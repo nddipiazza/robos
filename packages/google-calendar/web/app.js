@@ -61,6 +61,17 @@ function recomputeEndFromDuration() {
   document.getElementById('evt-end-time').value = endHm;
 }
 
+function syncDefaultGuestsForSelectedCalendar(calendarId) {
+  const cal = state.calendars.find((c) => c.id === calendarId);
+  state.selectedFamilyEmails.clear();
+  if (cal && cal.isFamilyCalendar) {
+    const sharedList = Array.isArray(cal.sharedWith) && cal.sharedWith.length ? cal.sharedWith : state.familyMembers;
+    for (const fm of sharedList) {
+      if (fm && fm.email) state.selectedFamilyEmails.add(fm.email);
+    }
+  }
+}
+
 function renderNamedCalendars() {
   const grid = document.getElementById('named-calendars-grid');
   const select = document.getElementById('evt-calendar');
@@ -71,6 +82,7 @@ function renderNamedCalendars() {
     const urlCal = new URLSearchParams(window.location.search).get('calendar');
     const matched = urlCal && writableCals.find((c) => c.id === urlCal || c.name.toLowerCase() === urlCal.toLowerCase());
     state.selectedCalendarId = matched ? matched.id : (state.defaultCalendarId || writableCals[0].id);
+    syncDefaultGuestsForSelectedCalendar(state.selectedCalendarId);
   }
 
   select.innerHTML = writableCals
@@ -102,6 +114,8 @@ function renderNamedCalendars() {
       const sharedAvatars = Array.isArray(c.sharedWith) && c.sharedWith.length
         ? `<div class="named-cal-shared">Shared with: ${c.sharedWith.map((m) => `${esc(m.avatar)} ${esc(m.nickname || m.firstName)}`).join(' · ')}</div>`
         : `<div class="named-cal-shared">${esc(c.description || c.id)}</div>`;
+      const gcalUrl = c.googleCalendarUrl || `https://calendar.google.com/calendar/u/0/r?cid=${encodeURIComponent(c.id)}`;
+      const gcalEmbedUrl = c.googleCalendarEmbedUrl || `https://calendar.google.com/calendar/embed?src=${encodeURIComponent(c.id)}`;
 
       return `
         <div class="named-cal-card ${isSelected ? 'active' : ''}" data-cal-id="${esc(c.id)}" data-writable="${c.writable !== false}">
@@ -113,10 +127,18 @@ function renderNamedCalendars() {
             <span class="cal-role-badge">${esc(roleLabel)}</span>
           </div>
           ${sharedAvatars}
+          <div class="named-cal-links" style="margin-top:6px;display:flex;gap:10px;flex-wrap:wrap;font-size:11.5px;">
+            <a href="${esc(gcalUrl)}" target="_blank" rel="noopener" class="gcal-ext-link" style="color:#38bdf8;text-decoration:none;font-weight:600;">🌐 Open in Google Calendar ↗</a>
+            <a href="${esc(gcalEmbedUrl)}" target="_blank" rel="noopener" class="gcal-ext-link" style="color:#94a3b8;text-decoration:none;">📅 Browser View ↗</a>
+          </div>
         </div>
       `;
     })
     .join('');
+
+  grid.querySelectorAll('.gcal-ext-link').forEach((link) => {
+    link.addEventListener('click', (ev) => ev.stopPropagation());
+  });
 
   grid.querySelectorAll('.named-cal-card').forEach((card) => {
     card.addEventListener('click', () => {
@@ -126,6 +148,8 @@ function renderNamedCalendars() {
       if (writable) {
         state.selectedCalendarId = calId;
         select.value = calId;
+        syncDefaultGuestsForSelectedCalendar(calId);
+        renderFamilyChips();
       }
       document.getElementById('cfg-cal-id').value = calId;
       renderNamedCalendars();
@@ -286,7 +310,9 @@ function applyParsedEventToForm(parsed) {
   if (parsed.calendarId) {
     state.selectedCalendarId = parsed.calendarId;
     document.getElementById('evt-calendar').value = parsed.calendarId;
+    syncDefaultGuestsForSelectedCalendar(parsed.calendarId);
     renderNamedCalendars();
+    renderFamilyChips();
   }
   const allDayEl = document.getElementById('evt-all-day');
   allDayEl.checked = Boolean(parsed.allDay);
@@ -341,7 +367,9 @@ async function loadState() {
 function setupEventListeners() {
   document.getElementById('evt-calendar').addEventListener('change', (e) => {
     state.selectedCalendarId = e.target.value;
+    syncDefaultGuestsForSelectedCalendar(state.selectedCalendarId);
     renderNamedCalendars();
+    renderFamilyChips();
   });
 
   document.getElementById('evt-all-day').addEventListener('change', (e) => {

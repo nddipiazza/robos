@@ -527,6 +527,8 @@ async function discoverNamedCalendars(accountIdOrEmail = null, options = {}) {
     const displayName = ov.name || cal.name;
     const color = normalizeHexColor(ov.color || cal.color, '#00bcd4');
     const isFamilyCal = /family/i.test(displayName) || /family/i.test(cal.originalSummary) || cal.id.startsWith('family');
+    const googleCalendarUrl = `https://calendar.google.com/calendar/u/0/r?cid=${encodeURIComponent(cal.id)}`;
+    const googleCalendarEmbedUrl = `https://calendar.google.com/calendar/embed?src=${encodeURIComponent(cal.id)}`;
     return {
       ...cal,
       name: displayName,
@@ -534,6 +536,8 @@ async function discoverNamedCalendars(accountIdOrEmail = null, options = {}) {
       color,
       backgroundColor: color,
       isFamilyCalendar: isFamilyCal,
+      googleCalendarUrl,
+      googleCalendarEmbedUrl,
       sharedWith: isFamilyCal
         ? familyMembers.filter((m) => m.email)
         : Array.isArray(ov.sharedWith)
@@ -910,7 +914,13 @@ async function createNamedCalendarEvent(eventInput = {}, options = {}) {
     }
   }
 
-  const attendees = resolveAttendees(eventInput.attendees, options);
+  const rawAttendeesInput =
+    eventInput.attendees !== undefined
+      ? eventInput.attendees
+      : targetCal?.isFamilyCalendar
+        ? discovered.familyMembers
+        : [];
+  const attendees = resolveAttendees(rawAttendeesInput, options);
   const rrule = buildRruleLine(eventInput.recurrence || eventInput.rrule);
   const uid = eventInput.uid || `robos-evt-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
 

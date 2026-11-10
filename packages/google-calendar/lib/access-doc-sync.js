@@ -72,12 +72,13 @@ function formatDateTimeHuman(isoStr, allDay = false) {
 
 /**
  * Renders the HTML for the "RobOS Calendar — Add Event Access Form" Google Doc.
- * Primary feature: 1 prominent button linking to the RobOS Add Calendar Event web app.
+ * Primary feature: 1 prominent button linking to the RobOS Add Calendar Event web app,
+ * plus direct browser links to each shared/named Google Calendar.
+ * Does NOT include a static upcoming-events snapshot (users open the WebApp or Google Calendar link).
  */
 function renderCalendarAccessDocHtml(options = {}) {
   const webAppUrl = String(options.webAppUrl || options.authedWebAppUrl || options.localWebAppUrl || 'http://127.0.0.1:19226').trim();
   const calendars = Array.isArray(options.calendars) ? options.calendars : [];
-  const events = Array.isArray(options.events) ? options.events : [];
   const syncedAt = new Date().toLocaleString('en-US', {
     month: 'short',
     day: 'numeric',
@@ -98,29 +99,15 @@ function renderCalendarAccessDocHtml(options = {}) {
         .join(' &nbsp;·&nbsp; ')
     : '';
 
-  const nowMs = Date.now() - 3600 * 1000;
-  const upcoming = events
-    .filter((e) => new Date(e.end || e.start).getTime() >= nowMs)
-    .slice(0, 12);
-
-  const upcomingRowsHtml = upcoming.length
-    ? upcoming
-        .map(
-          (ev) => `
-          <tr>
-            <td style="padding:7px 9px;border-bottom:1px solid #e2e8f0;font-weight:bold;color:#0f172a;">${escHtml(ev.summary)}</td>
-            <td style="padding:7px 9px;border-bottom:1px solid #e2e8f0;color:#334155;">${escHtml(ev.calendarName || 'Primary')}</td>
-            <td style="padding:7px 9px;border-bottom:1px solid #e2e8f0;color:#334155;">${escHtml(formatDateTimeHuman(ev.start, ev.allDay))}</td>
-            <td style="padding:7px 9px;border-bottom:1px solid #e2e8f0;color:#64748b;">${escHtml(ev.location || '—')}</td>
-          </tr>`
-        )
-        .join('')
-    : `
-      <tr>
-        <td colspan="4" style="padding:12px;text-align:center;color:#64748b;">
-          No upcoming events scheduled yet. Click the button above to add a Google Calendar event!
-        </td>
-      </tr>`;
+  const gcalBrowserLinksHtml = calendars.length
+    ? calendars
+        .map((c) => {
+          const gcalHref = c.googleCalendarUrl || `https://calendar.google.com/calendar/u/0/r?cid=${encodeURIComponent(c.id)}`;
+          const badge = c.isFamilyCalendar ? '👨‍👩‍👧‍👦 ' : c.primary ? '📅 ' : '🗓️ ';
+          return `<a href="${escHtml(gcalHref)}" style="color:#0f766e;text-decoration:underline;font-weight:bold;">${badge}Open ${escHtml(c.name)} in Google Calendar ↗</a>`;
+        })
+        .join(' &nbsp;·&nbsp; ')
+    : '';
 
   return `<!DOCTYPE html>
 <html>
@@ -141,9 +128,10 @@ function renderCalendarAccessDocHtml(options = {}) {
           <a href="${escHtml(webAppUrl)}" style="color:#0369a1;text-decoration:underline;font-weight:bold;">👉 CLICK THIS TO OPEN THE ROBOS ADD CALENDAR EVENT APP</a>
         </p>
         <p style="margin:0 0 12px 0;font-size:11.5pt;">
-          <a href="${escHtml(webAppUrl)}" style="color:#0284c7;text-decoration:none;font-weight:bold;">➕ Create a New Google Calendar Event (Title, Named Calendar, Date/Time, Family Guests, Reminders &amp; Voice Dictation) →</a>
+          <a href="${escHtml(webAppUrl)}" style="color:#0284c7;text-decoration:none;font-weight:bold;">➕ Create a New Google Calendar Event &amp; View Live Schedule (Title, Named Calendar, Date/Time, Family Guests, Reminders &amp; Voice Dictation) →</a>
         </p>
-        ${calLinksHtml ? `<p style="margin:0 0 12px 0;font-size:10.5pt;color:#1e293b;"><strong>Quick-Select Named Calendar:</strong> ${calLinksHtml}</p>` : ''}
+        ${calLinksHtml ? `<p style="margin:0 0 8px 0;font-size:10.5pt;color:#1e293b;"><strong>Quick-Add to Named Calendar:</strong> ${calLinksHtml}</p>` : ''}
+        ${gcalBrowserLinksHtml ? `<p style="margin:0 0 12px 0;font-size:10.5pt;color:#1e293b;"><strong>View Shared Calendar in Google Calendar:</strong> ${gcalBrowserLinksHtml}</p>` : ''}
         <p style="margin:0;padding:9px 12px;background-color:#fef2f2;border:1px solid #fecaca;color:#991b1b;font-size:10pt;font-weight:bold;">
           ⚠️ DO NOT TRY TO EDIT THIS DOC — This Google Doc is for data &amp; access purposes and is READ-ONLY. Click the button above to open the RobOS Add Calendar Event web app.
         </p>
@@ -156,8 +144,9 @@ function renderCalendarAccessDocHtml(options = {}) {
     <thead>
       <tr style="background-color:#f1f5f9;">
         <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #cbd5e1;">Calendar Name</th>
-        <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #cbd5e1;">Type / Access</th>
-        <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #cbd5e1;">Quick Add Link</th>
+        <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #cbd5e1;">Type / Shared Access</th>
+        <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #cbd5e1;">Open in Google Calendar (Browser)</th>
+        <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #cbd5e1;">Add Event in RobOS WebApp</th>
       </tr>
     </thead>
     <tbody>
@@ -165,32 +154,24 @@ function renderCalendarAccessDocHtml(options = {}) {
         .map((c) => {
           const sep = webAppUrl.includes('?') ? '&' : '?';
           const href = `${webAppUrl}${sep}calendar=${encodeURIComponent(c.id)}`;
+          const gcalHref = c.googleCalendarUrl || `https://calendar.google.com/calendar/u/0/r?cid=${encodeURIComponent(c.id)}`;
+          const gcalEmbedHref = c.googleCalendarEmbedUrl || `https://calendar.google.com/calendar/embed?src=${encodeURIComponent(c.id)}`;
           const roleBadge = c.primary ? 'Primary (Owner)' : c.isFamilyCalendar ? 'Shared Family Calendar' : c.writable ? 'Shared (Writable)' : 'Read-Only Feed';
           return `
           <tr>
             <td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;font-weight:bold;">${escHtml(c.name)}</td>
             <td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;color:#475569;">${escHtml(roleBadge)}</td>
             <td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;">
+              <a href="${escHtml(gcalHref)}" style="color:#0f766e;font-weight:bold;text-decoration:underline;">🌐 Open in Google Calendar ↗</a>
+              &nbsp;·&nbsp;
+              <a href="${escHtml(gcalEmbedHref)}" style="color:#475569;text-decoration:underline;">📅 Full-Screen View</a>
+            </td>
+            <td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;">
               ${c.writable !== false ? `<a href="${escHtml(href)}" style="color:#0284c7;font-weight:bold;">+ Add Event to ${escHtml(c.name)}</a>` : '<span style="color:#94a3b8;">Read-only</span>'}
             </td>
           </tr>`;
         })
         .join('')}
-    </tbody>
-  </table>
-
-  <h2 style="font-size:13pt;color:#0f172a;margin:16px 0 8px 0;">📆 Upcoming Events (Read-Only Snapshot)</h2>
-  <table style="width:100%;border-collapse:collapse;margin:0 0 14px 0;border:1px solid #cbd5e1;font-size:10pt;">
-    <thead>
-      <tr style="background-color:#f1f5f9;">
-        <th style="padding:8px 9px;text-align:left;border-bottom:2px solid #cbd5e1;">Event</th>
-        <th style="padding:8px 9px;text-align:left;border-bottom:2px solid #cbd5e1;">Calendar</th>
-        <th style="padding:8px 9px;text-align:left;border-bottom:2px solid #cbd5e1;">When</th>
-        <th style="padding:8px 9px;text-align:left;border-bottom:2px solid #cbd5e1;">Location</th>
-      </tr>
-    </thead>
-    <tbody>
-      ${upcomingRowsHtml}
     </tbody>
   </table>
 </body>

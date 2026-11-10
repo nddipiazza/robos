@@ -107,6 +107,18 @@ function renderAccessDocCard() {
   }
 }
 
+function syncDesktopDefaultGuestsForCalendar(calendarId) {
+  const cals = _namedState.calendars || [];
+  const cal = cals.find(c => c.id === calendarId);
+  _selectedFamilyEmails.clear();
+  if (cal && cal.isFamilyCalendar) {
+    const sharedList = Array.isArray(cal.sharedWith) && cal.sharedWith.length ? cal.sharedWith : (_namedState.familyMembers || []);
+    for (const fm of sharedList) {
+      if (fm && fm.email) _selectedFamilyEmails.add(fm.email);
+    }
+  }
+}
+
 function renderNamedCalendarsCard() {
   const listEl = document.getElementById('named-calendars-list');
   const renameSel = document.getElementById('rename-cal-select');
@@ -124,6 +136,7 @@ function renderNamedCalendarsCard() {
       const sharedInfo = Array.isArray(c.sharedWith) && c.sharedWith.length
         ? `<div style="font-size:11px;color:var(--muted);margin-top:2px;">Shared with Family: ${c.sharedWith.map(m => `${esc(m.avatar)} ${esc(m.nickname || m.firstName)}`).join(', ')}</div>`
         : '';
+      const gcalUrl = c.googleCalendarUrl || `https://calendar.google.com/calendar/u/0/r?cid=${encodeURIComponent(c.id)}`;
       return `
         <div class="named-cal-row">
           <div>
@@ -131,9 +144,18 @@ function renderNamedCalendarsCard() {
             <div style="font-size:11px;color:var(--muted);margin-top:2px;">ID: <code>${esc(c.id)}</code></div>
             ${sharedInfo}
           </div>
+          <div>
+            <button class="btn btn-open-gcal-url" data-url="${esc(gcalUrl)}" style="padding:4px 9px;font-size:11px;">🌐 Open in Google Calendar ↗</button>
+          </div>
         </div>
       `;
     }).join('');
+
+    listEl.querySelectorAll('.btn-open-gcal-url').forEach(btn => {
+      btn.onclick = () => {
+        if (btn.dataset.url) window.robos.openUrl(btn.dataset.url);
+      };
+    });
   }
 
   if (renameSel) {
@@ -142,9 +164,15 @@ function renderNamedCalendarsCard() {
 
   if (evCalSel) {
     const writable = cals.filter(c => c.writable !== false);
+    const currentVal = evCalSel.value || _namedState.defaultCalendarId || writable[0]?.id || '';
     evCalSel.innerHTML = writable.map(c =>
-      `<option value="${esc(c.id)}"${c.id === _namedState.defaultCalendarId ? ' selected' : ''}>${c.isFamilyCalendar ? '👨‍👩‍👧‍👦 ' : '📅 '}${esc(c.name)}</option>`
+      `<option value="${esc(c.id)}"${c.id === currentVal ? ' selected' : ''}>${c.isFamilyCalendar ? '👨‍👩‍👧‍👦 ' : '📅 '}${esc(c.name)}</option>`
     ).join('');
+    syncDesktopDefaultGuestsForCalendar(evCalSel.value);
+    evCalSel.onchange = () => {
+      syncDesktopDefaultGuestsForCalendar(evCalSel.value);
+      renderQuickEventForm();
+    };
   }
 }
 
@@ -331,7 +359,10 @@ document.getElementById('btn-nl-fill')?.addEventListener('click', async () => {
   if (res.ok && res.parsed) {
     const p = res.parsed;
     if (p.summary) document.getElementById('ev-title').value = p.summary;
-    if (p.calendarId) document.getElementById('ev-calendar-select').value = p.calendarId;
+    if (p.calendarId) {
+      document.getElementById('ev-calendar-select').value = p.calendarId;
+      syncDesktopDefaultGuestsForCalendar(p.calendarId);
+    }
     if (p.startDate) document.getElementById('ev-start-date').value = p.startDate;
     if (p.startTime) document.getElementById('ev-start-time').value = p.startTime;
     if (p.endTime) document.getElementById('ev-end-time').value = p.endTime;
@@ -339,8 +370,8 @@ document.getElementById('btn-nl-fill')?.addEventListener('click', async () => {
     if (p.recurrence) document.getElementById('ev-recurrence').value = p.recurrence;
     if (Array.isArray(p.attendees)) {
       p.attendees.forEach(a => a.email && _selectedFamilyEmails.add(a.email));
-      renderQuickEventForm();
     }
+    renderQuickEventForm();
     showStatus('✨ Parsed natural-language event into form!');
   }
 });
