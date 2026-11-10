@@ -132,9 +132,21 @@ function createStore(options = {}) {
   const listeners = new Set();
 
   let state = null;
+  let lastMtimeMs = 0;
 
-  function ensureLoaded() {
-    if (state) return state;
+  function getFileMtimeMs() {
+    try {
+      return fs.statSync(filePath).mtimeMs;
+    } catch {
+      return 0;
+    }
+  }
+
+  function ensureLoaded(forceReload = false) {
+    const currentMtime = getFileMtimeMs();
+    if (state && !forceReload && (currentMtime === 0 || currentMtime === lastMtimeMs)) {
+      return state;
+    }
     if (fs.existsSync(filePath)) {
       try {
         const raw = JSON.parse(fs.readFileSync(filePath, 'utf8'));
@@ -173,6 +185,7 @@ function createStore(options = {}) {
             sync: { ...seed.sync, ...(raw.sync || {}), docIds: { ...(raw.sync?.docIds || {}) }, docUrls: { ...(raw.sync?.docUrls || {}) } },
             updatedAt: raw.updatedAt || new Date().toISOString(),
           };
+          lastMtimeMs = getFileMtimeMs();
           return state;
         }
       } catch {}
@@ -182,6 +195,18 @@ function createStore(options = {}) {
     return state;
   }
 
+  function reload(notify = true) {
+    const prevUpdatedAt = state?.updatedAt;
+    ensureLoaded(true);
+    if (notify && state?.updatedAt !== prevUpdatedAt) {
+      const snap = getSnapshot();
+      for (const fn of listeners) {
+        try { fn(snap, 'disk-reload'); } catch {}
+      }
+    }
+    return getSnapshot();
+  }
+
   function persist({ silent = false, reason = 'update' } = {}) {
     ensureLoaded();
     state.updatedAt = new Date().toISOString();
@@ -189,6 +214,7 @@ function createStore(options = {}) {
     const tmp = `${filePath}.${process.pid}.tmp`;
     fs.writeFileSync(tmp, JSON.stringify(state, null, 2) + '\n', 'utf8');
     fs.renameSync(tmp, filePath);
+    lastMtimeMs = getFileMtimeMs();
     if (!silent) {
       const snap = getSnapshot();
       for (const fn of listeners) {
@@ -537,6 +563,7 @@ function createStore(options = {}) {
   return {
     filePath,
     getSnapshot,
+    reload,
     setActiveList,
     createList,
     addItem,
