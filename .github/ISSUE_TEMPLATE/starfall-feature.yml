@@ -1,0 +1,23 @@
+name: "Starfall Command · Feature request"
+description: "Propose a new mechanic, control, mode or quality-of-life improvement."
+title: "[Starfall][Feature] "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What would you like to do?
+      description: "Describe the problem or missing experience from the player's point of view."
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: How should it work?
+      description: "Describe the behavior you would expect to see in the game."
+    validations:
+      required: true
+  - type: textarea
+    id: examples
+    attributes:
+      label: Examples or references

@@ -1,0 +1,30 @@
+name: "Starfall Command · Balance feedback"
+description: "Report a matchup, unit, map or strategy that feels too strong or too weak."
+title: "[Starfall][Balance] "
+body:
+  - type: input
+    id: build
+    attributes:
+      label: Game version or commit
+      placeholder: "Release version or source commit"
+    validations:
+      required: true
+  - type: input
+    id: context
+    attributes:
+      label: Match context
+      description: "Include the mode, map, factions and difficulty, plus the seed if you have it."
+    validations:
+      required: true
+  - type: textarea
+    id: balance
+    attributes:
+      label: What feels out of balance?
+      description: "Describe the situation, what you tried to counter it, and what you would like to change."
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Replay, screenshots or match notes
+      description: "Attach a clip or give the timing and sequence that make the behavior reproducible."

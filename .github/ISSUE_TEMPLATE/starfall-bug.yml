@@ -1,0 +1,29 @@
+name: "Starfall Command · Bug report"
+description: "Report a broken command, incorrect result, crash or interface issue."
+title: "[Starfall][Bug] "
+labels: [bug]
+body:
+  - type: input
+    id: build
+    attributes:
+      label: Game version and platform
+      placeholder: "Version or source commit, operating system"
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: "Include the mode, map and factions if they matter."
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: What happened and what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Screenshots, clips or logs

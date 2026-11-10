@@ -1,0 +1,50 @@
+{
+  "@context": {
+    "@vocab": "https://rowbose.com/games/robos-rts/#",
+    "steward": {"@type": "@id"},
+    "source": {"@type": "@id"}
+  },
+  "@id": "https://rowbose.com/games/robos-rts/#balance-council",
+  "@type": "BalanceCouncil",
+  "name": "Starfall Command Balance Council",
+  "steward": {
+    "@id": "https://rowbose.com/games/robos-rts/#robos-global-consortium",
+    "@type": "Organization",
+    "name": "RobOS Global Consortium"
+  },
+  "issueForm": "https://github.com/nddipiazza/robos/issues/new",
+  "reports": [
+    {
+      "@id": "https://rowbose.com/games/robos-rts/#balance-report",
+      "name": "File a balance whine",
+      "template": "starfall-balance.yml",
+      "summary": "A unit, matchup, map or strategy feels too strong or too weak."
+    },
+    {
+      "@id": "https://rowbose.com/games/robos-rts/#bug-report",
+      "name": "Report a bug",
+      "template": "starfall-bug.yml",
+      "summary": "A command, rule or screen behaves differently than expected."
+    },
+    {
+      "@id": "https://rowbose.com/games/robos-rts/#feature-report",
+      "name": "Request a feature",
+      "template": "starfall-feature.yml",
+      "summary": "An improvement or missing mechanic would make the game better."
+    }
+  ],
+  "gameReferences": [
+    {
+      "name": "Maps and scenarios",
+      "source": "https://github.com/nddipiazza/robos/tree/main/games/robos-rts/scenarios"
+    },
+    {
+      "name": "Units and structures",
+      "source": "https://github.com/nddipiazza/robos/blob/main/games/robos-rts/scripts/engine/RTSData.gd"
+    },
+    {
+      "name": "Gameplay tests",
+      "source": "https://github.com/nddipiazza/robos/tree/main/games/robos-rts/tests"
+    }
+  ]
+}

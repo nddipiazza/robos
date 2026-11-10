@@ -3,9 +3,10 @@ layout: game
 title: "Starfall Command Docs"
 permalink: /games/robos-rts/docs/
 description: "Starfall Command guides for the Ashfall Signal campaign, three-faction skirmishes, controls, map editing and gameplay tests."
-bg_video: /assets/games/rts-bg.mp4
-bg_poster: /assets/games/rts-bg-poster.jpg
-accent: "#58b4ff"
+body_class: starfall-game
+extra_css: /assets/starfall-command.css
+accent: "#b9dc87"
+og_image: /assets/games/starfall-command/map-editor.webp
 og_image_alt: "Starfall Command RTS Documentation and Map Editor Guide"
 og_type: article
 schema_type: TechArticle
@@ -24,6 +25,7 @@ keywords: "Starfall Command docs, RobOS RTS documentation, Frontier Hunters map 
     <a class="card" href="{{ '/projects/robos-rts/#live-gameplay-and-frame-performance-tests' | relative_url }}"><div class="ic"><img class="ic-img" src="/assets/icons/check.svg" alt="" width="48" height="48" loading="lazy"></div><h3>Live gameplay tests</h3><p>Paid builds on the engine's frame clock, recorded walkthroughs and performance budgets.</p><span class="go">Open →</span></a>
     <a class="card" href="{{ '/projects/robos-rts/#scripting-and-bots' | relative_url }}"><div class="ic"><img class="ic-img" src="/assets/icons/robot.svg" alt="" width="48" height="48" loading="lazy"></div><h3>Bot API</h3><p>Endpoints and the Python SDK.</p><span class="go">Open →</span></a>
     <a class="card" href="{{ '/projects/robos-rts/#tests' | relative_url }}"><div class="ic"><img class="ic-img" src="/assets/icons/check.svg" alt="" width="48" height="48" loading="lazy"></div><h3>Tests</h3><p>The Cucumber scenarios and how to run them.</p><span class="go">Open →</span></a>
+    <a class="card" href="{{ '/games/robos-rts/#balance-council' | relative_url }}"><div class="ic"><img class="ic-img" src="/assets/icons/target.svg" alt="" width="48" height="48" loading="lazy"></div><h3>Balance Council</h3><p>See how the council reviews match evidence, or open a balance, bug or feature report.</p><span class="go">Open →</span></a>
   </div>
   <div class="doc-list" style="margin-top:44px">
     <div>
