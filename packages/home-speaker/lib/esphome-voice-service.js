@@ -1241,6 +1241,10 @@ class EspHomeVoiceService extends EventEmitter {
     }
 
     transcript = String(transcript || '').trim() || '(Voice note recorded from speaker)';
+    try {
+      const { normalizeShoppingVoiceTranscript } = require('../../shopping-lists/lib/defaults');
+      transcript = normalizeShoppingVoiceTranscript(transcript);
+    } catch {}
     this._sendVoiceEvent(socket, 4, [{ name: 'text', value: transcript }]); // VOICE_ASSISTANT_STT_END
 
     // If a guided speaker voice onboarding capture is waiting for this utterance, enroll it now!

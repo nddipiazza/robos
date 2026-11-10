@@ -1191,9 +1191,14 @@ function classifyVoiceCommand(cleanedText, { audioTracks = null, movieTracks = n
   }
 
   // 2.1 If it's a Household Shopping Lists command ("add milk to grocery", "put eggs on target list", "remove milk from costco", "check off avocados"), route to robos-skill
+  let normShopQ = q;
+  try {
+    const { normalizeShoppingVoiceTranscript } = require('../../shopping-lists/lib/defaults');
+    normShopQ = normalizeShoppingVoiceTranscript(cleanedText).toLowerCase();
+  } catch {}
   if (
-    /\b(?:shopping\s+lists?|grocery(?:\s+lists?)?|target\s+lists?|costco(?:\s+lists?)?|@(?:grocery|target|costco))\b/i.test(q) ||
-    /^(?:add|put|buy|get|need|remove|delete|check\s+off|uncheck|clear\s+checked)\b.+\b(?:to|on|in|from|at|for)\s+(?:my\s+|the\s+|our\s+)?(?:grocery|target|costco|shopping|lists?)\b/i.test(q)
+    /\b(?:shopping\s+lists?|grocery(?:\s+lists?)?|target\s+lists?|costco(?:\s+lists?)?|@(?:grocery|target|costco))\b/i.test(normShopQ) ||
+    /^(?:add|put|buy|get|need|remove|delete|check(?:\s+off)?|uncheck|clear(?:\s+checked)?)\b.+\b(?:to|on|in|from|at|for)\s+(?:[a-z0-9'\-\s]{1,30}\s+)?(?:grocery|target|costco|shopping|lists?)\b/i.test(normShopQ)
   ) {
     return { type: 'robos-skill', query: cleanedText };
   }

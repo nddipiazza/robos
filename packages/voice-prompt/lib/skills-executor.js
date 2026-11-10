@@ -109,18 +109,23 @@ class SkillsExecutor {
     }
 
     // 1.5 Household Shopping Lists Skill (Grocery, Target, Costco)
-    // Matches "/shopping-lists ...", "add 2 gal milk to grocery list", "what is on my costco list", "check off avocados on grocery", "remove tide pods from target", "add milk to my list"
-    const isShoppingCommand = /^\/shopping-lists?\b/i.test(query)
-      || (/\b(?:shopping\s+lists?|grocery(?:\s+lists?)?|target(?:\s+lists?)?|costco(?:\s+lists?)?|@(?:grocery|target|costco))\b/i.test(query)
-          && !/^(?:open|launch|start|switch\s+to)\s+(?:the\s+)?(?:robos\s+)?shopping\s+lists?(?:\s+app|\s+window)?$/i.test(query))
-      || (/\b(?:add|put|buy|get|need|remove|delete|check\s+off|uncheck|clear\s+checked)\b.+\b(?:to|on|in|from|at|for)\s+(?:my\s+|the\s+|our\s+)?lists?\b/i.test(query)
-          && !/\b(?:task|tasks|todo|issue|issues|ticket|tickets)\b/i.test(query));
+    // Matches "/shopping-lists ...", "add 2 gal milk to grocery list", "what is on my costco list", "check off avocados on grocery", "remove tide pods from target", "add milk to the [anything] list"
+    let normalizedShoppingQuery = query;
+    try {
+      const { normalizeShoppingVoiceTranscript } = require('../../shopping-lists/lib/defaults');
+      normalizedShoppingQuery = normalizeShoppingVoiceTranscript(query);
+    } catch {}
+    const isShoppingCommand = /^\/shopping-lists?\b/i.test(normalizedShoppingQuery)
+      || (/\b(?:shopping\s+lists?|grocery(?:\s+lists?)?|target(?:\s+lists?)?|costco(?:\s+lists?)?|@(?:grocery|target|costco))\b/i.test(normalizedShoppingQuery)
+          && !/^(?:open|launch|start|switch\s+to)\s+(?:the\s+)?(?:robos\s+)?shopping\s+lists?(?:\s+app|\s+window)?$/i.test(normalizedShoppingQuery))
+      || (/\b(?:add|put|buy|get|need|remove|delete|check(?:\s+off)?|uncheck|clear(?:\s+checked)?)\b.+\b(?:to|on|in|from|at|for)\s+(?:[a-z0-9'\-\s]{1,30}\s+)?lists?\b/i.test(normalizedShoppingQuery)
+          && !/\b(?:task|tasks|todo|issue|issues|ticket|tickets)\b/i.test(normalizedShoppingQuery));
     if (isShoppingCommand) {
       try {
         const { createStore } = require('../../shopping-lists/lib/store');
         const { executeTextCommand } = require('../../shopping-lists/lib/text-commands');
         const store = createStore({ homeDir: this.homeDir, configDir: this.configDir });
-        const shopRes = await executeTextCommand(store, query);
+        const shopRes = await executeTextCommand(store, normalizedShoppingQuery);
         return {
           ok: shopRes.ok,
           skill: shopRes.skill || 'shopping-lists',
