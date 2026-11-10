@@ -215,11 +215,20 @@ describe('Google Calendar: Thunderbird sync settings stick', () => {
 
     const html = accessDoc.renderCalendarAccessDocHtml({
       webAppUrl: 'https://demo-cal.trycloudflare.com/?auth=secret123',
-      calendars: [{ id: 'family123@group.calendar.google.com', name: 'Family', isFamilyCalendar: true, writable: true }],
-      events: [],
+      calendars: [{
+        id: 'family123@group.calendar.google.com',
+        name: 'Family',
+        isFamilyCalendar: true,
+        writable: true,
+        googleCalendarUrl: 'https://calendar.google.com/calendar/u/0/r?cid=family123%40group.calendar.google.com',
+        googleCalendarEmbedUrl: 'https://calendar.google.com/calendar/embed?src=family123%40group.calendar.google.com',
+      }],
     });
     assert.ok(html.includes('CLICK THIS TO OPEN THE ROBOS ADD CALENDAR EVENT APP'));
     assert.ok(html.includes('https://demo-cal.trycloudflare.com/?auth=secret123'));
     assert.ok(html.includes('DO NOT TRY TO EDIT THIS DOC'));
+    assert.ok(html.includes('https://calendar.google.com/calendar/u/0/r?cid=family123%40group.calendar.google.com'));
+    assert.ok(html.includes('https://calendar.google.com/calendar/embed?src=family123%40group.calendar.google.com'));
+    assert.ok(!html.includes('Upcoming Events (Read-Only Snapshot)'));
   });
 });
