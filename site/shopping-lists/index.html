@@ -1,0 +1,169 @@
+---
+layout: default
+title: "RobOS Shopping Lists — Grocery, Target & Costco Lists with Google Docs & Mobile Form"
+permalink: /shopping-lists/
+redirect_from:
+  - /apps/shopping-lists/
+body_class: guide
+extra_css: /assets/code-review.css
+description: "RobOS Shopping Lists (packages/shopping-lists): pre-seeded Grocery, Target, and Costco household shopping lists with form-style add/remove buttons, 1-tap staple chips, Smart Multi-Store paste, /shopping-lists AI skill, live mobile web form (:19225), and two-way Google Docs & Google Drive synchronization."
+og_image: /assets/blog/shopping-lists/01-grocery-list.png
+og_image_alt: "RobOS Shopping Lists desktop interface showing Grocery, Target, and Costco store cards, form-driven Add Item controls, 1-tap staple chips, and Google Docs & Drive sync"
+og_type: article
+schema_type: TechArticle
+keywords: "RobOS Shopping Lists, household shopping list app, Grocery Target Costco list, Google Docs shopping list, Google Drive shopping list sync, mobile shopping list form, RobOS Household"
+---
+{%- assign sl = '/assets/blog/shopping-lists/' | relative_url -%}
+<section class="cr-page"><div class="wrap">
+<article class="guide-body cr-body">
+
+<header class="cr-hero">
+<p class="eyebrow">RobOS Household Suite · Personal &amp; Family Organization</p>
+<h1>RobOS Shopping Lists</h1>
+<p class="lead">Three ready-made store lists — <strong>1) 🥬 Grocery</strong>, <strong>2) 🎯 Target</strong>, and <strong>3) 📦 Costco</strong> — designed for fast, form-driven item entry with tactile <code>−</code> / <code>+</code> quantity steppers, 1-tap staple chips, per-row check-off and remove buttons, a live mobile web companion (<code>:19225</code>), the <code>/shopping-lists</code> CLI &amp; AI skill, and two-way synchronization with native <strong>Google Docs</strong> in <strong>Google Drive</strong>.</p>
+<div class="cta" style="margin-top:6px">
+  <a class="btn" href="#three-lists">1. Grocery, Target &amp; Costco</a>
+  <a class="btn btn-ghost" href="#form-controls">2. Form &amp; Button Controls</a>
+  <a class="btn btn-ghost" href="#google-docs-mobile">3. Google Docs &amp; Mobile Form</a>
+  <a class="btn btn-ghost" href="#skills-guide">4. Printable Skills &amp; Text Commands</a>
+  <a class="btn btn-ghost" href="{{ '/shopping-lists/reference/' | relative_url }}">Package reference</a>
+  <a class="btn btn-ghost" href="{{ '/blog/robos-shopping-lists-google-docs-and-mobile-form/' | relative_url }}">Engineering blog →</a>
+</div>
+</header>
+
+<figure class="guide-shot"><a href="{{ sl }}01-grocery-list.png"><img src="{{ sl }}01-grocery-list.png" alt="RobOS Shopping Lists on the 1) Grocery store tab showing the 3 store deck cards (Grocery, Target, Costco), the form-driven Add Item card, 1-tap staple chips, aisle-grouped items, and Google Docs & Drive mobile sync" width="1440" height="900"></a><figcaption><strong>RobOS Shopping Lists</strong> on the <strong>1) 🥬 Grocery</strong> list: switch between <strong>Grocery</strong>, <strong>Target</strong>, and <strong>Costco</strong> at the top, add items through the structured form or 1-tap staple pills, step quantities or remove items with a single click, and sync all three lists to native Google Docs in Google Drive.</figcaption></figure>
+
+<ul class="cr-nav">
+<li><a href="#three-lists"><b>1. Three Store Lists</b><span>Pre-seeded Grocery, Target &amp; Costco lists with store-specific aisles &amp; staples</span></a></li>
+<li><a href="#form-controls"><b>2. Form &amp; Row Buttons</b><span>Quantity steppers, auto-aisles, badges, 1-tap chips, Remove &amp; Undo</span></a></li>
+<li><a href="#google-docs-mobile"><b>3. Google Docs &amp; Mobile</b><span>Two-way Google Docs in Drive + LAN QR &amp; Apps Script mobile web form</span></a></li>
+<li><a href="#skills-guide"><b>4. Skills &amp; Text Commands</b><span>Printable cheat sheet for /shopping-lists, @store tags, CLI &amp; Voice</span></a></li>
+<li><a href="#architecture"><b>5. Architecture &amp; CLI</b><span>Two-way sync pipeline, Household CSV export, and reproducible tests</span></a></li>
+</ul>
+
+<blockquote><p><strong>Part of the RobOS Household Line of Apps.</strong> Alongside <a href="{{ '/household/' | relative_url }}">RobOS Household</a> (<a href="{{ '/family-finances/' | relative_url }}">Family Finances</a>) and <a href="{{ '/robos-tax/' | relative_url }}"><code>robos.tax</code></a>, <strong>RobOS Shopping Lists</strong> keeps everyday household planning local-first in <code>~/.config/robos/household/shopping-lists.json</code>, exports checked carts directly to Household CSV format for statement reconciliation, and works 100% without AI while offering optional AI multi-item parsing and voice skills.</p></blockquote>
+
+<h2 id="three-lists">1. Three Pre-Seeded Store Lists: Grocery, Target &amp; Costco</h2>
+<p>Most families shop across three distinct trips: the weekly fresh grocery run, the Target household/pharmacy run, and the Costco warehouse bulk haul. Instead of lumping everything into one flat checklist, <strong>RobOS Shopping Lists</strong> comes pre-seeded with three store-tailored decks (<a href="https://github.com/nddipiazza/robos/blob/main/packages/shopping-lists/lib/defaults.js"><code>lib/defaults.js</code></a>) — each with its own accent theme, store-specific aisle rules, starter items, and 10+ one-tap staple chips:</p>
+
+<div class="cr-pair">
+<figure class="guide-shot"><a href="{{ sl }}02-target-list.png"><img src="{{ sl }}02-target-list.png" alt="RobOS Shopping Lists on the 2) Target list with bullseye red theme, Target household essentials staples, and coupon badge" loading="lazy" width="1440" height="900"></a><figcaption><strong>2) 🎯 Target Shopping List</strong>: Bullseye red accent theme with aisles for <em>Household Essentials</em>, <em>Personal Care &amp; Beauty</em>, <em>Health &amp; Pharmacy</em>, <em>Home &amp; Storage</em>, <em>Kids &amp; Pets</em>, and <em>Electronics &amp; Tech</em>.</figcaption></figure>
+<figure class="guide-shot"><a href="{{ sl }}03-costco-list.png"><img src="{{ sl }}03-costco-list.png" alt="RobOS Shopping Lists on the 3) Costco list with warehouse blue theme, Kirkland Signature staples, and case quantities" loading="lazy" width="1440" height="900"></a><figcaption><strong>3) 📦 Costco Shopping List</strong>: Warehouse blue accent theme with aisles for <em>Kirkland Signature</em>, <em>Rotisserie &amp; Deli</em>, <em>Bulk Produce</em>, <em>Meat &amp; Poultry</em>, <em>Freezer Bulk</em>, <em>Pantry &amp; Oils</em>, and <em>Paper &amp; Cleaning</em>.</figcaption></figure>
+</div>
+
+<table class="wide">
+<thead><tr><th>Store List</th><th>Store ID &amp; Tag</th><th>Auto-Detected Aisles</th><th>1-Tap Quick-Add Staples</th></tr></thead>
+<tbody>
+<tr><td><strong>1) 🥬 Grocery</strong></td><td><code>grocery</code> · <code>@grocery</code></td><td>Produce, Dairy &amp; Eggs, Bakery, Meat &amp; Seafood, Pantry &amp; Dry Goods, Frozen, Beverages, Snacks, Household</td><td>Organic Whole Milk, Pasture-Raised Eggs (12ct), Hass Avocados, Honeycrisp Apples, Sourdough Country Loaf, Baby Spinach, Plain Greek Yogurt, Boneless Chicken Thighs, Cold Brew Coffee, San Marzano Tomatoes, Grass-Fed Butter, Bananas</td></tr>
+<tr><td><strong>2) 🎯 Target</strong></td><td><code>target</code> · <code>@target</code></td><td>Household Essentials, Personal Care &amp; Beauty, Health &amp; Pharmacy, Kitchen &amp; Dining, Home &amp; Storage, Kids &amp; Pets, Electronics &amp; Tech, Market &amp; Snacks</td><td>Free &amp; Clear Laundry Pods, Dishwasher Platinum Pacs, Foaming Hand Soap Refill, Sensodyne Toothpaste 2-Pack, Ziploc Freezer Quart Bags, AA Alkaline Batteries (16pk), Parchment Paper, Allergy Relief Tablets, Facial Tissues 4-Cube Pack, USB-C Braided Cable</td></tr>
+<tr><td><strong>3) 📦 Costco</strong></td><td><code>costco</code> · <code>@costco</code></td><td>Kirkland Signature, Rotisserie &amp; Deli, Bulk Produce, Meat &amp; Poultry, Freezer Bulk, Pantry &amp; Oils, Paper &amp; Cleaning, Beverages &amp; Cases, Bakery &amp; Sweet</td><td>Hot Rotisserie Chicken, Kirkland Paper Towels (12ct), Kirkland Bath Tissue (30ct), Extra Virgin Olive Oil (2L), Kerrygold Pure Irish Butter (4pk), Butter Croissants (12ct), Organic Blueberries (18oz), Topo Chico Case (18ct), Wild Caught Mahi-Mahi, Kirkland Mixed Nuts</td></tr>
+</tbody>
+</table>
+
+<h2 id="form-controls">2. Form-Driven Item Entry, Tactile Buttons &amp; Smart Multi-Store Paste</h2>
+<p>Typing raw bullet points on a tiny phone keyboard while pushing a shopping cart is frustrating. Every screen in <strong>RobOS Shopping Lists</strong> — on desktop and on mobile — uses touch-friendly form controls and one-tap action buttons:</p>
+
+<ul>
+  <li><strong>Structured Add Item Card:</strong> Enter the item name, tap <code>−</code> or <code>+</code> to set quantity, choose a unit (<code>ea</code>, <code>pack</code>, <code>lb</code>, <code>oz</code>, <code>gal</code>, <code>case</code>, <code>bag</code>, <code>box</code>, <code>bunch</code>, <code>bottle</code>, <code>jar</code>), let <code>detectAisle()</code> auto-assign the store aisle (or pick one manually), add an optional estimated price (<code>$</code>) and brand/coupon note, and pick a highlight badge (<code>🔥 Must Have</code>, <code>🏷️ Sale / Coupon</code>, <code>🌿 Organic</code>, <code>⭐ Store Brand / Fav</code>).</li>
+  <li><strong>Duplicate Merge &amp; 1-Tap Staples:</strong> Clicking any <code>＋ Staple</code> chip or adding an item that is already unchecked on the list automatically increments its quantity instead of creating cluttered duplicate rows.</li>
+  <li><strong>Per-Row Action Buttons:</strong> Every item row features a large circular check-off button (with celebratory confetti when you finish a list), inline <code>−</code> and <code>+</code> quantity steppers, an <strong>Edit</strong> modal button, and a <strong>🗑️ Remove</strong> button backed by a 12-step <strong>↩ Undo</strong> stack and <strong>🧹 Clear Checked</strong>.</li>
+  <li><strong>Smart Multi-Store Paste (100% Offline + Optional AI):</strong> Paste a comma- or newline-separated string such as <code>2 gal organic milk $4.89 (whole), 4 avocados, laundry pods @target, kirkland paper towels @costco</code> and RobOS automatically parses quantities, units, prices, notes, badges, and store tags — routing each item to <strong>Grocery</strong>, <strong>Target</strong>, or <strong>Costco</strong> in one click.</li>
+</ul>
+
+<h2 id="google-docs-mobile">3. Viewable in Google Docs &amp; Google Drive on Mobile + Interactive Mobile Form</h2>
+<p>You asked for shopping lists that are <strong>viewable in Google Docs / Google Drive on a mobile device</strong> and <strong>easy to add/remove items in a form-like manner with buttons</strong>. RobOS delivers both together:</p>
+
+<div class="cr-pair">
+<figure class="guide-shot"><a href="{{ sl }}04-mobile-google-doc-preview.png"><img src="{{ sl }}04-mobile-google-doc-preview.png" alt="Mobile Device Experience Preview showing the native Google Docs Mobile View for Costco Shopping List with aisle headings, checkboxes, prices, badges, and top link to the interactive mobile form" loading="lazy" width="1440" height="900"></a><figcaption><strong>Google Docs Mobile View</strong>: Each list syncs to a native Google Doc (<code>Grocery — RobOS Shopping List</code>, <code>Target — RobOS Shopping List</code>, <code>Costco — RobOS Shopping List</code>) inside your <code>RobOS Household Shopping Lists</code> Google Drive folder, complete with a prominent top link to open the interactive button form.</figcaption></figure>
+<figure class="guide-shot"><a href="{{ sl }}05-mobile-form-app-preview.png"><img src="{{ sl }}05-mobile-form-app-preview.png" alt="Mobile Device Experience Preview showing the Interactive Form App on a mobile phone with store switcher tabs, form inputs, quantity steppers, badge pills, and action buttons" loading="lazy" width="1440" height="900"></a><figcaption><strong>Interactive Mobile Form App</strong>: Scan the QR code (or tap the banner at the top of the Google Doc) to use the mobile-first Add/Remove form with store switcher buttons, 1-tap staple chips, <code>−</code>/<code>+</code> steppers, and 1-tap <code>✕</code> remove buttons.</figcaption></figure>
+</div>
+
+<ol>
+  <li><strong>Native Google Docs in Google Drive (<code>application/vnd.google-apps.document</code>):</strong> Clicking <strong>☁️ Sync All 3 Lists to Google Docs &amp; Drive</strong> uses your <a href="{{ '/cloud-accounts/' | relative_url }}">RobOS Google Cloud Account</a> (<a href="https://github.com/nddipiazza/robos/blob/main/packages/shopping-lists/lib/google-drive-sync.js"><code>lib/google-drive-sync.js</code></a>) to create or update a <code>RobOS Household Shopping Lists</code> folder in Google Drive containing three formatted Google Docs plus <code>shopping-lists.json</code>. You can share the folder with a partner or family member right from the sidebar.</li>
+  <li><strong>Two-Way Checkbox &amp; Line Pull from Google Docs:</strong> If you check off an item (changing <code>☐</code> to <code>☑</code> or <code>[x]</code>) or type a new line (<code>☐ Swiffer WetJet Refill Pads — 2 box</code>) inside the Google Docs mobile app, <code>parseGoogleDocText()</code> (<a href="https://github.com/nddipiazza/robos/blob/main/packages/shopping-lists/lib/google-docs-format.js"><code>lib/google-docs-format.js</code></a>) pulls and merges those mobile edits back into RobOS on sync.</li>
+  <li><strong>Live Mobile Web Form (<code>:19225</code>) &amp; Serverless Google Drive Apps Script:</strong> On home Wi-Fi or <a href="{{ '/private-networks/' | relative_url }}">RobOS Private Networks</a>, scanning the built-in QR code opens the live mobile form on port <code>19225</code> with real-time Server-Sent Events (SSE). For 5G cellular inside the store when your home PC is asleep, RobOS also uploads <code>Mobile-Form-Apps-Script/Code.gs</code> and <code>Index.html</code> to your Drive folder so you can deploy a serverless Google Apps Script Web App backed directly by your Google Drive files.</li>
+</ol>
+
+<h2 id="skills-guide">4. Printable Skills &amp; Text Commands Guide (<code>/shopping-lists</code>)</h2>
+<p>Open <code>http://127.0.0.1:19225/guide</code> in any browser and click <strong>🖨️ Print Guide</strong> (or run <code>node packages/shopping-lists/bin/shopping-lists.js guide</code>) for a clean cheat sheet you can pin to the fridge:</p>
+
+<table class="wide">
+<thead><tr><th>Command / Syntax</th><th>Example</th><th>Effect</th></tr></thead>
+<tbody>
+<tr><td><strong>AI Skill / Slash Command</strong></td><td><code>/shopping-lists list [grocery|target|costco|all]</code></td><td>Shows items to buy, items in cart, aisle groupings, and estimated totals.</td></tr>
+<tr><td><strong>Cross-Store Add</strong></td><td><code>/shopping-lists add "2 gal milk, tide pods @target, rotisserie chicken @costco"</code></td><td>Routes each comma-separated item to <strong>Grocery</strong>, <strong>Target</strong>, or <strong>Costco</strong> with auto-detected aisles.</td></tr>
+<tr><td><strong>Check / Uncheck</strong></td><td><code>/shopping-lists check "avocados"</code> · <code>uncheck "avocados"</code></td><td>Marks an item checked (<code>☑</code> in cart) or puts it back on the To-Buy list (<code>☐</code>).</td></tr>
+<tr><td><strong>Step Quantity</strong></td><td><code>/shopping-lists qty "avocados" +2</code> (or <code>-1</code> or <code>6</code>)</td><td>Increments, decrements, or sets the exact quantity of an item.</td></tr>
+<tr><td><strong>Remove &amp; Undo</strong></td><td><code>/shopping-lists remove "tide pods" --list target</code> · <code>/shopping-lists undo</code></td><td>Removes an item (pushing to the Undo stack) or restores the last removed/cleared items.</td></tr>
+<tr><td><strong>Smart Paste Tags</strong></td><td><code>2 gal organic milk $4.89 (whole) #urgent @grocery</code></td><td>Sets qty <code>2</code>, unit <code>gal</code>, price <code>$4.89</code>, note <code>whole</code>, badge <code>🔥 Must Have</code>, store <code>Grocery</code>.</td></tr>
+<tr><td><strong>Voice ("Hey Nabu")</strong></td><td><code>"What is on my Costco list?"</code> · <code>"Add 2 gallons of milk to grocery"</code></td><td>Speaks remaining items &amp; estimated total aloud or adds items hands-free via <a href="{{ '/voice-prompt/' | relative_url }}">RobOS Voice</a>.</td></tr>
+<tr><td><strong>Fridge Checklist Print</strong></td><td><code>/shopping-lists print all</code> (or <code>GET :19225/print?list=all</code>)</td><td>Renders a clean, aisle-grouped Unicode checklist ready for printing.</td></tr>
+</tbody>
+</table>
+
+<h2 id="architecture">5. Technical Architecture &amp; Reproducible Verification</h2>
+
+<figure class="guide-shot"><a href="{{ sl }}shopping-lists-architecture.jpg"><img src="{{ sl }}shopping-lists-architecture.jpg" alt="Technical architecture diagram of RobOS Shopping Lists showing Input Surfaces & Skills, Household Store & Smart Parser, Two-Way Google Drive Sync Engine, and Google Drive & Mobile Access" loading="lazy" width="1600" height="900"></a><figcaption><strong>RobOS Shopping Lists Architecture</strong>: Desktop Electron UI (<code>:19224</code>), Mobile Web Companion (<code>:19225</code>), <code>/shopping-lists</code> CLI/Skill, and RobOS Voice feed the Smart Multi-Store Parser and Persistent Store, which syncs bidirectionally with native Google Docs in Google Drive.</figcaption></figure>
+
+<pre class="mermaid">
+flowchart LR
+  subgraph Inputs["1. Input Surfaces &amp; Skills"]
+    Desktop["Desktop Electron App<br/>(packages/shopping-lists :19224)"]
+    MobileWeb["Mobile Web Companion<br/>(:19225 LAN QR + SSE)"]
+    SkillCLI["/shopping-lists Skill &amp; CLI<br/>(@grocery, @target, @costco)"]
+    Voice["RobOS Voice / 'Hey Nabu'<br/>(Natural-Language Commands)"]
+  end
+
+  subgraph Core["2. Household Store &amp; Smart Parser"]
+    Parser["Smart Multi-Store Parser<br/>(lib/defaults.js: Qty, Units, Aisles, Badges)"]
+    Store[("Persistent Store<br/>~/.config/robos/household/shopping-lists.json")]
+    Lists["Pre-Seeded Store Lists:<br/>1) Grocery  2) Target  3) Costco"]
+    CSV["Household Finance CSV Exporter<br/>(packages/household format)"]
+    Parser --> Store
+    Store <--> Lists
+    Store --> CSV
+  end
+
+  subgraph Sync["3. Two-Way Google Drive Sync Engine"]
+    DriveSync["Google Drive v3 Sync<br/>(lib/google-drive-sync.js)"]
+    DocsFmt["Google Docs HTML &amp; Text Parser<br/>(lib/google-docs-format.js)"]
+    CheckSync["Checkbox State Pull<br/>(☑ / ☐ and [x] / [ ] edits)"]
+    DriveSync <--> DocsFmt
+    DocsFmt <--> CheckSync
+  end
+
+  subgraph Cloud["4. Google Drive &amp; Mobile Access"]
+    Folder["Drive Folder:<br/>RobOS Household Shopping Lists"]
+    GDocs["3 Native Google Docs<br/>(Grocery, Target, Costco)"]
+    AppsScript["Apps Script Mobile Form<br/>(Code.gs + Index.html for 5G)"]
+    Folder --> GDocs
+    Folder --> AppsScript
+  end
+
+  Desktop <--> Parser
+  MobileWeb <--> Store
+  SkillCLI <--> Parser
+  Voice <--> Parser
+  Store <--> DriveSync
+  DriveSync <--> Folder
+</pre>
+
+<pre><code># Run the Desktop Electron app
+electron packages/shopping-lists --no-sandbox --disable-gpu --disable-dev-shm-usage
+
+# Run the standalone Mobile Form &amp; Printable Guide server (:19225)
+node packages/shopping-lists/serve.js
+
+# Run CLI commands or print the cheat sheet
+node packages/shopping-lists/bin/shopping-lists.js list
+node packages/shopping-lists/bin/shopping-lists.js guide
+
+# Run unit tests (7/7) and headless E2E verification (1/1)
+node --test packages/robos-test/tests/shopping-lists/unit.test.js
+xvfb-run -a node --test packages/robos-test/tests/shopping-lists/e2e.test.js</code></pre>
+
+<p>See the <a href="{{ '/shopping-lists/reference/' | relative_url }}">RobOS Shopping Lists Package Reference</a>, <a href="{{ '/household/' | relative_url }}">RobOS Household</a>, <a href="{{ '/robos-tax/' | relative_url }}"><code>robos.tax</code></a>, and the <a href="{{ '/blog/robos-shopping-lists-google-docs-and-mobile-form/' | relative_url }}">Engineering Blog post</a>.</p>
+
+</article>
+</div></section>
+{% include mermaid.html %}

@@ -40,6 +40,7 @@
 - [Auto Center — 9. Switch Over From Your Old System](https://rowbose.com/auto-center/9-switch-over/)
 - [Auto Center — How We Know It Works (Tests)](https://rowbose.com/auto-center/tests/)
 - [Family Finances (Household Walkthrough)](https://rowbose.com/family-finances/): Automated walkthrough of a family's financial year across six accounts and tax prep
+- [RobOS Shopping Lists (Grocery, Target & Costco)](https://rowbose.com/shopping-lists/): Household shopping lists with form-driven mobile controls, `/shopping-lists` AI skill, and two-way Google Docs & Google Drive sync
 
 ## Games Built by AI Agents in RobOS
 - [RobOS Games Hub](https://rowbose.com/games/): Overview of games designed in the KGraph and built in Godot 4

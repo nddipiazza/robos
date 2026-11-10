@@ -1,13 +1,12 @@
 ---
-title: "RobOS Shopping Lists"
+title: "RobOS Shopping Lists — Package Reference"
 package: shopping-lists
 category: household
 component_type: app
-permalink: /shopping-lists/
-redirect_from:
-  - /apps/shopping-lists/
-summary: "Household shopping lists for Grocery, Target, and Costco with button-driven mobile form controls and two-way Google Docs & Google Drive sync."
-description: "RobOS Shopping Lists gives your household Grocery, Target, and Costco lists with form-style add/remove buttons, a live mobile web companion, and native Google Docs in Google Drive."
+landing: /shopping-lists/
+permalink: /shopping-lists/reference/
+summary: "Household shopping lists for Grocery, Target, and Costco with button-driven mobile form controls, two-way Google Docs & Google Drive sync, and the /shopping-lists AI skill."
+description: "Package reference for RobOS Shopping Lists (packages/shopping-lists): store schema, Smart Multi-Store text parser, mobile companion API (:19225), two-way Google Docs & Google Drive sync, and CLI/skill commands."
 icon: shopping-lists.svg
 related:
   - /household/
@@ -16,7 +15,54 @@ related:
   - /smart-home/
 ---
 
-**RobOS Shopping Lists** (`packages/shopping-lists`) is part of the **RobOS Household & Personal Finance** suite alongside [RobOS Household]({{ '/household/' | relative_url }}) and [`robos.tax`]({{ '/robos-tax/' | relative_url }}). It comes pre-loaded with three store-tailored lists—**Grocery**, **Target**, and **Costco**—and lets you create additional lists whenever your household needs them.
+> **Full Interactive Walkthrough & Printable Command Guide:** See the flagship landing page at [`/shopping-lists/`]({{ '/shopping-lists/' | relative_url }}) and the engineering blog post [RobOS Shopping Lists: Grocery, Target & Costco with Two-Way Google Docs and Mobile Form Controls]({{ '/blog/robos-shopping-lists-google-docs-and-mobile-form/' | relative_url }}).
+
+**RobOS Shopping Lists** (`packages/shopping-lists`) is part of the **RobOS Household & Personal Finance** suite alongside [RobOS Household]({{ '/household/' | relative_url }}) and [`robos.tax`]({{ '/robos-tax/' | relative_url }}). It comes pre-loaded with three store-tailored lists—**1) 🥬 Grocery**, **2) 🎯 Target**, and **3) 📦 Costco**—and lets you create additional lists whenever your household needs them.
+
+![RobOS Shopping Lists — Two-Way Google Docs & Mobile Form Architecture](/assets/blog/shopping-lists/shopping-lists-architecture.jpg)
+
+```mermaid
+flowchart LR
+    subgraph Inputs["1. Input Surfaces & Skills"]
+        Desktop["Desktop Electron App\n(packages/shopping-lists :19224)"]
+        MobileWeb["Mobile Web Companion\n(:19225 LAN QR + SSE)"]
+        SkillCLI["/shopping-lists Skill & CLI\n(@grocery, @target, @costco)"]
+        Voice["RobOS Voice / 'Hey Nabu'\n(Natural-Language Commands)"]
+    end
+
+    subgraph Core["2. Household Store & Smart Parser"]
+        Parser["Smart Multi-Store Parser\n(lib/defaults.js: Qty, Units, Aisles, Badges)"]
+        Store[("Persistent Store\n~/.config/robos/household/shopping-lists.json")]
+        Lists["Pre-Seeded Store Lists:\n1) Grocery  2) Target  3) Costco"]
+        CSV["Household Finance CSV Exporter\n(packages/household format)"]
+        Parser --> Store
+        Store <--> Lists
+        Store --> CSV
+    end
+
+    subgraph Sync["3. Two-Way Google Drive Sync Engine"]
+        DriveSync["Google Drive v3 Sync\n(lib/google-drive-sync.js)"]
+        DocsFmt["Google Docs HTML & Text Parser\n(lib/google-docs-format.js)"]
+        CheckSync["Checkbox State Pull\n(☑ / ☐ and [x] / [ ] edits)"]
+        DriveSync <--> DocsFmt
+        DocsFmt <--> CheckSync
+    end
+
+    subgraph Cloud["4. Google Drive & Mobile Access"]
+        Folder["Drive Folder:\nRobOS Household Shopping Lists"]
+        GDocs["3 Native Google Docs\n(Grocery, Target, Costco)"]
+        AppsScript["Apps Script Mobile Form\n(Code.gs + Index.html for 5G)"]
+        Folder --> GDocs
+        Folder --> AppsScript
+    end
+
+    Desktop <--> Parser
+    MobileWeb <--> Store
+    SkillCLI <--> Parser
+    Voice <--> Parser
+    Store <--> DriveSync
+    DriveSync <--> Folder
+```
 
 ## Three ready-made household lists
 
@@ -33,34 +79,37 @@ Rather than editing plain bullet text by hand while carrying a basket, every lis
 - **Structured Add Item form**: enter an item name, adjust quantity with `−` / `+` buttons, pick a unit (`ea`, `pack`, `lb`, `oz`, `gal`, `case`, `bag`, `box`, `bunch`), let the store's keyword rules auto-select the aisle (or choose one explicitly), add an optional unit price (`$`) or coupon note, and attach a highlight badge (`🔥 Must Have`, `🏷️ Sale / Coupon`, `🌿 Organic`, `⭐ Store Brand / Fav`).
 - **1-Tap Quick-Add staples**: tap any frequent item pill to add it immediately—or increment its quantity if it is already on the list.
 - **Per-item row buttons**: every item has a circular check-off button (updating the live cart progress ring and estimated remaining cost), inline `−` and `+` quantity steppers, an inline **Edit** dialog, and a **Remove** button backed by **Undo** and **Clear Checked**.
-- **Multi-store smart paste & optional AI**: paste a recipe or comma-separated list (`2 gal milk, 4 avocados, laundry pods at target, olive oil at costco`) to route items to the right store offline; if an AI CLI is configured, the optional **✦ Parse with Active RobOS AI Agent** button can also parse free-form notes through `robos-lib/ai-agent`.
-- **Household finance CSV export**: **Export Household CSV** formats items, merchants, categories, quantities and line totals as CSV ready for reconciliation workflows.
+- **Multi-store smart paste & optional AI**: paste a recipe or comma-separated list (`2 gal milk, 4 avocados, laundry pods @target, olive oil @costco`) to route items to the right store offline; if an AI CLI is configured, the optional **✦ Parse with Active RobOS AI Agent** button can also parse free-form notes through `robos-lib/ai-agent`.
+- **Household finance CSV export**: **Export Household CSV** formats items, merchants, categories, quantities and line totals as CSV ready for reconciliation workflows in [RobOS Household]({{ '/household/' | relative_url }}).
 
 ## Viewing and editing on mobile in Google Docs & Google Drive
-
-RobOS Shopping Lists pairs native **Google Docs** viewing with **interactive mobile form buttons** in two complementary ways:
 
 1. **Native Google Docs in Google Drive (`application/vnd.google-apps.document`)**:
    - Sign in once through [RobOS Cloud Accounts]({{ '/cloud-accounts/' | relative_url }}) (or click **Sign In** inside the app) and click **Sync All 3 Lists to Google Docs & Drive**.
    - RobOS creates (or updates) a `RobOS Household Shopping Lists` folder in your Google Drive containing **three native Google Docs**—`Grocery — RobOS Shopping List`, `Target — RobOS Shopping List`, and `Costco — RobOS Shopping List`—plus `shopping-lists.json`.
-   - Each Google Doc renders cleanly in the Google Docs and Google Drive iOS/Android mobile apps with store headers, remaining vs. in-cart counts, aisle headings, `☐` / `☑` checkboxes, notes, cross-links between lists, and a **Share with Family** option that grants Drive folder access to a partner or family member.
    - **Two-way Google Docs pull**: if you check off `☑` / `[x]` or type a new `☐ Item — 2 pack` line directly inside the Google Docs mobile app, syncing with **Pull mobile edits from Google Docs** merges those changes back into RobOS.
 2. **Interactive Mobile Form (LAN QR + Serverless Google Drive Apps Script)**:
    - On home Wi-Fi or [RobOS Private Networks]({{ '/private-networks/' | relative_url }}), scan the built-in QR code to open the live mobile web companion (`:19225`), which syncs in real time via Server-Sent Events.
-   - For cellular 5G inside the store when your home computer is off, RobOS generates and uploads `Mobile-Form-Apps-Script/Code.gs` and `Index.html` into your Google Drive folder. Deploying that script as a Google Apps Script Web App (`script.google.com`) embeds a **Tap Here to Add / Remove Items (Mobile Form)** link right at the top of each Google Doc, updating both `shopping-lists.json` and the Google Docs directly in Google Drive.
+   - For cellular 5G inside the store when your home computer is off, RobOS generates and uploads `Mobile-Form-Apps-Script/Code.gs` and `Index.html` into your Google Drive folder.
+
+## CLI & `/shopping-lists` AI Skill
+
+```bash
+# View lists or print a fridge checklist
+node packages/shopping-lists/bin/shopping-lists.js list
+node packages/shopping-lists/bin/shopping-lists.js print all
+
+# Add items across Grocery, Target, and Costco in one line
+node packages/shopping-lists/bin/shopping-lists.js add "2 gal organic milk $4.89 (whole), 4 avocados, tide pods @target, rotisserie chicken @costco"
+
+# Check off, adjust quantity, remove, undo, or print the command guide
+node packages/shopping-lists/bin/shopping-lists.js check "avocados"
+node packages/shopping-lists/bin/shopping-lists.js qty "avocados" +2
+node packages/shopping-lists/bin/shopping-lists.js guide
+```
 
 ## Where data lives
 
 - Local state: `~/.config/robos/household/shopping-lists.json` (honors `ROBOS_CONFIG_DIR` and syncs under `config/household/**` in [Config Sync]({{ '/robos-preferences/' | relative_url }})).
-- Ports: mobile form & Google Doc preview HTTP server on `:19225` (`SHOPPING_LISTS_WEB_PORT`), DOM snapshot debug server on `:19224`.
+- Ports: mobile form, printable guide (`/guide`), & Google Doc preview HTTP server on `:19225` (`SHOPPING_LISTS_WEB_PORT`), DOM snapshot debug server on `:19224`.
 - Source: [`packages/shopping-lists`](https://github.com/nddipiazza/robos/tree/main/packages/shopping-lists). Tests live in `packages/robos-test/tests/shopping-lists/`.
-
-## Run from source
-
-```bash
-# Desktop Electron app
-electron packages/shopping-lists --no-sandbox --disable-gpu --disable-dev-shm-usage
-
-# Standalone mobile/web form server
-node packages/shopping-lists/serve.js
-```
