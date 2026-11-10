@@ -4,19 +4,22 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 {% include seo.html site_name="RobOS Games" %}
-  <link rel="preload" as="image" href="{{ page.bg_poster | relative_url }}">
+  {% if page.bg_poster %}<link rel="preload" as="image" href="{{ page.bg_poster | relative_url }}">{% endif %}
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;800&family=Fira+Code:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ '/assets/site.css' | relative_url }}">
   <link rel="stylesheet" href="{{ '/assets/games.css' | relative_url }}">
+  {% if page.extra_css %}<link rel="stylesheet" href="{{ page.extra_css | relative_url }}">{% endif %}
 </head>
-<body class="game" style="--accent: {{ page.accent | default: '#e0b252' }}">
+<body class="game{% if page.body_class %} {{ page.body_class }}{% endif %}" style="--accent: {{ page.accent | default: '#e0b252' }}">
+{% if page.bg_poster or page.bg_video %}
 <div class="bg" aria-hidden="true">
-  <img class="bg-poster" src="{{ page.bg_poster | relative_url }}" alt="">
-  <video class="bg-video" muted loop playsinline preload="none" data-src="{{ page.bg_video | relative_url }}" poster="{{ page.bg_poster | relative_url }}"></video>
+  {% if page.bg_poster %}<img class="bg-poster" src="{{ page.bg_poster | relative_url }}" alt="">{% endif %}
+  {% if page.bg_video %}<video class="bg-video" muted loop playsinline preload="none" data-src="{{ page.bg_video | relative_url }}"{% if page.bg_poster %} poster="{{ page.bg_poster | relative_url }}"{% endif %}></video>{% endif %}
   <div class="bg-scrim"></div>
 </div>
+{% endif %}
 
 <header class="nav">
   <div class="wrap nav-in">

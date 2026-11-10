@@ -1,0 +1,124 @@
+.starfall-game {
+  --starfall-ground: #121715;
+  --starfall-panel: #1a211d;
+  --starfall-edge: #384239;
+  --starfall-text: #eef1e9;
+  --starfall-muted: #b9c2b6;
+  background: var(--starfall-ground);
+  color: var(--starfall-text);
+}
+
+.starfall .wrap { max-width: 1250px; padding-inline: clamp(18px, 4vw, 48px); }
+.starfall section[id] { scroll-margin-top: 65px; }
+.starfall-game .nav { background: #101512; }
+
+.starfall-nav { background: var(--starfall-panel); border-bottom: 1px solid var(--starfall-edge); }
+.starfall-nav .wrap, .starfall-nav .wrap > div { display: flex; align-items: center; gap: 12px 26px; flex-wrap: wrap; }
+.starfall-nav .wrap { justify-content: space-between; min-height: 54px; padding-block: 10px; }
+.starfall-nav a { color: var(--starfall-muted); font-size: .9rem; }
+.starfall-nav a:hover, .starfall-nav a:focus-visible { color: var(--accent); }
+.starfall-nav .starfall-nav-name { color: var(--starfall-text); font-weight: 700; }
+
+.starfall-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 4fr) minmax(0, 6fr);
+  gap: clamp(24px, 5vw, 68px);
+  align-items: center;
+  padding-block: clamp(38px, 8vw, 100px);
+}
+.starfall h1, .starfall h2, .starfall h3 { color: var(--starfall-text); margin: 0; line-height: 1.13; }
+.starfall h1 { font-size: clamp(2.8rem, 6vw, 5.45rem); letter-spacing: -.07em; font-weight: 800; }
+.starfall h2 { font-size: clamp(1.9rem, 3.7vw, 3.25rem); letter-spacing: -.045em; }
+.starfall h3 { font-size: 1.25rem; letter-spacing: -.015em; }
+.starfall p { color: var(--starfall-muted); }
+.starfall .starfall-label {
+  color: var(--accent);
+  margin: 0 0 10px;
+  font: 500 .76rem/1.4 'Fira Code', Consolas, monospace;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+}
+.starfall .starfall-lead { font-size: clamp(1rem, 1.6vw, 1.2rem); line-height: 1.6; max-width: 40ch; margin: 20px 0 24px; }
+.starfall .starfall-meta { margin: 20px 0 0; font-size: .82rem; }
+.starfall-actions { display: flex; gap: 12px 22px; align-items: center; flex-wrap: wrap; margin-top: 22px; }
+.starfall .btn { border-radius: 5px; }
+.starfall-link, .starfall-history a, .starfall-reference a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: .22em;
+}
+
+.starfall-capture { min-width: 0; margin: 0; border: 1px solid var(--starfall-edge); background: #111612; }
+.starfall-capture img, .starfall-grid img { width: 100%; height: auto; display: block; }
+.starfall-capture figcaption {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 14px;
+  padding: 8px 13px;
+  font: .73rem/1.5 'Fira Code', Consolas, monospace;
+  color: var(--starfall-muted);
+}
+.starfall-capture a, .starfall-grid article > a { display: block; }
+.starfall a:focus-visible, .starfall button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+.starfall-section { border-top: 1px solid var(--starfall-edge); padding-block: clamp(36px, 6vw, 76px); }
+.starfall-section-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  gap: 15px 32px;
+  align-items: end;
+  margin-bottom: 28px;
+}
+.starfall-section-head > p { margin: 0; max-width: 53ch; }
+.starfall-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+.starfall-grid article { min-width: 0; }
+.starfall-grid article > a { border: 1px solid var(--starfall-edge); margin-bottom: 14px; }
+.starfall-grid article p:last-child { margin: 8px 0 0; font-size: .92rem; }
+.starfall-split { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(24px, 5vw, 62px); }
+.starfall-editor { align-items: center; }
+.starfall-split > div > p:not(.starfall-label) { max-width: 59ch; }
+
+.starfall-council { background: var(--starfall-panel); }
+.starfall-council-copy > p { margin: 12px 0 16px; }
+.starfall-process { margin: 20px 0; padding-left: 23px; color: var(--starfall-muted); }
+.starfall-process li { margin: 12px 0; padding-left: 3px; }
+.starfall-process li::marker { color: var(--accent); font-weight: 700; }
+.starfall-process strong { color: var(--starfall-text); }
+.starfall-reference { display: flex; gap: 8px 16px; flex-wrap: wrap; font-size: .82rem; }
+.starfall-intake { background: var(--starfall-ground); border: 1px solid var(--starfall-edge); padding: clamp(15px, 3vw, 25px); }
+.starfall-intake fieldset { border: 0; padding: 0; margin: 0 0 16px; min-width: 0; }
+.starfall-intake legend { font-size: 1.25rem; font-weight: 700; margin-bottom: 10px; }
+.starfall-choice {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 4px;
+  border-top: 1px solid var(--starfall-edge);
+  cursor: pointer;
+}
+.starfall-choice input { margin: 6px 0 0; accent-color: var(--accent); }
+.starfall-choice input:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.starfall-choice strong, .starfall-choice small { display: block; }
+.starfall-choice small, .starfall-intake > p { color: var(--starfall-muted); font-size: .86rem; }
+.starfall-choice small { margin-top: 2px; }
+.starfall-intake > p { margin: 12px 0 6px; }
+.starfall-intake > a { font-size: .86rem; }
+.starfall-history { border-top: 1px solid var(--starfall-edge); margin-top: 36px; padding-top: 24px; }
+.starfall-history > div { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 32px; }
+.starfall-history p { margin: 12px 0 0; font-size: .94rem; }
+
+.starfall .game-downloads { padding-block: clamp(36px, 6vw, 76px); border-top: 1px solid var(--starfall-edge); }
+.starfall .game-downloads .panel-g { border: 0; background: none; padding: 0; backdrop-filter: none; }
+.starfall .game-downloads .eyebrow { font-size: .76rem; }
+.starfall .game-downloads .h2 { font-family: inherit; }
+.starfall .code { min-width: 0; align-self: center; margin: 0; }
+
+@media (max-width: 810px) {
+  .starfall-hero, .starfall-section-head, .starfall-split, .starfall-history > div { grid-template-columns: minmax(0, 1fr); }
+  .starfall-hero { gap: 26px; }
+}
+@media (max-width: 600px) {
+  .starfall-grid { grid-template-columns: minmax(0, 1fr); }
+  .starfall-nav .wrap, .starfall-nav .wrap > div { gap: 8px 14px; }
+}
