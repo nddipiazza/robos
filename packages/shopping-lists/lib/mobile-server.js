@@ -6,6 +6,7 @@ const path = require('node:path');
 const os = require('node:os');
 const { renderGoogleDocHtml } = require('./google-docs-format');
 const { renderQrSvg } = require('./qr');
+const { executeTextCommand, renderPrintableChecklist, renderPrintableGuideHtml } = require('./text-commands');
 
 function detectLanIp() {
   try {
@@ -111,6 +112,20 @@ function createMobileServer({ store, webDir = path.join(__dirname, '..', 'web'),
         return;
       }
 
+      if (req.method === 'GET' && (p === '/guide' || p === '/api/guide')) {
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+        res.end(renderPrintableGuideHtml());
+        return;
+      }
+
+      if (req.method === 'GET' && p === '/print') {
+        const listId = url.searchParams.get('list') || 'all';
+        const text = renderPrintableChecklist(store.getSnapshot(), listId, 'all');
+        res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
+        res.end(text);
+        return;
+      }
+
       if (req.method === 'GET' && p.startsWith('/api/export-csv/')) {
         const listId = decodeURIComponent(p.slice('/api/export-csv/'.length));
         const { filename, csv } = store.exportHouseholdCsv(listId);
@@ -136,6 +151,10 @@ function createMobileServer({ store, webDir = path.join(__dirname, '..', 'web'),
         else if (p === '/api/list/check-all') out = store.checkAll(body.listId, body.checked);
         else if (p === '/api/list/undo') out = store.undo();
         else if (p === '/api/smart-add') out = store.smartBatchAdd(body.text, body.listId);
+        else if (p === '/api/command') {
+          const cmdRes = await executeTextCommand(store, body.command || body.text || '', { listId: body.listId });
+          out = { ...cmdRes, state: store.getSnapshot() };
+        }
         else return sendJson(404, { error: 'Unknown API endpoint.' });
 
         if (onMutate) {

@@ -202,34 +202,60 @@ function detectAisle(list, itemName) {
 
 function detectTargetStoreId(chunk, defaultListId, availableListIds) {
   const s = String(chunk || '');
-  if (/\b(@target|at target|from target|target:)\b/i.test(s) && availableListIds.includes('target')) return 'target';
-  if (/\b(@costco|at costco|from costco|costco:|kirkland|bulk|case of)\b/i.test(s) && availableListIds.includes('costco')) return 'costco';
-  if (/\b(@grocery|at grocery|from grocery|grocery:)\b/i.test(s) && availableListIds.includes('grocery')) return 'grocery';
+  if (/(?:^|\s)@target\b|\b(?:at|from|to|on|in|for)\s+(?:the\s+)?target(?:\s+list)?\b|\btarget:/i.test(s) && availableListIds.includes('target')) return 'target';
+  if (/(?:^|\s)@costco\b|\b(?:at|from|to|on|in|for)\s+(?:the\s+)?costco(?:\s+list)?\b|\b(?:costco:|kirkland|bulk|case of)\b/i.test(s) && availableListIds.includes('costco')) return 'costco';
+  if (/(?:^|\s)@grocery\b|\b(?:at|from|to|on|in|for)\s+(?:the\s+)?grocery(?:\s+list)?\b|\bgrocery:/i.test(s) && availableListIds.includes('grocery')) return 'grocery';
   return defaultListId;
 }
+
+const WORD_QTY = {
+  one: 1, two: 2, three: 3, four: 4, five: 5,
+  six: 6, seven: 7, eight: 8, nine: 9, ten: 10,
+  eleven: 11, twelve: 12, dozen: 12,
+};
 
 /**
  * Local deterministic parser for natural-language multi-item / recipe input.
  * Works completely offline with zero AI agent required!
- * Example: "2 gal organic milk, 4 avocados, laundry pods at target, rotisserie chicken at costco"
+ * Example: "2 gal organic milk $4.89 (whole), 4 avocados, laundry pods @target, rotisserie chicken @costco"
  */
 function parseSmartItemsOffline(rawText, lists, defaultListId = 'grocery') {
   const listIds = lists.map((l) => l.id);
   const listMap = new Map(lists.map((l) => [l.id, l]));
   const parts = String(rawText || '')
     .split(/\r?\n|,|;/)
-    .map((p) => p.replace(/^[\s•\-*☐☑✓]+/, '').trim())
+    .map((p) => p.replace(/^[\s•\-*☐☑✓+]+/, '').trim())
     .filter(Boolean);
 
   const parsed = [];
   for (const part of parts) {
     const listId = detectTargetStoreId(part, defaultListId, listIds);
     let cleaned = part
-      .replace(/\b(?:@target|at target|from target|^target:)\b/gi, '')
-      .replace(/\b(?:@costco|at costco|from costco|^costco:)\b/gi, '')
-      .replace(/\b(?:@grocery|at grocery|from grocery|^grocery:)\b/gi, '')
+      .replace(/(?:^|\s)@(?:target|costco|grocery)\b/gi, ' ')
+      .replace(/\b(?:at|from|to|on|in|for)\s+(?:the\s+)?(?:target|costco|grocery)(?:\s+list)?\b/gi, ' ')
+      .replace(/^(?:target|costco|grocery):\s*/i, '')
+      .replace(/\s+/g, ' ')
       .trim();
     if (!cleaned) continue;
+
+    // Extract optional inline note in parentheses at the end: e.g. "Honeycrisp apples (extra crisp)"
+    let note = '';
+    const noteMatch = cleaned.match(/\(([^()]{1,80})\)\s*$/);
+    if (noteMatch) {
+      note = noteMatch[1].trim();
+      cleaned = cleaned.slice(0, noteMatch.index).trim();
+    }
+
+    // Extract optional inline price: e.g. "$4.99" or "@ $12.49"
+    let estPrice = null;
+    const priceMatch = cleaned.match(/(?:@\s*)?\$(\d+(?:\.\d{1,2})?)\b/);
+    if (priceMatch) {
+      estPrice = Math.round(Number(priceMatch[1]) * 100) / 100;
+      cleaned = cleaned.replace(priceMatch[0], ' ').replace(/\s+/g, ' ').trim();
+    }
+
+    // Normalize leading word numbers ("two gal milk" -> "2 gal milk")
+    cleaned = cleaned.replace(/^(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|dozen)\b/i, (m) => String(WORD_QTY[m.toLowerCase()] || m));
 
     let qty = 1;
     let unit = 'ea';
@@ -250,11 +276,14 @@ function parseSmartItemsOffline(rawText, lists, defaultListId = 'grocery') {
       cleaned = leadingQty[3].trim();
     }
 
-    const badge = /\burgent|must\b/i.test(cleaned) ? 'urgent'
-      : /\borganic\b/i.test(cleaned) ? 'organic'
-      : /\bkirkland\b/i.test(cleaned) ? 'kirkland'
-      : /\bcoupon|deal|sale\b/i.test(cleaned) ? 'deal'
+    const badge = /(?:^|\s)#?urgent\b|\bmust(?:\s+have)?\b/i.test(cleaned) ? 'urgent'
+      : /(?:^|\s)#?organic\b/i.test(cleaned) ? 'organic'
+      : /(?:^|\s)#?kirkland\b/i.test(cleaned) ? 'kirkland'
+      : /(?:^|\s)#?(?:coupon|deal|sale)\b/i.test(cleaned) ? 'deal'
       : '';
+
+    cleaned = cleaned.replace(/(?:^|\s)#(?:urgent|organic|kirkland|coupon|deal|sale)\b/gi, ' ').replace(/\s+/g, ' ').trim();
+    if (!cleaned) continue;
 
     const list = listMap.get(listId) || lists[0];
     const name = cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
@@ -265,8 +294,8 @@ function parseSmartItemsOffline(rawText, lists, defaultListId = 'grocery') {
       unit,
       aisle: detectAisle(list, name),
       badge,
-      note: '',
-      estPrice: null,
+      note,
+      estPrice,
     });
   }
   return parsed;

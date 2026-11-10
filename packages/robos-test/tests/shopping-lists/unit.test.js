@@ -11,6 +11,7 @@ const { renderGoogleDocHtml, parseGoogleDocText } = require('../../../shopping-l
 const { syncWithGoogleDrive, shareShoppingFolder, GDOC_MIME, FOLDER_MIME } = require('../../../shopping-lists/lib/google-drive-sync');
 const { generateAppsScriptCodeGs, generateAppsScriptIndexHtml } = require('../../../shopping-lists/lib/apps-script-bundle');
 const { buildMatrix, renderQrSvg } = require('../../../shopping-lists/lib/qr');
+const { executeTextCommand, renderPrintableGuideHtml } = require('../../../shopping-lists/lib/text-commands');
 
 function makeTempStore() {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'robos-shopping-unit-'));
@@ -325,6 +326,44 @@ describe('RobOS Shopping Lists — Store, Form Actions, Google Docs Sync & QR', 
         .replace(/&amp;/g, '&');
       const parsed = parseGoogleDocText(simulatedPlain, list);
       assert.equal(parsed.length, list.items.length);
+    } finally {
+      cleanup();
+    }
+  });
+
+  it('executes natural-language text commands, @store tags, inline prices/notes, and printable guide output', async () => {
+    const { store, cleanup } = makeTempStore();
+    try {
+      const addOut = await executeTextCommand(
+        store,
+        'add two gal organic milk $4.89 (whole), 3 hass avocados, laundry detergent @target, rotisserie chicken @costco',
+      );
+      assert.equal(addOut.ok, true);
+      assert.equal(addOut.data.added.length, 4);
+      assert.equal(addOut.data.added[0].listId, 'grocery');
+      assert.equal(addOut.data.added[0].item.qty, 2);
+      assert.equal(addOut.data.added[0].item.unit, 'gal');
+      assert.equal(addOut.data.added[0].item.estPrice, 4.89);
+      assert.equal(addOut.data.added[0].item.note, 'whole');
+      assert.equal(addOut.data.added[2].listId, 'target');
+      assert.equal(addOut.data.added[3].listId, 'costco');
+
+      const checkOut = await executeTextCommand(store, 'check off avocados');
+      assert.equal(checkOut.ok, true);
+      assert.equal(checkOut.data.item.checked, true);
+
+      const qtyOut = await executeTextCommand(store, 'qty avocados +2');
+      assert.equal(qtyOut.ok, true);
+      assert.ok(qtyOut.data.item.qty >= 5);
+
+      const statusOut = await executeTextCommand(store, 'what is on my costco list?');
+      assert.equal(statusOut.ok, true);
+      assert.match(statusOut.spoken, /Costco list has/);
+
+      const guideOut = await executeTextCommand(store, 'guide');
+      assert.equal(guideOut.ok, true);
+      assert.match(guideOut.text, /ROBOS SHOPPING LISTS — SKILLS & TEXT COMMANDS PRINTABLE GUIDE/);
+      assert.match(renderPrintableGuideHtml(), /Print Guide/);
     } finally {
       cleanup();
     }

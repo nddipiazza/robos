@@ -36,6 +36,7 @@ class SkillsExecutor {
       { id: 'movie-play', label: 'Play Movie from Library', intent: 'Find and play the best matching movie or film in RobOS Movie Player', patterns: ['play movie [title]', 'watch [movie]', 'put on movie [title]'] },
       { id: 'media-watch-status', label: 'Where Did We Leave Off?', intent: 'Answer which season and episode of a show you left off on (on any of your computers), what is next, or whether you watched a movie', patterns: ['what season of [show] did we leave off on', 'where did we leave off on [show]', 'what episode are we on in [show]', 'have we seen [movie]', 'what are we watching'] },
       { id: 'media-next-episode', label: 'Continue Watching a Show', intent: 'Play the next episode of a show in RobOS Movie Player, resuming the one in progress', patterns: ['continue watching [show]', 'play the next episode of [show]'] },
+      { id: 'shopping-lists', label: 'Manage Household Shopping Lists (Grocery, Target, Costco)', intent: 'Add, check off, remove, adjust quantity, sync with Google Docs/Drive, or read items on Grocery, Target, and Costco shopping lists', patterns: ['add [items] to grocery/target/costco list', 'check off [item] on shopping list', 'remove [item] from target list', 'what is on my costco list', 'clear checked on grocery list'] },
       { id: 'greeting', label: 'Casual Greeting', intent: 'Respond with a friendly greeting', patterns: ['hello robos', 'hi', 'hey'] },
       { id: 'ai-agent', label: 'AI Coding Agent Fallback', intent: 'General reasoning with active workspace context', patterns: ['*'] }
     ];
@@ -105,6 +106,27 @@ class SkillsExecutor {
           task: taskResult.data
         }
       };
+    }
+
+    // 1.5 Household Shopping Lists Skill (Grocery, Target, Costco)
+    // Matches "/shopping-lists ...", "add 2 gal milk to grocery list", "what is on my costco list", "check off avocados on grocery", "remove tide pods from target"
+    const isShoppingCommand = /^\/shopping-lists?\b/i.test(query)
+      || (/\b(?:shopping\s+lists?|grocery(?:\s+list)?|target(?:\s+list)?|costco(?:\s+list)?|@(?:grocery|target|costco))\b/i.test(query)
+          && !/^(?:open|launch|start|switch\s+to)\s+(?:the\s+)?(?:robos\s+)?shopping\s+lists?(?:\s+app|\s+window)?$/i.test(query));
+    if (isShoppingCommand) {
+      try {
+        const { createStore } = require('../../shopping-lists/lib/store');
+        const { executeTextCommand } = require('../../shopping-lists/lib/text-commands');
+        const store = createStore({ homeDir: this.homeDir, configDir: this.configDir });
+        const shopRes = await executeTextCommand(store, query);
+        return {
+          ok: shopRes.ok,
+          skill: shopRes.skill || 'shopping-lists',
+          actionDone: shopRes.spoken || shopRes.text,
+          response: shopRes.spoken || shopRes.text,
+          data: shopRes.data || null,
+        };
+      } catch {}
     }
 
     // 2. App Launching Intent:
@@ -429,6 +451,9 @@ class SkillsExecutor {
       'smart home': { id: 'smart-home', label: 'RobOS Smart Home' },
       'smart light': { id: 'smart-home', label: 'RobOS Smart Home' },
       'smart tv': { id: 'robos-tv', label: 'RobOS Smart TV Studio' },
+      'shopping lists': { id: 'shopping-lists', label: 'RobOS Shopping Lists' },
+      'shopping list': { id: 'shopping-lists', label: 'RobOS Shopping Lists' },
+      'household': { id: 'household', label: 'RobOS Household' },
     };
 
     let resolved = null;

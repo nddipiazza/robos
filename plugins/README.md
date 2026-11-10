@@ -187,6 +187,7 @@ plugins/
 | **`jrpg-generate-art`** | `/jrpg-generate-art` | Generate maps, dungeons, battle backdrops, character sprites and menu screens for a parsed JRPG with a Gemini image model. |
 | **`media-watch-status`** | `/media-watch-status` | Where did we leave off? Show / season / episode watch status across all your computers (synced through the RobOS backup vault on Google Drive), movie status, continue watching, history, mark watched, play next episode. MCP server: `node packages/movie-player/bin/media-mcp.js` |
 | **`fix-media-metadata`** | `/fix-media-metadata` | Inspect, extract, enrich, and write media metadata and cover art across all known formats using open-source tools (`music-metadata`, `ffmpeg`/`ffprobe`, MusicBrainz CC0, Cover Art Archive, LRCLIB) |
+| **`shopping-lists`** | `/shopping-lists` | Manage Household Shopping Lists (Grocery, Target, Costco) via CLI, natural-language text commands, Smart Multi-Store paste syntax (`@grocery`, `@target`, `@costco`), printable checklists, and two-way Google Docs / Google Drive sync (`node packages/shopping-lists/bin/shopping-lists.js`) |
 
 ---
 

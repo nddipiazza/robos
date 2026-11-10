@@ -53,7 +53,8 @@
     "jrpg-parse-assets",
     "jrpg-generate-art",
     "media-watch-status",
-    "send-email-thunderbird"
+    "send-email-thunderbird",
+    "shopping-lists"
   ],
   "commands": [
     "view-task-plan",
@@ -100,7 +101,8 @@
     "jrpg-parse-assets",
     "jrpg-generate-art",
     "media-watch-status",
-    "send-email-thunderbird"
+    "send-email-thunderbird",
+    "shopping-lists"
   ],
   "compatibility": {
     "claude": ">=1.0.0",
