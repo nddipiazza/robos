@@ -71,8 +71,9 @@ func _test_difficulty() -> void:
 	_check(not sim.campaign_allows_ability(1, "build_field_armory") and not sim.campaign_allows_ability(1, "build_sentry_turret"), "Casual defense locks out the armory and anti-air turret")
 	_check(not sim.units.values().any(func(unit): return unit.owner == 1 and unit.unit_type in Campaign.CASUAL_DISABLED_STRUCTURES), "Casual defense starts without those buildings")
 	_check(sim.campaign._wave_composition({"needlewing": 3}).is_empty(), "Casual defense skips flying waves")
+	_check(not sim.campaign.snapshot(sim, 1).has("next_wave_in"), "Player views do not reveal the next wave's timing")
 	_advance(_view().next_wave_in)
-	_check(_view().last_wave_size == 3 and _view().waves_sent == 1, "Casual deploys a smaller first wave on its displayed schedule")
+	_check(_view().last_wave_size == 3 and _view().waves_sent == 1, "Casual deploys a smaller first wave on its scripted schedule")
 	sim.start_campaign(Campaign.DEFENSE, "brutal")
 	var hub := _unit_named("evac_hub")
 	sim.tick = Campaign.TUNNEL_AT * sim.TICK_RATE

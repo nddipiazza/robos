@@ -65,7 +65,6 @@ const STRANDED_SQUADS := [
 	{"at": 660, "point": Vector2(20, 72), "approach": Vector2(29, 72), "direction": "western road", "cue": "distress_west"},
 ]
 const WAVE_LANES := [Vector2(138, 8), Vector2(111, 26), Vector2(21, 78), Vector2(129, 49)]
-const LANE_NAMES := ["north bridge", "northeast road", "west bridge", "over the river"]
 const WAVES := [
 	{"at": 50, "lanes": [[1, {"skitterling": 5}]]},
 	{"at": 125, "lanes": [[0, {"skitterling": 7, "bile_crawler": 2}]]},
@@ -560,12 +559,10 @@ func _send_wave(engine, target: Vector2) -> void:
 	var wave: Dictionary = WAVES[waves_sent]
 	waves_sent += 1
 	last_wave_size = 0
-	var directions := PackedStringArray()
 	for lane in wave.lanes:
 		var composition := _wave_composition(lane[1])
 		if composition.is_empty():
 			continue
-		directions.append(LANE_NAMES[lane[0]])
 		var origin: Vector2 = WAVE_LANES[lane[0]]
 		if lane[0] == 0 and difficulty in ["hard", "brutal"]:
 			origin.y -= 5
@@ -575,9 +572,7 @@ func _send_wave(engine, target: Vector2) -> void:
 	if difficulty == "brutal" and waves_sent in [3, 5, 12, 15]:
 		var flank := _spawn_force(engine, 2, Vector2(161, 65), {"needlewing": 4})
 		last_wave_size += flank.size()
-		directions.append("the eastern cliffs")
 		engine.issue_command(flank, "attack_move", target)
-	engine.notice.emit(1, "Brood wave %d incoming from the %s." % [waves_sent, " and ".join(directions)], "warn")
 	if waves_sent == 4:
 		_speak(engine, "pressure")
 	elif waves_sent == WAVES.size():
@@ -639,7 +634,7 @@ func snapshot(engine, viewer: int = 0) -> Dictionary:
 		mission_note = "Research Module unlocks Triage Specialists"
 	else:
 		rescue_in = maxi(0, ceili(float(RESCUE_AT * _tick_rate - engine.tick) / _tick_rate))
-		if waves_sent < WAVES.size():
+		if viewer == 0 and waves_sent < WAVES.size():
 			next_wave_in = ceili(float(int(WAVES[waves_sent].at) * _tick_rate - engine.tick) / _tick_rate)
 		primary = "Protect the Colony Hub until rescue arrives" if rescue_tag == 0 else "Protect the landing zone"
 		if rescue_tag != 0:
@@ -668,7 +663,7 @@ func snapshot(engine, viewer: int = 0) -> Dictionary:
 		public_cue = cue.duplicate()
 		var point: Vector2 = public_cue.point
 		public_cue.point = [point.x, point.y] if point.is_finite() else []
-	return {
+	var result := {
 		"mission": mission_index + 1, "title": MISSIONS[mission_index].title, "difficulty": difficulty,
 		"status": status, "reason": reason, "primary": primary, "stage": stage,
 		"stage_total": CHECKPOINTS.size() if mission_index == ASSAULT else 2 if mission_index == RECOVERY else 0,
@@ -677,7 +672,10 @@ func snapshot(engine, viewer: int = 0) -> Dictionary:
 		"extra": extra, "extra_done": extra_done, "extra_total": extra_total, "mission_note": mission_note,
 		"caches_claimed": cache_claimed.size(),
 		"waves_sent": waves_sent, "wave_total": WAVES.size() if mission_index == DEFENSE else 0,
-		"last_wave_size": last_wave_size, "next_wave_in": next_wave_in,
+		"last_wave_size": last_wave_size,
 		"rescue_in": rescue_in, "rescue_tag": rescue_tag,
 		"markers": markers, "cue": public_cue, "cue_history": cue_history.duplicate(),
 	}
+	if viewer == 0:
+		result["next_wave_in"] = next_wave_in
+	return result

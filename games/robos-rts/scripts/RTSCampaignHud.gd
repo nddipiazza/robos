@@ -44,6 +44,7 @@ var _reported_result := false
 func _ready() -> void:
 	layer = 9
 	_objectives = _panel(Vector2(28, 92), 460)
+	_objectives.self_modulate = Color.TRANSPARENT
 	var objectives := _body(_objectives)
 	_title = _label(objectives, 19, CYAN)
 	_primary = _label(objectives, 22)
@@ -51,6 +52,9 @@ func _ready() -> void:
 	_extra = _label(objectives, 17, GOLD)
 	_note = _label(objectives, 17)
 	_timing = _label(objectives, 17, CYAN)
+	for label in [_title, _primary, _bonus, _extra, _note, _timing]:
+		label.add_theme_color_override("font_outline_color", Color("#071018"))
+		label.add_theme_constant_override("outline_size", 4)
 	_top_bar = _bar(Vector2.ZERO, Vector2(1920, 106))
 	_bottom_bar = _bar(Vector2(0, 883), Vector2(1920, 197))
 	_captions = _panel(Vector2(455, 728), 1010)
@@ -177,11 +181,7 @@ func _process(_delta: float) -> void:
 	_note.text = state.mission_note
 	_timing.visible = state.rescue_in >= 0
 	if _timing.visible:
-		var rescue := "Rescue in %s" % _clock(state.rescue_in) if state.rescue_tag == 0 else "Rescue inbound"
-		var wave := "Wave %d/%d" % [state.waves_sent, state.wave_total]
-		if state.next_wave_in >= 0:
-			wave += "  •  Next in %s" % _clock(state.next_wave_in)
-		_timing.text = "%s   |   %s" % [rescue, wave]
+		_timing.text = "Rescue in %s" % _clock(state.rescue_in) if state.rescue_tag == 0 else "Rescue inbound"
 	if finished and not _reported_result:
 		_show_result()
 

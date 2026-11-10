@@ -20,6 +20,7 @@ PROJECT_DIR = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(PROJECT_DIR))
 
 from robos_rts_bot_sdk import RTSClient
+from window_capture import HEIGHT, WIDTH, offscreen_position
 
 
 class LiveRTSClient(RTSClient):
@@ -43,10 +44,17 @@ def before_all(context) -> None:
     context.realtime = context.rts_mode == "realtime"
     context.live_headless = os.environ.get("RTS_HEADLESS", "0") == "1"
     context.record_live = os.environ.get("RTS_RECORD", "0") == "1"
+    context.record_window = context.record_live and os.environ.get("RTS_RECORD_WINDOW") == "1"
     if context.record_live and (not context.realtime or context.live_headless):
         raise RuntimeError("--record requires rendered --realtime matches")
     if context.record_live and not shutil.which("ffmpeg"):
         raise RuntimeError("ffmpeg is required for --record")
+    if context.record_window:
+        if os.name != "nt":
+            raise RuntimeError("--record-window requires Windows")
+        filters = subprocess.check_output(["ffmpeg", "-hide_banner", "-filters"], text=True)
+        if "gfxcapture" not in filters:
+            raise RuntimeError("--record-window requires FFmpeg with the gfxcapture filter")
     if os.environ.get("RTS_WEB_SERVICE_PORT"):
         context.port = int(os.environ["RTS_WEB_SERVICE_PORT"])
     else:
@@ -71,14 +79,19 @@ def before_all(context) -> None:
     cmd = [godot_bin, "--path", str(PROJECT_DIR)]
     if context.rts_mode == "backend" or context.live_headless:
         cmd.insert(1, "--headless")
+    show_window = os.environ.get("RTS_SHOW_WINDOW") == "1"
+    if context.record_window:
+        cmd.extend(["--resolution", f"{WIDTH}x{HEIGHT}", "--max-fps", "60"])
+        if not show_window:
+            cmd.extend(["--position", offscreen_position()])
     if os.environ.get("RTS_TEST_TITLE") != "1":
         cmd.extend(["--", "--skip-title"])
 
     startupinfo = None
-    if os.name == "nt" and os.environ.get("RTS_SHOW_WINDOW") != "1":
+    if os.name == "nt" and not show_window:
         startupinfo = subprocess.STARTUPINFO()
         startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-        startupinfo.wShowWindow = 0
+        startupinfo.wShowWindow = 4 if context.record_window else 0
 
     context.engine_log = (context.reports_dir / "engine.log").open("w", encoding="utf-8")
     context.godot_proc = subprocess.Popen(

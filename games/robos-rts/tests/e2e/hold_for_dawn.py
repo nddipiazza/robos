@@ -10,6 +10,7 @@ from live_match import LiveMatch
 OUTPOST = (124, 120)
 BRIDGES = (103, 112)
 LANDING_PAD = (128, 141)
+BRIDGE_PATROLS = (((100, 91), (105, 77)), ((80, 106), (67, 90)))
 DISTRESS = (
     ("distress_north", "Northeast road"),
     ("distress_ruins", "Lowland ruins"),
@@ -35,6 +36,26 @@ def distance(unit, point):
     return hypot(unit["pos"]["x"] - point[0], unit["pos"]["y"] - point[1])
 
 
+def on_patrol(unit):
+    return any(order["type"] == "patrol" for order in unit["orders"])
+
+
+def dispatch_bridge_patrols(actions, rifles, patrols):
+    posted = set()
+    for (start, end), patrol in patrols.items():
+        needed = 2 - len(patrol)
+        if needed <= 0:
+            continue
+        candidates = [unit for unit in rifles if unit["tag"] not in posted
+                      and all(order["type"] == "hold_position" for order in unit["orders"])]
+        tags = [unit["tag"] for unit in sorted(candidates, key=lambda unit: distance(unit, start))[:needed]]
+        if len(tags) == needed and actions.command("move", tags=tags, x=start[0], y=start[1])["ok"]:
+            if actions.command("patrol", tags=tags, x=end[0], y=end[1], queue=True)["ok"]:
+                patrol.update(tags)
+                posted.update(tags)
+    return posted
+
+
 class HoldForDawn(LiveMatch):
     def __init__(self, context, difficulty):
         super().__init__(context, f"hold-for-dawn-{difficulty}", "idle")
@@ -46,6 +67,8 @@ class HoldForDawn(LiveMatch):
         self.completed_research = set()
         self.repair_crews = {}
         self.defenders = set()
+        self.bridge_patrols = {route: set() for route in BRIDGE_PATROLS}
+        self.next_patrol_order = 0.0
         self.interceptors = set()
         self.intercept_target = None
         self.expedition = set()
@@ -60,11 +83,11 @@ class HoldForDawn(LiveMatch):
     def follow_camera(self, _obs):
         self.client.focus_camera(*self.camera, height=self.camera_height)
 
-    def highlight(self, name, obs, detail, point, image=None):
+    def highlight(self, name, obs, detail, point, image=None, height=55):
         if any(event["stage"] == name for event in self.events):
             return
         self.camera = point
-        self.camera_height = 55
+        self.camera_height = height
         self.camera_hold_until = time.monotonic() + 2.0
         self.event(name, obs, detail)
         if self.rendered and image:
@@ -265,7 +288,7 @@ class HoldForDawn(LiveMatch):
             self.highlight("Final assault", obs, "Brood flyers and late ground waves close in on the outpost", OUTPOST, "final-assault")
 
     def _defend(self, units, rifles, medics, workers, bunkers):
-        available = [u for u in rifles if u["tag"] not in self.expedition | self.interceptors]
+        available = [u for u in rifles if u["tag"] not in self.expedition | self.interceptors and not on_patrol(u)]
         assigned = set()
         for bunker in bunkers:
             point = (bunker["pos"]["x"], bunker["pos"]["y"])
@@ -277,6 +300,21 @@ class HoldForDawn(LiveMatch):
                 boarders = sorted(candidates, key=lambda u: distance(u, point))[:seats]
                 if self._command("enter_bunker", boarders, target_tag=bunker["tag"]):
                     assigned.update(u["tag"] for u in boarders)
+
+        elapsed = self.final["sim_time"]
+        if elapsed >= self.next_patrol_order:
+            active = {u["tag"] for u in rifles if on_patrol(u)}
+            for patrol in self.bridge_patrols.values():
+                patrol.intersection_update(active)
+            reserves = [u for u in available if u["tag"] not in assigned]
+            if len(reserves) >= 18:
+                posted = dispatch_bridge_patrols(self.actions, reserves, self.bridge_patrols)
+                assigned.update(posted)
+                if posted and all(self.bridge_patrols.values()) and not any(e["stage"] == "Bridge patrols" for e in self.events):
+                    self.highlight("Bridge patrols", self.final, "Two Riflemen per bridge scout the river crossings",
+                                   (89, 92), height=67)
+                    self.camera_hold_until = time.monotonic() + 5.0
+            self.next_patrol_order = elapsed + 24
 
         for unit in available + [u for u in medics if u["tag"] not in self.expedition]:
             if (unit["tag"] in assigned or unit["tag"] in self.defenders
@@ -312,7 +350,7 @@ class HoldForDawn(LiveMatch):
             return
         target = min(threats, key=lambda u: distance(u, OUTPOST))
         point = (target["pos"]["x"], target["pos"]["y"])
-        candidates = [u for u in rifles if u["tag"] not in self.expedition
+        candidates = [u for u in rifles if u["tag"] not in self.expedition and not on_patrol(u)
                       and not any(o["type"] == "enter_bunker" for o in u["orders"])]
         interceptors = sorted(candidates, key=lambda u: distance(u, point))[:20]
         if interceptors and self._command("attack_target", interceptors, point, target_tag=target["tag"]):
@@ -343,7 +381,7 @@ class HoldForDawn(LiveMatch):
         if not marker:
             return
         target = tuple(marker["point"])
-        rifles = [u for u in rifles if u["tag"] not in self.interceptors
+        rifles = [u for u in rifles if u["tag"] not in self.interceptors and not on_patrol(u)
                   and not any(o["type"] == "enter_bunker" for o in u["orders"])]
         troop_count = max(0, min(24, len(rifles) - 12))
         if not self.expedition:
