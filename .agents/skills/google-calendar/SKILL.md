@@ -11,6 +11,16 @@ Use this skill whenever the user asks to:
 - Create or update the **1-button Calendar Request Google Doc** (`RobOS Calendar — Add Event Access Form`) on Google Drive that links to the **RobOS Add Calendar Event** web app (`:19226`)
 - Sync all Named Google Calendars into **Mozilla Thunderbird** (`user.js` CalDAV registry)
 
+## Named Calendar Purposes (KGraph Usage Boundaries)
+
+Each Named Calendar has a clear description and usage boundary in the Knowledge Graph (`~/.config/robos/kgraph/google-calendars.jsonld` and `~/.config/robos/ekgraph/nodes.json`):
+
+| Named Calendar | KGraph Role | What It Is Used For (Description) |
+|---|---|---|
+| **Family** (`Family`) | `private-household-family` | **For stuff that our private family needs** (household plans, family trips, dinners, and shared household activities). |
+| **Kids Calendar** (`Dipiazza Kids Calendar`) | `extended-divorced-kids-family` | **For stuff that the extended divorced side of the family needs** (kids weekend custody schedule, kids' appointments, school, and co-parenting events). |
+| **My Private Calendar** (`Primary`) | `private-personal-owner` | **My private calendar — for stuff that only I care about** (personal reminders, solo work, and private appointments). |
+
 ## CLI Commands
 
 ```bash

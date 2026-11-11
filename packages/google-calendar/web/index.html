@@ -44,12 +44,16 @@
             <label for="cfg-cal-name">Friendly Calendar Name</label>
             <input id="cfg-cal-name" type="text" placeholder="e.g. Household Family Calendar" required />
           </div>
+          <div class="form-group" style="flex:1.5;">
+            <label for="cfg-cal-desc">What Is This Calendar Used For? (Description)</label>
+            <input id="cfg-cal-desc" type="text" placeholder="e.g. Stuff that our private family needs" />
+          </div>
           <div class="form-group" style="max-width:110px;">
             <label for="cfg-cal-color">Color</label>
             <input id="cfg-cal-color" type="color" value="#ffad46" />
           </div>
           <div class="form-group" style="justify-content:flex-end;">
-            <button type="submit" class="btn btn-primary">Save Name</button>
+            <button type="submit" class="btn btn-primary">Save Calendar</button>
           </div>
         </div>
       </form>
@@ -96,6 +100,7 @@
             <div class="form-group">
               <label for="evt-calendar">Named Google Calendar</label>
               <select id="evt-calendar" name="calendarId"></select>
+              <div id="selected-cal-purpose" style="margin-top:4px;font-size:11.5px;color:#94a3b8;line-height:1.35;"></div>
             </div>
             <div class="form-group">
               <label for="evt-category">Event Category</label>
