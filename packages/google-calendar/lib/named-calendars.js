@@ -139,6 +139,7 @@ function listFamilyMembers(options = {}) {
         role: p.relationshipRole || p.title || '',
         birthday: p.birthday || '',
         age: p.age || null,
+        groups: Array.isArray(p.groups) ? p.groups : [],
         summary: p.robosPersonalitySummary || p.bio || '',
       }));
     }
@@ -163,6 +164,7 @@ function listFamilyMembers(options = {}) {
           role: p.relationshipRole || p.title || '',
           birthday: p.birthday || '',
           age: p.age || null,
+          groups: Array.isArray(p.groups) ? p.groups : [],
           summary: p.robosPersonalitySummary || p.bio || '',
         };
       } catch {
@@ -502,23 +504,61 @@ async function discoverNamedCalendars(accountIdOrEmail = null, options = {}) {
   // 5. Merge custom calendars from settings
   for (const custom of settings.customCalendars || []) {
     if (!custom || !custom.id) continue;
-    if (!discovered.some((c) => c.id.toLowerCase() === custom.id.toLowerCase())) {
+    const matchedDiscovered = discovered.find(
+      (c) =>
+        c.id.toLowerCase() === custom.id.toLowerCase() ||
+        (custom.name && c.name.toLowerCase() === custom.name.toLowerCase())
+    );
+    if (!matchedDiscovered) {
+      const backingId = custom.caldavBackingId || email;
       discovered.push({
         id: custom.id,
+        caldavBackingId: backingId,
         name: custom.name || custom.id,
         originalSummary: custom.name || custom.id,
         description: custom.description || 'Shared Google Calendar',
-        color: normalizeHexColor(custom.color, '#f59e0b'),
-        backgroundColor: normalizeHexColor(custom.color, '#f59e0b'),
+        color: normalizeHexColor(custom.color, '#a855f7'),
+        backgroundColor: normalizeHexColor(custom.color, '#a855f7'),
         primary: false,
         shared: true,
+        isCustomSharedCalendar: true,
         writable: custom.writable !== false,
         accessRole: custom.writable === false ? 'reader' : 'writer',
-        caldavUrl: `https://apidata.googleusercontent.com/caldav/v2/${encodeURIComponent(custom.id)}/events/`,
+        caldavUrl: `https://apidata.googleusercontent.com/caldav/v2/${encodeURIComponent(backingId)}/events/`,
+        customSharedWith: custom.sharedWith || [],
         source: 'custom',
       });
     }
   }
+
+  // Helper to resolve a list of uids/emails/objects into full family member objects
+  const resolveMemberList = (list) => {
+    if (!Array.isArray(list) || list.length === 0) return [];
+    const out = [];
+    for (const item of list) {
+      const q = typeof item === 'string' ? item.trim().toLowerCase() : String(item?.email || item?.uid || item?.name || '').trim().toLowerCase();
+      if (!q) continue;
+      const found = familyMembers.find(
+        (fm) =>
+          String(fm.uid || '').toLowerCase() === q ||
+          String(fm.email || '').toLowerCase() === q ||
+          String(fm.name || '').toLowerCase() === q ||
+          String(fm.firstName || '').toLowerCase() === q ||
+          String(fm.nickname || '').toLowerCase() === q
+      );
+      if (found && !out.some((x) => x.email === found.email)) {
+        out.push(found);
+      } else if (typeof item === 'object' && item?.email && !out.some((x) => x.email === item.email)) {
+        out.push(item);
+      }
+    }
+    return out;
+  };
+
+  // Household members for the main Google Family group calendar (members in 'Household' group, or all if no groups set)
+  const householdMembers = familyMembers.filter(
+    (m) => m.email && (!Array.isArray(m.groups) || m.groups.length === 0 || m.groups.some((g) => /^household$/i.test(g)))
+  );
 
   // 6. Apply user-defined display name / color overrides & attach family members to Family/shared calendars
   const overrides = settings.calendarOverrides || {};
@@ -526,9 +566,13 @@ async function discoverNamedCalendars(accountIdOrEmail = null, options = {}) {
     const ov = overrides[cal.id] || {};
     const displayName = ov.name || cal.name;
     const color = normalizeHexColor(ov.color || cal.color, '#00bcd4');
-    const isFamilyCal = /family/i.test(displayName) || /family/i.test(cal.originalSummary) || cal.id.startsWith('family');
-    const googleCalendarUrl = `https://calendar.google.com/calendar/u/0/r?cid=${encodeURIComponent(cal.id)}`;
-    const googleCalendarEmbedUrl = `https://calendar.google.com/calendar/embed?src=${encodeURIComponent(cal.id)}`;
+    const isFamilyCal =
+      !cal.isCustomSharedCalendar &&
+      (/family/i.test(displayName) || /family/i.test(cal.originalSummary) || cal.id.startsWith('family'));
+    const cidForLinks = cal.caldavBackingId || cal.id;
+    const googleCalendarUrl = `https://calendar.google.com/calendar/u/0/r?cid=${encodeURIComponent(cidForLinks)}`;
+    const googleCalendarEmbedUrl = `https://calendar.google.com/calendar/embed?src=${encodeURIComponent(cidForLinks)}`;
+    const customMembers = resolveMemberList(ov.sharedWith || cal.customSharedWith);
     return {
       ...cal,
       name: displayName,
@@ -538,11 +582,12 @@ async function discoverNamedCalendars(accountIdOrEmail = null, options = {}) {
       isFamilyCalendar: isFamilyCal,
       googleCalendarUrl,
       googleCalendarEmbedUrl,
-      sharedWith: isFamilyCal
-        ? familyMembers.filter((m) => m.email)
-        : Array.isArray(ov.sharedWith)
-          ? ov.sharedWith
-          : [],
+      sharedWith:
+        customMembers.length > 0
+          ? customMembers
+          : isFamilyCal
+            ? (householdMembers.length > 0 ? householdMembers : familyMembers.filter((m) => m.email))
+            : [],
     };
   });
 
@@ -564,10 +609,15 @@ async function discoverNamedCalendars(accountIdOrEmail = null, options = {}) {
 }
 
 /**
- * Saves a custom alias or color override for a Named Google Calendar, or adds a custom shared calendar.
+ * Saves a custom alias or color override for a Named Google Calendar, or creates/updates a custom shared Named Calendar.
  */
-function saveNamedCalendarConfig({ id, name, color, description, isDefault = false }, options = {}) {
-  const calId = String(id || '').trim() || `custom-${Date.now()}@group.calendar.google.com`;
+function saveNamedCalendarConfig({ id, name, color, description, sharedWith, caldavBackingId, isDefault = false }, options = {}) {
+  const slugId = String(name || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+  const calId = String(id || '').trim() || slugId || `custom-${Date.now()}@group.calendar.google.com`;
   const settings = loadCalendarSettings(options);
   settings.calendarOverrides = settings.calendarOverrides || {};
   settings.calendarOverrides[calId] = {
@@ -575,7 +625,29 @@ function saveNamedCalendarConfig({ id, name, color, description, isDefault = fal
     ...(name ? { name: String(name).trim() } : {}),
     ...(color ? { color: normalizeHexColor(color) } : {}),
     ...(description !== undefined ? { description: String(description).trim() } : {}),
+    ...(Array.isArray(sharedWith) ? { sharedWith } : {}),
   };
+
+  if (name && (!id || !id.includes('@') || caldavBackingId || Array.isArray(sharedWith))) {
+    settings.customCalendars = Array.isArray(settings.customCalendars) ? settings.customCalendars : [];
+    const existingIdx = settings.customCalendars.findIndex((c) => c && c.id === calId);
+    const customEntry = {
+      ...(existingIdx >= 0 ? settings.customCalendars[existingIdx] : {}),
+      id: calId,
+      name: String(name).trim(),
+      color: normalizeHexColor(color || settings.customCalendars[existingIdx]?.color, '#a855f7'),
+      description: description !== undefined ? String(description).trim() : (settings.customCalendars[existingIdx]?.description || 'Shared Named Google Calendar'),
+      writable: true,
+      ...(caldavBackingId ? { caldavBackingId } : {}),
+      ...(Array.isArray(sharedWith) ? { sharedWith } : {}),
+    };
+    if (existingIdx >= 0) {
+      settings.customCalendars[existingIdx] = customEntry;
+    } else {
+      settings.customCalendars.push(customEntry);
+    }
+  }
+
   if (isDefault) {
     settings.defaultCalendarId = calId;
   }
@@ -726,6 +798,13 @@ function escapeIcsText(val) {
     .replace(/,/g, '\\,');
 }
 
+function escapeIcsParamValue(val) {
+  return String(val || '')
+    .replace(/"/g, "'")
+    .replace(/[\r\n]+/g, ' ')
+    .trim();
+}
+
 function formatIcsUtcDateTime(dateObj) {
   const d = dateObj instanceof Date ? dateObj : new Date(dateObj);
   return d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z$/, 'Z');
@@ -815,13 +894,17 @@ function buildIcsCalendarEvent(ev) {
   if (ev.visibility && ev.visibility !== 'default') {
     lines.push(`CLASS:${String(ev.visibility).toUpperCase()}`);
   }
+  const catName = ev.calendarCategoryName || ev.calendarName || '';
+  if (catName) {
+    lines.push(`CATEGORIES:${escapeIcsText(catName)}`);
+  }
   if (ev.organizerEmail) {
-    lines.push(`ORGANIZER;CN="${escapeIcsText(ev.organizerName || ev.organizerEmail)}":mailto:${ev.organizerEmail}`);
+    lines.push(`ORGANIZER;CN="${escapeIcsParamValue(ev.organizerName || ev.organizerEmail)}":mailto:${ev.organizerEmail}`);
   }
   for (const att of ev.attendees || []) {
     if (!att || !att.email) continue;
     lines.push(
-      `ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;RSVP=TRUE;CN="${escapeIcsText(att.name || att.email)}":mailto:${att.email}`
+      `ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;RSVP=TRUE;CN="${escapeIcsParamValue(att.name || att.email)}":mailto:${att.email}`
     );
   }
 
@@ -921,9 +1004,11 @@ async function createNamedCalendarEvent(eventInput = {}, options = {}) {
   const rawAttendeesInput =
     eventInput.attendees !== undefined
       ? eventInput.attendees
-      : targetCal?.isFamilyCalendar
-        ? discovered.familyMembers
-        : [];
+      : Array.isArray(targetCal?.sharedWith) && targetCal.sharedWith.length > 0
+        ? targetCal.sharedWith
+        : targetCal?.isFamilyCalendar
+          ? discovered.familyMembers
+          : [];
   const attendees = resolveAttendees(rawAttendeesInput, options);
   const rrule = buildRruleLine(eventInput.recurrence || eventInput.rrule);
   const uid = eventInput.uid || `robos-evt-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
@@ -950,7 +1035,7 @@ async function createNamedCalendarEvent(eventInput = {}, options = {}) {
   // On a shared Family calendar, family members already share the calendar with write access.
   // Emitting ORGANIZER + ATTENDEE lines in CalDAV locks the event as read-only ("guestsCanModify: false")
   // for other family members in Google Calendar. Only emit ATTENDEE lines for external (non-family) guests
-  // or on non-Family calendars.
+  // or on non-Family calendars (such as Dipiazza Kids Calendar where members receive events via ATTENDEE).
   const familyEmailSet = new Set(
     (discovered.familyMembers || []).map((fm) => String(fm.email || '').toLowerCase()).filter(Boolean)
   );
@@ -971,6 +1056,7 @@ async function createNamedCalendarEvent(eventInput = {}, options = {}) {
     startDate,
     endDate,
     rrule,
+    calendarCategoryName: targetCal?.isCustomSharedCalendar ? targetCal.name : '',
     organizerEmail: targetCal?.isFamilyCalendar && icsAttendees.length === 0 ? '' : discovered.email,
     organizerName: organizerPerson?.name || discovered.email,
     attendees: icsAttendees,
@@ -987,7 +1073,8 @@ async function createNamedCalendarEvent(eventInput = {}, options = {}) {
   if (!options.skipNetwork && typeof fetchImpl === 'function' && targetCal?.writable !== false) {
     const caldavToken = getCaldavAccessToken(discovered.email, options);
     if (caldavToken) {
-      caldavResourceUrl = `https://apidata.googleusercontent.com/caldav/v2/${encodeURIComponent(targetCal.id)}/events/${encodeURIComponent(uid)}.ics`;
+      const caldavTargetId = targetCal.caldavBackingId || targetCal.id;
+      caldavResourceUrl = `https://apidata.googleusercontent.com/caldav/v2/${encodeURIComponent(caldavTargetId)}/events/${encodeURIComponent(uid)}.ics`;
       try {
         const putRes = await fetchImpl(caldavResourceUrl, {
           method: 'PUT',
@@ -1066,9 +1153,11 @@ async function deleteNamedCalendarEvent(eventId, options = {}) {
     const discovered = await discoverNamedCalendars(null, options);
     const caldavToken = getCaldavAccessToken(discovered.email, options);
     if (caldavToken) {
-      const candidateCalIds = calId
-        ? [calId]
-        : discovered.calendars.filter((c) => c.writable).map((c) => c.id);
+      const matchedCal = calId && discovered.calendars.find((c) => c.id === calId);
+      const resolvedCalId = matchedCal ? (matchedCal.caldavBackingId || matchedCal.id) : calId;
+      const candidateCalIds = resolvedCalId
+        ? Array.from(new Set([resolvedCalId, discovered.email]))
+        : Array.from(new Set(discovered.calendars.filter((c) => c.writable).map((c) => c.caldavBackingId || c.id)));
       for (const cid of candidateCalIds) {
         try {
           const url = `https://apidata.googleusercontent.com/caldav/v2/${encodeURIComponent(cid)}/events/${encodeURIComponent(rawUid)}.ics`;
@@ -1205,14 +1294,33 @@ async function moveNamedCalendarEvent({ eventId = '', query = '', fromCalendar =
     if (!matchId && !matchQuery) continue;
 
     const newUid = `robos-moved-${Date.now().toString(36)}-${crypto.randomBytes(3).toString('hex')}@google.com`;
-    // Keep only the master VEVENT (first VEVENT) and rewrite UID + ORGANIZER for destination calendar
+    // Keep only the master VEVENT (first VEVENT) and rewrite UID + ORGANIZER + CATEGORIES/ATTENDEES for destination calendar
     const firstVeventMatch = calData.match(/BEGIN:VEVENT[\s\S]*?END:VEVENT/i);
     if (!firstVeventMatch) continue;
+    const dstOrganizerEmail = dstCal.caldavBackingId || dstCal.id;
     let veventBlock = firstVeventMatch[0]
       .replace(/\r\n /g, '')
       .replace(/\n /g, '')
       .replace(/^UID:.*$/gm, `UID:${newUid}`)
-      .replace(/^ORGANIZER[^:]*:.*$/gm, `ORGANIZER;CN=${dstCal.name}:mailto:${dstCal.id}`);
+      .replace(/^CATEGORIES:.*[\r\n]*/gm, '')
+      .replace(/^ORGANIZER[^:]*:.*$/gm, `ORGANIZER;CN="${escapeIcsParamValue(dstCal.name)}":mailto:${dstOrganizerEmail}`);
+
+    if (dstCal.isCustomSharedCalendar && Array.isArray(dstCal.sharedWith) && dstCal.sharedWith.length > 0) {
+      // Replace ATTENDEE lines with the exact members of the custom shared calendar
+      veventBlock = veventBlock.replace(/^ATTENDEE[^:]*:.*[\r\n]*/gm, '');
+      const attendeeLines = dstCal.sharedWith
+        .filter((m) => m && m.email)
+        .map(
+          (m) =>
+            `ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;RSVP=TRUE;CN="${escapeIcsParamValue(
+              m.name || m.email
+            )}":mailto:${m.email}`
+        );
+      veventBlock = veventBlock.replace(
+        /END:VEVENT/i,
+        `CATEGORIES:${escapeIcsText(dstCal.name)}\r\n${attendeeLines.join('\r\n')}\r\nEND:VEVENT`
+      );
+    }
 
     const newIcs = [
       'BEGIN:VCALENDAR',
@@ -1236,12 +1344,59 @@ async function moveNamedCalendarEvent({ eventId = '', query = '', fromCalendar =
     });
 
     if (putRes.ok || putRes.status === 201 || putRes.status === 204) {
-      const delUrl = `${srcCal.caldavUrl}${encodeURIComponent(uid)}.ics`;
-      await fetchImpl(delUrl, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${caldavToken}` },
-        signal: AbortSignal.timeout(10000),
+      if (srcCal.caldavUrl !== dstCal.caldavUrl || uid !== newUid) {
+        const delUrl = `${srcCal.caldavUrl}${encodeURIComponent(uid)}.ics`;
+        await fetchImpl(delUrl, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${caldavToken}` },
+          signal: AbortSignal.timeout(10000),
+        });
+      }
+      // Update local store with new UID and destination calendarId
+      const existingLocal = thunderbirdGoogle.loadLocalCalendarEvents(options).filter(
+        (e) => e.uid !== uid && e.id !== `tb-${uid}`
+      );
+      const dtM = veventBlock.match(/^DTSTART([^:]*):(.*)$/m);
+      const deM = veventBlock.match(/^DTEND([^:]*):(.*)$/m);
+      const rrM = veventBlock.match(/^RRULE:(.*)$/m);
+      const rawStart = dtM ? dtM[2].trim() : '';
+      const rawEnd = deM ? deM[2].trim() : '';
+      const isAllDay = /^\d{8}$/.test(rawStart) || /VALUE=DATE/i.test(dtM?.[1] || '');
+      let startDateStr;
+      let endDateStr;
+      if (isAllDay && /^\d{8}$/.test(rawStart)) {
+        startDateStr = `${rawStart.slice(0, 4)}-${rawStart.slice(4, 6)}-${rawStart.slice(6, 8)}`;
+        if (/^\d{8}$/.test(rawEnd)) {
+          const incObj = new Date(Number(rawEnd.slice(0, 4)), Number(rawEnd.slice(4, 6)) - 1, Number(rawEnd.slice(6, 8)) - 1);
+          endDateStr = `${incObj.getFullYear()}-${String(incObj.getMonth() + 1).padStart(2, '0')}-${String(incObj.getDate()).padStart(2, '0')}`;
+        } else {
+          endDateStr = startDateStr;
+        }
+      }
+      const rruleVal = rrM ? rrM[1].trim() : '';
+      const rawStartIso = startDateStr ? new Date(`${startDateStr}T00:00:00`).toISOString() : new Date().toISOString();
+      const rawEndIso = endDateStr ? new Date(`${endDateStr}T23:59:59`).toISOString() : new Date().toISOString();
+      const { start: advStart, end: advEnd } = advanceRecurringStartEnd(rawStartIso, rawEndIso, rruleVal);
+      existingLocal.push({
+        id: `tb-${newUid}`,
+        uid: newUid,
+        summary,
+        start: advStart,
+        end: advEnd,
+        startDate: startDateStr,
+        endDate: endDateStr,
+        allDay: isAllDay,
+        recurring: Boolean(rruleVal),
+        rrule: rruleVal,
+        calendarId: dstCal.id,
+        calendarName: dstCal.name,
+        color: dstCal.color,
+        accountEmail: discovered.email,
+        attendees: (dstCal.sharedWith || []).map((m) => `${m.name} <${m.email}>`),
+        source: 'google-caldav-live',
       });
+      thunderbirdGoogle.saveLocalCalendarEvents(existingLocal, options);
+
       moved.push({
         summary,
         oldUid: uid,
@@ -1280,7 +1435,6 @@ async function listEventsAcrossNamedCalendars(accountIdOrEmail = null, options =
 <C:calendar-query xmlns:D="DAV:" xmlns:C="urn:ietf:params:xml:ns:caldav">
   <D:prop>
     <D:getetag/>
-    <D:calendar-data xmlns:D="urn:ietf:params:xml:ns:caldav"/>
     <C:calendar-data/>
   </D:prop>
   <C:filter>
@@ -1292,8 +1446,15 @@ async function listEventsAcrossNamedCalendars(accountIdOrEmail = null, options =
   </C:filter>
 </C:calendar-query>`;
 
+      const queriedCaldavUrls = new Set();
+      const baseCalendarsToQuery = calendars.filter((cal) => {
+        if (!cal.caldavUrl || queriedCaldavUrls.has(cal.caldavUrl)) return false;
+        queriedCaldavUrls.add(cal.caldavUrl);
+        return true;
+      });
+
       await Promise.all(
-        calendars.map(async (cal) => {
+        baseCalendarsToQuery.map(async (cal) => {
           try {
             const res = await fetchImpl(cal.caldavUrl, {
               method: 'REPORT',
@@ -1318,6 +1479,7 @@ async function listEventsAcrossNamedCalendars(accountIdOrEmail = null, options =
               const locM = block.match(/^LOCATION:(.*)$/m);
               const descM = block.match(/^DESCRIPTION:(.*)$/m);
               const rrM = block.match(/^RRULE:(.*)$/m);
+              const catM = block.match(/^CATEGORIES:(.*)$/m);
               if (!dtM) continue;
 
               const rawStart = dtM[2].trim();
@@ -1359,10 +1521,19 @@ async function listEventsAcrossNamedCalendars(accountIdOrEmail = null, options =
 
               const rruleVal = rrM ? rrM[1].trim() : '';
               const { start: startIso, end: endIso } = advanceRecurringStartEnd(rawStartIso, rawEndIso, rruleVal, now.getTime() - 3600000);
+              if (isAllDay && rruleVal) {
+                const advS = new Date(startIso);
+                const advE = new Date(endIso);
+                if (!Number.isNaN(advS.getTime()) && !Number.isNaN(advE.getTime())) {
+                  startDateStr = `${advS.getFullYear()}-${String(advS.getMonth() + 1).padStart(2, '0')}-${String(advS.getDate()).padStart(2, '0')}`;
+                  endDateStr = `${advE.getFullYear()}-${String(advE.getMonth() + 1).padStart(2, '0')}-${String(advE.getDate()).padStart(2, '0')}`;
+                }
+              }
               const uidVal = uidM ? uidM[1].trim() : `caldav-${caldavEvents.length}`;
               const summaryVal = (sumM ? sumM[1].trim() : '(Untitled Event)').replace(/\\,/g, ',').replace(/\\;/g, ';').replace(/\\n/g, ' ');
               const locVal = (locM ? locM[1].trim() : '').replace(/\\,/g, ',').replace(/\\n/g, ' ');
               const descVal = (descM ? descM[1].trim() : '').replace(/\\,/g, ',').replace(/\\;/g, ';').replace(/\\n/g, '\n');
+              const catVal = (catM ? catM[1].trim() : '').replace(/\\,/g, ',');
 
               const attendees = [];
               for (const attM of block.matchAll(/^ATTENDEE([^:]*):mailto:([^\r\n]+)$/gim)) {
@@ -1371,6 +1542,12 @@ async function listEventsAcrossNamedCalendars(accountIdOrEmail = null, options =
                 const cnM = params.match(/CN="?([^";]+)"?/i);
                 attendees.push(cnM ? `${cnM[1]} <${mail}>` : mail);
               }
+
+              const localOverride = localEvents.find((le) => le.uid === uidVal);
+              const matchedCustomCal =
+                (catVal && calendars.find((c) => c.name.toLowerCase() === catVal.toLowerCase())) ||
+                (localOverride?.calendarId && calendars.find((c) => c.id === localOverride.calendarId));
+              const effectiveCal = matchedCustomCal || cal;
 
               caldavEvents.push({
                 id: `tb-${uidVal}`,
@@ -1384,11 +1561,11 @@ async function listEventsAcrossNamedCalendars(accountIdOrEmail = null, options =
                 allDay: isAllDay,
                 recurring: Boolean(rruleVal),
                 rrule: rruleVal,
-                category: cal.isFamilyCalendar ? 'family' : 'meeting',
+                category: effectiveCal.isFamilyCalendar ? 'family' : 'meeting',
                 source: 'google-caldav-live',
-                calendarId: cal.id,
-                calendarName: cal.name,
-                color: cal.color,
+                calendarId: effectiveCal.id,
+                calendarName: effectiveCal.name,
+                color: effectiveCal.color,
                 accountEmail: discovered.email,
                 location: locVal,
                 attendees,

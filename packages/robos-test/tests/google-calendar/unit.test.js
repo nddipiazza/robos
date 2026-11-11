@@ -291,5 +291,22 @@ describe('Google Calendar: Thunderbird sync settings stick', () => {
     assert.strictEqual(itinParsed.detectedEvents[1].endTime, '14:34');
     assert.strictEqual(itinParsed.detectedEvents[2].startTime, '12:01');
     assert.strictEqual(itinParsed.detectedEvents[2].endTime, '16:37');
+
+    // Custom shared named calendar ICS includes CATEGORIES and ATTENDEE lines
+    const sharedKidsIcs = namedCals.buildIcsCalendarEvent({
+      uid: 'test-kids-cal-1',
+      summary: 'Kids Therapy Appointment',
+      calendarName: 'Kids Calendar',
+      start: '2026-11-13T16:00:00.000Z',
+      end: '2026-11-13T17:00:00.000Z',
+      includeAttendees: true,
+      attendees: [
+        { name: 'Parent One', email: 'parent1@example.com' },
+        { name: 'Parent Two', email: 'parent2@example.com' },
+      ],
+    });
+    assert.ok(sharedKidsIcs.includes('CATEGORIES:Kids Calendar'));
+    assert.ok(sharedKidsIcs.includes('mailto:parent1@example.com'));
+    assert.ok(sharedKidsIcs.includes('mailto:parent2@example.com'));
   });
 });
