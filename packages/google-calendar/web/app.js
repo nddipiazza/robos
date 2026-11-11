@@ -112,7 +112,7 @@ function recomputeEndFromDuration(opts = {}) {
 function syncDefaultGuestsForSelectedCalendar(calendarId) {
   const cal = state.calendars.find((c) => c.id === calendarId);
   state.selectedFamilyEmails.clear();
-  if (cal && cal.isFamilyCalendar) {
+  if (cal && (cal.isFamilyCalendar || (Array.isArray(cal.sharedWith) && cal.sharedWith.length > 0))) {
     const sharedList = Array.isArray(cal.sharedWith) && cal.sharedWith.length ? cal.sharedWith : state.familyMembers;
     for (const fm of sharedList) {
       if (fm && fm.email) state.selectedFamilyEmails.add(fm.email);
@@ -209,6 +209,8 @@ function renderNamedCalendars() {
 function renderFamilyChips() {
   const container = document.getElementById('family-chips');
   const profilesContainer = document.getElementById('family-profiles-list');
+  const countBadge = document.getElementById('family-count-badge');
+  if (countBadge) countBadge.textContent = `${state.familyMembers.length} Members`;
 
   container.innerHTML = state.familyMembers
     .map((fm) => {
