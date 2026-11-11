@@ -368,6 +368,64 @@
       "robos:technology": "Electron 28 / Google Drive v3 & Google Docs Mobile Sync / Mobile SSE Form Server / RobOS Household Suite"
     },
     {
+      "@id": "urn:robos:desktop-app:google-calendar",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:DesktopApp",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:title": "RobOS Google Calendar",
+      "dcterms:description": "Google Calendar & Mozilla Thunderbird CalDAV suite managing Named & Shared Calendars with clear usage boundaries: (1) Family Calendar — for stuff that our private household family needs, (2) Kids Calendar — for stuff that the extended divorced side of the family needs, and (3) Private/Primary Calendar — for stuff that only the owner cares about. Includes a 1-button Google Doc Access Form, multi-day & airline itinerary parser, and voice dictation.",
+      "robos:desktopFramework": "Electron",
+      "robos:namespace": "robos.applications",
+      "robos:package": "applications",
+      "robos:repository": "packages/google-calendar",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:technology": "Electron 28 / Google CalDAV v2 / Mozilla Thunderbird CalDAV / Google Docs Access Form / RobOS Household Suite"
+    },
+    {
+      "@id": "urn:robos:calendar:family",
+      "@type": [
+        "oslc:Resource",
+        "robos:NamedCalendar",
+        "schema:Schedule"
+      ],
+      "dcterms:title": "Family Calendar",
+      "dcterms:description": "For stuff that our private family needs (household plans, family trips, dinners, and shared household activities).",
+      "robos:calendarRole": "private-household-family",
+      "robos:namespace": "robos.applications",
+      "robos:package": "applications",
+      "robos:usagePurpose": "For stuff that our private family needs."
+    },
+    {
+      "@id": "urn:robos:calendar:kids",
+      "@type": [
+        "oslc:Resource",
+        "robos:NamedCalendar",
+        "schema:Schedule"
+      ],
+      "dcterms:title": "Kids Calendar",
+      "dcterms:description": "For stuff that the extended divorced side of the family needs (kids weekend custody schedule, kids appointments, school, and co-parenting events).",
+      "robos:calendarRole": "extended-divorced-kids-family",
+      "robos:namespace": "robos.applications",
+      "robos:package": "applications",
+      "robos:usagePurpose": "For stuff that the extended divorced side of the family needs."
+    },
+    {
+      "@id": "urn:robos:calendar:private",
+      "@type": [
+        "oslc:Resource",
+        "robos:NamedCalendar",
+        "schema:Schedule"
+      ],
+      "dcterms:title": "My Private Calendar (Primary)",
+      "dcterms:description": "My private calendar — for stuff that only I care about (personal reminders, solo work, and private appointments).",
+      "robos:calendarRole": "private-personal-owner",
+      "robos:namespace": "robos.applications",
+      "robos:package": "applications",
+      "robos:usagePurpose": "For stuff that only I care about."
+    },
+    {
       "@id": "urn:robos:desktop-app:docu-vault-desktop",
       "@type": [
         "oslc_am:Resource",
@@ -939,6 +997,64 @@
       "robos:repository": "packages/shopping-lists",
       "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
       "robos:technology": "Electron 28 / Google Drive v3 & Google Docs Mobile Sync / Mobile SSE Form Server / RobOS Household Suite"
+    },
+    {
+      "@id": "urn:robos:desktop-app:google-calendar",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:DesktopApp",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:title": "RobOS Google Calendar",
+      "dcterms:description": "Google Calendar & Mozilla Thunderbird CalDAV suite managing Named & Shared Calendars with clear usage boundaries: (1) Family Calendar — for stuff that our private household family needs, (2) Kids Calendar — for stuff that the extended divorced side of the family needs, and (3) Private/Primary Calendar — for stuff that only the owner cares about. Includes a 1-button Google Doc Access Form, multi-day & airline itinerary parser, and voice dictation.",
+      "robos:desktopFramework": "Electron",
+      "robos:namespace": "robos.applications",
+      "robos:package": "applications",
+      "robos:repository": "packages/google-calendar",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:technology": "Electron 28 / Google CalDAV v2 / Mozilla Thunderbird CalDAV / Google Docs Access Form / RobOS Household Suite"
+    },
+    {
+      "@id": "urn:robos:calendar:family",
+      "@type": [
+        "oslc:Resource",
+        "robos:NamedCalendar",
+        "schema:Schedule"
+      ],
+      "dcterms:title": "Family Calendar",
+      "dcterms:description": "For stuff that our private family needs (household plans, family trips, dinners, and shared household activities).",
+      "robos:calendarRole": "private-household-family",
+      "robos:namespace": "robos.applications",
+      "robos:package": "applications",
+      "robos:usagePurpose": "For stuff that our private family needs."
+    },
+    {
+      "@id": "urn:robos:calendar:kids",
+      "@type": [
+        "oslc:Resource",
+        "robos:NamedCalendar",
+        "schema:Schedule"
+      ],
+      "dcterms:title": "Kids Calendar",
+      "dcterms:description": "For stuff that the extended divorced side of the family needs (kids weekend custody schedule, kids appointments, school, and co-parenting events).",
+      "robos:calendarRole": "extended-divorced-kids-family",
+      "robos:namespace": "robos.applications",
+      "robos:package": "applications",
+      "robos:usagePurpose": "For stuff that the extended divorced side of the family needs."
+    },
+    {
+      "@id": "urn:robos:calendar:private",
+      "@type": [
+        "oslc:Resource",
+        "robos:NamedCalendar",
+        "schema:Schedule"
+      ],
+      "dcterms:title": "My Private Calendar (Primary)",
+      "dcterms:description": "My private calendar — for stuff that only I care about (personal reminders, solo work, and private appointments).",
+      "robos:calendarRole": "private-personal-owner",
+      "robos:namespace": "robos.applications",
+      "robos:package": "applications",
+      "robos:usagePurpose": "For stuff that only I care about."
     },
     {
       "@id": "urn:robos:desktop-app:docu-vault-desktop",

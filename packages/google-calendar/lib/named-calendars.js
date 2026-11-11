@@ -560,7 +560,24 @@ async function discoverNamedCalendars(accountIdOrEmail = null, options = {}) {
     (m) => m.email && (!Array.isArray(m.groups) || m.groups.length === 0 || m.groups.some((g) => /^household$/i.test(g)))
   );
 
-  // 6. Apply user-defined display name / color overrides & attach family members to Family/shared calendars
+  // Infer a clear usage description for each Named Calendar when none is explicitly set
+  const inferCalendarDescription = (cal, displayName, isFamilyCal) => {
+    if (isFamilyCal) {
+      return 'For stuff that our private family needs (household plans, family trips, dinners, and shared household activities).';
+    }
+    if (cal.isCustomSharedCalendar || /kids/i.test(displayName)) {
+      return 'For stuff that the extended divorced side of the family needs (kids weekend custody schedule, kids appointments, school, and co-parenting events).';
+    }
+    if (cal.primary) {
+      return 'My private calendar — for stuff that only I care about (personal reminders, solo work, and private appointments).';
+    }
+    if (cal.writable === false || /holiday/i.test(displayName)) {
+      return 'Read-only public holidays and observances feed.';
+    }
+    return cal.description || 'Shared Named Google Calendar.';
+  };
+
+  // 6. Apply user-defined display name / color / description overrides & attach family members + KGraph node to each calendar
   const overrides = settings.calendarOverrides || {};
   const enriched = discovered.map((cal) => {
     const ov = overrides[cal.id] || {};
@@ -573,21 +590,62 @@ async function discoverNamedCalendars(accountIdOrEmail = null, options = {}) {
     const googleCalendarUrl = `https://calendar.google.com/calendar/u/0/r?cid=${encodeURIComponent(cidForLinks)}`;
     const googleCalendarEmbedUrl = `https://calendar.google.com/calendar/embed?src=${encodeURIComponent(cidForLinks)}`;
     const customMembers = resolveMemberList(ov.sharedWith || cal.customSharedWith);
+    const sharedWith =
+      customMembers.length > 0
+        ? customMembers
+        : isFamilyCal
+          ? (householdMembers.length > 0 ? householdMembers : familyMembers.filter((m) => m.email))
+          : [];
+    const description =
+      (ov.description && String(ov.description).trim()) ||
+      (cal.isCustomSharedCalendar && cal.description && String(cal.description).trim()) ||
+      inferCalendarDescription(cal, displayName, isFamilyCal);
+    const slug = String(cal.id || displayName)
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '');
+    const calendarRole = isFamilyCal
+      ? 'private-household-family'
+      : cal.isCustomSharedCalendar || /kids/i.test(displayName)
+        ? 'extended-divorced-kids-family'
+        : cal.primary
+          ? 'private-personal-owner'
+          : cal.writable === false
+            ? 'public-readonly-feed'
+            : 'shared-calendar';
+
+    const kgraphNode = {
+      '@id': `urn:robos:calendar:${slug}`,
+      '@type': ['robos:NamedCalendar', 'schema:Schedule', 'oslc:Resource'],
+      'dcterms:title': displayName,
+      'dcterms:description': description,
+      'robos:usagePurpose': description,
+      'robos:calendarId': cal.id,
+      'robos:calendarRole': calendarRole,
+      'robos:color': color,
+      'robos:writable': cal.writable !== false,
+      'robos:googleCalendarUrl': googleCalendarUrl,
+      'robos:sharedWith': sharedWith.map((m) => ({
+        '@id': `urn:robos:person:${m.uid || m.email}`,
+        'dcterms:title': m.name,
+        'schema:email': m.email,
+      })),
+    };
+
     return {
       ...cal,
       name: displayName,
       summary: displayName,
+      description,
+      usagePurpose: description,
+      calendarRole,
       color,
       backgroundColor: color,
       isFamilyCalendar: isFamilyCal,
       googleCalendarUrl,
       googleCalendarEmbedUrl,
-      sharedWith:
-        customMembers.length > 0
-          ? customMembers
-          : isFamilyCal
-            ? (householdMembers.length > 0 ? householdMembers : familyMembers.filter((m) => m.email))
-            : [],
+      sharedWith,
+      kgraphNode,
     };
   });
 
@@ -598,7 +656,7 @@ async function discoverNamedCalendars(accountIdOrEmail = null, options = {}) {
     || enriched.find((c) => c.primary)
     || enriched[0];
 
-  return {
+  const result = {
     ok: true,
     email,
     accountId: account?.id || '',
@@ -606,6 +664,114 @@ async function discoverNamedCalendars(accountIdOrEmail = null, options = {}) {
     calendars: enriched,
     familyMembers,
   };
+
+  try {
+    syncCalendarKGraphToStore(result, options);
+  } catch {}
+
+  return result;
+}
+
+/**
+ * Builds and persists the JSON-LD Knowledge Graph for RobOS Google Calendar & its Named Calendars
+ * into `~/.config/robos/kgraph/google-calendars.jsonld` and updates `~/.config/robos/ekgraph/nodes.json`.
+ */
+function buildCalendarKGraph(discovered = {}) {
+  const calendars = Array.isArray(discovered.calendars) ? discovered.calendars : [];
+  const familyMembers = Array.isArray(discovered.familyMembers) ? discovered.familyMembers : [];
+
+  const appNode = {
+    '@id': 'urn:robos:desktop-app:google-calendar',
+    '@type': ['oslc_am:Resource', 'robos:DesktopApp', 'schema:SoftwareApplication'],
+    'dcterms:title': 'RobOS Google Calendar',
+    'dcterms:description':
+      'Google Calendar & Mozilla Thunderbird CalDAV suite with Named & Shared Calendars: (1) Family Calendar for stuff that our private household family needs, (2) Kids Calendar for stuff that the extended divorced side of the family needs, and (3) Private/Primary Calendar for stuff that only the owner cares about.',
+    'robos:managesCalendars': calendars.map((c) => ({ '@id': c.kgraphNode?.['@id'] || `urn:robos:calendar:${c.id}` })),
+  };
+
+  const calNodes = calendars.map((c) => c.kgraphNode).filter(Boolean);
+  const personNodes = familyMembers
+    .filter((m) => m && (m.uid || m.email))
+    .map((m) => ({
+      '@id': `urn:robos:person:${m.uid || m.email}`,
+      '@type': ['oslc:Person', 'schema:Person'],
+      'dcterms:title': m.name,
+      'dcterms:description': m.role || m.summary || '',
+      'schema:email': m.email || '',
+      'robos:groups': Array.isArray(m.groups) ? m.groups : [],
+    }));
+
+  return {
+    '@context': {
+      dcterms: 'http://purl.org/dc/terms/',
+      oslc: 'http://open-services.net/ns/core#',
+      oslc_am: 'http://open-services.net/ns/am#',
+      robos: 'https://robos.dev/ns/sdlc#',
+      schema: 'https://schema.org/',
+    },
+    '@id': 'urn:robos:package:google-calendar',
+    '@type': ['oslc:ServiceProvider', 'robos:Package'],
+    'dcterms:title': 'RobOS Google Calendar & Named Calendars KGraph',
+    'dcterms:description':
+      'Knowledge Graph describing RobOS Google Calendar and the purpose of each Named Calendar: Family (stuff our private household family needs), Kids Calendar (stuff the extended divorced side of the family needs), and Private Calendar (stuff only the owner cares about).',
+    '@graph': [appNode, ...calNodes, ...personNodes],
+  };
+}
+
+function syncCalendarKGraphToStore(discovered = {}, options = {}) {
+  const configDir = getConfigDir(options);
+  const kgraphDir = path.join(configDir, 'kgraph');
+  fs.mkdirSync(kgraphDir, { recursive: true });
+  const kgraphPayload = buildCalendarKGraph(discovered);
+  const kgraphFile = path.join(kgraphDir, 'google-calendars.jsonld');
+  fs.writeFileSync(kgraphFile, JSON.stringify(kgraphPayload, null, 2), 'utf8');
+
+  // Also synchronize calendar nodes with descriptions into ~/.config/robos/ekgraph/nodes.json if present
+  const ekgraphDir = path.join(configDir, 'ekgraph');
+  const ekNodesPath = path.join(ekgraphDir, 'nodes.json');
+  try {
+    fs.mkdirSync(ekgraphDir, { recursive: true });
+    let nodes = [];
+    if (fs.existsSync(ekNodesPath)) {
+      nodes = JSON.parse(fs.readFileSync(ekNodesPath, 'utf8'));
+      if (!Array.isArray(nodes)) nodes = [];
+    }
+    const nowIso = new Date().toISOString();
+    const calEntries = [
+      {
+        path: 'apps/google-calendar',
+        title: 'RobOS Google Calendar',
+        type: 'application',
+        description:
+          'Google Calendar & Mozilla Thunderbird CalDAV suite managing Named Calendars: Family (stuff our private family needs), Dipiazza Kids Calendar (stuff the extended divorced side of the family needs), and Private Calendar (stuff only I care about).',
+        content:
+          'Google Calendar & Mozilla Thunderbird CalDAV suite managing Named Calendars: Family (stuff our private family needs), Dipiazza Kids Calendar (stuff the extended divorced side of the family needs), and Private Calendar (stuff only I care about).',
+        tags: ['calendar', 'google-calendar', 'thunderbird', 'caldav', 'household'],
+        links: (discovered.calendars || []).map((c) => `calendars/${c.id}`),
+        updatedAt: nowIso,
+      },
+      ...(discovered.calendars || []).map((c) => ({
+        path: `calendars/${c.id}`,
+        title: c.name,
+        type: 'calendar',
+        role: c.calendarRole || 'calendar',
+        description: c.description || '',
+        content: c.description || '',
+        sharedWith: (c.sharedWith || []).map((m) => `${m.name} <${m.email}>`),
+        tags: ['calendar', c.calendarRole || 'named-calendar'].filter(Boolean),
+        links: ['apps/google-calendar', ...(c.sharedWith || []).map((m) => `people/${m.uid || m.email}`)],
+        updatedAt: nowIso,
+      })),
+    ];
+
+    const filtered = nodes.filter(
+      (n) => n && n.path !== 'apps/google-calendar' && !String(n.path || '').startsWith('calendars/')
+    );
+    filtered.push(...calEntries);
+    fs.writeFileSync(ekNodesPath, JSON.stringify(filtered, null, 2), 'utf8');
+  } catch {}
+
+  return { ok: true, kgraphFile, kgraph: kgraphPayload };
 }
 
 /**
@@ -1930,7 +2096,7 @@ function parseNaturalLanguageEvent(inputText, options = {}) {
   raw = raw.replace(/^(?:(?:hey|ok|okay)\s+nabu[\s,.:;-]*)/i, '').trim();
   raw = raw.replace(/^(?:please\s+)?(?:add|create|schedule|put|book|make|set\s+up)\s+(?:a\s+|an\s+|new\s+)?(?:calendar\s+event|event|appointment|meeting|reminder)?\s*(?:for|to|called|named|titled)?\s*/i, '').trim();
 
-  // 1. Detect target calendar ("on the Family calendar", "to Family calendar", "in Primary calendar")
+  // 1. Detect target calendar ("on the Family calendar", "to Dipiazza Kids calendar", "in my private calendar")
   let calendarId = '';
   let calendarName = '';
   const calMatch = raw.match(/\b(?:on|to|in)\s+(?:the\s+|my\s+|our\s+)?([a-z][a-z0-9_-]*(?:\s+[a-z][a-z0-9_-]*){0,2})\s+calendar\b/i);
@@ -1938,14 +2104,31 @@ function parseNaturalLanguageEvent(inputText, options = {}) {
     const q = calMatch[1].trim().toLowerCase();
     const matchedCal =
       calendars.find((c) => c.name.toLowerCase() === q || c.originalSummary?.toLowerCase() === q) ||
+      (/\b(?:private|personal|primary)\b/.test(q) && calendars.find((c) => c.primary)) ||
+      (/\bkids?\b/.test(q) && calendars.find((c) => /kids/i.test(c.name) || c.isCustomSharedCalendar)) ||
+      (/\bfamily\b/.test(q) && calendars.find((c) => c.isFamilyCalendar)) ||
       calendars.find((c) => c.name.toLowerCase().includes(q));
     if (matchedCal) {
       calendarId = matchedCal.id;
       calendarName = matchedCal.name;
+    } else if (q.includes('kids')) {
+      calendarName = 'Dipiazza Kids Calendar';
     } else if (q.includes('family')) {
       calendarName = 'Family';
     }
     raw = raw.replace(calMatch[0], ' ').replace(/\s+/g, ' ').trim();
+  } else if (/\b(?:kids\s+weekend|custody|co-?parent|jennilyn)\b/i.test(raw)) {
+    const kidsCal = calendars.find((c) => /kids/i.test(c.name) || c.isCustomSharedCalendar);
+    if (kidsCal) {
+      calendarId = kidsCal.id;
+      calendarName = kidsCal.name;
+    }
+  } else if (/\b(?:my\s+private|only\s+i\s+care\s+about)\b/i.test(raw)) {
+    const privCal = calendars.find((c) => c.primary);
+    if (privCal) {
+      calendarId = privCal.id;
+      calendarName = privCal.name;
+    }
   }
 
   // 2. Detect family members / attendees mentioned
@@ -2161,6 +2344,8 @@ module.exports = {
   getCaldavAccessToken,
   parseCaldavCalendarHomeXml,
   discoverNamedCalendars,
+  buildCalendarKGraph,
+  syncCalendarKGraphToStore,
   saveNamedCalendarConfig,
   syncNamedCalendarsToThunderbird,
   resolveAttendees,

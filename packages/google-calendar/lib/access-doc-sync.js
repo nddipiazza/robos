@@ -144,7 +144,8 @@ function renderCalendarAccessDocHtml(options = {}) {
     <thead>
       <tr style="background-color:#f1f5f9;">
         <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #cbd5e1;">Calendar Name</th>
-        <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #cbd5e1;">Type / Shared Access</th>
+        <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #cbd5e1;">What This Calendar Is Used For (Description)</th>
+        <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #cbd5e1;">Shared Members / Role</th>
         <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #cbd5e1;">Open in Google Calendar (Browser)</th>
         <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #cbd5e1;">Add Event in RobOS WebApp</th>
       </tr>
@@ -156,11 +157,15 @@ function renderCalendarAccessDocHtml(options = {}) {
           const href = `${webAppUrl}${sep}calendar=${encodeURIComponent(c.id)}`;
           const gcalHref = c.googleCalendarUrl || `https://calendar.google.com/calendar/u/0/r?cid=${encodeURIComponent(c.id)}`;
           const gcalEmbedHref = c.googleCalendarEmbedUrl || `https://calendar.google.com/calendar/embed?src=${encodeURIComponent(c.id)}`;
-          const roleBadge = c.primary ? 'Primary (Owner)' : c.isFamilyCalendar ? 'Shared Family Calendar' : c.writable ? 'Shared (Writable)' : 'Read-Only Feed';
+          const roleBadge = c.primary ? 'Primary · Private (Owner)' : c.isFamilyCalendar ? 'Shared Family Calendar' : c.writable ? 'Shared (Writable)' : 'Read-Only Feed';
+          const sharedStr = Array.isArray(c.sharedWith) && c.sharedWith.length
+            ? `${roleBadge} — ${c.sharedWith.map((m) => m.nickname || m.firstName || m.name).join(', ')}`
+            : roleBadge;
           return `
           <tr>
             <td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;font-weight:bold;">${escHtml(c.name)}</td>
-            <td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;color:#475569;">${escHtml(roleBadge)}</td>
+            <td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;color:#1e293b;">${escHtml(c.description || '')}</td>
+            <td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;color:#475569;">${escHtml(sharedStr)}</td>
             <td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;">
               <a href="${escHtml(gcalHref)}" style="color:#0f766e;font-weight:bold;text-decoration:underline;">🌐 Open in Google Calendar ↗</a>
               &nbsp;·&nbsp;

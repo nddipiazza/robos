@@ -308,5 +308,50 @@ describe('Google Calendar: Thunderbird sync settings stick', () => {
     assert.ok(sharedKidsIcs.includes('CATEGORIES:Kids Calendar'));
     assert.ok(sharedKidsIcs.includes('mailto:parent1@example.com'));
     assert.ok(sharedKidsIcs.includes('mailto:parent2@example.com'));
+
+    // KGraph JSON-LD generation includes descriptions for each calendar role
+    const kgraph = namedCals.buildCalendarKGraph({
+      calendars: [
+        {
+          id: 'primary@example.com',
+          name: 'Primary',
+          kgraphNode: {
+            '@id': 'urn:robos:calendar:primary',
+            '@type': ['robos:NamedCalendar', 'schema:Schedule'],
+            'dcterms:title': 'Primary',
+            'dcterms:description': 'My private calendar — for stuff that only I care about.',
+            'robos:calendarRole': 'private-personal-owner',
+          },
+        },
+        {
+          id: 'family@group.calendar.google.com',
+          name: 'Family',
+          kgraphNode: {
+            '@id': 'urn:robos:calendar:family',
+            '@type': ['robos:NamedCalendar', 'schema:Schedule'],
+            'dcterms:title': 'Family',
+            'dcterms:description': 'For stuff that our private family needs.',
+            'robos:calendarRole': 'private-household-family',
+          },
+        },
+        {
+          id: 'kids-calendar',
+          name: 'Kids Calendar',
+          kgraphNode: {
+            '@id': 'urn:robos:calendar:kids',
+            '@type': ['robos:NamedCalendar', 'schema:Schedule'],
+            'dcterms:title': 'Kids Calendar',
+            'dcterms:description': 'For stuff that the extended divorced side of the family needs.',
+            'robos:calendarRole': 'extended-divorced-kids-family',
+          },
+        },
+      ],
+      familyMembers: [],
+    });
+    assert.strictEqual(kgraph['@id'], 'urn:robos:package:google-calendar');
+    assert.strictEqual(kgraph['@graph'].length, 4);
+    assert.ok(kgraph['@graph'].some((n) => n['dcterms:description']?.includes('private family needs')));
+    assert.ok(kgraph['@graph'].some((n) => n['dcterms:description']?.includes('extended divorced side')));
+    assert.ok(kgraph['@graph'].some((n) => n['dcterms:description']?.includes('only I care about')));
   });
 });

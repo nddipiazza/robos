@@ -148,20 +148,27 @@ function renderNamedCalendars() {
     targetPill.style.borderColor = activeCal.color;
     targetPill.style.color = activeCal.color;
   }
+  const purposeEl = document.getElementById('selected-cal-purpose');
+  if (purposeEl) {
+    purposeEl.textContent = activeCal?.description ? `📌 ${activeCal.description}` : '';
+  }
 
   grid.innerHTML = state.calendars
     .map((c) => {
       const isSelected = c.id === state.selectedCalendarId;
       const roleLabel = c.primary
-        ? 'Primary · Owner'
+        ? 'Primary · Private'
         : c.isFamilyCalendar
           ? 'Shared Family Calendar'
           : c.writable
             ? 'Shared · Writable'
             : 'Read-Only Feed';
+      const descLine = c.description
+        ? `<div class="named-cal-desc" style="font-size:12px;color:#cbd5e1;margin-top:4px;line-height:1.35;">📌 ${esc(c.description)}</div>`
+        : '';
       const sharedAvatars = Array.isArray(c.sharedWith) && c.sharedWith.length
-        ? `<div class="named-cal-shared">Shared with: ${c.sharedWith.map((m) => `${esc(m.avatar)} ${esc(m.nickname || m.firstName)}`).join(' · ')}</div>`
-        : `<div class="named-cal-shared">${esc(c.description || c.id)}</div>`;
+        ? `<div class="named-cal-shared" style="margin-top:4px;">Shared with: ${c.sharedWith.map((m) => `${esc(m.avatar)} ${esc(m.nickname || m.firstName)}`).join(' · ')}</div>`
+        : '';
       const gcalUrl = c.googleCalendarUrl || `https://calendar.google.com/calendar/u/0/r?cid=${encodeURIComponent(c.id)}`;
       const gcalEmbedUrl = c.googleCalendarEmbedUrl || `https://calendar.google.com/calendar/embed?src=${encodeURIComponent(c.id)}`;
 
@@ -174,6 +181,7 @@ function renderNamedCalendars() {
             </div>
             <span class="cal-role-badge">${esc(roleLabel)}</span>
           </div>
+          ${descLine}
           ${sharedAvatars}
           <div class="named-cal-links" style="margin-top:6px;display:flex;gap:10px;flex-wrap:wrap;font-size:11.5px;">
             <a href="${esc(gcalUrl)}" target="_blank" rel="noopener" class="gcal-ext-link" style="color:#38bdf8;text-decoration:none;font-weight:600;">🌐 Open in Google Calendar ↗</a>
@@ -192,6 +200,7 @@ function renderNamedCalendars() {
     card.addEventListener('click', () => {
       const calId = card.dataset.calId;
       const writable = card.dataset.writable === 'true';
+      const clickedCal = state.calendars.find((c) => c.id === calId);
       state.filterCalendarId = calId;
       if (writable) {
         state.selectedCalendarId = calId;
@@ -200,6 +209,12 @@ function renderNamedCalendars() {
         renderFamilyChips();
       }
       document.getElementById('cfg-cal-id').value = calId;
+      if (clickedCal) {
+        document.getElementById('cfg-cal-name').value = clickedCal.name || '';
+        const descInput = document.getElementById('cfg-cal-desc');
+        if (descInput) descInput.value = clickedCal.description || '';
+        if (clickedCal.color) document.getElementById('cfg-cal-color').value = clickedCal.color;
+      }
       renderNamedCalendars();
       renderEvents();
     });
@@ -725,11 +740,12 @@ function setupEventListeners() {
     e.preventDefault();
     const id = document.getElementById('cfg-cal-id').value.trim() || state.selectedCalendarId;
     const name = document.getElementById('cfg-cal-name').value.trim();
+    const description = document.getElementById('cfg-cal-desc')?.value?.trim() || '';
     const color = document.getElementById('cfg-cal-color').value;
     const res = await fetch('/api/calendars/config', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, name, color }),
+      body: JSON.stringify({ id, name, description, color }),
     });
     const data = await res.json();
     if (data.ok) {
