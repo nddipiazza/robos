@@ -501,16 +501,23 @@ async function discoverNamedCalendars(accountIdOrEmail = null, options = {}) {
     });
   }
 
-  // 5. Merge custom calendars from settings
+  // 5. Merge custom calendars from settings (or attach to newly created @group.calendar.google.com match)
   for (const custom of settings.customCalendars || []) {
     if (!custom || !custom.id) continue;
     const matchedDiscovered = discovered.find(
       (c) =>
         c.id.toLowerCase() === custom.id.toLowerCase() ||
-        (custom.name && c.name.toLowerCase() === custom.name.toLowerCase())
+        (custom.name && c.name.toLowerCase() === custom.name.toLowerCase()) ||
+        (/kids/i.test(custom.name || '') && /kids/i.test(c.name || '') && c.id.includes('@group.calendar.google.com'))
     );
-    if (!matchedDiscovered) {
+    if (matchedDiscovered) {
+      matchedDiscovered.isCustomSharedCalendar = true;
+      matchedDiscovered.customSharedWith = custom.sharedWith || [];
+      if (custom.description) matchedDiscovered.description = custom.description;
+      if (custom.color) matchedDiscovered.color = normalizeHexColor(custom.color, matchedDiscovered.color);
+    } else {
       const backingId = custom.caldavBackingId || email;
+      const isNativeGroupCal = custom.id.includes('@group.calendar.google.com');
       discovered.push({
         id: custom.id,
         caldavBackingId: backingId,
@@ -522,6 +529,8 @@ async function discoverNamedCalendars(accountIdOrEmail = null, options = {}) {
         primary: false,
         shared: true,
         isCustomSharedCalendar: true,
+        needsGoogleCalendarContainer: !isNativeGroupCal,
+        googleCreateCalendarUrl: 'https://calendar.google.com/calendar/u/0/r/settings/createcalendar',
         writable: custom.writable !== false,
         accessRole: custom.writable === false ? 'reader' : 'writer',
         caldavUrl: `https://apidata.googleusercontent.com/caldav/v2/${encodeURIComponent(backingId)}/events/`,
@@ -818,7 +827,129 @@ function saveNamedCalendarConfig({ id, name, color, description, sharedWith, cal
     settings.defaultCalendarId = calId;
   }
   saveCalendarSettings(settings, options);
+
+  // If this calendar is a real Google CalDAV calendar (@gmail.com or @group.calendar.google.com),
+  // asynchronously sync its description/name/color to Google Calendar via CalDAV PROPPATCH.
+  if (calId.includes('@') && !options.skipNetwork && process.env.ROBOS_TEST !== '1') {
+    syncCalendarMetadataToCaldav(calId, { name, description, color }, options).catch(() => {});
+  }
+
   return { ok: true, id: calId, settings };
+}
+
+/**
+ * Updates a Google Calendar's `<C:calendar-description>` (and `<D:displayname>` / `<A:calendar-color>`)
+ * directly on Google's servers via CalDAV `PROPPATCH`.
+ */
+async function syncCalendarMetadataToCaldav(calId, { name, description, color } = {}, options = {}) {
+  if (!calId || !calId.includes('@')) return { ok: false, reason: 'not-google-caldav-id' };
+  const fetchImpl = options.fetchImpl || globalThis.fetch;
+  if (typeof fetchImpl !== 'function') return { ok: false, reason: 'no-fetch' };
+
+  const accounts = cloudAccounts.listCloudAccounts(options) || [];
+  const googleAcct = accounts.find((a) => a.provider === 'google' && a.email) || accounts[0];
+  const email = googleAcct?.email || '';
+  const tok = getCaldavAccessToken(email, options);
+  if (!tok) return { ok: false, reason: 'no-caldav-token' };
+
+  const escXml = (s) =>
+    String(s ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+
+  const propLines = [];
+  if (description !== undefined && String(description).trim()) {
+    propLines.push(`<C:calendar-description>${escXml(String(description).trim())}</C:calendar-description>`);
+  }
+  if (name !== undefined && String(name).trim() && !calId.endsWith('@gmail.com')) {
+    propLines.push(`<D:displayname>${escXml(String(name).trim())}</D:displayname>`);
+  }
+  if (color !== undefined && /^#[0-9a-fA-F]{6}$/.test(String(color).trim())) {
+    propLines.push(`<A:calendar-color>${String(color).trim().toUpperCase()}FF</A:calendar-color>`);
+  }
+  if (propLines.length === 0) return { ok: false, reason: 'nothing-to-patch' };
+
+  const xmlBody = `<?xml version="1.0" encoding="utf-8" ?>
+<D:propertyupdate xmlns:D="DAV:" xmlns:C="urn:ietf:params:xml:ns:caldav" xmlns:A="http://apple.com/ns/ical/">
+  <D:set>
+    <D:prop>
+      ${propLines.join('\n      ')}
+    </D:prop>
+  </D:set>
+</D:propertyupdate>`;
+
+  const url = `https://apidata.googleusercontent.com/caldav/v2/${encodeURIComponent(calId)}/events/`;
+  const res = await fetchImpl(url, {
+    method: 'PROPPATCH',
+    headers: {
+      Authorization: `Bearer ${tok}`,
+      'Content-Type': 'application/xml; charset=utf-8',
+    },
+    body: xmlBody,
+    signal: AbortSignal.timeout(8000),
+  });
+  return { ok: res.ok || res.status === 207, status: res.status };
+}
+
+/**
+ * Checks if any custom calendar in `settings.customCalendars` (that lacked a native `@group.calendar.google.com`
+ * container) has now been created in Google Calendar web settings (`PROPFIND` returns a matching `@group.calendar.google.com`).
+ * When found, automatically links the real `@group.calendar.google.com` ID, patches its description/color via `PROPPATCH`,
+ * and moves all events tagged for that custom calendar into the new `@group.calendar.google.com` calendar.
+ */
+async function promoteCustomCalendarsToGoogleContainers(options = {}) {
+  const settings = loadCalendarSettings(options);
+  const pendingCustoms = (settings.customCalendars || []).filter(
+    (c) => c && c.id && !c.id.includes('@group.calendar.google.com')
+  );
+  if (pendingCustoms.length === 0) return { ok: true, promoted: [] };
+
+  const discovered = await discoverNamedCalendars(null, options);
+  const promoted = [];
+  for (const custom of pendingCustoms) {
+    const match = (discovered.calendars || []).find(
+      (c) =>
+        c.id.includes('@group.calendar.google.com') &&
+        !c.isFamilyCalendar &&
+        (c.name.toLowerCase() === String(custom.name || '').toLowerCase() ||
+          c.originalSummary?.toLowerCase() === String(custom.name || '').toLowerCase() ||
+          (/kids/i.test(custom.name || '') && /kids/i.test(c.name || '')))
+    );
+    if (!match) continue;
+
+    const oldId = custom.id;
+    const newGroupId = match.id;
+    custom.id = newGroupId;
+    custom.caldavBackingId = newGroupId;
+    settings.calendarOverrides = settings.calendarOverrides || {};
+    settings.calendarOverrides[newGroupId] = {
+      ...(settings.calendarOverrides[oldId] || {}),
+      name: custom.name || match.name,
+      color: custom.color || match.color,
+      description: custom.description || match.description,
+      sharedWith: custom.sharedWith || [],
+    };
+    delete settings.calendarOverrides[oldId];
+    saveCalendarSettings(settings, options);
+
+    await syncCalendarMetadataToCaldav(
+      newGroupId,
+      { name: custom.name, description: custom.description, color: custom.color },
+      options
+    ).catch(() => {});
+
+    // Move any events tagged for this custom calendar from the old backing calendar to the new @group.calendar.google.com
+    for (const q of ['kid weekend', 'Leo Therapy']) {
+      await moveNamedCalendarEvent(
+        { query: q, fromCalendar: discovered.email, toCalendar: newGroupId },
+        options
+      ).catch(() => {});
+    }
+
+    promoted.push({ oldId, newGroupId, name: custom.name });
+  }
+  return { ok: true, promoted };
 }
 
 /**
@@ -2347,6 +2478,8 @@ module.exports = {
   buildCalendarKGraph,
   syncCalendarKGraphToStore,
   saveNamedCalendarConfig,
+  syncCalendarMetadataToCaldav,
+  promoteCustomCalendarsToGoogleContainers,
   syncNamedCalendarsToThunderbird,
   resolveAttendees,
   buildIcsCalendarEvent,

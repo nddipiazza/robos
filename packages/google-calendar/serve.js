@@ -11,7 +11,12 @@ const fs = require('node:fs');
 const path = require('node:path');
 const os = require('node:os');
 const { spawn } = require('node:child_process');
-const { loadCalendarSettings, updateCalendarSettings } = require('./lib/named-calendars');
+const {
+  loadCalendarSettings,
+  updateCalendarSettings,
+  promoteCustomCalendarsToGoogleContainers,
+  syncNamedCalendarsToThunderbird,
+} = require('./lib/named-calendars');
 const { createCalendarWebServer } = require('./lib/calendar-web-server');
 const { syncCalendarAccessDocWithGoogleDrive } = require('./lib/access-doc-sync');
 
@@ -82,6 +87,19 @@ async function main() {
   console.log(`  • Local:     ${info.localUrl}`);
   console.log(`  • Home Wi-Fi: ${lanAuthed}`);
   startPublicHttpsTunnel(info.localUrl);
+
+  // Periodically check if any custom calendar (e.g. "Dipiazza Kids Calendar") has been created in Google Calendar web settings
+  // and automatically promote + migrate its events into the new @group.calendar.google.com container.
+  setInterval(async () => {
+    try {
+      const res = await promoteCustomCalendarsToGoogleContainers();
+      if (res.promoted && res.promoted.length > 0) {
+        console.log('  • Promoted custom calendar(s) to Google Calendar container:', res.promoted);
+        await syncNamedCalendarsToThunderbird().catch(() => {});
+        await syncCalendarAccessDocWithGoogleDrive().catch(() => {});
+      }
+    } catch {}
+  }, 10000);
 }
 
 if (require.main === module) {
