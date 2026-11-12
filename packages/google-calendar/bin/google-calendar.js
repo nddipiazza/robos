@@ -158,9 +158,21 @@ async function main() {
       shareWithFamily: Boolean(flags['share-family'] || flags.share),
     });
     if (asJson) return console.log(JSON.stringify(res, null, 2));
-    console.log(`✓ Synced Google Doc "${res.docTitle}":`);
+    console.log(`✓ Synced Master Google Doc "${res.docTitle}":`);
     console.log(`  • Google Doc URL:        ${res.docUrl}`);
     console.log(`  • 1-Button WebApp Link:  ${res.authedWebAppUrl}`);
+    const calDocs = Object.values(res.calendarDocs || {});
+    if (calDocs.length > 0) {
+      console.log(`\n✓ Synced Per-Calendar Invite Google Docs (${calDocs.length}):`);
+      for (const cd of calDocs) {
+        const sharedInfo = Array.isArray(cd.sharedEmails) && cd.sharedEmails.length
+          ? `shared with: ${cd.sharedEmails.join(', ')}`
+          : 'private (owner only)';
+        console.log(`  • [${cd.calendarName}] "${cd.docTitle}"`);
+        console.log(`    ↳ URL: ${cd.docUrl}`);
+        console.log(`    ↳ Access: ${sharedInfo}`);
+      }
+    }
     return;
   }
 

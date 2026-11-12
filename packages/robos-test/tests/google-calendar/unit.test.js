@@ -353,5 +353,33 @@ describe('Google Calendar: Thunderbird sync settings stick', () => {
     assert.ok(kgraph['@graph'].some((n) => n['dcterms:description']?.includes('private family needs')));
     assert.ok(kgraph['@graph'].some((n) => n['dcterms:description']?.includes('extended divorced side')));
     assert.ok(kgraph['@graph'].some((n) => n['dcterms:description']?.includes('only I care about')));
+
+    // Per-calendar Invite & Access Google Doc HTML rendering
+    const kidsCalDocTitle = accessDoc.getCalendarInviteDocTitle({
+      id: 'kids-calendar',
+      name: 'Kids Calendar',
+      primary: false,
+    });
+    assert.strictEqual(kidsCalDocTitle, 'RobOS Calendar — Kids Calendar (Invite & Access Doc)');
+
+    const singleCalHtml = accessDoc.renderSingleCalendarInviteDocHtml(
+      {
+        id: 'kids-calendar',
+        name: 'Kids Calendar',
+        description: 'For stuff that the extended divorced side of the family needs.',
+        googleCalendarUrl: 'https://calendar.google.com/calendar/u/0/r?cid=kids-calendar',
+        googleCalendarEmbedUrl: 'https://calendar.google.com/calendar/embed?src=kids-calendar',
+        sharedWith: [
+          { name: 'Parent One', role: 'Father', email: 'parent1@example.com', avatar: '👨' },
+          { name: 'Parent Two', role: 'Mother', email: 'parent2@example.com', avatar: '👩' },
+        ],
+      },
+      { webAppUrl: 'https://demo-cal.trycloudflare.com/?auth=secret123' }
+    );
+    assert.ok(singleCalHtml.includes('CLICK THIS TO OPEN &amp; ADD EVENTS TO KIDS CALENDAR'));
+    assert.ok(singleCalHtml.includes('calendar=kids-calendar'));
+    assert.ok(singleCalHtml.includes('For stuff that the extended divorced side of the family needs.'));
+    assert.ok(singleCalHtml.includes('parent1@example.com'));
+    assert.ok(singleCalHtml.includes('parent2@example.com'));
   });
 });

@@ -171,6 +171,9 @@ function renderNamedCalendars() {
         : '';
       const gcalUrl = c.googleCalendarUrl || `https://calendar.google.com/calendar/u/0/r?cid=${encodeURIComponent(c.id)}`;
       const gcalEmbedUrl = c.googleCalendarEmbedUrl || `https://calendar.google.com/calendar/embed?src=${encodeURIComponent(c.id)}`;
+      const inviteDocLink = c.inviteDocUrl
+        ? `<a href="${esc(c.inviteDocUrl)}" target="_blank" rel="noopener" class="gcal-ext-link" style="color:#10b981;text-decoration:none;font-weight:600;" title="Open ${esc(c.name)}'s dedicated Invite &amp; Access Google Doc">📄 Invite Google Doc ↗</a>`
+        : '';
       const createInGcalLink = c.needsGoogleCalendarContainer
         ? `<a href="${esc(c.googleCreateCalendarUrl || 'https://calendar.google.com/calendar/u/0/r/settings/createcalendar')}" target="_blank" rel="noopener" class="gcal-ext-link" style="color:#f59e0b;text-decoration:none;font-weight:600;" title="Google CalDAV disables MKCALENDAR; click to create '${esc(c.name)}' in Google Calendar Settings so it appears as its own sidebar calendar">➕ Create "${esc(c.name)}" in Google Calendar Sidebar ↗</a>`
         : '';
@@ -187,6 +190,7 @@ function renderNamedCalendars() {
           ${descLine}
           ${sharedAvatars}
           <div class="named-cal-links" style="margin-top:6px;display:flex;gap:10px;flex-wrap:wrap;font-size:11.5px;">
+            ${inviteDocLink}
             <a href="${esc(gcalUrl)}" target="_blank" rel="noopener" class="gcal-ext-link" style="color:#38bdf8;text-decoration:none;font-weight:600;">🌐 Open in Google Calendar ↗</a>
             <a href="${esc(gcalEmbedUrl)}" target="_blank" rel="noopener" class="gcal-ext-link" style="color:#94a3b8;text-decoration:none;">📅 Browser View ↗</a>
             ${createInGcalLink}
