@@ -16,6 +16,7 @@ const path = require('node:path');
 const {
   loadCalendarSettings,
   updateCalendarSettings,
+  saveNamedCalendarConfig,
   discoverNamedCalendars,
   listEventsAcrossNamedCalendars,
 } = require('./named-calendars');
@@ -401,10 +402,32 @@ function createGoogleDocsDriveApi({ accountId, homeDir, tokens, fetchImpl } = {}
     });
   }
 
-  async function shareFile(fileId, { email, role = 'reader', sendNotificationEmail = false } = {}) {
+  async function listPermissions(fileId) {
+    const res = await request(
+      'GET',
+      `/drive/v3/files/${encodeURIComponent(fileId)}/permissions?fields=${encodeURIComponent('permissions(id,emailAddress,role,displayName)')}&supportsAllDrives=true`
+    );
+    return res?.permissions || [];
+  }
+
+  async function deletePermission(fileId, permissionId) {
+    return request(
+      'DELETE',
+      `/drive/v3/files/${encodeURIComponent(fileId)}/permissions/${encodeURIComponent(permissionId)}?supportsAllDrives=true`
+    );
+  }
+
+  async function shareFile(fileId, { email, role = 'reader', sendNotificationEmail = false, emailMessage = '' } = {}) {
+    const params = new URLSearchParams({
+      sendNotificationEmail: sendNotificationEmail ? 'true' : 'false',
+      supportsAllDrives: 'true',
+    });
+    if (sendNotificationEmail && emailMessage) {
+      params.set('emailMessage', String(emailMessage));
+    }
     return request(
       'POST',
-      `/drive/v3/files/${encodeURIComponent(fileId)}/permissions?sendNotificationEmail=${sendNotificationEmail ? 'true' : 'false'}&supportsAllDrives=true`,
+      `/drive/v3/files/${encodeURIComponent(fileId)}/permissions?${params.toString()}`,
       {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -420,6 +443,8 @@ function createGoogleDocsDriveApi({ accountId, homeDir, tokens, fetchImpl } = {}
     findFolderByName,
     createFolder,
     listChildren,
+    listPermissions,
+    deletePermission,
     createDocFromHtml: ({ name, parentId, html }) =>
       createMultipartFile({
         name,
@@ -628,6 +653,124 @@ async function syncCalendarAccessDocWithGoogleDrive(options = {}) {
   };
 }
 
+/**
+ * Invites a person (by email or RobOS family member name/uid) to a specific Named Calendar
+ * via its dedicated Invite & Access Google Doc (`sendNotificationEmail=true`), ensuring they
+ * are also listed in the calendar's `sharedWith` member table and receive the official Google Docs
+ * invitation email with direct 1-click links to the calendar and WebApp.
+ */
+async function inviteMemberToCalendarDoc({ calendar = '', email = '', role = 'reader', message = '' } = {}, options = {}) {
+  const discovered = await discoverNamedCalendars(options.accountId || null, options);
+  const calendars = discovered.calendars || [];
+  const calQuery = String(calendar || '').trim().toLowerCase();
+  const targetCal =
+    (calQuery &&
+      (calendars.find((c) => c.id.toLowerCase() === calQuery) ||
+        calendars.find((c) => c.name.toLowerCase() === calQuery) ||
+        calendars.find((c) => c.name.toLowerCase().includes(calQuery)))) ||
+    calendars.find((c) => c.isCustomSharedCalendar) ||
+    calendars.find((c) => c.isFamilyCalendar) ||
+    calendars[0];
+
+  if (!targetCal) {
+    throw new Error(`Calendar "${calendar}" not found.`);
+  }
+
+  const rawWho = String(email || '').trim();
+  const lowerWho = rawWho.toLowerCase();
+  const matchedPerson = (discovered.familyMembers || []).find(
+    (fm) =>
+      String(fm.email || '').toLowerCase() === lowerWho ||
+      String(fm.uid || '').toLowerCase() === lowerWho ||
+      String(fm.name || '').toLowerCase() === lowerWho ||
+      String(fm.firstName || '').toLowerCase() === lowerWho ||
+      String(fm.nickname || '').toLowerCase() === lowerWho
+  );
+  const targetEmail = String(matchedPerson?.email || (rawWho.includes('@') ? rawWho : '')).trim().toLowerCase();
+  if (!targetEmail) {
+    throw new Error(`Could not resolve an email address for "${rawWho}".`);
+  }
+
+  // Ensure the member is included in this calendar's sharedWith list if not already present
+  const existingShared = Array.isArray(targetCal.sharedWith) ? targetCal.sharedWith : [];
+  const alreadyInList = existingShared.some((m) => String(m.email || '').toLowerCase() === targetEmail);
+  if (!alreadyInList) {
+    const nextSharedIds = [
+      ...existingShared.map((m) => m.uid || m.email),
+      matchedPerson?.uid || targetEmail,
+    ];
+    saveNamedCalendarConfig(
+      {
+        id: targetCal.id,
+        name: targetCal.name,
+        color: targetCal.color,
+        description: targetCal.description,
+        sharedWith: nextSharedIds,
+      },
+      options
+    );
+  }
+
+  // Sync the calendar's Invite & Access Google Doc so it is up-to-date
+  const syncRes = await syncCalendarAccessDocWithGoogleDrive(options);
+  const calDoc = syncRes.calendarDocs?.[targetCal.id];
+  if (!calDoc || !calDoc.docId) {
+    throw new Error(`No Invite Google Doc found for calendar "${targetCal.name}".`);
+  }
+
+  const api = options.driveApi || createGoogleDocsDriveApi({
+    accountId: options.accountId || null,
+    homeDir: options.homeDir,
+    tokens: options.tokens,
+    fetchImpl: options.fetchImpl,
+  });
+
+  // If the user already had a silent permission (created with sendNotificationEmail=false),
+  // remove it first so creating the permission with sendNotificationEmail=true triggers Google's invite email.
+  try {
+    if (typeof api.listPermissions === 'function' && typeof api.deletePermission === 'function') {
+      const perms = await api.listPermissions(calDoc.docId);
+      const existingPerm = perms.find(
+        (p) => String(p.emailAddress || '').toLowerCase() === targetEmail && p.role !== 'owner'
+      );
+      if (existingPerm && existingPerm.id) {
+        await api.deletePermission(calDoc.docId, existingPerm.id);
+      }
+    }
+  } catch {}
+
+  const defaultMessage =
+    message ||
+    `You are invited to the "${targetCal.name}" calendar (${targetCal.description || 'Shared family & kids calendar'}).\n\n` +
+      `Open this Google Doc to:\n` +
+      `1. Click the blue button to view upcoming events or add new events (single-day, multi-day, or pasted itineraries) to ${targetCal.name}.\n` +
+      `2. Open ${targetCal.name} directly in Google Calendar.`;
+
+  const permRes = await api.shareFile(calDoc.docId, {
+    email: targetEmail,
+    role,
+    sendNotificationEmail: true,
+    emailMessage: defaultMessage,
+  });
+
+  return {
+    ok: true,
+    calendarId: targetCal.id,
+    calendarName: targetCal.name,
+    description: targetCal.description,
+    invitedEmail: targetEmail,
+    invitedName: matchedPerson?.name || targetEmail,
+    docId: calDoc.docId,
+    docTitle: calDoc.docTitle,
+    docUrl: calDoc.docUrl,
+    authedWebAppUrl: calDoc.authedWebAppUrl,
+    googleCalendarUrl: calDoc.googleCalendarUrl,
+    permissionId: permRes?.id || '',
+    notificationEmailSent: true,
+    emailMessage: defaultMessage,
+  };
+}
+
 module.exports = {
   DEFAULT_FOLDER_NAME,
   DEFAULT_DOC_TITLE,
@@ -638,4 +781,5 @@ module.exports = {
   renderCalendarAccessDocHtml,
   createGoogleDocsDriveApi,
   syncCalendarAccessDocWithGoogleDrive,
+  inviteMemberToCalendarDoc,
 };
