@@ -372,4 +372,79 @@ func apply_view(view: Dictionary, me: Dictionary, lobby: Dictionary) -> void:
       env.cleanup();
     }
   });
+
+  it('supports authoritative onTick timed round cycling, mid-match seat joins, and fast agy CLI flags', async () => {
+    const aiAgent = require('../../../robos-lib/ai-agent');
+    const agyArgs = aiAgent.PROVIDER_MAP.antigravity.buildArgs('Generate game', {
+      resolvedBin: 'agy',
+      effort: 'low',
+    });
+    assert.deepEqual(agyArgs, [
+      '--disable-slash-commands',
+      '--print-timeout',
+      '0',
+      '--effort',
+      'low',
+      '-p',
+      'Generate game',
+    ]);
+
+    const env = makeTempEnv();
+    const runtime = new GameTheaterRuntime({ configDir: env.dir });
+    try {
+      const players = loadTheaterPlayers({ configDir: env.dir, seedPeople: env.seedPeople });
+      const [alice, bob, charlie] = players;
+
+      const timedServerJs = `
+        const meta = { title: 'Timed Count Quiz', minPlayers: 2, maxPlayers: 4, tickIntervalMs: 250 };
+        function createInitialState(players) {
+          return { players, round: 1, ticks: 0 };
+        }
+        function onPlayerAction(state) {
+          return { state };
+        }
+        function onTick(state) {
+          state.ticks += 1;
+          if (state.ticks >= 2) {
+            state.round += 1;
+            state.ticks = 0;
+          }
+          return { state };
+        }
+        function onSeatsChanged(state, seats) {
+          state.players = seats;
+          return { state };
+        }
+        function getPlayerView(state) {
+          return { round: state.round, playerCount: state.players.length };
+        }
+        module.exports = { meta, createInitialState, onPlayerAction, onTick, onSeatsChanged, getPlayerView };
+      `;
+
+      runtime.saveAndActivateGame({
+        id: 'timed-count-quiz',
+        manifest: { id: 'timed-count-quiz', title: 'Timed Count Quiz', minPlayers: 2, maxPlayers: 4 },
+        serverJs: timedServerJs,
+        clientGd: 'extends Control\nvar send_action: Callable\nfunc apply_view(_v: Dictionary, _m: Dictionary, _l: Dictionary) -> void:\n\tpass\n',
+        activate: true,
+      });
+
+      runtime.joinSeat(alice);
+      runtime.joinSeat(bob);
+      assert.equal(runtime.matchStatus, 'playing');
+      assert.equal(runtime.getPlayerViewFor(alice.uid).round, 1);
+
+      // Charlie joins mid-match (maxPlayers = 4)
+      const joinRes = runtime.joinSeat(charlie);
+      assert.equal(joinRes.ok, true);
+      assert.equal(runtime.getPlayerViewFor(alice.uid).playerCount, 3);
+
+      // Wait ~620ms so two 250ms ticks advance round 1 -> round 2 automatically!
+      await new Promise((r) => setTimeout(r, 620));
+      assert.ok(runtime.getPlayerViewFor(alice.uid).round >= 2, 'onTick should auto-advance timed round');
+    } finally {
+      runtime.close();
+      env.cleanup();
+    }
+  });
 });

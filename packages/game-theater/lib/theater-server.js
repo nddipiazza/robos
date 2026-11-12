@@ -623,6 +623,9 @@ function createGameTheaterServer(options = {}) {
   }
 
   const httpServer = http.createServer(handleHttpRequest);
+  httpServer.requestTimeout = 0;
+  httpServer.headersTimeout = 0;
+  httpServer.keepAliveTimeout = 120000;
   attachWebSocketServer(httpServer, {
     pathPrefix: '/ws',
     verifyUpgrade: (req, parsedUrl) => resolveReqAuth(req, parsedUrl),
@@ -654,6 +657,9 @@ function createGameTheaterServer(options = {}) {
       const tlsDir = path.join(getTheaterDir(options), 'tls');
       const tls = ensureTheaterTlsCert(tlsDir, lanIp);
       httpsServer = https.createServer({ key: tls.key, cert: tls.cert }, handleHttpRequest);
+      httpsServer.requestTimeout = 0;
+      httpsServer.headersTimeout = 0;
+      httpsServer.keepAliveTimeout = 120000;
       attachWebSocketServer(httpsServer, {
         pathPrefix: '/ws',
         verifyUpgrade: (req, parsedUrl) => resolveReqAuth(req, parsedUrl),
@@ -687,6 +693,7 @@ function createGameTheaterServer(options = {}) {
   }
 
   async function close() {
+    runtime.close?.();
     for (const c of wsClients) {
       try { c.conn.close(); } catch {}
     }

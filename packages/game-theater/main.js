@@ -97,6 +97,7 @@ function apiRequest(method, apiPath, body = null) {
         });
       },
     );
+    req.setTimeout(0);
     req.on('error', reject);
     if (payload) req.write(payload);
     req.end();

@@ -230,19 +230,26 @@ IMPORTANT: Do NOT invoke any tools, file readers, or shell commands. Reply direc
 }
 
 === STRICT CONTRACT FOR "serverJs" (CommonJS in restricted Node VM — NO require() except globals Math, Date, JSON, crypto.randomInt) ===
-1. Export via \`module.exports = { meta, createInitialState, onPlayerAction, getPlayerView };\`
-   - \`meta\`: \`{ title, description, minPlayers, maxPlayers }\` (MUST match manifest minPlayers & maxPlayers!).
+1. Export via \`module.exports = { meta, createInitialState, onPlayerAction, getPlayerView, onTick, onSeatsChanged };\` (\`onTick\` and \`onSeatsChanged\` are optional):
+   - \`meta\`: \`{ title, description, minPlayers, maxPlayers, tickIntervalMs }\` (MUST match manifest minPlayers & maxPlayers! Set \`tickIntervalMs: 1000\` if the game uses real-time timers/countdowns).
    - \`createInitialState(players, options)\`:
      - \`players\` is an Array of seated player objects: \`[{ uid, name, shortName, gamerTag, avatar, color }, ...]\`.
-     - Use \`Math.random()\` or \`crypto.randomInt(0, players.length)\` when random starter selection is required.
+     - Use \`Math.random()\` or \`crypto.randomInt(0, players.length)\` when random starter/question selection is required.
      - Return a plain JSON-serializable state object.
    - \`onPlayerAction(state, player, action)\`:
      - \`player\` is the seated player \`{ uid, name, shortName, gamerTag, avatar, color }\` who sent \`action\` (\`{ type: "...", ... }\`).
      - Validate turn/role ownership and inputs! On illegal move or wrong player's turn, return \`{ state, error: "Clear explanation" }\`.
      - On valid move, update state and return \`{ state }\`.
+   - \`onTick(state, nowMs)\` (OPTIONAL — called automatically on the server every \`meta.tickIntervalMs || 1000\` ms while a match is playing):
+     - Ideal for timed trivia rounds (e.g. cycling questions every 30 seconds), countdown clocks, or real-time mechanics!
+     - Update countdowns / advance expired rounds using \`nowMs\` and return \`{ state }\` (the runtime automatically broadcasts whenever \`state\` changes).
+   - \`onSeatsChanged(state, seats)\` (OPTIONAL — called if a player joins/leaves a seat mid-match when \`seats.length <= maxPlayers\`):
+     - Sync \`state.players\` / \`state.scores\` so newly seated players appear on the leaderboard immediately without resetting scores.
    - \`getPlayerView(state, viewerUid)\`:
      - Return a JSON-serializable Dictionary tailored specifically to \`viewerUid\`.
-     - NEVER leak hidden secrets (such as unguessed secret words/phrases or hidden hands) to a player who should not see them yet! Reveal the full secret only to its chooser or once the round finishes (\`won\` / \`lost\`).
+     - NEVER leak hidden secrets (such as unguessed secret words/phrases, unrevealed correct multiple-choice index, or hidden hands) to a player who should not see them yet! Reveal the full answer only to its chooser or once the round finishes / reveals.
+2. LARGE CONTENT & TRIVIA PACKING RULE:
+   - If the user requests hundreds of items/questions (e.g. 500 trivia counts, large word banks, card decks), keep the JSON compact and fast to emit: encode datasets as compact single-line pipe-delimited strings (e.g. \`"Subject|Correct|Alt1|Alt2|Alt3"\` or \`"Category|Subject|CorrectValue"\` paired with realistic scale-aware distractor generation in JS) with ZERO comments or multi-line formatting per entry so the entire JSON bundle stays concise and complete.
 
 === STRICT CONTRACT FOR "clientGd" (Godot 4.3 GDScript) ===
 1. MUST start with \`extends Control\` and declare:
@@ -282,8 +289,10 @@ async function askAgentForBundle(fullPrompt, options = {}) {
     providerId,
     cwd: isolatedCwd,
     model: options.model || undefined,
-    cliTimeoutMs: options.cliTimeoutMs || 300000,
-    timeoutMs: options.timeoutMs || 300000,
+    effort: options.effort || 'low',
+    skipWritingPreamble: true,
+    cliTimeoutMs: options.cliTimeoutMs || 900000,
+    timeoutMs: options.timeoutMs || 900000,
   });
 }
 
@@ -388,14 +397,33 @@ Return ONLY the complete JSON bundle {"manifest", "serverJs", "clientGd"}.`;
     let validated = null;
 
     for (let attempt = 0; attempt <= maxRepairs; attempt++) {
-      if (attempt > 0) {
+      const baseStep =
+        attempt > 0
+          ? `Auto-repairing compiler check (attempt ${attempt}/${maxRepairs})`
+          : mode === 'modify'
+            ? `Asking RobOS Agent to update "${existingRecord.manifest.title}"`
+            : `Asking RobOS Agent to design "${title || 'new multiplayer game'}"`;
+
+      const attemptStartedAt = Date.now();
+      runtime.setAgentStatus({
+        busy: true,
+        step: `${baseStep}...`,
+      });
+      const progressTimer = setInterval(() => {
+        const secs = Math.floor((Date.now() - attemptStartedAt) / 1000);
         runtime.setAgentStatus({
           busy: true,
-          step: `Auto-repairing compiler check (attempt ${attempt}/${maxRepairs})...`,
+          step: `${baseStep}... (${secs}s elapsed)`,
         });
-      }
+      }, 4000);
+      progressTimer.unref?.();
 
-      const res = await askAgentForBundle(currentPrompt, { providerId, aiAsk });
+      let res;
+      try {
+        res = await askAgentForBundle(currentPrompt, { providerId, aiAsk });
+      } finally {
+        clearInterval(progressTimer);
+      }
       if (!res || !res.ok) {
         throw new Error(res?.error || 'RobOS Agent invocation failed.');
       }

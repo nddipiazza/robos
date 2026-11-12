@@ -60,7 +60,19 @@ const PROVIDERS = [
     id:   'antigravity',
     name: 'Gemini CLI / Antigravity',
     // gemini -p / agy -p: non-interactive single prompt. Antigravity installs ship agy without gemini.
-    buildArgs: (prompt, opts = {}) => [...(opts.model ? ['--model', opts.model] : []), '-p', prompt],
+    buildArgs: (prompt, opts = {}) => [
+      ...(opts.resolvedBin === 'agy'
+        ? [
+            '--disable-slash-commands',
+            '--print-timeout',
+            '0',
+            ...(opts.effort ? ['--effort', String(opts.effort)] : []),
+          ]
+        : []),
+      ...(opts.model ? ['--model', opts.model] : []),
+      '-p',
+      prompt,
+    ],
     bin: 'gemini',
     altBins: ['agy'],
   },
@@ -166,11 +178,13 @@ function resolveBin(provider) {
 }
 
 function askCli(prompt, providerDef, opts = {}) {
-  const provider = { ...providerDef, bin: resolveBin(providerDef) };
+  const resolvedBin = resolveBin(providerDef);
+  const provider = { ...providerDef, bin: resolvedBin };
   return new Promise((resolve) => {
     let proc;
+    const startedAt = Date.now();
     try {
-      proc = cp.spawn(provider.bin, provider.buildArgs(prompt, opts), {
+      proc = cp.spawn(provider.bin, provider.buildArgs(prompt, { ...opts, resolvedBin }), {
         env:   { ...process.env },
         stdio: ['ignore', 'pipe', 'pipe'],
         ...(opts.cwd ? { cwd: opts.cwd } : {}),
@@ -184,10 +198,26 @@ function askCli(prompt, providerDef, opts = {}) {
     proc.stdout.on('data', d => { out += d; });
     proc.stderr.on('data', d => { err += d; });
 
-    proc.on('close', code => {
+    proc.on('close', (code, signal) => {
       if (code !== 0) {
+        const elapsedMs = Date.now() - startedAt;
+        const timedOut =
+          Boolean(opts.cliTimeoutMs) &&
+          (proc.killed || signal === 'SIGTERM' || signal === 'SIGKILL') &&
+          elapsedMs >= opts.cliTimeoutMs - 500;
+        if (timedOut) {
+          const secs = Math.round(opts.cliTimeoutMs / 1000);
+          return resolve({
+            ok: false,
+            text: '',
+            error: `${provider.bin} timed out after ${secs}s while generating output.`,
+            code: 'cli_timeout',
+            via: 'cli',
+            provider: provider.id,
+          });
+        }
         // Some CLIs (e.g. claude) write their error message to stdout, not stderr
-        const detail = err.trim() || out.trim().slice(0, 400) || `exit code ${code}`;
+        const detail = err.trim() || out.trim().slice(0, 400) || (signal ? `signal ${signal}` : `exit code ${code}`);
         return resolve({ ok: false, text: '', error: `${provider.bin} failed: ${detail}`, via: 'cli', provider: provider.id });
       }
       resolve({ ok: true, text: out.trim(), error: null, via: 'cli', provider: provider.id });
@@ -221,7 +251,9 @@ async function ask(prompt, opts = {}) {
   if (scan.blocked) {
     return { ok: false, text: '', error: scan.summary, code: 'prompt_security_violation', findings: scan.findings, via: 'cli', provider: provider.id };
   }
-  prompt = require('./engineering-writing').instructions + '\n\n' + scan.text;
+  prompt = opts.skipWritingPreamble
+    ? scan.text
+    : require('./engineering-writing').instructions + '\n\n' + scan.text;
 
   // API mode only applies when the caller did not pick a specific CLI.
   let apiFallback = null;
