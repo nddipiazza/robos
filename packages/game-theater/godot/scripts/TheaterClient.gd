@@ -3,7 +3,12 @@ extends Control
 var _ws := WebSocketPeer.new()
 var _ws_url: String = ""
 var _ws_connected: bool = false
+var _conn_state_kind: String = "connecting" # "connecting" | "live" | "reconnecting" | "error"
+var _conn_err_code: int = 0
 var _reconnect_timer: float = 0.0
+
+var _symbols_ready: bool = false
+var _fallback_fonts: Array[FontFile] = []
 
 var _me: Dictionary = {}
 var _snapshot: Dictionary = {}
@@ -12,6 +17,10 @@ var _ai_mode: String = "generate" # "generate" | "modify"
 var _updating_dropdown: bool = false
 
 # UI Nodes
+var _brand_label: Label
+var _lobby_hdr_label: Label
+var _ai_hdr_label: Label
+var _chat_hdr_label: Label
 var _conn_badge: Label
 var _player_badge: Label
 var _game_dropdown: OptionButton
@@ -34,9 +43,151 @@ var _waiting_banner: PanelContainer
 var _waiting_label: Label
 
 func _ready() -> void:
+	_load_native_vector_fonts_if_available()
 	_build_ui()
 	_ws_url = _discover_ws_url()
+	if OS.has_feature("web"):
+		_fetch_web_vector_fonts()
 	_connect_ws()
+
+func _has_glyph(cp: int) -> bool:
+	if cp == 0x09 or cp == 0x0A or cp == 0x0D or cp == 0x20:
+		return true
+	if cp == 0x200D or cp == 0xFE0E or cp == 0xFE0F:
+		return false
+	if ThemeDB.fallback_font != null and ThemeDB.fallback_font.has_char(cp):
+		return true
+	for ff in _fallback_fonts:
+		if ff != null and ff.has_char(cp):
+			return true
+	return false
+
+func _all_glyphs_supported(s: String) -> bool:
+	if s == "":
+		return false
+	for i in range(s.length()):
+		if not _has_glyph(s.unicode_at(i)):
+			return false
+	return true
+
+func _icon(glyph_str: String, ascii_fallback: String = "") -> String:
+	if _all_glyphs_supported(glyph_str):
+		return glyph_str + " "
+	if ascii_fallback != "":
+		return ascii_fallback + " "
+	return ""
+
+func _avatar_prefix(raw_avatar: String) -> String:
+	if raw_avatar.strip_edges() == "":
+		return _icon("🎮", "•")
+	# Strip variation selectors & ZWJ first (e.g. 🛡️ -> 🛡)
+	var cleaned := ""
+	for i in range(raw_avatar.length()):
+		var cp := raw_avatar.unicode_at(i)
+		if cp != 0x200D and cp != 0xFE0E and cp != 0xFE0F and cp != 0x2640 and cp != 0x2642:
+			cleaned += raw_avatar.substr(i, 1)
+	cleaned = cleaned.strip_edges()
+	if cleaned != "" and _all_glyphs_supported(cleaned):
+		return cleaned + " "
+	# Map color-only bitmap avatars to crisp vector outline icons
+	if raw_avatar.contains("🧙"):
+		return _icon("★", "•")
+	if raw_avatar.contains("🛡"):
+		return _icon("🛡", "•")
+	if raw_avatar.contains("🌸") or raw_avatar.contains("🎉"):
+		return _icon("✦", "•")
+	if raw_avatar.contains("🦞"):
+		return _icon("❖", "•")
+	return _icon("🎮", "•")
+
+func _safe_text(raw: String) -> String:
+	if raw == "":
+		return ""
+	var out := ""
+	for i in range(raw.length()):
+		var cp := raw.unicode_at(i)
+		if _has_glyph(cp):
+			out += raw.substr(i, 1)
+	return out
+
+func _attach_fallback_font(ff: FontFile) -> void:
+	if ff == null:
+		return
+	_fallback_fonts.append(ff)
+	var font_arr: Array[Font] = []
+	for item in _fallback_fonts:
+		font_arr.append(item)
+	ThemeDB.fallback_font.fallbacks = font_arr
+	if ff.has_char(0x1F3AD) or ff.has_char(0x25B6):
+		_symbols_ready = true
+
+func _load_native_vector_fonts_if_available() -> void:
+	if OS.has_feature("web"):
+		return
+	var paths := [
+		"/usr/share/fonts/truetype/noto/NotoSansSymbols2-Regular.ttf",
+		"/usr/share/fonts/truetype/noto/NotoSansSymbols-Regular.ttf",
+		"/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+	]
+	for p in paths:
+		if FileAccess.file_exists(p):
+			var ff := FontFile.new()
+			if ff.load_dynamic_font(p) == OK:
+				_attach_fallback_font(ff)
+
+func _discover_http_origin() -> String:
+	if OS.has_feature("web"):
+		var res: Variant = JavaScriptBridge.eval("window.location.origin", true)
+		if typeof(res) == TYPE_STRING and String(res) != "":
+			return String(res)
+	if _ws_url.begins_with("wss://"):
+		var rest := _ws_url.trim_prefix("wss://")
+		return "https://" + rest.split("/")[0]
+	if _ws_url.begins_with("ws://"):
+		var rest2 := _ws_url.trim_prefix("ws://")
+		return "http://" + rest2.split("/")[0]
+	return "http://127.0.0.1:19228"
+
+func _fetch_web_vector_fonts() -> void:
+	var origin := _discover_http_origin()
+	for endpoint in ["/api/fonts/symbols2.ttf", "/api/fonts/symbols.ttf", "/api/fonts/dejavu.ttf"]:
+		_fetch_single_font(origin + endpoint)
+
+func _fetch_single_font(url: String) -> void:
+	var req := HTTPRequest.new()
+	req.body_size_limit = -1
+	add_child(req)
+	req.request_completed.connect(func(result: int, response_code: int, _headers: PackedStringArray, body: PackedByteArray) -> void:
+		if result == HTTPRequest.RESULT_SUCCESS and response_code == 200 and body.size() > 1024:
+			var ff := FontFile.new()
+			ff.data = body
+			_attach_fallback_font(ff)
+			_refresh_all_ui_after_font_load()
+		req.queue_free()
+	)
+	req.request(url)
+
+func _refresh_all_ui_after_font_load() -> void:
+	if is_instance_valid(_brand_label):
+		_brand_label.text = _icon("🎭") + "RobOS AI Multiplayer Game Theater"
+	if is_instance_valid(_lobby_hdr_label):
+		_lobby_hdr_label.text = _icon("❖") + "Multiplayer Lobby & Seats"
+	if is_instance_valid(_ai_hdr_label):
+		_ai_hdr_label.text = _icon("⚡") + "RobOS Agent Game Studio"
+	if is_instance_valid(_chat_hdr_label):
+		_chat_hdr_label.text = _icon("✉") + "Lobby Chat"
+	if is_instance_valid(_mode_new_btn):
+		_mode_new_btn.text = _icon("✦", "+") + "New Game"
+	if is_instance_valid(_mode_edit_btn):
+		_mode_edit_btn.text = _icon("⚙") + "Change Game"
+	if is_instance_valid(_sandbox_host):
+		_sandbox_host.set_emoji_enabled(_all_glyphs_supported("🎭"))
+	_set_ai_mode(_ai_mode)
+	_refresh_conn_badge()
+	if not _snapshot.is_empty():
+		_apply_snapshot(_snapshot)
+	propagate_notification(NOTIFICATION_THEME_CHANGED)
+	queue_redraw()
 
 func _discover_ws_url() -> String:
 	if OS.has_feature("web"):
@@ -69,9 +220,27 @@ func _connect_ws() -> void:
 	_ws.outbound_buffer_size = 1024 * 1024
 	var err := _ws.connect_to_url(_ws_url)
 	if err != OK:
-		_set_conn_badge("🔴 Connection Error (" + str(err) + ")", Color("#ef4444"))
+		_conn_state_kind = "error"
+		_conn_err_code = err
 	else:
-		_set_conn_badge("🟡 Connecting...", Color("#eab308"))
+		_conn_state_kind = "connecting"
+	_refresh_conn_badge()
+
+func _refresh_conn_badge() -> void:
+	if not is_instance_valid(_conn_badge):
+		return
+	if _conn_state_kind == "live":
+		var secure := _ws_url.begins_with("wss://")
+		if secure:
+			_set_conn_badge(_icon("🔒", "•") + "HTTPS/WSS Live", Color("#22c55e"))
+		else:
+			_set_conn_badge(_icon("●", "•") + "WS Live", Color("#22c55e"))
+	elif _conn_state_kind == "reconnecting":
+		_set_conn_badge(_icon("●", "•") + "Reconnecting...", Color("#ef4444"))
+	elif _conn_state_kind == "error":
+		_set_conn_badge(_icon("⚠", "!") + "Connection Error (" + str(_conn_err_code) + ")", Color("#ef4444"))
+	else:
+		_set_conn_badge(_icon("●", "•") + "Connecting...", Color("#eab308"))
 
 func _process(delta: float) -> void:
 	_ws.poll()
@@ -79,8 +248,8 @@ func _process(delta: float) -> void:
 	if state == WebSocketPeer.STATE_OPEN:
 		if not _ws_connected:
 			_ws_connected = true
-			var secure := _ws_url.begins_with("wss://")
-			_set_conn_badge("🔒 HTTPS/WSS Live" if secure else "🟢 WS Live", Color("#22c55e"))
+			_conn_state_kind = "live"
+			_refresh_conn_badge()
 			_publish_web_bridge()
 		while _ws.get_available_packet_count() > 0:
 			var pkt := _ws.get_packet().get_string_from_utf8()
@@ -88,7 +257,8 @@ func _process(delta: float) -> void:
 	elif state == WebSocketPeer.STATE_CLOSED:
 		if _ws_connected:
 			_ws_connected = false
-			_set_conn_badge("🔴 Reconnecting...", Color("#ef4444"))
+			_conn_state_kind = "reconnecting"
+			_refresh_conn_badge()
 			_publish_web_bridge()
 		_reconnect_timer += delta
 		if _reconnect_timer >= 2.0:
@@ -111,19 +281,19 @@ func _handle_ws_message(raw_text: String) -> void:
 		if typeof(snap) == TYPE_DICTIONARY:
 			_apply_snapshot(snap)
 	elif msg_type == "action_error":
-		_show_notice("⚠️ " + String(msg.get("error", "Action rejected")), Color("#f97316"))
+		_show_notice(_icon("⚠", "[!]") + _safe_text(String(msg.get("error", "Action rejected"))), Color("#f97316"))
 	elif msg_type == "info":
-		_show_notice("✨ " + String(msg.get("message", "")), Color("#00bcd4"))
+		_show_notice(_icon("✦", "*") + _safe_text(String(msg.get("message", ""))), Color("#00bcd4"))
 
 func _apply_snapshot(snap: Dictionary) -> void:
 	_snapshot = snap
 	var me_var: Variant = snap.get("me", {})
 	_me = me_var if typeof(me_var) == TYPE_DICTIONARY else {}
 
-	var my_avatar := String(_me.get("avatar", "🎮"))
-	var my_name := String(_me.get("name", "Guest"))
-	var my_tag := String(_me.get("gamerTag", ""))
-	_player_badge.text = my_avatar + " " + my_name + (" (@" + my_tag + ")" if my_tag != "" else "")
+	var my_avatar := _avatar_prefix(String(_me.get("avatar", "")))
+	var my_name := _safe_text(String(_me.get("name", "Guest")))
+	var my_tag := _safe_text(String(_me.get("gamerTag", "")))
+	_player_badge.text = my_avatar + my_name + (" (@" + my_tag + ")" if my_tag != "" else "")
 
 	# Games dropdown
 	var games_arr: Array = snap.get("games", []) if typeof(snap.get("games")) == TYPE_ARRAY else []
@@ -143,7 +313,7 @@ func _apply_snapshot(snap: Dictionary) -> void:
 		for i in range(games_arr.size()):
 			var g: Dictionary = games_arr[i]
 			var gid := String(g.get("id", ""))
-			var gtitle := String(g.get("title", gid))
+			var gtitle := _safe_text(String(g.get("title", gid)))
 			var gmax := int(g.get("maxPlayers", 2))
 			var ver := int(g.get("version", 1))
 			_game_ids.append(gid)
@@ -171,7 +341,9 @@ func _apply_snapshot(snap: Dictionary) -> void:
 	var online_names: PackedStringArray = []
 	for p in online_arr:
 		if typeof(p) == TYPE_DICTIONARY:
-			online_names.append(String(p.get("avatar", "🟢")) + " " + String(p.get("shortName", p.get("name", "Player"))))
+			var av := _avatar_prefix(String(p.get("avatar", "")))
+			var nm := _safe_text(String(p.get("shortName", p.get("name", "Player"))))
+			online_names.append(av + nm)
 	_online_label.text = "Online in Lobby (" + str(online_names.size()) + "): " + (", ".join(online_names) if online_names.size() > 0 else "Connecting...")
 
 	# Seats list
@@ -183,7 +355,8 @@ func _apply_snapshot(snap: Dictionary) -> void:
 		row.add_theme_font_size_override("font_size", 13)
 		if idx < seats.size() and typeof(seats[idx]) == TYPE_DICTIONARY:
 			var sp: Dictionary = seats[idx]
-			row.text = "Seat " + str(idx + 1) + ": " + String(sp.get("avatar", "🎮")) + " " + String(sp.get("name", "")) + " (@" + String(sp.get("gamerTag", "")) + ")"
+			var sp_av := _avatar_prefix(String(sp.get("avatar", "")))
+			row.text = "Seat " + str(idx + 1) + ": " + sp_av + _safe_text(String(sp.get("name", ""))) + " (@" + _safe_text(String(sp.get("gamerTag", ""))) + ")"
 			row.add_theme_color_override("font_color", Color("#e2e8f0"))
 		else:
 			row.text = "Seat " + str(idx + 1) + ": — Open Seat —"
@@ -196,29 +369,29 @@ func _apply_snapshot(snap: Dictionary) -> void:
 	else:
 		if typeof(active_game) == TYPE_DICTIONARY and seats.size() >= max_p:
 			_seat_btn.text = "Seats Full (" + str(max_p) + "/" + str(max_p) + ")"
-			_seat_btn.disabled = false # keep clickable so server also sends explicit rejection notice if clicked
+			_seat_btn.disabled = false
 		else:
-			_seat_btn.text = "🪑 Join Game Seat"
+			_seat_btn.text = _icon("🪑", "+") + "Join Game Seat"
 			_seat_btn.disabled = false
 
 	_start_btn.disabled = (typeof(active_game) != TYPE_DICTIONARY)
 	var match_status := String(snap.get("matchStatus", "idle"))
-	_start_btn.text = "🔄 New Match" if match_status == "playing" else "▶️ Start Match"
+	_start_btn.text = (_icon("↻") + "New Match") if match_status == "playing" else (_icon("▶") + "Start Match")
 
 	# Agent status
 	var agent_st: Dictionary = snap.get("agentStatus", {}) if typeof(snap.get("agentStatus")) == TYPE_DICTIONARY else {}
 	var agent_busy := bool(agent_st.get("busy", false))
 	_run_agent_btn.disabled = agent_busy
 	if agent_busy:
-		var who := String(agent_st.get("requestedBy", "A player"))
-		var step := String(agent_st.get("step", "Generating server.js & Godot 4 client.gd..."))
-		_agent_status_label.text = "🤖 " + who + ": " + step
+		var who := _safe_text(String(agent_st.get("requestedBy", "A player")))
+		var step := _safe_text(String(agent_st.get("step", "Generating server.js & Godot 4 client.gd...")))
+		_agent_status_label.text = _icon("⚡", "[AI]") + who + ": " + step
 		_agent_status_label.add_theme_color_override("font_color", Color("#eab308"))
 	elif agent_st.get("error", null) != null and String(agent_st.get("error", "")) != "":
-		_agent_status_label.text = "⚠️ " + String(agent_st.get("error", ""))
+		_agent_status_label.text = _icon("⚠", "[!]") + _safe_text(String(agent_st.get("error", "")))
 		_agent_status_label.add_theme_color_override("font_color", Color("#ef4444"))
 	elif String(agent_st.get("step", "")) != "":
-		_agent_status_label.text = "✅ " + String(agent_st.get("step", ""))
+		_agent_status_label.text = _icon("✓", "[OK]") + _safe_text(String(agent_st.get("step", "")))
 		_agent_status_label.add_theme_color_override("font_color", Color("#22c55e"))
 	else:
 		_agent_status_label.text = "Any RobOS Game User can generate or evolve games."
@@ -229,14 +402,15 @@ func _apply_snapshot(snap: Dictionary) -> void:
 	var chat_lines: PackedStringArray = []
 	for c in chats:
 		if typeof(c) == TYPE_DICTIONARY:
-			chat_lines.append("[b]" + String(c.get("avatar", "💬")) + " " + String(c.get("name", "Player")) + ":[/b] " + String(c.get("text", "")))
+			var c_av := _avatar_prefix(String(c.get("avatar", "")))
+			chat_lines.append("[b]" + c_av + _safe_text(String(c.get("name", "Player"))) + ":[/b] " + _safe_text(String(c.get("text", ""))))
 	_chat_log_rtl.text = "\n".join(chat_lines) if chat_lines.size() > 0 else "[i]Lobby chat ready...[/i]"
 
 	# Waiting banner vs active match
 	if typeof(active_game) == TYPE_DICTIONARY and match_status != "playing":
 		_waiting_banner.visible = true
 		_waiting_label.text = (
-			"⏳ Waiting for players to claim seats for '" + String(active_game.get("title", "Game")) + "' ("
+			_icon("⏳") + "Waiting for players to claim seats for '" + _safe_text(String(active_game.get("title", "Game"))) + "' ("
 			+ str(seats.size()) + "/" + str(min_p) + " needed, max " + str(max_p) + "). Click 'Join Game Seat' on the left!"
 		)
 	else:
@@ -260,6 +434,7 @@ func _publish_web_bridge() -> void:
 	var active_game: Variant = _snapshot.get("activeGame", null)
 	var bridge_state := {
 		"connected": _ws_connected,
+		"symbolsFontLoaded": _symbols_ready,
 		"wsUrl": _ws_url,
 		"me": _me,
 		"activeGameId": active_game.get("id", null) if typeof(active_game) == TYPE_DICTIONARY else null,
@@ -284,13 +459,15 @@ func _set_conn_badge(text: String, col: Color) -> void:
 
 func _set_ai_mode(mode: String) -> void:
 	_ai_mode = mode
-	_title_input.visible = (mode == "generate")
-	if mode == "generate":
-		_prompt_input.placeholder_text = "Describe a new multiplayer game (e.g. '2-player Hangman, max 2 players, random starter then alternate phrase chooser')..."
-		_run_agent_btn.text = "✨ Generate New Game"
-	else:
-		_prompt_input.placeholder_text = "Describe how to change the active game's rules, server logic, or Godot 4 visuals..."
-		_run_agent_btn.text = "🔧 Modify Active Game"
+	if is_instance_valid(_title_input):
+		_title_input.visible = (mode == "generate")
+	if is_instance_valid(_prompt_input) and is_instance_valid(_run_agent_btn):
+		if mode == "generate":
+			_prompt_input.placeholder_text = "Describe a new multiplayer game (e.g. '2-player Hangman, max 2 players, random starter then alternate phrase chooser')..."
+			_run_agent_btn.text = _icon("✦", "+") + "Generate New Game"
+		else:
+			_prompt_input.placeholder_text = "Describe how to change the active game's rules, server logic, or Godot 4 visuals..."
+			_run_agent_btn.text = _icon("⚙") + "Modify Active Game"
 
 func _on_seat_pressed() -> void:
 	var is_seated := bool(_snapshot.get("isSeated", false))
@@ -308,7 +485,7 @@ func _on_game_selected(idx: int) -> void:
 func _on_run_agent_pressed() -> void:
 	var prompt := _prompt_input.text.strip_edges()
 	if prompt == "":
-		_show_notice("⚠️ Enter a description for the RobOS Agent first.", Color("#f97316"))
+		_show_notice(_icon("⚠", "[!]") + "Enter a description for the RobOS Agent first.", Color("#f97316"))
 		return
 	if _ai_mode == "generate":
 		_send_ws({
@@ -388,11 +565,11 @@ func _build_ui() -> void:
 	header_hbox.add_theme_constant_override("separation", 14)
 	header_card.add_child(header_hbox)
 
-	var brand := Label.new()
-	brand.text = "🎭 RobOS AI Multiplayer Game Theater"
-	brand.add_theme_font_size_override("font_size", 18)
-	brand.add_theme_color_override("font_color", Color("#00bcd4"))
-	header_hbox.add_child(brand)
+	_brand_label = Label.new()
+	_brand_label.text = _icon("🎭") + "RobOS AI Multiplayer Game Theater"
+	_brand_label.add_theme_font_size_override("font_size", 18)
+	_brand_label.add_theme_color_override("font_color", Color("#00bcd4"))
+	header_hbox.add_child(_brand_label)
 
 	_game_dropdown = OptionButton.new()
 	_game_dropdown.custom_minimum_size = Vector2(250, 34)
@@ -410,12 +587,12 @@ func _build_ui() -> void:
 	header_hbox.add_child(spacer)
 
 	_conn_badge = Label.new()
-	_conn_badge.text = "🟡 Connecting..."
+	_conn_badge.text = _icon("●", "•") + "Connecting..."
 	_conn_badge.add_theme_font_size_override("font_size", 13)
 	header_hbox.add_child(_conn_badge)
 
 	_player_badge = Label.new()
-	_player_badge.text = "🎮 Authenticating..."
+	_player_badge.text = _icon("🎮") + "Authenticating..."
 	_player_badge.add_theme_font_size_override("font_size", 14)
 	_player_badge.add_theme_color_override("font_color", Color("#f8fafc"))
 	header_hbox.add_child(_player_badge)
@@ -445,11 +622,11 @@ func _build_ui() -> void:
 	lobby_vbox.add_theme_constant_override("separation", 8)
 	lobby_card.add_child(lobby_vbox)
 
-	var lobby_hdr := Label.new()
-	lobby_hdr.text = "👥 Multiplayer Lobby & Seats"
-	lobby_hdr.add_theme_font_size_override("font_size", 15)
-	lobby_hdr.add_theme_color_override("font_color", Color("#38bdf8"))
-	lobby_vbox.add_child(lobby_hdr)
+	_lobby_hdr_label = Label.new()
+	_lobby_hdr_label.text = _icon("❖") + "Multiplayer Lobby & Seats"
+	_lobby_hdr_label.add_theme_font_size_override("font_size", 15)
+	_lobby_hdr_label.add_theme_color_override("font_color", Color("#38bdf8"))
+	lobby_vbox.add_child(_lobby_hdr_label)
 
 	_online_label = Label.new()
 	_online_label.text = "Online in Lobby: ..."
@@ -467,14 +644,14 @@ func _build_ui() -> void:
 	lobby_vbox.add_child(seat_btns_hbox)
 
 	_seat_btn = Button.new()
-	_seat_btn.text = "🪑 Join Game Seat"
+	_seat_btn.text = _icon("🪑", "+") + "Join Game Seat"
 	_seat_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_style_button(_seat_btn, "#0284c7", "#0369a1")
 	_seat_btn.pressed.connect(_on_seat_pressed)
 	seat_btns_hbox.add_child(_seat_btn)
 
 	_start_btn = Button.new()
-	_start_btn.text = "▶️ Start Match"
+	_start_btn.text = _icon("▶") + "Start Match"
 	_start_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_style_button(_start_btn, "#1e293b", "#334155")
 	_start_btn.pressed.connect(_on_start_pressed)
@@ -495,25 +672,25 @@ func _build_ui() -> void:
 	ai_vbox.add_theme_constant_override("separation", 8)
 	ai_card.add_child(ai_vbox)
 
-	var ai_hdr := Label.new()
-	ai_hdr.text = "🤖 RobOS Agent Game Studio"
-	ai_hdr.add_theme_font_size_override("font_size", 15)
-	ai_hdr.add_theme_color_override("font_color", Color("#c084fc"))
-	ai_vbox.add_child(ai_hdr)
+	_ai_hdr_label = Label.new()
+	_ai_hdr_label.text = _icon("⚡") + "RobOS Agent Game Studio"
+	_ai_hdr_label.add_theme_font_size_override("font_size", 15)
+	_ai_hdr_label.add_theme_color_override("font_color", Color("#c084fc"))
+	ai_vbox.add_child(_ai_hdr_label)
 
 	var mode_hbox := HBoxContainer.new()
 	mode_hbox.add_theme_constant_override("separation", 6)
 	ai_vbox.add_child(mode_hbox)
 
 	_mode_new_btn = Button.new()
-	_mode_new_btn.text = "✨ New Game"
+	_mode_new_btn.text = _icon("✦", "+") + "New Game"
 	_mode_new_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_style_button(_mode_new_btn, "#4c1d95", "#6d28d9")
 	_mode_new_btn.pressed.connect(func(): _set_ai_mode("generate"))
 	mode_hbox.add_child(_mode_new_btn)
 
 	_mode_edit_btn = Button.new()
-	_mode_edit_btn.text = "🔧 Change Game"
+	_mode_edit_btn.text = _icon("⚙") + "Change Game"
 	_mode_edit_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_style_button(_mode_edit_btn, "#1e293b", "#334155")
 	_mode_edit_btn.pressed.connect(func(): _set_ai_mode("modify"))
@@ -551,11 +728,11 @@ func _build_ui() -> void:
 	chat_vbox.add_theme_constant_override("separation", 6)
 	chat_card.add_child(chat_vbox)
 
-	var chat_hdr := Label.new()
-	chat_hdr.text = "💬 Lobby Chat"
-	chat_hdr.add_theme_font_size_override("font_size", 14)
-	chat_hdr.add_theme_color_override("font_color", Color("#38bdf8"))
-	chat_vbox.add_child(chat_hdr)
+	_chat_hdr_label = Label.new()
+	_chat_hdr_label.text = _icon("✉") + "Lobby Chat"
+	_chat_hdr_label.add_theme_font_size_override("font_size", 14)
+	_chat_hdr_label.add_theme_color_override("font_color", Color("#38bdf8"))
+	chat_vbox.add_child(_chat_hdr_label)
 
 	_chat_log_rtl = RichTextLabel.new()
 	_chat_log_rtl.bbcode_enabled = true
@@ -598,6 +775,7 @@ func _build_ui() -> void:
 	_waiting_banner.add_child(_waiting_label)
 
 	_sandbox_host = GameSandboxHost.new()
+	_sandbox_host.set_emoji_enabled(_all_glyphs_supported("🎭"))
 	_sandbox_host.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_sandbox_host.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_sandbox_host.action_dispatched.connect(func(payload: Dictionary):

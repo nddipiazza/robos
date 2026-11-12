@@ -8,8 +8,10 @@ var _loaded_version: int = -1
 var _loaded_code_hash: int = 0
 var _active_instance: Control = null
 var _welcome_box: CenterContainer = null
+var _welcome_title: Label = null
 var _status_label: Label = null
 var _stage_holder: Control = null
+var _emoji_enabled: bool = false
 
 func _ready() -> void:
 	var panel_style := StyleBoxFlat.new()
@@ -47,12 +49,12 @@ func _build_welcome_view() -> void:
 	vbox.add_theme_constant_override("separation", 12)
 	card.add_child(vbox)
 
-	var title := Label.new()
-	title.text = "🎭 Stage Ready — Generate Any Multiplayer Game!"
-	title.add_theme_font_size_override("font_size", 22)
-	title.add_theme_color_override("font_color", Color("#00bcd4"))
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	vbox.add_child(title)
+	_welcome_title = Label.new()
+	_welcome_title.text = ("🎭 " if _emoji_enabled else "") + "Stage Ready — Generate Any Multiplayer Game!"
+	_welcome_title.add_theme_font_size_override("font_size", 22)
+	_welcome_title.add_theme_color_override("font_color", Color("#00bcd4"))
+	_welcome_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(_welcome_title)
 
 	_status_label = Label.new()
 	_status_label.text = (
@@ -66,6 +68,11 @@ func _build_welcome_view() -> void:
 	_status_label.add_theme_font_size_override("font_size", 15)
 	_status_label.add_theme_color_override("font_color", Color("#cbd5e1"))
 	vbox.add_child(_status_label)
+
+func set_emoji_enabled(enabled: bool) -> void:
+	_emoji_enabled = enabled
+	if is_instance_valid(_welcome_title):
+		_welcome_title.text = ("🎭 " if _emoji_enabled else "") + "Stage Ready — Generate Any Multiplayer Game!"
 
 func clear_game_stage(message: String = "") -> void:
 	if is_instance_valid(_active_instance):
@@ -115,12 +122,14 @@ func _mount_gdscript(gid: String, ver: int, code_hash: int, gd_code: String) -> 
 	dyn_script.source_code = gd_code
 	var err := dyn_script.reload()
 	if err != OK:
-		clear_game_stage("⚠️ Failed to compile dynamic Godot 4 script for '" + gid + "' (error " + str(err) + ").")
+		var pfx := "⚠ " if _emoji_enabled else "[Error] "
+		clear_game_stage(pfx + "Failed to compile dynamic Godot 4 script for '" + gid + "' (error " + str(err) + ").")
 		return
 
 	var inst_variant: Variant = dyn_script.new()
 	if not (inst_variant is Control):
-		clear_game_stage("⚠️ Dynamic script for '" + gid + "' must extend Control.")
+		var pfx2 := "⚠ " if _emoji_enabled else "[Error] "
+		clear_game_stage(pfx2 + "Dynamic script for '" + gid + "' must extend Control.")
 		return
 
 	var inst: Control = inst_variant

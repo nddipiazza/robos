@@ -51,7 +51,39 @@ const MIME_TYPES = {
   '.svg': 'image/svg+xml',
   '.png': 'image/png',
   '.ico': 'image/x-icon',
+  '.ttf': 'font/ttf',
+  '.ttc': 'font/collection',
+  '.otf': 'font/otf',
 };
+
+const FONT_CANDIDATES = {
+  symbols2: [
+    '/usr/share/fonts/truetype/noto/NotoSansSymbols2-Regular.ttf',
+    '/usr/share/fonts/noto/NotoSansSymbols2-Regular.ttf',
+  ],
+  symbols: [
+    '/usr/share/fonts/truetype/noto/NotoSansSymbols-Regular.ttf',
+    '/usr/share/fonts/noto/NotoSansSymbols-Regular.ttf',
+  ],
+  dejavu: [
+    '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
+    '/usr/share/fonts/TTF/DejaVuSans.ttf',
+    '/System/Library/Fonts/Supplemental/Arial Unicode.ttf',
+    'C:\\Windows\\Fonts\\seguisym.ttf',
+  ],
+};
+
+function resolveSystemFontPath(kind) {
+  const list = FONT_CANDIDATES[kind] || [];
+  for (const candidate of list) {
+    try {
+      if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) {
+        return candidate;
+      }
+    } catch {}
+  }
+  return '';
+}
 
 function parseCookies(req) {
   const raw = String(req.headers?.cookie || '');
@@ -237,6 +269,28 @@ function createGameTheaterServer(options = {}) {
       const proto = isTls ? 'https' : 'http';
       const parsedUrl = new URL(req.url || '/', `${proto}://${req.headers.host || '127.0.0.1'}`);
       const pathname = parsedUrl.pathname;
+
+      // ── Public vector symbol fallback fonts for Godot 4 WebAssembly ───────
+      if (
+        (req.method === 'GET' || req.method === 'HEAD') &&
+        /^\/api\/fonts\/(symbols2|symbols|dejavu)\.ttf$/.test(pathname)
+      ) {
+        const kind = pathname.slice('/api/fonts/'.length, -'.ttf'.length);
+        const fontPath = resolveSystemFontPath(kind);
+        if (!fontPath) {
+          res.writeHead(204, { 'Access-Control-Allow-Origin': '*' });
+          return res.end();
+        }
+        const stat = fs.statSync(fontPath);
+        res.writeHead(200, {
+          'Content-Type': 'font/ttf',
+          'Content-Length': stat.size,
+          'Cache-Control': 'public, max-age=86400',
+          'Access-Control-Allow-Origin': '*',
+        });
+        if (req.method === 'HEAD') return res.end();
+        return fs.createReadStream(fontPath).pipe(res);
+      }
 
       const authRes = resolveReqAuth(req, parsedUrl);
       if (!authRes.ok) {
