@@ -29,7 +29,10 @@ const {
   parseNaturalLanguageEvent,
   syncNamedCalendarsToThunderbird,
 } = require('../lib/named-calendars');
-const { syncCalendarAccessDocWithGoogleDrive } = require('../lib/access-doc-sync');
+const {
+  syncCalendarAccessDocWithGoogleDrive,
+  inviteMemberToCalendarDoc,
+} = require('../lib/access-doc-sync');
 
 function parseArgs(argv) {
   const positional = [];
@@ -150,6 +153,27 @@ async function main() {
     for (const m of res.moved) {
       console.log(`  • "${m.summary}" [${m.fromCalendar} → ${m.toCalendar}] (${m.newUid})`);
     }
+    return;
+  }
+
+  if (cmd === 'invite' || cmd === 'share-calendar') {
+    const emailArg = rest[0] || flags.email || flags.to || '';
+    const calArg = flags.calendar || rest.slice(1).join(' ') || '';
+    if (!emailArg) throw new Error('Provide an email address or family member name to invite.');
+    const res = await inviteMemberToCalendarDoc({
+      email: emailArg,
+      calendar: calArg,
+      message: flags.message || '',
+    });
+    if (asJson) return console.log(JSON.stringify(res, null, 2));
+    console.log(`✓ Sent Calendar Invite Google Doc to ${res.invitedName} <${res.invitedEmail}>:`);
+    console.log(`  • Calendar:             ${res.calendarName}`);
+    console.log(`  • Purpose:              ${res.description}`);
+    console.log(`  • Invite Google Doc:    ${res.docTitle}`);
+    console.log(`  • Google Doc URL:       ${res.docUrl}`);
+    console.log(`  • 1-Button WebApp Link: ${res.authedWebAppUrl}`);
+    console.log(`  • Google Calendar Link: ${res.googleCalendarUrl}`);
+    console.log(`  • Notification Email:   Sent via Google Docs (${res.permissionId})`);
     return;
   }
 

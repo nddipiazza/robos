@@ -174,6 +174,10 @@ function renderNamedCalendars() {
       const inviteDocLink = c.inviteDocUrl
         ? `<a href="${esc(c.inviteDocUrl)}" target="_blank" rel="noopener" class="gcal-ext-link" style="color:#10b981;text-decoration:none;font-weight:600;" title="Open ${esc(c.name)}'s dedicated Invite &amp; Access Google Doc">📄 Invite Google Doc ↗</a>`
         : '';
+      const sendInviteBtn =
+        !c.primary && c.writable !== false
+          ? `<button type="button" class="btn-link btn-send-cal-invite" data-cal-id="${esc(c.id)}" data-cal-name="${esc(c.name)}" style="font-size:11.5px;color:#c084fc;font-weight:600;">✉️ Invite Person to Calendar</button>`
+          : '';
       const createInGcalLink = c.needsGoogleCalendarContainer
         ? `<a href="${esc(c.googleCreateCalendarUrl || 'https://calendar.google.com/calendar/u/0/r/settings/createcalendar')}" target="_blank" rel="noopener" class="gcal-ext-link" style="color:#f59e0b;text-decoration:none;font-weight:600;" title="Google CalDAV disables MKCALENDAR; click to create '${esc(c.name)}' in Google Calendar Settings so it appears as its own sidebar calendar">➕ Create "${esc(c.name)}" in Google Calendar Sidebar ↗</a>`
         : '';
@@ -189,8 +193,9 @@ function renderNamedCalendars() {
           </div>
           ${descLine}
           ${sharedAvatars}
-          <div class="named-cal-links" style="margin-top:6px;display:flex;gap:10px;flex-wrap:wrap;font-size:11.5px;">
+          <div class="named-cal-links" style="margin-top:6px;display:flex;gap:10px;flex-wrap:wrap;font-size:11.5px;align-items:center;">
             ${inviteDocLink}
+            ${sendInviteBtn}
             <a href="${esc(gcalUrl)}" target="_blank" rel="noopener" class="gcal-ext-link" style="color:#38bdf8;text-decoration:none;font-weight:600;">🌐 Open in Google Calendar ↗</a>
             <a href="${esc(gcalEmbedUrl)}" target="_blank" rel="noopener" class="gcal-ext-link" style="color:#94a3b8;text-decoration:none;">📅 Browser View ↗</a>
             ${createInGcalLink}
@@ -202,6 +207,35 @@ function renderNamedCalendars() {
 
   grid.querySelectorAll('.gcal-ext-link').forEach((link) => {
     link.addEventListener('click', (ev) => ev.stopPropagation());
+  });
+
+  grid.querySelectorAll('.btn-send-cal-invite').forEach((btn) => {
+    btn.addEventListener('click', async (ev) => {
+      ev.stopPropagation();
+      const calId = btn.dataset.calId;
+      const calName = btn.dataset.calName;
+      const email = window.prompt(`Enter email address (or family member name) to invite to "${calName}":`);
+      if (!email || !email.trim()) return;
+      btn.disabled = true;
+      btn.textContent = '⏳ Sending Invite...';
+      try {
+        const res = await fetch('/api/calendars/invite', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ calendarId: calId, email: email.trim() }),
+        });
+        const data = await res.json();
+        if (data.ok) {
+          showToast(`✉️ Invited ${data.invitedName} <${data.invitedEmail}> to "${data.calendarName}" via Google Docs!`);
+          await loadState();
+        } else {
+          showToast(`⚠️ ${data.error || 'Could not send invite.'}`);
+        }
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '✉️ Invite Person to Calendar';
+      }
+    });
   });
 
   grid.querySelectorAll('.named-cal-card').forEach((card) => {

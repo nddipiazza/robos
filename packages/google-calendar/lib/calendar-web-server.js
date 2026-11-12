@@ -25,7 +25,10 @@ const {
   listEventsAcrossNamedCalendars,
   parseNaturalLanguageEvent,
 } = require('./named-calendars');
-const { syncCalendarAccessDocWithGoogleDrive } = require('./access-doc-sync');
+const {
+  syncCalendarAccessDocWithGoogleDrive,
+  inviteMemberToCalendarDoc,
+} = require('./access-doc-sync');
 
 let dictateAgent = null;
 try {
@@ -343,6 +346,21 @@ function createCalendarWebServer(options = {}) {
         const syncTb = await syncNamedCalendarsToThunderbird(null, options);
         broadcastUpdate('calendars-updated', {});
         return sendJson(res, 200, { ok: true, saved, thunderbird: syncTb }, extraHeaders);
+      }
+
+      // ── POST /api/calendars/invite — Send Calendar Invite Google Doc to Email ─
+      if (req.method === 'POST' && pathname === '/api/calendars/invite') {
+        const body = await readJsonBody(req);
+        const invited = await inviteMemberToCalendarDoc(
+          {
+            calendar: body.calendar || body.calendarId || body.calendarName || '',
+            email: body.email || '',
+            message: body.message || '',
+          },
+          options
+        );
+        broadcastUpdate('calendars-updated', {});
+        return sendJson(res, 200, invited, extraHeaders);
       }
 
       // ── POST /api/sync-doc — Create / Update Access Google Doc ──────────────
