@@ -23,6 +23,7 @@ const {
   createNamedCalendarEvent,
   deleteNamedCalendarEvent,
   listEventsAcrossNamedCalendars,
+  scopeCalendarStateForCalendar,
   parseNaturalLanguageEvent,
 } = require('./named-calendars');
 const {
@@ -37,6 +38,7 @@ try {
 
 const WEB_DIR = path.resolve(__dirname, '..', 'web');
 const SESSION_COOKIE = 'robos_cal_session';
+const SCOPE_COOKIE = 'robos_cal_scope';
 
 const MIME_TYPES = {
   '.html': 'text/html; charset=utf-8',
@@ -180,15 +182,27 @@ function createCalendarWebServer(options = {}) {
 
       // Check `?auth=<token>` query parameter
       const queryAuth = parsedUrl.searchParams.get('auth') || '';
+      const queryCalendarScope = parsedUrl.searchParams.get('calendar') || '';
+      const cookies = parseCookies(req);
       let isAuthed = false;
-      let setCookieHeader = null;
+      const cookieHeaders = [];
 
       if (queryAuth && queryAuth === expectedToken) {
         isAuthed = true;
         const isHttps = String(req.headers['x-forwarded-proto'] || '').toLowerCase() === 'https';
-        setCookieHeader = `${SESSION_COOKIE}=${expectedCookieVal}; Path=/; Max-Age=${365 * 86400}; HttpOnly; SameSite=Lax${isHttps ? '; Secure' : ''}`;
+        cookieHeaders.push(
+          `${SESSION_COOKIE}=${expectedCookieVal}; Path=/; Max-Age=${365 * 86400}; HttpOnly; SameSite=Lax${isHttps ? '; Secure' : ''}`
+        );
+        if (pathname === '/') {
+          if (queryCalendarScope) {
+            cookieHeaders.push(
+              `${SCOPE_COOKIE}=${encodeURIComponent(queryCalendarScope)}; Path=/; Max-Age=${365 * 86400}; HttpOnly; SameSite=Lax${isHttps ? '; Secure' : ''}`
+            );
+          } else {
+            cookieHeaders.push(`${SCOPE_COOKIE}=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax`);
+          }
+        }
       } else {
-        const cookies = parseCookies(req);
         if (cookies[SESSION_COOKIE] === expectedCookieVal || isLoopbackRequest(req) || options.requireAuth === false) {
           isAuthed = true;
         }
@@ -202,7 +216,7 @@ function createCalendarWebServer(options = {}) {
         return res.end(renderUnauthorizedHtml());
       }
 
-      const extraHeaders = setCookieHeader ? { 'Set-Cookie': setCookieHeader } : {};
+      const extraHeaders = cookieHeaders.length ? { 'Set-Cookie': cookieHeaders } : {};
 
       // ── SSE Stream ──────────────────────────────────────────────────────────
       if (req.method === 'GET' && pathname === '/api/stream') {
@@ -220,20 +234,24 @@ function createCalendarWebServer(options = {}) {
 
       // ── GET /api/state — Named Calendars, Family Members, Upcoming Events, Access Doc ──
       if (req.method === 'GET' && pathname === '/api/state') {
-        const state = await listEventsAcrossNamedCalendars(null, options);
+        const rawState = await listEventsAcrossNamedCalendars(null, options);
+        const scopeCalId = queryCalendarScope || cookies[SCOPE_COOKIE] || '';
+        const state = scopeCalId ? scopeCalendarStateForCalendar(rawState, scopeCalId) : rawState;
         const latestSettings = loadCalendarSettings(options);
+        const scopedCalDoc = scopeCalId && latestSettings.calendarDocs ? latestSettings.calendarDocs[state.scopedCalendarId || scopeCalId] : null;
         return sendJson(
           res,
           200,
           {
             ok: true,
             email: state.email,
+            scopedCalendarId: state.scopedCalendarId || '',
             defaultCalendarId: state.defaultCalendarId,
             calendars: state.calendars,
             familyMembers: state.familyMembers,
             events: state.events,
-            accessDoc: latestSettings.accessDoc || {},
-            calendarDocs: latestSettings.calendarDocs || {},
+            accessDoc: scopedCalDoc || latestSettings.accessDoc || {},
+            calendarDocs: scopeCalId ? (scopedCalDoc ? { [state.scopedCalendarId || scopeCalId]: scopedCalDoc } : {}) : (latestSettings.calendarDocs || {}),
             publicTunnelUrl: latestSettings.publicTunnelUrl || '',
             lanWebAppUrl: latestSettings.lanWebAppUrl || '',
           },
@@ -266,7 +284,9 @@ function createCalendarWebServer(options = {}) {
       // ── POST /api/parse — Smart Natural Language / Itinerary / Invite Parser ─
       if (req.method === 'POST' && pathname === '/api/parse') {
         const body = await readJsonBody(req);
-        const state = await listEventsAcrossNamedCalendars(null, { ...options, skipNetwork: true });
+        const rawState = await listEventsAcrossNamedCalendars(null, { ...options, skipNetwork: true });
+        const scopeCal = cookies[SCOPE_COOKIE] || body.calendarId || '';
+        const state = scopeCal ? scopeCalendarStateForCalendar(rawState, scopeCal) : rawState;
         const parsed = parseNaturalLanguageEvent(body.text || '', {
           ...options,
           familyMembers: state.familyMembers,
@@ -324,7 +344,9 @@ function createCalendarWebServer(options = {}) {
         if (!transcript) {
           return sendJson(res, 200, { ok: false, error: 'No speech detected in audio.', transcript: '' }, extraHeaders);
         }
-        const state = await listEventsAcrossNamedCalendars(null, { ...options, skipNetwork: true });
+        const rawState = await listEventsAcrossNamedCalendars(null, { ...options, skipNetwork: true });
+        const scopeCal = cookies[SCOPE_COOKIE] || body.calendarId || '';
+        const state = scopeCal ? scopeCalendarStateForCalendar(rawState, scopeCal) : rawState;
         const parsed = parseNaturalLanguageEvent(transcript, {
           ...options,
           familyMembers: state.familyMembers,

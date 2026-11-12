@@ -381,5 +381,62 @@ describe('Google Calendar: Thunderbird sync settings stick', () => {
     assert.ok(singleCalHtml.includes('For stuff that the extended divorced side of the family needs.'));
     assert.ok(singleCalHtml.includes('parent1@example.com'));
     assert.ok(singleCalHtml.includes('parent2@example.com'));
+
+    // Scoped calendar state hides people and events that do not belong to the target calendar
+    const scopedKidsState = namedCals.scopeCalendarStateForCalendar(
+      {
+        email: 'parent1@example.com',
+        calendars: [
+          {
+            id: 'family@group.calendar.google.com',
+            name: 'Family',
+            isFamilyCalendar: true,
+            sharedWith: [
+              { uid: 'p1', name: 'Parent One', email: 'parent1@example.com' },
+              { uid: 'partner', name: 'Private Partner', email: 'partner@example.com' },
+            ],
+          },
+          {
+            id: 'kids-calendar',
+            name: 'Kids Calendar',
+            isCustomSharedCalendar: true,
+            sharedWith: [
+              { uid: 'p1', name: 'Parent One', email: 'parent1@example.com' },
+              { uid: 'p2', name: 'Co-Parent Two', email: 'coparent@example.com' },
+              { uid: 'kid1', name: 'Kid One', email: 'kid1@example.com' },
+            ],
+          },
+        ],
+        familyMembers: [
+          { uid: 'p1', name: 'Parent One', email: 'parent1@example.com' },
+          { uid: 'partner', name: 'Private Partner', email: 'partner@example.com' },
+          { uid: 'p2', name: 'Co-Parent Two', email: 'coparent@example.com' },
+          { uid: 'kid1', name: 'Kid One', email: 'kid1@example.com' },
+        ],
+        events: [
+          {
+            id: 'ev-family-1',
+            summary: 'Household Trip',
+            calendarId: 'family@group.calendar.google.com',
+            calendarName: 'Family',
+            attendees: ['Private Partner <partner@example.com>'],
+          },
+          {
+            id: 'ev-kids-1',
+            summary: 'Kids Weekend',
+            calendarId: 'kids-calendar',
+            calendarName: 'Kids Calendar',
+            attendees: ['Parent One <parent1@example.com>', 'Co-Parent Two <coparent@example.com>'],
+          },
+        ],
+      },
+      'kids-calendar'
+    );
+    assert.strictEqual(scopedKidsState.calendars.length, 1);
+    assert.strictEqual(scopedKidsState.calendars[0].id, 'kids-calendar');
+    assert.ok(!scopedKidsState.familyMembers.some((m) => m.email === 'partner@example.com'));
+    assert.ok(scopedKidsState.familyMembers.some((m) => m.email === 'coparent@example.com'));
+    assert.strictEqual(scopedKidsState.events.length, 1);
+    assert.strictEqual(scopedKidsState.events[0].summary, 'Kids Weekend');
   });
 });

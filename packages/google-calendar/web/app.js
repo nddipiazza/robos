@@ -109,6 +109,21 @@ function recomputeEndFromDuration(opts = {}) {
   updateDateSpanBadge();
 }
 
+function getVisibleMembersForSelectedCalendar() {
+  const cal = state.calendars.find((c) => c.id === state.selectedCalendarId) || state.calendars[0];
+  if (!cal) return state.familyMembers;
+  if (Array.isArray(cal.sharedWith) && cal.sharedWith.length > 0) {
+    const allowedEmails = new Set(cal.sharedWith.map((m) => String(m.email || '').toLowerCase()).filter(Boolean));
+    return state.familyMembers.filter((fm) => allowedEmails.has(String(fm.email || '').toLowerCase()));
+  }
+  if (cal.primary) {
+    return state.familyMembers.filter(
+      (fm) => String(fm.email || '').toLowerCase() === String(state.email || '').toLowerCase()
+    );
+  }
+  return state.familyMembers;
+}
+
 function syncDefaultGuestsForSelectedCalendar(calendarId) {
   const cal = state.calendars.find((c) => c.id === calendarId);
   state.selectedFamilyEmails.clear();
@@ -267,9 +282,10 @@ function renderFamilyChips() {
   const container = document.getElementById('family-chips');
   const profilesContainer = document.getElementById('family-profiles-list');
   const countBadge = document.getElementById('family-count-badge');
-  if (countBadge) countBadge.textContent = `${state.familyMembers.length} Members`;
+  const visibleMembers = getVisibleMembersForSelectedCalendar();
+  if (countBadge) countBadge.textContent = `${visibleMembers.length} Members`;
 
-  container.innerHTML = state.familyMembers
+  container.innerHTML = visibleMembers
     .map((fm) => {
       const selected = state.selectedFamilyEmails.has(fm.email);
       return `
@@ -296,7 +312,7 @@ function renderFamilyChips() {
   });
 
   if (profilesContainer) {
-    profilesContainer.innerHTML = state.familyMembers
+    profilesContainer.innerHTML = visibleMembers
       .map(
         (fm) => `
         <div class="family-profile-row">
@@ -628,7 +644,9 @@ function toggleAllDayFields(isAllDay) {
 }
 
 async function loadState() {
-  const res = await fetch('/api/state');
+  const urlCal = new URLSearchParams(window.location.search).get('calendar') || '';
+  const stateEndpoint = urlCal ? `/api/state?calendar=${encodeURIComponent(urlCal)}` : '/api/state';
+  const res = await fetch(stateEndpoint);
   const data = await res.json();
   if (!data.ok) return;
   state.email = data.email || '';
@@ -637,6 +655,13 @@ async function loadState() {
   state.familyMembers = data.familyMembers || [];
   state.events = data.events || [];
   state.accessDoc = data.accessDoc || {};
+
+  if (data.scopedCalendarId && state.calendars.length === 1) {
+    state.selectedCalendarId = state.calendars[0].id;
+    state.filterCalendarId = state.calendars[0].id;
+    syncDefaultGuestsForSelectedCalendar(state.selectedCalendarId);
+    document.getElementById('btn-Customize-cal')?.classList.add('hidden');
+  }
 
   const sub = document.getElementById('account-subtitle');
   if (sub && state.email) {
@@ -753,7 +778,7 @@ function setupEventListeners() {
   });
 
   document.getElementById('btn-invite-all-family').addEventListener('click', () => {
-    for (const fm of state.familyMembers) {
+    for (const fm of getVisibleMembersForSelectedCalendar()) {
       if (fm.email) state.selectedFamilyEmails.add(fm.email);
     }
     renderFamilyChips();
