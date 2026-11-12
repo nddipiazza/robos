@@ -1,7 +1,7 @@
 .starfall-game {
-  --starfall-ground: #121715;
-  --starfall-panel: #1a211d;
-  --starfall-edge: #384239;
+  --starfall-ground: #101817;
+  --starfall-panel: #172321;
+  --starfall-edge: #3a4d44;
   --starfall-text: #eef1e9;
   --starfall-muted: #b9c2b6;
   background: var(--starfall-ground);
@@ -26,6 +26,15 @@
   align-items: center;
   padding-block: clamp(38px, 8vw, 100px);
 }
+.starfall-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: radial-gradient(ellipse at 76% 40%, #314c3b 0%, transparent 68%);
+}
+.starfall-hero { position: relative; isolation: isolate; }
+.starfall-hero .starfall-capture { box-shadow: 0 24px 54px #070e0bb3; }
 .starfall h1, .starfall h2, .starfall h3 { color: var(--starfall-text); margin: 0; line-height: 1.13; }
 .starfall h1 { font-size: clamp(2.8rem, 6vw, 5.45rem); letter-spacing: -.07em; font-weight: 800; }
 .starfall h2 { font-size: clamp(1.9rem, 3.7vw, 3.25rem); letter-spacing: -.045em; }
@@ -72,8 +81,11 @@
 }
 .starfall-section-head > p { margin: 0; max-width: 53ch; }
 .starfall-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+.starfall-campaign-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .starfall-grid article { min-width: 0; }
-.starfall-grid article > a { border: 1px solid var(--starfall-edge); margin-bottom: 14px; }
+.starfall-grid article > a { border: 1px solid var(--starfall-edge); margin-bottom: 14px; overflow: hidden; }
+.starfall-grid article > a:hover { border-color: var(--accent); }
+.starfall-grid article img { aspect-ratio: 16/9; object-fit: cover; }
 .starfall-grid article p:last-child { margin: 8px 0 0; font-size: .92rem; }
 .starfall-split { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(24px, 5vw, 62px); }
 .starfall-editor { align-items: center; }
@@ -81,10 +93,13 @@
 
 .starfall-council { background: var(--starfall-panel); }
 .starfall-council-copy > p { margin: 12px 0 16px; }
-.starfall-process { margin: 20px 0; padding-left: 23px; color: var(--starfall-muted); }
-.starfall-process li { margin: 12px 0; padding-left: 3px; }
-.starfall-process li::marker { color: var(--accent); font-weight: 700; }
-.starfall-process strong { color: var(--starfall-text); }
+.starfall-dev { background: linear-gradient(125deg, var(--starfall-panel), #202e24); }
+.starfall-dev-inner { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 240px); align-items: center; gap: clamp(20px, 7vw, 88px); }
+.starfall-dev-inner p { max-width: 52ch; }
+.starfall-short { display: block; position: relative; width: min(100%, 240px); border: 1px solid var(--starfall-edge); box-shadow: 0 18px 40px #090f0c99; }
+.starfall-short img { display: block; width: 100%; height: auto; }
+.starfall-short span { display: grid; place-items: center; position: absolute; top: 50%; left: 50%; translate: -50% -50%; width: 54px; height: 54px; border-radius: 50%; color: #111b16; background: var(--accent); }
+.starfall-short:hover { border-color: var(--accent); }
 .starfall-reference { display: flex; gap: 8px 16px; flex-wrap: wrap; font-size: .82rem; }
 .starfall-intake { background: var(--starfall-ground); border: 1px solid var(--starfall-edge); padding: clamp(15px, 3vw, 25px); }
 .starfall-intake fieldset { border: 0; padding: 0; margin: 0 0 16px; min-width: 0; }
@@ -136,6 +151,6 @@
   .starfall-hero { gap: 26px; }
 }
 @media (max-width: 600px) {
-  .starfall-grid { grid-template-columns: minmax(0, 1fr); }
+  .starfall-grid, .starfall-dev-inner { grid-template-columns: minmax(0, 1fr); }
   .starfall-nav .wrap, .starfall-nav .wrap > div { gap: 8px 14px; }
 }
