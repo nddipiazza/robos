@@ -4,8 +4,18 @@ let appState = null;
 let aiMode = 'generate';
 let codeTab = 'server'; // 'server' | 'client'
 let loadedGameDetail = null;
+const sendingShareUids = new Set();
+const recentlySentShareUntil = new Map();
+const recentlyCopiedUidUntil = new Map();
 
 const el = (id) => document.getElementById(id);
+
+function isValidPlayerEmail(email) {
+  const clean = String(email || '').trim().toLowerCase();
+  if (!clean || !clean.includes('@')) return false;
+  if (clean.endsWith('.local') || clean.endsWith('@localhost')) return false;
+  return true;
+}
 
 function setBanner(msg, isError = false) {
   const b = el('status-banner');
@@ -61,20 +71,69 @@ async function refreshState() {
     hostDocWrap.innerHTML = '';
   }
 
+  const now = Date.now();
   const onlineSet = new Set((state.lobby?.onlinePlayers || []).map((p) => p.uid));
   const tbody = el('players-tbody');
   tbody.innerHTML = (state.players || [])
     .map((p) => {
       const onlineDot = onlineSet.has(p.uid) ? '🟢 ' : '';
-      const docBtn = p.doc?.docUrl
-        ? `<button class="link-btn" data-open-url="${esc(p.doc.docUrl)}">📄 Open Doc ↗</button>`
-        : '<span class="muted">Not synced</span>';
+      const hasValidEmail = isValidPlayerEmail(p.email);
+      const emailSub = hasValidEmail ? p.email : 'No Google email set';
       const targetHttpsUrl = p.lanHttpsLaunchUrl || p.launchUrl || p.localLaunchUrl;
+      const shareUrl = p.doc?.docUrl || targetHttpsUrl;
+      const docBtn = p.doc?.docUrl
+        ? `<button class="link-btn" data-open-url="${esc(p.doc.docUrl)}" title="Open ${esc(p.name)}'s personal Google Doc">📄 Open Doc ↗</button>`
+        : '<span class="muted">Not synced</span>';
+
+      const isSending = sendingShareUids.has(p.uid);
+      const isRecentlySent = (recentlySentShareUntil.get(p.uid) || 0) > now;
+      const isRecentlyCopied = (recentlyCopiedUidUntil.get(p.uid) || 0) > now;
+
+      const resendLabel = isSending
+        ? '⏳ Sending...'
+        : isRecentlySent
+          ? '✅ Sent!'
+          : '📨 Resend Share';
+      const copyLabel = isRecentlyCopied ? '✅ Copied!' : '📋 Copy Link';
+
       return `
         <tr>
-          <td><strong>${onlineDot}${esc(p.avatar || '🎮')} ${esc(p.name)}</strong></td>
+          <td>
+            <strong>${onlineDot}${esc(p.avatar || '🎮')} ${esc(p.name)}</strong>
+            <span class="player-sub">${esc(emailSub)}</span>
+          </td>
           <td><code>@${esc(p.gamerTag)}</code></td>
-          <td>${docBtn}</td>
+          <td>
+            <div class="doc-share-actions">
+              ${docBtn}
+              <button
+                type="button"
+                class="btn btn-secondary btn-xs"
+                data-resend-uid="${esc(p.uid)}"
+                data-resend-name="${esc(p.name)}"
+                data-resend-email="${esc(p.email || '')}"
+                data-resend-doc-url="${esc(shareUrl)}"
+                ${isSending ? 'disabled' : ''}
+                title="Sync personal Google Doc and resend share invitation email${hasValidEmail ? ` to ${esc(p.email)}` : ''}"
+              >${resendLabel}</button>
+              <button
+                type="button"
+                class="btn btn-secondary btn-xs"
+                data-edit-share-uid="${esc(p.uid)}"
+                data-edit-share-name="${esc(p.name)}"
+                data-edit-share-email="${esc(hasValidEmail ? p.email : '')}"
+                title="Send or resend share link to a specific email address"
+              >✉️</button>
+              <button
+                type="button"
+                class="btn btn-secondary btn-xs"
+                data-copy-uid="${esc(p.uid)}"
+                data-copy-name="${esc(p.name)}"
+                data-copy-url="${esc(shareUrl)}"
+                title="Copy share link to clipboard"
+              >${copyLabel}</button>
+            </div>
+          </td>
           <td>
             <button class="btn btn-primary btn-sm" data-play-uid="${esc(p.uid)}" data-play-name="${esc(p.name)}" data-play-url="${esc(targetHttpsUrl)}">🎮 Play as ${esc(p.shortName || p.name)}</button>
           </td>
@@ -143,10 +202,93 @@ function setCodeTab(tab) {
   }
 }
 
+function openResendDialog({ uid, name, email }) {
+  const dlg = el('resend-share-dialog');
+  if (!dlg) return;
+  el('resend-dialog-uid').value = uid || '';
+  el('resend-dialog-title').textContent = `📨 Resend Google Doc Share Link — ${name || 'Player'}`;
+  el('resend-dialog-email').value = isValidPlayerEmail(email) ? email : '';
+  el('resend-dialog-message').value = '';
+  if (typeof dlg.showModal === 'function') dlg.showModal();
+  el('resend-dialog-email').focus();
+}
+
+async function performResendShare({ uid, name, email, message = '', fallbackUrl = '' }) {
+  if (!uid) return;
+  sendingShareUids.add(uid);
+  setBanner(`Syncing ${name || uid}'s Google Doc and resending share invitation to ${email}...`);
+  await refreshState();
+  try {
+    const res = await window.robos.invitePlayer({ uid, email, message });
+    if (res?.ok) {
+      sendingShareUids.delete(uid);
+      recentlySentShareUntil.set(uid, Date.now() + 4500);
+      const docUrl = res.playerDoc?.docUrl || fallbackUrl;
+      if (res.delivery === 'owner-doc-ready') {
+        if (docUrl) await window.robos.copyText(docUrl);
+        setBanner(
+          `Synced ${res.player?.name || name}'s Google Doc (you own this doc as ${res.invitedEmail}) — share link copied to clipboard!`,
+        );
+      } else if (res.delivery === 'thunderbird-email') {
+        if (docUrl) await window.robos.copyText(docUrl);
+        setBanner(
+          `Emailed ${res.player?.name || name}'s Google Doc share link to ${res.invitedEmail} via Thunderbird (and copied link to clipboard)!`,
+        );
+      } else {
+        setBanner(`Resent Google Doc share email to ${res.player?.name || name} (${res.invitedEmail})!`);
+      }
+      await refreshState();
+    } else {
+      sendingShareUids.delete(uid);
+      setBanner(res?.error || 'Failed to resend Google Doc share link.', true);
+      await refreshState();
+    }
+  } catch (err) {
+    sendingShareUids.delete(uid);
+    setBanner(err?.message || 'Failed to resend Google Doc share link.', true);
+    await refreshState();
+  }
+}
+
 document.addEventListener('click', async (ev) => {
   const openBtn = ev.target.closest('[data-open-url]');
   if (openBtn) {
     window.robos.openExternal(openBtn.getAttribute('data-open-url'));
+    return;
+  }
+  const resendBtn = ev.target.closest('[data-resend-uid]');
+  if (resendBtn) {
+    const uid = resendBtn.getAttribute('data-resend-uid');
+    const name = resendBtn.getAttribute('data-resend-name') || uid;
+    const email = (resendBtn.getAttribute('data-resend-email') || '').trim();
+    const docUrl = resendBtn.getAttribute('data-resend-doc-url') || '';
+    if (!isValidPlayerEmail(email) || ev.shiftKey) {
+      openResendDialog({ uid, name, email });
+      return;
+    }
+    await performResendShare({ uid, name, email, fallbackUrl: docUrl });
+    return;
+  }
+  const editShareBtn = ev.target.closest('[data-edit-share-uid]');
+  if (editShareBtn) {
+    openResendDialog({
+      uid: editShareBtn.getAttribute('data-edit-share-uid'),
+      name: editShareBtn.getAttribute('data-edit-share-name'),
+      email: editShareBtn.getAttribute('data-edit-share-email'),
+    });
+    return;
+  }
+  const copyBtn = ev.target.closest('[data-copy-url]');
+  if (copyBtn) {
+    const uid = copyBtn.getAttribute('data-copy-uid') || '';
+    const name = copyBtn.getAttribute('data-copy-name') || 'player';
+    const url = copyBtn.getAttribute('data-copy-url') || '';
+    if (url) {
+      await window.robos.copyText(url);
+      if (uid) recentlyCopiedUidUntil.set(uid, Date.now() + 3500);
+      setBanner(`Copied ${name}'s share link to clipboard!`);
+      await refreshState();
+    }
     return;
   }
   const playBtn = ev.target.closest('[data-play-uid]');
@@ -157,6 +299,30 @@ document.addEventListener('click', async (ev) => {
       url: playBtn.getAttribute('data-play-url'),
     });
   }
+});
+
+el('btn-cancel-resend')?.addEventListener('click', () => {
+  el('resend-share-dialog')?.close();
+});
+
+el('resend-share-form')?.addEventListener('submit', async (ev) => {
+  ev.preventDefault();
+  const uid = el('resend-dialog-uid').value.trim();
+  const email = el('resend-dialog-email').value.trim();
+  const message = el('resend-dialog-message').value.trim();
+  if (!uid || !isValidPlayerEmail(email)) {
+    setBanner('Please enter a valid Google email address.', true);
+    return;
+  }
+  const playerObj = (appState?.players || []).find((p) => p.uid === uid);
+  el('resend-share-dialog')?.close();
+  await performResendShare({
+    uid,
+    name: playerObj?.name || uid,
+    email,
+    message,
+    fallbackUrl: playerObj?.doc?.docUrl || playerObj?.launchUrl || '',
+  });
 });
 
 el('btn-refresh').addEventListener('click', () => refreshState());
