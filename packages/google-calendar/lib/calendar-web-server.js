@@ -354,7 +354,23 @@ function createCalendarWebServer(options = {}) {
         });
         let created = null;
         if (body.autoCreate && parsed.summary) {
-          const resCreate = await createNamedCalendarEvent(parsed, options);
+          if (!parsed.hasExplicitDate || (!parsed.hasExplicitTime && !parsed.allDay)) {
+            return sendJson(
+              res,
+              200,
+              {
+                ok: false,
+                error:
+                  parsed.missingDateTimeError ||
+                  'Please include a date and time (for example, "Friday at 2pm") before creating the event.',
+                 transcript,
+                parsed,
+                created: null,
+              },
+              extraHeaders
+            );
+          }
+          const resCreate = await createNamedCalendarEvent(parsed, { ...options, requireExplicitDateTime: true });
           created = resCreate.event;
           broadcastUpdate('event-created', { event: created });
         }

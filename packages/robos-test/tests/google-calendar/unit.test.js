@@ -468,5 +468,31 @@ describe('Google Calendar: Thunderbird sync settings stick', () => {
     assert.strictEqual(nabuParsed2.category, 'appointment');
     assert.strictEqual(nabuParsed2.startDate, '2026-11-20');
     assert.strictEqual(nabuParsed2.startTime, '14:30');
+    assert.strictEqual(nabuParsed2.hasExplicitDate, true);
+    assert.strictEqual(nabuParsed2.hasExplicitTime, true);
+    assert.strictEqual(nabuParsed2.missingDateTimeError, '');
+
+    // Voice Nabu command where user blanks out before speaking date/time must flag missing date/time and error
+    const nabuBlanked = namedCals.parseNaturalLanguageEvent(
+      'Ok Nabu, add an appointment to the kids calendar.',
+      {
+        now: '2026-11-12T10:00:00Z',
+        calendars: [{ id: 'kids-calendar', name: 'Kids Calendar', isCustomSharedCalendar: true }],
+        familyMembers: [],
+      }
+    );
+    assert.strictEqual(nabuBlanked.hasExplicitDate, false);
+    assert.strictEqual(nabuBlanked.hasExplicitTime, false);
+    assert.strictEqual(nabuBlanked.hasExplicitDateOrTime, false);
+    assert.ok(nabuBlanked.missingDateTimeError.includes('no date or time was given'));
+
+    assert.throws(
+      () =>
+        namedCals.parseNaturalLanguageEvent('Ok Nabu, add an appointment to the kids calendar.', {
+          now: '2026-11-12T10:00:00Z',
+          requireExplicitDateTime: true,
+        }),
+      /no date or time was given/i
+    );
   });
 });

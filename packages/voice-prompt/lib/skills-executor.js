@@ -183,9 +183,23 @@ class SkillsExecutor {
             familyMembers: state.familyMembers,
             calendars: state.calendars,
           });
+          if (!parsed.hasExplicitDate || (!parsed.hasExplicitTime && !parsed.allDay)) {
+            const errMsg =
+              parsed.missingDateTimeError ||
+              'Could not add the appointment because no date or time was given. Please try again and include the day and time, such as Friday at 2 PM.';
+            return {
+              ok: false,
+              skill: 'google-calendar',
+              actionDone: errMsg,
+              response: errMsg,
+              error: errMsg,
+              data: { error: 'missing-date-time', parsed },
+            };
+          }
           const created = await namedCalendars.createNamedCalendarEvent(parsed, {
             homeDir: this.homeDir,
             configDir: this.configDir,
+            requireExplicitDateTime: true,
           });
           const calNameRaw = String(created.event.calendarName || 'Family').trim();
           const calLabel = /calendar$/i.test(calNameRaw) ? calNameRaw : `${calNameRaw} calendar`;
@@ -207,6 +221,15 @@ class SkillsExecutor {
         }
       } catch (err) {
         console.warn('[skills-executor] Google Calendar skill error:', err.message);
+        const errMsg = err?.message || 'Could not add that calendar event.';
+        return {
+          ok: false,
+          skill: 'google-calendar',
+          actionDone: errMsg,
+          response: errMsg,
+          error: errMsg,
+          data: { error: errMsg },
+        };
       }
     }
 
