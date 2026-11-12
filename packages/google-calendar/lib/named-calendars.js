@@ -771,9 +771,9 @@ function syncCalendarKGraphToStore(discovered = {}, options = {}) {
         title: 'RobOS Google Calendar',
         type: 'application',
         description:
-          'Google Calendar & Mozilla Thunderbird CalDAV suite managing Named Calendars: Family (stuff our private family needs), Dipiazza Kids Calendar (stuff the extended divorced side of the family needs), and Private Calendar (stuff only I care about).',
+          'Google Calendar & Mozilla Thunderbird CalDAV suite managing Named Calendars: Family (stuff our private family needs), Kids Calendar (stuff the extended divorced side of the family needs), and Private Calendar (stuff only I care about).',
         content:
-          'Google Calendar & Mozilla Thunderbird CalDAV suite managing Named Calendars: Family (stuff our private family needs), Dipiazza Kids Calendar (stuff the extended divorced side of the family needs), and Private Calendar (stuff only I care about).',
+          'Google Calendar & Mozilla Thunderbird CalDAV suite managing Named Calendars: Family (stuff our private family needs), Kids Calendar (stuff the extended divorced side of the family needs), and Private Calendar (stuff only I care about).',
         tags: ['calendar', 'google-calendar', 'thunderbird', 'caldav', 'household'],
         links: (discovered.calendars || []).map((c) => `calendars/${c.id}`),
         updatedAt: nowIso,
@@ -1274,7 +1274,8 @@ async function createNamedCalendarEvent(eventInput = {}, options = {}) {
     targetCal =
       calendars.find((c) => c.id.toLowerCase() === lowerReq) ||
       calendars.find((c) => c.name.toLowerCase() === lowerReq || c.originalSummary.toLowerCase() === lowerReq) ||
-      calendars.find((c) => c.name.toLowerCase().includes(lowerReq));
+      (/\bkids?\b/i.test(lowerReq) && calendars.find((c) => /kids/i.test(c.name) || c.isCustomSharedCalendar)) ||
+      calendars.find((c) => c.name.toLowerCase().includes(lowerReq) || c.id.toLowerCase().includes(lowerReq));
   }
   if (!targetCal) {
     targetCal =
@@ -1324,15 +1325,35 @@ async function createNamedCalendarEvent(eventInput = {}, options = {}) {
     }
   }
 
+  const explicitAttendeesList = Array.isArray(eventInput.attendees)
+    ? eventInput.attendees.filter(Boolean)
+    : eventInput.attendees
+      ? [eventInput.attendees]
+      : [];
   const rawAttendeesInput =
-    eventInput.attendees !== undefined
-      ? eventInput.attendees
-      : Array.isArray(targetCal?.sharedWith) && targetCal.sharedWith.length > 0
-        ? targetCal.sharedWith
-        : targetCal?.isFamilyCalendar
-          ? discovered.familyMembers
-          : [];
-  const attendees = resolveAttendees(rawAttendeesInput, options);
+    targetCal?.isCustomSharedCalendar && Array.isArray(targetCal.sharedWith) && targetCal.sharedWith.length > 0
+      ? [...targetCal.sharedWith, ...explicitAttendeesList]
+      : explicitAttendeesList.length > 0
+        ? explicitAttendeesList
+        : Array.isArray(targetCal?.sharedWith) && targetCal.sharedWith.length > 0
+          ? targetCal.sharedWith
+          : targetCal?.isFamilyCalendar
+            ? discovered.familyMembers
+            : [];
+  const allowedCustomEmails =
+    targetCal?.isCustomSharedCalendar && Array.isArray(targetCal.sharedWith) && targetCal.sharedWith.length > 0
+      ? new Set(targetCal.sharedWith.map((m) => String(m.email || '').toLowerCase()).filter(Boolean))
+      : null;
+  const familyEmailSet = new Set(
+    (discovered.familyMembers || []).map((fm) => String(fm.email || '').toLowerCase()).filter(Boolean)
+  );
+  const attendees = resolveAttendees(rawAttendeesInput, options).filter((a) => {
+    if (!allowedCustomEmails) return true;
+    const em = String(a.email || '').toLowerCase();
+    // Never include a household/family member who is not in this custom calendar's sharedWith list
+    if (familyEmailSet.has(em) && !allowedCustomEmails.has(em)) return false;
+    return true;
+  });
   const rrule = buildRruleLine(eventInput.recurrence || eventInput.rrule);
   const uid = eventInput.uid || `robos-evt-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
 
@@ -1358,10 +1379,7 @@ async function createNamedCalendarEvent(eventInput = {}, options = {}) {
   // On a shared Family calendar, family members already share the calendar with write access.
   // Emitting ORGANIZER + ATTENDEE lines in CalDAV locks the event as read-only ("guestsCanModify: false")
   // for other family members in Google Calendar. Only emit ATTENDEE lines for external (non-family) guests
-  // or on non-Family calendars (such as Dipiazza Kids Calendar where members receive events via ATTENDEE).
-  const familyEmailSet = new Set(
-    (discovered.familyMembers || []).map((fm) => String(fm.email || '').toLowerCase()).filter(Boolean)
-  );
+  // or on non-Family calendars (such as a custom Kids Calendar where members receive events via ATTENDEE).
   const icsAttendees =
     targetCal?.isFamilyCalendar && !eventInput.forceAttendeeInvites
       ? attendees.filter((a) => !familyEmailSet.has(String(a.email || '').toLowerCase()))
@@ -2316,11 +2334,114 @@ function parseItineraryOrInviteText(rawText, options = {}) {
   return null;
 }
 
+const SPOKEN_ORDINAL_DAYS = {
+  first: '1st', second: '2nd', third: '3rd', fourth: '4th', fifth: '5th',
+  sixth: '6th', seventh: '7th', eighth: '8th', ninth: '9th', tenth: '10th',
+  eleventh: '11th', twelfth: '12th', thirteenth: '13th', fourteenth: '14th', fifteenth: '15th',
+  sixteenth: '16th', seventeenth: '17th', eighteenth: '18th', nineteenth: '19th', twentieth: '20th',
+  'twenty-first': '21st', 'twenty first': '21st',
+  'twenty-second': '22nd', 'twenty second': '22nd',
+  'twenty-third': '23rd', 'twenty third': '23rd',
+  'twenty-fourth': '24th', 'twenty fourth': '24th',
+  'twenty-fifth': '25th', 'twenty fifth': '25th',
+  'twenty-sixth': '26th', 'twenty sixth': '26th',
+  'twenty-seventh': '27th', 'twenty seventh': '27th',
+  'twenty-eighth': '28th', 'twenty eighth': '28th',
+  'twenty-ninth': '29th', 'twenty ninth': '29th',
+  thirtieth: '30th',
+  'thirty-first': '31st', 'thirty first': '31st',
+};
+
+const SPOKEN_HOUR_WORDS = {
+  one: '1', two: '2', three: '3', four: '4', five: '5',
+  six: '6', seven: '7', eight: '8', nine: '9', ten: '10',
+  eleven: '11', twelve: '12',
+};
+
+const SPOKEN_MIN_WORDS = {
+  'oh five': '05', 'o five': '05',
+  ten: '10', fifteen: '15', twenty: '20',
+  'twenty-five': '25', 'twenty five': '25',
+  thirty: '30',
+  'thirty-five': '35', 'thirty five': '35',
+  forty: '40',
+  'forty-five': '45', 'forty five': '45',
+  fifty: '50',
+  'fifty-five': '55', 'fifty five': '55',
+};
+
+/**
+ * Normalizes Whisper STT phonetic mishearings, clipped wake-word prefixes,
+ * `a.m.`/`p.m.` punctuation, and spoken word numbers/ordinals for calendar & appointment commands.
+ */
+function normalizeCalendarVoiceTranscript(rawText) {
+  let s = String(rawText || '').trim();
+  if (!s) return s;
+
+  // 1. Normalize phonetic spellings of "calendar", "appointment", and "kids calendar"
+  s = s
+    .replace(/\b(?:calender|calander|callender|cullender|calandar)s?\b/gi, 'calendar')
+    .replace(/\b(?:apointment|a\s+pointment|appoinment)s?\b/gi, 'appointment')
+    .replace(/\b(?:kids'?s?|kid's|kits|kiss|kicks)\s+(?:calendar|challenger)\b/gi, 'kids calendar');
+
+  // 2. Normalize "a.m." / "p.m." -> "am" / "pm", and "noon" / "midnight"
+  s = s
+    .replace(/\b([ap])\.?\s*m\.?(?=\s|$|[.,!?])/gi, (_, ap) => `${ap.toLowerCase()}m`)
+    .replace(/\bat\s+noon\b/gi, 'at 12:00pm')
+    .replace(/\bnoon\b/gi, '12:00pm')
+    .replace(/\bat\s+midnight\b/gi, 'at 12:00am');
+
+  // 3. Convert spoken hour + minute words ("two thirty pm" -> "2:30 pm", "at two pm" -> "at 2 pm")
+  const hourPat = Object.keys(SPOKEN_HOUR_WORDS).join('|');
+  const minPat = Object.keys(SPOKEN_MIN_WORDS).sort((a, b) => b.length - a.length).join('|');
+  s = s.replace(
+    new RegExp(`\\b(${hourPat})[\\s-]+(${minPat})(?=\\s*(?:am|pm|o'?clock)\\b|\\s|$)`, 'gi'),
+    (_, hWord, mWord) => {
+      const h = SPOKEN_HOUR_WORDS[hWord.toLowerCase()];
+      const m = SPOKEN_MIN_WORDS[mWord.toLowerCase().replace(/-/g, ' ')] || SPOKEN_MIN_WORDS[mWord.toLowerCase()];
+      return h && m ? `${h}:${m}` : _;
+    }
+  );
+  s = s.replace(
+    new RegExp(`\\b(at|from|to|until|around)\\s+(${hourPat})(?=\\s*(?:am|pm|o'?clock|:|\\b))`, 'gi'),
+    (_, prep, hWord) => `${prep} ${SPOKEN_HOUR_WORDS[hWord.toLowerCase()] || hWord}`
+  );
+  s = s.replace(
+    new RegExp(`\\b(${hourPat})\\s*(am|pm|o'?clock)\\b`, 'gi'),
+    (_, hWord, suffix) => `${SPOKEN_HOUR_WORDS[hWord.toLowerCase()] || hWord} ${suffix}`
+  );
+  s = s.replace(/\b(\d{1,2})\s+o'?clock\b/gi, '$1:00');
+  s = s.replace(/\b(\d{1,2})[.\s](15|30|45)\s*(am|pm)\b/gi, '$1:$2 $3');
+  s = s.replace(/\b(1[0-2]|0?[1-9])([0-5]\d)\s*(am|pm)\b/gi, '$1:$2 $3');
+
+  // 4. Convert spoken ordinal days ("November fifteenth" -> "November 15th", "the twentieth" -> "the 20th")
+  for (const [word, ord] of Object.entries(SPOKEN_ORDINAL_DAYS).sort((a, b) => b[0].length - a[0].length)) {
+    const re = new RegExp(`\\b${word.replace(/\s+/g, '[\\s-]+')}\\b`, 'gi');
+    s = s.replace(re, ord);
+  }
+
+  // 5. If this is a calendar/appointment utterance where Whisper clipped "add" into "and"/"at"/"had"/"in" or dropped the verb:
+  if (/\b(?:calendar|calendars|appointment|appointments)\b/i.test(s)) {
+    s = s.replace(
+      /^((?:(?:hey|hello|hi|ok|okay|yo)\s+(?:nabu|robos|computer|assistant)[\s,.:;!-]*)?)(?:and|at|had|ed|in)\s+(?=(?:a|an|the|new|medical|doctor|dentist|therapy|kids?|appointment|event|meeting)\b)/i,
+      '$1add '
+    );
+    s = s.replace(
+      /^((?:(?:hey|hello|hi|ok|okay|yo)\s+(?:nabu|robos|computer|assistant)[\s,.:;!-]*)?)(?=(?:a|an|new|medical|doctor'?s?|dentist'?s?|therapy|pediatric(?:ian)?)\s+.*?\b(?:appointment|appointments|calendar)\b)/i,
+      '$1add '
+    );
+  }
+
+  return s;
+}
+
 /**
  * Parses a natural-language, voice-dictated, or pasted itinerary/invite calendar event description
  * into structured form fields.
  * Example:
  *   "Add Dentist appointment on Friday at 3pm for 1 hour on the Family calendar at Downtown Dental"
+ *   "ok nabu, add an appointment to the kids calendar Friday at 2pm"
+ *   "ok nabu, add a new medical appointment to the kids calendar Friday at 2pm"
  *   "Vacation to Florida Keys Feb 1 to Feb 8 on the Family calendar"
  */
 function parseNaturalLanguageEvent(inputText, options = {}) {
@@ -2335,20 +2456,37 @@ function parseNaturalLanguageEvent(inputText, options = {}) {
     if (itin) return itin;
   }
 
+  raw = normalizeCalendarVoiceTranscript(raw);
+  const hadAppointmentKeyword = /\b(?:appointment|medical|doctor'?s?|dentist'?s?|therapy|pediatric(?:ian)?|ortho(?:dontist)?|optometrist|physical|checkup|check-up)\b/i.test(raw);
+  const hadMedicalKeyword = /\bmedical\b/i.test(raw);
+
   const now = options.now ? new Date(options.now) : new Date();
   const family = options.familyMembers || listFamilyMembers(options);
-  const calendars = options.calendars || [];
+  let calendars = Array.isArray(options.calendars) && options.calendars.length > 0 ? options.calendars : [];
+  if (calendars.length === 0) {
+    try {
+      const settings = loadCalendarSettings(options);
+      const customCals = Array.isArray(settings.customCalendars) ? settings.customCalendars : [];
+      calendars = customCals.map((c) => ({
+        id: c.id,
+        name: c.name || c.id,
+        originalSummary: c.name || c.id,
+        isCustomSharedCalendar: true,
+        sharedWith: c.sharedWith || [],
+      }));
+    } catch {}
+  }
 
-  // Strip conversational prefixes ("Ok Nabu", "add event", "schedule", "create a calendar event for", etc.)
-  raw = raw.replace(/^(?:(?:hey|ok|okay)\s+nabu[\s,.:;-]*)/i, '').trim();
-  raw = raw.replace(/^(?:please\s+)?(?:add|create|schedule|put|book|make|set\s+up)\s+(?:a\s+|an\s+|new\s+)?(?:calendar\s+event|event|appointment|meeting|reminder)?\s*(?:for|to|called|named|titled)?\s*/i, '').trim();
+  // Strip conversational wake-word prefixes ("Ok Nabu", "Hey Nabu", etc.)
+  raw = raw.replace(/^(?:(?:hey|hello|hi|ok|okay|yo)\s+)?(?:nabu|na\s+bu|naboo|robos|rob\s+os|computer|assistant)\b[\s,.:;!-]*/i, '').trim();
+  raw = raw.replace(/^(?:can\s+you\s+|could\s+you\s+|would\s+you\s+)?(?:please\s+)?/i, '').trim();
 
-  // 1. Detect target calendar ("on the Family calendar", "to Dipiazza Kids calendar", "in my private calendar")
+  // 1. Detect target calendar FIRST ("on the Family calendar", "to the kids calendar", "in my private calendar")
+  //    before stripping leading verbs/prepositions so "to the kids calendar" is never partially eaten!
   let calendarId = '';
   let calendarName = '';
-  const calMatch = raw.match(/\b(?:on|to|in)\s+(?:the\s+|my\s+|our\s+)?([a-z][a-z0-9_-]*(?:\s+[a-z][a-z0-9_-]*){0,2})\s+calendar\b/i);
-  if (calMatch) {
-    const q = calMatch[1].trim().toLowerCase();
+  const resolveMatchedCalendar = (qStr) => {
+    const q = String(qStr || '').trim().toLowerCase();
     const matchedCal =
       calendars.find((c) => c.name.toLowerCase() === q || c.originalSummary?.toLowerCase() === q) ||
       (/\b(?:private|personal|primary)\b/.test(q) && calendars.find((c) => c.primary)) ||
@@ -2358,25 +2496,41 @@ function parseNaturalLanguageEvent(inputText, options = {}) {
     if (matchedCal) {
       calendarId = matchedCal.id;
       calendarName = matchedCal.name;
-    } else if (q.includes('kids')) {
-      calendarName = 'Dipiazza Kids Calendar';
-    } else if (q.includes('family')) {
+      return true;
+    }
+    if (/\bkids?\b/.test(q)) {
+      calendarId = 'kids-calendar';
+      calendarName = 'Kids Calendar';
+      return true;
+    }
+    if (/\bfamily\b/.test(q)) {
       calendarName = 'Family';
+      return true;
     }
-    raw = raw.replace(calMatch[0], ' ').replace(/\s+/g, ' ').trim();
-  } else if (/\b(?:kids\s+weekend|custody|co-?parent|jennilyn)\b/i.test(raw)) {
-    const kidsCal = calendars.find((c) => /kids/i.test(c.name) || c.isCustomSharedCalendar);
-    if (kidsCal) {
-      calendarId = kidsCal.id;
-      calendarName = kidsCal.name;
-    }
+    return false;
+  };
+
+  const calPrepMatch =
+    raw.match(/\b(?:on|to|in|for|into)\s+(?:the\s+|my\s+|our\s+)?([a-z0-9_'-]+(?:\s+kids'?|\s+family|\s+private|\s+personal|\s+primary)?)\s+calendar\b/i) ||
+    raw.match(/\b(?:on|to|in|for|into)\s+(?:the\s+|my\s+|our\s+)?([a-z][a-z0-9_'-]*(?:\s+[a-z][a-z0-9_'-]*){0,2})\s+calendar\b/i);
+  const calBareMatch = !calPrepMatch && raw.match(/\b(?:the\s+|my\s+|our\s+)?([a-z0-9_'-]+\s+kids'?|kids'?|family|private|personal|primary)\s+calendar\b/i);
+  const activeCalMatch = calPrepMatch || calBareMatch;
+
+  if (activeCalMatch) {
+    resolveMatchedCalendar(activeCalMatch[1]);
+    raw = raw.replace(activeCalMatch[0], ' ').replace(/\s+/g, ' ').trim();
+  } else if (/\b(?:kids\s+weekend|custody|co-?parent)\b/i.test(raw)) {
+    resolveMatchedCalendar('kids');
   } else if (/\b(?:my\s+private|only\s+i\s+care\s+about)\b/i.test(raw)) {
-    const privCal = calendars.find((c) => c.primary);
-    if (privCal) {
-      calendarId = privCal.id;
-      calendarName = privCal.name;
-    }
+    resolveMatchedCalendar('private');
   }
+
+  // 1b. Strip leading command verb + articles ("add a new", "add an", "schedule a", etc.)
+  //     Keep event nouns like "appointment" or "medical appointment" so "add an appointment to the kids calendar"
+  //     retains "Appointment" as its title!
+  raw = raw.replace(/^(?:please\s+)?(?:add|create|schedule|put|book|make|set\s+up)\s+(?:(?:a|an|the|new)\s+)*/i, '').trim();
+  raw = raw.replace(/^(?:calendar\s+event|event|reminder)\s+(?:(?:for|to|called|named|titled)\s+)?/i, '').trim();
+  raw = raw.replace(/^(?:appointment|meeting)\s+(?:called|named|titled)\s+/i, '').trim();
 
   // 2. Detect family members / attendees mentioned
   const matchedAttendees = [];
@@ -2433,9 +2587,10 @@ function parseNaturalLanguageEvent(inputText, options = {}) {
     raw = raw.replace(/\ball[- ]day\b/i, ' ').trim();
   }
 
-  // 5. Detect single date OR multi-day date range ("Feb 1 to Feb 8", "Feb 1 - 8", "2027-02-01 to 2027-02-08")
+  // 5. Detect single date OR multi-day date range ("Feb 1 to Feb 8", "Feb 1 - 8", "2027-02-01 to 2027-02-08", "11/20", "15th of November")
   const targetDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   let explicitEndYmd = '';
+  let periodDefaultHour = null;
   const weekdays = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
   const months = {
     jan: 0, january: 0, feb: 1, february: 1, mar: 2, march: 2, apr: 3, april: 3,
@@ -2444,16 +2599,34 @@ function parseNaturalLanguageEvent(inputText, options = {}) {
   };
 
   const monthNamesPat = 'jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?';
-  const isoRangeM = raw.match(/\b(?:from\s+|on\s+)?(\d{4}-\d{2}-\d{2})\s*(?:to|through|thru|until|-|–)\s*(\d{4}-\d{2}-\d{2})\b/i);
+  const weekdayPrefixPat = '(?:(?:this|next)\\s+)?(?:(?:sunday|monday|tuesday|wednesday|thursday|friday|saturday),?\\s+)?';
+  const isoRangeM = raw.match(/\b(?:from\s+|on\s+|for\s+)?(\d{4}-\d{2}-\d{2})\s*(?:to|through|thru|until|-|–)\s*(\d{4}-\d{2}-\d{2})\b/i);
   const monthDayRangeM = raw.match(
     new RegExp(
-      `\\b(?:from\\s+|on\\s+)?(${monthNamesPat})\\s+(\\d{1,2})(?:st|nd|rd|th)?(?:,?\\s*(\\d{4}))?\\s*(?:to|through|thru|until|-|–)\\s*(?:(${monthNamesPat})\\s+)?(\\d{1,2})(?:st|nd|rd|th)?(?:,?\\s*(\\d{4}))?\\b`,
+      `\\b(?:from\\s+|on\\s+|for\\s+)?(${monthNamesPat})\\s+(\\d{1,2})(?:st|nd|rd|th)?(?:,?\\s*(\\d{4}))?\\s*(?:to|through|thru|until|-|–)\\s*(?:(${monthNamesPat})\\s+)?(\\d{1,2})(?:st|nd|rd|th)?(?:,?\\s*(\\d{4}))?\\b`,
       'i'
     )
   );
-  const isoDateM = raw.match(/\b(?:on\s+)?(\d{4}-\d{2}-\d{2})\b/i);
-  const monthDayM = raw.match(new RegExp(`\\b(?:on\\s+)?(${monthNamesPat})\\s+(\\d{1,2})(?:st|nd|rd|th)?(?:,?\\s*(\\d{4}))?\\b`, 'i'));
-  const weekdayM = raw.match(/\b(?:on\s+)?(?:(this|next)\s+)?(sunday|monday|tuesday|wednesday|thursday|friday|saturday)\b/i);
+  const dayAfterTomorrowM = raw.match(/\b(?:on\s+|for\s+)?(?:the\s+)?day\s+after\s+tomorrow\b/i);
+  const tomorrowM = raw.match(/\b(?:on\s+|for\s+)?tomorrow(?:\s+(morning|afternoon|evening|night))?\b/i);
+  const todayM = raw.match(/\b(?:on\s+|for\s+)?(today|tonight)(?:\s+(morning|afternoon|evening|night))?\b/i);
+  const isoDateM = raw.match(/\b(?:on\s+|for\s+)?(\d{4}-\d{2}-\d{2})\b/i);
+  const slashDateM = raw.match(/\b(?:on\s+|for\s+)?(0?[1-9]|1[0-2])\/(0?[1-9]|[12]\d|3[01])(?:\/(\d{2,4}))?\b/i);
+  const monthDayM = raw.match(
+    new RegExp(`\\b(?:(?:on|for)\\s+)?${weekdayPrefixPat}(${monthNamesPat})\\s+(\\d{1,2})(?:st|nd|rd|th)?(?:,?\\s*(\\d{4}))?\\b`, 'i')
+  );
+  const dayOfMonthM = raw.match(
+    new RegExp(`\\b(?:(?:on|for)\\s+)?${weekdayPrefixPat}(?:the\\s+)?(\\d{1,2})(?:st|nd|rd|th)?\\s+of\\s+(${monthNamesPat})(?:,?\\s*(\\d{4}))?\\b`, 'i')
+  );
+  const weekdayM = raw.match(/\b(?:(?:on|for)\s+)?(?:(this|next)\s+)?(sunday|monday|tuesday|wednesday|thursday|friday|saturday)(?:\s+(morning|afternoon|evening|night))?\b/i);
+  const ordinalOnlyM = raw.match(/\b(?:on|for)\s+the\s+(\d{1,2})(?:st|nd|rd|th)\b/i);
+
+  const applyPeriodHour = (periodStr) => {
+    const p = String(periodStr || '').toLowerCase();
+    if (p === 'morning') periodDefaultHour = 9;
+    else if (p === 'afternoon') periodDefaultHour = 14;
+    else if (p === 'evening' || p === 'night' || p === 'tonight') periodDefaultHour = 18;
+  };
 
   if (isoRangeM) {
     const [sy, sm, sd] = isoRangeM[1].split('-').map(Number);
@@ -2475,15 +2648,27 @@ function parseNaturalLanguageEvent(inputText, options = {}) {
     explicitEndYmd = `${endObjRange.getFullYear()}-${String(endObjRange.getMonth() + 1).padStart(2, '0')}-${String(endObjRange.getDate()).padStart(2, '0')}`;
     allDay = true;
     raw = raw.replace(monthDayRangeM[0], ' ').trim();
-  } else if (/\btomorrow\b/i.test(raw)) {
+  } else if (dayAfterTomorrowM) {
+    targetDate.setDate(targetDate.getDate() + 2);
+    raw = raw.replace(dayAfterTomorrowM[0], ' ').trim();
+  } else if (tomorrowM) {
     targetDate.setDate(targetDate.getDate() + 1);
-    raw = raw.replace(/\b(?:on\s+)?tomorrow\b/i, ' ').trim();
-  } else if (/\btoday\b/i.test(raw)) {
-    raw = raw.replace(/\b(?:on\s+)?today\b/i, ' ').trim();
+    applyPeriodHour(tomorrowM[1]);
+    raw = raw.replace(tomorrowM[0], ' ').trim();
+  } else if (todayM) {
+    applyPeriodHour(todayM[2] || todayM[1]);
+    raw = raw.replace(todayM[0], ' ').trim();
   } else if (isoDateM) {
     const [y, m, d] = isoDateM[1].split('-').map(Number);
     targetDate.setFullYear(y, m - 1, d);
     raw = raw.replace(isoDateM[0], ' ').trim();
+  } else if (slashDateM) {
+    const mIdx = Number(slashDateM[1]) - 1;
+    const dayNum = Number(slashDateM[2]);
+    const startResolved = resolveSmartYmd(mIdx, dayNum, slashDateM[3], now);
+    const [sy, sm, sd] = startResolved.split('-').map(Number);
+    targetDate.setFullYear(sy, sm - 1, sd);
+    raw = raw.replace(slashDateM[0], ' ').trim();
   } else if (monthDayM) {
     const mIdx = months[monthDayM[1].slice(0, 3).toLowerCase()];
     const dayNum = Number(monthDayM[2]);
@@ -2491,6 +2676,13 @@ function parseNaturalLanguageEvent(inputText, options = {}) {
     const [sy, sm, sd] = startResolved.split('-').map(Number);
     targetDate.setFullYear(sy, sm - 1, sd);
     raw = raw.replace(monthDayM[0], ' ').trim();
+  } else if (dayOfMonthM) {
+    const dayNum = Number(dayOfMonthM[1]);
+    const mIdx = months[dayOfMonthM[2].slice(0, 3).toLowerCase()];
+    const startResolved = resolveSmartYmd(mIdx, dayNum, dayOfMonthM[3], now);
+    const [sy, sm, sd] = startResolved.split('-').map(Number);
+    targetDate.setFullYear(sy, sm - 1, sd);
+    raw = raw.replace(dayOfMonthM[0], ' ').trim();
   } else if (weekdayM) {
     const targetDow = weekdays.indexOf(weekdayM[2].toLowerCase());
     let delta = (targetDow - targetDate.getDay() + 7) % 7;
@@ -2498,11 +2690,27 @@ function parseNaturalLanguageEvent(inputText, options = {}) {
       delta = delta === 0 ? 7 : delta;
     }
     targetDate.setDate(targetDate.getDate() + delta);
+    applyPeriodHour(weekdayM[3]);
     raw = raw.replace(weekdayM[0], ' ').trim();
+  } else if (ordinalOnlyM) {
+    const dayNum = Number(ordinalOnlyM[1]);
+    if (dayNum >= 1 && dayNum <= 31) {
+      let mIdx = targetDate.getMonth();
+      let yr = targetDate.getFullYear();
+      if (dayNum < targetDate.getDate()) {
+        mIdx += 1;
+        if (mIdx > 11) {
+          mIdx = 0;
+          yr += 1;
+        }
+      }
+      targetDate.setFullYear(yr, mIdx, dayNum);
+      raw = raw.replace(ordinalOnlyM[0], ' ').trim();
+    }
   }
 
-  // 6. Detect time ("at 3pm", "at 2:30 pm", "from 5pm to 7pm") & duration ("for 2 hours", "for 45 minutes")
-  let startHour = 17;
+  // 6. Detect time ("at 3pm", "at 2:30 pm", "Friday 2pm", "from 5pm to 7pm") & duration ("for 2 hours", "for 45 minutes")
+  let startHour = periodDefaultHour != null ? periodDefaultHour : (hadAppointmentKeyword ? 10 : 17);
   let startMin = 0;
   let durationMinutes = 60;
 
@@ -2515,10 +2723,7 @@ function parseNaturalLanguageEvent(inputText, options = {}) {
     return { h, m };
   };
 
-  const rangeTimeM = raw.match(/\b(?:from|at)\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\s+(?:to|until|-)\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)\b/i);
-  const singleTimeM = raw.match(/\bat\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\b/i);
   const durM = raw.match(/\bfor\s+(\d+(?:\.\d+)?)\s*(hours?|hrs?|hr|minutes?|mins?|min|days?)\b/i);
-
   if (durM) {
     const val = Number(durM[1]);
     const unit = durM[2].toLowerCase();
@@ -2532,6 +2737,13 @@ function parseNaturalLanguageEvent(inputText, options = {}) {
     raw = raw.replace(durM[0], ' ').trim();
   }
 
+  const rangeTimeM = raw.match(/\b(?:from|at|between)?\s*(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\s+(?:to|until|and|-|–)\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)\b/i);
+  const singleTimeWithPrepM = !rangeTimeM && raw.match(/\b(?:at|for|around|@)\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\b/i);
+  const singleTimeBareM =
+    !rangeTimeM &&
+    !singleTimeWithPrepM &&
+    (raw.match(/\b(\d{1,2}):(\d{2})\s*(am|pm)?\b/i) || raw.match(/\b(\d{1,2})\s*(am|pm)\b/i));
+
   if (rangeTimeM) {
     const s = parseHourMin(rangeTimeM[1], rangeTimeM[2], rangeTimeM[3] || rangeTimeM[6]);
     const e = parseHourMin(rangeTimeM[4], rangeTimeM[5], rangeTimeM[6]);
@@ -2541,12 +2753,26 @@ function parseNaturalLanguageEvent(inputText, options = {}) {
     if (diff > 0) durationMinutes = diff;
     allDay = false;
     raw = raw.replace(rangeTimeM[0], ' ').trim();
-  } else if (singleTimeM) {
-    const s = parseHourMin(singleTimeM[1], singleTimeM[2], singleTimeM[3] || (Number(singleTimeM[1]) < 8 ? 'pm' : 'am'));
+  } else if (singleTimeWithPrepM) {
+    const hrNum = Number(singleTimeWithPrepM[1]);
+    const inferredAmPm = singleTimeWithPrepM[3] || (hrNum < 8 || hrNum === 12 ? 'pm' : 'am');
+    const s = parseHourMin(singleTimeWithPrepM[1], singleTimeWithPrepM[2], inferredAmPm);
     startHour = s.h;
     startMin = s.m;
     allDay = false;
-    raw = raw.replace(singleTimeM[0], ' ').trim();
+    raw = raw.replace(singleTimeWithPrepM[0], ' ').trim();
+  } else if (singleTimeBareM) {
+    const hasMinutes = singleTimeBareM.length === 4;
+    const hrStr = singleTimeBareM[1];
+    const minStr = hasMinutes ? singleTimeBareM[2] : '00';
+    const explicitAp = hasMinutes ? singleTimeBareM[3] : singleTimeBareM[2];
+    const hrNum = Number(hrStr);
+    const inferredAmPm = explicitAp || (hrNum < 8 || hrNum === 12 ? 'pm' : 'am');
+    const s = parseHourMin(hrStr, minStr, inferredAmPm);
+    startHour = s.h;
+    startMin = s.m;
+    allDay = false;
+    raw = raw.replace(singleTimeBareM[0], ' ').trim();
   }
 
   // 7. Detect location ("at Red Lobster", "in Living Room")
@@ -2557,7 +2783,34 @@ function parseNaturalLanguageEvent(inputText, options = {}) {
     raw = raw.replace(locM[0], '').trim();
   }
 
-  const summary = raw.replace(/\s+/g, ' ').replace(/^[-,.:;]+|[-,.:;]+$/g, '').trim() || 'Family Calendar Event';
+  // Clean up dangling prepositions / punctuation around summary
+  let cleanedSummary = raw
+    .replace(/\s+/g, ' ')
+    .replace(/^[-,.:;]+|[-,.:;]+$/g, '')
+    .replace(/^(?:for|on|at|to|in|a|an|new)\s+/i, '')
+    .replace(/\s+\b(?:for|on|at|to|in)$/i, '')
+    .trim();
+
+  if (!cleanedSummary) {
+    cleanedSummary = hadMedicalKeyword
+      ? 'Medical Appointment'
+      : hadAppointmentKeyword
+        ? 'Appointment'
+        : 'Family Calendar Event';
+  } else if (cleanedSummary === cleanedSummary.toLowerCase()) {
+    // Capitalize lowercase voice transcripts nicely ("medical appointment" -> "Medical Appointment")
+    cleanedSummary = cleanedSummary.replace(/\b([a-z])([a-z']*)\b/g, (w, a, b) =>
+      /^(?:a|an|the|for|on|at|to|in|of|with|and)$/.test(w) ? w : a.toUpperCase() + b
+    );
+    cleanedSummary = cleanedSummary.charAt(0).toUpperCase() + cleanedSummary.slice(1);
+  }
+
+  const category = hadAppointmentKeyword
+    ? 'appointment'
+    : /kids|family/i.test(calendarName)
+      ? 'family'
+      : 'meeting';
+
   const ymd = `${targetDate.getFullYear()}-${String(targetDate.getMonth() + 1).padStart(2, '0')}-${String(targetDate.getDate()).padStart(2, '0')}`;
   const startTime = `${String(startHour).padStart(2, '0')}:${String(startMin).padStart(2, '0')}`;
   const endObj = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate(), startHour, startMin + durationMinutes);
@@ -2566,7 +2819,8 @@ function parseNaturalLanguageEvent(inputText, options = {}) {
   const endTime = `${String(endObj.getHours()).padStart(2, '0')}:${String(endObj.getMinutes()).padStart(2, '0')}`;
 
   return {
-    summary,
+    summary: cleanedSummary,
+    category,
     calendarId,
     calendarName,
     allDay,
@@ -2606,5 +2860,6 @@ module.exports = {
   listEventsAcrossNamedCalendars,
   scopeCalendarStateForCalendar,
   parseItineraryOrInviteText,
+  normalizeCalendarVoiceTranscript,
   parseNaturalLanguageEvent,
 };

@@ -1203,6 +1203,16 @@ function classifyVoiceCommand(cleanedText, { audioTracks = null, movieTracks = n
     return { type: 'robos-skill', query: cleanedText };
   }
 
+  // 2.2 If it's a Google Calendar / Appointments command ("add an appointment to the kids calendar Friday at 2pm", "add a new medical appointment to the kids calendar"), route to robos-skill
+  let normCalQ = q;
+  try {
+    const { normalizeCalendarVoiceTranscript } = require('../../google-calendar/lib/named-calendars');
+    normCalQ = normalizeCalendarVoiceTranscript(cleanedText).toLowerCase();
+  } catch {}
+  if (/\b(?:calendar|calendars|appointment|appointments)\b/i.test(normCalQ) || /^(?:schedule|book)\b/i.test(normCalQ)) {
+    return { type: 'robos-skill', query: cleanedText };
+  }
+
   // 3. Explicit Movie / TV playback ("play/place the movie Dune", "watch Scary Movie 2", "play rick and morty season 8 episode 1 on the roku")
   const isPlayLikeVerb = PLAY_VERB_VARIANTS.has(firstWord) || jaroWinkler(firstWord, 'play') >= 0.80;
   const hasTvSeasonEpisode = /\b(?:season\s+(?:\d+|one|two|three|four|five|six|seven|eight|nine|ten)|episode\s+(?:\d+|one|two|three|four|five|six|seven|eight|nine|ten)|s\d+\s*e\d+|\d+x\d+)\b/i.test(q);
