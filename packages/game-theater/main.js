@@ -198,6 +198,18 @@ ipcMain.handle('theater:open-external', (_e, url) => {
   return { ok: true };
 });
 ipcMain.handle('theater:open-player-window', (_e, info) => openIsolatedPlayerClientWindow(info));
+ipcMain.handle('theater:capture-player-window', async (_e, { uid, savePath }) => {
+  const win = _playerWindows.get(uid);
+  if (!win || win.isDestroyed()) return { ok: false, error: 'Player window not open' };
+  const img = await win.webContents.capturePage();
+  const png = img.toPNG();
+  if (savePath) fs.writeFileSync(savePath, png);
+  let state = null;
+  try {
+    state = await win.webContents.executeJavaScript('window.__robosGodotState || null');
+  } catch {}
+  return { ok: true, bytes: png.length, state };
+});
 
 app.whenReady().then(async () => {
   await ensureTheaterServerRunning();

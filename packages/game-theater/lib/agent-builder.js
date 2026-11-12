@@ -266,6 +266,7 @@ IMPORTANT: Do NOT invoke any tools, file readers, or shell commands. Reply direc
      - \`Control.PRESET_FULL_RECT\`, \`HORIZONTAL_ALIGNMENT_CENTER\`, \`TextServer.AUTOWRAP_WORD_SMART\`
      - \`StyleBoxFlat.new()\` with \`add_theme_stylebox_override("panel", style)\` or \`"normal"\`
      - For custom 2D graphics (gallows, boards, tokens), create a child \`Control\` or draw inside a dedicated \`Control\` / custom draw helper using \`queue_redraw()\` and \`_draw()\` (\`draw_line\`, \`draw_circle\`, \`draw_arc\`, \`draw_rect\`). Note: inner \`class CanvasBoard extends Control:\` inside \`client.gd\` works great in Godot 4!
+   - Prefer clean ASCII labels and procedural \`_draw()\` graphics over raw Unicode emojis so text renders crisply even before fallback emoji fonts finish loading.
    - Make the UI clean, dark-themed (\`#0d1117\` / \`#161b22\` / \`#00bcd4\` / \`#22c55e\` / \`#ef4444\`), responsive, legible, and fun to play!`;
 }
 

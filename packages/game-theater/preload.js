@@ -14,4 +14,5 @@ contextBridge.exposeInMainWorld('robos', {
   saveGameSource: (payload) => ipcRenderer.invoke('theater:save-game-source', payload),
   openExternal: (url) => ipcRenderer.invoke('theater:open-external', url),
   openPlayerWindow: (info) => ipcRenderer.invoke('theater:open-player-window', info),
+  capturePlayerWindow: (payload) => ipcRenderer.invoke('theater:capture-player-window', payload),
 });
