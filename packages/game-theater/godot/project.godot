@@ -1,0 +1,25 @@
+; Engine configuration file.
+; RobOS AI Multiplayer Game Theater — Godot 4 HTTPS Web Client
+
+config_version=5
+
+[application]
+
+config/name="RobOS AI Multiplayer Game Theater"
+config/description="Dynamic AI-generated multiplayer game client for RobOS Game Theater"
+run/main_scene="res://scenes/Main.tscn"
+config/features=PackedStringArray("4.3", "GL Compatibility")
+config/icon="res://icon.svg"
+
+[display]
+
+window/size/viewport_width=1360
+window/size/viewport_height=820
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+environment/defaults/default_clear_color=Color(0.0509804, 0.0666667, 0.0901961, 1)

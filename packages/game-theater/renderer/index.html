@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>RobOS AI Multiplayer Game Theater</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand-wrap">
+      <img src="../icon.svg" alt="Game Theater" class="brand-icon" />
+      <div>
+        <h1>RobOS AI Multiplayer Game Theater</h1>
+        <p class="subtitle">Dynamic AI Multiplayer Game Server + Godot 4 HTTPS Web Client + Per-Player Google Doc Launchers</p>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <span id="endpoint-pill" class="pill pill-cyan">Starting HTTPS Server...</span>
+      <button id="btn-sync-docs" class="btn btn-primary">📄 Sync Per-Player Google Docs</button>
+      <button id="btn-refresh" class="btn btn-secondary">↻ Refresh</button>
+    </div>
+  </header>
+
+  <div id="status-banner" class="status-banner hidden"></div>
+
+  <main class="grid-layout">
+    <!-- Left Column: Per-Player Google Docs & Lobby Players -->
+    <section class="card">
+      <div class="card-header">
+        <h2>🪪 RobOS Players &amp; Per-Player Google Launch Docs</h2>
+        <span id="host-doc-link-wrap"></span>
+      </div>
+      <p class="hint">
+        Each player gets their own Google Doc containing a 1-click Launch Button (<code>?auth=&lt;256-bit-token&gt;</code>) that signs them into the Godot 4 HTTPS Web Client as a verified RobOS Game User.
+      </p>
+
+      <div class="table-wrap">
+        <table class="players-table">
+          <thead>
+            <tr>
+              <th>Player</th>
+              <th>GamerTag</th>
+              <th>Google Doc</th>
+              <th>Play in Godot 4</th>
+            </tr>
+          </thead>
+          <tbody id="players-tbody"></tbody>
+        </table>
+      </div>
+
+      <form id="add-player-form" class="inline-form">
+        <input id="new-player-name" type="text" placeholder="Add player name (e.g. Sam)" required />
+        <input id="new-player-tag" type="text" placeholder="GamerTag" />
+        <input id="new-player-email" type="email" placeholder="Google email (for Drive share)" />
+        <button type="submit" class="btn btn-secondary">+ Add Player</button>
+      </form>
+    </section>
+
+    <!-- Right Column: Dynamic AI Game Studio & Live Code Inspector -->
+    <section class="card">
+      <div class="card-header">
+        <h2>🤖 Dynamic AI Multiplayer Game Studio</h2>
+        <div class="row-gap">
+          <select id="game-select" class="select-input"></select>
+          <span id="game-cap-pill" class="pill">No Game Yet</span>
+        </div>
+      </div>
+
+      <p class="hint">
+        Start with an empty stage or pick any generated game. Any RobOS Game User can generate a new game or evolve the active game — both in this studio and live inside the Godot 4 Web Client!
+      </p>
+
+      <div class="ai-builder-box">
+        <div class="mode-tabs">
+          <button type="button" id="tab-generate" class="tab-btn active">✨ Generate New Game</button>
+          <button type="button" id="tab-modify" class="tab-btn">🔧 Change Active Game</button>
+        </div>
+        <input id="ai-game-title" type="text" placeholder="Game Title (e.g. Hangman)" class="full-input" />
+        <textarea id="ai-game-prompt" rows="4" placeholder="Describe your multiplayer game rules, player limit, turn order, and Godot 4 visuals..."></textarea>
+        <div class="builder-footer">
+          <span id="agent-live-status" class="muted">Ready to generate server.js + Godot 4 client.gd</span>
+          <button type="button" id="btn-run-agent" class="btn btn-accent">🚀 Run RobOS Agent</button>
+        </div>
+      </div>
+
+      <div class="code-inspector">
+        <div class="code-header">
+          <div class="mode-tabs">
+            <button type="button" id="code-tab-server" class="tab-btn active">📜 server.js (Multiplayer Server)</button>
+            <button type="button" id="code-tab-client" class="tab-btn">🎮 client.gd (Godot 4 Client)</button>
+          </div>
+          <button type="button" id="btn-save-code" class="btn btn-secondary btn-sm" disabled>💾 Validate &amp; Hot-Reload</button>
+        </div>
+        <textarea id="code-editor" class="code-textarea" spellcheck="false" placeholder="// Dynamically generated server.js and Godot 4 client.gd appear here..."></textarea>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
