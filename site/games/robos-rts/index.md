@@ -39,7 +39,7 @@ keywords: "Starfall Command, RobOS RTS, RTS campaign, Frontier Hunters, Balance 
         {% include game-download-button.html %}
         <a class="starfall-link" href="#dev-update">Watch the dev update</a>
       </div>
-      <p class="starfall-meta">Windows · Linux · macOS</p>
+      <p class="starfall-meta">Windows · Linux · macOS. <a class="starfall-link" href="#play">Run from source for the latest campaign and online lobby.</a></p>
     </div>
     <figure class="starfall-capture" id="battle">
       <a href="{{ captures | append: 'hold-for-dawn-battle.webp' | relative_url }}">
@@ -134,6 +134,7 @@ keywords: "Starfall Command, RobOS RTS, RTS campaign, Frontier Hunters, Balance 
           <a href="{{ captures | append: 'online-lobby.webp' | relative_url }}"><img src="{{ captures | append: 'online-lobby.webp' | relative_url }}" width="980" height="585" loading="lazy" alt="Online 1v1 lobby with controls to host or join a Frontier Hunters match"></a>
           <h3>Host or join a match</h3>
           <p>Use the online lobby to play Frontier Hunters or spectate an AI matchup. LAN party support and co-op are planned.</p>
+          <p><a class="starfall-link" href="{{ '/robos-game-server/' | relative_url }}">Set up the game server</a></p>
         </article>
       </div>
     </div>
