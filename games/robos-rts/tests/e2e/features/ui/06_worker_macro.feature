@@ -42,12 +42,12 @@ Feature: Workers keep the economy moving
     When the commander presses "S"
     Then the command card is targeting "build_silo"
     When the commander places a building at (35, 24)
-    And the simulation advances 64 ticks
+    And the simulation advances 256 ticks
     And the commander presses "T"
     Then construction at (35, 24) stays unfinished without a builder
     When the commander clicks unit "backup"
     And the commander right-clicks terrain at (35, 24)
-    And the simulation advances 430 ticks
+    And the simulation advances 2048 ticks
     Then a finished "silo" stands at (35, 24)
     And player 1 has 300 crystal, 150 aether and 2 supply used
     When the commander presses "B"
@@ -82,13 +82,40 @@ Feature: Workers keep the economy moving
     And the commander Shift-places a building at (40, 22)
     And the commander Shift-places a building at (40, 22)
     And the commander Shift-places a building at (47, 22)
-    Then "builder" has orders "build,build"
+    And the commander Shift-places a building at (47, 29)
+    Then "builder" has orders "build,build,build"
+    And a queued "silo" blueprint stands at (40, 22)
+    And a queued "silo" blueprint stands at (47, 22)
+    And a queued "silo" blueprint stands at (47, 29)
+    And no building stands at (40, 22)
+    And no building stands at (47, 22)
+    And no building stands at (47, 29)
     When the commander releases Shift
     Then the worker build page is "root"
     And no placement is active
-    When the simulation advances 1240 ticks
+    When the commander presses "S"
+    Then the map shows 0 queued building blueprints
+    When the commander presses "B"
+    And the commander presses "S"
+    And the commander holds Shift
+    And the commander Shift-places a building at (40, 22)
+    And the commander Shift-places a building at (47, 22)
+    And the commander Shift-places a building at (47, 29)
+    And the commander releases Shift
+    And the commander selects the building at (47, 22)
+    And the commander presses "Escape"
+    Then "builder" has orders "build,build"
+    And the map shows 2 queued building blueprints
+    And a queued "silo" blueprint stands at (40, 22)
+    And a queued "silo" blueprint stands at (47, 29)
+    When the simulation advances 420 ticks
+    Then construction at (40, 22) is progressing
+    And the map shows 1 queued building blueprints
+    When the simulation advances 4200 ticks
     Then a finished "silo" stands at (40, 22)
-    And a finished "silo" stands at (47, 22)
+    And no building stands at (47, 22)
+    And a finished "silo" stands at (47, 29)
+    And the map shows 0 queued building blueprints
 
   Scenario: A group assigns separate Pioneers to foundations and can go back to gathering
     Given an RTS test scenario
@@ -167,7 +194,7 @@ Feature: Workers keep the economy moving
     And the commander Shift-right-clicks at (47, 32)
     And the commander releases Shift
     Then "builder" has orders "build,build,harvest"
-    When the simulation advances 400 ticks
+    When the simulation advances 800 ticks
     Then "builder" has orders "harvest"
     And construction at (39, 23) is progressing
     And construction at (46, 24) is progressing

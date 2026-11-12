@@ -22,7 +22,7 @@ Feature: A paid Farsight Wisp scouts briefly without weapons or detection
     And the scouting cell at (79, 25) is unexplored
     When the commander clicks the projected body of "source" at (0.0, 1.15)
     And the commander presses "V"
-    Then player 1 has 155 crystal, 50 aether and 1 supply used
+    Then player 1 has 155 crystal, 50 aether and 0 supply used
     When the simulation advances 767 ticks
     Then no "farsight_wisp" exists
     When the simulation advances 1 ticks

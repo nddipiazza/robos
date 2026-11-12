@@ -11,7 +11,7 @@ Feature: Train a Brood Keeper and seed a delayed clutch
       """
     When the commander clicks unit "nest"
     And the commander presses "E"
-    Then player 1 has 275 crystal, 125 aether and 2 supply used
+    Then player 1 has 275 crystal, 125 aether and 0 supply used
     And "nest" holds 2 brood slots with no clutch growing
     When the simulation advances 2200 ticks
     And the commander frames (35, 30) at zoom height 44

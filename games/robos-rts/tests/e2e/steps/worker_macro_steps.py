@@ -1,3 +1,5 @@
+import time
+
 from behave import then, when
 
 from tactical_controls_steps import find_unit
@@ -58,6 +60,7 @@ def click_card(context, slot, button):
 
 
 @when("the commander clicks worker card slot {slot:d}")
+@when("the commander clicks command card slot {slot:d}")
 def click_worker_card(context, slot):
     click_card(context, slot, 1)
 
@@ -94,6 +97,29 @@ def building_at(context, x, y):
          if u["is_structure"] and abs(u["pos"]["x"] - x) < 0.2 and abs(u["pos"]["y"] - y) < 0.2),
         None,
     )
+
+
+def wait_for_blueprints(context, matches):
+    deadline = time.monotonic() + 2
+    while True:
+        blueprints = context.client.ui()["state"]["build_blueprints"]
+        if matches(blueprints):
+            return
+        assert time.monotonic() < deadline, blueprints
+        time.sleep(0.02)
+
+
+@then('a queued "{type_id}" blueprint stands at ({x:d}, {y:d})')
+def blueprint_at(context, type_id, x, y):
+    wait_for_blueprints(context, lambda sites: any(
+        site["type"] == type_id and abs(site["pos"][0] - x) < 0.2 and abs(site["pos"][1] - y) < 0.2
+        for site in sites
+    ))
+
+
+@then("the map shows {count:d} queued building blueprints")
+def blueprint_count(context, count):
+    wait_for_blueprints(context, lambda sites: len(sites) == count)
 
 
 @then("construction at ({x:d}, {y:d}) stays unfinished without a builder")

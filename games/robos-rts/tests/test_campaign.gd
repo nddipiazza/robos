@@ -12,14 +12,18 @@ func _run() -> void:
 	sim = root.get_node("SimEngine")
 	_test_difficulty()
 	_test_roster_rules()
+	_test_research_pace()
 	_test_hall_relocation()
 	_test_bunker_garrison()
 	_test_objective_visibility()
 	_test_assault(true)
 	_test_assault(false)
+	_test_uprising_blast()
 	_test_recovery()
 	_test_defense()
+	_test_evacuation()
 	_test_stranded_rescue()
+	_test_stranded_timeout()
 	_test_terminal_states()
 	_test_progress()
 	print("Campaign: ", "passed" if failures.is_empty() else failures)
@@ -48,6 +52,84 @@ func _order(tags: Array, kind: String, point: Vector2) -> void:
 func _advance(seconds: int) -> void:
 	sim.step_ticks(seconds * sim.TICK_RATE)
 
+func _test_evacuation() -> void:
+	var evac := Campaign.Evacuation
+	_check(not Campaign.mission_available(Campaign.EVACUATION, [Campaign.MISSIONS[Campaign.RECOVERY].id]),
+		"Mission 04 stays locked before Hold for Dawn")
+	_check(Campaign.mission_available(Campaign.EVACUATION, [Campaign.MISSIONS[Campaign.DEFENSE].id]),
+		"Hold for Dawn unlocks Mission 04")
+	_check(sim.start_campaign(Campaign.EVACUATION, "hard").ok, "The Last Road loads")
+	_check(sim.map_width == 152 and sim.map_height == 200, "The evacuation uses the original terrain dimensions")
+	_check(sim.terrain_grid != null and sim.terrain_grid.bounds == Rect2(17, 24, 113, 160),
+		"The original playable bounds are inset from the terrain edges")
+	_check(sim._is_point_blocked_by_static(Vector2(12, 145), 0.6)
+		and not sim.can_place_structure("silo", Vector2(12, 145)), "Movement and construction respect the playable boundary")
+	var insertion_height: float = sim.get_elevation_at(evac.INSERTION_ROAD.front())
+	var settlement_height: float = sim.get_elevation_at(evac.SETTLEMENT)
+	var spaceport_height: float = sim.get_elevation_at(evac.SPACEPORT)
+	_check(settlement_height > insertion_height + 1.5 and spaceport_height > settlement_height + 1.5,
+		"The settlement and spaceport use distinct elevation tiers")
+	_check(sim._has_clear_line_of_walk(Vector2(90, 50), Vector2(95, 45), 0.85)
+		and not sim._has_clear_line_of_walk(Vector2(90, 54), Vector2(100, 46), 0.85),
+		"Infantry can follow the dock ramps and are blocked by the adjacent cliff")
+	_check(_army().size() == 4 and _unit_named("settlement_hub").owner == 0, "Opening escort has four troops and a neutral settlement")
+	_check(not sim.can_see_position(1, evac.SPACEPORT), "The spaceport starts in fog")
+	_check(sim.research_offer(1, "weapons").get("level") == 1
+		and sim.research_offer(1, "armor").get("time") == 160.0, "The Field Armory offers campaign infantry +1/+1")
+	var truck_radius: float = root.get_node("RTSData").get_unit_def("settlement_truck").radius
+	for index in range(1, evac.ROUTE.size()):
+		var from: Vector2 = evac.ROUTE[index - 1]
+		var to: Vector2 = evac.ROUTE[index]
+		var path: Array[Vector2] = sim.compute_smooth_path(from, to, truck_radius)
+		var length := 0.0
+		for step in path:
+			length += from.distance_to(step)
+			from = step
+		_check(not path.is_empty() and path.back().distance_to(to) < 0.25
+			and length < 1.5 * evac.ROUTE[index - 1].distance_to(to),
+			"Truck route is traversable at waypoint %d" % index)
+		var route_start: Vector2 = evac.ROUTE[index - 1]
+		var bend: Vector2 = evac.ROAD_BENDS.get(index, to)
+		_check(sim._has_clear_line_of_walk(route_start, bend, truck_radius)
+			and sim._has_clear_line_of_walk(bend, to, truck_radius),
+			"The truck's automatic route stays on walkable terrain at waypoint %d" % index)
+	var squad := _army()
+	for index in range(1, evac.INSERTION_ROAD.size()):
+		sim.issue_command(squad, "attack_move", evac.INSERTION_ROAD[index], 0, "", index > 1)
+	_advance(38)
+	_check(sim.campaign.stage == 1 and _unit_named("settlement_hub").owner == 1, "Arrival transfers the settlement")
+	if sim.campaign.stage != 1:
+		return
+	var hall := _unit_named("evac_muster")
+	_check(sim.production_attachment(hall).get("unit_type") == "research_module", "Starting Research Module is docked")
+	_check(sim.issue_command([hall.tag], "train_torchguard").ok, "Torchguards can train with an attached Research Module")
+	_check(sim.campaign_allows_ability(1, "attach_fabrication_module"), "Mission 04 unlocks the Fabrication Module")
+	_advance(26)
+	var state := _view()
+	_check(state.convoys_sent == 1 and state.convoy_tag > 0, "A truck leaves automatically")
+	if not sim.units.has(state.convoy_tag):
+		return
+	var truck: Dictionary = sim.units[state.convoy_tag]
+	_check(not sim.issue_command([truck.tag], "stop").ok and not sim.issue_command([truck.tag], "move", Vector2(40, 140)).ok,
+		"Player commands cannot override the convoy")
+	var before: Vector2 = truck.pos
+	var next: Vector2 = evac.ROUTE[sim.campaign.evacuation._waypoint + 1]
+	var obstruction: Dictionary = sim.spawn_unit("silo", 1, before.move_toward(next, 2.0))
+	_advance(6)
+	_check(truck.pos.distance_to(before) > 4.5,
+		"The automatic truck follows the road through building footprints")
+	sim._remove_destroyed_unit(obstruction)
+	sim._remove_destroyed_unit(truck)
+	sim.campaign.step(sim)
+	_check(_view().colonists_lost == 5 and sim.campaign.evacuation._survivors.size() == 5,
+		"A destroyed ten-seat truck records casualties and releases survivors")
+	for tag in sim.campaign.evacuation._survivors:
+		_check(sim.units[tag].unit_type == "evacuee" and not sim.units[tag].orders.is_empty(),
+			"Survivors follow the road on foot")
+	sim.campaign.evacuation.lost = evac.LOSS_LIMIT
+	_advance(1)
+	_check(_view().status == "defeat", "Hard fails when the colonist loss limit is reached")
+
 func _test_difficulty() -> void:
 	sim.start_campaign(Campaign.ASSAULT)
 	var standard := _unit_named("checkpoint_1")
@@ -58,8 +140,14 @@ func _test_difficulty() -> void:
 	_check(_unit_named("captain_vale").hp == 245.0, "Casual enemy modifiers leave the player's squad intact")
 	sim.start_campaign(Campaign.ASSAULT, "hard")
 	var hard := _unit_named("checkpoint_1")
-	_check(sim.units.size() > standard_count and sim.unit_upgrade_level(hard, "armor") == 1, "Hard adds guards and enemy infantry armor")
-	_check(sim.unit_upgrade_level(hard, "weapons") == 0, "Hard infantry starts with armor only")
+	_check(sim.units.size() > standard_count and sim.unit_upgrade_level(hard, "armor") == 0 and sim.unit_upgrade_level(hard, "weapons") == 0,
+		"Hard adds guards without combat upgrades in Cut the Signal")
+	sim.start_campaign(Campaign.RECOVERY, "hard")
+	var directorate := sim.units.values().filter(func(unit): return unit.owner == 2 and unit.unit_type == "rifleman").front() as Dictionary
+	var directorate_medic := sim.units.values().filter(func(unit): return unit.owner == 2 and unit.unit_type == "triage_specialist").front() as Dictionary
+	_check(sim.unit_upgrade_level(directorate, "armor") == 1 and sim.unit_upgrade_level(directorate, "weapons") == 1,
+		"Hard White Ridge gives Directorate combat units +1 weapons and armor")
+	_check(directorate_medic.campaign_healing_multiplier == Campaign.DIRECTORATE_HEALING_MULTIPLIER, "Hard White Ridge improves Directorate healing")
 	sim.start_campaign(Campaign.RECOVERY, "brutal")
 	var enemy: Dictionary = sim.spawn_unit("rifleman", 2, Vector2(90, 119))
 	var medic: Dictionary = sim.spawn_unit("triage_specialist", 1, Vector2(94, 117))
@@ -78,6 +166,9 @@ func _test_difficulty() -> void:
 	var hub := _unit_named("evac_hub")
 	sim.tick = Campaign.TUNNEL_AT * sim.TICK_RATE
 	sim.campaign._step_defense_escalation(sim, hub.pos)
+	_check(sim.units.values().filter(func(unit): return unit.owner == 2).all(func(unit):
+		return sim.unit_upgrade_level(unit, "weapons") == 0 and sim.unit_upgrade_level(unit, "armor") == 0
+	), "Late Brutal pressure uses reinforcements without Brood research tiers")
 	var tunnel: Dictionary = sim.units.get(sim.campaign._tunnel_tag, {})
 	_check(tunnel.get("unit_type") == "tunnel_mouth", "Brutal establishes a destructible reinforcement tunnel")
 	var count: int = sim.units.size()
@@ -105,6 +196,16 @@ func _test_roster_rules() -> void:
 	_check(not sim.campaign_allows_ability(1, "attach_fabrication_module") and not sim.campaign_allows_ability(1, "train_howitzer") and not sim.campaign_allows_ability(1, "build_airframe_hangar"), "Dual production, armor and air tech remain outside the prologue roster")
 	var bunker := _unit_named("north_bunker")
 	var enemy: Dictionary = sim.spawn_unit("skitterling", 2, bunker.pos + Vector2(4, 0))
+	var air_enemy: Dictionary = sim.spawn_unit("needlewing", 2, bunker.pos + Vector2(4, 0))
+	var turret := sim.units.values().filter(func(unit): return unit.owner == 1 and unit.unit_type == "sentry_turret").front() as Dictionary
+	_check(sim.can_attack(turret, air_enemy) and not sim.can_attack(turret, enemy), "Hold for Dawn turrets only attack air targets")
+	var armory := sim.units.values().filter(func(unit): return unit.owner == 1 and unit.unit_type == "field_armory").front() as Dictionary
+	workers = sim.units.values().filter(func(unit): return unit.is_worker and unit.owner == 1)
+	armory.build_progress = 0.9
+	var site := Vector2(102, 138)
+	_check(not sim.issue_command([workers[2].tag], "build_sentry_turret", site).ok, "Turret construction requires a completed Field Armory")
+	armory.build_progress = 1.0
+	_check(sim.issue_command([workers[2].tag], "build_sentry_turret", site).ok, "The completed Field Armory unlocks turret construction")
 	for id in Campaign.DEFENSE_BUNKERS:
 		var start_bunker := _unit_named(id)
 		var garrison: Array = start_bunker.get("passengers", [])
@@ -119,6 +220,7 @@ func _test_hall_relocation() -> void:
 	var hall := _unit_named("recovery_hall")
 	var destination := Vector2(115, 123)
 	_order([hall.tag], "lift", hall.pos)
+	_advance(1)
 	_check(hall.flight_height > 0.0, "The White Ridge Hall can take off")
 	_order([hall.tag], "move", destination)
 	_advance(4)
@@ -127,6 +229,42 @@ func _test_hall_relocation() -> void:
 	_advance(2)
 	_check(hall.flight_height == 0.0 and hall.pos == destination, "The relocated Hall lands at its target")
 	_check(sim.issue_command([hall.tag], "train_rifleman").ok, "The landed Hall can train Riflemen again")
+
+func _test_research_pace() -> void:
+	for mission in [Campaign.ASSAULT, Campaign.RECOVERY]:
+		sim.start_campaign(mission)
+		_check(sim.research_offer(1, "weapons").is_empty() and sim.research_offer(1, "armor").is_empty()
+			and not sim.campaign_allows_ability(1, "research_surge_efficiency"), "The first two missions have no player research")
+	sim.start_campaign(Campaign.DEFENSE, "casual")
+	_check(sim.research_offer(1, "weapons").is_empty() and sim.research_offer(1, "armor").is_empty(), "Casual Hold for Dawn has no player research")
+	for difficulty in ["normal", "hard", "brutal"]:
+		sim.start_campaign(Campaign.DEFENSE, difficulty)
+		var armory := sim.units.values().filter(func(unit): return unit.unit_type == "field_armory").front() as Dictionary
+		var bridge_approaches := [Vector2(101, 92), Vector2(80, 108)]
+		for i in Campaign.DEFENSE_CACHE_SITES.size():
+			var point: Vector2 = Campaign.DEFENSE_CACHE_SITES[i].point
+			var path: Array = sim.compute_smooth_path(bridge_approaches[i / 2], point)
+			_check(path.back().is_equal_approx(point), "The supplies at %s can be reached across their bridge" % point)
+		_check(sim.issue_command([armory.tag], "research_weapons").ok, "The completed starting armory accepts Weapons")
+		_check(not sim.issue_command([armory.tag], "research_armor").ok, "Armor waits for aether after paying for Weapons")
+		var cache: Dictionary = Campaign.DEFENSE_CACHE_SITES[1]
+		sim.spawn_unit("rifleman", 1, cache.point)
+		sim.step_ticks(8)
+		_check(_view().caches_claimed == 1 and sim.players[1].aether == 125, "The Aether cache pays for the second upgrade")
+		_check(sim.issue_command([armory.tag], "research_armor").ok and armory.production_queue.size() == 2, "Armor queues behind Weapons")
+		var duration: float = Campaign.INFANTRY_RESEARCH_SECONDS
+		_check(armory.production_queue.all(func(job): return job.total_time == duration), "Both queued jobs take 160 game seconds on %s" % difficulty)
+		if difficulty == "normal":
+			_advance(158)
+			_check(sim.players[1].upgrades.weapons == 0, "Weapons has not finished before 160 seconds")
+			_advance(1)
+			sim.step_ticks(sim.TICK_RATE - 8)
+			_check(sim.players[1].upgrades.weapons == 1 and sim.players[1].upgrades.armor == 0, "Weapons completes at 160 seconds and Armor starts next")
+			_advance(159)
+			_check(sim.players[1].upgrades.armor == 0, "Armor stays pending until its own 160 seconds elapse")
+			_advance(1)
+			_check(sim.players[1].upgrades.armor == 1 and sim.research_offer(1, "weapons").is_empty()
+				and sim.research_offer(1, "armor").is_empty(), "At 320 seconds both upgrades are capped at +1")
 
 func _test_bunker_garrison() -> void:
 	sim.load_scenario_dict({"paused": true, "map": {"width": 96, "height": 64}, "units": [
@@ -218,9 +356,25 @@ func _test_assault(take_detours: bool) -> void:
 	_check(_view().status == "victory" and _unit_named("relay_hq").is_empty(), "Destroying the relay headquarters wins the assault")
 	_check(not _unit_named("captain_vale").is_empty(), "Captain Vale survives the assault")
 	_check(_view().troops_joined == 5, "Five survivors join as real units")
-	_check(_view().cue_history == ["arrival", "road", "square", "convoy", "signal_off"], "Each assault scene triggers once in sequence")
+	_check(_view().cue_history == ["arrival", "road", "square", "convoy", "perimeter_low", "uprising", "signal_off"], "Each assault scene triggers once in sequence")
+	var civilians: Array = sim.units.values().filter(func(unit): return unit.unit_type == "resistance_civilian")
+	_check(civilians.size() == 6 and civilians.all(func(unit): return unit.has("uprising_throw_tick")), "All six civilians take part in the barrage")
+	_check(_unit_named("resistance_gate").is_empty() and sim.units.values().all(func(unit): return not unit.id.begins_with("uprising_wave_")), "The side gate opens and the final wave is cleared before victory")
 	if not take_detours:
 		_check(_view().bonus_done < _view().bonus_total, "Bonus statues are optional")
+
+func _test_uprising_blast() -> void:
+	sim.reset_state(716, 96, 64)
+	var center := Vector2(40, 30)
+	var civilian: Dictionary = sim.spawn_unit("resistance_civilian", 1, Vector2(28, 30))
+	var vehicle: Dictionary = sim.spawn_unit("howitzer", 2, center)
+	var infantry: Dictionary = sim.spawn_unit("rifleman", 2, center + Vector2(0, 1.7))
+	var friendly: Dictionary = sim.spawn_unit("rifleman", 1, center + Vector2(0, -1.7))
+	sim._rebuild_spatial_grid()
+	sim.apply_uprising_blast(civilian, vehicle, center, [vehicle.tag, infantry.tag])
+	_check(vehicle.hp == vehicle.max_hp - 70.0 + vehicle.armor, "The civilian direct hit has Emplaced Mortar damage and armor bonus")
+	_check(infantry.hp == infantry.max_hp - 20.0, "The civilian blast uses the Emplaced Mortar inner splash band")
+	_check(friendly.hp == friendly.max_hp, "The scripted barrage leaves Vale's squad unharmed")
 
 func _test_recovery() -> void:
 	_check(sim.start_campaign(Campaign.RECOVERY).ok and _view().cue.id == "dig_brief", "The White Ridge economy mission loads second")
@@ -240,22 +394,26 @@ func _test_recovery() -> void:
 	_advance(11)
 	_order(_army(), "attack_move", Campaign.CAMP_BEACON)
 	for second in 38:
-		if second % 6 == 0:
+		if second % 25 == 0:
 			sim.issue_command([hall.tag], "train_rifleman")
 		_advance(1)
 	_check(_view().bonus_done == 1 and _view().troops_joined > 0, "Clearing the siege transfers surviving militia troops and buildings")
 	_check(sim.issue_command([camp.tag], "train_rifleman").ok, "The rescued Hall can produce units")
 	_check(sim.issue_command([hall.tag], "train_triage_specialist").ok, "A completed Research Module enables paid Triage production")
 	_check(_view().waves_sent > 0, "The Directorate sends pressure from the ridge")
-	sim.issue_command([hall.tag], "rally", Vector2(94, 103))
-	sim.issue_command([camp.tag], "rally", Vector2(37, 112))
-	_order(_army(), "attack_move", Campaign.CAMP_BEACON)
-	for second in 64:
-		if second % 5 == 0:
-			sim.issue_command([hall.tag, camp.tag], "train_rifleman")
-		if second == 23:
-			sim.issue_command([hall.tag], "train_triage_specialist")
+	var approach := Vector2(88, 105)
+	sim.issue_command([hall.tag], "rally", approach)
+	sim.issue_command([camp.tag], "rally", approach)
+	_order(_army(), "attack_move", approach)
+	# Rally both production lines to the approach so they intercept the raids
+	# while the slower Normal-speed queues build up the expedition.
+	for second in 390:
+		if second % 25 == 0:
+			sim.issue_command([camp.tag], "train_rifleman")
+			sim.issue_command([hall.tag], "train_triage_specialist" if second % 75 == 50 else "train_rifleman")
 		_advance(1)
+		if _view().status != "playing" or (sim.sim_time >= 260.0 and _army().size() >= 24):
+			break
 	var muster := Vector2(39, 96)
 	_order(_army(), "attack_move", muster)
 	_advance(23)
@@ -292,7 +450,7 @@ func _test_defense() -> void:
 	var rifle_order: Dictionary = sim.issue_command([hall.tag], "train_rifleman")
 	_check(rifle_order.ok, "The garrison can spend starting crystal on reinforcements")
 	_advance(40)
-	_check(sim.players[1].upgrades.weapons == 1 and sim.research_offer(1, "weapons").is_empty(), "Only the first upgrade tier is available")
+	_check(sim.players[1].upgrades.weapons == 0 and armory.production_queue[0].progress == 40.0, "Research advances on the evacuation clock")
 	var wave_sizes: Array[int] = []
 	for index in Campaign.WAVES.size():
 		sim.tick = int(Campaign.WAVES[index].at) * sim.TICK_RATE - 2
@@ -305,7 +463,7 @@ func _test_defense() -> void:
 	# The live Brutal playthrough covers combat. Isolate the transport trigger and flight here.
 	for unit in sim.units.values():
 		if unit.owner == 2:
-			sim._apply_damage_to_target(hub, unit, unit.max_hp + 10.0, {}, 1.0)
+			sim._remove_destroyed_unit(unit)
 	sim.tick = (Campaign.RESCUE_AT - 1) * sim.TICK_RATE
 	_check(_view().rescue_in == 1 and _view().rescue_tag == 0, "The Rampart waits for the evacuation timer")
 	_advance(15)
@@ -332,8 +490,8 @@ func _test_stranded_rescue() -> void:
 			sim.step_ticks(1)
 			_check(squad.state == "waiting" and squad.tags.is_empty(), "Squad %d waits for its timestamp on %s" % [index + 1, difficulty])
 			sim.step_ticks(1)
-			_check(squad.state == ("rescued" if prepositioned else "stranded") and squad.tags.size() == 4,
-				"Squad %d spawns on time and a prepositioned soldier can rescue it on %s" % [index + 1, difficulty])
+			_check(squad.state == "stranded" and squad.tags.size() == 4,
+				"Squad %d spawns on time and waits for combat on %s" % [index + 1, difficulty])
 			_check(squad.get("ambush", []).size() == guard_counts[difficulty][index], "Squad %d gets its local guards on %s" % [index + 1, difficulty])
 			for tag in squad.tags + squad.get("ambush", []):
 				var unit: Dictionary = sim.units[tag]
@@ -357,15 +515,53 @@ func _test_stranded_rescue() -> void:
 	sim._apply_damage_to_target(militia, guard, 1000.0, {}, 1.0)
 	_check(militia.hp == militia.max_hp and guard.hp == guard.max_hp and not sim.issue_command([militia.tag], "stop").ok,
 		"The staged fight does no damage and the militia remains outside player control")
+	var rescuer: Dictionary = sim.spawn_unit("rifleman", 1, site.point + Vector2(0, -2))
+	var other_enemy: Dictionary = sim.spawn_unit("skitterling", 2, Vector2(170, 135))
+	sim._apply_damage_to_target(rescuer, other_enemy, 1.0, {}, 1.0)
+	_check(squad.state == "stranded", "An attack on a different enemy leaves this squad stranded")
+	var audio := root.get_node("RTSAudio")
+	var before: int = audio.sfx_counts.get("unit_ready", 0)
+	sim._apply_damage_to_target(rescuer, guard, 1.0, {}, 1.0)
+	_check(squad.state == "rescued" and _view().bonus_done == 1
+		and squad.tags.all(func(tag): return sim.issue_command([tag], "stop").ok),
+		"The first hit on a guard recruits the entire surviving squad immediately")
+	_check(audio.sfx_counts.get("unit_ready", 0) == before + 1 and audio.recent_sfx.back().ui,
+		"The handoff plays one reinforcement chime")
+	var guard_hp: float = guard.hp
+	sim._apply_damage_to_target(militia, guard, 1.0, {}, 1.0)
+	_check(guard.hp < guard_hp and audio.sfx_counts.get("unit_ready", 0) == before + 1,
+		"Recruited militia can fight and subsequent hits do not replay the chime")
+	sim._apply_damage_to_target(guard, militia, 1000.0, {}, 1.0)
+	_check(not sim.units.has(militia.tag), "Guards can kill a recruited soldier immediately")
+
+func _test_stranded_timeout() -> void:
+	sim.start_campaign(Campaign.DEFENSE)
+	var site: Dictionary = Campaign.STRANDED_SQUADS[0]
+	sim.tick = int(site.at) * sim.TICK_RATE - 1
+	sim.step_ticks(1)
+	var squad: Dictionary = sim.campaign.squads[0]
+	var marker: Dictionary = _view().markers.filter(func(entry): return entry.label == "Rescue militia").front()
+	_check(marker.cover_seconds == Campaign.MILITIA_RESCUE_WINDOW_SECONDS, "The distress marker shows the full cover window")
+	sim.tick = squad.deadline - 2
+	sim.step_ticks(1)
+	_check(squad.tags.all(func(tag): return sim.units.has(tag)), "The militia still have cover just before the deadline")
+	for _second in range(40):
+		_advance(1)
+		if squad.state == "lost":
+			break
+	_check(squad.state == "lost" and not squad.tags.any(func(tag): return sim.units.has(tag)),
+		"Without a rescue, the Brood naturally kill the entire squad after cover expires")
+	_check(not _view().markers.any(func(entry): return entry.label == "Rescue militia" and entry.point == marker.point),
+		"The overrun squad's rescue marker disappears")
+	var outpost := _unit_named("evac_hub")
+	var surviving_guards: Array = squad.ambush.filter(func(tag): return sim.units.has(tag))
+	_check(not surviving_guards.is_empty() and surviving_guards.all(func(tag):
+		var orders: Array = sim.units[tag].orders
+		return not orders.is_empty() and orders[0].type == "attack_move" and orders[0].target_pos == outpost.pos),
+		"The surviving militia attackers become an attack wave heading for the outpost")
 	sim.spawn_unit("rifleman", 1, site.point + Vector2(0, -2))
-	sim.step_ticks(8)
-	_check(squad.state == "rescued" and _view().bonus_done == 1 and sim.issue_command([militia.tag], "stop").ok,
-		"A late arrival recruits the militia")
-	sim._apply_damage_to_target(guard, militia, 1000.0, {}, 1.0)
-	_check(sim.units.has(militia.tag) and militia.hp == militia.max_hp, "Rescued troops have cover to get clear of the melee")
-	sim.tick += Campaign.RESCUE_COVER_SECONDS * sim.TICK_RATE
-	sim._apply_damage_to_target(guard, militia, 1000.0, {}, 1.0)
-	_check(not sim.units.has(militia.tag), "Normal lethal combat resumes when the withdrawal cover expires")
+	sim.step_ticks(1)
+	_check(_view().status == "playing" and _view().bonus_done == 0, "A wiped squad cannot be rescued and its loss does not fail the mission")
 
 func _test_terminal_states() -> void:
 	sim.start_campaign(Campaign.DEFENSE)

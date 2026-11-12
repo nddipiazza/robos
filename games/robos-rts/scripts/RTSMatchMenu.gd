@@ -7,10 +7,10 @@ signal campaign_restart_requested
 
 enum Layout { BATTLE, SKIRMISH, SETTINGS }
 
-const DISPLAY_PREFS := "user://rts-display.cfg"
-const VOLUME_LEVELS := [100, 70, 40, 0]
 const PAN_SPEEDS := [28.0, 46.0, 72.0]
 const SkirmishPreview = preload("res://scripts/RTSSkirmishPreview.gd")
+const LeaveConfirmation = preload("res://scripts/RTSLeaveConfirmation.gd")
+const Campaign = preload("res://scripts/engine/RTSCampaign.gd")
 const MAP_FILTER_LABELS := ["All maps", "Compact maps", "Large maps", "Two starts", "Multiple starts",
 	"Finite by default", "Water or bridges", "Cliffs or plateaus", "Watch stations", "Destructible blockers"]
 enum OrderLines { ALWAYS, SHIFT, HIDDEN }
@@ -28,7 +28,7 @@ var health_bars: OptionButton
 var difficulty: OptionButton
 var strategy: OptionButton
 var speed: OptionButton
-var volume: OptionButton
+var music_volume: HSlider
 var grid_hotkeys := false
 var edge_scroll := false
 var pan_speed := 46.0
@@ -48,13 +48,22 @@ var _surrender_button: Button
 var _editor_button: Button
 var _retry_mission: Button
 var _resume_button: Button
+var _leave_confirmation: LeaveConfirmation
+var _heading: Label
+var _mutator_summary: Label
 
 func _ready() -> void:
 	layer = 10
 	var in_battle := layout == Layout.BATTLE
 	panel = _make_panel(Vector2(630, 145) if in_battle else Vector2(128, 246), Vector2(660, 640) if in_battle else Vector2(608, 0))
 	var box := _panel_body(panel)
-	_label(box, "SETTINGS" if layout == Layout.SETTINGS else "SKIRMISH", 32)
+	if in_battle:
+		box.add_theme_constant_override("separation", 12)
+	_heading = _label(box, "SETTINGS" if layout == Layout.SETTINGS else "SKIRMISH", 32)
+	if in_battle:
+		_mutator_summary = _label(box, "", 16)
+		_mutator_summary.modulate = Color("#ffcd77")
+		_mutator_summary.hide()
 	if layout != Layout.SETTINGS:
 		map_preview = SkirmishPreview.new()
 		map_preview.position = panel.position + Vector2(panel.custom_minimum_size.x + 18, 0)
@@ -67,15 +76,18 @@ func _ready() -> void:
 		map_filter.focus_mode = Control.FOCUS_CLICK
 		map_filter.item_selected.connect(_filter_maps)
 		panel.visibility_changed.connect(func():
-			map_preview.visible = panel.visible and (not in_battle or SimEngine.campaign == null)
+			map_preview.visible = panel.visible and (not in_battle or (SimEngine.campaign == null and not RTSNetwork.match_active))
 			filters.visible = map_preview.visible)
 		_skirmish_options = VBoxContainer.new()
-		_skirmish_options.add_theme_constant_override("separation", 18)
+		_skirmish_options.add_theme_constant_override("separation", 12 if in_battle else 18)
 		box.add_child(_skirmish_options)
 		_build_skirmish_options(_skirmish_options)
 	if layout != Layout.SKIRMISH:
+		_build_sound_options(box)
 		_build_display_options(box)
 	if layout != Layout.SETTINGS:
+		_leave_confirmation = LeaveConfirmation.new()
+		add_child(_leave_confirmation)
 		_start_button = _button(box, "Start new match", _start)
 	if not in_battle:
 		_button(box, "Back", func(): back_requested.emit())
@@ -83,13 +95,10 @@ func _ready() -> void:
 	_resume_button = _button(box, "Resume (F8)", toggle)
 	_show_results = _button(box, "Match results", _open_result)
 	_show_results.hide()
-	_surrender_button = _button(box, "Surrender", func():
-		SimEngine.surrender(1)
-		panel.hide()
-		SimEngine.paused = false)
-	_editor_button = _button(box, "Map editor", func(): get_tree().change_scene_to_file("res://scenes/MapEditor.tscn"))
+	_surrender_button = _button(box, "Surrender", _request_surrender)
+	_editor_button = _button(box, "Map editor", _request_editor)
 	_retry_mission = _button(box, "Restart mission", func(): campaign_restart_requested.emit())
-	_button(box, "Main menu", _return_to_title)
+	_button(box, "Main menu", _request_title)
 	_create_scorecard()
 	SimEngine.match_finished.connect(_open_result)
 
@@ -107,14 +116,54 @@ func _build_skirmish_options(box: VBoxContainer) -> void:
 	strategy = _option(box, "AI strategy", ["Rush", "Balanced", "Economy", "Siege"], 1)
 	speed = _option(box, "Game speed", ["1×", "2×", "4×", "8×"], 0)
 
+func _build_sound_options(box: VBoxContainer) -> void:
+	var sound := VBoxContainer.new()
+	sound.add_theme_constant_override("separation", 10)
+	box.add_child(sound)
+	_label(sound, "Sound", 22)
+	music_volume = _volume_slider(sound, "Music Volume", RTSMusic.volume_percent, RTSMusic.set_volume_percent)
+	_volume_slider(sound, "SFX Volume", RTSAudio.volume_percent, RTSAudio.set_volume_percent)
+	if layout == Layout.SETTINGS:
+		var credits := HBoxContainer.new()
+		credits.add_theme_constant_override("separation", 10)
+		sound.add_child(credits)
+		_add_soundtrack_link(credits, RTSMusic.CREDIT, RTSMusic.ALBUM_URL)
+		_label(credits, "·", 15)
+		_add_soundtrack_link(credits, RTSMusic.TEMPEST_CREDIT, RTSMusic.TEMPEST_ALBUM_URL)
+
+func _add_soundtrack_link(credits: HBoxContainer, title: String, url: String) -> void:
+	var link := LinkButton.new()
+	link.text = title
+	link.uri = url
+	link.add_theme_font_size_override("font_size", 15)
+	credits.add_child(link)
+
+func _volume_slider(box: VBoxContainer, title: String, percent: int, setter: Callable) -> HSlider:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 12)
+	box.add_child(row)
+	_label(row, title).size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var slider := HSlider.new()
+	slider.custom_minimum_size.x = 150
+	slider.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	slider.max_value = 100.0
+	slider.step = 1.0
+	slider.value = percent
+	slider.tooltip_text = title
+	row.add_child(slider)
+	var value := _label(row, "%d%%" % percent)
+	value.custom_minimum_size.x = 48
+	value.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	slider.value_changed.connect(func(amount: float):
+		setter.call(int(amount))
+		value.text = "%d%%" % int(amount))
+	return slider
+
 func _build_display_options(box: VBoxContainer) -> void:
-	var current := 0
-	if RTSAudio:
-		current = 3 if RTSAudio.muted else maxi(0, VOLUME_LEVELS.find(RTSAudio.volume_percent))
-	volume = _option(box, "Sound volume", ["100%", "70%", "40%", "Muted"], current)
-	volume.item_selected.connect(_on_volume_selected)
+	if layout == Layout.SETTINGS:
+		_label(box, "Display and Controls", 22)
 	var display := ConfigFile.new()
-	display.load(_display_prefs_path())
+	display.load(RTSAudio.prefs_path())
 	health_bars = _option(box, "Overhead health bars", ["Selected or damaged", "Always", "Off"], clampi(int(display.get_value("display", "health_bars", 0)), 0, 2))
 	health_bars.item_selected.connect(_on_health_selected)
 	grid_hotkeys = bool(display.get_value("controls", "grid_hotkeys", false))
@@ -135,23 +184,66 @@ func _build_display_options(box: VBoxContainer) -> void:
 
 func _save_control(key: String, value: Variant) -> void:
 	var display := ConfigFile.new()
-	var path := _display_prefs_path()
+	var path := RTSAudio.prefs_path()
 	display.load(path)
 	display.set_value("controls", key, value)
 	display.save(path)
-
-func _display_prefs_path() -> String:
-	var override := OS.get_environment("RTS_DISPLAY_PREFS")
-	return DISPLAY_PREFS if override.is_empty() else override
 
 func open_title_panel() -> void:
 	panel.show()
 	if map_picker:
 		map_picker.grab_focus()
 	else:
-		volume.grab_focus()
+		music_volume.grab_focus()
+
+func confirmation_title() -> String:
+	return _leave_confirmation.title if _leave_confirmation and _leave_confirmation.visible else ""
+
+func _has_active_battle() -> bool:
+	if layout != Layout.BATTLE:
+		return SimEngine.resume_from_title
+	return not SimEngine._scenario_finished() and (
+		RTSNetwork.match_active or SimEngine.campaign != null or not SimEngine.units.is_empty())
+
+func _request_surrender() -> void:
+	_leave_confirmation.ask("Surrender?", "Surrendering will end the current match.", _surrender)
+
+func _surrender() -> void:
+	if RTSNetwork.match_active:
+		RTSNetwork.surrender()
+	else:
+		SimEngine.surrender(1)
+	panel.hide()
+	SimEngine.paused = false
+
+func _request_editor() -> void:
+	if _has_active_battle():
+		_leave_confirmation.ask("Open the map editor?", "This will end the current battle.", _open_editor)
+	else:
+		_open_editor()
+
+func _open_editor() -> void:
+	SimEngine.paused = true
+	get_tree().call_deferred("change_scene_to_file", "res://scenes/MapEditor.tscn")
+
+func _request_title() -> void:
+	if not _has_active_battle():
+		_return_to_title()
+		return
+	var message := "You can resume this battle from the main menu."
+	if RTSNetwork.match_active:
+		message = "This will disconnect you from the current online match."
+	elif SimEngine.campaign != null:
+		message = "You can resume this mission from the main menu."
+	_leave_confirmation.ask("Return to the main menu?", message, _return_to_title)
 
 func _return_to_title() -> void:
+	if RTSNetwork.match_active:
+		RTSNetwork.leave_match()
+		SimEngine.resume_from_title = false
+		SimEngine.paused = true
+		get_tree().call_deferred("change_scene_to_file", "res://scenes/RTSStart.tscn")
+		return
 	SimEngine.resume_from_title = not SimEngine.units.is_empty() and not SimEngine._scenario_finished()
 	if SimEngine.resume_from_title:
 		get_parent().save_title_view()
@@ -208,8 +300,8 @@ func _create_scorecard() -> void:
 	table.add_theme_constant_override("h_separation", 24)
 	box.add_child(table)
 	_label(table, "Match totals").size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_label(table, "You").horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	_label(table, "AI").horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_label(table, "Commander 1" if RTSNetwork.watching_ai else "You").horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_label(table, "Commander 2" if RTSNetwork.watching_ai else ("Opponent" if RTSNetwork.match_active else "AI")).horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	var rows := {"crystal_collected": "Crystal collected", "aether_collected": "Aether collected",
 		"units_trained": "Units trained", "units_lost": "Units lost", "structures_built": "Structures completed"}
 	for key in rows:
@@ -226,37 +318,54 @@ func _create_scorecard() -> void:
 	box.add_child(actions)
 	_rematch = _button(actions, "Rematch (Ctrl+Enter)", restart)
 	_rematch.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_button(actions, "Match setup (F8)", toggle).size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_button(actions, "Menu (F8)" if RTSNetwork.match_active else "Match setup (F8)", toggle).size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_button(actions, "Observe (O)", func(): observe_requested.emit()).size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
 func _open_result() -> void:
 	var state: Dictionary = SimEngine.match_state
 	if not state.has("scorecard"):
 		return
+	_leave_confirmation.dismiss()
 	panel.hide()
-	var outcome := "VICTORY" if state.winner == 1 else ("DRAW" if state.winner == 0 else "DEFEAT")
+	var seat := RTSNetwork.seat if RTSNetwork.match_active and not RTSNetwork.watching_ai else 1
+	var opponent := 3 - seat
+	var outcome := "VICTORY" if state.winner == seat else ("DRAW" if state.winner == 0 else "DEFEAT")
+	if RTSNetwork.watching_ai and state.winner in [1, 2]:
+		outcome = "COMMANDER %d WINS" % state.winner
 	_score_title.text = outcome
 	var seconds := floori(state.finished_tick * SimEngine.TICK_DT)
-	var reason := "Surrender" if state.reason == "surrender" else "Annihilation"
+	var reason := str(state.reason).capitalize() if state.reason != "all_structures_destroyed" else "Annihilation"
 	_score_detail.text = "%s vs %s   ·   %s   ·   %d:%02d" % [
-		RTSData.get_faction_name(SimEngine.players[1].faction), RTSData.get_faction_name(SimEngine.players[2].faction),
+		RTSData.get_faction_name(SimEngine.players[seat].faction), RTSData.get_faction_name(SimEngine.players[opponent].faction),
 		reason, seconds / 60, seconds % 60]
 	for stat in _score_values:
-		for player in [1, 2]:
-			_score_values[stat][player - 1].text = str(state.scorecard[str(player)][stat])
+		_score_values[stat][0].text = str(state.scorecard[str(seat)][stat])
+		_score_values[stat][1].text = str(state.scorecard[str(opponent)][stat])
 	_rematch.visible = state.mode == "1p_vs_ai"
 	_show_results.show()
 	result_panel.show()
 
 func reset_views() -> void:
+	_leave_confirmation.dismiss()
 	panel.hide()
 	result_panel.hide()
 	_show_results.hide()
 	var in_campaign := SimEngine.campaign != null
-	_skirmish_options.visible = not in_campaign
-	_start_button.visible = not in_campaign
-	_surrender_button.visible = not in_campaign
-	_editor_button.visible = not in_campaign
+	var online := RTSNetwork.match_active
+	_heading.text = "ONLINE MATCH" if online else "SKIRMISH"
+	var mutator_count := 0
+	if in_campaign:
+		var index: int = SimEngine.campaign.mission_index
+		_heading.text = "MISSION %02d  /  %s" % [index + 1, Campaign.MISSIONS[index].title.to_upper()]
+		mutator_count = SimEngine.campaign.selected_mutators().size()
+	_mutator_summary.visible = mutator_count > 0
+	_mutator_summary.text = "Mutators  ·  %d active" % mutator_count
+	_skirmish_options.visible = not in_campaign and not online
+	_start_button.visible = not in_campaign and not online
+	_surrender_button.visible = not in_campaign and not RTSNetwork.watching_ai
+	_surrender_button.disabled = online and SimEngine._scenario_finished()
+	_editor_button.visible = not in_campaign and not online
+	speed.get_parent().visible = not online
 	_retry_mission.visible = in_campaign
 	var map_id: String = SimEngine.match_state.get("map_id", "")
 	if SimEngine.SKIRMISH_MAPS.has(map_id):
@@ -273,6 +382,8 @@ func reset_views() -> void:
 	ai_faction.select(maxi(0, _faction_ids.find(choices.get("2", ""))))
 
 func restart() -> void:
+	if RTSNetwork.match_active:
+		return
 	SimEngine.rematch()
 
 func _option(box: VBoxContainer, label_text: String, choices: Array, selected: int) -> OptionButton:
@@ -289,10 +400,6 @@ func _option(box: VBoxContainer, label_text: String, choices: Array, selected: i
 	row.add_child(option)
 	box.add_child(row)
 	return option
-
-func _on_volume_selected(idx: int) -> void:
-	if RTSAudio and idx >= 0 and idx < VOLUME_LEVELS.size():
-		RTSAudio.set_volume_percent(VOLUME_LEVELS[idx])
 
 func _on_map_selected(index: int) -> void:
 	var map_id: String = map_picker.get_item_metadata(index)
@@ -355,7 +462,7 @@ func _matches_map_filter(data: Dictionary, filter_id: int) -> bool:
 
 func _on_health_selected(mode: int) -> void:
 	var display := ConfigFile.new()
-	var path := _display_prefs_path()
+	var path := RTSAudio.prefs_path()
 	display.load(path)
 	display.set_value("display", "health_bars", mode)
 	display.save(path)
@@ -363,11 +470,16 @@ func _on_health_selected(mode: int) -> void:
 
 func toggle() -> void:
 	result_panel.hide()
+	if RTSNetwork.match_active:
+		panel.visible = not panel.visible
+		if panel.visible:
+			_surrender_button.disabled = SimEngine._scenario_finished()
+			_resume_button.grab_focus()
+		return
 	if panel.visible:
 		panel.hide()
 		if SimEngine.campaign == null:
 			SimEngine.sim_speed = float(1 << speed.selected)
-		_on_volume_selected(volume.selected)
 		SimEngine.paused = was_paused
 	else:
 		was_paused = SimEngine.paused
@@ -379,6 +491,12 @@ func _start() -> void:
 	var map_id := selected_map_id()
 	if map_id.is_empty():
 		return
+	if _has_active_battle():
+		_leave_confirmation.ask("Start a new match?", "This will replace the current battle.", _start_match.bind(map_id))
+	else:
+		_start_match(map_id)
+
+func _start_match(map_id: String) -> void:
 	var settings := {"difficulty": ["easy", "normal", "hard"][difficulty.selected],
 		"strategy": ["rush", "balanced", "economy", "siege"][strategy.selected],
 		"player_faction": _faction_ids[player_faction.selected], "ai_faction": _faction_ids[ai_faction.selected],
@@ -386,7 +504,5 @@ func _start() -> void:
 	if not SimEngine.start_skirmish(map_id, settings).ok:
 		return
 	SimEngine.sim_speed = float(1 << speed.selected)
-	if volume:
-		_on_volume_selected(volume.selected)
 	panel.hide()
 	SimEngine.paused = false

@@ -38,7 +38,7 @@ func _test_detour() -> void:
 	_check(sim.issue_command([hall.tag], "rally", goal).ok, "Set the rally across the blocked direct exit")
 	for _slot in range(3):
 		_check(sim.issue_command([hall.tag], "train_rifleman").ok, "Pay for each rifleman")
-	sim.step_ticks(1500)
+	sim.step_ticks(85 * sim.TICK_RATE)
 	_check(arrivals.size() == 3 and hall.production_queue.is_empty(), "The full squad deploys around adjacent obstacles")
 	for arrival in arrivals:
 		_check(arrival.unit.orders.is_empty() and arrival.unit.pos.distance_to(goal) < 5.0,
@@ -59,14 +59,14 @@ func _test_blocked_exit() -> void:
 	var initial: int = sim.players[1].crystal
 	for _slot in range(2):
 		_check(sim.issue_command([hall.tag], "train_rifleman").ok, "Pay for a job at the enclosed hall")
-	sim.step_ticks(700)
+	sim.step_ticks(25 * sim.TICK_RATE)
 	var queue: Array = hall.production_queue
 	_check(arrivals.is_empty() and queue.size() == 2 and queue[0].progress == queue[0].total_time and queue[1].progress == 0.0,
 		"The completed job waits at the closed exit and the following job keeps its place")
-	_check(sim.players[1].crystal == initial - 100 and sim.players[1].supply_used == 2, "Waiting jobs retain paid costs and supply")
+	_check(sim.players[1].crystal == initial - 100 and sim.players[1].supply_used == 1, "Only the completed job waiting for an exit retains supply")
 	_check(sim.issue_command([hall.tag], "cancel_training", Vector2.ZERO, 0, "0").ok and sim.players[1].crystal == initial - 50,
 		"The completed blocked job can still be refunded")
-	sim.step_ticks(700)
+	sim.step_ticks(25 * sim.TICK_RATE)
 	_check(arrivals.is_empty() and queue.size() == 1 and queue[0].progress == queue[0].total_time, "The remaining job waits at the closed gate")
 	_check(sim.issue_command([gate.tag], "retract_silo").ok, "The player opens the only exit")
 	sim.step_ticks(320)
@@ -82,7 +82,7 @@ func _test_parallel_hatching() -> void:
 	for _slot in range(3):
 		_check(sim.issue_command([nest.tag], "train_skitterling").ok, "Buy a parallel Brood hatch")
 	_check(nest.brood_slots == 0, "All three hatches use a Brood slot")
-	sim.step_ticks(1200)
+	sim.step_ticks(24 * sim.TICK_RATE)
 	_check(arrivals.size() == 3 and nest.production_queue.is_empty() and sim.players[1].units_trained == 3, "Parallel hatches all deploy")
 	for i in range(arrivals.size()):
 		for j in range(i + 1, arrivals.size()):

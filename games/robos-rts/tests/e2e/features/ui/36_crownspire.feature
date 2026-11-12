@@ -39,7 +39,7 @@ Feature: A late-tech Crownspire attacks Massive units and loses to cheaper inter
     When the commander presses "Escape"
     And the commander clicks the projected body of "source" at (0.0, 1.15)
     And the commander presses "N"
-    Then player 1 has 400 crystal, 200 aether and 9 supply used
+    Then player 1 has 400 crystal, 200 aether and 1 supply used
     When the simulation advances 4351 ticks
     Then no "crownspire" exists
     When the simulation advances 1 ticks
@@ -74,7 +74,7 @@ Feature: A late-tech Crownspire attacks Massive units and loses to cheaper inter
     And the commander clicks the projected body of "hangar" at (0.0, 1.15)
     And the commander presses "A"
     And the commander presses "A"
-    Then player 1 has 150 crystal, 50 aether and 6 supply used
+    Then player 1 has 150 crystal, 50 aether and 0 supply used
     When the simulation advances 3840 ticks
     And the commander selects the two paid Kestrels
     And player 2 issues "hold_fire" to unit "capital" toward (86.0, 24.0)

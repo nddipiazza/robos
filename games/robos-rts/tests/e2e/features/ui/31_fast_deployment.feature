@@ -32,7 +32,7 @@ Feature: Concord Waystones deploy paid trainees through powered fields
     When a deployment command "fast_deploy" from "source" at (70, 27) is attempted
     Then the deployment command is rejected
     When the commander presses "Z"
-    Then player 1 has 750 crystal, 350 aether and 2 supply used
+    Then player 1 has 750 crystal, 350 aether and 0 supply used
     When the commander presses "D"
     Then the command card is targeting "fast_deploy"
     When the commander clicks a targeted point at (85, 15)

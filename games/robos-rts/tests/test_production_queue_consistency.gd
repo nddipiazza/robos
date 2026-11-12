@@ -15,6 +15,7 @@ func _run() -> void:
 	sim = root.get_node("SimEngine")
 	data = root.get_node("RTSData")
 	sim.unit_production_finished.connect(_record_deployment)
+	_test_normal_worker_training()
 	_test_power_cycle()
 	_test_tech_and_workshop()
 	_test_attachment_cycle(true)
@@ -70,13 +71,27 @@ func _start_build(worker: Dictionary, type: String, point: Vector2) -> Dictionar
 	return {}
 
 func _build_ticks(site: Dictionary) -> int:
-	return ceili(float(site.build_total_time) * sim.build_time_scale() / sim.TICK_DT)
+	return ceili(float(site.build_total_time) / sim.TICK_DT)
 
 func _finish_front(producer: Dictionary) -> void:
 	if not _check(not producer.production_queue.is_empty(), "There is a front job to finish"):
 		return
 	var job: Dictionary = producer.production_queue.front()
 	sim.step_ticks(ceili((float(job.total_time) - float(job.progress)) / sim.TICK_DT))
+
+func _test_normal_worker_training() -> void:
+	_load([
+		{"id": "hub", "type": "colony_hub", "x": 16, "y": 20},
+		{"id": "nest", "type": "brood_nest", "x": 40, "y": 20},
+		{"id": "heartstone", "type": "heartstone", "x": 64, "y": 20},
+	])
+	for entry in [["hub", "pioneer"], ["nest", "forager"], ["heartstone", "mote"]]:
+		_check(sim.issue_command([_unit(entry[0]).tag], "train_" + entry[1]).ok,
+			"The completed base can train " + entry[1])
+	sim.step_ticks(17 * sim.TICK_RATE - 1)
+	_check(deployed.is_empty(), "Workers cannot finish before 17 Normal seconds")
+	sim.step_ticks(1)
+	_check(deployed == ["pioneer", "forager", "mote"], "All three workers finish at 17 Normal seconds")
 
 func _test_power_cycle() -> void:
 	_load([
@@ -151,7 +166,12 @@ func _test_tech_and_workshop() -> void:
 		return
 	_check(not sim.issue_command([worker.tag], "build_workshop", workshop_site).ok and _stock() == STARTING_STOCK - _cost("muster_hall"),
 		"An unfinished Muster Hall does not satisfy the Workshop prerequisite")
-	sim.step_ticks(_build_ticks(hall))
+	_check(hall.build_total_time == 65.0, "A Muster Hall takes 65 Normal seconds")
+	var remaining_ticks := ceili((1.0 - float(hall.build_progress)) * 65.0 * sim.TICK_RATE - 0.000001)
+	sim.step_ticks(remaining_ticks - 1)
+	_check(hall.build_progress < 1.0, "Worker construction cannot complete a tick early")
+	sim.step_ticks(1)
+	_check(hall.build_progress == 1.0, "Worker construction completes on the scheduled tick")
 	var workshop := _start_build(worker, "workshop", workshop_site)
 	if workshop.is_empty():
 		return
@@ -174,8 +194,8 @@ func _test_workshop_queue(workshop: Dictionary, paid_buildings: Vector2i) -> voi
 	for command in ["train_howitzer", "research_weapons", "research_armor", "train_howitzer"]:
 		_check(sim.issue_command([workshop.tag], command).ok, "Accept Workshop job " + command)
 	if not _check(_job_names(workshop) == ["howitzer", "weapons", "armor", "howitzer"]
-		and _stock() == paid_buildings - troops - weapons - armor and player.supply_used == starting_supply + troop_supply,
-		"Training and research share one queue and only training reserves supply"):
+		and _stock() == paid_buildings - troops - weapons - armor and player.supply_used == starting_supply,
+		"Training and research share one queue and waiting jobs use no supply"):
 		return
 	sim.step_ticks(32)
 	var front: Dictionary = workshop.production_queue[0]
@@ -247,7 +267,7 @@ func _test_attachment_cycle(cancel_research: bool) -> void:
 		_check(sim.issue_command([hall.tag], "train_rifleman").ok, "Queue paid infantry behind research")
 	var cost_before_loss := module_cost * 2 + research_cost + rifle_cost * 2
 	if not _check(_job_names(hall) == ["surge_efficiency", "rifleman", "rifleman"]
-		and _stock() == STARTING_STOCK - cost_before_loss and player.supply_used == 3,
+		and _stock() == STARTING_STOCK - cost_before_loss and player.supply_used == 1,
 		"Research and infantry keep exact order, cost and supply"):
 		return
 	sim.step_ticks(32)
@@ -263,14 +283,14 @@ func _test_attachment_cycle(cancel_research: bool) -> void:
 	_check(not sim.issue_command([other_hall.tag], research).ok, "Paused research still reserves the unique upgrade")
 	if cancel_research:
 		_check(_cancel(hall, 0) and _stock() == STARTING_STOCK - cost_before_loss + research_cost
-			and player.supply_used == 3 and not player.surge_efficiency,
+			and player.supply_used == 1 and not player.surge_efficiency,
 			"Canceling paused research refunds its full cost without granting the upgrade")
 		sim.step_ticks(1)
 		_check(queue[0].progress == sim.TICK_DT and queue[1].progress == 0.0,
 			"Canceling paused research lets the next paid unit advance normally")
 		_check(sim.issue_command([other_hall.tag], research).ok, "A separate attached Hall can restart the canceled research")
 		return
-	_check(_cancel(hall, 1) and _stock() == STARTING_STOCK - cost_before_loss + rifle_cost and player.supply_used == 2,
+	_check(_cancel(hall, 1) and _stock() == STARTING_STOCK - cost_before_loss + rifle_cost and player.supply_used == 1,
 		"Canceling a waiting unit during attachment loss refunds only that unit")
 	_check(sim.issue_command([hall.tag], attach).ok, "Pay to rebuild the missing Research Module")
 	var replacement: Dictionary = sim.production_attachment(hall, false)

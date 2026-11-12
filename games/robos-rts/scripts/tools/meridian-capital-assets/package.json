@@ -1,0 +1,12 @@
+{
+  "name": "starfall-meridian-capital-assets",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Deterministic procedural GLB generator and validator for Starfall Command Meridian air, drone-turret, and capital assets",
+  "scripts": {
+    "build": "node src/build.mjs",
+    "validate": "node src/validate.mjs",
+    "test": "node src/build.mjs && node src/validate.mjs"
+  }
+}

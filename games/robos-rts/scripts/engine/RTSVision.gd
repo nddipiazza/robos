@@ -102,7 +102,7 @@ func _cover(sight: PlayerSight, center: Vector2i, radius: float, sees_high: bool
 			sight.high_deltas[left] += 1
 			sight.high_deltas[right] -= 1
 
-func update(units: Dictionary, tick: int, watch_stations: Array[Dictionary] = [], station_sight: float = 0.0) -> void:
+func update(units: Dictionary, tick: int, watch_stations: Array[Dictionary] = [], station_sight: float = 0.0, revealed: Callable = Callable()) -> void:
 	var stride := size.x + 1
 	var has_elevation := not _high_cells.is_empty()
 	for sight in _players.values():
@@ -112,13 +112,16 @@ func update(units: Dictionary, tick: int, watch_stations: Array[Dictionary] = []
 	var structures: Array = []
 	for unit in units.values():
 		var sight: PlayerSight = _players.get(unit.owner)
-		if sight == null or unit.hp <= 0.0:
+		if sight == null or unit.hp <= 0.0 or unit.get("dread_in_transit", false) or unit.get("gas_extracting", false):
 			continue
 		if unit.is_structure:
 			structures.append(unit)
 		var center := _cell(unit.pos)
-		var sees_high: bool = has_elevation and (unit.flight_height > 0.0 or _high_cells[center.y * size.x + center.x] != 0)
+		var sees_high: bool = has_elevation and (unit.flight_height > 0.0 or unit.get("vision_over_cliffs", false)
+			or _high_cells[center.y * size.x + center.x] != 0)
 		_cover(sight, center, unit.sight_range, sees_high)
+		if unit.has("sky_zone"):
+			_cover(sight, _cell(unit.sky_zone.pos), float(unit.sky_zone.radius), has_elevation)
 
 	for station in watch_stations:
 		if _players.has(station.owner):
@@ -156,13 +159,14 @@ func update(units: Dictionary, tick: int, watch_stations: Array[Dictionary] = []
 		# comes into view and can be confirmed empty.
 		for tag in sight.buildings.keys():
 			var old: Dictionary = sight.buildings[tag]
-			if state_at(player, old.pos) != VISIBLE:
-				continue
 			var live: Dictionary = units.get(tag, {})
+			var public_structure: bool = revealed.is_valid() and revealed.call(old)
+			if not public_structure and state_at(player, old.pos) != VISIBLE:
+				continue
 			if live.is_empty() or live.hp <= 0.0 or not live.is_structure or live.pos != old.pos:
 				sight.buildings.erase(tag)
 		for building in structures:
-			if building.owner != player and state_at(player, building.pos) == VISIBLE:
+			if building.owner != player and (state_at(player, building.pos) == VISIBLE or (revealed.is_valid() and revealed.call(building))):
 				sight.buildings[building.tag] = {
 					"tag": building.tag, "owner": building.owner,
 					"unit_type": building.unit_type, "name": building.name,

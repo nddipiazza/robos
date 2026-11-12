@@ -1,7 +1,7 @@
 {
   "pioneer": {
     "unit_name": "Pioneer",
-    "voice": "en-US-BrianMultilingualNeural",
+    "voice": "Qwen3-TTS VoiceDesign",
     "categories": {
       "select": [
         {
@@ -121,11 +121,12 @@
           "path": "res://assets/audio/voice/pioneer_attack_5.wav"
         }
       ]
-    }
+    },
+    "direction": "Middle-aged man with a thick Texas drawl, mid-low pitch, raspy weather-beaten warmth and a relaxed, dryly funny working cadence."
   },
   "rifleman": {
     "unit_name": "Rifleman",
-    "voice": "en-US-AndrewMultilingualNeural",
+    "voice": "Qwen3-TTS VoiceDesign",
     "categories": {
       "select": [
         {
@@ -220,11 +221,12 @@
           "path": "res://assets/audio/voice/rifleman_ready_2.wav"
         }
       ]
-    }
+    },
+    "direction": "Mature man with a clipped neutral American accent, deep pitch, gruff gravelly voice and the brisk discipline of a career soldier."
   },
   "breacher": {
     "unit_name": "Breacher",
-    "voice": "en-US-ChristopherNeural",
+    "voice": "Qwen3-TTS VoiceDesign",
     "categories": {
       "select": [
         {
@@ -314,11 +316,12 @@
           "path": "res://assets/audio/voice/breacher_ready_2.wav"
         }
       ]
-    }
+    },
+    "direction": "Young man with a working-class Chicago accent, booming gritty rasp and the punchy confidence of an adrenaline-fueled daredevil."
   },
   "howitzer": {
     "unit_name": "Howitzer",
-    "voice": "en-US-EmmaMultilingualNeural",
+    "voice": "Qwen3-TTS VoiceDesign",
     "categories": {
       "select": [
         {
@@ -408,11 +411,12 @@
           "path": "res://assets/audio/voice/howitzer_ready_2.wav"
         }
       ]
-    }
+    },
+    "direction": "Older man with a flat Midwestern accent, low rumbling gravel and the deliberate delivery of an unbothered artillery veteran."
   },
   "forager": {
     "unit_name": "Forager",
-    "voice": "en-US-ChristopherNeural",
+    "voice": "Qwen3-TTS VoiceDesign",
     "categories": {
       "select": [
         {
@@ -529,11 +533,12 @@
           "path": "res://assets/audio/voice/forager_ready_2.wav"
         }
       ]
-    }
+    },
+    "direction": "Juvenile androgynous creature with a high chittering voice, frenetic darting pace, constantly hungry, words still clear."
   },
   "mote": {
     "unit_name": "Mote",
-    "voice": "en-GB-SoniaNeural",
+    "voice": "Qwen3-TTS VoiceDesign",
     "categories": {
       "select": [
         {
@@ -650,11 +655,12 @@
           "path": "res://assets/audio/voice/mote_ready_2.wav"
         }
       ]
-    }
+    },
+    "direction": "Ageless crystalline creature with a light, melodic, high voice, brisk fluid pace and the curiosity of a devoted artisan."
   },
   "triage_specialist": {
     "unit_name": "Triage Specialist",
-    "voice": "en-US-AvaNeural",
+    "voice": "Qwen3-TTS VoiceDesign",
     "categories": {
       "select": [
         {
@@ -744,11 +750,12 @@
           "path": "res://assets/audio/voice/triage_specialist_ready_2.wav"
         }
       ]
-    }
+    },
+    "direction": "Adult woman with a soft Appalachian accent, crisp and urgent but steady, reassuring and compassionate even under fire."
   },
   "kestrel_interceptor": {
     "unit_name": "Kestrel Interceptor",
-    "voice": "en-US-GuyNeural",
+    "voice": "Qwen3-TTS VoiceDesign",
     "categories": {
       "select": [
         {
@@ -838,11 +845,12 @@
           "path": "res://assets/audio/voice/kestrel_interceptor_ready_2.wav"
         }
       ]
-    }
+    },
+    "direction": "Young woman with a brisk California accent, high-mid pitch, quick breathy delivery and the swagger of a high-g pilot."
   },
   "prospector": {
     "unit_name": "Prospector",
-    "voice": "en-US-GuyNeural",
+    "voice": "Qwen3-TTS VoiceDesign",
     "categories": {
       "select": [
         {
@@ -905,11 +913,12 @@
           "path": "res://assets/audio/voice/prospector_ready_2.wav"
         }
       ]
-    }
+    },
+    "direction": "Older woman with a dry Australian accent, low cracked dusty rasp, and a wry drawling scavenger's delivery."
   },
   "rampart_transport": {
     "unit_name": "Rampart Transport",
-    "voice": "en-US-AriaNeural",
+    "voice": "Qwen3-TTS VoiceDesign",
     "categories": {
       "select": [
         {
@@ -972,11 +981,12 @@
           "path": "res://assets/audio/voice/rampart_transport_ready_2.wav"
         }
       ]
-    }
+    },
+    "direction": "Mature man with a Boston accent, thick bass voice and the measured, protective delivery of a grizzled transport driver."
   },
   "needlewing": {
     "unit_name": "Needlewing",
-    "voice": "en-US-ChristopherNeural",
+    "voice": "Qwen3-TTS VoiceDesign",
     "categories": {
       "select": [
         {
@@ -1066,11 +1076,12 @@
           "path": "res://assets/audio/voice/needlewing_ready_2.wav"
         }
       ]
-    }
+    },
+    "direction": "Female insectoid with piercing pitch, airy hissing sibilants, erratic darting rhythm and a vicious aerial hunter's excitement."
   },
   "drift_sac": {
     "unit_name": "Drift Sac",
-    "voice": "en-US-ChristopherNeural",
+    "voice": "Qwen3-TTS VoiceDesign",
     "categories": {
       "select": [
         {
@@ -1133,11 +1144,12 @@
           "path": "res://assets/audio/voice/drift_sac_ready_2.wav"
         }
       ]
-    }
+    },
+    "direction": "Ancient creature with a subterranean low, bubbling voice, plodding hypnotic rhythm, docile but immense."
   },
   "lumen_carrier": {
     "unit_name": "Lumen Carrier",
-    "voice": "en-US-AvaNeural",
+    "voice": "Qwen3-TTS VoiceDesign",
     "categories": {
       "select": [
         {
@@ -1200,11 +1212,12 @@
           "path": "res://assets/audio/voice/lumen_carrier_ready_2.wav"
         }
       ]
-    }
+    },
+    "direction": "Mature alien man with velvety resonant low voice, ceremonial delivery and the quiet conviction of a beacon bearer."
   },
   "farsight_wisp": {
     "unit_name": "Farsight Wisp",
-    "voice": "en-US-EmmaNeural",
+    "voice": "Qwen3-TTS VoiceDesign",
     "categories": {
       "select": [
         {
@@ -1267,11 +1280,12 @@
           "path": "res://assets/audio/voice/farsight_wisp_ready_2.wav"
         }
       ]
-    }
+    },
+    "direction": "Young alien woman with a breathy, high and luminous voice, gliding rhythm and a detached prophetic mood."
   },
   "brood_keeper": {
     "unit_name": "Brood Keeper",
-    "voice": "en-US-GuyNeural",
+    "voice": "Qwen3-TTS VoiceDesign",
     "categories": {
       "select": [
         {
@@ -1388,11 +1402,12 @@
           "path": "res://assets/audio/voice/brood_keeper_ready_2.wav"
         }
       ]
-    }
+    },
+    "direction": "Elder creature matriarch with a deep, resonant guttural voice, measured cadence, and a cruel but maternal attitude."
   },
   "veilseeker": {
     "unit_name": "Veilseeker",
-    "voice": "en-US-AndrewNeural",
+    "voice": "Qwen3-TTS VoiceDesign",
     "categories": {
       "select": [
         {
@@ -1455,11 +1470,12 @@
           "path": "res://assets/audio/voice/veilseeker_ready_2.wav"
         }
       ]
-    }
+    },
+    "direction": "Adult alien man with a clipped, shadowy mid-low voice, swift cautious pacing and an infiltrator's restraint."
   },
   "carapace_bulwark": {
     "unit_name": "Carapace Bulwark",
-    "voice": "en-US-GuyNeural",
+    "voice": "Qwen3-TTS VoiceDesign",
     "categories": {
       "select": [
         {
@@ -1549,11 +1565,12 @@
           "path": "res://assets/audio/voice/carapace_bulwark_ready_2.wav"
         }
       ]
-    }
+    },
+    "direction": "Massive beast with crushing bass, rocky phlegmy texture, dragging pace and blunt, stubborn resolve."
   },
   "aegis_warden": {
     "unit_name": "Aegis Warden",
-    "voice": "en-US-AndrewNeural",
+    "voice": "Qwen3-TTS VoiceDesign",
     "categories": {
       "select": [
         {
@@ -1643,11 +1660,12 @@
           "path": "res://assets/audio/voice/aegis_warden_ready_2.wav"
         }
       ]
-    }
+    },
+    "direction": "Ancient alien man with a booming, crystalline voice, ponderous formal cadence and unwavering composure."
   },
   "crownspire": {
     "unit_name": "Crownspire Dreadnought",
-    "voice": "en-US-BrianNeural",
+    "voice": "Qwen3-TTS VoiceDesign",
     "categories": {
       "select": [
         {
@@ -1735,6 +1753,3064 @@
           "id": "crownspire_ready_2",
           "text": "Capital ship standing by.",
           "path": "res://assets/audio/voice/crownspire_ready_2.wav"
+        }
+      ]
+    },
+    "direction": "Ageless alien matriarch, rich regal contralto, measured solemn pace and the authority of a collective speaking in unison."
+  },
+  "sporeburst": {
+    "unit_name": "Sporeburst",
+    "voice": "Qwen3-TTS VoiceDesign",
+    "categories": {
+      "select": [
+        {
+          "id": "sporeburst_select_1",
+          "text": "I smell the front line.",
+          "path": "res://assets/audio/voice/sporeburst_select_1.wav"
+        },
+        {
+          "id": "sporeburst_select_2",
+          "text": "Keep the sac intact.",
+          "path": "res://assets/audio/voice/sporeburst_select_2.wav"
+        },
+        {
+          "id": "sporeburst_select_3",
+          "text": "The brood sends me.",
+          "path": "res://assets/audio/voice/sporeburst_select_3.wav"
+        },
+        {
+          "id": "sporeburst_select_4",
+          "text": "I hear your signal.",
+          "path": "res://assets/audio/voice/sporeburst_select_4.wav"
+        },
+        {
+          "id": "sporeburst_select_5",
+          "text": "The pressure builds.",
+          "path": "res://assets/audio/voice/sporeburst_select_5.wav"
+        }
+      ],
+      "move": [
+        {
+          "id": "sporeburst_move_1",
+          "text": "Low and fast.",
+          "path": "res://assets/audio/voice/sporeburst_move_1.wav"
+        },
+        {
+          "id": "sporeburst_move_2",
+          "text": "Scuttling through.",
+          "path": "res://assets/audio/voice/sporeburst_move_2.wav"
+        },
+        {
+          "id": "sporeburst_move_3",
+          "text": "I'll go around.",
+          "path": "res://assets/audio/voice/sporeburst_move_3.wav"
+        },
+        {
+          "id": "sporeburst_move_4",
+          "text": "Follow my trail.",
+          "path": "res://assets/audio/voice/sporeburst_move_4.wav"
+        }
+      ],
+      "attack": [
+        {
+          "id": "sporeburst_attack_1",
+          "text": "Right into the pack.",
+          "path": "res://assets/audio/voice/sporeburst_attack_1.wav"
+        },
+        {
+          "id": "sporeburst_attack_2",
+          "text": "One burst is enough.",
+          "path": "res://assets/audio/voice/sporeburst_attack_2.wav"
+        },
+        {
+          "id": "sporeburst_attack_3",
+          "text": "Their line is too tight.",
+          "path": "res://assets/audio/voice/sporeburst_attack_3.wav"
+        },
+        {
+          "id": "sporeburst_attack_4",
+          "text": "I can reach them.",
+          "path": "res://assets/audio/voice/sporeburst_attack_4.wav"
+        },
+        {
+          "id": "sporeburst_attack_5",
+          "text": "Let the pressure out.",
+          "path": "res://assets/audio/voice/sporeburst_attack_5.wav"
+        }
+      ],
+      "ready": [
+        {
+          "id": "sporeburst_ready_1",
+          "text": "The shell is open.",
+          "path": "res://assets/audio/voice/sporeburst_ready_1.wav"
+        },
+        {
+          "id": "sporeburst_ready_2",
+          "text": "Sporeburst ready.",
+          "path": "res://assets/audio/voice/sporeburst_ready_2.wav"
+        }
+      ]
+    },
+    "direction": "Androgynous juvenile creature with a wheezing, raspy voice, wet whistling breaths and an excitable manic delivery."
+  },
+  "ridge_scout": {
+    "unit_name": "Ridge Scout",
+    "voice": "Qwen3-TTS VoiceDesign",
+    "categories": {
+      "select": [
+        {
+          "id": "ridge_scout_select_1",
+          "text": "Ridge Scout checking in.",
+          "path": "res://assets/audio/voice/ridge_scout_select_1.wav"
+        },
+        {
+          "id": "ridge_scout_select_2",
+          "text": "Both nozzles green.",
+          "path": "res://assets/audio/voice/ridge_scout_select_2.wav"
+        },
+        {
+          "id": "ridge_scout_select_3",
+          "text": "Where do you need eyes?",
+          "path": "res://assets/audio/voice/ridge_scout_select_3.wav"
+        },
+        {
+          "id": "ridge_scout_select_4",
+          "text": "I've got the high side.",
+          "path": "res://assets/audio/voice/ridge_scout_select_4.wav"
+        },
+        {
+          "id": "ridge_scout_select_5",
+          "text": "Radio's good. Go ahead.",
+          "path": "res://assets/audio/voice/ridge_scout_select_5.wav"
+        }
+      ],
+      "move": [
+        {
+          "id": "ridge_scout_move_1",
+          "text": "I'll take the ledge.",
+          "path": "res://assets/audio/voice/ridge_scout_move_1.wav"
+        },
+        {
+          "id": "ridge_scout_move_2",
+          "text": "Cutting across.",
+          "path": "res://assets/audio/voice/ridge_scout_move_2.wav"
+        },
+        {
+          "id": "ridge_scout_move_3",
+          "text": "I see the route.",
+          "path": "res://assets/audio/voice/ridge_scout_move_3.wav"
+        },
+        {
+          "id": "ridge_scout_move_4",
+          "text": "Moving on your mark.",
+          "path": "res://assets/audio/voice/ridge_scout_move_4.wav"
+        }
+      ],
+      "attack": [
+        {
+          "id": "ridge_scout_attack_1",
+          "text": "Caught them looking downhill.",
+          "path": "res://assets/audio/voice/ridge_scout_attack_1.wav"
+        },
+        {
+          "id": "ridge_scout_attack_2",
+          "text": "Two pistols. One problem.",
+          "path": "res://assets/audio/voice/ridge_scout_attack_2.wav"
+        },
+        {
+          "id": "ridge_scout_attack_3",
+          "text": "I'll clear the overlook.",
+          "path": "res://assets/audio/voice/ridge_scout_attack_3.wav"
+        },
+        {
+          "id": "ridge_scout_attack_4",
+          "text": "Their flank's wide open.",
+          "path": "res://assets/audio/voice/ridge_scout_attack_4.wav"
+        },
+        {
+          "id": "ridge_scout_attack_5",
+          "text": "Taking the shot.",
+          "path": "res://assets/audio/voice/ridge_scout_attack_5.wav"
+        }
+      ],
+      "ready": [
+        {
+          "id": "ridge_scout_ready_1",
+          "text": "Pack charged, pistols loaded.",
+          "path": "res://assets/audio/voice/ridge_scout_ready_1.wav"
+        },
+        {
+          "id": "ridge_scout_ready_2",
+          "text": "Ridge Scout ready to climb.",
+          "path": "res://assets/audio/voice/ridge_scout_ready_2.wav"
+        }
+      ]
+    },
+    "direction": "Young man with a light Southern accent, wiry hushed tone and the hurried caution of an alert recon specialist."
+  },
+  "bastion_walker": {
+    "unit_name": "Bastion Walker",
+    "voice": "Qwen3-TTS VoiceDesign",
+    "categories": {
+      "select": [
+        {
+          "id": "bastion_walker_select_1",
+          "text": "Bastion Walker standing by.",
+          "path": "res://assets/audio/voice/bastion_walker_select_1.wav"
+        },
+        {
+          "id": "bastion_walker_select_2",
+          "text": "Phase coils stable.",
+          "path": "res://assets/audio/voice/bastion_walker_select_2.wav"
+        },
+        {
+          "id": "bastion_walker_select_3",
+          "text": "I can hold this line.",
+          "path": "res://assets/audio/voice/bastion_walker_select_3.wav"
+        },
+        {
+          "id": "bastion_walker_select_4",
+          "text": "Point me at their armor.",
+          "path": "res://assets/audio/voice/bastion_walker_select_4.wav"
+        },
+        {
+          "id": "bastion_walker_select_5",
+          "text": "Bastion crew listening.",
+          "path": "res://assets/audio/voice/bastion_walker_select_5.wav"
+        }
+      ],
+      "move": [
+        {
+          "id": "bastion_walker_move_1",
+          "text": "I'll take the front.",
+          "path": "res://assets/audio/voice/bastion_walker_move_1.wav"
+        },
+        {
+          "id": "bastion_walker_move_2",
+          "text": "Moving at your pace.",
+          "path": "res://assets/audio/voice/bastion_walker_move_2.wav"
+        },
+        {
+          "id": "bastion_walker_move_3",
+          "text": "Coming around.",
+          "path": "res://assets/audio/voice/bastion_walker_move_3.wav"
+        },
+        {
+          "id": "bastion_walker_move_4",
+          "text": "Crossing now.",
+          "path": "res://assets/audio/voice/bastion_walker_move_4.wav"
+        }
+      ],
+      "attack": [
+        {
+          "id": "bastion_walker_attack_1",
+          "text": "Focus their armor.",
+          "path": "res://assets/audio/voice/bastion_walker_attack_1.wav"
+        },
+        {
+          "id": "bastion_walker_attack_2",
+          "text": "Opening both emitters.",
+          "path": "res://assets/audio/voice/bastion_walker_attack_2.wav"
+        },
+        {
+          "id": "bastion_walker_attack_3",
+          "text": "They're in range.",
+          "path": "res://assets/audio/voice/bastion_walker_attack_3.wav"
+        },
+        {
+          "id": "bastion_walker_attack_4",
+          "text": "Put the shield to work.",
+          "path": "res://assets/audio/voice/bastion_walker_attack_4.wav"
+        },
+        {
+          "id": "bastion_walker_attack_5",
+          "text": "Hold steady. Firing.",
+          "path": "res://assets/audio/voice/bastion_walker_attack_5.wav"
+        }
+      ],
+      "ready": [
+        {
+          "id": "bastion_walker_ready_1",
+          "text": "Bastion Walker online.",
+          "path": "res://assets/audio/voice/bastion_walker_ready_1.wav"
+        },
+        {
+          "id": "bastion_walker_ready_2",
+          "text": "Phase cannons charged.",
+          "path": "res://assets/audio/voice/bastion_walker_ready_2.wav"
+        }
+      ]
+    },
+    "direction": "Venerable alien warrior with a deep, granite-like voice, archaic cadence and a tireless unhurried calm."
+  },
+  "rift_engine": {
+    "unit_name": "Rift Engine",
+    "voice": "Qwen3-TTS VoiceDesign",
+    "categories": {
+      "select": [
+        {
+          "id": "rift_engine_select_1",
+          "text": "Rift Engine online.",
+          "path": "res://assets/audio/voice/rift_engine_select_1.wav"
+        },
+        {
+          "id": "rift_engine_select_2",
+          "text": "Containment is steady.",
+          "path": "res://assets/audio/voice/rift_engine_select_2.wav"
+        },
+        {
+          "id": "rift_engine_select_3",
+          "text": "Show me the target.",
+          "path": "res://assets/audio/voice/rift_engine_select_3.wav"
+        },
+        {
+          "id": "rift_engine_select_4",
+          "text": "Which lane needs clearing?",
+          "path": "res://assets/audio/voice/rift_engine_select_4.wav"
+        },
+        {
+          "id": "rift_engine_select_5",
+          "text": "I'll keep the core quiet.",
+          "path": "res://assets/audio/voice/rift_engine_select_5.wav"
+        }
+      ],
+      "move": [
+        {
+          "id": "rift_engine_move_1",
+          "text": "Moving the engine.",
+          "path": "res://assets/audio/voice/rift_engine_move_1.wav"
+        },
+        {
+          "id": "rift_engine_move_2",
+          "text": "Taking the long way.",
+          "path": "res://assets/audio/voice/rift_engine_move_2.wav"
+        },
+        {
+          "id": "rift_engine_move_3",
+          "text": "Course set.",
+          "path": "res://assets/audio/voice/rift_engine_move_3.wav"
+        },
+        {
+          "id": "rift_engine_move_4",
+          "text": "Drifting into position.",
+          "path": "res://assets/audio/voice/rift_engine_move_4.wav"
+        }
+      ],
+      "attack": [
+        {
+          "id": "rift_engine_attack_1",
+          "text": "Nova away. Clear the lane.",
+          "path": "res://assets/audio/voice/rift_engine_attack_1.wav"
+        },
+        {
+          "id": "rift_engine_attack_2",
+          "text": "Keep back from the blast.",
+          "path": "res://assets/audio/voice/rift_engine_attack_2.wav"
+        },
+        {
+          "id": "rift_engine_attack_3",
+          "text": "Sending a pulse.",
+          "path": "res://assets/audio/voice/rift_engine_attack_3.wav"
+        },
+        {
+          "id": "rift_engine_attack_4",
+          "text": "The core is out.",
+          "path": "res://assets/audio/voice/rift_engine_attack_4.wav"
+        },
+        {
+          "id": "rift_engine_attack_5",
+          "text": "Stand clear.",
+          "path": "res://assets/audio/voice/rift_engine_attack_5.wav"
+        }
+      ],
+      "ready": [
+        {
+          "id": "rift_engine_ready_1",
+          "text": "Rift Engine ready.",
+          "path": "res://assets/audio/voice/rift_engine_ready_1.wav"
+        },
+        {
+          "id": "rift_engine_ready_2",
+          "text": "Containment checks passed.",
+          "path": "res://assets/audio/voice/rift_engine_ready_2.wav"
+        }
+      ]
+    },
+    "direction": "Androgynous cybernetic entity with a precise, synthetic mid voice and the clockwork rhythmic cadence of a warp navigator."
+  },
+  "mirage_adept": {
+    "unit_name": "Mirage Adept",
+    "voice": "Qwen3-TTS VoiceDesign",
+    "categories": {
+      "select": [
+        {
+          "id": "mirage_adept_select_1",
+          "text": "Mirage Adept standing by.",
+          "path": "res://assets/audio/voice/mirage_adept_select_1.wav"
+        },
+        {
+          "id": "mirage_adept_select_2",
+          "text": "The light bends with me.",
+          "path": "res://assets/audio/voice/mirage_adept_select_2.wav"
+        },
+        {
+          "id": "mirage_adept_select_3",
+          "text": "Show me the approach.",
+          "path": "res://assets/audio/voice/mirage_adept_select_3.wav"
+        },
+        {
+          "id": "mirage_adept_select_4",
+          "text": "Mirage here. I can scout ahead.",
+          "path": "res://assets/audio/voice/mirage_adept_select_4.wav"
+        },
+        {
+          "id": "mirage_adept_select_5",
+          "text": "My glaive is charged.",
+          "path": "res://assets/audio/voice/mirage_adept_select_5.wav"
+        }
+      ],
+      "move": [
+        {
+          "id": "mirage_adept_move_1",
+          "text": "Moving up.",
+          "path": "res://assets/audio/voice/mirage_adept_move_1.wav"
+        },
+        {
+          "id": "mirage_adept_move_2",
+          "text": "I'll check the crossing.",
+          "path": "res://assets/audio/voice/mirage_adept_move_2.wav"
+        },
+        {
+          "id": "mirage_adept_move_3",
+          "text": "On your signal.",
+          "path": "res://assets/audio/voice/mirage_adept_move_3.wav"
+        },
+        {
+          "id": "mirage_adept_move_4",
+          "text": "Taking the flank.",
+          "path": "res://assets/audio/voice/mirage_adept_move_4.wav"
+        }
+      ],
+      "attack": [
+        {
+          "id": "mirage_adept_attack_1",
+          "text": "Glaive out.",
+          "path": "res://assets/audio/voice/mirage_adept_attack_1.wav"
+        },
+        {
+          "id": "mirage_adept_attack_2",
+          "text": "Cutting through their line.",
+          "path": "res://assets/audio/voice/mirage_adept_attack_2.wav"
+        },
+        {
+          "id": "mirage_adept_attack_3",
+          "text": "I'll clear the light infantry.",
+          "path": "res://assets/audio/voice/mirage_adept_attack_3.wav"
+        },
+        {
+          "id": "mirage_adept_attack_4",
+          "text": "Found an opening.",
+          "path": "res://assets/audio/voice/mirage_adept_attack_4.wav"
+        },
+        {
+          "id": "mirage_adept_attack_5",
+          "text": "Watch the flank.",
+          "path": "res://assets/audio/voice/mirage_adept_attack_5.wav"
+        }
+      ],
+      "ready": [
+        {
+          "id": "mirage_adept_ready_1",
+          "text": "Mirage Adept ready.",
+          "path": "res://assets/audio/voice/mirage_adept_ready_1.wav"
+        },
+        {
+          "id": "mirage_adept_ready_2",
+          "text": "Transfer field online.",
+          "path": "res://assets/audio/voice/mirage_adept_ready_2.wav"
+        }
+      ]
+    },
+    "direction": "Young alien man with a mid-pitched, poetic voice, gliding delivery and the playful confidence of an enigmatic duelist."
+  },
+  "storm_scribe": {
+    "unit_name": "Storm Scribe",
+    "voice": "Qwen3-TTS VoiceDesign",
+    "categories": {
+      "select": [
+        {
+          "id": "storm_scribe_select_1",
+          "text": "Storm Scribe at your call.",
+          "path": "res://assets/audio/voice/storm_scribe_select_1.wav"
+        },
+        {
+          "id": "storm_scribe_select_2",
+          "text": "The field is steady.",
+          "path": "res://assets/audio/voice/storm_scribe_select_2.wav"
+        },
+        {
+          "id": "storm_scribe_select_3",
+          "text": "I can hear their energy.",
+          "path": "res://assets/audio/voice/storm_scribe_select_3.wav"
+        },
+        {
+          "id": "storm_scribe_select_4",
+          "text": "Show me where they're gathering.",
+          "path": "res://assets/audio/voice/storm_scribe_select_4.wav"
+        },
+        {
+          "id": "storm_scribe_select_5",
+          "text": "The Archive trained me for this.",
+          "path": "res://assets/audio/voice/storm_scribe_select_5.wav"
+        }
+      ],
+      "move": [
+        {
+          "id": "storm_scribe_move_1",
+          "text": "I'll find the high ground.",
+          "path": "res://assets/audio/voice/storm_scribe_move_1.wav"
+        },
+        {
+          "id": "storm_scribe_move_2",
+          "text": "Moving behind the line.",
+          "path": "res://assets/audio/voice/storm_scribe_move_2.wav"
+        },
+        {
+          "id": "storm_scribe_move_3",
+          "text": "Keep the approach clear.",
+          "path": "res://assets/audio/voice/storm_scribe_move_3.wav"
+        },
+        {
+          "id": "storm_scribe_move_4",
+          "text": "On my way.",
+          "path": "res://assets/audio/voice/storm_scribe_move_4.wav"
+        }
+      ],
+      "attack": [
+        {
+          "id": "storm_scribe_attack_1",
+          "text": "Channeling now.",
+          "path": "res://assets/audio/voice/storm_scribe_attack_1.wav"
+        },
+        {
+          "id": "storm_scribe_attack_2",
+          "text": "Let them come closer.",
+          "path": "res://assets/audio/voice/storm_scribe_attack_2.wav"
+        },
+        {
+          "id": "storm_scribe_attack_3",
+          "text": "That's a crowded line.",
+          "path": "res://assets/audio/voice/storm_scribe_attack_3.wav"
+        },
+        {
+          "id": "storm_scribe_attack_4",
+          "text": "I'll drain their charge.",
+          "path": "res://assets/audio/voice/storm_scribe_attack_4.wav"
+        },
+        {
+          "id": "storm_scribe_attack_5",
+          "text": "Clear the field.",
+          "path": "res://assets/audio/voice/storm_scribe_attack_5.wav"
+        }
+      ],
+      "ready": [
+        {
+          "id": "storm_scribe_ready_1",
+          "text": "Storm Scribe ready.",
+          "path": "res://assets/audio/voice/storm_scribe_ready_1.wav"
+        },
+        {
+          "id": "storm_scribe_ready_2",
+          "text": "My channel is open.",
+          "path": "res://assets/audio/voice/storm_scribe_ready_2.wav"
+        }
+      ]
+    },
+    "direction": "Elder alien woman with an incisive high-mid pitch, imperious voice, brisk pacing and the intensity of an elemental scholar."
+  },
+  "duskblade": {
+    "unit_name": "Duskblade",
+    "voice": "Qwen3-TTS VoiceDesign",
+    "categories": {
+      "select": [
+        {
+          "id": "duskblade_select_1",
+          "text": "Duskblade ready.",
+          "path": "res://assets/audio/voice/duskblade_select_1.wav"
+        },
+        {
+          "id": "duskblade_select_2",
+          "text": "I can pass unseen.",
+          "path": "res://assets/audio/voice/duskblade_select_2.wav"
+        },
+        {
+          "id": "duskblade_select_3",
+          "text": "Where is the breach?",
+          "path": "res://assets/audio/voice/duskblade_select_3.wav"
+        },
+        {
+          "id": "duskblade_select_4",
+          "text": "The Veil holds.",
+          "path": "res://assets/audio/voice/duskblade_select_4.wav"
+        },
+        {
+          "id": "duskblade_select_5",
+          "text": "Give me an opening.",
+          "path": "res://assets/audio/voice/duskblade_select_5.wav"
+        }
+      ],
+      "move": [
+        {
+          "id": "duskblade_move_1",
+          "text": "Moving through the shadows.",
+          "path": "res://assets/audio/voice/duskblade_move_1.wav"
+        },
+        {
+          "id": "duskblade_move_2",
+          "text": "I'll take the quiet route.",
+          "path": "res://assets/audio/voice/duskblade_move_2.wav"
+        },
+        {
+          "id": "duskblade_move_3",
+          "text": "Crossing now.",
+          "path": "res://assets/audio/voice/duskblade_move_3.wav"
+        },
+        {
+          "id": "duskblade_move_4",
+          "text": "I see the path.",
+          "path": "res://assets/audio/voice/duskblade_move_4.wav"
+        }
+      ],
+      "attack": [
+        {
+          "id": "duskblade_attack_1",
+          "text": "One clean strike.",
+          "path": "res://assets/audio/voice/duskblade_attack_1.wav"
+        },
+        {
+          "id": "duskblade_attack_2",
+          "text": "I have their flank.",
+          "path": "res://assets/audio/voice/duskblade_attack_2.wav"
+        },
+        {
+          "id": "duskblade_attack_3",
+          "text": "They haven't seen me.",
+          "path": "res://assets/audio/voice/duskblade_attack_3.wav"
+        },
+        {
+          "id": "duskblade_attack_4",
+          "text": "The blade is out.",
+          "path": "res://assets/audio/voice/duskblade_attack_4.wav"
+        },
+        {
+          "id": "duskblade_attack_5",
+          "text": "I'll cut through.",
+          "path": "res://assets/audio/voice/duskblade_attack_5.wav"
+        }
+      ],
+      "ready": [
+        {
+          "id": "duskblade_ready_1",
+          "text": "Duskblade online.",
+          "path": "res://assets/audio/voice/duskblade_ready_1.wav"
+        },
+        {
+          "id": "duskblade_ready_2",
+          "text": "I walk unseen.",
+          "path": "res://assets/audio/voice/duskblade_ready_2.wav"
+        }
+      ]
+    },
+    "direction": "Adult alien woman with an austere, low, razor-thin rasp, swift and disciplined delivery with a hint of remorse."
+  },
+  "lattice_archon": {
+    "unit_name": "Lattice Archon",
+    "voice": "Qwen3-TTS VoiceDesign",
+    "categories": {
+      "select": [
+        {
+          "id": "lattice_archon_select_1",
+          "text": "We are the Lattice.",
+          "path": "res://assets/audio/voice/lattice_archon_select_1.wav"
+        },
+        {
+          "id": "lattice_archon_select_2",
+          "text": "Our charge is stable.",
+          "path": "res://assets/audio/voice/lattice_archon_select_2.wav"
+        },
+        {
+          "id": "lattice_archon_select_3",
+          "text": "We stand together.",
+          "path": "res://assets/audio/voice/lattice_archon_select_3.wav"
+        },
+        {
+          "id": "lattice_archon_select_4",
+          "text": "Where do we hold?",
+          "path": "res://assets/audio/voice/lattice_archon_select_4.wav"
+        },
+        {
+          "id": "lattice_archon_select_5",
+          "text": "The field is ours.",
+          "path": "res://assets/audio/voice/lattice_archon_select_5.wav"
+        }
+      ],
+      "move": [
+        {
+          "id": "lattice_archon_move_1",
+          "text": "We move as one.",
+          "path": "res://assets/audio/voice/lattice_archon_move_1.wav"
+        },
+        {
+          "id": "lattice_archon_move_2",
+          "text": "Our course is set.",
+          "path": "res://assets/audio/voice/lattice_archon_move_2.wav"
+        },
+        {
+          "id": "lattice_archon_move_3",
+          "text": "We cross together.",
+          "path": "res://assets/audio/voice/lattice_archon_move_3.wav"
+        },
+        {
+          "id": "lattice_archon_move_4",
+          "text": "We advance.",
+          "path": "res://assets/audio/voice/lattice_archon_move_4.wav"
+        }
+      ],
+      "attack": [
+        {
+          "id": "lattice_archon_attack_1",
+          "text": "Feel the current.",
+          "path": "res://assets/audio/voice/lattice_archon_attack_1.wav"
+        },
+        {
+          "id": "lattice_archon_attack_2",
+          "text": "Their line breaks here.",
+          "path": "res://assets/audio/voice/lattice_archon_attack_2.wav"
+        },
+        {
+          "id": "lattice_archon_attack_3",
+          "text": "Discharge.",
+          "path": "res://assets/audio/voice/lattice_archon_attack_3.wav"
+        },
+        {
+          "id": "lattice_archon_attack_4",
+          "text": "We have them.",
+          "path": "res://assets/audio/voice/lattice_archon_attack_4.wav"
+        },
+        {
+          "id": "lattice_archon_attack_5",
+          "text": "Release the charge.",
+          "path": "res://assets/audio/voice/lattice_archon_attack_5.wav"
+        }
+      ],
+      "ready": [
+        {
+          "id": "lattice_archon_ready_1",
+          "text": "The Lattice is whole.",
+          "path": "res://assets/audio/voice/lattice_archon_ready_1.wav"
+        },
+        {
+          "id": "lattice_archon_ready_2",
+          "text": "The warp is complete.",
+          "path": "res://assets/audio/voice/lattice_archon_ready_2.wav"
+        }
+      ]
+    },
+    "direction": "Thundering low and gender-ambiguous collective voice, deliberate majestic delivery, a choral quality and immense resonant power."
+  },
+  "rupture_crawler": {
+    "unit_name": "Rupture Crawler",
+    "voice": "Qwen3-TTS VoiceDesign",
+    "categories": {
+      "select": [
+        {
+          "id": "rupture_crawler_select_1",
+          "text": "Rupture Crawler awake.",
+          "path": "res://assets/audio/voice/rupture_crawler_select_1.wav"
+        },
+        {
+          "id": "rupture_crawler_select_2",
+          "text": "The sac is full.",
+          "path": "res://assets/audio/voice/rupture_crawler_select_2.wav"
+        },
+        {
+          "id": "rupture_crawler_select_3",
+          "text": "Find me a tight group.",
+          "path": "res://assets/audio/voice/rupture_crawler_select_3.wav"
+        },
+        {
+          "id": "rupture_crawler_select_4",
+          "text": "The ground will open.",
+          "path": "res://assets/audio/voice/rupture_crawler_select_4.wav"
+        },
+        {
+          "id": "rupture_crawler_select_5",
+          "text": "Gnarl charge ready.",
+          "path": "res://assets/audio/voice/rupture_crawler_select_5.wav"
+        }
+      ],
+      "move": [
+        {
+          "id": "rupture_crawler_move_1",
+          "text": "Crawling into range.",
+          "path": "res://assets/audio/voice/rupture_crawler_move_1.wav"
+        },
+        {
+          "id": "rupture_crawler_move_2",
+          "text": "I smell the crossing.",
+          "path": "res://assets/audio/voice/rupture_crawler_move_2.wav"
+        },
+        {
+          "id": "rupture_crawler_move_3",
+          "text": "Moving my sacs.",
+          "path": "res://assets/audio/voice/rupture_crawler_move_3.wav"
+        },
+        {
+          "id": "rupture_crawler_move_4",
+          "text": "Through the gap.",
+          "path": "res://assets/audio/voice/rupture_crawler_move_4.wav"
+        }
+      ],
+      "attack": [
+        {
+          "id": "rupture_crawler_attack_1",
+          "text": "Bile in the air.",
+          "path": "res://assets/audio/voice/rupture_crawler_attack_1.wav"
+        },
+        {
+          "id": "rupture_crawler_attack_2",
+          "text": "Scatter while you can.",
+          "path": "res://assets/audio/voice/rupture_crawler_attack_2.wav"
+        },
+        {
+          "id": "rupture_crawler_attack_3",
+          "text": "The barrier will melt.",
+          "path": "res://assets/audio/voice/rupture_crawler_attack_3.wav"
+        },
+        {
+          "id": "rupture_crawler_attack_4",
+          "text": "Mark the landing.",
+          "path": "res://assets/audio/voice/rupture_crawler_attack_4.wav"
+        },
+        {
+          "id": "rupture_crawler_attack_5",
+          "text": "The acid falls.",
+          "path": "res://assets/audio/voice/rupture_crawler_attack_5.wav"
+        }
+      ],
+      "ready": [
+        {
+          "id": "rupture_crawler_ready_1",
+          "text": "The cocoon opens.",
+          "path": "res://assets/audio/voice/rupture_crawler_ready_1.wav"
+        },
+        {
+          "id": "rupture_crawler_ready_2",
+          "text": "Rupture Crawler grown.",
+          "path": "res://assets/audio/voice/rupture_crawler_ready_2.wav"
+        }
+      ]
+    },
+    "direction": "Predatory beast with a low, grinding guttural voice and heavy, lunging rhythm with a crocodilian resonance."
+  },
+  "spine_ambusher": {
+    "unit_name": "Spine Ambusher",
+    "voice": "Qwen3-TTS VoiceDesign",
+    "categories": {
+      "select": [
+        {
+          "id": "spine_ambusher_select_1",
+          "text": "I hear their footfalls.",
+          "path": "res://assets/audio/voice/spine_ambusher_select_1.wav"
+        },
+        {
+          "id": "spine_ambusher_select_2",
+          "text": "The soil is soft here.",
+          "path": "res://assets/audio/voice/spine_ambusher_select_2.wav"
+        },
+        {
+          "id": "spine_ambusher_select_3",
+          "text": "Where will they cross?",
+          "path": "res://assets/audio/voice/spine_ambusher_select_3.wav"
+        },
+        {
+          "id": "spine_ambusher_select_4",
+          "text": "My spines are set.",
+          "path": "res://assets/audio/voice/spine_ambusher_select_4.wav"
+        },
+        {
+          "id": "spine_ambusher_select_5",
+          "text": "Let them come closer.",
+          "path": "res://assets/audio/voice/spine_ambusher_select_5.wav"
+        }
+      ],
+      "move": [
+        {
+          "id": "spine_ambusher_move_1",
+          "text": "Taking a new position.",
+          "path": "res://assets/audio/voice/spine_ambusher_move_1.wav"
+        },
+        {
+          "id": "spine_ambusher_move_2",
+          "text": "I will wait there.",
+          "path": "res://assets/audio/voice/spine_ambusher_move_2.wav"
+        },
+        {
+          "id": "spine_ambusher_move_3",
+          "text": "Keep the crossing in sight.",
+          "path": "res://assets/audio/voice/spine_ambusher_move_3.wav"
+        },
+        {
+          "id": "spine_ambusher_move_4",
+          "text": "Scythes forward.",
+          "path": "res://assets/audio/voice/spine_ambusher_move_4.wav"
+        }
+      ],
+      "attack": [
+        {
+          "id": "spine_ambusher_attack_1",
+          "text": "Split their line.",
+          "path": "res://assets/audio/voice/spine_ambusher_attack_1.wav"
+        },
+        {
+          "id": "spine_ambusher_attack_2",
+          "text": "The ground has teeth.",
+          "path": "res://assets/audio/voice/spine_ambusher_attack_2.wav"
+        },
+        {
+          "id": "spine_ambusher_attack_3",
+          "text": "Let the spines rise.",
+          "path": "res://assets/audio/voice/spine_ambusher_attack_3.wav"
+        },
+        {
+          "id": "spine_ambusher_attack_4",
+          "text": "They walked into it.",
+          "path": "res://assets/audio/voice/spine_ambusher_attack_4.wav"
+        },
+        {
+          "id": "spine_ambusher_attack_5",
+          "text": "Straight through.",
+          "path": "res://assets/audio/voice/spine_ambusher_attack_5.wav"
+        }
+      ],
+      "ready": [
+        {
+          "id": "spine_ambusher_ready_1",
+          "text": "Spine Ambusher grown.",
+          "path": "res://assets/audio/voice/spine_ambusher_ready_1.wav"
+        },
+        {
+          "id": "spine_ambusher_ready_2",
+          "text": "Find me a choke point.",
+          "path": "res://assets/audio/voice/spine_ambusher_ready_2.wav"
+        }
+      ]
+    },
+    "direction": "Female predator with a venomous whispered voice, dry clicking consonants, and a swift, unnervingly deliberate rhythm."
+  },
+  "shade_agent": {
+    "unit_name": "Shade Agent",
+    "voice": "Qwen3-TTS VoiceDesign",
+    "categories": {
+      "select": [
+        {
+          "id": "shade_agent_select_1",
+          "text": "Shade on your frequency.",
+          "path": "res://assets/audio/voice/shade_agent_select_1.wav"
+        },
+        {
+          "id": "shade_agent_select_2",
+          "text": "Who are we watching?",
+          "path": "res://assets/audio/voice/shade_agent_select_2.wav"
+        },
+        {
+          "id": "shade_agent_select_3",
+          "text": "I have a clear sightline.",
+          "path": "res://assets/audio/voice/shade_agent_select_3.wav"
+        },
+        {
+          "id": "shade_agent_select_4",
+          "text": "Comms are quiet.",
+          "path": "res://assets/audio/voice/shade_agent_select_4.wav"
+        },
+        {
+          "id": "shade_agent_select_5",
+          "text": "Waiting on the signal.",
+          "path": "res://assets/audio/voice/shade_agent_select_5.wav"
+        }
+      ],
+      "move": [
+        {
+          "id": "shade_agent_move_1",
+          "text": "Moving under cover.",
+          "path": "res://assets/audio/voice/shade_agent_move_1.wav"
+        },
+        {
+          "id": "shade_agent_move_2",
+          "text": "I'll take the flank.",
+          "path": "res://assets/audio/voice/shade_agent_move_2.wav"
+        },
+        {
+          "id": "shade_agent_move_3",
+          "text": "Crossing now.",
+          "path": "res://assets/audio/voice/shade_agent_move_3.wav"
+        },
+        {
+          "id": "shade_agent_move_4",
+          "text": "Changing position.",
+          "path": "res://assets/audio/voice/shade_agent_move_4.wav"
+        }
+      ],
+      "attack": [
+        {
+          "id": "shade_agent_attack_1",
+          "text": "Target in sight.",
+          "path": "res://assets/audio/voice/shade_agent_attack_1.wav"
+        },
+        {
+          "id": "shade_agent_attack_2",
+          "text": "Hold for my shot.",
+          "path": "res://assets/audio/voice/shade_agent_attack_2.wav"
+        },
+        {
+          "id": "shade_agent_attack_3",
+          "text": "Their shields are my problem.",
+          "path": "res://assets/audio/voice/shade_agent_attack_3.wav"
+        },
+        {
+          "id": "shade_agent_attack_4",
+          "text": "I have the angle.",
+          "path": "res://assets/audio/voice/shade_agent_attack_4.wav"
+        },
+        {
+          "id": "shade_agent_attack_5",
+          "text": "Sending one downrange.",
+          "path": "res://assets/audio/voice/shade_agent_attack_5.wav"
+        }
+      ],
+      "ready": [
+        {
+          "id": "shade_agent_ready_1",
+          "text": "Shade Agent in position.",
+          "path": "res://assets/audio/voice/shade_agent_ready_1.wav"
+        },
+        {
+          "id": "shade_agent_ready_2",
+          "text": "Canister rifle checked.",
+          "path": "res://assets/audio/voice/shade_agent_ready_2.wav"
+        }
+      ]
+    },
+    "direction": "Adult woman with a subtle Mid-Atlantic accent, low-mid velvety whisper and deliberate, ice-cold precision."
+  },
+  "night_harrier": {
+    "unit_name": "Night Harrier",
+    "voice": "Qwen3-TTS VoiceDesign",
+    "categories": {
+      "select": [
+        {
+          "id": "night_harrier_select_1",
+          "text": "Harrier on station.",
+          "path": "res://assets/audio/voice/night_harrier_select_1.wav"
+        },
+        {
+          "id": "night_harrier_select_2",
+          "text": "Pick a route below the radar.",
+          "path": "res://assets/audio/voice/night_harrier_select_2.wav"
+        }
+      ],
+      "move": [
+        {
+          "id": "night_harrier_move_1",
+          "text": "Keeping low.",
+          "path": "res://assets/audio/voice/night_harrier_move_1.wav"
+        },
+        {
+          "id": "night_harrier_move_2",
+          "text": "Swinging around the flank.",
+          "path": "res://assets/audio/voice/night_harrier_move_2.wav"
+        }
+      ],
+      "attack": [
+        {
+          "id": "night_harrier_attack_1",
+          "text": "Both racks away.",
+          "path": "res://assets/audio/voice/night_harrier_attack_1.wav"
+        },
+        {
+          "id": "night_harrier_attack_2",
+          "text": "Clearing the ground below.",
+          "path": "res://assets/audio/voice/night_harrier_attack_2.wav"
+        }
+      ],
+      "ready": [
+        {
+          "id": "night_harrier_ready_1",
+          "text": "Harrier fueled and armed.",
+          "path": "res://assets/audio/voice/night_harrier_ready_1.wav"
+        },
+        {
+          "id": "night_harrier_ready_2",
+          "text": "Rocket racks checked.",
+          "path": "res://assets/audio/voice/night_harrier_ready_2.wav"
+        }
+      ]
+    },
+    "direction": "Adult man with a clipped Canadian accent, tight strained baritone and the fast focus of a night-flying stealth pilot."
+  },
+  "sky_sentry": {
+    "unit_name": "Sky Sentry",
+    "voice": "Qwen3-TTS VoiceDesign",
+    "categories": {
+      "select": [
+        {
+          "id": "sky_sentry_select_1",
+          "text": "Sky Sentry overhead.",
+          "path": "res://assets/audio/voice/sky_sentry_select_1.wav"
+        },
+        {
+          "id": "sky_sentry_select_2",
+          "text": "I can cover that approach.",
+          "path": "res://assets/audio/voice/sky_sentry_select_2.wav"
+        }
+      ],
+      "move": [
+        {
+          "id": "sky_sentry_move_1",
+          "text": "Changing altitude.",
+          "path": "res://assets/audio/voice/sky_sentry_move_1.wav"
+        },
+        {
+          "id": "sky_sentry_move_2",
+          "text": "Shifting the patrol.",
+          "path": "res://assets/audio/voice/sky_sentry_move_2.wav"
+        }
+      ],
+      "attack": [
+        {
+          "id": "sky_sentry_attack_1",
+          "text": "Tracking both contacts.",
+          "path": "res://assets/audio/voice/sky_sentry_attack_1.wav"
+        },
+        {
+          "id": "sky_sentry_attack_2",
+          "text": "Clear the marked ground.",
+          "path": "res://assets/audio/voice/sky_sentry_attack_2.wav"
+        }
+      ],
+      "ready": [
+        {
+          "id": "sky_sentry_ready_1",
+          "text": "Sky Sentry ready for patrol.",
+          "path": "res://assets/audio/voice/sky_sentry_ready_1.wav"
+        },
+        {
+          "id": "sky_sentry_ready_2",
+          "text": "Ventral cannon checked.",
+          "path": "res://assets/audio/voice/sky_sentry_ready_2.wav"
+        }
+      ]
+    },
+    "direction": "Older woman with formal British pronunciation, firm mid pitch, clipped rhythm and a near-metallic controller's authority."
+  },
+  "watchkeeper": {
+    "unit_name": "Watchkeeper",
+    "voice": "Qwen3-TTS VoiceDesign",
+    "categories": {
+      "select": [
+        {
+          "id": "watchkeeper_select_1",
+          "text": "Watchkeeper reading clear.",
+          "path": "res://assets/audio/voice/watchkeeper_select_1.wav"
+        },
+        {
+          "id": "watchkeeper_select_2",
+          "text": "What should I watch?",
+          "path": "res://assets/audio/voice/watchkeeper_select_2.wav"
+        }
+      ],
+      "move": [
+        {
+          "id": "watchkeeper_move_1",
+          "text": "Moving the sensor sweep.",
+          "path": "res://assets/audio/voice/watchkeeper_move_1.wav"
+        },
+        {
+          "id": "watchkeeper_move_2",
+          "text": "Repositioning for a better return.",
+          "path": "res://assets/audio/voice/watchkeeper_move_2.wav"
+        }
+      ],
+      "attack": [
+        {
+          "id": "watchkeeper_attack_1",
+          "text": "Tracking the signal.",
+          "path": "res://assets/audio/voice/watchkeeper_attack_1.wav"
+        },
+        {
+          "id": "watchkeeper_attack_2",
+          "text": "I'll shut down their weapons.",
+          "path": "res://assets/audio/voice/watchkeeper_attack_2.wav"
+        }
+      ],
+      "ready": [
+        {
+          "id": "watchkeeper_ready_1",
+          "text": "Watchkeeper's sensors are live.",
+          "path": "res://assets/audio/voice/watchkeeper_ready_1.wav"
+        },
+        {
+          "id": "watchkeeper_ready_2",
+          "text": "Telemetry is coming through.",
+          "path": "res://assets/audio/voice/watchkeeper_ready_2.wav"
+        }
+      ]
+    },
+    "direction": "Senior man with a North Carolina accent, deep smoky gravel and the slow, uncompromising resolve of a frontier marshal."
+  },
+  "dreadnought": {
+    "unit_name": "Dreadnought",
+    "voice": "Qwen3-TTS VoiceDesign",
+    "categories": {
+      "select": [
+        {
+          "id": "dreadnought_select_1",
+          "text": "Dreadnought bridge here.",
+          "path": "res://assets/audio/voice/dreadnought_select_1.wav"
+        },
+        {
+          "id": "dreadnought_select_2",
+          "text": "Bridge standing by.",
+          "path": "res://assets/audio/voice/dreadnought_select_2.wav"
+        }
+      ],
+      "move": [
+        {
+          "id": "dreadnought_move_1",
+          "text": "Bring us onto that heading.",
+          "path": "res://assets/audio/voice/dreadnought_move_1.wav"
+        },
+        {
+          "id": "dreadnought_move_2",
+          "text": "Helm, make way.",
+          "path": "res://assets/audio/voice/dreadnought_move_2.wav"
+        }
+      ],
+      "attack": [
+        {
+          "id": "dreadnought_attack_1",
+          "text": "Fire the forward batteries.",
+          "path": "res://assets/audio/voice/dreadnought_attack_1.wav"
+        },
+        {
+          "id": "dreadnought_attack_2",
+          "text": "Charge the siege emitter.",
+          "path": "res://assets/audio/voice/dreadnought_attack_2.wav"
+        }
+      ],
+      "ready": [
+        {
+          "id": "dreadnought_ready_1",
+          "text": "Dreadnought cleared for departure.",
+          "path": "res://assets/audio/voice/dreadnought_ready_1.wav"
+        },
+        {
+          "id": "dreadnought_ready_2",
+          "text": "All batteries report ready.",
+          "path": "res://assets/audio/voice/dreadnought_ready_2.wav"
+        }
+      ]
+    },
+    "direction": "Older man with Scandinavian-tinged English, a very deep grinding voice and the measured resolve of a ship commander."
+  },
+  "cinder_runner": {
+    "unit_name": "Cinder Runner",
+    "categories": {
+      "select": [
+        {
+          "id": "cinder_runner_select_1",
+          "text": "Burner's primed.",
+          "path": "res://assets/audio/voice/cinder_runner_select_1.wav"
+        },
+        {
+          "id": "cinder_runner_select_2",
+          "text": "Try to keep up.",
+          "path": "res://assets/audio/voice/cinder_runner_select_2.wav"
+        },
+        {
+          "id": "cinder_runner_select_3",
+          "text": "Someone order heat?",
+          "path": "res://assets/audio/voice/cinder_runner_select_3.wav"
+        }
+      ],
+      "move": [
+        {
+          "id": "cinder_runner_move_1",
+          "text": "Pavement's mine.",
+          "path": "res://assets/audio/voice/cinder_runner_move_1.wav"
+        },
+        {
+          "id": "cinder_runner_move_2",
+          "text": "I can make that turn.",
+          "path": "res://assets/audio/voice/cinder_runner_move_2.wav"
+        },
+        {
+          "id": "cinder_runner_move_3",
+          "text": "Rolling hot.",
+          "path": "res://assets/audio/voice/cinder_runner_move_3.wav"
+        }
+      ],
+      "attack": [
+        {
+          "id": "cinder_runner_attack_1",
+          "text": "Light 'em up.",
+          "path": "res://assets/audio/voice/cinder_runner_attack_1.wav"
+        },
+        {
+          "id": "cinder_runner_attack_2",
+          "text": "Through the smoke.",
+          "path": "res://assets/audio/voice/cinder_runner_attack_2.wav"
+        },
+        {
+          "id": "cinder_runner_attack_3",
+          "text": "Let's make it glow.",
+          "path": "res://assets/audio/voice/cinder_runner_attack_3.wav"
+        }
+      ],
+      "ready": [
+        {
+          "id": "cinder_runner_ready_1",
+          "text": "Burner's primed.",
+          "path": "res://assets/audio/voice/cinder_runner_ready_1.wav"
+        }
+      ]
+    },
+    "voice": "Qwen3-TTS VoiceDesign",
+    "direction": "Young man with a Gulf Coast accent and gleeful raspy confidence, fast punchy delivery, like a grease-streaked flame buggy driver."
+  },
+  "sentinel_mine": {
+    "unit_name": "Sentinel Mine",
+    "categories": {
+      "select": [
+        {
+          "id": "sentinel_mine_select_1",
+          "text": "Sensor array online.",
+          "path": "res://assets/audio/voice/sentinel_mine_select_1.wav"
+        },
+        {
+          "id": "sentinel_mine_select_2",
+          "text": "Standby position held.",
+          "path": "res://assets/audio/voice/sentinel_mine_select_2.wav"
+        },
+        {
+          "id": "sentinel_mine_select_3",
+          "text": "Listening for a contact.",
+          "path": "res://assets/audio/voice/sentinel_mine_select_3.wav"
+        }
+      ],
+      "move": [
+        {
+          "id": "sentinel_mine_move_1",
+          "text": "Relocating.",
+          "path": "res://assets/audio/voice/sentinel_mine_move_1.wav"
+        },
+        {
+          "id": "sentinel_mine_move_2",
+          "text": "Searching for a new position.",
+          "path": "res://assets/audio/voice/sentinel_mine_move_2.wav"
+        },
+        {
+          "id": "sentinel_mine_move_3",
+          "text": "Path acquired.",
+          "path": "res://assets/audio/voice/sentinel_mine_move_3.wav"
+        }
+      ],
+      "attack": [
+        {
+          "id": "sentinel_mine_attack_1",
+          "text": "Threat acquired.",
+          "path": "res://assets/audio/voice/sentinel_mine_attack_1.wav"
+        },
+        {
+          "id": "sentinel_mine_attack_2",
+          "text": "Interceptor released.",
+          "path": "res://assets/audio/voice/sentinel_mine_attack_2.wav"
+        },
+        {
+          "id": "sentinel_mine_attack_3",
+          "text": "Contact confirmed.",
+          "path": "res://assets/audio/voice/sentinel_mine_attack_3.wav"
+        }
+      ],
+      "ready": [
+        {
+          "id": "sentinel_mine_ready_1",
+          "text": "Sensor array online.",
+          "path": "res://assets/audio/voice/sentinel_mine_ready_1.wav"
+        }
+      ]
+    },
+    "voice": "Qwen3-TTS VoiceDesign",
+    "direction": "Androgynous autonomous machine voice, quiet and watchful, crisp consonants and perfectly measured phrasing."
+  },
+  "vortex_rover": {
+    "unit_name": "Vortex Rover",
+    "categories": {
+      "select": [
+        {
+          "id": "vortex_rover_select_1",
+          "text": "Vortex crew on net.",
+          "path": "res://assets/audio/voice/vortex_rover_select_1.wav"
+        },
+        {
+          "id": "vortex_rover_select_2",
+          "text": "Point out a runner.",
+          "path": "res://assets/audio/voice/vortex_rover_select_2.wav"
+        },
+        {
+          "id": "vortex_rover_select_3",
+          "text": "Tracking array's clear.",
+          "path": "res://assets/audio/voice/vortex_rover_select_3.wav"
+        }
+      ],
+      "move": [
+        {
+          "id": "vortex_rover_move_1",
+          "text": "Taking the inside line.",
+          "path": "res://assets/audio/voice/vortex_rover_move_1.wav"
+        },
+        {
+          "id": "vortex_rover_move_2",
+          "text": "We're moving.",
+          "path": "res://assets/audio/voice/vortex_rover_move_2.wav"
+        },
+        {
+          "id": "vortex_rover_move_3",
+          "text": "New intercept course.",
+          "path": "res://assets/audio/voice/vortex_rover_move_3.wav"
+        }
+      ],
+      "attack": [
+        {
+          "id": "vortex_rover_attack_1",
+          "text": "I've got a lock.",
+          "path": "res://assets/audio/voice/vortex_rover_attack_1.wav"
+        },
+        {
+          "id": "vortex_rover_attack_2",
+          "text": "Bring it down.",
+          "path": "res://assets/audio/voice/vortex_rover_attack_2.wav"
+        },
+        {
+          "id": "vortex_rover_attack_3",
+          "text": "Target won't shake us.",
+          "path": "res://assets/audio/voice/vortex_rover_attack_3.wav"
+        }
+      ],
+      "ready": [
+        {
+          "id": "vortex_rover_ready_1",
+          "text": "Vortex crew on net.",
+          "path": "res://assets/audio/voice/vortex_rover_ready_1.wav"
+        }
+      ]
+    },
+    "voice": "Qwen3-TTS VoiceDesign",
+    "direction": "Adult woman with a blunt American accent, low hoarse pitch and the urgent crisp focus of an interceptor crew leader."
+  },
+  "atlas_walker": {
+    "unit_name": "Atlas Walker",
+    "categories": {
+      "select": [
+        {
+          "id": "atlas_walker_select_1",
+          "text": "Atlas reporting.",
+          "path": "res://assets/audio/voice/atlas_walker_select_1.wav"
+        },
+        {
+          "id": "atlas_walker_select_2",
+          "text": "Fire control is green.",
+          "path": "res://assets/audio/voice/atlas_walker_select_2.wav"
+        },
+        {
+          "id": "atlas_walker_select_3",
+          "text": "Tell me what needs leveling.",
+          "path": "res://assets/audio/voice/atlas_walker_select_3.wav"
+        }
+      ],
+      "move": [
+        {
+          "id": "atlas_walker_move_1",
+          "text": "Slow and steady.",
+          "path": "res://assets/audio/voice/atlas_walker_move_1.wav"
+        },
+        {
+          "id": "atlas_walker_move_2",
+          "text": "Walking to coordinates.",
+          "path": "res://assets/audio/voice/atlas_walker_move_2.wav"
+        },
+        {
+          "id": "atlas_walker_move_3",
+          "text": "I'll find solid ground.",
+          "path": "res://assets/audio/voice/atlas_walker_move_3.wav"
+        }
+      ],
+      "attack": [
+        {
+          "id": "atlas_walker_attack_1",
+          "text": "Guns on target.",
+          "path": "res://assets/audio/voice/atlas_walker_attack_1.wav"
+        },
+        {
+          "id": "atlas_walker_attack_2",
+          "text": "Range confirmed.",
+          "path": "res://assets/audio/voice/atlas_walker_attack_2.wav"
+        },
+        {
+          "id": "atlas_walker_attack_3",
+          "text": "That's close enough.",
+          "path": "res://assets/audio/voice/atlas_walker_attack_3.wav"
+        }
+      ],
+      "ready": [
+        {
+          "id": "atlas_walker_ready_1",
+          "text": "Atlas reporting.",
+          "path": "res://assets/audio/voice/atlas_walker_ready_1.wav"
+        }
+      ]
+    },
+    "voice": "Qwen3-TTS VoiceDesign",
+    "direction": "Adult man with a deep Midwestern voice, dry and matter-of-fact, slow enough for precise fire-control calls."
+  },
+  "dawn_interceptor": {
+    "unit_name": "Dawn Interceptor",
+    "categories": {
+      "select": [
+        {
+          "id": "dawn_interceptor_select_1",
+          "text": "First light is mine.",
+          "path": "res://assets/audio/voice/dawn_interceptor_select_1.wav"
+        },
+        {
+          "id": "dawn_interceptor_select_2",
+          "text": "My wings are ready.",
+          "path": "res://assets/audio/voice/dawn_interceptor_select_2.wav"
+        },
+        {
+          "id": "dawn_interceptor_select_3",
+          "text": "I await your bearing.",
+          "path": "res://assets/audio/voice/dawn_interceptor_select_3.wav"
+        }
+      ],
+      "move": [
+        {
+          "id": "dawn_interceptor_move_1",
+          "text": "I take the high arc.",
+          "path": "res://assets/audio/voice/dawn_interceptor_move_1.wav"
+        },
+        {
+          "id": "dawn_interceptor_move_2",
+          "text": "Across the dawn.",
+          "path": "res://assets/audio/voice/dawn_interceptor_move_2.wav"
+        },
+        {
+          "id": "dawn_interceptor_move_3",
+          "text": "On radiant wings.",
+          "path": "res://assets/audio/voice/dawn_interceptor_move_3.wav"
+        }
+      ],
+      "attack": [
+        {
+          "id": "dawn_interceptor_attack_1",
+          "text": "They rise no farther.",
+          "path": "res://assets/audio/voice/dawn_interceptor_attack_1.wav"
+        },
+        {
+          "id": "dawn_interceptor_attack_2",
+          "text": "Light finds them.",
+          "path": "res://assets/audio/voice/dawn_interceptor_attack_2.wav"
+        },
+        {
+          "id": "dawn_interceptor_attack_3",
+          "text": "I will bring them down.",
+          "path": "res://assets/audio/voice/dawn_interceptor_attack_3.wav"
+        }
+      ],
+      "ready": [
+        {
+          "id": "dawn_interceptor_ready_1",
+          "text": "First light is mine.",
+          "path": "res://assets/audio/voice/dawn_interceptor_ready_1.wav"
+        }
+      ]
+    },
+    "voice": "Qwen3-TTS VoiceDesign",
+    "direction": "Young alien woman with a bright piercing voice, smooth formal diction and a daring, quick pilot's rhythm."
+  },
+  "prism_ray": {
+    "unit_name": "Prism Ray",
+    "categories": {
+      "select": [
+        {
+          "id": "prism_ray_select_1",
+          "text": "The lens is aligned.",
+          "path": "res://assets/audio/voice/prism_ray_select_1.wav"
+        },
+        {
+          "id": "prism_ray_select_2",
+          "text": "Name what the beam should touch.",
+          "path": "res://assets/audio/voice/prism_ray_select_2.wav"
+        },
+        {
+          "id": "prism_ray_select_3",
+          "text": "The light is patient.",
+          "path": "res://assets/audio/voice/prism_ray_select_3.wav"
+        }
+      ],
+      "move": [
+        {
+          "id": "prism_ray_move_1",
+          "text": "Redirecting the light.",
+          "path": "res://assets/audio/voice/prism_ray_move_1.wav"
+        },
+        {
+          "id": "prism_ray_move_2",
+          "text": "I follow your ray.",
+          "path": "res://assets/audio/voice/prism_ray_move_2.wav"
+        },
+        {
+          "id": "prism_ray_move_3",
+          "text": "The lens turns.",
+          "path": "res://assets/audio/voice/prism_ray_move_3.wav"
+        }
+      ],
+      "attack": [
+        {
+          "id": "prism_ray_attack_1",
+          "text": "Focus the beam.",
+          "path": "res://assets/audio/voice/prism_ray_attack_1.wav"
+        },
+        {
+          "id": "prism_ray_attack_2",
+          "text": "It will burn through.",
+          "path": "res://assets/audio/voice/prism_ray_attack_2.wav"
+        },
+        {
+          "id": "prism_ray_attack_3",
+          "text": "Let the prism shine.",
+          "path": "res://assets/audio/voice/prism_ray_attack_3.wav"
+        }
+      ],
+      "ready": [
+        {
+          "id": "prism_ray_ready_1",
+          "text": "The lens is aligned.",
+          "path": "res://assets/audio/voice/prism_ray_ready_1.wav"
+        }
+      ]
+    },
+    "voice": "Qwen3-TTS VoiceDesign",
+    "direction": "Alien woman with a bright controlled mid voice, ceremonial vowels and restrained excitement that builds into the attack."
+  },
+  "horizon_lancer": {
+    "unit_name": "Horizon Lancer",
+    "categories": {
+      "select": [
+        {
+          "id": "horizon_lancer_select_1",
+          "text": "The horizon is clear.",
+          "path": "res://assets/audio/voice/horizon_lancer_select_1.wav"
+        },
+        {
+          "id": "horizon_lancer_select_2",
+          "text": "I see beyond their line.",
+          "path": "res://assets/audio/voice/horizon_lancer_select_2.wav"
+        },
+        {
+          "id": "horizon_lancer_select_3",
+          "text": "Lance at your command.",
+          "path": "res://assets/audio/voice/horizon_lancer_select_3.wav"
+        }
+      ],
+      "move": [
+        {
+          "id": "horizon_lancer_move_1",
+          "text": "Changing my bearing.",
+          "path": "res://assets/audio/voice/horizon_lancer_move_1.wav"
+        },
+        {
+          "id": "horizon_lancer_move_2",
+          "text": "I take the long arc.",
+          "path": "res://assets/audio/voice/horizon_lancer_move_2.wav"
+        },
+        {
+          "id": "horizon_lancer_move_3",
+          "text": "On the horizon.",
+          "path": "res://assets/audio/voice/horizon_lancer_move_3.wav"
+        }
+      ],
+      "attack": [
+        {
+          "id": "horizon_lancer_attack_1",
+          "text": "Distance is my ally.",
+          "path": "res://assets/audio/voice/horizon_lancer_attack_1.wav"
+        },
+        {
+          "id": "horizon_lancer_attack_2",
+          "text": "No shelter at this range.",
+          "path": "res://assets/audio/voice/horizon_lancer_attack_2.wav"
+        },
+        {
+          "id": "horizon_lancer_attack_3",
+          "text": "Lance away.",
+          "path": "res://assets/audio/voice/horizon_lancer_attack_3.wav"
+        }
+      ],
+      "ready": [
+        {
+          "id": "horizon_lancer_ready_1",
+          "text": "The horizon is clear.",
+          "path": "res://assets/audio/voice/horizon_lancer_ready_1.wav"
+        }
+      ]
+    },
+    "voice": "Qwen3-TTS VoiceDesign",
+    "direction": "Alien man with a solemn rich baritone, measured long-range callouts and a distinct bright edge on consonants."
+  },
+  "fleet_carrier": {
+    "unit_name": "Fleet Carrier",
+    "categories": {
+      "select": [
+        {
+          "id": "fleet_carrier_select_1",
+          "text": "The fleet awaits your word.",
+          "path": "res://assets/audio/voice/fleet_carrier_select_1.wav"
+        },
+        {
+          "id": "fleet_carrier_select_2",
+          "text": "Launch crews standing by.",
+          "path": "res://assets/audio/voice/fleet_carrier_select_2.wav"
+        },
+        {
+          "id": "fleet_carrier_select_3",
+          "text": "Our escorts are ready.",
+          "path": "res://assets/audio/voice/fleet_carrier_select_3.wav"
+        }
+      ],
+      "move": [
+        {
+          "id": "fleet_carrier_move_1",
+          "text": "The fleet changes course.",
+          "path": "res://assets/audio/voice/fleet_carrier_move_1.wav"
+        },
+        {
+          "id": "fleet_carrier_move_2",
+          "text": "Bringing the line around.",
+          "path": "res://assets/audio/voice/fleet_carrier_move_2.wav"
+        },
+        {
+          "id": "fleet_carrier_move_3",
+          "text": "Set the heading.",
+          "path": "res://assets/audio/voice/fleet_carrier_move_3.wav"
+        }
+      ],
+      "attack": [
+        {
+          "id": "fleet_carrier_attack_1",
+          "text": "Release the pursuit craft.",
+          "path": "res://assets/audio/voice/fleet_carrier_attack_1.wav"
+        },
+        {
+          "id": "fleet_carrier_attack_2",
+          "text": "Fleet, engage.",
+          "path": "res://assets/audio/voice/fleet_carrier_attack_2.wav"
+        },
+        {
+          "id": "fleet_carrier_attack_3",
+          "text": "Their line will break.",
+          "path": "res://assets/audio/voice/fleet_carrier_attack_3.wav"
+        }
+      ],
+      "ready": [
+        {
+          "id": "fleet_carrier_ready_1",
+          "text": "The fleet awaits your word.",
+          "path": "res://assets/audio/voice/fleet_carrier_ready_1.wav"
+        }
+      ]
+    },
+    "voice": "Qwen3-TTS VoiceDesign",
+    "direction": "Elder alien woman with a stately contralto, formal diction, and the unhurried authority of an experienced fleet commander."
+  },
+  "sunseer": {
+    "unit_name": "Sunseer",
+    "categories": {
+      "select": [
+        {
+          "id": "sunseer_select_1",
+          "text": "There is more than one light.",
+          "path": "res://assets/audio/voice/sunseer_select_1.wav"
+        },
+        {
+          "id": "sunseer_select_2",
+          "text": "Shall I lift the veil?",
+          "path": "res://assets/audio/voice/sunseer_select_2.wav"
+        },
+        {
+          "id": "sunseer_select_3",
+          "text": "I see a flicker ahead.",
+          "path": "res://assets/audio/voice/sunseer_select_3.wav"
+        }
+      ],
+      "move": [
+        {
+          "id": "sunseer_move_1",
+          "text": "I follow the flicker.",
+          "path": "res://assets/audio/voice/sunseer_move_1.wav"
+        },
+        {
+          "id": "sunseer_move_2",
+          "text": "Drifting into view.",
+          "path": "res://assets/audio/voice/sunseer_move_2.wav"
+        },
+        {
+          "id": "sunseer_move_3",
+          "text": "Let us look closer.",
+          "path": "res://assets/audio/voice/sunseer_move_3.wav"
+        }
+      ],
+      "attack": [
+        {
+          "id": "sunseer_attack_1",
+          "text": "The light unmasks you.",
+          "path": "res://assets/audio/voice/sunseer_attack_1.wav"
+        },
+        {
+          "id": "sunseer_attack_2",
+          "text": "I have seen your end.",
+          "path": "res://assets/audio/voice/sunseer_attack_2.wav"
+        },
+        {
+          "id": "sunseer_attack_3",
+          "text": "Let them stare at the sun.",
+          "path": "res://assets/audio/voice/sunseer_attack_3.wav"
+        }
+      ],
+      "ready": [
+        {
+          "id": "sunseer_ready_1",
+          "text": "There is more than one light.",
+          "path": "res://assets/audio/voice/sunseer_ready_1.wav"
+        }
+      ]
+    },
+    "voice": "Qwen3-TTS VoiceDesign",
+    "direction": "Alien woman with a gliding, breathy and luminous high voice, playfully cryptic but precise diction."
+  },
+  "sunblade": {
+    "unit_name": "Sunblade",
+    "categories": {
+      "select": [
+        {
+          "id": "sunblade_select_1",
+          "text": "My blades are awake.",
+          "path": "res://assets/audio/voice/sunblade_select_1.wav"
+        },
+        {
+          "id": "sunblade_select_2",
+          "text": "Tell me where I stand.",
+          "path": "res://assets/audio/voice/sunblade_select_2.wav"
+        },
+        {
+          "id": "sunblade_select_3",
+          "text": "The first stroke is yours to name.",
+          "path": "res://assets/audio/voice/sunblade_select_3.wav"
+        }
+      ],
+      "move": [
+        {
+          "id": "sunblade_move_1",
+          "text": "I go with honor.",
+          "path": "res://assets/audio/voice/sunblade_move_1.wav"
+        },
+        {
+          "id": "sunblade_move_2",
+          "text": "You have my stride.",
+          "path": "res://assets/audio/voice/sunblade_move_2.wav"
+        },
+        {
+          "id": "sunblade_move_3",
+          "text": "The path is clear.",
+          "path": "res://assets/audio/voice/sunblade_move_3.wav"
+        }
+      ],
+      "attack": [
+        {
+          "id": "sunblade_attack_1",
+          "text": "My blades know the way.",
+          "path": "res://assets/audio/voice/sunblade_attack_1.wav"
+        },
+        {
+          "id": "sunblade_attack_2",
+          "text": "I meet them head on.",
+          "path": "res://assets/audio/voice/sunblade_attack_2.wav"
+        },
+        {
+          "id": "sunblade_attack_3",
+          "text": "Through their guard.",
+          "path": "res://assets/audio/voice/sunblade_attack_3.wav"
+        }
+      ],
+      "ready": [
+        {
+          "id": "sunblade_ready_1",
+          "text": "My blades are awake.",
+          "path": "res://assets/audio/voice/sunblade_ready_1.wav"
+        }
+      ]
+    },
+    "voice": "Qwen3-TTS VoiceDesign",
+    "direction": "Alien man with a deep, musical and fierce warrior's voice, disciplined formality, and sudden emphatic attack calls."
+  },
+  "skirmisher": {
+    "unit_name": "Skirmisher",
+    "categories": {
+      "select": [
+        {
+          "id": "skirmisher_select_1",
+          "text": "You saw me that time.",
+          "path": "res://assets/audio/voice/skirmisher_select_1.wav"
+        },
+        {
+          "id": "skirmisher_select_2",
+          "text": "I have an opening.",
+          "path": "res://assets/audio/voice/skirmisher_select_2.wav"
+        },
+        {
+          "id": "skirmisher_select_3",
+          "text": "I am between their lines.",
+          "path": "res://assets/audio/voice/skirmisher_select_3.wav"
+        }
+      ],
+      "move": [
+        {
+          "id": "skirmisher_move_1",
+          "text": "I take the shorter path.",
+          "path": "res://assets/audio/voice/skirmisher_move_1.wav"
+        },
+        {
+          "id": "skirmisher_move_2",
+          "text": "Through the fold.",
+          "path": "res://assets/audio/voice/skirmisher_move_2.wav"
+        },
+        {
+          "id": "skirmisher_move_3",
+          "text": "They won't see me cross.",
+          "path": "res://assets/audio/voice/skirmisher_move_3.wav"
+        }
+      ],
+      "attack": [
+        {
+          "id": "skirmisher_attack_1",
+          "text": "Strike through the gap.",
+          "path": "res://assets/audio/voice/skirmisher_attack_1.wav"
+        },
+        {
+          "id": "skirmisher_attack_2",
+          "text": "They watch the wrong flank.",
+          "path": "res://assets/audio/voice/skirmisher_attack_2.wav"
+        },
+        {
+          "id": "skirmisher_attack_3",
+          "text": "I have their measure.",
+          "path": "res://assets/audio/voice/skirmisher_attack_3.wav"
+        }
+      ],
+      "ready": [
+        {
+          "id": "skirmisher_ready_1",
+          "text": "You saw me that time.",
+          "path": "res://assets/audio/voice/skirmisher_ready_1.wav"
+        }
+      ]
+    },
+    "voice": "Qwen3-TTS VoiceDesign",
+    "direction": "Alien man with a wiry quiet voice, measured consonants and brisk stealthy rhythms, dryly pleased to outmaneuver opponents."
+  },
+  "spire_walker": {
+    "unit_name": "Spire Walker",
+    "categories": {
+      "select": [
+        {
+          "id": "spire_walker_select_1",
+          "text": "The spire watches.",
+          "path": "res://assets/audio/voice/spire_walker_select_1.wav"
+        },
+        {
+          "id": "spire_walker_select_2",
+          "text": "Name the line I hold.",
+          "path": "res://assets/audio/voice/spire_walker_select_2.wav"
+        },
+        {
+          "id": "spire_walker_select_3",
+          "text": "I remember older sieges.",
+          "path": "res://assets/audio/voice/spire_walker_select_3.wav"
+        }
+      ],
+      "move": [
+        {
+          "id": "spire_walker_move_1",
+          "text": "My steps are measured.",
+          "path": "res://assets/audio/voice/spire_walker_move_1.wav"
+        },
+        {
+          "id": "spire_walker_move_2",
+          "text": "The spire advances.",
+          "path": "res://assets/audio/voice/spire_walker_move_2.wav"
+        },
+        {
+          "id": "spire_walker_move_3",
+          "text": "I take the ridge.",
+          "path": "res://assets/audio/voice/spire_walker_move_3.wav"
+        }
+      ],
+      "attack": [
+        {
+          "id": "spire_walker_attack_1",
+          "text": "Bring down their walls.",
+          "path": "res://assets/audio/voice/spire_walker_attack_1.wav"
+        },
+        {
+          "id": "spire_walker_attack_2",
+          "text": "The long shot is mine.",
+          "path": "res://assets/audio/voice/spire_walker_attack_2.wav"
+        },
+        {
+          "id": "spire_walker_attack_3",
+          "text": "Their line will give way.",
+          "path": "res://assets/audio/voice/spire_walker_attack_3.wav"
+        }
+      ],
+      "ready": [
+        {
+          "id": "spire_walker_ready_1",
+          "text": "The spire watches.",
+          "path": "res://assets/audio/voice/spire_walker_ready_1.wav"
+        }
+      ]
+    },
+    "voice": "Qwen3-TTS VoiceDesign",
+    "direction": "Old alien man with a solemn heavy bass, articulated formal diction, and the patient menace of a siege sentinel."
+  },
+  "skitterling": {
+    "unit_name": "Skitterling",
+    "categories": {
+      "select": [
+        {
+          "id": "skitterling_select_1",
+          "text": "Hear feet. Want hunt.",
+          "path": "res://assets/audio/voice/skitterling_select_1.wav"
+        },
+        {
+          "id": "skitterling_select_2",
+          "text": "Hungry. Where?",
+          "path": "res://assets/audio/voice/skitterling_select_2.wav"
+        },
+        {
+          "id": "skitterling_select_3",
+          "text": "I can smell them.",
+          "path": "res://assets/audio/voice/skitterling_select_3.wav"
+        }
+      ],
+      "move": [
+        {
+          "id": "skitterling_move_1",
+          "text": "Quick, quick.",
+          "path": "res://assets/audio/voice/skitterling_move_1.wav"
+        },
+        {
+          "id": "skitterling_move_2",
+          "text": "Down the crack.",
+          "path": "res://assets/audio/voice/skitterling_move_2.wav"
+        },
+        {
+          "id": "skitterling_move_3",
+          "text": "On the trail.",
+          "path": "res://assets/audio/voice/skitterling_move_3.wav"
+        }
+      ],
+      "attack": [
+        {
+          "id": "skitterling_attack_1",
+          "text": "Bite first.",
+          "path": "res://assets/audio/voice/skitterling_attack_1.wav"
+        },
+        {
+          "id": "skitterling_attack_2",
+          "text": "Chase the warm ones.",
+          "path": "res://assets/audio/voice/skitterling_attack_2.wav"
+        },
+        {
+          "id": "skitterling_attack_3",
+          "text": "Mine to chew.",
+          "path": "res://assets/audio/voice/skitterling_attack_3.wav"
+        }
+      ],
+      "ready": [
+        {
+          "id": "skitterling_ready_1",
+          "text": "Hear feet. Want hunt.",
+          "path": "res://assets/audio/voice/skitterling_ready_1.wav"
+        }
+      ]
+    },
+    "voice": "Qwen3-TTS VoiceDesign",
+    "direction": "Small frantic insect with a bright, cracked high pitch, rapid clipped syllables, raspy breaths and eager hunting energy."
+  },
+  "bile_crawler": {
+    "unit_name": "Bile Crawler",
+    "categories": {
+      "select": [
+        {
+          "id": "bile_crawler_select_1",
+          "text": "Bile is rising.",
+          "path": "res://assets/audio/voice/bile_crawler_select_1.wav"
+        },
+        {
+          "id": "bile_crawler_select_2",
+          "text": "I can taste the air.",
+          "path": "res://assets/audio/voice/bile_crawler_select_2.wav"
+        },
+        {
+          "id": "bile_crawler_select_3",
+          "text": "Give me something to dissolve.",
+          "path": "res://assets/audio/voice/bile_crawler_select_3.wav"
+        }
+      ],
+      "move": [
+        {
+          "id": "bile_crawler_move_1",
+          "text": "Scrape forward.",
+          "path": "res://assets/audio/voice/bile_crawler_move_1.wav"
+        },
+        {
+          "id": "bile_crawler_move_2",
+          "text": "A fresh trail.",
+          "path": "res://assets/audio/voice/bile_crawler_move_2.wav"
+        },
+        {
+          "id": "bile_crawler_move_3",
+          "text": "Drag me closer.",
+          "path": "res://assets/audio/voice/bile_crawler_move_3.wav"
+        }
+      ],
+      "attack": [
+        {
+          "id": "bile_crawler_attack_1",
+          "text": "Spit and sink.",
+          "path": "res://assets/audio/voice/bile_crawler_attack_1.wav"
+        },
+        {
+          "id": "bile_crawler_attack_2",
+          "text": "Let the bile in.",
+          "path": "res://assets/audio/voice/bile_crawler_attack_2.wav"
+        },
+        {
+          "id": "bile_crawler_attack_3",
+          "text": "Their shell will soften.",
+          "path": "res://assets/audio/voice/bile_crawler_attack_3.wav"
+        }
+      ],
+      "ready": [
+        {
+          "id": "bile_crawler_ready_1",
+          "text": "Bile is rising.",
+          "path": "res://assets/audio/voice/bile_crawler_ready_1.wav"
+        }
+      ]
+    },
+    "voice": "Qwen3-TTS VoiceDesign",
+    "direction": "Stocky beast with a wet gravel bass, short belchy breaths and an abrupt, irritable rhythm."
+  },
+  "blight_hurler": {
+    "unit_name": "Blight Hurler",
+    "categories": {
+      "select": [
+        {
+          "id": "blight_hurler_select_1",
+          "text": "The rot is ready.",
+          "path": "res://assets/audio/voice/blight_hurler_select_1.wav"
+        },
+        {
+          "id": "blight_hurler_select_2",
+          "text": "Point me at the dry ones.",
+          "path": "res://assets/audio/voice/blight_hurler_select_2.wav"
+        },
+        {
+          "id": "blight_hurler_select_3",
+          "text": "I brought the blight.",
+          "path": "res://assets/audio/voice/blight_hurler_select_3.wav"
+        }
+      ],
+      "move": [
+        {
+          "id": "blight_hurler_move_1",
+          "text": "I seep forward.",
+          "path": "res://assets/audio/voice/blight_hurler_move_1.wav"
+        },
+        {
+          "id": "blight_hurler_move_2",
+          "text": "The trail goes sour.",
+          "path": "res://assets/audio/voice/blight_hurler_move_2.wav"
+        },
+        {
+          "id": "blight_hurler_move_3",
+          "text": "Closer to the heat.",
+          "path": "res://assets/audio/voice/blight_hurler_move_3.wav"
+        }
+      ],
+      "attack": [
+        {
+          "id": "blight_hurler_attack_1",
+          "text": "Smother them.",
+          "path": "res://assets/audio/voice/blight_hurler_attack_1.wav"
+        },
+        {
+          "id": "blight_hurler_attack_2",
+          "text": "Let the rot take hold.",
+          "path": "res://assets/audio/voice/blight_hurler_attack_2.wav"
+        },
+        {
+          "id": "blight_hurler_attack_3",
+          "text": "The mist is hungry.",
+          "path": "res://assets/audio/voice/blight_hurler_attack_3.wav"
+        }
+      ],
+      "ready": [
+        {
+          "id": "blight_hurler_ready_1",
+          "text": "The rot is ready.",
+          "path": "res://assets/audio/voice/blight_hurler_ready_1.wav"
+        }
+      ]
+    },
+    "voice": "Qwen3-TTS VoiceDesign",
+    "direction": "Tall predatory creature with a lean nasal mid pitch, sharp hiss and a malicious, pointed delivery."
+  },
+  "spore_seer": {
+    "unit_name": "Spore Seer",
+    "categories": {
+      "select": [
+        {
+          "id": "spore_seer_select_1",
+          "text": "I feel a movement.",
+          "path": "res://assets/audio/voice/spore_seer_select_1.wav"
+        },
+        {
+          "id": "spore_seer_select_2",
+          "text": "Nothing hides from spores.",
+          "path": "res://assets/audio/voice/spore_seer_select_2.wav"
+        },
+        {
+          "id": "spore_seer_select_3",
+          "text": "The unseen are loud.",
+          "path": "res://assets/audio/voice/spore_seer_select_3.wav"
+        }
+      ],
+      "move": [
+        {
+          "id": "spore_seer_move_1",
+          "text": "I drift into their thoughts.",
+          "path": "res://assets/audio/voice/spore_seer_move_1.wav"
+        },
+        {
+          "id": "spore_seer_move_2",
+          "text": "Following their wake.",
+          "path": "res://assets/audio/voice/spore_seer_move_2.wav"
+        },
+        {
+          "id": "spore_seer_move_3",
+          "text": "The air pulls me onward.",
+          "path": "res://assets/audio/voice/spore_seer_move_3.wav"
+        }
+      ],
+      "attack": [
+        {
+          "id": "spore_seer_attack_1",
+          "text": "Their nest will spoil.",
+          "path": "res://assets/audio/voice/spore_seer_attack_1.wav"
+        },
+        {
+          "id": "spore_seer_attack_2",
+          "text": "The brood sees through them.",
+          "path": "res://assets/audio/voice/spore_seer_attack_2.wav"
+        },
+        {
+          "id": "spore_seer_attack_3",
+          "text": "Let the spores settle.",
+          "path": "res://assets/audio/voice/spore_seer_attack_3.wav"
+        }
+      ],
+      "ready": [
+        {
+          "id": "spore_seer_ready_1",
+          "text": "I feel a movement.",
+          "path": "res://assets/audio/voice/spore_seer_ready_1.wav"
+        }
+      ]
+    },
+    "voice": "Qwen3-TTS VoiceDesign",
+    "direction": "Ancient androgynous beast with a slow whispered contralto, nasal wet gurgle and ominously precise words."
+  },
+  "brood_mimic": {
+    "unit_name": "Brood Mimic",
+    "categories": {
+      "select": [
+        {
+          "id": "brood_mimic_select_1",
+          "text": "I sound like you.",
+          "path": "res://assets/audio/voice/brood_mimic_select_1.wav"
+        },
+        {
+          "id": "brood_mimic_select_2",
+          "text": "I can wear their face.",
+          "path": "res://assets/audio/voice/brood_mimic_select_2.wav"
+        },
+        {
+          "id": "brood_mimic_select_3",
+          "text": "Did they see me change?",
+          "path": "res://assets/audio/voice/brood_mimic_select_3.wav"
+        }
+      ],
+      "move": [
+        {
+          "id": "brood_mimic_move_1",
+          "text": "I will blend in.",
+          "path": "res://assets/audio/voice/brood_mimic_move_1.wav"
+        },
+        {
+          "id": "brood_mimic_move_2",
+          "text": "Quiet little steps.",
+          "path": "res://assets/audio/voice/brood_mimic_move_2.wav"
+        },
+        {
+          "id": "brood_mimic_move_3",
+          "text": "Behind their line.",
+          "path": "res://assets/audio/voice/brood_mimic_move_3.wav"
+        }
+      ],
+      "ready": [
+        {
+          "id": "brood_mimic_ready_1",
+          "text": "I sound like you.",
+          "path": "res://assets/audio/voice/brood_mimic_ready_1.wav"
+        }
+      ]
+    },
+    "voice": "Qwen3-TTS VoiceDesign",
+    "direction": "Sly androgynous creature with a pinched voice, mimicking rhythms and little insect clicks behind each clear word."
+  },
+  "drift_hauler": {
+    "unit_name": "Drift Hauler",
+    "categories": {
+      "select": [
+        {
+          "id": "drift_hauler_select_1",
+          "text": "Climb beneath my shell.",
+          "path": "res://assets/audio/voice/drift_hauler_select_1.wav"
+        },
+        {
+          "id": "drift_hauler_select_2",
+          "text": "Room for more.",
+          "path": "res://assets/audio/voice/drift_hauler_select_2.wav"
+        },
+        {
+          "id": "drift_hauler_select_3",
+          "text": "I carry the clutch.",
+          "path": "res://assets/audio/voice/drift_hauler_select_3.wav"
+        }
+      ],
+      "move": [
+        {
+          "id": "drift_hauler_move_1",
+          "text": "Drift, little ones.",
+          "path": "res://assets/audio/voice/drift_hauler_move_1.wav"
+        },
+        {
+          "id": "drift_hauler_move_2",
+          "text": "I float to safety.",
+          "path": "res://assets/audio/voice/drift_hauler_move_2.wav"
+        },
+        {
+          "id": "drift_hauler_move_3",
+          "text": "A slow wind will do.",
+          "path": "res://assets/audio/voice/drift_hauler_move_3.wav"
+        }
+      ],
+      "ready": [
+        {
+          "id": "drift_hauler_ready_1",
+          "text": "Climb beneath my shell.",
+          "path": "res://assets/audio/voice/drift_hauler_ready_1.wav"
+        }
+      ]
+    },
+    "voice": "Qwen3-TTS VoiceDesign",
+    "direction": "Huge docile creature with an airy cavernous bass, slow breaths and an unhurried, wet throat resonance."
+  },
+  "mireweaver": {
+    "unit_name": "Mireweaver",
+    "categories": {
+      "select": [
+        {
+          "id": "mireweaver_select_1",
+          "text": "My threads are damp.",
+          "path": "res://assets/audio/voice/mireweaver_select_1.wav"
+        },
+        {
+          "id": "mireweaver_select_2",
+          "text": "Come into my mire.",
+          "path": "res://assets/audio/voice/mireweaver_select_2.wav"
+        },
+        {
+          "id": "mireweaver_select_3",
+          "text": "I know where the roots meet.",
+          "path": "res://assets/audio/voice/mireweaver_select_3.wav"
+        }
+      ],
+      "move": [
+        {
+          "id": "mireweaver_move_1",
+          "text": "The mire follows.",
+          "path": "res://assets/audio/voice/mireweaver_move_1.wav"
+        },
+        {
+          "id": "mireweaver_move_2",
+          "text": "Threading through.",
+          "path": "res://assets/audio/voice/mireweaver_move_2.wav"
+        },
+        {
+          "id": "mireweaver_move_3",
+          "text": "I creep where it's wet.",
+          "path": "res://assets/audio/voice/mireweaver_move_3.wav"
+        }
+      ],
+      "attack": [
+        {
+          "id": "mireweaver_attack_1",
+          "text": "Wrap their feet.",
+          "path": "res://assets/audio/voice/mireweaver_attack_1.wav"
+        },
+        {
+          "id": "mireweaver_attack_2",
+          "text": "Their minds will open.",
+          "path": "res://assets/audio/voice/mireweaver_attack_2.wav"
+        },
+        {
+          "id": "mireweaver_attack_3",
+          "text": "Let the mire take them.",
+          "path": "res://assets/audio/voice/mireweaver_attack_3.wav"
+        }
+      ],
+      "ready": [
+        {
+          "id": "mireweaver_ready_1",
+          "text": "My threads are damp.",
+          "path": "res://assets/audio/voice/mireweaver_ready_1.wav"
+        }
+      ]
+    },
+    "voice": "Qwen3-TTS VoiceDesign",
+    "direction": "Elder creature with a conspiratorial low feminine voice, bubbling resonance and creeping, measured cadence."
+  },
+  "locust_brooder": {
+    "unit_name": "Locust Brooder",
+    "categories": {
+      "select": [
+        {
+          "id": "locust_brooder_select_1",
+          "text": "My brood is restless.",
+          "path": "res://assets/audio/voice/locust_brooder_select_1.wav"
+        },
+        {
+          "id": "locust_brooder_select_2",
+          "text": "The swarm wants out.",
+          "path": "res://assets/audio/voice/locust_brooder_select_2.wav"
+        },
+        {
+          "id": "locust_brooder_select_3",
+          "text": "I have hatched enough.",
+          "path": "res://assets/audio/voice/locust_brooder_select_3.wav"
+        }
+      ],
+      "move": [
+        {
+          "id": "locust_brooder_move_1",
+          "text": "The brood shifts.",
+          "path": "res://assets/audio/voice/locust_brooder_move_1.wav"
+        },
+        {
+          "id": "locust_brooder_move_2",
+          "text": "Carry the clutch onward.",
+          "path": "res://assets/audio/voice/locust_brooder_move_2.wav"
+        },
+        {
+          "id": "locust_brooder_move_3",
+          "text": "I crawl to the feeding ground.",
+          "path": "res://assets/audio/voice/locust_brooder_move_3.wav"
+        }
+      ],
+      "attack": [
+        {
+          "id": "locust_brooder_attack_1",
+          "text": "Go, little jaws.",
+          "path": "res://assets/audio/voice/locust_brooder_attack_1.wav"
+        },
+        {
+          "id": "locust_brooder_attack_2",
+          "text": "Feed upon them.",
+          "path": "res://assets/audio/voice/locust_brooder_attack_2.wav"
+        },
+        {
+          "id": "locust_brooder_attack_3",
+          "text": "Swarm from the shell.",
+          "path": "res://assets/audio/voice/locust_brooder_attack_3.wav"
+        }
+      ],
+      "ready": [
+        {
+          "id": "locust_brooder_ready_1",
+          "text": "My brood is restless.",
+          "path": "res://assets/audio/voice/locust_brooder_ready_1.wav"
+        }
+      ]
+    },
+    "voice": "Qwen3-TTS VoiceDesign",
+    "direction": "Burly male creature with a wet buzzing baritone, irregular clicks and deliberate bursts of speech."
+  },
+  "siphon_wyrm": {
+    "unit_name": "Siphon Wyrm",
+    "categories": {
+      "select": [
+        {
+          "id": "siphon_wyrm_select_1",
+          "text": "The air tastes weak.",
+          "path": "res://assets/audio/voice/siphon_wyrm_select_1.wav"
+        },
+        {
+          "id": "siphon_wyrm_select_2",
+          "text": "My throat is empty.",
+          "path": "res://assets/audio/voice/siphon_wyrm_select_2.wav"
+        },
+        {
+          "id": "siphon_wyrm_select_3",
+          "text": "I smell their power.",
+          "path": "res://assets/audio/voice/siphon_wyrm_select_3.wav"
+        }
+      ],
+      "move": [
+        {
+          "id": "siphon_wyrm_move_1",
+          "text": "Slide beneath their gaze.",
+          "path": "res://assets/audio/voice/siphon_wyrm_move_1.wav"
+        },
+        {
+          "id": "siphon_wyrm_move_2",
+          "text": "I follow the current.",
+          "path": "res://assets/audio/voice/siphon_wyrm_move_2.wav"
+        },
+        {
+          "id": "siphon_wyrm_move_3",
+          "text": "Drawing nearer.",
+          "path": "res://assets/audio/voice/siphon_wyrm_move_3.wav"
+        }
+      ],
+      "attack": [
+        {
+          "id": "siphon_wyrm_attack_1",
+          "text": "Drain their strength.",
+          "path": "res://assets/audio/voice/siphon_wyrm_attack_1.wav"
+        },
+        {
+          "id": "siphon_wyrm_attack_2",
+          "text": "Let the cloud take them.",
+          "path": "res://assets/audio/voice/siphon_wyrm_attack_2.wav"
+        },
+        {
+          "id": "siphon_wyrm_attack_3",
+          "text": "Mine to pull under.",
+          "path": "res://assets/audio/voice/siphon_wyrm_attack_3.wav"
+        }
+      ],
+      "ready": [
+        {
+          "id": "siphon_wyrm_ready_1",
+          "text": "The air tastes weak.",
+          "path": "res://assets/audio/voice/siphon_wyrm_ready_1.wav"
+        }
+      ]
+    },
+    "voice": "Qwen3-TTS VoiceDesign",
+    "direction": "Ancient snake-like monster with a narrow gravelly whisper, lingering sibilants and a heavy wet undertone."
+  },
+  "corrosion_flyer": {
+    "unit_name": "Corrosion Flyer",
+    "categories": {
+      "select": [
+        {
+          "id": "corrosion_flyer_select_1",
+          "text": "My breath will strip them.",
+          "path": "res://assets/audio/voice/corrosion_flyer_select_1.wav"
+        },
+        {
+          "id": "corrosion_flyer_select_2",
+          "text": "The air burns sweet.",
+          "path": "res://assets/audio/voice/corrosion_flyer_select_2.wav"
+        },
+        {
+          "id": "corrosion_flyer_select_3",
+          "text": "Corrosion takes wing.",
+          "path": "res://assets/audio/voice/corrosion_flyer_select_3.wav"
+        }
+      ],
+      "move": [
+        {
+          "id": "corrosion_flyer_move_1",
+          "text": "I taste a crosswind.",
+          "path": "res://assets/audio/voice/corrosion_flyer_move_1.wav"
+        },
+        {
+          "id": "corrosion_flyer_move_2",
+          "text": "Skim the ridge.",
+          "path": "res://assets/audio/voice/corrosion_flyer_move_2.wav"
+        },
+        {
+          "id": "corrosion_flyer_move_3",
+          "text": "The wind carries me.",
+          "path": "res://assets/audio/voice/corrosion_flyer_move_3.wav"
+        }
+      ],
+      "attack": [
+        {
+          "id": "corrosion_flyer_attack_1",
+          "text": "Spit on their armor.",
+          "path": "res://assets/audio/voice/corrosion_flyer_attack_1.wav"
+        },
+        {
+          "id": "corrosion_flyer_attack_2",
+          "text": "I will eat through it.",
+          "path": "res://assets/audio/voice/corrosion_flyer_attack_2.wav"
+        },
+        {
+          "id": "corrosion_flyer_attack_3",
+          "text": "Let the caustic rain fall.",
+          "path": "res://assets/audio/voice/corrosion_flyer_attack_3.wav"
+        }
+      ],
+      "ready": [
+        {
+          "id": "corrosion_flyer_ready_1",
+          "text": "My breath will strip them.",
+          "path": "res://assets/audio/voice/corrosion_flyer_ready_1.wav"
+        }
+      ]
+    },
+    "voice": "Qwen3-TTS VoiceDesign",
+    "direction": "Aerial monster with a tense mid-high pitch, coarse hiss, and short, swift calls with a caustic snarl."
+  },
+  "brood_siege_flyer": {
+    "unit_name": "Brood Siege Flyer",
+    "categories": {
+      "select": [
+        {
+          "id": "brood_siege_flyer_select_1",
+          "text": "I carry a storm of jaws.",
+          "path": "res://assets/audio/voice/brood_siege_flyer_select_1.wav"
+        },
+        {
+          "id": "brood_siege_flyer_select_2",
+          "text": "The brood hangs heavy.",
+          "path": "res://assets/audio/voice/brood_siege_flyer_select_2.wav"
+        },
+        {
+          "id": "brood_siege_flyer_select_3",
+          "text": "I see their walls below.",
+          "path": "res://assets/audio/voice/brood_siege_flyer_select_3.wav"
+        }
+      ],
+      "move": [
+        {
+          "id": "brood_siege_flyer_move_1",
+          "text": "I drift above the line.",
+          "path": "res://assets/audio/voice/brood_siege_flyer_move_1.wav"
+        },
+        {
+          "id": "brood_siege_flyer_move_2",
+          "text": "Moving where they cannot reach.",
+          "path": "res://assets/audio/voice/brood_siege_flyer_move_2.wav"
+        },
+        {
+          "id": "brood_siege_flyer_move_3",
+          "text": "My shadow crosses them.",
+          "path": "res://assets/audio/voice/brood_siege_flyer_move_3.wav"
+        }
+      ],
+      "attack": [
+        {
+          "id": "brood_siege_flyer_attack_1",
+          "text": "Rain the brood.",
+          "path": "res://assets/audio/voice/brood_siege_flyer_attack_1.wav"
+        },
+        {
+          "id": "brood_siege_flyer_attack_2",
+          "text": "Drop teeth on them.",
+          "path": "res://assets/audio/voice/brood_siege_flyer_attack_2.wav"
+        },
+        {
+          "id": "brood_siege_flyer_attack_3",
+          "text": "Their walls will feed us.",
+          "path": "res://assets/audio/voice/brood_siege_flyer_attack_3.wav"
+        }
+      ],
+      "ready": [
+        {
+          "id": "brood_siege_flyer_ready_1",
+          "text": "I carry a storm of jaws.",
+          "path": "res://assets/audio/voice/brood_siege_flyer_ready_1.wav"
+        }
+      ]
+    },
+    "voice": "Qwen3-TTS VoiceDesign",
+    "direction": "Massive airborne creature with a low booming growl, bubbling resonance and a dragging, ominously deliberate cadence."
+  },
+  "locust_flying": {
+    "unit_name": "Flying Locust",
+    "categories": {
+      "select": [
+        {
+          "id": "locust_flying_select_1",
+          "text": "Wings are humming.",
+          "path": "res://assets/audio/voice/locust_flying_select_1.wav"
+        },
+        {
+          "id": "locust_flying_select_2",
+          "text": "I hatch to hunt.",
+          "path": "res://assets/audio/voice/locust_flying_select_2.wav"
+        },
+        {
+          "id": "locust_flying_select_3",
+          "text": "Where's the swarm?",
+          "path": "res://assets/audio/voice/locust_flying_select_3.wav"
+        }
+      ],
+      "move": [
+        {
+          "id": "locust_flying_move_1",
+          "text": "I follow the swarm.",
+          "path": "res://assets/audio/voice/locust_flying_move_1.wav"
+        },
+        {
+          "id": "locust_flying_move_2",
+          "text": "Skimming there.",
+          "path": "res://assets/audio/voice/locust_flying_move_2.wav"
+        },
+        {
+          "id": "locust_flying_move_3",
+          "text": "On a new wind.",
+          "path": "res://assets/audio/voice/locust_flying_move_3.wav"
+        }
+      ],
+      "attack": [
+        {
+          "id": "locust_flying_attack_1",
+          "text": "Dive and bite.",
+          "path": "res://assets/audio/voice/locust_flying_attack_1.wav"
+        },
+        {
+          "id": "locust_flying_attack_2",
+          "text": "Find the soft spots.",
+          "path": "res://assets/audio/voice/locust_flying_attack_2.wav"
+        },
+        {
+          "id": "locust_flying_attack_3",
+          "text": "Teeth first.",
+          "path": "res://assets/audio/voice/locust_flying_attack_3.wav"
+        }
+      ],
+      "ready": [
+        {
+          "id": "locust_flying_ready_1",
+          "text": "Wings are humming.",
+          "path": "res://assets/audio/voice/locust_flying_ready_1.wav"
+        }
+      ]
+    },
+    "voice": "Qwen3-TTS VoiceDesign",
+    "direction": "Small winged insect with a high buzzing rasp, clipped words, a fast rhythm and breathless excitement before a dive."
+  },
+  "broodling": {
+    "unit_name": "Broodling",
+    "categories": {
+      "select": [
+        {
+          "id": "broodling_select_1",
+          "text": "I just hatched.",
+          "path": "res://assets/audio/voice/broodling_select_1.wav"
+        },
+        {
+          "id": "broodling_select_2",
+          "text": "Warm things near.",
+          "path": "res://assets/audio/voice/broodling_select_2.wav"
+        },
+        {
+          "id": "broodling_select_3",
+          "text": "Ready to bite.",
+          "path": "res://assets/audio/voice/broodling_select_3.wav"
+        }
+      ],
+      "move": [
+        {
+          "id": "broodling_move_1",
+          "text": "I scurry.",
+          "path": "res://assets/audio/voice/broodling_move_1.wav"
+        },
+        {
+          "id": "broodling_move_2",
+          "text": "Quick little steps.",
+          "path": "res://assets/audio/voice/broodling_move_2.wav"
+        },
+        {
+          "id": "broodling_move_3",
+          "text": "Follow the scent.",
+          "path": "res://assets/audio/voice/broodling_move_3.wav"
+        }
+      ],
+      "attack": [
+        {
+          "id": "broodling_attack_1",
+          "text": "Nip and run.",
+          "path": "res://assets/audio/voice/broodling_attack_1.wav"
+        },
+        {
+          "id": "broodling_attack_2",
+          "text": "Bite the ankle.",
+          "path": "res://assets/audio/voice/broodling_attack_2.wav"
+        },
+        {
+          "id": "broodling_attack_3",
+          "text": "Catch the warm one.",
+          "path": "res://assets/audio/voice/broodling_attack_3.wav"
+        }
+      ],
+      "ready": [
+        {
+          "id": "broodling_ready_1",
+          "text": "I just hatched.",
+          "path": "res://assets/audio/voice/broodling_ready_1.wav"
+        }
+      ]
+    },
+    "voice": "Qwen3-TTS VoiceDesign",
+    "direction": "Newly hatched creature with a thin, cracked high voice and sharp, eager bursts that sound like clicks turning into words."
+  },
+  "brood_larva": {
+    "unit_name": "Brood Larva",
+    "categories": {
+      "select": [
+        {
+          "id": "brood_larva_select_1",
+          "text": "Little one here.",
+          "path": "res://assets/audio/voice/brood_larva_select_1.wav"
+        },
+        {
+          "id": "brood_larva_select_2",
+          "text": "What will I be?",
+          "path": "res://assets/audio/voice/brood_larva_select_2.wav"
+        },
+        {
+          "id": "brood_larva_select_3",
+          "text": "I am growing.",
+          "path": "res://assets/audio/voice/brood_larva_select_3.wav"
+        }
+      ]
+    },
+    "voice": "Qwen3-TTS VoiceDesign",
+    "direction": "Tiny creature with a high, soft, curious voice, wavering syllables and a hesitant wet chirp before speaking."
+  },
+  "captain_vale": {
+    "unit_name": "Captain Vale",
+    "voice": "Qwen3-TTS VoiceDesign",
+    "direction": "A seasoned male field commander from Chicago with a natural, clearly audible Chicago regional accent and Inland North vowel sounds. Strong warm low baritone with light gravel and a slightly weathered voice. Grounded, decisive, clipped radio commands with calm authority, speaking quickly and distinctly. Keep the Chicago accent authentic and understated.",
+    "categories": {
+      "select": [
+        {
+          "id": "captain_vale_select_1",
+          "text": "Vale here. Give me the situation.",
+          "path": "res://assets/audio/voice/captain_vale_select_1.wav"
+        },
+        {
+          "id": "captain_vale_select_2",
+          "text": "What've we got?",
+          "path": "res://assets/audio/voice/captain_vale_select_2.wav"
+        },
+        {
+          "id": "captain_vale_select_3",
+          "text": "I'm with you. Talk to me.",
+          "path": "res://assets/audio/voice/captain_vale_select_3.wav"
+        },
+        {
+          "id": "captain_vale_select_4",
+          "text": "Everyone accounted for?",
+          "path": "res://assets/audio/voice/captain_vale_select_4.wav"
+        },
+        {
+          "id": "captain_vale_select_5",
+          "text": "Captain Vale. What's the plan?",
+          "path": "res://assets/audio/voice/captain_vale_select_5.wav"
+        }
+      ],
+      "move": [
+        {
+          "id": "captain_vale_move_1",
+          "text": "On my way. Stay close.",
+          "path": "res://assets/audio/voice/captain_vale_move_1.wav"
+        },
+        {
+          "id": "captain_vale_move_2",
+          "text": "I'm taking point.",
+          "path": "res://assets/audio/voice/captain_vale_move_2.wav"
+        },
+        {
+          "id": "captain_vale_move_3",
+          "text": "Copy that. Moving up.",
+          "path": "res://assets/audio/voice/captain_vale_move_3.wav"
+        },
+        {
+          "id": "captain_vale_move_4",
+          "text": "Let's move. Watch the corners.",
+          "path": "res://assets/audio/voice/captain_vale_move_4.wav"
+        }
+      ],
+      "attack": [
+        {
+          "id": "captain_vale_attack_1",
+          "text": "Focus your fire.",
+          "path": "res://assets/audio/voice/captain_vale_attack_1.wav"
+        },
+        {
+          "id": "captain_vale_attack_2",
+          "text": "On my mark. Engage.",
+          "path": "res://assets/audio/voice/captain_vale_attack_2.wav"
+        },
+        {
+          "id": "captain_vale_attack_3",
+          "text": "Keep their heads down.",
+          "path": "res://assets/audio/voice/captain_vale_attack_3.wav"
+        },
+        {
+          "id": "captain_vale_attack_4",
+          "text": "With me. Clear that position.",
+          "path": "res://assets/audio/voice/captain_vale_attack_4.wav"
+        },
+        {
+          "id": "captain_vale_attack_5",
+          "text": "Eyes up. I got this one.",
+          "path": "res://assets/audio/voice/captain_vale_attack_5.wav"
+        }
+      ]
+    }
+  },
+  "torchguard": {
+    "unit_name": "Torchguard",
+    "voice": "en-US-DavisNeural",
+    "categories": {
+      "select": [
+        {
+          "id": "torchguard_select_1",
+          "text": "Torchguard standing by.",
+          "path": "res://assets/audio/voice/torchguard_select_1.wav"
+        },
+        {
+          "id": "torchguard_select_2",
+          "text": "Fuel pressure is good.",
+          "path": "res://assets/audio/voice/torchguard_select_2.wav"
+        },
+        {
+          "id": "torchguard_select_3",
+          "text": "Point me at the swarm.",
+          "path": "res://assets/audio/voice/torchguard_select_3.wav"
+        },
+        {
+          "id": "torchguard_select_4",
+          "text": "I can clear that road.",
+          "path": "res://assets/audio/voice/torchguard_select_4.wav"
+        },
+        {
+          "id": "torchguard_select_5",
+          "text": "Both burners are ready.",
+          "path": "res://assets/audio/voice/torchguard_select_5.wav"
+        }
+      ],
+      "move": [
+        {
+          "id": "torchguard_move_1",
+          "text": "Moving up.",
+          "path": "res://assets/audio/voice/torchguard_move_1.wav"
+        },
+        {
+          "id": "torchguard_move_2",
+          "text": "Keeping the burners low.",
+          "path": "res://assets/audio/voice/torchguard_move_2.wav"
+        },
+        {
+          "id": "torchguard_move_3",
+          "text": "I'll take point.",
+          "path": "res://assets/audio/voice/torchguard_move_3.wav"
+        },
+        {
+          "id": "torchguard_move_4",
+          "text": "On that road.",
+          "path": "res://assets/audio/voice/torchguard_move_4.wav"
+        }
+      ],
+      "attack": [
+        {
+          "id": "torchguard_attack_1",
+          "text": "Clear behind me.",
+          "path": "res://assets/audio/voice/torchguard_attack_1.wav"
+        },
+        {
+          "id": "torchguard_attack_2",
+          "text": "Burners on.",
+          "path": "res://assets/audio/voice/torchguard_attack_2.wav"
+        },
+        {
+          "id": "torchguard_attack_3",
+          "text": "I've got the close ones.",
+          "path": "res://assets/audio/voice/torchguard_attack_3.wav"
+        },
+        {
+          "id": "torchguard_attack_4",
+          "text": "Light them up.",
+          "path": "res://assets/audio/voice/torchguard_attack_4.wav"
+        },
+        {
+          "id": "torchguard_attack_5",
+          "text": "Sweeping the lane.",
+          "path": "res://assets/audio/voice/torchguard_attack_5.wav"
+        }
+      ],
+      "ready": [
+        {
+          "id": "torchguard_ready_1",
+          "text": "Torchguard ready to deploy.",
+          "path": "res://assets/audio/voice/torchguard_ready_1.wav"
+        },
+        {
+          "id": "torchguard_ready_2",
+          "text": "Fuel topped off. Where's the convoy?",
+          "path": "res://assets/audio/voice/torchguard_ready_2.wav"
         }
       ]
     }

@@ -12,7 +12,7 @@ Feature: Control production and send workers directly to resources
     When the commander clicks unit "home"
     And the commander right-clicks terrain at (40, <y>)
     And the commander presses "S"
-    And the simulation advances 200 ticks
+    And the simulation advances 1088 ticks
     Then a newly trained Pioneer gathers from "<target>"
 
     Examples:
@@ -33,13 +33,13 @@ Feature: Control production and send workers directly to resources
     And the commander presses "D"
     And the commander presses "A"
     Then "hall" has 3 units in production
-    And player 1 has 200 crystal, 125 aether and 4 supply used
+    And player 1 has 200 crystal, 125 aether and 0 supply used
     And the production controls are captured
     When the commander cancels production slot 2
     And the commander cancels production slot 5
     Then "hall" has 2 units in production
-    And player 1 has 300 crystal, 150 aether and 2 supply used
-    When the simulation advances 640 ticks
+    And player 1 has 300 crystal, 150 aether and 0 supply used
+    When the simulation advances 3200 ticks
     Then player 1 has 2 surviving "rifleman" units
     And player 1 has 0 surviving "breacher" units
 
@@ -58,12 +58,37 @@ Feature: Control production and send workers directly to resources
     Then production at "home" receives no further orders
     When the commander holds "S" to train
     Then "home" eventually has at least 5 units in production
-    And player 1 has 250 crystal, 0 aether and 5 supply used
-    When the simulation advances 200 ticks
+    And player 1 has 250 crystal, 0 aether and 0 supply used
+    When the simulation advances 1088 ticks
     Then player 1 has 1 surviving "pioneer" units
     And "home" eventually has at least 5 units in production
     When the commander releases "S"
-    Then player 1 has 200 crystal, 0 aether and 6 supply used
+    Then player 1 has 200 crystal, 0 aether and 1 supply used
+
+  Scenario: A paid unit waits at full supply and starts when a silo finishes
+    Given an RTS test scenario
+      """
+      {"name":"Waiting for supply","paused":true,"decor":false,"map":{"width":112,"height":72},
+       "units":[{"type":"colony_hub","owner":1,"x":20,"y":37},
+                {"id":"hall","type":"muster_hall","owner":1,"x":42,"y":28},
+                {"id":"builder","type":"pioneer","owner":1,"x":33,"y":35},
+                {"type":"rifleman","owner":1,"count":14,"x":28,"y":15}]}
+      """
+    When the commander clicks unit "hall"
+    And the commander presses "A"
+    And the simulation advances 128 ticks
+    Then "hall" has 1 units in production
+    And player 1 has 350 crystal, 150 aether and 15 supply used
+    When the commander clicks unit "builder"
+    And the commander frames (34, 38) at zoom height 55
+    And the commander presses "B"
+    And the commander presses "S"
+    And the commander places a building at (34, 41)
+    Then "builder" has orders "build"
+    When the simulation advances 2050 ticks
+    Then a finished "silo" stands at (34, 41)
+    And "hall" has 1 units in production
+    And player 1 has 250 crystal, 150 aether and 16 supply used
 
   Scenario: Changing selection stops an active training repeat
     Given an RTS test scenario

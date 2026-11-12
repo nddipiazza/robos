@@ -22,6 +22,7 @@ func _run() -> void:
 	data = root.get_node("RTSData")
 	for setup in FACTIONS:
 		_test_reservations(setup)
+	_test_waiting_for_supply()
 	print("Supply reservation checks: ", "passed" if failures.is_empty() else str(failures))
 	quit(0 if failures.is_empty() else 1)
 
@@ -80,16 +81,17 @@ func _test_reservations(setup: Dictionary) -> void:
 	_check(deployed == 14 and original_cap == 23, "The fixture starts with 14 deployed and 23 capacity")
 	for _job in range(2):
 		_check(sim.issue_command([producer.tag], train).ok, "A paid unit can reserve a slot")
-	if not _check(queue.size() == 2 and _stock(player) == STARTING_STOCK - cost * 2 and player.supply_used == deployed + 2 * supply,
-		"Two queued units reserve their full supply and both resource costs"):
+	if not _check(queue.size() == 2 and _stock(player) == STARTING_STOCK - cost * 2 and player.supply_used == deployed,
+		"Two queued units pay their resource costs before reserving supply"):
 		return
 	sim.issue_command([attacker.tag], "hold_fire")
 	sim.step_ticks(32)
-	_check(queue[0].progress > 0.0, "Production is underway before the provider is attacked")
+	var reserved := supply * (2 if brood else 1)
+	_check(queue[0].progress > 0.0 and player.supply_used == deployed + reserved, "Only jobs that start reserve supply")
 	_check(sim.issue_command([attacker.tag], "attack_target", provider.pos, provider.tag).ok, "An enemy attacks the weakened provider")
 	sim.step_ticks(32)
-	if not _check(not sim.units.has(provider.tag) and player.supply_cap == original_cap - 8 and player.supply_used == deployed + 2 * supply and queue.size() == 2,
-		"Destroying the provider removes capacity and retains both paid reservations"):
+	if not _check(not sim.units.has(provider.tag) and player.supply_cap == original_cap - 8 and player.supply_used == deployed + reserved and queue.size() == 2,
+		"Destroying the provider removes capacity and retains supply for jobs that started"):
 		return
 	var surviving_job: Dictionary = queue[0]
 	var paid_progress: float = surviving_job.progress
@@ -102,8 +104,6 @@ func _test_reservations(setup: Dictionary) -> void:
 		_check(producer.brood_slots == brood_slots + 1, "Cancel also returns exactly one brood slot")
 	_check(not sim.issue_command([producer.tag], "cancel_training", Vector2.ZERO, 0, "1").ok and _stock(player) == STARTING_STOCK - cost,
 		"Canceling the same slot again gives no extra refund")
-	_check(not sim.issue_command([base.tag], "train_" + str(setup.worker)).ok and _stock(player) == STARTING_STOCK - cost and player.supply_used == deployed + supply,
-		"Even the town hall cannot reserve new supply while over capacity")
 	var train_ticks := ceili(float(surviving_job.total_time) / sim.TICK_DT)
 	if needs_power:
 		sim.step_ticks(32)
@@ -131,5 +131,32 @@ func _test_restoration(setup: Dictionary, builder: Dictionary, producer: Diction
 	_check(sites[0].build_progress == 1.0 and player.supply_cap == 23, "Completing the replacement restores its eight supply")
 	_check(producer.production_queue.is_empty() and player.units_trained == 1 and player.supply_used == expected_used and _stock(player) == paid,
 		"The original job deploys exactly once with no extra reservation or resource charge")
-	_check(sim.issue_command([producer.tag], train).ok and player.supply_used == expected_used + trainee.supply_cost and _stock(player) == paid - _cost(trainee),
-		"Restored capacity can reserve a new paid slot")
+	_check(sim.issue_command([producer.tag], train).ok and player.supply_used == expected_used and _stock(player) == paid - _cost(trainee),
+		"A new paid slot leaves supply unchanged until it starts")
+	sim.step_ticks(1)
+	_check(player.supply_used == expected_used + trainee.supply_cost, "The new job reserves supply on its first production tick")
+
+func _test_waiting_for_supply() -> void:
+	faction = "humans"
+	var setup: Dictionary = FACTIONS[0]
+	_load(setup, false)
+	var producer := _unit("producer")
+	var player: Dictionary = sim.players[1]
+	var audio := root.get_node("RTSAudio")
+	audio.reset_stats()
+	sim.issue_command([_unit("attacker").tag], "hold_fire")
+	var supply: int = data.get_unit_def("howitzer").supply_cost
+	_check(sim.issue_command([producer.tag], "train_howitzer").ok, "First howitzer is ordered")
+	sim.step_ticks(1)
+	sim._remove_destroyed_unit(_unit("provider"))
+	_check(sim.issue_command([producer.tag], "train_howitzer").ok, "The queue accepts another paid job over capacity")
+	var waiting: Dictionary = producer.production_queue[1]
+	sim.step_ticks(ceili(float(waiting.total_time) / sim.TICK_DT) + sim.TICK_RATE)
+	var bank := _stock(player)
+	_check(player.units_trained == 1 and player.supply_used == 14 + supply and waiting.progress == 0.0,
+		"The started job finishes over capacity and the next job waits without supply")
+	_check(audio.sfx_counts.get("alert_supply_required", 0) == 1, "Waiting plays the supply warning once")
+	sim.spawn_unit("silo", 1, BUILD_SITE)
+	sim.step_ticks(1)
+	_check(waiting.progress > 0.0 and player.supply_used == 14 + supply * 2 and _stock(player) == bank,
+		"Restoring capacity starts the waiting job without charging its resources again")

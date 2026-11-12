@@ -157,44 +157,162 @@ def gen_autocannon_fire() -> list[float]:
 
 
 def gen_sentry_fire() -> list[float]:
-    """A short coil discharge with a dry kinetic snap and a descending whine."""
-    length = int(0.19 * SAMPLE_RATE)
-    noise = _one_pole_hp(_make_noise(length, 906), 720.0)
+    """A rising rush that bends down in pitch as the missile pulls away."""
+    length = int(0.27 * SAMPLE_RATE)
+    air = _one_pole_lp(_one_pole_hp(_make_noise(length, 906), 280.0), 1600.0)
+    core_phase = 0.0
+    overtone_phase = 0.0
     result = []
-    for i, sample in enumerate(noise):
+    for i, sample in enumerate(air):
         t = i / SAMPLE_RATE
-        snap = sample * _env_ad(t, 0.001, 0.064, 2.2)
-        chirp = math.sin(2 * math.pi * (820.0 * t - 1650.0 * t * t))
-        result.append(_soft_clip(1.3 * snap + 0.45 * chirp * _env_ad(t, 0.003, 0.16, 1.8)))
+        glide = (1.0 + math.tanh((t - 0.074) * 29.0)) * 0.5
+        core_phase += math.tau * (366.0 - 181.0 * glide) / SAMPLE_RATE
+        overtone_phase += math.tau * (746.0 - 352.0 * glide) / SAMPLE_RATE
+        swell = math.sin(math.pi * min(1.0, t / 0.27) ** 0.55) ** 2
+        tone = 0.31 * math.sin(core_phase) + 0.13 * math.sin(overtone_phase)
+        tail = 0.040 * math.sin(core_phase * 3.0) * (1.0 - glide)
+        result.append((tone + tail + sample * 0.11) * swell)
+    return result
+
+
+def gen_sentry_impact() -> list[float]:
+    """A short, padded impact under the launch sound."""
+    length = int(0.09 * SAMPLE_RATE)
+    result = []
+    phase = 0.0
+    for i in range(length):
+        t = i / SAMPLE_RATE
+        phase += math.tau * (125.0 + 65.0 * math.exp(-t * 50.0)) / SAMPLE_RATE
+        tone = math.sin(phase) + 0.20 * math.sin(phase * 2.0)
+        result.append(tone * _env_ad(t, 0.009, 0.077, 2.5))
     return result
 
 
 def gen_mortar_fire() -> list[float]:
-    """Emplaced Mortar: deep siege artillery cannon blast with incoming whistle and heavy shell impact."""
-    dur = 0.52
+    """Emplaced Howitzer: chunky siege cannon crack, weighty low boom, steel breech cycle, and short outdoor tail."""
+    dur = 0.66
     n = int(dur * SAMPLE_RATE)
-    noise = _make_noise(n, 104)
-    low_blast = _one_pole_lp(noise, 650.0)
-    crackle = _one_pole_hp(_one_pole_lp(noise, 3400.0), 400.0)
+    noise_a = _make_noise(n, 104)
+    noise_b = _make_noise(n, 1043)
+    noise_c = _make_noise(n, 1049)
+
+    # Layer 1: Immediate chunky muzzle crack + 14ms ground-plane shock reflection
+    snap_hi = _one_pole_hp(_one_pole_lp(noise_a, 7800.0), 1950.0)
+    crack_mid = _one_pole_hp(_one_pole_lp(noise_a, 2850.0), 380.0)
+    ground_slap = _one_pole_hp(_one_pole_lp(noise_b, 2150.0), 220.0)
+
+    # Layer 2: Weighty dual-band low siege boom (upper-bass chest punch + deep cordite sub)
+    sub_cordite = _one_pole_lp(_one_pole_lp(noise_b, 205.0), 205.0)
+    chest_blast = _one_pole_hp(_one_pole_lp(noise_a, 590.0), 75.0)
+
+    # Layer 3: Heavy steel breech recoil stop, hydro-pneumatic vent & cam lock-back
+    steel_shear = _one_pole_hp(_one_pole_lp(noise_c, 5200.0), 1250.0)
+    iron_clank = _one_pole_hp(_one_pole_lp(noise_c, 1750.0), 400.0)
+    pneum_vent = _one_pole_hp(_one_pole_lp(noise_b, 4800.0), 1650.0)
+
+    # Layer 4: Short outdoor battlefield shockwave dispersion tail
+    tail_air = _one_pole_hp(_one_pole_lp(noise_c, 3400.0), 950.0)
+    tail_roll_mid = _one_pole_hp(_one_pole_lp(noise_b, 1450.0), 290.0)
+    tail_roll_low = _one_pole_hp(_one_pole_lp(_one_pole_lp(noise_c, 520.0), 520.0), 98.0)
+    turb_slow = _one_pole_lp(_one_pole_lp(noise_a, 26.0), 20.0)
+    turb_crack = _one_pole_lp(noise_c, 110.0)
+
+    two_pi = 2.0 * math.pi
     out = [0.0] * n
+
     for i in range(n):
         t = i / SAMPLE_RATE
-        # Initial cannon discharge boom
-        env1 = _env_ad(t, 0.002, 0.28, 1.8)
-        f1 = 46.0 + 180.0 * math.exp(-t * 22.0)
-        cannon = (math.sin(2.0 * math.pi * f1 * t) * 1.2 + low_blast[i] * 1.1 + crackle[i] * 0.55) * env1
-        # Brief artillery shell whistle
-        whistle_env = _env_ad(t - 0.04, 0.02, 0.16, 1.5)
-        f_whistle = 1150.0 - 520.0 * max(0.0, t - 0.04) * 4.0
-        whistle = math.sin(2.0 * math.pi * max(300.0, f_whistle) * t) * whistle_env * 0.22
-        # Secondary impact rumble
-        t2 = t - 0.14
-        impact = 0.0
-        if t2 >= 0.0:
-            env2 = _env_ad(t2, 0.003, 0.35, 1.7)
-            f2 = 38.0 + 130.0 * math.exp(-t2 * 16.0)
-            impact = (math.sin(2.0 * math.pi * f2 * t2) * 1.15 + low_blast[i] * 1.2 + crackle[i] * 0.45) * env2
-        out[i] = _soft_clip(cannon + whistle + impact, 1.9)
+
+        # 1) Immediate chunky muzzle crack (0.000s - 0.052s)
+        n_wave = (
+            (1.0 - 2.1 * (t / 0.0036)) * (1.0 - t / 0.0036) * 1.28
+            if t < 0.0036
+            else 0.0
+        )
+        bark_phase = two_pi * (82.0 * t + (270.0 / 96.0) * (1.0 - math.exp(-t * 96.0)))
+        snap_env = _env_ad(t, 0.0002, 0.024, 2.25)
+        bark_env = _env_ad(t, 0.0004, 0.044, 1.95)
+        direct_crack = (
+            n_wave
+            + snap_hi[i] * snap_env * 1.60
+            + _soft_clip(math.sin(bark_phase) * 1.25 + crack_mid[i] * 2.50, 2.4) * bark_env * 0.98
+        )
+
+        # 14ms ground-bounce blast slap from elevated muzzle
+        slap = 0.0
+        t_slap = t - 0.014
+        if t_slap >= 0.0:
+            slap_env = _env_ad(t_slap, 0.0006, 0.036, 2.05)
+            slap_phase = two_pi * (92.0 * t_slap + (145.0 / 85.0) * (1.0 - math.exp(-t_slap * 85.0)))
+            slap = _soft_clip(ground_slap[i] * 2.20 + math.sin(slap_phase) * 0.85, 1.95) * slap_env * 0.64
+
+        # 2) Weighty low siege boom (0.002s - 0.280s)
+        chest_env = _env_ad(t, 0.0018, 0.145, 1.9)
+        chest_phase = two_pi * (86.0 * t + (95.0 / 48.0) * (1.0 - math.exp(-t * 48.0)))
+        sub_env = _env_ad(t, 0.0035, 0.270, 1.95)
+        sub_phase = two_pi * (43.0 * t + (82.0 / 44.0) * (1.0 - math.exp(-t * 44.0)))
+
+        chest_layer = (math.sin(chest_phase) * 0.70 + chest_blast[i] * 2.25) * chest_env
+        gas_mod = 0.84 + 0.32 * math.sin(sub_phase)
+        sub_layer = (
+            math.sin(sub_phase) * 0.84
+            + math.sin(sub_phase * 2.0) * 0.30
+            + sub_cordite[i] * 4.15 * gas_mod
+        ) * sub_env
+        boom = _soft_clip(chest_layer * 0.78 + sub_layer * 0.92, 1.75)
+
+        # 3) Mechanical breech & hydro-pneumatic recuperator layer (0.048s - 0.250s)
+        mech = 0.0
+        t_stop = t - 0.048
+        if t_stop >= 0.0:
+            stop_env = _env_ad(t_stop, 0.0004, 0.028, 2.35)
+            stop_phase = two_pi * (128.0 * t_stop + (190.0 / 85.0) * (1.0 - math.exp(-t_stop * 85.0)))
+            fm_stop = math.sin(two_pi * 1580.0 * t_stop) * 1.7 * math.exp(-t_stop * 140.0)
+            cradle_slam = math.sin(stop_phase) * 0.55 + math.sin(two_pi * 630.0 * t_stop + fm_stop) * 0.35
+            mech += (cradle_slam + iron_clank[i] * 1.65 + steel_shear[i] * 1.30) * stop_env * 0.44
+
+        t_vent = t - 0.068
+        if t_vent >= 0.0:
+            vent_env = _env_ad(t_vent, 0.010, 0.155, 1.75)
+            mech += (pneum_vent[i] * 1.05 + iron_clank[i] * 0.34) * vent_env * 0.28
+
+        t_cam = t - 0.156
+        if t_cam >= 0.0:
+            cam_env = _env_ad(t_cam, 0.0004, 0.016, 2.5)
+            fm_cam = math.sin(two_pi * 2240.0 * t_cam) * 1.5 * math.exp(-t_cam * 175.0)
+            cam_click = math.sin(two_pi * 860.0 * t_cam + fm_cam) * 0.34
+            mech += (cam_click + steel_shear[i] * 1.35 + iron_clank[i] * 1.10) * cam_env * 0.30
+
+        t_lock = t - 0.192
+        if t_lock >= 0.0:
+            lock_env = _env_ad(t_lock, 0.0005, 0.028, 2.35)
+            lock_phase = two_pi * (114.0 * t_lock + (155.0 / 82.0) * (1.0 - math.exp(-t_lock * 82.0)))
+            fm_lock = math.sin(two_pi * 1840.0 * t_lock) * 1.4 * math.exp(-t_lock * 155.0)
+            breech_seat = math.sin(lock_phase) * 0.60 + math.sin(two_pi * 535.0 * t_lock + fm_lock) * 0.28
+            mech += (breech_seat + iron_clank[i] * 1.45 + steel_shear[i] * 0.92) * lock_env * 0.34
+
+        # 4) Short outdoor artillery shockwave tail (0.024s - 0.660s)
+        tail = 0.0
+        t_tail = t - 0.024
+        if t_tail >= 0.0:
+            air_tex = _clamp(
+                0.76 + 3.1 * abs(turb_slow[i]) + 0.80 * max(0.0, turb_crack[i]),
+                0.42,
+                1.62,
+            )
+            air_env = _env_ad(t_tail, 0.010, 0.175, 2.05)
+            mid_env = _env_ad(t_tail, 0.022, 0.395, 1.95)
+            low_env = _env_ad(t_tail, 0.035, 0.605, 2.15)
+            tail = (
+                tail_air[i] * air_env * 0.65
+                + tail_roll_mid[i] * mid_env * 1.15
+                + tail_roll_low[i] * low_env * 2.35
+            ) * air_tex * 0.47
+
+        mix = direct_crack * 0.96 + slap + boom * 0.76 + mech + tail
+        front_punch = 1.0 + 0.27 * math.exp(-t * 52.0)
+        out[i] = _soft_clip(mix * front_punch, 1.24)
+
     return out
 
 
@@ -860,12 +978,285 @@ def gen_support_pulse(frequency: float, duration: float) -> list[float]:
     return samples
 
 
+def gen_volatile_burst() -> list[float]:
+    """A short organic pop followed by acid hiss and scattered droplets."""
+    duration = 0.52
+    rng = random.Random(9061)
+    noise = [rng.uniform(-1.0, 1.0) for _ in range(int(SAMPLE_RATE * duration))]
+    hiss = _one_pole_hp(_one_pole_lp(noise, 5800), 640)
+    thump = _one_pole_lp(noise, 290)
+    samples = []
+    for i, (sizzle, pressure) in enumerate(zip(hiss, thump)):
+        t = i / SAMPLE_RATE
+        pop = math.sin(2.0 * math.pi * (132 * t - 107 * t * t)) * math.exp(-25 * t)
+        droplets = sum(math.exp(-((t - hit) / 0.011) ** 2) for hit in (0.058, 0.094, 0.141, 0.207))
+        samples.append(0.65 * pop + pressure * math.exp(-19 * t) +
+                       sizzle * (0.55 * math.exp(-5.5 * t) + 0.25 * droplets))
+    return samples
+
+
+def gen_brood_hatch(frequency: float, duration: float, seed: int) -> list[float]:
+    """Soft tissue movement with a short shell crack and falling pitch."""
+    count = int(SAMPLE_RATE * duration)
+    noise = _one_pole_lp(_make_noise(count, seed), 1850.0)
+    samples = []
+    for index, grain in enumerate(noise):
+        t = index / SAMPLE_RATE
+        pitch = math.sin(math.tau * frequency * (t - 0.9 * t * t))
+        swell = _env_ad(t, 0.035, duration - 0.035)
+        crack = math.exp(-((t - 0.075) / 0.018) ** 2)
+        samples.append(pitch * swell * 0.42 + grain * (0.58 * crack + 0.23 * swell))
+    return samples
+
+
+def gen_ridge_pistols() -> list[float]:
+    count = int(0.24 * SAMPLE_RATE)
+    noise = _one_pole_hp(_make_noise(count, 4829), 900.0)
+    samples = []
+    for index, grain in enumerate(noise):
+        time = index / SAMPLE_RATE
+        sound = 0.0
+        for onset in (0.0, 0.038):
+            pulse = time - onset
+            body = math.sin(math.tau * (260.0 * pulse - 390.0 * pulse * pulse))
+            sound += (0.65 * grain + 0.35 * body) * _env_ad(pulse, 0.001, 0.075)
+        samples.append(_soft_clip(sound, 1.6))
+    return samples
+
+
+def gen_ridge_charge_throw() -> list[float]:
+    samples = []
+    for index, grain in enumerate(_make_noise(int(0.23 * SAMPLE_RATE), 1055)):
+        time = index / SAMPLE_RATE
+        flick = _env_ad(time, 0.003, 0.033)
+        swish = _env_ad(time - 0.025, 0.036, 0.13)
+        samples.append(grain * (0.55 * flick + 0.28 * swish) + math.sin(math.tau * 920.0 * time) * flick * 0.21)
+    return _one_pole_hp(samples, 240.0)
+
+
+def gen_ridge_charge_impact() -> list[float]:
+    count = int(0.45 * SAMPLE_RATE)
+    noise = _one_pole_lp(_make_noise(count, 1081), 1400.0)
+    samples = []
+    for index, grain in enumerate(noise):
+        time = index / SAMPLE_RATE
+        crack = _env_ad(time, 0.002, 0.095)
+        thump = math.sin(math.tau * (104.0 * time - 63.0 * time * time))
+        samples.append(_soft_clip(grain * crack * 1.1 + thump * _env_ad(time, 0.009, 0.38) * 0.72))
+    return samples
+
+
+def gen_gnarl_tech_ready(hatchling_pool: bool) -> list[float]:
+    length = 0.58 if hatchling_pool else 0.72
+    pulse_starts = (0.0, 0.13, 0.22, 0.31) if hatchling_pool else (0.0, 0.17, 0.40)
+    cutoff = 820.0 if hatchling_pool else 480.0
+    rng_seed = 8751 if hatchling_pool else 8752
+    noise = _one_pole_lp(_make_noise(int(length * SAMPLE_RATE), rng_seed), cutoff)
+    samples = []
+    for index, grain in enumerate(noise):
+        time = index / SAMPLE_RATE
+        sound = 0.0
+        for count, onset in enumerate(pulse_starts):
+            pulse = time - onset
+            pitch = 140.0 + count * 47.0 if hatchling_pool else 85.0 + count * 15.0
+            chamber = math.sin(math.tau * (pitch * pulse - 130.0 * pulse * pulse))
+            sound += (0.57 * chamber + 0.55 * grain) * _env_ad(pulse, 0.024, 0.22)
+        samples.append(_soft_clip(sound, 1.3))
+    return samples
+
+
+def gen_concord_resonance(notes: tuple[float, ...], sweep: float) -> list[float]:
+    """Layer clean resonances with staggered attacks."""
+    duration = 0.55 + 0.075 * (len(notes) - 1)
+    samples = []
+    for index in range(int(duration * SAMPLE_RATE)):
+        time = index / SAMPLE_RATE
+        sound = 0.0
+        for layer, frequency in enumerate(notes):
+            pulse = time - layer * 0.075
+            phase = math.tau * frequency * (pulse + sweep * pulse * pulse)
+            resonance = math.sin(phase) + 0.24 * math.sin(phase * 2.003)
+            sound += resonance * _env_ad(pulse, 0.065, 0.48) / len(notes)
+        samples.append(sound)
+    return samples
+
+
+def gen_canticle_storm() -> list[float]:
+    """A six-second electrical storm with a distinct opening strike and fading crackle."""
+    rng = random.Random(587)
+    samples = []
+    low_noise = 0.0
+    for index in range(6 * SAMPLE_RATE):
+        time = index / SAMPLE_RATE
+        noise = rng.uniform(-1.0, 1.0)
+        low_noise = low_noise * 0.88 + noise * 0.12
+        wind_down = min(1.0, (6.0 - time) / 0.7)
+        strike = math.exp(-10.0 * time)
+        crackle = math.exp(-29.0 * ((time + 0.08) % 0.43))
+        hum = math.sin(math.tau * (84.0 * time + 3.0 * math.sin(time * 1.2)))
+        samples.append(wind_down * (hum * (0.10 + 0.21 * strike) + low_noise * (0.52 + 0.8 * strike) + noise * crackle * 0.22))
+    return samples
+
+
+def gen_rupture_bile(impact: bool, light: bool = False) -> list[float]:
+    """A pressurized wet launch or a short bubbling acid impact."""
+    duration = 0.32 if light else (0.65 if impact else 0.49)
+    rng = random.Random(371 if impact else (372 if light else 373))
+    fluid = 0.0
+    samples = []
+    for index in range(int(duration * SAMPLE_RATE)):
+        time = index / SAMPLE_RATE
+        noise = rng.uniform(-1.0, 1.0)
+        fluid = fluid * 0.83 + noise * 0.17
+        tone = math.sin(math.tau * (130.0 * time + (-90.0 if impact else 120.0) * time * time))
+        envelope = _env_ad(time, 0.012, duration - 0.012)
+        samples.append(envelope * (0.35 * tone + fluid * 1.2 + noise * (0.22 if impact else 0.08)))
+    return samples
+
+
+def gen_spine_line() -> list[float]:
+    """Five rising chitin strikes with a low bed of shifting soil."""
+    rng = random.Random(613)
+    samples = []
+    earth = 0.0
+    for index in range(int(0.52 * SAMPLE_RATE)):
+        time = index / SAMPLE_RATE
+        noise = rng.uniform(-1.0, 1.0)
+        earth = 0.90 * earth + 0.10 * noise
+        strike = 0.0
+        for number in range(5):
+            phase = time - 0.038 * number
+            if 0.0 <= phase < 0.2:
+                strike += math.exp(-24.0 * phase) * (noise * 0.25 + math.sin(math.tau * (82 + 12 * number) * phase) * 0.4)
+        samples.append((strike + earth * 0.35) * min(1.0, (0.52 - time) * 8.0))
+    return samples
+
+
+def gen_brood_air(kind: str) -> list[float]:
+    """Layer chitin clicks and a resonant air pulse for flying Brood weapons."""
+    duration, frequency, clicks, seed = {
+        "corrosion_spore": (0.29, 210.0, 2, 491),
+        "corrosion_spray": (0.48, 128.0, 5, 492),
+        "broodling_launch": (0.54, 103.0, 2, 493),
+        "locust_launch": (0.61, 174.0, 7, 494),
+    }[kind]
+    rng = random.Random(seed)
+    samples = []
+    resonance = 0.0
+    for index in range(int(duration * SAMPLE_RATE)):
+        time = index / SAMPLE_RATE
+        noise = rng.uniform(-1.0, 1.0)
+        resonance = resonance * 0.85 + noise * 0.15
+        pulse = sum(math.exp(-33.0 * (time - 0.041 * onset)) for onset in range(clicks) if time >= 0.041 * onset)
+        sweep = math.sin(math.tau * (frequency * time - 38.0 * time * time + 0.3 * math.sin(time * 39.0)))
+        samples.append(_env_ad(time, 0.008, duration - 0.008) * (0.34 * sweep + pulse * (0.28 * noise + 0.36 * resonance)))
+    return samples
+
+
+def gen_workshop_cue(cue: str) -> list[float]:
+    duration, pulses, frequency, color, seed = {
+        "workshop_flame": (0.58, 5, 71.0, 850.0, 561),
+        "sentinel_missile": (0.72, 1, 142.0, 4400.0, 562),
+        "vortex_missile": (0.34, 1, 390.0, 3100.0, 563),
+        "atlas_airburst": (0.49, 4, 216.0, 2850.0, 564),
+        "atlas_precision": (0.59, 1, 86.0, 1700.0, 565),
+        "harrier_rockets": (0.44, 2, 202.0, 3800.0, 566),
+        "sky_airburst": (0.40, 2, 315.0, 5100.0, 567),
+        "sky_defender_cannon": (0.68, 1, 119.0, 1850.0, 568),
+        "bastion_railgun": (0.21, 1, 380.0, 3450.0, 569),
+        "dreadnought_laser": (0.19, 1, 710.0, 1250.0, 570),
+        "fortified_hub_cannon": (0.58, 2, 95.0, 1530.0, 571),
+    }[cue]
+    count = int(duration * SAMPLE_RATE)
+    noise = _one_pole_lp(_make_noise(count, seed), color)
+    samples = []
+    for index, hiss in enumerate(noise):
+        time = index / SAMPLE_RATE
+        attack = 0.025 if cue == "workshop_flame" else 0.004
+        pulse = sum(_env_ad(time - offset * 0.038, attack, duration * 0.53, 2.6) for offset in range(pulses))
+        low = math.sin(math.tau * frequency * time * (1.1 - 0.65 * time / duration))
+        samples.append(pulse * (0.42 * low + 1.2 * hiss))
+    return samples
+
+
+def gen_specter_cue(cue: str) -> list[float]:
+    """Use distinct transients for the rifle, lock, EMP, and strike."""
+    duration, start, end, cutoff, seed = {
+        "shade_rifle": (0.27, 250.0, 67.0, 2700.0, 531),
+        "shade_snipe_lock": (0.58, 290.0, 810.0, 1700.0, 532),
+        "shade_snipe_fire": (0.51, 380.0, 52.0, 3300.0, 533),
+        "shade_emp_launch": (0.31, 510.0, 170.0, 3700.0, 534),
+        "shade_emp_burst": (0.62, 960.0, 68.0, 1250.0, 535),
+        "shade_strike_warning": (0.82, 380.0, 540.0, 860.0, 536),
+        "shade_strike_blast": (1.65, 112.0, 31.0, 740.0, 537),
+        "watchkeeper_jam_launch": (0.38, 325.0, 1120.0, 2350.0, 574),
+        "systems_jammer_impact": (0.53, 1020.0, 208.0, 1950.0, 575),
+        "watchkeeper_armor_launch": (0.31, 360.0, 105.0, 3170.0, 576),
+        "armor_breaker_impact": (0.81, 184.0, 45.0, 910.0, 577),
+        "bastion_deploy": (0.49, 510.0, 125.0, 1640.0, 578),
+        "dreadnought_beam": (1.28, 115.0, 940.0, 1480.0, 579),
+        "dreadnought_beam_hit": (0.95, 282.0, 51.0, 1740.0, 580),
+        "dreadnought_jump": (0.94, 84.0, 810.0, 1120.0, 581),
+        "dreadnought_arrival": (0.78, 810.0, 65.0, 1520.0, 582),
+        "sunseer_pulsar": (0.31, 1320.0, 515.0, 2750.0, 583),
+        "sunseer_revelation": (0.62, 450.0, 1160.0, 1180.0, 584),
+        "stasis_seed": (0.49, 345.0, 620.0, 1950.0, 585),
+        "stasis_ward_detonate": (0.77, 1470.0, 155.0, 2450.0, 586),
+    }[cue]
+    count = int(duration * SAMPLE_RATE)
+    noise = _one_pole_lp(_make_noise(count, seed), cutoff)
+    phase = 0.0
+    samples = []
+    for index, hiss in enumerate(noise):
+        time = index / SAMPLE_RATE
+        progress = time / duration
+        phase += math.tau * (start + (end - start) * progress) / SAMPLE_RATE
+        tone = math.sin(phase) + 0.24 * math.sin(phase * 2.02)
+        envelope = _env_ad(time, 0.008 if end > start else 0.002, duration * 0.96, 2.2)
+        accent = 0.6 + 0.4 * math.cos(math.tau * progress * 3.0) if end > start else math.exp(-time * 17.0)
+        samples.append(envelope * (tone * (0.5 + 0.35 * accent) + hiss * (0.25 + 1.25 * accent)))
+    return samples
+
+
 GENERATORS = {
     # Gunfire & Ranged Weapons
     "rifle_fire": (gen_rifle_fire, 0.90),
+    "shade_rifle": (lambda: gen_specter_cue("shade_rifle"), 0.86),
+    "shade_snipe_lock": (lambda: gen_specter_cue("shade_snipe_lock"), 0.70),
+    "shade_snipe_fire": (lambda: gen_specter_cue("shade_snipe_fire"), 0.93),
+    "shade_emp_launch": (lambda: gen_specter_cue("shade_emp_launch"), 0.82),
+    "shade_emp_burst": (lambda: gen_specter_cue("shade_emp_burst"), 0.90),
+    "shade_strike_warning": (lambda: gen_specter_cue("shade_strike_warning"), 0.76),
+    "shade_strike_blast": (lambda: gen_specter_cue("shade_strike_blast"), 0.94),
+    "workshop_flame": (lambda: gen_workshop_cue("workshop_flame"), 0.84),
+    "harrier_rockets": (lambda: gen_workshop_cue("harrier_rockets"), 0.84),
+    "sky_airburst": (lambda: gen_workshop_cue("sky_airburst"), 0.73),
+    "sky_defender_cannon": (lambda: gen_workshop_cue("sky_defender_cannon"), 0.87),
+    "bastion_railgun": (lambda: gen_workshop_cue("bastion_railgun"), 0.77),
+    "dreadnought_laser": (lambda: gen_workshop_cue("dreadnought_laser"), 0.66),
+    "fortified_hub_cannon": (lambda: gen_workshop_cue("fortified_hub_cannon"), 0.85),
+    "watchkeeper_jam_launch": (lambda: gen_specter_cue("watchkeeper_jam_launch"), 0.80),
+    "systems_jammer_impact": (lambda: gen_specter_cue("systems_jammer_impact"), 0.81),
+    "watchkeeper_armor_launch": (lambda: gen_specter_cue("watchkeeper_armor_launch"), 0.82),
+    "armor_breaker_impact": (lambda: gen_specter_cue("armor_breaker_impact"), 0.88),
+    "bastion_deploy": (lambda: gen_specter_cue("bastion_deploy"), 0.77),
+    "dreadnought_beam": (lambda: gen_specter_cue("dreadnought_beam"), 0.80),
+    "dreadnought_beam_hit": (lambda: gen_specter_cue("dreadnought_beam_hit"), 0.92),
+    "dreadnought_jump": (lambda: gen_specter_cue("dreadnought_jump"), 0.84),
+    "dreadnought_arrival": (lambda: gen_specter_cue("dreadnought_arrival"), 0.82),
+    "sunseer_pulsar": (lambda: gen_specter_cue("sunseer_pulsar"), 0.69),
+    "sunseer_revelation": (lambda: gen_specter_cue("sunseer_revelation"), 0.77),
+    "stasis_seed": (lambda: gen_specter_cue("stasis_seed"), 0.72),
+    "stasis_ward_detonate": (lambda: gen_specter_cue("stasis_ward_detonate"), 0.84),
+    "sentinel_missile": (lambda: gen_workshop_cue("sentinel_missile"), 0.92),
+    "vortex_missile": (lambda: gen_workshop_cue("vortex_missile"), 0.83),
+    "atlas_airburst": (lambda: gen_workshop_cue("atlas_airburst"), 0.86),
+    "atlas_precision": (lambda: gen_workshop_cue("atlas_precision"), 0.90),
+    "ridge_pistols": (gen_ridge_pistols, 0.85),
     "breach_charge": (gen_breach_charge, 0.92),
     "autocannon_fire": (gen_autocannon_fire, 0.92),
-    "sentry_fire": (gen_sentry_fire, 0.84),
+    "sentry_fire": (gen_sentry_fire, 0.38),
+    "sentry_impact": (gen_sentry_impact, 0.17),
     "mortar_fire": (gen_mortar_fire, 0.95),
     "acid_spit": (gen_acid_spit, 0.85),
     "corrosive_lob": (gen_corrosive_lob, 0.88),
@@ -882,6 +1273,37 @@ GENERATORS = {
     # Combat Impacts & Shields
     "shield_hit": (gen_shield_hit, 0.80),
     "explosion_splash": (gen_explosion_splash, 0.94),
+    "volatile_burst": (gen_volatile_burst, 0.88),
+    "ridge_charge_throw": (gen_ridge_charge_throw, 0.75),
+    "ridge_charge_impact": (gen_ridge_charge_impact, 0.88),
+    "hatchling_pool_ready": (lambda: gen_gnarl_tech_ready(True), 0.80),
+    "transit_start": (lambda: gen_concord_resonance((155, 234), 0.70), 0.55),
+    "transit_ready": (lambda: gen_concord_resonance((310, 465, 620), -0.10), 0.60),
+    "transit_mode_ready": (lambda: gen_concord_resonance((123, 246, 370, 494), 0.08), 0.62),
+    "forge_relay_fire": (lambda: gen_concord_resonance((216, 465, 788), -0.83), 0.69),
+    "bastion_phase_fire": (lambda: gen_concord_resonance((110, 146, 327), -0.51), 0.78),
+    "bastion_barrier": (lambda: gen_concord_resonance((260, 392, 523), 0.36), 0.57),
+    "rift_nova_launch": (lambda: gen_concord_resonance((140, 211, 610), 0.52), 0.67),
+    "rift_nova_blast": (lambda: gen_concord_resonance((72, 197, 311), -0.63), 0.88),
+    "mirage_glaive_fire": (lambda: gen_concord_resonance((220, 362, 937), -0.69), 0.70),
+    "mirage_transfer": (lambda: gen_concord_resonance((170, 290, 551), 0.75), 0.60),
+    "mirage_arrival": (lambda: gen_concord_resonance((220, 443, 662), -0.27), 0.58),
+    "canticle_spark": (lambda: gen_concord_resonance((329, 493, 880), -0.46), 0.43),
+    "scribe_feedback": (lambda: gen_concord_resonance((523, 261, 130), -0.65), 0.66),
+    "canticle_storm": (gen_canticle_storm, 0.70),
+    "duskblade_slash": (lambda: gen_concord_resonance((375, 506, 873), -0.95), 0.68),
+    "archon_shockwave": (lambda: gen_concord_resonance((94, 141, 421, 666), -0.52), 0.77),
+    "archon_warp": (lambda: gen_concord_resonance((114, 171, 228, 342), 0.73), 0.56),
+    "archon_ready": (lambda: gen_concord_resonance((154, 231, 308, 462), -0.08), 0.57),
+    "rupture_discharge": (lambda: gen_rupture_bile(False, light=True), 0.68),
+    "rupture_launch": (lambda: gen_rupture_bile(False), 0.74),
+    "rupture_impact": (lambda: gen_rupture_bile(True), 0.85),
+    "spine_line": (gen_spine_line, 0.78),
+    "corrosion_spore": (lambda: gen_brood_air("corrosion_spore"), 0.72),
+    "corrosion_spray": (lambda: gen_brood_air("corrosion_spray"), 0.67),
+    "broodling_launch": (lambda: gen_brood_air("broodling_launch"), 0.79),
+    "locust_launch": (lambda: gen_brood_air("locust_launch"), 0.76),
+    "bile_warren_ready": (lambda: gen_gnarl_tech_ready(False), 0.82),
     # Abilities & Mode Transforms
     "surge_activate": (gen_surge_activate, 0.85),
     "charge_activate": (gen_charge_activate, 0.85),
@@ -894,6 +1316,9 @@ GENERATORS = {
     "silo_gate": (gen_silo_gate, 0.82),
     "vital_restore": (lambda: gen_support_pulse(360, 0.26), 0.50),
     "brood_inject": (lambda: gen_support_pulse(182, 0.39), 0.52),
+    "brood_larva_ready": (lambda: gen_brood_hatch(230, 0.18, 241), 0.24),
+    "brood_egg_morph": (lambda: gen_brood_hatch(145, 0.36, 242), 0.45),
+    "brood_egg_hatch": (lambda: gen_brood_hatch(185, 0.30, 243), 0.51),
     "burrow_shift": (lambda: gen_support_pulse(118, 0.25), 0.48),
     "aegis_restore": (lambda: gen_support_pulse(530, 0.39), 0.56),
     # Unit & Structure Destruction

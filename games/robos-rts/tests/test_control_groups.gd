@@ -153,6 +153,7 @@ func _run() -> void:
 	var replacement: Dictionary = sim.spawn_unit("rifleman", 1, Vector2(20, 20))
 	main._select_tags([replacement.tag])
 	key(1, true)
+	main.world_3d = null
 	main.apply_ui_state({"local_player": 2})
 	check(main.control_groups.is_empty() and main.selected_tags.is_empty(), "Changing player clears the previous player's groups and selection")
 	check(root.get_node("RTSAudio").local_player_id == 2, "Changing player keeps the audio listener on the viewed faction")
@@ -162,12 +163,47 @@ func _run() -> void:
 	main._on_scenario_loaded("reset")
 	check(main.control_groups.is_empty() and main._last_group_press.is_empty(), "Scenario restart clears groups and double-tap history")
 	_test_exclusive_groups(sim)
+	_test_double_click_selection(sim)
 	main.hud.free()
 	main.world_3d = null
 	camera.free()
 	main.free()
 	print(JSON.stringify({"checks": checks, "failures": failures}))
 	quit(0 if failures.is_empty() else 1)
+
+func _test_double_click_selection(sim: Node) -> void:
+	sim.load_scenario_dict({"paused": true, "map": {"width": 200, "height": 100}})
+	main.world_3d = null
+	main.apply_ui_state({"local_player": 1})
+	var first: Dictionary = sim.spawn_unit("pioneer", 1, Vector2(20, 20))
+	var second: Dictionary = sim.spawn_unit("pioneer", 1, Vector2(32, 20))
+	var other: Dictionary = sim.spawn_unit("rifleman", 1, Vector2(40, 20))
+	var hidden: Dictionary = sim.spawn_unit("pioneer", 1, Vector2(48, 20))
+	hidden["gas_extracting"] = true
+	sim.spawn_unit("pioneer", 2, Vector2(56, 20))
+	sim.spawn_unit("pioneer", 1, Vector2(32, 74))
+	sim.spawn_unit("pioneer", 1, Vector2(175, 20))
+
+	var position := Vector2(270, 270)
+	_click_unit(position)
+	check(main.selected_tags == [first.tag], "A single click selects only the clicked worker")
+	_click_unit(position, true)
+	check(main.selected_tags == [first.tag, second.tag], "A double press selects only visible, on-screen workers of the same owner")
+	main._select_tags([other.tag, first.tag])
+	_click_unit(position, true, true)
+	check(main.selected_tags == [other.tag, first.tag, second.tag], "Shift double-click adds visible matching workers without duplicates")
+
+func _click_unit(position: Vector2, double_click: bool = false, shift: bool = false) -> void:
+	var button := InputEventMouseButton.new()
+	button.button_index = MOUSE_BUTTON_LEFT
+	button.position = position
+	button.shift_pressed = shift
+	button.pressed = true
+	button.double_click = double_click
+	main._unhandled_input(button)
+	button.pressed = false
+	button.double_click = false
+	main._unhandled_input(button)
 
 func _test_exclusive_groups(sim: Node) -> void:
 	main._set_local_player(1)

@@ -1,0 +1,31 @@
+extends RefCounted
+
+# Presentation only. Attack cadence and damage remain in the simulation.
+const WEAPONS := {
+	"aegis_warden": {"kind": "beam", "socket": "Muzzle", "secondary": "", "recoil": 0.04, "pitch": 1.5, "kick": 0.035, "recover": 0.19, "flash": 0.3, "color": "#8cdfff"},
+	"bastion_walker": {"kind": "beam", "socket": "Muzzle", "secondary": "MuzzleLeft", "recoil": 0.19, "pitch": 3.0, "kick": 0.04, "recover": 0.25, "flash": 0.42, "color": "#7fdfff"},
+	"bile_crawler": {"kind": "acid", "socket": "Muzzle", "secondary": "", "recoil": 0.17, "pitch": -6.0, "kick": 0.042, "recover": 0.24, "flash": 0.36, "color": "#b4ff4a"},
+	"blight_hurler": {"kind": "lob", "socket": "MortarVent", "secondary": "", "recoil": 0.27, "pitch": 7.5, "kick": 0.05, "recover": 0.33, "flash": 0.5, "color": "#9ef748"},
+	"breacher": {"kind": "lob", "socket": "Muzzle", "secondary": "MuzzleLeft", "recoil": 0.24, "pitch": 6.5, "kick": 0.045, "recover": 0.26, "flash": 0.4, "color": "#ff9e44"},
+	"brood_keeper": {"kind": "acid", "socket": "Muzzle", "secondary": "QuillOrigin", "recoil": 0.16, "pitch": -4.5, "kick": 0.042, "recover": 0.24, "flash": 0.34, "color": "#ccf263"},
+	"carapace_bulwark": {"kind": "melee", "socket": "ClawTip", "secondary": "", "recoil": 0.42, "pitch": -10.0, "kick": 0.065, "recover": 0.32, "flash": 0.52, "color": "#ff9654"},
+	"crownspire": {"kind": "beam", "socket": "CrownLance", "secondary": "", "recoil": 0.09, "pitch": 1.5, "kick": 0.08, "recover": 0.42, "flash": 0.72, "color": "#97fffd"},
+	"duskblade": {"kind": "melee", "socket": "BladeTip", "secondary": "", "recoil": 0.34, "pitch": -8.0, "kick": 0.05, "recover": 0.40, "flash": 0.65, "color": "#d3c1ff"},
+	"forager": {"kind": "melee", "socket": "HarvestTip", "secondary": "", "recoil": 0.24, "pitch": -7.0, "kick": 0.04, "recover": 0.2, "flash": 0.24, "color": "#ffbe82"},
+	"howitzer": {"kind": "cannon", "socket": "Muzzle", "secondary": "", "recoil": 0.26, "pitch": 3.0, "kick": 0.038, "recover": 0.2, "flash": 0.52, "color": "#ffc266"},
+	"kestrel_assault": {"kind": "ballistic", "socket": "Muzzle", "secondary": "MuzzleLeft", "recoil": 0.19, "pitch": 3.5, "kick": 0.032, "recover": 0.19, "flash": 0.34, "color": "#ffbe66"},
+	"kestrel_interceptor": {"kind": "missile", "socket": "Muzzle", "secondary": "MuzzleLeft", "recoil": 0.13, "pitch": 2.5, "kick": 0.036, "recover": 0.22, "flash": 0.3, "color": "#ffba6b"},
+	"lattice_archon": {"kind": "shockwave", "socket": "Muzzle", "secondary": "", "recoil": 0.10, "pitch": 2.5, "kick": 0.075, "recover": 0.33, "flash": 0.9, "color": "#a6d0ff"},
+	"mirage_adept": {"kind": "glaive", "socket": "Muzzle", "secondary": "", "recoil": 0.14, "pitch": 4.0, "kick": 0.035, "recover": 0.23, "flash": 0.50, "color": "#95eaff"},
+	"mote": {"kind": "arc", "socket": "HarvestTip", "secondary": "", "recoil": 0.11, "pitch": -4.0, "kick": 0.032, "recover": 0.18, "flash": 0.25, "color": "#7eeeff"},
+	"needlewing": {"kind": "acid", "socket": "Muzzle", "secondary": "", "recoil": 0.18, "pitch": -5.0, "kick": 0.036, "recover": 0.21, "flash": 0.28, "color": "#98ff88"},
+	"pioneer": {"kind": "arc", "socket": "WeldTip", "secondary": "", "recoil": 0.1, "pitch": -3.5, "kick": 0.035, "recover": 0.22, "flash": 0.24, "color": "#8be8ff"},
+	"rifleman": {"kind": "ballistic", "socket": "Muzzle", "secondary": "", "recoil": 0.14, "pitch": 4.5, "kick": 0.025, "recover": 0.13, "flash": 0.28, "color": "#ffe396"},
+	"ridge_scout": {"kind": "ballistic", "socket": "Muzzle", "secondary": "MuzzleLeft", "recoil": 0.1, "pitch": 3.0, "kick": 0.024, "recover": 0.12, "flash": 0.24, "color": "#ffe396"},
+	"rupture_crawler": {"kind": "acid", "socket": "Muzzle", "secondary": "", "recoil": 0.20, "pitch": -5.0, "kick": 0.065, "recover": 0.30, "flash": 0.55, "color": "#b3e45c"},
+	"skirmisher": {"kind": "missile", "socket": "Muzzle", "secondary": "", "recoil": 0.15, "pitch": 3.5, "kick": 0.034, "recover": 0.22, "flash": 0.32, "color": "#6be2ff"},
+	"skitterling": {"kind": "melee", "socket": "ClawTip", "secondary": "", "recoil": 0.33, "pitch": -9.0, "kick": 0.032, "recover": 0.15, "flash": 0.28, "color": "#fff0ad"},
+	"spire_walker": {"kind": "beam", "socket": "Muzzle", "secondary": "MuzzleLeft", "recoil": 0.11, "pitch": 3.0, "kick": 0.045, "recover": 0.25, "flash": 0.42, "color": "#72e8ff"},
+	"storm_scribe": {"kind": "missile", "socket": "Muzzle", "secondary": "", "recoil": 0.12, "pitch": 4.0, "kick": 0.045, "recover": 0.24, "flash": 0.28, "color": "#accbff"},
+	"sunblade": {"kind": "melee", "socket": "", "secondary": "", "recoil": 0.17, "pitch": -4.0, "kick": 0.038, "recover": 0.22, "flash": 0.44, "color": "#2ea8ff"},
+}

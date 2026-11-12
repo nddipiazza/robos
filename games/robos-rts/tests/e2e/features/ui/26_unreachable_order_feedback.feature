@@ -86,6 +86,9 @@ Feature: Shortened routes mark their reachable endpoints
     Then unit "scout" is within 1.6 units of (56.0, 27.0)
     When the commander presses "1"
     And the commander presses "R"
+    And the simulation advances 63 ticks
+    Then player 1 has 1 surviving "silo_retracted" units
+    When the simulation advances 1 ticks
     Then player 1 has 1 surviving "silo" units
 
   Scenario: A click inside a cliff marks its reachable near edge

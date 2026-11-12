@@ -26,6 +26,8 @@ Starfall Command is a Godot 4.3 real-time strategy game. Play the **Ashfall Sign
 
 Starfall Command opens on a title screen. Choose **Campaign** for Ashfall Signal, **Skirmish** for 1 vs. AI, **Scenarios** for practice and showcases, or **Map Editor** to create a battlefield. **Settings** contains sound, overhead health bars, mouse edge scrolling and a choice of Standard or Grid command hotkeys. Grid uses **QWERT**, **ASDFG**, **ZXCVB**, and **UHJKL** when the card needs a fourth row. Hotkeys named below use the Standard layout. Navigate with the mouse or the arrow keys and **Enter**. **Esc** returns from a setup page.
 
+The official soundtrack is [*Bloodlines* by Pathless Land](https://pathlessland.bandcamp.com/album/bloodlines-2), used with permission from [Mattowarrior](https://www.youtube.com/user/Mattowarrior777). The full album plays in order across the title screen and matches and turns down during dialogue. **Music volume** in Settings controls the soundtrack separately from sound effects. **Master volume** controls both.
+
 During a battle, **F8 → Main menu** pauses the match. **Resume Match** restores the battlefield, camera, and control groups. The editor also has a **Main Menu** button and keeps its current draft while the game is open.
 
 Press **Alt+Enter** or **Shift+F11** to switch between fullscreen and your previous window mode. The title screen’s **Settings** menu and the **F8** pause menu both have a **Toggle fullscreen** button.
@@ -51,6 +53,7 @@ In **Skirmish**, pick a map, both factions, and a difficulty. AI profiles includ
 1. **Cut the Signal.** Start on the southeast road and follow it through the lower junction, town square and detention convoy to the relay headquarters at the top of the map. Keep Captain Vale alive and destroy the headquarters. Two groups of survivors join you along the route. Target all six propaganda statues to complete the optional objective.
 2. **The White Ridge Job.** Gather resources, train an army and attack the Directorate excavation. A Muster Hall with a completed Research Module can train Triage Specialists. Resource caches and the besieged militia outpost offer help along the way. Destroy the dig site's Hub, Hall and Workshop to expose the artifact, then send a soldier to collect it.
 3. **Hold for Dawn.** Defend two bridges and cover the river against airborne Gnarl Brood. The rescue transport enters when the 20:00 evacuation clock reaches zero and must reach the landing pad. As optional objectives, rescue three militia squads and bring both field artifacts back to the Colony Hub. The HUD shows the evacuation clock and objectives over the battlefield. Watch your approaches to spot incoming waves.
+4. **The Last Road.** Take two Torchguards and two Triage Specialists west to Bracken. Claim the settlement, then escort its trucks north to the colony ships until at least 50 colonists reach safety. Garrison the roadside bunkers and keep infantry with each convoy. If a truck is destroyed, protect the survivors on foot. Hard and Brutal fail at 20 colonist losses. Three guarded Brood samples lie off the convoy route.
 
 The three battlefields measure 132×153, 140×152 and 168×161 Starfall world units. The first two maps use walkable terrain outlines to keep squads on the roads, plazas and paths between them. The defense map puts the outpost on the southeast plateau with two diagonal river crossings.
 
@@ -59,6 +62,9 @@ The three battlefields measure 132×153, 140×152 and 168×161 Starfall world un
 | Cut the Signal | Captain Vale and Riflemen. Reinforcements join as you clear the road. |
 | The White Ridge Job | Pioneers, Riflemen and Triage Specialists. Build Colony Hubs, Provision Silos, Aether Taps and Muster Halls. Attach a Research Module to train Triage Specialists. |
 | Hold for Dawn | Adds Field Bunkers, Sentry Turrets and the Field Armory. Bunkers shelter up to four infantry. The Field Armory researches level-one infantry weapons and armor. |
+| The Last Road | Adds Torchguards at Muster Halls with a Research Module, and Fabrication Modules for parallel Rifleman production. The settlement's Contract Post can call up to three squads of four Roadwardens for 250 Crystal per squad. |
+
+Player research unlocks in **Hold for Dawn** on Normal, Hard and Brutal. The Research Module in **The White Ridge Job** unlocks Triage Specialist training. The prebuilt Field Armory offers **+1 Infantry Weapons** and **+1 Infantry Armor** for 100 Crystal and 100 Aether each. Each takes **2:40 on the mission clock**. Both take **5:20** in one Armory queue. Ground troops can pick up Crystal and Aether caches just beyond either bridge to fund early research.
 
 Choose a difficulty in **Campaign** before launching. **Restart Mission**, **Retry Mission**, and **Replay Mission** open a difficulty picker with the current setting selected. **Next Mission** carries that setting forward.
 
@@ -68,7 +74,7 @@ Starting in **The White Ridge Job**, select a completed Muster Hall and press **
 | --- | --- |
 | Casual | Enemies have half health. Raids are smaller, and Hold for Dawn uses ground waves with no Field Armory or Sentry Turret. |
 | Normal | Standard defenders, raids and evacuation waves. |
-| Hard | Extra road and cache guards, earlier attacks, and upgraded Brood incursions inside the perimeter. |
+| Hard | Extra road and cache guards, earlier attacks, and Brood incursions inside the perimeter. The White Ridge Directorate gets +1 weapons, +1 armor and stronger healing on Hard and Brutal. |
 | Brutal | Heavier garrisons and raids, enemy focus fire on medics, and earlier air attacks. Hold for Dawn also spawns a destructible reinforcement tunnel. |
 
 Cyan markers show the current objective and gold markers show bonus objectives within current vision. The mission panel lists objectives even while their locations are hidden. **Space** or **Esc** skips a cutscene. The campaign saves completed missions locally and unlocks the next mission on victory. **F8** opens pause settings, restart and the main menu. **Resume Mission** returns to the active attempt during the same game session.
@@ -83,7 +89,7 @@ The militia calls come at the same point on the evacuation clock on every diffic
 | 14:00 | Lowland ruins north of the river |
 | 9:00 | Western road beyond the west crossing |
 
-Each squad trades fire with nearby Brood until friendly ground troops reach its position. The stranded militia survive the staged fight and join your army on contact. A soldier already at a beacon can recruit them as soon as they appear. The new recruits move toward your nearest rescuer and get six game seconds of cover to withdraw. Give them a route back to the bunkers before that cover expires.
+Each distress call gives its squad three game minutes of cover. The Brood can kill the militia once that cover runs out. Friendly ground troops can recruit any survivors on contact, and a soldier already at the beacon can recruit the squad as soon as it appears. The new recruits move toward your nearest rescuer and get six game seconds of cover to withdraw.
 
 Keep Riflemen in both starting bunkers, leave idle Pioneers nearby for Auto-Repair, and build extra Sentry Turrets to cover the river and landing pad. Use **P**, then click the terrain to patrol, and send two Riflemen per bridge to scout the crossings. Take Triage Specialists with the rescue expeditions. The later rescue sites have heavier escorts on Hard and Brutal. Waves get closer together in the final minutes, and on Brutal a destructible tunnel opens with 3:45 remaining. Hold for Dawn runs at 1× on Casual and Normal, 1.2× on Hard, and 1.4× on Brutal. Those speeds affect wall-clock time while the evacuation clock and distress milestones use game time.
 
@@ -295,7 +301,7 @@ Producers have a five-slot queue. Active jobs show progress in the queue and abo
 
 Tap a training hotkey to queue one unit. Hold it to keep queuing one at a time after a short delay. Hold **Shift** when clicking a training button or pressing its hotkey to order up to five units at once. Orders fill the shortest queues across eligible selected buildings as resources, supply and queue space allow.
 
-Right-click a queued unit in the selected building's production panel to cancel that slot. Its crystal and aether costs are refunded, its reserved supply is released, and the rest of the queue keeps its order.
+Training orders pay crystal and aether when queued. Each unit claims supply when its production starts. A job at the front waits for free capacity and plays a “Supply required” alert. Right-click a unit in the production panel to cancel its slot and refund its costs. Canceling a job that has started also releases its supply.
 
 With a worker-producing building selected, right-click a visible crystal field or your completed Aether Tap to rally new workers straight to gathering. The teal rally flag marks a resource target. Rally to open ground to move new workers there instead.
 
