@@ -327,8 +327,11 @@ function authenticatePlayerRequest({ queryAuth = '', queryAs = '', cookieVal = '
   }
 
   if (isLoopback && options.allowLoopbackDefault !== false && players.length > 0) {
-    // Prefer nicholas-dipiazza if present on local host, otherwise first player
-    const preferred = players.find((p) => p.uid === 'nicholas-dipiazza') || players[0];
+    let osUser = '';
+    try { osUser = String(os.userInfo().username || '').toLowerCase(); } catch {}
+    const preferred =
+      (osUser && players.find((p) => p.uid.includes(osUser) || p.email.toLowerCase().startsWith(`${osUser}@`))) ||
+      players[0];
     return {
       ok: true,
       via: 'loopback-default',

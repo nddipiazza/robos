@@ -51,34 +51,34 @@ describe('Dynamically Generated 2-Player Hangman — End-to-End Verification', (
 
       const seedPeople = [
         {
-          uid: 'nicholas-dipiazza',
-          displayName: 'Nicholas DiPiazza',
-          firstName: 'Nicholas',
-          nickname: 'Nick',
-          gamerTag: 'IllusionistNick',
+          uid: 'alex-rivera',
+          displayName: 'Alex Rivera',
+          firstName: 'Alex',
+          nickname: 'Alex',
+          gamerTag: 'ArcadeAlex',
           avatar: '🧙‍♂️',
           color: '#00bcd4',
-          email: 'nick@example.com',
+          email: 'alex@example.com',
         },
         {
-          uid: 'diana-arrington',
-          displayName: 'Diana Arrington',
-          firstName: 'Diana',
-          nickname: 'Diana',
-          gamerTag: 'PaladinDiana',
+          uid: 'sam-chen',
+          displayName: 'Sam Chen',
+          firstName: 'Sam',
+          nickname: 'Sam',
+          gamerTag: 'PixelSam',
           avatar: '🛡️',
           color: '#ec4899',
-          email: 'diana@example.com',
+          email: 'sam@example.com',
         },
         {
-          uid: 'isabella-dipiazza',
-          displayName: 'Isabella DiPiazza',
-          firstName: 'Bella',
-          nickname: 'Bella',
-          gamerTag: 'BellaD',
+          uid: 'jordan-patel',
+          displayName: 'Jordan Patel',
+          firstName: 'Jordan',
+          nickname: 'Jordan',
+          gamerTag: 'SynthJordan',
           avatar: '🌟',
           color: '#eab308',
-          email: 'bella@example.com',
+          email: 'jordan@example.com',
         },
       ];
 
@@ -90,9 +90,9 @@ describe('Dynamically Generated 2-Player Hangman — End-to-End Verification', (
       const ep = await srv.listen({ httpPort: 0, httpsPort: 0, host: '127.0.0.1', enableHttps: true });
 
       const players = loadTheaterPlayers({ configDir: tmpConfigDir, seedPeople });
-      const nick = players.find((p) => p.uid === 'nicholas-dipiazza');
-      const diana = players.find((p) => p.uid === 'diana-arrington');
-      const bella = players.find((p) => p.uid === 'isabella-dipiazza');
+      const alex = players.find((p) => p.uid === 'alex-rivera');
+      const sam = players.find((p) => p.uid === 'sam-chen');
+      const jordan = players.find((p) => p.uid === 'jordan-patel');
 
       // 1. Verify random starter selection across 30 fresh initial states
       const activeGame = srv.runtime.getActiveGame();
@@ -101,55 +101,55 @@ describe('Dynamically Generated 2-Player Hangman — End-to-End Verification', (
 
       const startersSeen = new Set();
       for (let i = 0; i < 30; i++) {
-        const st = activeGame.compiled.createInitialState([nick, diana], {});
+        const st = activeGame.compiled.createInitialState([alex, sam], {});
         startersSeen.add(st.players[st.chooserIdx].uid);
       }
       assert.equal(startersSeen.size, 2, 'Both players should be randomly selected to start across matches');
 
-      // 2. Connect Nick, Diana, and Bella over WSS using their personal Google Doc tokens!
+      // 2. Connect Alex, Sam, and Jordan over WSS using their personal Google Doc tokens!
       const wssUrl = `wss://127.0.0.1:${ep.httpsPort}/ws`;
-      const wsNick = await connectWebSocketClient(`${wssUrl}?auth=${nick.authToken}`);
-      const wsDiana = await connectWebSocketClient(`${wssUrl}?auth=${diana.authToken}`);
-      const wsBella = await connectWebSocketClient(`${wssUrl}?auth=${bella.authToken}`);
+      const wsAlex = await connectWebSocketClient(`${wssUrl}?auth=${alex.authToken}`);
+      const wsSam = await connectWebSocketClient(`${wssUrl}?auth=${sam.authToken}`);
+      const wsJordan = await connectWebSocketClient(`${wssUrl}?auth=${jordan.authToken}`);
 
-      let nickSnap = null;
-      let dianaSnap = null;
-      wsNick.on('message', (raw) => {
+      let alexSnap = null;
+      let samSnap = null;
+      wsAlex.on('message', (raw) => {
         const m = JSON.parse(raw);
-        if (m.type === 'snapshot') nickSnap = m.snapshot;
+        if (m.type === 'snapshot') alexSnap = m.snapshot;
       });
-      wsDiana.on('message', (raw) => {
+      wsSam.on('message', (raw) => {
         const m = JSON.parse(raw);
-        if (m.type === 'snapshot') dianaSnap = m.snapshot;
+        if (m.type === 'snapshot') samSnap = m.snapshot;
       });
 
       const matchStarted = waitWsMessage(
-        wsDiana,
+        wsSam,
         (m) => m.type === 'snapshot' && m.snapshot?.matchStatus === 'playing',
       );
-      wsNick.sendJson({ type: 'join_seat' });
-      wsDiana.sendJson({ type: 'join_seat' });
+      wsAlex.sendJson({ type: 'join_seat' });
+      wsSam.sendJson({ type: 'join_seat' });
       await matchStarted;
 
-      // 3. Verify 3rd player (Bella) is strictly blocked from joining the 2-player Hangman game!
-      const bellaErrP = waitWsMessage(wsBella, (m) => m.type === 'action_error');
-      wsBella.sendJson({ type: 'join_seat' });
-      const bellaErr = await bellaErrP;
-      assert.equal(bellaErr.code, 'MAX_PLAYERS_REACHED');
-      assert.match(bellaErr.error, /No more than 2 players allowed/i);
+      // 3. Verify 3rd player (Jordan) is strictly blocked from joining the 2-player Hangman game!
+      const jordanErrP = waitWsMessage(wsJordan, (m) => m.type === 'action_error');
+      wsJordan.sendJson({ type: 'join_seat' });
+      const jordanErr = await jordanErrP;
+      assert.equal(jordanErr.code, 'MAX_PLAYERS_REACHED');
+      assert.match(jordanErr.error, /No more than 2 players allowed/i);
 
       const wsByUid = {
-        'nicholas-dipiazza': wsNick,
-        'diana-arrington': wsDiana,
+        'alex-rivera': wsAlex,
+        'sam-chen': wsSam,
       };
       const snapByUid = () => ({
-        'nicholas-dipiazza': nickSnap,
-        'diana-arrington': dianaSnap,
+        'alex-rivera': alexSnap,
+        'sam-chen': samSnap,
       });
 
-      // 4. Play Round 1: Chooser sets "ROBOS THEATER", Guesser solves it letter-by-letter!
-      const r1ChooserUid = dianaSnap.gameView.chooserUid;
-      const r1GuesserUid = dianaSnap.gameView.guesserUid;
+      // 4. Play Round 1: Chooser sets "ROBOS AI!", Guesser solves it letter-by-letter!
+      const r1ChooserUid = samSnap.gameView.chooserUid;
+      const r1GuesserUid = samSnap.gameView.guesserUid;
       assert.notEqual(r1ChooserUid, r1GuesserUid);
 
       // Guesser trying to set_phrase is rejected
@@ -200,13 +200,13 @@ describe('Dynamically Generated 2-Player Hangman — End-to-End Verification', (
 
       // 5. Advance to Round 2 -> Verify Phrase Chooser strictly alternates!
       const round2P = waitWsMessage(
-        wsNick,
+        wsAlex,
         (m) => m.type === 'snapshot' && m.snapshot?.gameView?.round === 2,
       );
-      wsNick.sendJson({ type: 'game_action', action: { type: 'next_round' } });
+      wsAlex.sendJson({ type: 'game_action', action: { type: 'next_round' } });
       await round2P;
 
-      const r2View = nickSnap.gameView;
+      const r2View = alexSnap.gameView;
       assert.equal(r2View.round, 2);
       assert.equal(r2View.phase, 'choosing');
       assert.equal(r2View.chooserUid, r1GuesserUid, 'Round 2 Phrase Chooser must alternate to Round 1 Guesser!');
@@ -225,11 +225,11 @@ describe('Dynamically Generated 2-Player Hangman — End-to-End Verification', (
 
       const r2OverP = Promise.all([
         waitWsMessage(
-          wsNick,
+          wsAlex,
           (m) => m.type === 'snapshot' && m.snapshot?.gameView?.phase === 'round_over',
         ),
         waitWsMessage(
-          wsDiana,
+          wsSam,
           (m) => m.type === 'snapshot' && m.snapshot?.gameView?.phase === 'round_over',
         ),
       ]);
@@ -238,16 +238,16 @@ describe('Dynamically Generated 2-Player Hangman — End-to-End Verification', (
         action: { type: 'guess_phrase', phrase: 'godot four' },
       });
       await r2OverP;
-      assert.equal(nickSnap.gameView.roundResult, 'won');
+      assert.equal(alexSnap.gameView.roundResult, 'won');
 
       // 6. Advance to Round 3 -> Verify Phrase Chooser alternates back to Round 1 Chooser!
       const round3P = waitWsMessage(
-        wsNick,
+        wsAlex,
         (m) => m.type === 'snapshot' && m.snapshot?.gameView?.round === 3,
       );
-      wsDiana.sendJson({ type: 'game_action', action: { type: 'next_round' } });
+      wsSam.sendJson({ type: 'game_action', action: { type: 'next_round' } });
       await round3P;
-      assert.equal(nickSnap.gameView.chooserUid, r1ChooserUid, 'Round 3 Phrase Chooser must alternate back!');
+      assert.equal(alexSnap.gameView.chooserUid, r1ChooserUid, 'Round 3 Phrase Chooser must alternate back!');
 
       // 7. Validate rendering all Hangman states inside real Godot 4 Engine!
       const godotBin = findGodotBin();
@@ -257,9 +257,9 @@ describe('Dynamically Generated 2-Player Hangman — End-to-End Verification', (
           viewsFile,
           JSON.stringify({
             samples: [
-              { view: snapsGuessing[r1ChooserUid].gameView, me: nick, lobby: {} },
-              { view: snapsGuessing[r1GuesserUid].gameView, me: diana, lobby: {} },
-              { view: r1EndView, me: diana, lobby: {} },
+              { view: snapsGuessing[r1ChooserUid].gameView, me: alex, lobby: {} },
+              { view: snapsGuessing[r1GuesserUid].gameView, me: sam, lobby: {} },
+              { view: r1EndView, me: sam, lobby: {} },
             ],
           }),
           'utf8',
@@ -281,9 +281,9 @@ describe('Dynamically Generated 2-Player Hangman — End-to-End Verification', (
         assert.match(gdOut, /VALIDATION_OK/);
       }
 
-      wsNick.close();
-      wsDiana.close();
-      wsBella.close();
+      wsAlex.close();
+      wsSam.close();
+      wsJordan.close();
     } finally {
       if (srv) await srv.close();
       fs.rmSync(tmpConfigDir, { recursive: true, force: true });

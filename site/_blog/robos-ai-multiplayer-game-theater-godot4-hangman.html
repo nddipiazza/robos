@@ -1,0 +1,135 @@
+---
+title: "RobOS AI Multiplayer Game Theater: Dynamic Godot 4 HTTPS Games, Per-Player Google Doc Launchers, and 2-Player Hangman"
+nav_label: "AI Multiplayer Game Theater"
+date: 2026-11-12 23:00:00 +0000
+date_label: "Nov 12, 2026"
+tags:
+  - "Party Games"
+  - "Godot 4"
+  - "Google Drive"
+  - "AI Agents"
+summary: "We built <a href=\"/game-theater/\">RobOS AI Multiplayer Game Theater</a> (<code>packages/game-theater</code>), a dynamic multiplayer game stage where each player enters through a personal 1-button Google Doc (<code>?auth=&lt;256-bit-token&gt;</code>) into a <strong>Godot 4.3 HTTPS WebAssembly Client</strong>. Starting from an empty stage, any authenticated RobOS Game User in the lobby can ask the RobOS Agent to generate or modify both the authoritative Node.js multiplayer server (<code>server.js</code>) and the Godot 4 GDScript client (<code>client.gd</code>) live — verified end-to-end by dynamically generating a 2-player game of <strong>Hangman</strong> with random Round 1 starter selection, alternating Phrase Chooser turns, server-side secret masking, and vector outline symbol font rendering."
+description: "How RobOS AI Multiplayer Game Theater combines per-player Google Doc capability launchers, a Godot 4.3 HTTPS/WSS WebAssembly lobby, and live dual-validated AI generation of Node.js multiplayer servers and GDScript clients to build 2-player Hangman on the fly."
+og_image: /assets/blog/game-theater/02-godot-hangman-match.png
+og_image_alt: "Live 2-player Hangman match running inside the RobOS AI Multiplayer Game Theater Godot 4.3 HTTPS WebAssembly Client with custom gallows canvas, masked phrase, A-Z letter buttons, lobby seats, and live chat"
+---
+<div class="blog-body">
+  <figure class="blog-fig">
+    <img src="{{ '/assets/blog/game-theater/02-godot-hangman-match.png' | relative_url }}" alt="Live 2-player Hangman match running inside the RobOS AI Multiplayer Game Theater Godot 4.3 HTTPS WebAssembly Client with custom gallows canvas, masked phrase, A-Z letter buttons, lobby seats, and live chat" loading="lazy" width="1440" height="900">
+    <figcaption><strong>2-Player Hangman Inside the Godot 4.3 HTTPS Web Client.</strong> Starting from an empty stage, the RobOS Agent dynamically generated both the authoritative multiplayer <code>server.js</code> and the Godot 4 <code>client.gd</code> stage — enforcing a strict 2-player seat cap, randomly picking the Round 1 Phrase Chooser, alternating roles every round, and drawing the gallows procedurally via <code>Control._draw()</code>.</figcaption>
+  </figure>
+
+  <p><strong>Why start with a blank stage instead of a fixed game?</strong> Most multiplayer party platforms ship a hardcoded catalog of mini-games. With <a href="{{ '/game-theater/' | relative_url }}">RobOS AI Multiplayer Game Theater</a> (<code>packages/game-theater</code>), we inverted the model: the app boots as an empty multiplayer lobby backed by an authoritative Node.js HTTP/HTTPS + WebSocket server (<code>:19228</code> / <code>:19229</code>) and a <strong>Godot 4.3 HTTPS WebAssembly Client</strong>. Once players join the lobby through their personal Google Docs, <em>any</em> authenticated RobOS Game User can describe a brand-new multiplayer game — or ask the RobOS Agent to change the active game’s rules, scoring, or visuals — and watch the stage hot-reload live across every connected browser.</p>
+
+  <h2>1. Architecture: Per-Player Google Docs → Node VM Server → Godot 4 WebAssembly Stage</h2>
+
+  <figure class="blog-fig">
+    <img src="{{ '/assets/blog/game-theater/game-theater-architecture.jpg' | relative_url }}" alt="RobOS AI Multiplayer Game Theater 4-column architecture diagram showing Per-Player Google Docs with 256-bit auth tokens, the HTTPS and WSS Game Theater Server with Sandboxed Node VM and Vector Symbol Font endpoints, the Dynamic RobOS Agent Studio with Dual Validation Loop, and the Godot 4.3 WebAssembly Client" loading="lazy" width="1600" height="900">
+    <figcaption><strong>End-to-End Multiplayer Architecture.</strong> Capability-token Google Docs authenticate each player into the HTTPS/WSS server, where the RobOS Agent compiles and validates <code>server.js</code> + <code>client.gd</code> before hot-mounting the stage inside every player’s Godot 4 WebAssembly client.</figcaption>
+  </figure>
+
+  <pre class="mermaid">
+flowchart LR
+  subgraph Docs["1. Per-Player Google Docs (Drive API)"]
+    direction TB
+    D1["Player 1 Google Doc<br/>1-Click Launch (?auth=256-bit-token)"]
+    D2["Player 2 Google Doc<br/>1-Click Launch (?auth=256-bit-token)"]
+  end
+
+  subgraph Server["2. Game Theater HTTPS + WSS Server (:19228 / :19229)"]
+    direction TB
+    AUTH["HMAC Session &amp; Seat Gate<br/>Verifies RobOS Game User &amp; maxPlayers"]
+    VM["Sandboxed Node VM Runtime<br/>createInitialState · onPlayerAction · getPlayerView"]
+    FONT["Vector Symbol Font Endpoint<br/>/api/fonts/symbols2.ttf · dejavu.ttf"]
+  end
+
+  subgraph Agent["3. Dynamic RobOS Agent Studio"]
+    direction TB
+    PROMPT["Prompt from Any Lobby Player<br/>Generate New Game / Modify Active Game"]
+    VAL["Dual Validation &amp; Self-Repair Loop<br/>Node VM Check + Headless Godot 4.3 Compiler"]
+    PROMPT --> VAL
+  end
+
+  subgraph Godot["4. Godot 4.3 HTTPS WebAssembly Client"]
+    direction TB
+    LOBBY["TheaterClient.gd<br/>Lobby Presence, Seats, Chat &amp; AI Prompt UI"]
+    STAGE["GameSandboxHost.gd<br/>Hot-Mounts GDScript.new() Control Stage"]
+    LOBBY <--> STAGE
+  end
+
+  D1 --> AUTH
+  D2 --> AUTH
+  AUTH --> VM
+  VM <--> LOBBY
+  LOBBY --> PROMPT
+  VAL --> VM
+  VAL --> STAGE
+  FONT --> LOBBY
+  </pre>
+
+  <h2>2. Passwordless Player Identity via Per-Player Google Docs</h2>
+  <p>Typing passwords or pairing codes on phones, tablets, or laptops before a quick game slows everyone down. Following the same capability-launcher pattern we built for <a href="{{ '/google-calendar/' | relative_url }}">RobOS Google Calendar</a> and <a href="{{ '/blog/robos-shopping-lists-google-docs-and-mobile-form/' | relative_url }}">RobOS Shopping Lists</a>, <code>packages/game-theater/lib/player-doc-sync.js</code> provisions a dedicated <code>RobOS AI Multiplayer Game Theater</code> folder in Google Drive containing:</p>
+  <ul>
+    <li><strong>One Personal Google Doc per Player (<code>RobOS Game Theater — &lt;Player&gt; (Player Launch Doc)</code>):</strong> Each player receives a cryptographically random 256-bit token embedded in a prominent launch button (<code>?auth=&lt;token&gt;</code>) and shared exclusively with that player’s Google account via Drive permissions (<code>role: 'reader'</code>).</li>
+    <li><strong>HMAC-Signed Session Cookie + Dual HTTPS Delivery:</strong> Clicking the launch button exchanges the capability token for an <code>HttpOnly</code> HMAC-SHA256 session cookie (<code>robos_theater_player</code>) over either the outbound HTTPS tunnel or the LAN ECDSA P-256 HTTPS server on <code>:19229</code> (generated automatically by <code>lib/tls-cert.js</code> so Godot 4’s WebAssembly <code>SharedArrayBuffer</code> / Secure Context requirements are satisfied on local Wi-Fi too).</li>
+    <li><strong>Host Directory Google Doc:</strong> An owner-only index doc keeps quick links to every player’s launch document in one place.</li>
+  </ul>
+
+  <div class="blog-fig-grid">
+    <figure class="blog-fig">
+      <img src="{{ '/assets/blog/game-theater/01-studio-overview.png' | relative_url }}" alt="RobOS AI Multiplayer Game Theater desktop Electron studio showing synthetic players with synced Google Docs, Play in Godot 4 buttons, and the dynamically generated Hangman server.js inspector" loading="lazy" width="1440" height="900">
+      <figcaption><strong>Desktop Game Theater Studio (<code>packages/game-theater</code>).</strong> Manage players, sync per-player Google Docs, inspect or hot-reload <code>server.js</code> and <code>client.gd</code>, or open isolated per-player Godot 4 windows.</figcaption>
+    </figure>
+    <figure class="blog-fig">
+      <img src="{{ '/assets/blog/game-theater/03-per-player-google-doc.png' | relative_url }}" alt="Rendered per-player Google Doc launcher showing the 1-click Launch RobOS AI Multiplayer Game Theater button and LAN HTTPS fallback link" loading="lazy" width="1440" height="900">
+      <figcaption><strong>Per-Player Google Doc Pass.</strong> Shared only with that player’s Google account; 1 click signs them straight into the Godot 4 multiplayer lobby as their verified RobOS Game User.</figcaption>
+    </figure>
+  </div>
+
+  <h2>3. Dual-Validated Dynamic Generation: Building 2-Player Hangman Live</h2>
+  <p>Whether triggered from the desktop studio, CLI, or directly inside the Godot 4 Web Client by any player in the lobby, <code>lib/agent-builder.js</code> asks the configured RobOS Agent (<code>robos-lib/ai-agent</code>) to emit a complete JSON game cartridge containing <code>manifest</code>, CommonJS <code>serverJs</code>, and Godot 4.3 <code>clientGd</code>. Before any cartridge reaches connected players, it must pass a two-stage compiler gate (with automatic error-feedback repair retries if either check fails):</p>
+  <ol>
+    <li><strong>Restricted Node VM Server Contract Check (<code>lib/game-runtime.js</code>):</strong> Compiles <code>server.js</code> inside an isolated <code>node:vm</code> context (no filesystem or network access), verifies <code>meta</code>, calls <code>createInitialState(mockPlayers)</code>, and asserts that <code>getPlayerView(state, viewerUid)</code> returns valid per-player dictionaries without leaking opponent secrets.</li>
+    <li><strong>Headless Godot 4.3 GDScript Compiler &amp; Render Check (<code>godot/scripts/validate_client.gd</code>):</strong> Runs <code>godot4 --headless -s res://scripts/validate_client.gd</code> to compile <code>client.gd</code> with <code>GDScript.reload()</code>, instantiate the <code>Control</code> node, and pump both player views and empty waiting states through <code>apply_view(view, me, lobby)</code> to catch Godot 4 strict type-inference errors before broadcast.</li>
+  </ol>
+
+  <p>Using this live pipeline, we prompted the empty stage to create <strong>2-Player Hangman</strong>:</p>
+  <ul>
+    <li><strong>Strict 2-Player Cap (<code>minPlayers: 2, maxPlayers: 2</code>):</strong> Once two players claim seats, any third player attempting <code>join_seat</code> receives an explicit <code>MAX_PLAYERS_REACHED</code> rejection while still being able to watch or chat in the lobby.</li>
+    <li><strong>Random Starter, Strictly Alternating Phrase Chooser:</strong> Round 1 picks <code>chooserIdx</code> via <code>crypto.randomInt(0, 2)</code>; every <code>next_round</code> advances <code>chooserIdx = (state.chooserIdx + 1) % 2</code> so both players alternate setting phrases and solving them.</li>
+    <li><strong>Zero-Leak Secret Phrase Masking:</strong> During the <code>choosing</code> and <code>guessing</code> phases, <code>getPlayerView(state, viewerUid)</code> sends <code>secretPhrase: null</code> and only the masked pattern (<code>R O _ O _   T _ E _ T E R</code>) to the Guesser, revealing the full phrase to both players only when <code>phase === 'round_over'</code>.</li>
+  </ul>
+
+  <h2>4. Solving Broken Emoji Tofu Boxes in Godot 4 WebAssembly</h2>
+  <p>When we first opened the exported Godot 4.3 WebAssembly client in a live desktop window, Unicode emojis across headers, buttons, and multi-codepoint ZWJ player avatars (such as <code>🧙‍♂️</code> = <code>U+1F9D9 U+200D U+2642 U+FE0F</code>) rendered as hex tofu boxes. Investigating with headless Godot 4 shaping tests revealed two subtle engine details:</p>
+  <ul>
+    <li>Godot 4’s built-in <code>ThemeDB.fallback_font</code> bundles only Latin/Cyrillic <code>OpenSans</code> (even basic symbols like <code>▶</code> and <code>✓</code> are absent).</li>
+    <li>Attaching Linux’s <code>NotoColorEmoji.ttf</code> passes <code>FontFile.has_char()</code> (because the <code>cmap</code> table lists every emoji), <strong>but</strong> Godot 4’s <code>wasm32</code> FreeType build does not rasterize PNG-compressed <code>CBDT/CBLC</code> color bitmap tables in WebAssembly.</li>
+  </ul>
+  <p>We fixed this cleanly in <code>lib/theater-server.js</code> and <code>godot/scripts/TheaterClient.gd</code> by serving lightweight, pure <strong>TrueType vector outline symbol fonts</strong> (<code>NotoSansSymbols2-Regular.ttf</code>, <code>NotoSansSymbols-Regular.ttf</code>, and <code>DejaVuSans.ttf</code>) from <code>/api/fonts/{symbols2,symbols,dejavu}.ttf</code>, attaching them via <code>FontFile.data</code> to <code>ThemeDB.fallback_font.fallbacks</code>, stripping ZWJ/variation selectors (<code>U+200D</code>, <code>U+FE0F</code>), and verifying every codepoint through <code>_has_glyph()</code> before rendering.</p>
+
+  <h2>5. Install (From Source), Launch &amp; Run the E2E Suite</h2>
+  <div class="blog-log"># 1. Install the GNOME "(From Source)" launcher icon &amp; menu entry
+$ node scripts/source-shortcuts/source-shortcuts.cjs install game-theater
+
+# 2. Start the HTTP (:19228) + LAN HTTPS (:19229) server &amp; sync per-player Google Docs
+$ node packages/game-theater/serve.js
+$ node packages/game-theater/bin/game-theater.js sync-docs
+
+# 3. Dynamically generate a 2-player Hangman game via the RobOS Agent
+$ node packages/game-theater/bin/game-theater.js generate \
+    "Create a 2-player game of Hangman (max 2 players), randomly select starter on Round 1 then alternate being the Phrase Chooser." \
+    --title "Hangman"
+
+# 4. Run the unit + real headless Chrome WebAssembly + Godot 4 compiler E2E suite
+$ node --test packages/robos-test/tests/game-theater/unit.test.js \
+              packages/robos-test/tests/game-theater/hangman-e2e.test.js
+✔ Dynamically Generated 2-Player Hangman — End-to-End Verification (2/2 pass)
+✔ RobOS AI Multiplayer Game Theater (2/2 pass)</div>
+</div>
+<div class="blog-links">
+  <a href="{{ '/game-theater/' | relative_url }}">RobOS AI Multiplayer Game Theater Docs →</a>
+  <a href="{{ '/party-game/' | relative_url }}">RobOS Party Game Docs →</a>
+  <a href="{{ '/google-calendar/' | relative_url }}">Google Doc Capability Pattern →</a>
+  <span class="blog-commits">Commits: <a href="https://github.com/nddipiazza/robos/commit/3889f775">3889f775</a>, <a href="https://github.com/nddipiazza/robos/commit/92ac4967">92ac4967</a></span>
+</div>

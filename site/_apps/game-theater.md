@@ -15,6 +15,17 @@ icon: game-theater.svg
 
 **RobOS AI Multiplayer Game Theater** (`packages/game-theater`) starts with a blank multiplayer stage and lets any authenticated RobOS Game User dynamically create, play, and evolve multiplayer games on the fly using the RobOS Agent.
 
+![RobOS AI Multiplayer Game Theater Architecture]({{ '/assets/blog/game-theater/game-theater-architecture.jpg' | relative_url }})
+
+```mermaid
+flowchart LR
+  D1["Player Google Doc<br/>1-Click Launch (?auth=256-bit-token)"] --> AUTH["Game Theater HTTPS/WSS Server<br/>(:19228 / :19229) + Node VM"]
+  AUTH <--> GODOT["Godot 4.3 HTTPS Web Client<br/>Lobby + GameSandboxHost.gd"]
+  GODOT --> AGENT["RobOS Agent Builder<br/>Node VM + Headless Godot 4 Check"]
+  AGENT --> AUTH
+  AGENT --> GODOT
+```
+
 ## How it works
 
 1. **Per-Player Google Doc Launchers**: Using the same Google Drive v3 capability-token launcher architecture as [RobOS Google Calendar]({{ '/google-calendar/' | relative_url }}) and [RobOS Shopping Lists]({{ '/shopping-lists/' | relative_url }}), each RobOS player gets their own personal Google Doc (`RobOS Game Theater — <Player> (Player Launch Doc)`) with a 1-click Launch Button (`?auth=<256-bit-token>`). Clicking it authenticates them straight into the lobby as a verified RobOS Game User.
