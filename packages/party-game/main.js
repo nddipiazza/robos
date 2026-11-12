@@ -580,7 +580,6 @@ if (app) {
                 if (engine.state.joinUrl !== publicJoinUrl) {
                   engine.setJoinUrl(publicJoinUrl);
                   log({ msg: 'public HTTPS tunnel ready', joinUrl: publicJoinUrl, lanJoinUrl: localJoinUrl });
-                  sendToRenderer('party:state', hostSnapshot());
                 }
               }
             }
