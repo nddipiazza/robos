@@ -230,6 +230,7 @@ function createCalendarWebServer(options = {}) {
             familyMembers: state.familyMembers,
             events: state.events,
             accessDoc: latestSettings.accessDoc || {},
+            calendarDocs: latestSettings.calendarDocs || {},
             publicTunnelUrl: latestSettings.publicTunnelUrl || '',
             lanWebAppUrl: latestSettings.lanWebAppUrl || '',
           },

@@ -77,6 +77,9 @@ function loadCalendarSettings(options = {}) {
   if (!raw.accessDoc || typeof raw.accessDoc !== 'object') {
     raw.accessDoc = {};
   }
+  if (!raw.calendarDocs || typeof raw.calendarDocs !== 'object') {
+    raw.calendarDocs = {};
+  }
   if (changed) {
     saveCalendarSettings(raw, options);
   }
@@ -104,6 +107,10 @@ function updateCalendarSettings(patch = {}, options = {}) {
     accessDoc: {
       ...(current.accessDoc || {}),
       ...(patch.accessDoc || {}),
+    },
+    calendarDocs: {
+      ...(current.calendarDocs || {}),
+      ...(patch.calendarDocs || {}),
     },
   };
   return saveCalendarSettings(next, options);
@@ -623,6 +630,14 @@ async function discoverNamedCalendars(accountIdOrEmail = null, options = {}) {
             ? 'public-readonly-feed'
             : 'shared-calendar';
 
+    const calendarDocsMap = settings.calendarDocs || {};
+    const calInviteDoc =
+      calendarDocsMap[cal.id] ||
+      Object.values(calendarDocsMap).find(
+        (d) => d && d.calendarName && String(d.calendarName).toLowerCase() === displayName.toLowerCase()
+      ) ||
+      null;
+
     const kgraphNode = {
       '@id': `urn:robos:calendar:${slug}`,
       '@type': ['robos:NamedCalendar', 'schema:Schedule', 'oslc:Resource'],
@@ -634,6 +649,7 @@ async function discoverNamedCalendars(accountIdOrEmail = null, options = {}) {
       'robos:color': color,
       'robos:writable': cal.writable !== false,
       'robos:googleCalendarUrl': googleCalendarUrl,
+      ...(calInviteDoc?.docUrl ? { 'robos:inviteDocUrl': calInviteDoc.docUrl } : {}),
       'robos:sharedWith': sharedWith.map((m) => ({
         '@id': `urn:robos:person:${m.uid || m.email}`,
         'dcterms:title': m.name,
@@ -653,6 +669,9 @@ async function discoverNamedCalendars(accountIdOrEmail = null, options = {}) {
       isFamilyCalendar: isFamilyCal,
       googleCalendarUrl,
       googleCalendarEmbedUrl,
+      inviteDocId: calInviteDoc?.docId || '',
+      inviteDocTitle: calInviteDoc?.docTitle || '',
+      inviteDocUrl: calInviteDoc?.docUrl || '',
       sharedWith,
       kgraphNode,
     };
@@ -931,6 +950,13 @@ async function promoteCustomCalendarsToGoogleContainers(options = {}) {
       sharedWith: custom.sharedWith || [],
     };
     delete settings.calendarOverrides[oldId];
+    if (settings.calendarDocs && settings.calendarDocs[oldId]) {
+      settings.calendarDocs[newGroupId] = {
+        ...settings.calendarDocs[oldId],
+        calendarId: newGroupId,
+      };
+      delete settings.calendarDocs[oldId];
+    }
     saveCalendarSettings(settings, options);
 
     await syncCalendarMetadataToCaldav(

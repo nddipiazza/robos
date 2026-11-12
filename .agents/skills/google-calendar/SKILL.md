@@ -15,11 +15,11 @@ Use this skill whenever the user asks to:
 
 Each Named Calendar has a clear description and usage boundary in the Knowledge Graph (`~/.config/robos/kgraph/google-calendars.jsonld` and `~/.config/robos/ekgraph/nodes.json`):
 
-| Named Calendar | KGraph Role | What It Is Used For (Description) |
-|---|---|---|
-| **Family** (`Family`) | `private-household-family` | **For stuff that our private family needs** (household plans, family trips, dinners, and shared household activities). |
-| **Kids Calendar** (`Dipiazza Kids Calendar`) | `extended-divorced-kids-family` | **For stuff that the extended divorced side of the family needs** (kids weekend custody schedule, kids' appointments, school, and co-parenting events). |
-| **My Private Calendar** (`Primary`) | `private-personal-owner` | **My private calendar — for stuff that only I care about** (personal reminders, solo work, and private appointments). |
+| Named Calendar | KGraph Role | What It Is Used For (Description) | Dedicated Invite & Access Google Doc |
+|---|---|---|---|
+| **Family** (`Family`) | `private-household-family` | **For stuff that our private family needs** (household plans, family trips, dinners, and shared household activities). | `RobOS Calendar — Family (Invite & Access Doc)` (shared with household family members) |
+| **Kids Calendar** (`Kids Calendar`) | `extended-divorced-kids-family` | **For stuff that the extended divorced side of the family needs** (kids weekend custody schedule, kids' appointments, school, and co-parenting events). | `RobOS Calendar — Kids Calendar (Invite & Access Doc)` (shared with extended kids calendar members) |
+| **My Private Calendar** (`Primary`) | `private-personal-owner` | **My private calendar — for stuff that only I care about** (personal reminders, solo work, and private appointments). | `RobOS Calendar — Primary (Private Calendar Access Doc)` (private to owner only) |
 
 ## CLI Commands
 

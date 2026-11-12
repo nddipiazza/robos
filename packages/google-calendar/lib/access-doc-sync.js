@@ -16,6 +16,7 @@ const path = require('node:path');
 const {
   loadCalendarSettings,
   updateCalendarSettings,
+  discoverNamedCalendars,
   listEventsAcrossNamedCalendars,
 } = require('./named-calendars');
 
@@ -71,9 +72,139 @@ function formatDateTimeHuman(isoStr, allDay = false) {
 }
 
 /**
+ * Returns the Google Doc title for a specific Named Calendar's Invite & Access Doc.
+ */
+function getCalendarInviteDocTitle(cal = {}) {
+  const rawName = String(cal.name || cal.id || 'Calendar').trim();
+  const cleanName = rawName.replace(/\s*\([^)]*@[^)]*\)\s*$/, '').trim() || rawName;
+  if (cal.primary) {
+    return `RobOS Calendar — ${cleanName} (Private Calendar Access Doc)`;
+  }
+  return `RobOS Calendar — ${cleanName} (Invite & Access Doc)`;
+}
+
+/**
+ * Renders the HTML for a single Named Calendar's dedicated "Invite & Access Google Doc".
+ * Designed so that each calendar (`Family`, `Kids Calendar`, `Primary`) has its own
+ * Google Doc that can be shared ONLY with the members of that specific calendar.
+ */
+function renderSingleCalendarInviteDocHtml(cal = {}, options = {}) {
+  const baseWebUrl = String(options.webAppUrl || options.authedWebAppUrl || options.localWebAppUrl || 'http://127.0.0.1:19226').trim();
+  const sep = baseWebUrl.includes('?') ? '&' : '?';
+  const calWebAppUrl = `${baseWebUrl}${sep}calendar=${encodeURIComponent(cal.id || '')}`;
+  const gcalHref = cal.googleCalendarUrl || `https://calendar.google.com/calendar/u/0/r?cid=${encodeURIComponent(cal.id || '')}`;
+  const gcalEmbedHref = cal.googleCalendarEmbedUrl || `https://calendar.google.com/calendar/embed?src=${encodeURIComponent(cal.id || '')}`;
+  const docTitle = getCalendarInviteDocTitle(cal);
+  const badge = cal.isFamilyCalendar ? '👨‍👩‍👧‍👦' : cal.primary ? '🔒' : '🗓️';
+  const roleLabel = cal.primary
+    ? 'Private Personal Calendar (Owner Only)'
+    : cal.isFamilyCalendar
+      ? 'Shared Household Family Calendar'
+      : 'Shared Extended Family / Kids Calendar';
+  const description =
+    cal.description ||
+    (cal.isFamilyCalendar
+      ? 'For stuff that our private family needs (household plans, family trips, dinners, and shared household activities).'
+      : cal.primary
+        ? 'My private calendar — for stuff that only I care about (personal reminders, solo work, and private appointments).'
+        : 'Shared Named Google Calendar.');
+  const members = Array.isArray(cal.sharedWith) ? cal.sharedWith : [];
+  const syncedAt = new Date().toLocaleString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+
+  const membersTableHtml = members.length
+    ? `
+  <h2 style="font-size:13pt;color:#0f172a;margin:16px 0 8px 0;">👥 People Invited to ${escHtml(cal.name)} (${members.length})</h2>
+  <table style="width:100%;border-collapse:collapse;margin:0 0 16px 0;border:1px solid #cbd5e1;font-size:10pt;">
+    <thead>
+      <tr style="background-color:#f1f5f9;">
+        <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #cbd5e1;">Member</th>
+        <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #cbd5e1;">Role / Relationship</th>
+        <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #cbd5e1;">Google Account / Email</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${members
+        .map(
+          (m) => `
+      <tr>
+        <td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;font-weight:bold;">${escHtml(m.avatar || '👤')} ${escHtml(m.name || m.firstName || m.email)}</td>
+        <td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;color:#475569;">${escHtml(m.role || 'Calendar Member')}</td>
+        <td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;color:#0369a1;">${escHtml(m.email || '')}</td>
+      </tr>`
+        )
+        .join('')}
+    </tbody>
+  </table>`
+    : `
+  <p style="margin:12px 0 16px 0;padding:10px 14px;background-color:#f8fafc;border:1px solid #cbd5e1;font-size:10pt;color:#334155;">
+    🔒 <strong>Private Calendar:</strong> This calendar is private to the calendar owner${options.ownerEmail ? ` (${escHtml(options.ownerEmail)})` : ''} and is not shared with other household members.
+  </p>`;
+
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>${escHtml(docTitle)}</title>
+</head>
+<body style="font-family:Arial,Helvetica,sans-serif;color:#0f172a;line-height:1.45;">
+  <h1 style="margin:0 0 4px 0;font-size:20pt;color:#0f172a;">${badge} ${escHtml(cal.name)} — Calendar Invite &amp; Access Doc</h1>
+  <p style="margin:0 0 12px 0;font-size:10pt;color:#475569;">
+    ${escHtml(roleLabel)} · Synced with Google Calendar &amp; Mozilla Thunderbird CalDAV · Updated ${escHtml(syncedAt)}
+  </p>
+
+  <table style="width:100%;border-collapse:collapse;margin:10px 0 14px 0;border:2px solid #cbd5e1;background-color:#f8fafc;">
+    <tr>
+      <td style="padding:12px 16px;">
+        <p style="margin:0 0 4px 0;font-size:10.5pt;font-weight:bold;color:#0f172a;">📌 What This Calendar Is Used For:</p>
+        <p style="margin:0;font-size:11pt;color:#1e293b;">${escHtml(description)}</p>
+      </td>
+    </tr>
+  </table>
+
+  <table style="width:100%;border-collapse:collapse;margin:14px 0 18px 0;border:3px solid #0284c7;background-color:#eff6ff;">
+    <tr>
+      <td style="padding:22px 20px;text-align:center;">
+        <p style="margin:0 0 10px 0;font-size:17pt;font-weight:bold;line-height:1.35;">
+          <a href="${escHtml(calWebAppUrl)}" style="color:#0369a1;text-decoration:underline;font-weight:bold;">👉 CLICK THIS TO OPEN &amp; ADD EVENTS TO ${escHtml(String(cal.name || 'THIS CALENDAR').toUpperCase())}</a>
+        </p>
+        <p style="margin:0 0 14px 0;font-size:11pt;">
+          <a href="${escHtml(calWebAppUrl)}" style="color:#0284c7;text-decoration:none;font-weight:bold;">➕ Add Single-Day or Multi-Day Events, Paste Flight/Hotel Itineraries, or Dictate by Voice (Pre-Selected to ${escHtml(cal.name)}) →</a>
+        </p>
+        <p style="margin:0 0 14px 0;font-size:11pt;color:#1e293b;">
+          <strong>Open in Google Calendar:</strong> &nbsp;
+          <a href="${escHtml(gcalHref)}" style="color:#0f766e;text-decoration:underline;font-weight:bold;">🌐 Open ${escHtml(cal.name)} in Google Calendar (Browser / App) ↗</a>
+          &nbsp;·&nbsp;
+          <a href="${escHtml(gcalEmbedHref)}" style="color:#475569;text-decoration:underline;font-weight:bold;">📅 Full-Screen Calendar View ↗</a>
+        </p>
+        <p style="margin:0;padding:9px 12px;background-color:#fef2f2;border:1px solid #fecaca;color:#991b1b;font-size:10pt;font-weight:bold;">
+          ⚠️ DO NOT TRY TO EDIT THIS DOC — This Google Doc is for calendar invitation &amp; access purposes and is READ-ONLY. Click the links above to view the calendar or add events.
+        </p>
+      </td>
+    </tr>
+  </table>
+
+  ${membersTableHtml}
+
+  <h2 style="font-size:12.5pt;color:#0f172a;margin:14px 0 6px 0;">✨ How to Use ${escHtml(cal.name)}</h2>
+  <ul style="margin:0 0 14px 18px;padding:0;font-size:10pt;color:#334155;">
+    <li style="margin-bottom:4px;"><strong>View in Google Calendar:</strong> Click <em>Open ${escHtml(cal.name)} in Google Calendar</em> above to view or subscribe in your browser or phone.</li>
+    <li style="margin-bottom:4px;"><strong>Add or Edit Events:</strong> Click the big blue link above to open the RobOS Add Calendar Event web app pre-selected to <strong>${escHtml(cal.name)}</strong>.</li>
+    <li style="margin-bottom:4px;"><strong>Automatic Member Invites:</strong> Events added to <strong>${escHtml(cal.name)}</strong> automatically pre-select the invited members of this calendar.</li>
+  </ul>
+</body>
+</html>`;
+}
+
+/**
  * Renders the HTML for the "RobOS Calendar — Add Event Access Form" Google Doc.
  * Primary feature: 1 prominent button linking to the RobOS Add Calendar Event web app,
- * plus direct browser links to each shared/named Google Calendar.
+ * plus direct browser links to each shared/named Google Calendar and its per-calendar Invite Google Doc.
  * Does NOT include a static upcoming-events snapshot (users open the WebApp or Google Calendar link).
  */
 function renderCalendarAccessDocHtml(options = {}) {
@@ -139,13 +270,14 @@ function renderCalendarAccessDocHtml(options = {}) {
     </tr>
   </table>
 
-  <h2 style="font-size:13pt;color:#0f172a;margin:16px 0 8px 0;">🗂️ Named &amp; Shared Google Calendars</h2>
+  <h2 style="font-size:13pt;color:#0f172a;margin:16px 0 8px 0;">🗂️ Named &amp; Shared Google Calendars (Each with Its Own Invite Google Doc)</h2>
   <table style="width:100%;border-collapse:collapse;margin:0 0 16px 0;border:1px solid #cbd5e1;font-size:10pt;">
     <thead>
       <tr style="background-color:#f1f5f9;">
         <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #cbd5e1;">Calendar Name</th>
         <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #cbd5e1;">What This Calendar Is Used For (Description)</th>
         <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #cbd5e1;">Shared Members / Role</th>
+        <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #cbd5e1;">Calendar Invite Google Doc</th>
         <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #cbd5e1;">Open in Google Calendar (Browser)</th>
         <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #cbd5e1;">Add Event in RobOS WebApp</th>
       </tr>
@@ -161,11 +293,15 @@ function renderCalendarAccessDocHtml(options = {}) {
           const sharedStr = Array.isArray(c.sharedWith) && c.sharedWith.length
             ? `${roleBadge} — ${c.sharedWith.map((m) => m.nickname || m.firstName || m.name).join(', ')}`
             : roleBadge;
+          const inviteDocCell = c.inviteDocUrl
+            ? `<a href="${escHtml(c.inviteDocUrl)}" style="color:#7c3aed;font-weight:bold;text-decoration:underline;">📄 Open ${escHtml(c.name)} Invite Doc ↗</a>`
+            : '<span style="color:#94a3b8;">—</span>';
           return `
           <tr>
             <td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;font-weight:bold;">${escHtml(c.name)}</td>
             <td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;color:#1e293b;">${escHtml(c.description || '')}</td>
             <td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;color:#475569;">${escHtml(sharedStr)}</td>
+            <td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;">${inviteDocCell}</td>
             <td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;">
               <a href="${escHtml(gcalHref)}" style="color:#0f766e;font-weight:bold;text-decoration:underline;">🌐 Open in Google Calendar ↗</a>
               &nbsp;·&nbsp;
@@ -299,7 +435,10 @@ function createGoogleDocsDriveApi({ accountId, homeDir, tokens, fetchImpl } = {}
 }
 
 /**
- * Creates or updates the "RobOS Calendar — Add Event Access Form" Google Doc in Google Drive.
+ * Creates or updates:
+ *   1. A dedicated Invite & Access Google Doc for EACH writable Named Calendar (`Family`, `Kids Calendar`, `Primary`),
+ *      automatically shared in Google Drive ONLY with the members of that specific calendar (`cal.sharedWith`).
+ *   2. The master "RobOS Calendar — Add Event Access Form" Google Doc in Google Drive.
  */
 async function syncCalendarAccessDocWithGoogleDrive(options = {}) {
   const settings = loadCalendarSettings(options);
@@ -315,12 +454,6 @@ async function syncCalendarAccessDocWithGoogleDrive(options = {}) {
   const authedWebAppUrl = baseWebUrl.includes('auth=')
     ? baseWebUrl
     : `${baseWebUrl.replace(/\/+$/, '')}/?auth=${encodeURIComponent(token)}`;
-
-  const html = renderCalendarAccessDocHtml({
-    webAppUrl: authedWebAppUrl,
-    calendars: state.calendars,
-    events: state.events,
-  });
 
   const api = options.driveApi || createGoogleDocsDriveApi({
     accountId: options.accountId || null,
@@ -339,6 +472,85 @@ async function syncCalendarAccessDocWithGoogleDrive(options = {}) {
       folderId = created.id;
     }
   }
+
+  const syncedAt = new Date().toISOString();
+  const existingCalendarDocs = { ...(settings.calendarDocs || {}) };
+  const calendarDocsResult = {};
+
+  // 1. Sync a dedicated Invite & Access Google Doc for each writable Named Calendar
+  if (options.syncPerCalendarDocs !== false) {
+    const writableCalendars = (state.calendars || []).filter((c) => c.writable !== false);
+    for (const cal of writableCalendars) {
+      const calDocTitle = getCalendarInviteDocTitle(cal);
+      const calHtml = renderSingleCalendarInviteDocHtml(cal, {
+        webAppUrl: authedWebAppUrl,
+        ownerEmail: state.email,
+      });
+
+      let calDocId = existingCalendarDocs[cal.id]?.docId || '';
+      if (!calDocId && folderId) {
+        try {
+          const found = await api.listChildren(folderId, { name: calDocTitle, mimeType: GDOC_MIME });
+          if (found.length > 0) calDocId = found[0].id;
+        } catch {}
+      }
+
+      if (calDocId) {
+        try {
+          await api.updateDocFromHtml(calDocId, calHtml);
+        } catch {
+          const created = await api.createDocFromHtml({ name: calDocTitle, parentId: folderId, html: calHtml });
+          calDocId = created.id;
+        }
+      } else {
+        const created = await api.createDocFromHtml({ name: calDocTitle, parentId: folderId, html: calHtml });
+        calDocId = created.id;
+      }
+
+      const calDocUrl = googleDocEditUrl(calDocId);
+      const sep = authedWebAppUrl.includes('?') ? '&' : '?';
+      const calWebAppUrl = `${authedWebAppUrl}${sep}calendar=${encodeURIComponent(cal.id)}`;
+
+      // Share this calendar's Invite Google Doc with the specific members of this calendar
+      const calSharedEmails = [];
+      if (options.shareCalendarDocs !== false && Array.isArray(cal.sharedWith) && cal.sharedWith.length > 0) {
+        for (const member of cal.sharedWith) {
+          const memberEmail = String(member?.email || '').trim();
+          if (!memberEmail || memberEmail.toLowerCase() === String(state.email || '').toLowerCase()) continue;
+          try {
+            await api.shareFile(calDocId, { email: memberEmail, role: 'reader', sendNotificationEmail: false });
+            calSharedEmails.push(memberEmail);
+          } catch {}
+        }
+      }
+
+      cal.inviteDocId = calDocId;
+      cal.inviteDocTitle = calDocTitle;
+      cal.inviteDocUrl = calDocUrl;
+
+      const entry = {
+        calendarId: cal.id,
+        calendarName: cal.name,
+        description: cal.description || '',
+        docId: calDocId,
+        docTitle: calDocTitle,
+        docUrl: calDocUrl,
+        authedWebAppUrl: calWebAppUrl,
+        googleCalendarUrl: cal.googleCalendarUrl || '',
+        sharedEmails: calSharedEmails.length ? calSharedEmails : (existingCalendarDocs[cal.id]?.sharedEmails || []),
+        lastSyncedAt: syncedAt,
+      };
+      existingCalendarDocs[cal.id] = entry;
+      calendarDocsResult[cal.id] = entry;
+    }
+  }
+
+  // 2. Render & sync the Master "RobOS Calendar — Add Event Access Form" Google Doc (with links to each per-calendar doc)
+  const html = renderCalendarAccessDocHtml({
+    webAppUrl: authedWebAppUrl,
+    calendars: state.calendars,
+    events: state.events,
+  });
 
   const docTitle = options.docTitle || settings.accessDoc?.docTitle || DEFAULT_DOC_TITLE;
   let docId = options.docId || settings.accessDoc?.docId || '';
@@ -365,13 +577,13 @@ async function syncCalendarAccessDocWithGoogleDrive(options = {}) {
 
   const docUrl = googleDocEditUrl(docId);
   const folderUrl = googleDriveFolderUrl(folderId);
-  const syncedAt = new Date().toISOString();
 
-  // Share with family members if requested
+  // Share master doc with household family members if requested
   const sharedEmails = [];
   if (options.shareWithFamily) {
     for (const fm of state.familyMembers || []) {
       if (!fm.email || fm.email.toLowerCase() === String(state.email || '').toLowerCase()) continue;
+      if (Array.isArray(fm.groups) && fm.groups.length > 0 && !fm.groups.some((g) => /^household$/i.test(g))) continue;
       try {
         await api.shareFile(docId, { email: fm.email, role: 'reader', sendNotificationEmail: false });
         sharedEmails.push(fm.email);
@@ -391,9 +603,15 @@ async function syncCalendarAccessDocWithGoogleDrive(options = {}) {
         lastSyncedAt: syncedAt,
         sharedEmails: sharedEmails.length ? sharedEmails : (settings.accessDoc?.sharedEmails || []),
       },
+      calendarDocs: existingCalendarDocs,
     },
     options
   );
+
+  // Refresh KGraph store so each calendar node includes its robos:inviteDocUrl
+  try {
+    await discoverNamedCalendars(options.accountId || null, { ...options, skipNetwork: true });
+  } catch {}
 
   return {
     ok: true,
@@ -403,6 +621,7 @@ async function syncCalendarAccessDocWithGoogleDrive(options = {}) {
     folderId,
     folderUrl,
     authedWebAppUrl,
+    calendarDocs: calendarDocsResult,
     syncedAt,
     calendarsCount: state.calendars.length,
     upcomingEventsCount: state.events.length,
@@ -414,6 +633,8 @@ module.exports = {
   DEFAULT_DOC_TITLE,
   googleDocEditUrl,
   googleDriveFolderUrl,
+  getCalendarInviteDocTitle,
+  renderSingleCalendarInviteDocHtml,
   renderCalendarAccessDocHtml,
   createGoogleDocsDriveApi,
   syncCalendarAccessDocWithGoogleDrive,
