@@ -39,7 +39,7 @@ func _stock() -> Vector2i:
 	return Vector2i(sim.players[1].crystal, sim.players[1].aether)
 
 func _build_ticks(type: String) -> int:
-	return ceili(float(data.get_unit_def(type).build_time) * sim.build_time_scale() / sim.TICK_DT)
+	return ceili(float(data.get_unit_def(type).build_time) / sim.TICK_DT)
 
 func _hall_with_module() -> Dictionary:
 	births.clear()
@@ -65,12 +65,12 @@ func _test_two_lanes() -> void:
 	var starting := _stock()
 	if not _train(hall, ["rifleman", "rifleman", "rifleman"]):
 		return
-	_check(_stock() == starting - _cost("rifleman") * 3 and sim.players[1].supply_used == 3,
-		"All three paid jobs reserve normal costs and supply")
+	_check(_stock() == starting - _cost("rifleman") * 3 and sim.players[1].supply_used == 0,
+		"All three jobs pay their costs before production starts")
 	sim.step_ticks(1)
 	var queue: Array = hall.production_queue
 	_check(sim.active_production_slots(hall) == 2 and queue[0].progress == sim.TICK_DT
-		and queue[1].progress == sim.TICK_DT and queue[2].progress == 0.0,
+		and queue[1].progress == sim.TICK_DT and queue[2].progress == 0.0 and sim.players[1].supply_used == 2,
 		"Exactly the first two light jobs advance on the same tick")
 	sim.step_ticks(_build_ticks("rifleman") - 1)
 	if _check(births.size() == 2, "Both identical paid jobs finish on the same scheduled tick"):
@@ -78,7 +78,7 @@ func _test_two_lanes() -> void:
 			and births[0].position.distance_to(births[1].position) >= births[0].radius + births[1].radius,
 			"Same-tick jobs deploy in slot order at separate clear positions")
 	_check(queue.size() == 1 and queue[0].progress == 0.0 and _stock() == starting - _cost("rifleman") * 3
-		and sim.players[1].supply_used == 3, "Deployment transfers both reservations once and starts no third job on that tick")
+		and sim.players[1].supply_used == 2, "Deployment transfers both reservations once and starts no third job on that tick")
 
 func _test_heavy_fifo() -> void:
 	var hall := _hall_with_module()
@@ -103,12 +103,14 @@ func _test_heavy_fifo() -> void:
 func _test_module_loss() -> void:
 	var hall := _hall_with_module()
 	var module: Dictionary = sim.production_attachment(hall)
-	if module.is_empty() or not _train(hall, ["triage_specialist", "rifleman", "rifleman"]):
+	if module.is_empty() or not _train(hall, ["triage_specialist", "rifleman", "rifleman", "rifleman", "rifleman"]):
 		return
 	var queue: Array = hall.production_queue
 	var first: Dictionary = queue[0]
 	var second: Dictionary = queue[1]
-	var waiting: Dictionary = queue[2]
+	var third: Dictionary = queue[2]
+	var fourth: Dictionary = queue[3]
+	var fifth: Dictionary = queue[4]
 	sim.step_ticks(16)
 	var gun: Dictionary = sim.spawn_unit("howitzer_emplaced", 2, module.pos + Vector2(22, 0))
 	module.hp = 1.0
@@ -122,8 +124,9 @@ func _test_module_loss() -> void:
 		"Combat loss leaves the second paid job in a paused slot"):
 		return
 	sim.step_ticks(16)
-	_check(first.progress > front_progress and second.progress == paused_progress and waiting.progress == 0.0,
+	_check(first.progress > front_progress and second.progress == paused_progress and third.progress == 0.0,
 		"The front job advances serially while the second job keeps its exact progress")
+	front_progress = first.progress
 	_check(sim.issue_command([hall.tag], ATTACH).ok and _stock() == before_rebuild - _cost(MODULE), "Pay normal construction cost to restore the second line")
 	var replacement: Dictionary = sim.production_attachment(hall, false)
 	if replacement.is_empty():
@@ -132,15 +135,17 @@ func _test_module_loss() -> void:
 		sim.step_ticks(1)
 		if replacement.build_progress >= 1.0:
 			break
-	_check(second.progress == paused_progress and waiting.progress == 0.0, "The foundation grants no concurrent progress")
+	_check(births.is_empty() and first.progress == front_progress and second.progress == paused_progress,
+		"The rebuild pauses both paid jobs at their existing progress")
 	sim.step_ticks(1)
-	_check(sim.active_production_slots(hall) == 2 and second.progress == paused_progress + sim.TICK_DT and waiting.progress == 0.0,
-		"Restoration resumes the same paid second job from its saved progress")
+	_check(sim.active_production_slots(hall) == 2 and first.progress > front_progress and second.progress > paused_progress,
+		"Restoration resumes both paid jobs in parallel")
 	var before_cancel := _stock()
 	var supply_before: int = sim.players[1].supply_used
 	var second_progress: float = second.progress
 	_check(_cancel(hall, 0) and _stock() == before_cancel + _cost("triage_specialist")
-		and sim.players[1].supply_used == supply_before - 2 and queue[0] == second and second.progress == second_progress,
+		and sim.players[1].supply_used == supply_before - first.supply_cost and queue[0] == second and second.progress == second_progress,
 		"Canceling an active job refunds only its own resources and supply and preserves its neighbor")
 	sim.step_ticks(1)
-	_check(waiting.progress == sim.TICK_DT, "The waiting light job takes the freed line on the next tick")
+	_check(third.progress == sim.TICK_DT and fourth.progress == 0.0 and fifth.progress == 0.0,
+		"The next waiting light job takes the freed line on the next tick")

@@ -38,13 +38,15 @@ func _test_airframe(sim: Node) -> void:
 		return
 	var hangar: Dictionary = hangars[0]
 	_check(not sim.issue_command([hangar.tag], "train_rampart_transport").ok, "An unfinished Hangar cannot train")
-	sim.step_ticks(2400)
+	sim.step_ticks(ceili(float(hangar.build_total_time) / sim.TICK_DT))
 	_check(hangar.build_progress >= 1.0, "Pioneer completes the Hangar")
 	_check(sim.issue_command([hangar.tag], "train_rampart_transport").ok and player.crystal == 150 and player.aether == 100, "Hangar pays for a Rampart")
-	sim.step_ticks(1900)
+	if not hangar.production_queue.is_empty():
+		sim.step_ticks(ceili(float(hangar.production_queue[0].total_time) / sim.TICK_DT))
 	_check(sim.units.values().any(func(unit): return unit.unit_type == "rampart_transport" and unit.flight_height > 0.0), "A completed paid transport takes flight")
 	_check(sim.issue_command([hangar.tag], "train_kestrel_interceptor").ok, "Hangar pays for a Kestrel")
-	sim.step_ticks(2500)
+	if not hangar.production_queue.is_empty():
+		sim.step_ticks(ceili(float(hangar.production_queue[0].total_time) / sim.TICK_DT))
 	_check(sim.units.values().any(func(unit): return unit.unit_type == "kestrel_interceptor"), "Hangar completes a paid fighter")
 
 func _test_cargo(sim: Node) -> void:
@@ -69,7 +71,7 @@ func _test_cargo(sim: Node) -> void:
 		return
 	_check(passengers.all(func(unit): return unit.unit_type == "rifleman" and unit.owner == 1 and not sim.units.has(unit.tag)), "Only our nearby ground troops are removed from the field")
 	_check(not sim.issue_command([transport.tag], "load_transport").ok, "Full transport does not board more")
-	_check(sim.issue_command([sim.units.values()[0].tag], "train_pioneer").ok and sim.players[1].supply_used == supply + 1, "Embarked units still reserve supply after recalculation")
+	_check(sim.issue_command([sim.units.values()[0].tag], "train_pioneer").ok and sim.players[1].supply_used == supply, "Embarked units still reserve supply after recalculation")
 	_check(not sim.issue_command([transport.tag], "unload_transport", Vector2(47, 26)).ok, "Impassable terrain rejects a drop")
 	_check(sim.issue_command([transport.tag], "unload_transport", Vector2(65, 26)).ok, "Clear ground on the far side accepts a drop")
 	sim.step_ticks(300)

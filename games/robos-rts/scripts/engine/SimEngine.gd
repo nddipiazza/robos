@@ -1,5 +1,7 @@
 extends Node
 
+const TerrainGrid = preload("res://scripts/engine/RTSTerrainGrid.gd")
+
 class MoveFormation extends RefCounted:
 	var slots := {}
 	var bins := {}
@@ -18,10 +20,12 @@ signal unit_spawned(unit: Dictionary)
 signal unit_destroyed(unit: Dictionary)
 signal projectile_fired(from_pos: Vector2, to_pos: Vector2, weapon_name: String, is_splash: bool, owner_id: int)
 signal unit_phased(from_pos: Vector2, to_pos: Vector2, unit_tag: int)
+signal archon_merged(first_tag: int, second_tag: int, archon_tag: int)
 signal scenario_loaded(scenario_name: String)
 signal paused_step
 signal notice(owner_id: int, text: String, kind: String)
 signal unit_damaged(owner_id: int, pos: Vector2)
+signal militia_recruited(owner_id: int)
 signal order_path_resolved(unit: Dictionary, order: Dictionary, requested: Vector2, endpoint: Vector2, status: String)
 signal weapon_attack(attacker: Dictionary, target: Dictionary, weapon: Dictionary, hit_shields: bool)
 signal ability_triggered(unit: Dictionary, ability_id: String, pos: Vector2)
@@ -33,6 +37,8 @@ signal match_finished
 
 const TICK_RATE: int = 64
 const TICK_DT: float = 1.0 / float(TICK_RATE)
+const SUPPLY_REQUIRED_NOTICE := "Supply required."
+const SILO_RAISE_TICKS := TICK_RATE
 const SPLASH_INNER_RADIUS_RATIO := 0.5
 const SPATIAL_CELL_SIZE: float = 8.0
 const PATH_CELL_SIZE: float = 2.0
@@ -62,7 +68,7 @@ const PRODUCTION_EXIT_RETRY_TICKS := 8
 const MAX_UPGRADE_LEVEL := 3
 const HUB_ENERGY_MAX := 200.0
 const HUB_POWER_COST := 50.0
-const HUB_OPERATIONS_OFFER := {"crystal": 150, "aether": 50, "supply": 0, "time": 30.0, "requires": ["muster_hall"]}
+const HUB_OPERATIONS_OFFER := {"crystal": 150, "aether": 50, "supply": 0, "time": 35.0, "requires": ["muster_hall"]}
 const PROSPECTOR_LIFETIME_TICKS := 45 * TICK_RATE
 const TRANSPORT_PICKUP_RADIUS := 6.5
 const FIGHTER_TRANSITION_TICKS := 96
@@ -122,7 +128,14 @@ var tick: int = 0
 var sim_time: float = 0.0
 var rng_seed: int = 42
 var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+var weapon_rng := RandomNumberGenerator.new()
 var paused: bool = false
+var network_clock := false
+var network_ai_events: Callable
+const LadderRules = preload("res://scripts/engine/RTSLadderRules.gd")
+var ladder_rules := false
+var _ladder_last_progress_tick := 0
+var ladder_no_headquarters_since := [-1, -1]
 var decor_enabled: bool = true
 var last_step_count: int = 1
 var rts_mode: String = "human"
@@ -130,12 +143,16 @@ var sim_speed: float = 1.0
 var manual_step_requests: int = 0
 
 var map_width: float = 128.0
+var terrain_grid: TerrainGrid
 var map_height: float = 96.0
 var scenario_name: String = "Starfall Canyon — Humans vs Monsters vs Aliens"
 
 var terrain_obstacles: Array[Rect2] = []
 var high_ground_zones: Array[Rect2] = []
 var ramps: Array[Rect2] = []
+var _ground_ledges: Array[Rect2] = []
+var _ledge_plateaus: Array[Rect2] = []
+var _ledge_ramps: Array[Rect2] = []
 var water_polygons: Array[PackedVector2Array] = []
 var land_bridges: Array[Rect2] = []
 var water_cells: Dictionary = {}
@@ -146,7 +163,29 @@ var terrain_tiles: Array = []
 var _brush_cells: Dictionary = {}
 var watch_stations: Array[Dictionary] = []
 var miasma_zones: Array[Dictionary] = []
+var canticle_storms: Array[Dictionary] = []
+var fungal_projectiles: Array[Dictionary] = []
+var fungal_infections: Dictionary = {}
+var microbial_shrouds: Array[Dictionary] = []
+var neural_tethers: Dictionary = {}
+var brood_tunnel_cargo: Dictionary = {}
+var blinding_clouds: Array[Dictionary] = []
+var parasitic_clouds: Array[Dictionary] = []
+var time_warps: Array[Dictionary] = []
+var emp_projectiles: Array[Dictionary] = []
+var watchkeeper_missiles: Array[Dictionary] = []
+var sentinel_missiles: Array[Dictionary] = []
+var sentry_missiles: Array[Dictionary] = []
+var archon_approaches: Dictionary = {}
+var guardian_shields: Dictionary = {}
+var caustic_strikes: Array[Dictionary] = []
+var unseen_weapon_hits: Dictionary = {}
 var lattice_bursts: Array[Dictionary] = []
+var ridge_charges: Array[Dictionary] = []
+const RIDGE_CHARGE_RANGE := 12.5
+const RIDGE_CHARGE_RADIUS := 5.0
+const RIDGE_CHARGE_DELAY_TICKS := 2 * TICK_RATE
+const RIDGE_CHARGE_COOLDOWN_TICKS := 14 * TICK_RATE
 
 var players: Dictionary = {}
 var next_tag: int = 1001
@@ -170,6 +209,7 @@ var resume_from_title := false
 var title_battle_view: Dictionary = {}
 var match_state: Dictionary = {}
 const Campaign = preload("res://scripts/engine/RTSCampaign.gd")
+const Mutators = preload("res://scripts/engine/RTSCampaignMutators.gd")
 var campaign: Campaign
 var _skirmish_source: Dictionary = {}
 var vision: Vision
@@ -215,7 +255,7 @@ func _load_startup_scenario() -> void:
 func _process(delta: float) -> void:
 	frame_sim_usec = 0
 	frame_sim_ticks = 0
-	if rts_mode == "backend" or paused or _scenario_finished():
+	if rts_mode == "backend" or network_clock or paused or _scenario_finished():
 		return
 	var started = Time.get_ticks_usec()
 	# Keep input/rendering responsive when fast-forward or a slow capture exhausts
@@ -234,10 +274,15 @@ func _process(delta: float) -> void:
 	frame_sim_ticks = steps
 
 func reset_state(new_seed: int = 42, width: float = 128.0, height: float = 96.0) -> void:
+	ladder_rules = false
+	_ladder_last_progress_tick = 0
+	ladder_no_headquarters_since = [-1, -1]
+	RTSData.ladder_active = false
 	tick = 0
 	sim_time = 0.0
 	rng_seed = new_seed
 	rng.seed = rng_seed
+	weapon_rng.seed = rng_seed ^ 0x2406cb23
 	map_width = width
 	map_height = height
 	living_ground = LivingGround.new(width, height)
@@ -251,8 +296,12 @@ func reset_state(new_seed: int = 42, width: float = 128.0, height: float = 96.0)
 	spatial_grid.clear()
 	_spatial_by_owner.clear()
 	terrain_obstacles.clear()
+	terrain_grid = null
 	high_ground_zones.clear()
 	ramps.clear()
+	_ground_ledges.clear()
+	_ledge_plateaus.clear()
+	_ledge_ramps.clear()
 	water_polygons.clear()
 	land_bridges.clear()
 	water_cells.clear()
@@ -263,7 +312,25 @@ func reset_state(new_seed: int = 42, width: float = 128.0, height: float = 96.0)
 	_brush_cells.clear()
 	watch_stations.clear()
 	miasma_zones.clear()
+	canticle_storms.clear()
+	fungal_projectiles.clear()
+	fungal_infections.clear()
+	microbial_shrouds.clear()
+	neural_tethers.clear()
+	brood_tunnel_cargo.clear()
+	blinding_clouds.clear()
+	parasitic_clouds.clear()
+	time_warps.clear()
+	emp_projectiles.clear()
+	watchkeeper_missiles.clear()
+	sentinel_missiles.clear()
+	sentry_missiles.clear()
+	archon_approaches.clear()
+	guardian_shields.clear()
+	caustic_strikes.clear()
+	unseen_weapon_hits.clear()
 	lattice_bursts.clear()
+	ridge_charges.clear()
 	recent_events.clear()
 	_defensive_recalls.clear()
 	command_history.clear()
@@ -376,14 +443,25 @@ func load_legacy_scenario() -> void:
 	_recompute_supplies()
 	emit_signal("scenario_loaded", scenario_name)
 
-func load_scenario_dict(data: Dictionary, campaign_index: int = -1, difficulty: String = "normal") -> Dictionary:
+func load_scenario_dict(data: Dictionary, campaign_index: int = -1, difficulty: String = "normal", mutations: Array = []) -> Dictionary:
+	for id in mutations:
+		if not Mutators.ACTIVE.has(id):
+			return {"ok": false, "error": "Unknown or unavailable mutator: %s" % str(id)}
 	if str(data.get("mode", "")) == "skirmish":
 		return _load_skirmish(data)
 	var s_seed = int(data.get("seed", 42))
 	var map_cfg = data.get("map", {})
 	var w = float(map_cfg.get("width", 128.0))
 	var h = float(map_cfg.get("height", 96.0))
+	var grid: TerrainGrid
+	if map_cfg.has("terrain_grid"):
+		grid = TerrainGrid.new()
+		if w <= 0.0 or h <= 0.0 or not grid.load_grid(str(map_cfg.terrain_grid), Vector2i(w, h)):
+			return {"ok": false, "error": "Invalid scenario terrain grid"}
 	reset_state(s_seed, w, h)
+	terrain_grid = grid
+	ladder_rules = campaign_index < 0 and data.get("ruleset", "") == LadderRules.ID
+	RTSData.ladder_active = ladder_rules
 	scenario_name = str(data.get("name", data.get("rdfs:label", "Custom RTS Scenario")))
 	paused = bool(data.get("paused", false))
 	decor_enabled = bool(data.get("decor", true))
@@ -451,6 +529,8 @@ func load_scenario_dict(data: Dictionary, campaign_index: int = -1, difficulty: 
 			var c = idx % cols
 			var pos = Vector2(base_x + c * spread, base_y + r * spread) if count > 1 else Vector2(base_x, base_y)
 			var spawned = spawn_unit(utype, owner_id, pos, str(u.get("id", "")) if count == 1 else "", float(u.get("build_progress", 1.0)))
+			if campaign_index >= 0 and Campaign.CONSTRUCTION_TIMES.has(utype):
+				spawned.build_total_time = Campaign.CONSTRUCTION_TIMES[utype]
 			if u.has("hp"):
 				spawned["hp"] = float(u.get("hp"))
 			if u.has("shields"):
@@ -464,8 +544,14 @@ func load_scenario_dict(data: Dictionary, campaign_index: int = -1, difficulty: 
 	_start_vision(bool(data.get("fog_of_war", false)))
 	if campaign_index >= 0:
 		campaign = Campaign.new(self, campaign_index, difficulty)
+		if not mutations.is_empty():
+			var enabled := []
+			for id in Mutators.ACTIVE:
+				if id in mutations:
+					enabled.append(id)
+			campaign.mutators = Mutators.new(self, enabled)
 		sim_speed = campaign.playback_speed()
-		if difficulty in ["hard", "brutal"]:
+		if campaign.mutators != null or difficulty in ["hard", "brutal"]:
 			_refresh_vision()
 	emit_signal("scenario_loaded", scenario_name)
 	return {"ok": true, "scenario": scenario_name, "unit_count": units.size()}
@@ -480,7 +566,7 @@ func resolve_scenario_path(slug_or_path: String) -> String:
 			return candidate
 	return ""
 
-func load_scenario_file(slug_or_path: String, difficulty: String = "normal") -> Dictionary:
+func load_scenario_file(slug_or_path: String, difficulty: String = "normal", mutations: Array = []) -> Dictionary:
 	if difficulty not in Campaign.DIFFICULTIES:
 		return {"ok": false, "error": "Unknown campaign difficulty."}
 	var file_path = resolve_scenario_path(slug_or_path)
@@ -489,12 +575,12 @@ func load_scenario_file(slug_or_path: String, difficulty: String = "normal") -> 
 	var parsed = JSON.parse_string(FileAccess.get_file_as_string(file_path))
 	if typeof(parsed) != TYPE_DICTIONARY:
 		return {"ok": false, "error": "Scenario is not a JSON object: " + file_path}
-	return load_scenario_dict(parsed, Campaign.mission_for_path(file_path), difficulty)
+	return load_scenario_dict(parsed, Campaign.mission_for_path(file_path), difficulty, mutations)
 
-func start_campaign(index: int, difficulty: String = "normal") -> Dictionary:
+func start_campaign(index: int, difficulty: String = "normal", mutations: Array = []) -> Dictionary:
 	if index < 0 or index >= Campaign.MISSIONS.size():
 		return {"ok": false, "error": "Unknown campaign mission."}
-	return load_scenario_file(Campaign.MISSIONS[index].id, difficulty)
+	return load_scenario_file(Campaign.MISSIONS[index].id, difficulty, mutations)
 
 func start_skirmish(map_id: String = "frontier-hunters", options: Dictionary = {}) -> Dictionary:
 	if not SKIRMISH_MAPS.has(map_id):
@@ -505,6 +591,16 @@ func start_skirmish(map_id: String = "frontier-hunters", options: Dictionary = {
 	for key in ["seed", "difficulty", "strategy", "unlimited_resources", "player_faction", "ai_faction"]:
 		if options.has(key):
 			data[key] = options[key]
+	return _load_skirmish(data)
+
+func start_online_match(map_id: String, match_seed: int, factions: Array, watch_ai := false) -> Dictionary:
+	var data := skirmish_map_config(map_id)
+	if data.is_empty() or factions.size() != 2:
+		return {"ok": false, "error": "Invalid online match setup"}
+	data.merge({"seed": match_seed, "player_faction": factions[0], "ai_faction": factions[1],
+		"unlimited_resources": false, "fog_of_war": true, "online": true, "watch_ai": watch_ai,
+		"difficulty": "hard" if watch_ai else data.get("difficulty", "normal"),
+		"strategy": "rush" if watch_ai else data.get("strategy", "balanced")}, true)
 	return _load_skirmish(data)
 
 func skirmish_map_config(map_id: String) -> Dictionary:
@@ -522,7 +618,6 @@ func _load_skirmish(data: Dictionary) -> Dictionary:
 	var strategy = str(data.get("strategy", "balanced"))
 	var player_faction := str(data.get("player_faction", RTSData.FACTION_HUMANS))
 	var ai_faction := str(data.get("ai_faction", RTSData.FACTION_HUMANS))
-	var faction_ids: Array = RTSData.faction_info.keys()
 	for choice in [player_faction, ai_faction]:
 		if choice != "random" and not RTSData.faction_info.has(choice):
 			return {"ok": false, "error": "Unknown skirmish faction."}
@@ -537,7 +632,13 @@ func _load_skirmish(data: Dictionary) -> Dictionary:
 	_configure_watch_stations(map_cfg)
 	_spawn_route_blockers(map_cfg)
 	players.erase(3)
+	var online := bool(data.get("online", false))
+	var watch_ai := bool(data.get("watch_ai", false))
+	ladder_rules = watch_ai
+	RTSData.ladder_active = ladder_rules
 	scenario_name = str(data.get("name", "Frontier Hunters — 1 Player vs AI"))
+	if online:
+		scenario_name = scenario_name.split(" — ", true, 1)[0] + " — Online 1v1"
 	var slots: Array = range(starts.size())
 	for i in range(starts.size() - 1, 0, -1):
 		var j = rng.randi_range(0, i)
@@ -545,30 +646,29 @@ func _load_skirmish(data: Dictionary) -> Dictionary:
 		slots[i] = slots[j]
 		slots[j] = temp
 	# Faction rolls do not change which starting sites a given seed selects.
-	var faction_rng := RandomNumberGenerator.new()
-	faction_rng.seed = match_seed ^ 0x348ba701
-	var rolled := [faction_ids[faction_rng.randi_range(0, faction_ids.size() - 1)], faction_ids[faction_rng.randi_range(0, faction_ids.size() - 1)]]
 	var choices := {"1": player_faction, "2": ai_faction}
-	var factions := {"1": rolled[0] if player_faction == "random" else player_faction,
-		"2": rolled[1] if ai_faction == "random" else ai_faction}
-	match_state = {"mode": "1p_vs_ai", "status": "playing", "winner": 0, "reason": "", "seed": match_seed,
+	var factions := resolve_factions(match_seed, choices)
+	match_state = {"mode": "online_ai_1v1" if watch_ai else ("online_1v1" if online else "1p_vs_ai"), "status": "playing", "winner": 0, "reason": "", "seed": match_seed,
 		"map_id": str(data.get("map_id", "custom")),
 		"difficulty": difficulty, "strategy": strategy, "unlimited_resources": unlimited_resources,
 		"starts": starts.duplicate(true), "expansions": map_cfg.get("expansions", []).duplicate(true),
 		"assigned_starts": {"1": slots[0], "2": slots[1]}, "factions": factions, "faction_choices": choices}
+	if ladder_rules:
+		match_state["ruleset"] = LadderRules.ID
 	for obs in map_cfg.get("obstacles", []):
 		terrain_obstacles.append(Rect2(float(obs.x), float(obs.y), float(obs.w), float(obs.h)))
 	var resource_sites = starts + map_cfg.get("expansions", [])
 	var crystal_lines := {}
 	var crystal_stock := 50000 if unlimited_resources else 1500
-	var aether_stock := 50000 if unlimited_resources else 2250
+	var aether_stock := 50000 if unlimited_resources else LadderRules.GAS_STOCK
 	for slot in range(resource_sites.size()):
 		var site: Dictionary = resource_sites[slot]
 		var base = Vector2(float(site.x), float(site.y))
 		var outward = (base - Vector2(map_width, map_height) * 0.5).normalized()
 		var tangent = Vector2(-outward.y, outward.x)
 		for i in range(8):
-			var patch := spawn_resource("crystal_field", _resource_land_position(base + outward * 13.0 + tangent * (float(i) - 3.5) * 3.6), crystal_stock, "start_%d_crystal_%d" % [slot, i])
+			var stock: int = LadderRules.MINERAL_STOCK[i] if ladder_rules else crystal_stock
+			var patch := spawn_resource("crystal_field", _resource_land_position(base + outward * 13.0 + tangent * (float(i) - 3.5) * 3.6), stock, "start_%d_crystal_%d" % [slot, i])
 			patch["line_origin"] = base
 			if i == 0:
 				crystal_lines[slot] = patch
@@ -584,12 +684,15 @@ func _load_skirmish(data: Dictionary) -> Dictionary:
 		var faction: String = factions[str(pid)]
 		var roster: Dictionary = RTSData.faction_info[faction]
 		players[pid]["faction"] = faction
-		players[pid]["name"] = "Commander" if pid == 1 else "AI Commander"
+		players[pid]["name"] = "Commander %d" % pid if online else ("Commander" if pid == 1 else "AI Commander")
 		players[pid]["crystal"] = 50
 		players[pid]["aether"] = 0
 		var start: Dictionary = starts[slots[pid - 1]]
 		var base = Vector2(float(start.x), float(start.y))
-		spawn_unit(roster.town_hall, pid, base)
+		var town_hall := spawn_unit(roster.town_hall, pid, base)
+		if ladder_rules and faction == RTSData.FACTION_MONSTERS:
+			_grant_larvae(town_hall, BROOD_SLOTS - town_hall.brood_slots)
+			spawn_unit("drift_sac", pid, base + Vector2(0.0, -10.0))
 		for i in range(12):
 			var angle = TAU * float(i) / 12.0
 			var worker = spawn_unit(roster.worker, pid, base + Vector2(cos(angle), sin(angle)) * 7.0)
@@ -597,17 +700,30 @@ func _load_skirmish(data: Dictionary) -> Dictionary:
 	_rebuild_astar_grid()
 	_recompute_supplies()
 	RTSCommanderAI.configure_from_scenario([])
-	RTSCommanderAI.set_skirmish_directive(2, difficulty, strategy)
+	if not online or watch_ai:
+		RTSCommanderAI.set_skirmish_directive(2, difficulty, strategy)
+	if watch_ai:
+		RTSCommanderAI.set_skirmish_directive(1, difficulty, strategy)
 	_start_vision(bool(data.get("fog_of_war", true)))
 	emit_signal("scenario_loaded", scenario_name)
 	return {"ok": true, "scenario": scenario_name, "match": match_state.duplicate(true)}
+
+func resolve_factions(seed_value: int, choices: Dictionary) -> Dictionary:
+	var ids := RTSData.faction_info.keys()
+	var faction_rng := RandomNumberGenerator.new()
+	faction_rng.seed = seed_value ^ 0x348ba701
+	var factions := {}
+	for seat in ["1", "2"]:
+		var rolled: String = ids[faction_rng.randi_range(0, ids.size() - 1)]
+		factions[seat] = rolled if choices[seat] == "random" else choices[seat]
+	return factions
 
 func _start_vision(enabled: bool) -> void:
 	if not _brush_cells.is_empty() or not watch_stations.is_empty():
 		_rebuild_spatial_grid()
 	if enabled:
 		vision = Vision.new(map_width, map_height, players.keys())
-		if not high_ground_zones.is_empty() or not ramps.is_empty():
+		if terrain_grid or not high_ground_zones.is_empty() or not ramps.is_empty():
 			vision.configure_elevation(get_elevation_at)
 	_refresh_vision()
 
@@ -627,7 +743,8 @@ func _refresh_vision() -> void:
 	for station in watch_stations:
 		var owner := 0
 		for unit in query_units_in_radius(station.pos, WATCH_STATION_CAPTURE):
-			if unit.is_structure or unit.flight_height > 0.0 or unit.get("burrowed", false) or unit.hp <= 0.0 or not players.has(unit.owner):
+			if (unit.is_structure or unit.flight_height > 0.0 or unit.get("burrowed", false)
+					or unit.get("nonblocking", false) or unit.hp <= 0.0 or not players.has(unit.owner)):
 				continue
 			if unit.pos.distance_squared_to(station.pos) > WATCH_STATION_CAPTURE * WATCH_STATION_CAPTURE:
 				continue
@@ -638,7 +755,7 @@ func _refresh_vision() -> void:
 		station.owner = owner
 	if vision != null:
 		var started := Time.get_ticks_usec()
-		vision.update(units, tick, watch_stations, WATCH_STATION_SIGHT)
+		vision.update(units, tick, watch_stations, WATCH_STATION_SIGHT, _public_ladder_structure if ladder_rules else Callable())
 		profile_usec.vision += Time.get_ticks_usec() - started
 
 func visible_watch_station_owner(station: Dictionary, player: int) -> int:
@@ -681,26 +798,53 @@ func _can_spread_living_ground(from: Vector2, to: Vector2) -> bool:
 	return true
 
 func can_see_unit(player: int, unit: Dictionary) -> bool:
+	if unit.get("dread_in_transit", false) or unit.get("gas_extracting", false):
+		return false
 	if player == 0 or unit.owner == player:
+		return true
+	if int(unit.get("revealed_to", {}).get(player, 0)) > tick:
+		return true
+	if unit.is_structure and _public_ladder_structure(unit):
 		return true
 	if not can_see_position(player, unit.pos):
 		return false
-	var requires_detection := bool(unit.get("cloaked", false)) or bool(unit.get("burrowed", false))
+	var burrow_conceals := bool(unit.get("burrowed", false))
+	if unit.unit_type == "sentinel_mine_armed":
+		burrow_conceals = int(unit.get("mine_ready", 0)) <= tick or bool(players[unit.owner].upgrades.get("drilling_claws", 0))
+	var requires_detection := bool(unit.get("cloaked", false)) or burrow_conceals or flagship_cloaks(unit)
+	if requires_detection and (fungal_grasp_active(unit) or int(unit.get("stasis_until", 0)) > tick):
+		return true
+	if requires_detection and systems_jammed(unit):
+		return true
+	if requires_detection and not unit.get("burrowed", false) and int(unit.get("emp_reveal_until", 0)) > tick:
+		return true
+	if requires_detection and neural_tethers.has(unit.tag):
+		return true
 	var concealed: bool = not _brush_cells.is_empty() and not unit.is_structure and not unit.is_worker and unit.flight_height <= 0.0 and unit.attributes.has("Biological") and _brush_cells.has(Vector2i((unit.pos / 4.0).floor()))
 	if not requires_detection and not concealed:
 		return true
-	if vision != null and vision.sweep_detects(player, unit.pos):
+	if _position_detected(player, unit.pos):
 		return true
-	for detector in _detectors:
-		if detector.owner == player and detector_is_active(detector):
-			var radius: float = detector.detection_radius
-			if unit.pos.distance_squared_to(detector.pos) <= radius * radius:
-				return true
 	if not requires_detection:
 		for scout in query_units_in_radius(unit.pos, BRUSH_REVEAL_RADIUS):
 			if scout.owner == player and scout.hp > 0.0 and scout.build_progress >= 1.0 and scout.pos.distance_squared_to(unit.pos) <= BRUSH_REVEAL_RADIUS * BRUSH_REVEAL_RADIUS:
 				return true
 	return false
+
+func _position_detected(player: int, point: Vector2) -> bool:
+	if vision != null and vision.sweep_detects(player, point):
+		return true
+	for detector in _detectors:
+		if detector.owner == player and detector_is_active(detector) and point.distance_squared_to(detector.pos) <= detector.detection_radius ** 2:
+			return true
+	return false
+
+func can_identify_hallucination(player: int, unit: Dictionary) -> bool:
+	return (unit.get("hallucinated", false) and (player == 0 or player == unit.owner
+		or (can_see_position(player, unit.pos) and _position_detected(player, unit.pos))))
+
+func is_hostile_contact(player: int, unit: Dictionary) -> bool:
+	return unit.owner > 0 and unit.owner != player and int(unit.get("disguise_owner", -1)) != player
 
 func detector_is_active(detector: Dictionary) -> bool:
 	return float(detector.get("detection_radius", 0.0)) > 0.0 and detector.hp > 0.0 and detector.build_progress >= 1.0 \
@@ -709,18 +853,66 @@ func detector_is_active(detector: Dictionary) -> bool:
 func remembered_buildings(player: int) -> Array:
 	if vision == null:
 		return []
-	return vision.buildings_for(player).filter(func(building): return not can_see_position(player, building.pos))
+	return vision.buildings_for(player).filter(func(building):
+		return not can_see_position(player, building.pos) and not _public_ladder_structure(building))
 
 func _check_match_result() -> void:
 	if match_state.get("status", "") != "playing":
 		return
 	var remaining = {1: 0, 2: 0}
+	var has_headquarters := [false, false]
 	for u in units.values():
-		if u.is_structure and u.hp > 0 and remaining.has(u.owner):
+		if u.hp > 0 and remaining.has(u.owner) and _qualifies_for_elimination(u):
 			remaining[u.owner] += 1
+			if ladder_rules and u.get("is_town_hall", false):
+				has_headquarters[int(u.owner) - 1] = true
+	if ladder_rules:
+		for index in range(has_headquarters.size()):
+			if has_headquarters[index]:
+				ladder_no_headquarters_since[index] = -1
+			elif ladder_no_headquarters_since[index] < 0:
+				ladder_no_headquarters_since[index] = tick
 	if remaining[1] == 0 or remaining[2] == 0:
 		var winner = 0 if remaining[1] == 0 and remaining[2] == 0 else (2 if remaining[1] == 0 else 1)
 		_finish_match(winner, "all_structures_destroyed")
+	elif ladder_rules and tick - _ladder_last_progress_tick >= LadderRules.STALEMATE_DRAW_SECONDS * TICK_RATE:
+		_finish_match(0, "stalemate")
+
+func _qualifies_for_elimination(unit: Dictionary) -> bool:
+	return unit.is_structure and (not ladder_rules or unit.unit_type not in LadderRules.NON_ELIMINATION_STRUCTURES)
+
+func ladder_structures_revealed(owner: int) -> bool:
+	if not ladder_rules or owner < 1 or owner > 2:
+		return false
+	var since: int = ladder_no_headquarters_since[owner - 1]
+	return since >= 0 and tick - since >= LadderRules.HEADQUARTERS_REVEAL_SECONDS * TICK_RATE
+
+func _public_ladder_structure(building: Dictionary) -> bool:
+	return ladder_structures_revealed(building.owner) and building.unit_type not in LadderRules.NON_ELIMINATION_STRUCTURES
+
+func stalemate_seconds_remaining() -> int:
+	var elapsed := tick - _ladder_last_progress_tick
+	if not ladder_rules or match_state.get("status") != "playing" or elapsed < LadderRules.STALEMATE_WARNING_SECONDS * TICK_RATE:
+		return 0
+	return ceili(float(LadderRules.STALEMATE_DRAW_SECONDS * TICK_RATE - elapsed) / TICK_RATE)
+
+func radar_contacts(owner: int) -> PackedVector2Array:
+	var positions := PackedVector2Array()
+	if not ladder_rules or vision == null or owner == 0:
+		return positions
+	var tracked := {}
+	for beacon in units.values():
+		if beacon.owner != owner or beacon.unit_type != "radar_beacon" or beacon.build_progress < 1.0:
+			continue
+		for contact in query_units_in_radius(beacon.pos, LadderRules.RADAR_RADIUS, owner):
+			if (contact.is_structure or contact.get("nonblocking", false) or contact.get("cloaked", false)
+					or contact.get("burrowed", false) or flagship_cloaks(contact) or tracked.has(contact.tag)):
+				continue
+			if (is_hostile_contact(owner, contact) and not can_see_unit(owner, contact)
+					and beacon.pos.distance_squared_to(contact.pos) <= LadderRules.RADAR_RADIUS ** 2):
+				tracked[contact.tag] = true
+				positions.append(contact.pos)
+	return positions
 
 func surrender(player_id: int) -> Dictionary:
 	if match_state.get("status", "") != "playing" or not player_id in [1, 2]:
@@ -749,36 +941,58 @@ func _finish_match(winner: int, reason: String) -> void:
 		scores[str(owner)] = row
 	match_state["scorecard"] = scores
 	emit_signal("notice", 1, "Victory" if winner == 1 else ("Draw" if winner == 0 else "Defeat"), "info")
+	if match_state.get("mode") == "online_1v1":
+		emit_signal("notice", 2, "Victory" if winner == 2 else ("Draw" if winner == 0 else "Defeat"), "info")
 	emit_signal("match_finished")
 
+func unit_definition_for(unit_type: String, owner_id: int) -> Dictionary:
+	if unit_type == "sentry_turret" and owner_id == 1 and campaign != null and campaign.mission_index == Campaign.DEFENSE:
+		return campaign.defense_turret_definition
+	return RTSData.get_unit_def(unit_type)
+
 func _can_build(worker: Dictionary, structure_type: String, pos: Vector2) -> bool:
-	var def = RTSData.get_unit_def(structure_type)
+	var def := unit_definition_for(structure_type, worker.owner)
 	if not worker.is_worker or worker.unit_type == "prospector" or not bool(def.get("is_structure", false)) or def.has("attachment_for") or def.get("faction", "") != worker.faction:
 		return false
 	if def.get("campaign_only", false) and (campaign == null or worker.owner != 1):
+		return false
+	if def.get("morph_only", false) or (def.get("ladder_only", false) and not ladder_rules):
 		return false
 	if campaign != null and worker.owner == 1 and structure_type not in campaign.roster.structures:
 		return false
 	for required in def.get("requires", []):
 		if not has_tech_structure(worker.owner, str(required)):
 			return false
+	if not alternative_tech_met(worker.owner, def.get("requires_any", [])):
+		return false
 	if requires_power(structure_type) and not is_powered(worker.owner, pos):
 		return false
 	if def.get("requires_living_ground", false) and (not can_see_position(worker.owner, pos) or not has_active_living_ground(pos, worker.owner)):
 		return false
 	return can_place_structure(structure_type, pos)
 
+func alternative_tech_met(owner_id: int, alternatives: Array) -> bool:
+	return alternatives.is_empty() or alternatives.any(func(required): return has_tech_structure(owner_id, str(required)))
+
 func has_tech_structure(owner_id: int, type_id: String) -> bool:
 	var retracted_type := type_id + "_retracted"
 	for unit in units.values():
 		if unit.owner != owner_id or not unit.is_structure or unit.build_progress < 1.0 or unit.get("campaign_reserve", false):
 			continue
-		if unit.unit_type == type_id or unit.unit_type == retracted_type:
+		if unit.unit_type == type_id or unit.unit_type == retracted_type or (type_id == "waystone" and unit.unit_type == "transit_waystone"):
 			return true
+		if type_id == "colony_hub" and unit.unit_type == "fortified_hub":
+			return true
+		if unit.has("structure_form"):
+			var form: String = unit.structure_form
+			if form == type_id or (type_id == "brood_lair" and form == "brood_hive"):
+				return true
 	return false
 
 func requires_power(structure_type: String) -> bool:
-	return structure_type == "aegis_relay" or (structure_type == "waystone" and not match_state.is_empty())
+	return structure_type in ["aegis_relay", "aegis_capacitor", "concord_core", "transit_waystone", "twilight_array",
+		"prism_forge", "robotics_foundry", "robotics_annex", "canticle_archive", "veil_sanctum", "star_assembly", "fleet_spire"] \
+		or (structure_type == "waystone" and (ladder_rules or not match_state.is_empty()))
 
 func is_powered(owner_id: int, pos: Vector2) -> bool:
 	for unit in units.values():
@@ -790,9 +1004,9 @@ func power_source_radius(unit: Dictionary) -> float:
 	if unit.build_progress < 1.0:
 		return 0.0
 	if unit.unit_type == "resonator":
-		return POWER_RADIUS
-	if unit.unit_type == "lumen_carrier" and carrier_power_ticks(unit) > 0:
-		return CARRIER_POWER_RADIUS
+		return float(RTSData.get_unit_def("resonator").get("power_radius", POWER_RADIUS))
+	if unit.unit_type == "lumen_carrier" and carrier_power_active(unit):
+		return LadderRules.CARRIER_FIELD_RADIUS if ladder_rules else CARRIER_POWER_RADIUS
 	return 0.0
 
 func power_source_covers(unit: Dictionary, pos: Vector2) -> bool:
@@ -802,12 +1016,17 @@ func power_source_covers(unit: Dictionary, pos: Vector2) -> bool:
 func carrier_power_ticks(unit: Dictionary) -> int:
 	return maxi(0, int(unit.get("power_field_until", 0)) - tick)
 
+func carrier_power_active(unit: Dictionary) -> bool:
+	return unit.get("carrier_anchored", false) or carrier_power_ticks(unit) > 0
+
 func carrier_rearm_ticks(unit: Dictionary) -> int:
 	return maxi(0, int(unit.get("power_field_rearm", 0)) - tick)
 
 func carrier_field_block_reason(unit: Dictionary, deploy: bool) -> String:
 	if unit.unit_type != "lumen_carrier" or unit.build_progress < 1.0:
 		return "Select a completed Lumen Carrier."
+	if unit.has("power_field_transition"):
+		return "Lumen Carrier is transforming."
 	if not deploy:
 		return "The power field is folded." if not unit.is_immobile else ""
 	if unit.is_immobile:
@@ -818,25 +1037,41 @@ func carrier_field_block_reason(unit: Dictionary, deploy: bool) -> String:
 func _set_carrier_field(unit: Dictionary, deploy: bool) -> void:
 	unit["is_immobile"] = deploy
 	if deploy:
-		unit["power_field_until"] = tick + CARRIER_POWER_TICKS
-		unit.orders.clear()
-		unit.path.clear()
-		unit.erase("choke_yield")
-		unit["vel"] = Vector2.ZERO
-		unit["has_home_pos"] = false
+		if ladder_rules:
+			unit["carrier_anchored"] = true
+		else:
+			unit["power_field_until"] = tick + CARRIER_POWER_TICKS
+		_stop_for_mode_change(unit)
 	else:
+		unit.erase("carrier_anchored")
 		unit.erase("power_field_until")
-		unit["power_field_rearm"] = tick + CARRIER_REARM_TICKS
+		if not ladder_rules:
+			unit["power_field_rearm"] = tick + CARRIER_REARM_TICKS
 	ability_triggered.emit(unit, "deploy_power_field" if deploy else "retract_power_field", unit.pos)
+
+func _stop_for_mode_change(unit: Dictionary) -> void:
+	unit.orders.clear()
+	unit.path.clear()
+	unit.erase("choke_yield")
+	unit.vel = Vector2.ZERO
+	unit.has_home_pos = false
 
 func uses_brood_slots(unit: Dictionary) -> bool:
 	return unit.unit_type == "brood_nest" and not match_state.is_empty()
+
+func brood_slot_cap() -> int:
+	return LadderRules.LARVA_LIMIT if ladder_rules else BROOD_SLOT_CAP
+
+func training_uses_brood_slot(producer: Dictionary, unit_type: String) -> bool:
+	return uses_brood_slots(producer) and (not ladder_rules or unit_type != "brood_keeper")
 
 func brood_inject_block_reason(keeper: Dictionary, nest: Dictionary) -> String:
 	if keeper.unit_type != "brood_keeper" or keeper.energy < BROOD_INJECT_COST:
 		return "Requires a Brood Keeper with 25 energy."
 	if nest.is_empty() or nest.owner != keeper.owner or nest.build_progress < 1.0 or not uses_brood_slots(nest):
 		return "Select a completed friendly Brood Nest."
+	if ladder_rules:
+		return ""
 	if nest.get("brood_inject_finish", 0) > 0:
 		return "A clutch is already growing at this Nest."
 	if nest.brood_slots >= BROOD_SLOT_CAP:
@@ -849,8 +1084,16 @@ func brood_inject_remaining(nest: Dictionary) -> float:
 func burrow_block_reason(unit: Dictionary, underground: bool) -> String:
 	if unit.flight_height > 0.0 or not RTSData.get_unit_def(unit.unit_type).get("abilities", []).has("burrow"):
 		return "This unit cannot burrow."
+	if unit.has("burrow_transition"):
+		return "Burrow transition in progress."
 	if unit.get("burrowed", false) == underground:
 		return "Already burrowed." if underground else "Already on the surface."
+	if underground:
+		var upgrades: Dictionary = players[unit.owner].upgrades
+		if ladder_rules and unit.unit_type != "spine_ambusher" and not upgrades.get("burrow", 0):
+			return "Research Burrow at a Brood Nest."
+		if not ladder_rules and unit.unit_type == "sporeburst" and not upgrades.get("spore_burrow", 0):
+			return "Research Spore Burrow at the Spore Nursery."
 	if _is_point_blocked_by_static(unit.pos, unit.radius):
 		return "Burrow needs clear ground." if underground else "The surface is blocked."
 	if not underground and nav_dirty:
@@ -865,8 +1108,14 @@ func burrow_block_reason(unit: Dictionary, underground: bool) -> String:
 func _set_burrowed(unit: Dictionary, underground: bool) -> void:
 	var definition: Dictionary = RTSData.get_unit_def(unit.unit_type)
 	unit["burrowed"] = underground
-	unit.is_immobile = underground or bool(definition.get("is_immobile", false))
-	unit.sight_range = minf(float(definition.sight_range), BURROW_SIGHT) if underground else float(definition.sight_range)
+	if ladder_rules and unit.unit_type == "bile_crawler":
+		unit["burrow_mobile"] = underground and players[unit.owner].upgrades.get("tunneling_claws", 0) > 0
+	elif ladder_rules and unit.unit_type == "mireweaver":
+		unit["burrow_mobile"] = underground
+	unit.is_immobile = (underground and not unit.get("burrow_mobile", false)) or bool(definition.get("is_immobile", false))
+	unit.sight_range = minf(float(definition.sight_range), BURROW_SIGHT) if underground and unit.unit_type != "spine_ambusher" else float(definition.sight_range)
+	if underground and unit.unit_type == "mireweaver":
+		unit.sight_range = 20.0
 	unit.orders.clear()
 	unit.path.clear()
 	unit.erase("choke_yield")
@@ -877,11 +1126,42 @@ func _set_burrowed(unit: Dictionary, underground: bool) -> void:
 	unit.attack_state_timer = 0.0
 	unit.attack_target_tag = 0
 
-func can_place_structure(structure_type: String, pos: Vector2) -> bool:
+func _begin_burrow_transition(unit: Dictionary, underground: bool) -> void:
+	var timing: Vector3 = LadderRules.BURROW_TIMINGS[unit.unit_type]
+	if unit.unit_type == "spine_ambusher" and players[unit.owner].upgrades.get("adaptive_talons", 0):
+		timing.x = LadderRules.AMBUSHER_TALONS_BURROW_SECONDS
+	var delay := timing.x + rng.randf_range(0.0, timing.z) if underground \
+		else timing.y + rng.randf_range(0.0, timing.z if unit.unit_type == "spine_ambusher" else LadderRules.UNBURROW_MAX_DELAY)
+	unit["burrow_transition"] = {"down": underground, "start": tick,
+		"finish": tick + ceili(delay * TICK_RATE), "orders": []}
+	if unit.is_worker:
+		_release_mining_slot(unit)
+	_stop_for_mode_change(unit)
+	unit.is_immobile = true
+	unit.attack_state = "idle"
+	unit.attack_state_timer = 0.0
+	unit.attack_target_tag = 0
+
+func _finish_burrow_transition(unit: Dictionary) -> void:
+	var transition: Dictionary = unit.burrow_transition
+	unit.erase("burrow_transition")
+	var reason := burrow_block_reason(unit, transition.down)
+	if not reason.is_empty():
+		unit.is_immobile = (unit.get("burrowed", false) and not unit.get("burrow_mobile", false)) \
+			or RTSData.get_unit_def(unit.unit_type).get("is_immobile", false)
+		notice.emit(unit.owner, reason, "warn")
+		return
+	_set_burrowed(unit, transition.down)
+	for order in transition.orders:
+		issue_command([unit.tag], order.type, order.pos, order.tag, "", order.queue)
+
+func can_place_structure(structure_type: String, pos: Vector2, ignore_tag: int = 0) -> bool:
 	var def = RTSData.get_unit_def(structure_type)
 	if def.is_empty() or not pos.is_finite():
 		return false
 	var radius = float(def.get("radius", 2.0))
+	if terrain_grid and (_map_clamped_position(pos, radius) != pos or terrain_grid.overlaps(pos, radius, false, true)):
+		return false
 	if is_water_at(pos, radius):
 		return false
 	var extractor := bool(def.get("is_extractor", false))
@@ -898,7 +1178,7 @@ func can_place_structure(structure_type: String, pos: Vector2) -> bool:
 		if obs.grow(radius).has_point(pos):
 			return false
 	for u in units.values():
-		if u.is_structure and u.flight_height <= 0.0 and pos.distance_to(u.pos) < radius + float(u.radius) + 1.0:
+		if u.tag != ignore_tag and u.is_structure and u.flight_height <= 0.0 and pos.distance_to(u.pos) < radius + float(u.radius) + 1.0:
 			return false
 	for res in resources.values():
 		if not deposit_present(res):
@@ -908,19 +1188,30 @@ func can_place_structure(structure_type: String, pos: Vector2) -> bool:
 				return false
 	return true
 
-func _ground_mobile_overlaps(point: Vector2, radius: float) -> bool:
+func _ground_mobile_overlaps(point: Vector2, radius: float, ignored_tag: int = 0, other_ignored_tag: int = 0) -> bool:
 	for unit in units.values():
-		if not unit.is_structure and unit.flight_height <= 0.0 and not unit.get("burrowed", false) and point.distance_to(unit.pos) < radius + unit.radius:
+		if (unit.tag != ignored_tag and unit.tag != other_ignored_tag and not unit.is_structure and unit.flight_height <= 0.0
+				and not unit.get("burrowed", false) and not unit.get("nonblocking", false) and point.distance_to(unit.pos) < radius + unit.radius):
 			return true
 	return false
 
 func silo_raise_block_reason(silo: Dictionary) -> String:
+	if silo.has("silo_raise_until"):
+		return "The silo is already raising."
 	if _ground_mobile_overlaps(silo.pos, silo.radius):
 		return "Move ground units off the Silo before raising it."
 	return ""
 
 func production_attachment_pad(producer: Dictionary) -> Vector2:
 	return producer.pos + ATTACHMENT_PAD_OFFSET
+
+func supports_meridian_attachments(structure_type: String) -> bool:
+	return structure_type in LadderRules.MERIDIAN_MODULE_PRODUCERS if ladder_rules else structure_type == "muster_hall"
+
+func _meridian_attachment_compatible(producer: Dictionary, attachment_type: String) -> bool:
+	var definition := RTSData.get_unit_def(attachment_type)
+	return (supports_meridian_attachments(producer.get("unit_type", "")) and definition.has("attachment_for")
+		and producer.faction == definition.get("faction") and players.has(producer.owner))
 
 func _attachment_link_valid(producer: Dictionary, attachment: Dictionary) -> bool:
 	return not producer.is_empty() and not attachment.is_empty() and producer.hp > 0.0 and producer.flight_height <= 0.0 \
@@ -934,13 +1225,20 @@ func production_attachment(producer: Dictionary, completed_only: bool = true) ->
 		return {}
 	return attachment
 
-func _is_light_infantry_job(job: Dictionary) -> bool:
+func attachment_under_construction(producer: Dictionary) -> bool:
+	return production_attachment(producer, false).get("build_progress", 1.0) < 1.0
+
+func _reactor_compatible_job(job: Dictionary) -> bool:
+	if ladder_rules:
+		return not job.has("upgrade") and not job.has("requires_attachment")
 	var definition: Dictionary = RTSData.get_unit_def(str(job.get("unit_type", "")))
 	return definition.get("attributes", []).has("Light")
 
 func active_production_slots(producer: Dictionary) -> int:
 	var queue: Array = producer.production_queue
-	if queue.is_empty() or producer.flight_height > 0.0 or (requires_power(producer.unit_type) and not is_powered(producer.owner, producer.pos)):
+	if queue.is_empty() or producer.flight_height > 0.0 or producer.has("flight_transition") or (requires_power(producer.unit_type) and not is_powered(producer.owner, producer.pos)):
+		return 0
+	if attachment_under_construction(producer):
 		return 0
 	var required_attachment := str(queue[0].get("requires_attachment", ""))
 	if not required_attachment.is_empty() and production_attachment(producer).get("unit_type") != required_attachment:
@@ -949,17 +1247,16 @@ func active_production_slots(producer: Dictionary) -> int:
 		return queue.size()
 	if queue.size() >= 2 and producer.has("attachment_tag") and production_attachment(producer).get("unit_type") == "fabrication_module":
 		# Heavy units and research are FIFO barriers. Neither lane can skip a job.
-		if _is_light_infantry_job(queue[0]) and _is_light_infantry_job(queue[1]):
+		if _reactor_compatible_job(queue[0]) and _reactor_compatible_job(queue[1]):
 			return 2
 	return 1
 
 func attachment_block_reason(producer: Dictionary, attachment_type: String) -> String:
 	var definition: Dictionary = RTSData.get_unit_def(attachment_type)
-	if producer.is_empty() or not units.has(producer.tag) or producer.unit_type != definition.get("attachment_for") \
-		or producer.faction != definition.get("faction") or not players.has(producer.owner):
+	if producer.is_empty() or not units.has(producer.tag) or not _meridian_attachment_compatible(producer, attachment_type):
 		return "This structure cannot build that attachment."
 	if producer.build_progress < 1.0 or producer.hp <= 0.0 or producer.flight_height > 0.0:
-		return "Requires a completed, grounded Muster Hall."
+		return "Requires a completed, grounded production structure."
 	if not production_attachment(producer, false).is_empty():
 		return "The attachment pad is already in use."
 	var pad := production_attachment_pad(producer)
@@ -984,7 +1281,7 @@ func _start_production_attachment(producer: Dictionary, attachment_type: String)
 	var cost := Vector2i(definition.crystal_cost, definition.aether_cost)
 	players[producer.owner].crystal -= cost.x
 	players[producer.owner].aether -= cost.y
-	var attachment := spawn_unit(attachment_type, producer.owner, production_attachment_pad(producer), "", 0.1)
+	var attachment := spawn_unit(attachment_type, producer.owner, production_attachment_pad(producer), "", 0.0)
 	attachment["construction_cost"] = cost
 	attachment["auto_summon"] = true
 	_link_production_attachment(producer, attachment)
@@ -1002,6 +1299,8 @@ func _unlink_attachment(attachment: Dictionary) -> void:
 
 func _orphan_attachment(attachment: Dictionary) -> void:
 	_unlink_attachment(attachment)
+	if ladder_rules:
+		attachment.production_queue.clear()
 	if attachment.build_progress < 1.0:
 		_confirm_waiting_attack_loss(attachment)
 		units.erase(attachment.tag)
@@ -1015,13 +1314,51 @@ func detach_production_attachment(producer: Dictionary) -> void:
 	producer.erase("attachment_tag")
 
 func lift_block_reason(producer: Dictionary) -> String:
+	if producer.has("flight_transition"):
+		return "Wait for the flight transition to finish."
 	var definition: Dictionary = RTSData.get_unit_def(producer.unit_type)
 	if not definition.has("lift_speed") or producer.flight_height > 0.0 or producer.build_progress < 1.0:
 		return "Requires a completed, grounded Meridian production structure."
+	if ladder_rules and producer.unit_type == "colony_hub" and not producer.production_queue.is_empty() \
+			and producer.production_queue[0].get("upgrade") in ["hub_operations", "fortify_hub"]:
+		return "Finish or cancel the Hub conversion before lifting."
 	var attachment := production_attachment(producer, false)
 	if not attachment.is_empty() and attachment.build_progress < 1.0:
 		return "Finish or cancel the attachment before lifting."
+	if ladder_rules and not attachment.is_empty() and not attachment.production_queue.is_empty():
+		return "Finish or cancel the module research before lifting."
 	return ""
+
+func _begin_production_flight_transition(producer: Dictionary, kind: String, start_height: float, end_height: float) -> void:
+	var definition := RTSData.get_unit_def(producer.unit_type)
+	var duration_ms: float = definition.get("%s_duration_ms" % ("lift" if kind == "abort" else kind), 1000)
+	var ticks := maxi(1, ceili(duration_ms * TICK_RATE / 1000.0))
+	# Keep the current targeting and collision layer until the animation ends.
+	producer["flight_transition"] = {
+		"kind": kind, "start": tick, "end": tick + ticks,
+		"from_height": start_height, "to_height": end_height,
+	}
+	producer.vel = Vector2.ZERO
+	producer.path.clear()
+	producer.has_home_pos = false
+	producer.is_immobile = true
+
+func _finish_production_flight_transition(producer: Dictionary) -> void:
+	var transition: Dictionary = producer.flight_transition
+	producer.erase("flight_transition")
+	producer.is_immobile = bool(RTSData.get_unit_def(producer.unit_type).get("is_immobile", false))
+	match transition.kind:
+		"lift":
+			detach_production_attachment(producer)
+			_set_producer_airborne(producer, true)
+		"land":
+			var reason := landing_block_reason(producer, producer.pos)
+			if reason.is_empty():
+				_land_production(producer, producer.pos)
+			else:
+				producer.orders.clear()
+				_begin_production_flight_transition(producer, "abort", transition.to_height, PRODUCTION_FLIGHT_HEIGHT)
+				notice.emit(producer.owner, reason, "warn")
 
 func _set_producer_airborne(producer: Dictionary, airborne: bool) -> void:
 	var definition: Dictionary = RTSData.get_unit_def(producer.unit_type)
@@ -1034,19 +1371,19 @@ func _set_producer_airborne(producer: Dictionary, airborne: bool) -> void:
 	nav_dirty = true
 
 func _detached_module_at_pad(producer: Dictionary, center: Vector2, tolerance: float) -> Dictionary:
-	if producer.unit_type != "muster_hall":
+	if not supports_meridian_attachments(producer.unit_type):
 		return {}
 	var pad := center + ATTACHMENT_PAD_OFFSET
 	var best := {}
 	var nearest := tolerance * tolerance
 	for module in units.values():
-		if not module.is_structure or module.owner != producer.owner or module.has("attachment_parent_tag") \
+		if not module.is_structure or (not ladder_rules and module.owner != producer.owner) or module.has("attachment_parent_tag") \
 			or module.build_progress < 1.0 or module.hp <= 0.0 or module.flight_height > 0.0:
 			continue
 		var distance: float = module.pos.distance_squared_to(pad)
 		if distance > nearest or (not best.is_empty() and distance == nearest):
 			continue
-		if RTSData.get_unit_def(module.unit_type).get("attachment_for") != producer.unit_type:
+		if not _meridian_attachment_compatible(producer, module.unit_type):
 			continue
 		if not is_equal_approx(get_elevation_at(module.pos), get_elevation_at(module.pos - ATTACHMENT_PAD_OFFSET)):
 			continue
@@ -1061,6 +1398,8 @@ func production_landing_position(producer: Dictionary, requested: Vector2) -> Ve
 	return module.pos - ATTACHMENT_PAD_OFFSET if not module.is_empty() else requested
 
 func landing_block_reason(producer: Dictionary, position: Vector2) -> String:
+	if producer.has("flight_transition"):
+		return "Wait for the flight transition to finish."
 	if not RTSData.get_unit_def(producer.unit_type).has("lift_speed") or producer.flight_height <= 0.0:
 		return "Requires an airborne Meridian production structure."
 	if not position.is_finite() or not can_see_position(producer.owner, position):
@@ -1078,12 +1417,15 @@ func _land_production(producer: Dictionary, position: Vector2) -> void:
 	_index_footprint(producer)
 	var module := _detached_module_at_pad(producer, position, 0.01)
 	if not module.is_empty() and module.pos.is_equal_approx(production_attachment_pad(producer)):
+		module.owner = producer.owner
 		_link_production_attachment(producer, module)
 
 func is_build_tile_blocked(point: Vector2, player: int, allowed_vent: Vector2 = Vector2.INF) -> bool:
 	if not can_see_position(player, point) or is_water_at(point):
 		return true
 	if not Rect2(0, 0, map_width, map_height).has_point(point):
+		return true
+	if terrain_grid and (not terrain_grid.bounds.has_point(point) or terrain_grid.overlaps(point, 0.0, false, true)):
 		return true
 	for obstacle in terrain_obstacles:
 		if obstacle.has_point(point):
@@ -1195,6 +1537,8 @@ func merged_terrain_rects(kind: String) -> Array[Rect2]:
 	return result
 
 func is_water_at(pos: Vector2, radius: float = 0.0) -> bool:
+	if terrain_grid and terrain_grid.overlaps(pos, radius, true, false, true):
+		return true
 	for x in range(int(floor((pos.x - radius) / PATH_CELL_SIZE)), int(floor((pos.x + radius) / PATH_CELL_SIZE)) + 1):
 		for y in range(int(floor((pos.y - radius) / PATH_CELL_SIZE)), int(floor((pos.y + radius) / PATH_CELL_SIZE)) + 1):
 			if water_cells.has(Vector2i(x, y)):
@@ -1238,7 +1582,22 @@ func deposit_yield(deposit: Dictionary) -> int:
 		return 7 if deposit.rich else 5
 	return 6 if deposit.rich else 4
 
-func spawn_unit(unit_type: String, owner_id: int, pos: Vector2, custom_id: String = "", build_progress: float = 1.0) -> Dictionary:
+func unit_upgrade_detail(unit: Dictionary) -> String:
+	if not ladder_rules:
+		return ""
+	if unit.get("rich_extractor", false):
+		return "rich_extractor"
+	if unit.unit_type == "brood_mimic":
+		return unit.get("disguise_detail", "")
+	var owner: int = unit.get("neural_original_owner", unit.owner)
+	var upgrades: Dictionary = players.get(owner, {}).get("upgrades", {})
+	if unit.unit_type == "rifleman" and upgrades.get("combat_shields", 0):
+		return "combat_shield"
+	if unit.unit_type == "skitterling" and upgrades.get("metabolic_boost", 0):
+		return "wings"
+	return ""
+
+func spawn_unit(unit_type: String, owner_id: int, pos: Vector2, custom_id: String = "", build_progress: float = 1.0, hallucinated: bool = false) -> Dictionary:
 	var def = RTSData.get_unit_def(unit_type)
 	if def.is_empty():
 		push_warning("[SimEngine] Unknown unit_type: " + unit_type)
@@ -1251,8 +1610,11 @@ func spawn_unit(unit_type: String, owner_id: int, pos: Vector2, custom_id: Strin
 	next_tag += 1
 	var max_hp = float(def.get("max_hp", 45.0))
 	var max_shields = float(def.get("max_shields", 0.0))
-	var start_hp = max_hp if build_progress >= 1.0 else max(10.0, max_hp * build_progress)
-	var start_shields = max_shields if build_progress >= 1.0 else max_shields * build_progress
+	var durability_progress := build_progress
+	if not ladder_rules and build_progress == 0.0 and def.get("is_structure", false):
+		durability_progress = 0.1
+	var start_hp = max_hp if build_progress >= 1.0 else max(10.0, max_hp * durability_progress)
+	var start_shields = max_shields if build_progress >= 1.0 else max_shields * durability_progress
 
 	var u = {
 		"tag": tag,
@@ -1277,10 +1639,14 @@ func spawn_unit(unit_type: String, owner_id: int, pos: Vector2, custom_id: Strin
 		"flight_height": float(def.get("flight_height", 0.0)),
 		"push_priority": int(def.get("push_priority", 1)),
 		"is_structure": bool(def.get("is_structure", false)),
+		"is_town_hall": bool(def.get("is_town_hall", false)),
 		"is_extractor": bool(def.get("is_extractor", false)),
 		"is_walkable_structure": bool(def.get("is_walkable_structure", false)),
 		"is_worker": bool(def.get("is_worker", false)),
 		"is_immobile": bool(def.get("is_immobile", false)),
+		"cliff_walk": bool(def.get("cliff_walk", false)),
+		"vision_over_cliffs": bool(def.get("vision_over_cliffs", false)),
+		"nonblocking": bool(def.get("nonblocking", false)),
 		"armed_structure": bool(def.get("is_structure", false)) and def.has("weapon"),
 		"detection_radius": float(def.get("detection_radius", 0.0)),
 		"attributes": def.get("attributes", []).duplicate(),
@@ -1304,7 +1670,7 @@ func spawn_unit(unit_type: String, owner_id: int, pos: Vector2, custom_id: Strin
 		"harvest_target_tag": 0,
 		"energy": _starting_energy(unit_type),
 		"build_progress": build_progress,
-		"build_total_time": float(def.get("build_time", 20.0)),
+		"build_total_time": construction_time(unit_type) if def.get("is_structure", false) else float(def.get("build_time", 20.0)),
 		"production_queue": [],
 		"rally_route": [],
 		"kills": 0,
@@ -1312,10 +1678,43 @@ func spawn_unit(unit_type: String, owner_id: int, pos: Vector2, custom_id: Strin
 	}
 	if def.has("living_ground_radius"):
 		u["living_ground_radius"] = def.living_ground_radius
+	if ladder_rules and u.is_extractor:
+		for deposit in resources.values():
+			if deposit.rich and deposit.resource_type == "aether_vent" and deposit.pos.distance_squared_to(pos) <= 0.25:
+				u["rich_extractor"] = true
+				u.name = "Rich " + u.name
+				break
+	if unit_type == "fleet_carrier":
+		u["fighter_reserve"] = LadderRules.CARRIER_FIGHTER_INITIAL
+		u["active_fighters"] = []
+		u["fighter_orders"] = 0
+		u["auto_build_fighters"] = true
+	elif unit_type == "locust_flying":
+		u["auto_locust_swoop"] = true
+	elif unit_type == "vortex_rover":
+		u["auto_vortex_lock"] = true
+	elif unit_type == "sentinel_mine_armed":
+		u["burrowed"] = true
+		u["auto_sentinel_missiles"] = true
+	elif unit_type == "sentinel_mine":
+		u["auto_sentinel_missiles"] = true
+	elif unit_type == "crownspire" and ladder_rules and players.has(owner_id):
+		players[owner_id]["crownspire_tag"] = tag
+	if ladder_rules and unit_type == "rifleman" and players.get(owner_id, {}).get("upgrades", {}).get("combat_shields", 0):
+		_apply_combat_shield(u)
 	if def.has("living_ground_speed_bonus"):
 		u["living_ground_speed_bonus"] = def.living_ground_speed_bonus
+	if def.has("hp_regen"):
+		u["hp_regen"] = def.hp_regen
+		u["hp_regen_delay"] = def.get("hp_regen_delay", 0.0)
+	if def.has("target_priority"):
+		u["target_priority"] = def.target_priority
+	if unit_type == "sporeburst" and players.get(owner_id, {}).get("upgrades", {}).get("rolling_spores", 0):
+		_apply_rolling_spores(u)
 	if unit_type == "brood_nest":
-		u["brood_slots"] = BROOD_SLOTS
+		u["brood_slots"] = 0 if ladder_rules else BROOD_SLOTS
+		u["brood_seeded"] = false
+		u["brood_larvae"] = []
 		u["brood_bonus_slots"] = 0
 		u["brood_recharge"] = 0.0
 		u["worker_rally_route"] = []
@@ -1329,24 +1728,44 @@ func spawn_unit(unit_type: String, owner_id: int, pos: Vector2, custom_id: Strin
 		u["energy"] = def.support.starting_energy
 		u["support_target_tag"] = 0
 		u["next_support_cue"] = 0
-		if unit_type == "triage_specialist":
+		if def.support.stat == "hp":
 			u["auto_heal"] = true
+		elif unit_type == "aegis_capacitor":
+			u["auto_aegis"] = true
+			if _near_friendly_heartstone(owner_id, pos):
+				u.energy = def.support.max_energy
+	if ladder_rules and unit_type == "sunblade":
+		u["auto_charge"] = true
+		if players.get(owner_id, {}).get("upgrades", {}).get("charge", 0):
+			u.speed = LadderRules.SUNBLADE_UPGRADED_SPEED
+	if ladder_rules and unit_type in ["farsight_wisp", "duskblade"]:
+		u["cloaked"] = true
+	if unit_type == "bastion_walker":
+		u["auto_bastion_barrier"] = true
 	if def.has("lifetime_seconds"):
 		u["expires_tick"] = tick + int(def.lifetime_seconds) * TICK_RATE
+	if hallucinated:
+		u["hallucinated"] = true
+		u["expires_tick"] = tick + LadderRules.HALLUCINATION_SECONDS * TICK_RATE
 	units[tag] = u
+	if campaign != null and campaign.mutators != null:
+		campaign.mutators.on_spawn(u)
 	if u.detection_radius > 0.0:
 		_detectors.append(u)
 	if u["is_structure"]:
 		nav_dirty = true
 	_recompute_supplies()
 	emit_signal("unit_spawned", u)
+	if unit_type == "brood_nest" and ladder_rules and build_progress >= 1.0:
+		u.brood_seeded = true
+		_grant_larvae(u, 1)
 	return u
 
 func _starting_energy(unit_type: String) -> float:
 	match unit_type:
-		"colony_hub": return HUB_POWER_COST
+		"colony_hub": return 0.0 if ladder_rules else HUB_POWER_COST
 		"heartstone": return PRODUCTION_BOOST_COST
-		"skirmisher": return 75.0
+		"skirmisher": return 0.0 if ladder_rules else 75.0
 	return 0.0
 
 func ramp_rises_east(ramp: Rect2, plateaus: Array[Rect2]) -> bool:
@@ -1361,17 +1780,94 @@ func ramp_rises_east(ramp: Rect2, plateaus: Array[Rect2]) -> bool:
 	return east_is_high
 
 func get_elevation_at(pos: Vector2) -> float:
+	if terrain_grid:
+		return terrain_grid.elevation_at(pos)
+	return _surface_elevation(pos, pos.x)
+
+func _surface_elevation(region_point: Vector2, x: float) -> float:
 	for rmp in ramps:
-		if rmp.has_point(pos):
-			var t := (pos.x - rmp.position.x) / rmp.size.x
+		if rmp.has_point(region_point):
+			var t := clampf((x - rmp.position.x) / rmp.size.x, 0.0, 1.0)
 			return 2.2 * (t if ramp_rises_east(rmp, high_ground_zones) else 1.0 - t)
 	for hg in high_ground_zones:
-		if hg.has_point(pos):
+		if hg.has_point(region_point):
 			return 2.2
 	return 0.0
 
+func _rebuild_ground_ledges() -> void:
+	if _ledge_plateaus == high_ground_zones and _ledge_ramps == ramps:
+		return
+	_ledge_plateaus = high_ground_zones.duplicate()
+	_ledge_ramps = ramps.duplicate()
+	_ground_ledges.clear()
+	var surfaces := high_ground_zones + ramps
+	for axis in range(2):
+		var along := 1 - axis
+		var limit := map_width if axis == 0 else map_height
+		var edges := {0.0: true, limit: true}
+		for surface in surfaces:
+			edges[surface.position[axis]] = true
+			edges[surface.end[axis]] = true
+		var lines := edges.keys()
+		lines.sort()
+		for line_index in range(1, lines.size() - 1):
+			var edge: float = lines[line_index]
+			if edge <= 0.0 or edge >= limit:
+				continue
+			var cuts := {}
+			for surface in surfaces:
+				if surface.position[axis] <= edge and surface.end[axis] >= edge:
+					cuts[surface.position[along]] = true
+					cuts[surface.end[along]] = true
+			var points := cuts.keys()
+			points.sort()
+			var start := INF
+			var before := Vector2.ZERO
+			var after := Vector2.ZERO
+			before[axis] = (lines[line_index - 1] + edge) * 0.5
+			after[axis] = (lines[line_index + 1] + edge) * 0.5
+			for i in range(points.size() - 1):
+				before[along] = (points[i] + points[i + 1]) * 0.5
+				after[along] = before[along]
+				# Compare the two surfaces at the seam, including both
+				# ends when the seam runs along the ramp's slope.
+				var x: float = edge if axis == 0 else points[i]
+				var has_step := not is_equal_approx(_surface_elevation(before, x), _surface_elevation(after, x))
+				if axis == 1 and not has_step:
+					x = points[i + 1]
+					has_step = not is_equal_approx(_surface_elevation(before, x), _surface_elevation(after, x))
+				if has_step and not is_finite(start):
+					start = points[i]
+				if is_finite(start) and (not has_step or i == points.size() - 2):
+					var end: float = points[i + 1] if has_step else points[i]
+					var position := Vector2.ZERO
+					var size := Vector2.ZERO
+					position[axis] = edge - 0.005
+					position[along] = start
+					size[axis] = 0.01
+					size[along] = end - start
+					_ground_ledges.append(Rect2(position, size))
+					start = INF
+
 func unit_elevation(unit: Dictionary) -> float:
 	return float(unit.flight_height) if unit.flight_height > 0.0 else get_elevation_at(unit.pos)
+
+func unit_visual_elevation(unit: Dictionary) -> float:
+	if unit.has("locust_descent"):
+		var descent: Dictionary = unit.locust_descent
+		var progress := smoothstep(float(descent.start), float(descent.ends), float(tick))
+		return lerpf(unit.flight_height, get_elevation_at(descent.pos), progress)
+	if ladder_rules and unit.has("fighter_mode_until"):
+		var landing: bool = unit.unit_type == "kestrel_interceptor"
+		var air_height := float(RTSData.get_unit_def("kestrel_interceptor").flight_height)
+		var ground_height := get_elevation_at(unit.pos)
+		var progress := smoothstep(float(unit.fighter_mode_started), float(unit.fighter_mode_until), float(tick))
+		return lerpf(air_height, ground_height, progress) if landing else lerpf(ground_height, air_height, progress)
+	if not unit.has("flight_transition"):
+		return unit_elevation(unit)
+	var transition: Dictionary = unit.flight_transition
+	var progress := smoothstep(float(transition.start), float(transition.end), float(tick))
+	return lerpf(transition.from_height, transition.to_height, progress)
 
 func step_ticks(count: int = 1) -> void:
 	last_step_count = count
@@ -1396,8 +1892,14 @@ func _step_single_tick() -> void:
 	_rebuild_spatial_grid()
 
 	if tick % 8 == 0:
+		for tag in guardian_shields.keys():
+			if tick >= int(guardian_shields[tag]):
+				guardian_shields.erase(tag)
 		var ai_started = Time.get_ticks_usec()
-		RTSCommanderAI.step_ai(TICK_DT * 8.0)
+		if network_ai_events.is_valid():
+			network_ai_events.call()
+		else:
+			RTSCommanderAI.step_ai(TICK_DT * 8.0)
 		profile_usec.ai += Time.get_ticks_usec() - ai_started
 
 	_update_structures(TICK_DT)
@@ -1410,6 +1912,8 @@ func _step_single_tick() -> void:
 		if not units.has(tag):
 			continue
 		var u = units[tag]
+		if u.unit_type == "brood_larva" and _update_larva_creep(u):
+			continue
 		if u.has("expires_tick") and tick >= int(u.expires_tick):
 			_release_mining_slot(u)
 			_confirm_waiting_attack_loss(u)
@@ -1420,36 +1924,98 @@ func _step_single_tick() -> void:
 			unit_destroyed.emit(u)
 			continue
 		u["prev_pos"] = u["pos"]
+		if u.has("transit_finish"):
+			_update_transit_projection(u)
+			continue
+		if u.unit_type == "rift_nova" and _finish_rift_nova_if_due(u):
+			continue
+		if u.unit_type == "mirage_shade" and _finish_mirage_shade_if_due(u):
+			continue
+		if u.has("archon_warp_finish"):
+			var remaining: int = u.archon_warp_finish - tick
+			if remaining > 0:
+				u.build_progress = 1.0 - float(remaining) / ceili(LadderRules.ARCHON_WARP_SECONDS * TICK_RATE)
+				continue
+			u.erase("archon_warp_finish")
+			u.is_immobile = false
+			u.build_progress = 1.0
+			ability_triggered.emit(u, "archon_ready", u.pos)
 		_update_unit_timers(u, TICK_DT)
+		if u.unit_type == "stasis_ward" and u.build_progress >= 1.0:
+			_step_stasis_ward(u)
+			continue
+		if int(u.get("stasis_until", 0)) > tick:
+			continue
+		if u.has("recall_channel"):
+			continue
 		if u.has("support") and _step_support(u, TICK_DT):
 			continue
 		if u.is_structure and u.flight_height <= 0.0 and (not u.armed_structure or u.build_progress < 1.0):
 			continue
+		if u.armed_structure and requires_power(u.unit_type) and not is_powered(u.owner, u.pos):
+			u.attack_state = "idle"
+			continue
 		_update_unit_orders(u, TICK_DT)
 		if u.is_worker and not u.orders.is_empty() and u.orders[0].type in ["harvest", "return_cargo"]:
-			var deposit: Dictionary = resources.get(int(u.orders[0].target_tag), {})
-			if u.cargo_type == "crystal" or (u.orders[0].type == "harvest" and u.cargo_amount == 0 and deposit.get("resource_type") == "crystal_field"):
+			var target_tag: int = u.orders[0].target_tag
+			var deposit: Dictionary = resources.get(target_tag, {})
+			var tap: Dictionary = units.get(target_tag, {}) if deposit.is_empty() else {}
+			var gathering: bool = deposit.get("resource_type") in ["crystal_field", "aether_vent"] \
+				or (tap.get("is_extractor", false) and tap.owner == u.owner)
+			if u.cargo_type in ["crystal", "aether"] or (u.orders[0].type == "harvest" and u.cargo_amount == 0 and gathering):
 				mineral_walkers[tag] = true
 
 	profile_usec.orders += Time.get_ticks_usec() - orders_started
 	var steering_started = Time.get_ticks_usec()
 	_apply_steering_and_push_resolution(all_tags, TICK_DT, mineral_walkers)
+	if not neural_tethers.is_empty():
+		_step_neural_tethers()
+	if not archon_approaches.is_empty():
+		_step_archon_approaches()
 	_step_miasma()
+	if not canticle_storms.is_empty():
+		_step_canticle_storms()
+	if not fungal_projectiles.is_empty() or not fungal_infections.is_empty():
+		_step_fungal_grasp()
+	while not microbial_shrouds.is_empty() and tick >= int(microbial_shrouds[0].ends):
+		microbial_shrouds.pop_front()
+	while not blinding_clouds.is_empty() and tick >= int(blinding_clouds[0].ends):
+		blinding_clouds.pop_front()
+	while not time_warps.is_empty() and tick >= int(time_warps[0].ends):
+		time_warps.pop_front()
+	if not parasitic_clouds.is_empty():
+		_step_parasitic_clouds()
+	if not emp_projectiles.is_empty():
+		_step_emp_projectiles()
+	if not watchkeeper_missiles.is_empty():
+		_step_watchkeeper_missiles()
+	if not sentinel_missiles.is_empty():
+		_step_sentinel_missiles()
+	if not sentry_missiles.is_empty():
+		_step_sentry_missiles()
+	if not caustic_strikes.is_empty():
+		_step_caustic_strikes()
 	_step_lattice_bursts()
+	if not ridge_charges.is_empty():
+		_step_ridge_charges()
 	profile_usec.steering += Time.get_ticks_usec() - steering_started
-	if tick % LivingGround.UPDATE_TICKS == 0:
-		living_ground.update(units, tick, _can_spread_living_ground)
+	var creep_interval := LadderRules.CREEP_SPREAD_TICKS if ladder_rules else LivingGround.UPDATE_TICKS
+	if tick % creep_interval == 0:
+		living_ground.update(units, tick, _can_spread_living_ground, LadderRules.CREEP_SPREAD_TICKS if ladder_rules else 0)
 	if not _defensive_recalls.is_empty():
 		_update_defensive_recalls()
 	if tick % VISION_UPDATE_TICKS == 0 and (vision != null or not watch_stations.is_empty()):
 		_refresh_vision()
 	_check_match_result()
 	if campaign != null:
+		if campaign.mutators != null and campaign.status == "playing":
+			campaign.mutators.step(self)
 		campaign.step(self)
 	emit_signal("simulation_ticked", tick)
 
 func _rebuild_astar_grid() -> void:
 	_navigation_revision += 1
+	_rebuild_ground_ledges()
 	_static_structures.clear()
 	_footprint_bins.clear()
 	_clearance_grids.clear()
@@ -1470,7 +2036,7 @@ func _rebuild_astar_grid() -> void:
 				if resource.resource_type == "aether_vent" and resource.pos.distance_squared_to(u.pos) < 1.0:
 					_gas_source_by_tap[u.tag] = resource.tag
 					_gas_tap_by_vent[Vector2i(u.owner, resource.tag)] = u.tag
-		if u["is_structure"] and not u["is_walkable_structure"] and u.flight_height <= 0.0:
+		if u["is_structure"] and not u["is_walkable_structure"] and u.flight_height <= 0.0 and not u.get("crawler_uprooted", false):
 			_static_structures.append(u)
 			_index_footprint(u)
 		else:
@@ -1502,20 +2068,43 @@ func _fill_navigation_grid(grid: AStarGrid2D, clearance: float, ignore_cliffs: b
 	grid.default_compute_heuristic = AStarGrid2D.HEURISTIC_OCTILE
 	grid.default_estimate_heuristic = AStarGrid2D.HEURISTIC_OCTILE
 	grid.update()
+	if terrain_grid:
+		var bounds := terrain_grid.bounds.grow(-clearance)
+		_mark_navigation_rect(grid, Rect2(0, 0, bounds.position.x, map_height), cell_size)
+		_mark_navigation_rect(grid, Rect2(bounds.end.x, 0, map_width - bounds.end.x, map_height), cell_size)
+		_mark_navigation_rect(grid, Rect2(0, 0, map_width, bounds.position.y), cell_size)
+		_mark_navigation_rect(grid, Rect2(0, bounds.end.y, map_width, map_height - bounds.end.y), cell_size)
+		for row in terrain_grid.blocked_rows:
+			for run in row:
+				if terrain_grid.blocks(run[1], ignore_cliffs):
+					var rect: Rect2 = run[0]
+					_mark_navigation_rect(grid, rect.grow(clearance), cell_size)
 	if not ignore_cliffs:
 		for obs in terrain_obstacles:
-			var expanded := obs.grow(clearance)
-			var first := Vector2i(((expanded.position - grid.offset) / cell_size).ceil())
-			var last := Vector2i(((expanded.end - grid.offset) / cell_size).ceil())
-			grid.fill_solid_region(Rect2i(first, last - first).intersection(grid.region))
-		var water_scale := roundi(PATH_CELL_SIZE / cell_size)
-		for cell in water_cells:
-			grid.fill_solid_region(Rect2i(cell * water_scale, Vector2i.ONE * water_scale).intersection(grid.region))
+			_mark_navigation_rect(grid, obs.grow(clearance), cell_size)
+		for ledge in _ground_ledges:
+			var expanded := ledge.grow(clearance)
+			# A wall between adjacent lattice centers still blocks the edge
+			# between them. Cover that span without narrowing ramp mouths.
+			var crosswise := maxf(0.0, cell_size * 0.5 - clearance)
+			if ledge.size.x < ledge.size.y:
+				expanded = expanded.grow_side(SIDE_LEFT, crosswise).grow_side(SIDE_RIGHT, crosswise)
+			else:
+				expanded = expanded.grow_side(SIDE_TOP, crosswise).grow_side(SIDE_BOTTOM, crosswise)
+			_mark_navigation_rect(grid, expanded, cell_size)
+	var water_scale := roundi(PATH_CELL_SIZE / cell_size)
+	for cell in water_cells:
+		grid.fill_solid_region(Rect2i(cell * water_scale, Vector2i.ONE * water_scale).intersection(grid.region))
 	for footprint in resources.values():
 		if deposit_present(footprint):
 			_mark_footprint(grid, footprint, clearance)
 	for footprint in _static_structures:
 		_mark_footprint(grid, footprint, clearance)
+
+func _mark_navigation_rect(grid: AStarGrid2D, rect: Rect2, cell_size: float) -> void:
+	var first := Vector2i(((rect.position - grid.offset) / cell_size).ceil())
+	var last := Vector2i(((rect.end - grid.offset) / cell_size).ceil())
+	grid.fill_solid_region(Rect2i(first, last - first).intersection(grid.region))
 
 func _mark_footprint(grid: AStarGrid2D, footprint: Dictionary, clearance: float) -> void:
 	# Leave a margin at lattice vertices so edges can round circular footprints.
@@ -1543,6 +2132,8 @@ func _navigation_grid(radius: float, ignore_cliffs: bool, cell_size: float = PAT
 func _has_off_grid_crossing(radius: float, lattice_offset: float) -> bool:
 	# A continuous opening can fall entirely between coarse grid rows or columns.
 	# Check for such a gap before allocating a second grid on a partial route.
+	if terrain_grid or not _ground_ledges.is_empty():
+		return true
 	if terrain_obstacles.is_empty():
 		return false
 	var gates: Array[Rect2] = []
@@ -1594,14 +2185,14 @@ func _compute_smooth_path(start_pos: Vector2, end_pos: Vector2, unit_radius: flo
 		return [goal]
 
 	var path := _trace_navigation_grid(_navigation_grid(unit_radius, ignore_cliffs), start_pos, goal, unit_radius, ignore_cliffs)
-	if not ignore_cliffs and not path.back().is_equal_approx(goal):
+	if not path.back().is_equal_approx(goal):
 		# An integer-centered lane avoids giving a one-unit passage two
 		# parallel tracks. Try the half-cell lattice if the centered route fails.
 		for lattice_offset in [0.0, 0.5]:
-			var narrow_grid := _navigation_grid(unit_radius, false, NARROW_PATH_CELL_SIZE, lattice_offset)
+			var narrow_grid := _navigation_grid(unit_radius, ignore_cliffs, NARROW_PATH_CELL_SIZE, lattice_offset)
 			if narrow_grid == null:
 				continue
-			var narrow_path := _trace_navigation_grid(narrow_grid, start_pos, goal, unit_radius, false)
+			var narrow_path := _trace_navigation_grid(narrow_grid, start_pos, goal, unit_radius, ignore_cliffs)
 			if narrow_path.back().is_equal_approx(goal):
 				return narrow_path
 	return path
@@ -1609,7 +2200,9 @@ func _compute_smooth_path(start_pos: Vector2, end_pos: Vector2, unit_radius: flo
 func _trace_navigation_grid(grid: AStarGrid2D, start_pos: Vector2, goal: Vector2, unit_radius: float, ignore_cliffs: bool) -> Array[Vector2]:
 	# A unit displaced at a choke lip can be in an open cell with its center
 	# across the cliff corner. Snap to a center the unit can actually reach.
-	var start_clearance := -1.0 if _is_point_blocked_by_static(start_pos, unit_radius, ignore_cliffs) else unit_radius
+	var on_ledge := not ignore_cliffs and _point_overlaps_ledge(start_pos, unit_radius)
+	var can_escape_overlap := not on_ledge and _is_point_blocked_by_static(start_pos, unit_radius, ignore_cliffs)
+	var start_clearance := -1.0 if can_escape_overlap else unit_radius
 	var start := _find_nearest_walkable_cell(grid, start_pos, start_pos, start_clearance, ignore_cliffs)
 	var end := _find_nearest_walkable_cell(grid, goal, start_pos)
 	if grid.is_point_solid(start) or grid.is_point_solid(end):
@@ -1647,7 +2240,7 @@ func _trace_navigation_grid(grid: AStarGrid2D, start_pos: Vector2, goal: Vector2
 				high = probe - 1
 		if furthest == idx + 1 and not _has_clear_line_of_walk(anchor, waypoints[furthest], unit_radius, ignore_cliffs):
 			# An authored spawn can overlap a footprint. Let it step out to its first cell.
-			if idx >= 0 or not _is_point_blocked_by_static(anchor, unit_radius, ignore_cliffs):
+			if idx >= 0 or not can_escape_overlap:
 				break
 		smoothed.append(waypoints[furthest])
 		anchor = waypoints[furthest]
@@ -1676,6 +2269,18 @@ func _interaction_destination(from: Vector2, target: Vector2, fallback: Vector2,
 
 func _project_destination(from: Vector2, requested: Vector2, radius: float, ignore_cliffs: bool) -> Vector2:
 	var goal := _map_clamped_position(requested, radius)
+	if not ignore_cliffs:
+		for ledge in _ground_ledges:
+			if not ledge.grow(radius).has_point(goal):
+				continue
+			# Keep a click near the lip on the elevation the player chose.
+			var axis := 0 if ledge.size.x < ledge.size.y else 1
+			var edge := ledge.get_center()[axis]
+			var side := signf(goal[axis] - edge)
+			if is_zero_approx(side):
+				side = -1.0 if from[axis] < edge else 1.0
+			goal[axis] = edge + side * (radius + 0.02)
+		goal = _map_clamped_position(goal, radius)
 	if not _is_point_blocked_by_static(goal, radius, ignore_cliffs):
 		return goal
 	# Search back from the click so a large obstacle uses the edge facing the unit.
@@ -1727,14 +2332,18 @@ func _find_nearest_walkable_cell(grid: AStarGrid2D, pos: Vector2, approach: Vect
 			return best
 	return cell
 
-func _has_clear_line_of_walk(a: Vector2, b: Vector2, radius: float, ignore_cliffs: bool = false) -> bool:
+func _has_clear_line_of_walk(a: Vector2, b: Vector2, radius: float, ignore_cliffs: bool = false, ignore_phase_barriers: bool = false) -> bool:
 	if b.x < radius or b.y < radius or b.x > map_width - radius or b.y > map_height - radius:
+		return false
+	if terrain_grid and (not terrain_grid.bounds.grow(-radius).has_point(b) or terrain_grid.blocks_segment(a, b, radius, ignore_cliffs, _walk_segment_enters_rect)):
 		return false
 	if not ignore_cliffs:
 		for obstacle in terrain_obstacles:
 			if _walk_segment_enters_rect(a, b, obstacle.grow(radius)):
 				return false
-	var check_water := not ignore_cliffs and not water_cells.is_empty()
+		if _walk_segment_hits_ledge(a, b, radius):
+			return false
+	var check_water := not water_cells.is_empty()
 	if not check_water and _footprint_bins.is_empty():
 		return true
 	var steps := maxi(1, ceili(a.distance_to(b) / WALK_TRACE_STEP))
@@ -1744,12 +2353,35 @@ func _has_clear_line_of_walk(a: Vector2, b: Vector2, radius: float, ignore_cliff
 		if check_water and _walk_segment_hits_water(previous, p, radius * 0.5):
 			return false
 		for footprint in _footprint_bins.get(_footprint_bin(p), NO_FOOTPRINTS):
+			if footprint.get("removed_phase_barrier", false) or (ignore_phase_barriers and footprint.get("unit_type") == "phase_barrier"):
+				continue
 			var reach: float = footprint.radius + radius
 			var closest := Geometry2D.get_closest_point_to_segment(footprint.pos, previous, p)
 			if closest.distance_squared_to(footprint.pos) < reach * reach:
 				return false
 		previous = p
 	return true
+
+func _walk_segment_hits_ledge(a: Vector2, b: Vector2, radius: float) -> bool:
+	for ledge in _ground_ledges:
+		var clearance := ledge.grow(radius)
+		if not _walk_segment_enters_rect(a, b, clearance):
+			continue
+		if clearance.has_point(a):
+			# Authored spawns and landing units may start too close to the
+			# edge. They can move away from it on their own side.
+			var from_edge := a.distance_squared_to(a.clamp(ledge.position, ledge.end))
+			var to_edge := b.distance_squared_to(b.clamp(ledge.position, ledge.end))
+			if to_edge > from_edge and (ledge.has_point(a) or not _walk_segment_enters_rect(a, b, ledge)):
+				continue
+		return true
+	return false
+
+func _point_overlaps_ledge(p: Vector2, radius: float) -> bool:
+	for ledge in _ground_ledges:
+		if ledge.grow(radius).has_point(p):
+			return true
+	return false
 
 func _walk_segment_hits_water(a: Vector2, b: Vector2, clearance: float) -> bool:
 	var margin := Vector2.ONE * clearance
@@ -1793,16 +2425,22 @@ func _walk_segment_enters_rect(a: Vector2, b: Vector2, rect: Rect2) -> bool:
 			return false
 	return true
 
-func _is_point_blocked_by_static(p: Vector2, radius: float, ignore_cliffs: bool = false) -> bool:
+func _is_point_blocked_by_static(p: Vector2, radius: float, ignore_cliffs: bool = false, vacated_tag: int = 0) -> bool:
+	if terrain_grid and (not terrain_grid.bounds.grow(-radius).has_point(p) or terrain_grid.overlaps(p, radius, ignore_cliffs)):
+		return true
 	if p.x < radius or p.y < radius or p.x > map_width - radius or p.y > map_height - radius:
 		return true
+	if is_water_at(p, radius * 0.5):
+		return true
 	if not ignore_cliffs:
-		if is_water_at(p, radius * 0.5):
-			return true
 		for obs in terrain_obstacles:
 			if obs.grow(radius).has_point(p):
 				return true
+		if _point_overlaps_ledge(p, radius):
+			return true
 	for footprint in _footprint_bins.get(_footprint_bin(p), NO_FOOTPRINTS):
+		if footprint.get("removed_phase_barrier", false) or (vacated_tag != 0 and footprint.tag == vacated_tag):
+			continue
 		var reach := float(footprint.radius) + radius
 		if p.distance_squared_to(footprint.pos) < reach * reach:
 			return true
@@ -1857,44 +2495,110 @@ func query_units_in_radius(center: Vector2, radius: float, exclude_owner: int = 
 
 func _update_structures(dt: float) -> void:
 	var arrivals: Array[Dictionary] = []
+	var silo_raised := false
 	for u in units.values():
 		if not u["is_structure"]:
+			if u.unit_type == "brood_egg" and not u.production_queue.is_empty():
+				var hatch: Dictionary = u.production_queue.front()
+				hatch.progress = minf(hatch.progress + dt, hatch.total_time)
+				if hatch.progress >= hatch.total_time:
+					_try_finish_production(u, 0, arrivals)
+			continue
+		if u.has("silo_raise_until") and tick >= int(u.silo_raise_until):
+			u.erase("silo_raise_until")
+			var reason := silo_raise_block_reason(u)
+			if reason.is_empty():
+				_morph_unit_in_place(u, "silo")
+				silo_raised = true
+			else:
+				notice.emit(u.owner, reason, "warn")
+		if u.has("flight_transition"):
+			if tick >= int(u.flight_transition.end):
+				_finish_production_flight_transition(u)
 			continue
 		if u.has("attachment_parent_tag") and not _attachment_link_valid(units.get(u.attachment_parent_tag, {}), u):
 			_orphan_attachment(u)
 			continue
 		if u["build_progress"] < 1.0:
 			if bool(u.get("auto_summon", false)):
-				var rate = dt / maxf(1.0, float(u.build_total_time) * build_time_scale())
-				u.build_progress = minf(1.0, u.build_progress + rate)
-				u.hp = minf(u.max_hp, u.hp + u.max_hp * rate)
-				if u.build_progress >= 1.0:
+				if _advance_construction(u, dt):
+					if u.unit_type == "brood_tunnel_worm":
+						u.armor = float(RTSData.get_unit_def(u.unit_type).armor)
+						ability_triggered.emit(u, "brood_worm_open", u.pos)
+					if ladder_rules and u.unit_type == "brood_growth_node":
+						u["burrowed"] = true
+						u["growth_node_ready"] = tick + ceili(LadderRules.TUMOR_BUILD_SECONDS * TICK_RATE)
+					if u.unit_type == "stasis_ward":
+						u["cloaked"] = true
+						u["expires_tick"] = tick + LadderRules.STASIS_WARD_LIFETIME * TICK_RATE
 					players[u.owner].structures_built += 1
+					if ladder_rules and _qualifies_for_elimination(u):
+						_ladder_last_progress_tick = tick
 					_recompute_supplies()
 					emit_signal("structure_construction_finished", u)
 			continue
-		if u.unit_type == "colony_hub" or u.unit_type == "heartstone":
-			u.energy = minf(HUB_ENERGY_MAX, u.energy + 0.75 * dt)
+		if u.has("transit_morph"):
+			_step_transit_morph(u)
+			continue
+		if ladder_rules and u.faction == RTSData.FACTION_HUMANS and u.hp < u.max_hp / 3.0:
+			u.hp = maxf(0.0, u.hp - LadderRules.TERRAN_BURN_DPS * dt)
+			if u.hp <= 0.0:
+				_remove_destroyed_unit(u)
+				continue
+		if float(u.get("transit_charge", 0.0)) > 0.0 and is_powered(u.owner, u.pos):
+			var recharge_rate := PRODUCTION_BOOST_RATE if int(u.get("production_boost_until", -1)) >= tick else 1.0
+			u.transit_charge = maxf(0.0, u.transit_charge - dt * recharge_rate)
+		if u.unit_type == "colony_hub" and ladder_rules and u.get("hub_operations", false):
+			u.energy = minf(HUB_ENERGY_MAX, u.energy + 0.7875 * dt)
+		elif not ladder_rules and (u.unit_type == "colony_hub" or u.unit_type == "heartstone"):
+			if not u.has("energy_profile"):
+				u.energy = minf(HUB_ENERGY_MAX, u.energy + 0.75 * dt)
 		if u.unit_type == "tunnel_mouth" and u.has("tunnel_arrival"):
 			_step_tunnel_squad(u)
+		if u.has("brood_tunnel_unload"):
+			_step_brood_tunnel_unload(u)
 		var salvage_finish: int = u.get("salvage_finish", 0)
 		if salvage_finish > 0 and tick >= salvage_finish:
 			var definition: Dictionary = RTSData.get_unit_def(u.unit_type)
 			var cost: Vector2i = u.get("construction_cost", Vector2i(definition.crystal_cost, definition.aether_cost))
+			if u.unit_type == "field_bunker" and not u.get("passengers", []).is_empty() and not _drop_ground_squad(u.passengers, u.pos):
+				u.erase("salvage_finish")
+				notice.emit(u.owner, "Clear space around the bunker before salvaging.", "warn")
+				continue
 			_refund_structure(u, cost)
 			emit_signal("notice", u.owner, "%s salvaged." % u.name, "info")
 			continue
 		var queue: Array = u["production_queue"]
 		var brood := uses_brood_slots(u)
-		if brood:
+		var contaminated := tick < int(u.get("contaminated_until", 0))
+		if brood and not contaminated:
 			_update_brood_slots(u, dt)
+		elif brood:
+			for timer in ["brood_inject_finish", "brood_release_tick"]:
+				if int(u.get(timer, 0)) > 0:
+					u[timer] += 1
+		if contaminated and not brood:
+			continue
 		var active := active_production_slots(u)
 		# The tick at the deadline consumes the final interval of the boost.
-		var boost_active := active > 0 and int(u.get("production_boost_until", -1)) >= tick and is_powered(u.owner, u.pos)
+		var boost_active: bool = (active > 0 and int(u.get("production_boost_until", -1)) >= tick
+			and (is_powered(u.owner, u.pos) or (ladder_rules and u.unit_type == "heartstone")))
 		var index := 0
+		var nest_lane_used := false
 		while index < active:
 			var item: Dictionary = queue[index]
-			var progress_dt := dt * PRODUCTION_BOOST_RATE if boost_active and item.has("unit_type") else dt
+			if contaminated and not item.has("egg_tag"):
+				index += 1
+				continue
+			if brood and ladder_rules and not item.has("egg_tag"):
+				if nest_lane_used:
+					index += 1
+					continue
+				nest_lane_used = true
+			if not _start_production_job(u, item):
+				index += 1
+				continue
+			var progress_dt := dt * PRODUCTION_BOOST_RATE if boost_active and (ladder_rules or item.has("unit_type")) else dt
 			item.progress = minf(item.progress + progress_dt, item.total_time)
 			if item.progress < item.total_time or tick < int(item.get("exit_retry_tick", 0)):
 				index += 1
@@ -1903,8 +2607,63 @@ func _update_structures(dt: float) -> void:
 			else:
 				item["exit_retry_tick"] = tick + PRODUCTION_EXIT_RETRY_TICKS
 				index += 1
+	if silo_raised:
+		_rebuild_astar_grid()
+		nav_dirty = false
+
+func production_supply_reserved(job: Dictionary) -> float:
+	if not job.has("unit_type") or (float(job.progress) <= 0.0 and not job.has("egg_tag")):
+		return 0.0
+	return float(job.get("supply_cost", RTSData.get_unit_def(job.unit_type).get("supply_cost", 1)))
+
+func _start_production_job(producer: Dictionary, job: Dictionary) -> bool:
+	if not job.has("unit_type") or job.progress > 0.0 or job.has("egg_tag"):
+		return true
+	var cost := float(job.get("supply_cost", RTSData.get_unit_def(job.unit_type).get("supply_cost", 1)))
+	var player: Dictionary = players[producer.get("neural_original_owner", producer.owner)]
+	if cost > 0.0 and player.supply_used + cost > player.supply_cap:
+		if not job.get("supply_blocked", false):
+			job["supply_blocked"] = true
+			_warn_supply_required(producer.owner)
+		return false
+	job.erase("supply_blocked")
+	player.supply_used += cost
+	return true
+
+func _warn_supply_required(owner_id: int) -> void:
+	var player: Dictionary = players[owner_id]
+	if tick >= int(player.get("next_supply_notice_tick", 0)):
+		player["next_supply_notice_tick"] = tick + 2 * TICK_RATE
+		notice.emit(owner_id, SUPPLY_REQUIRED_NOTICE, "warn")
 
 func _update_brood_slots(nest: Dictionary, dt: float) -> void:
+	if ladder_rules:
+		if not nest.brood_seeded:
+			_grant_larvae(nest, 1)
+			nest.brood_seeded = true
+			return
+		if nest.brood_slots < BROOD_SLOTS:
+			nest.brood_recharge += dt
+			if nest.brood_recharge >= LadderRules.NATURAL_LARVA_SECONDS:
+				_grant_larvae(nest, 1)
+				nest.brood_recharge -= LadderRules.NATURAL_LARVA_SECONDS
+				if nest.brood_slots == BROOD_SLOTS:
+					nest.brood_recharge = 0.0
+		var deadline: int = nest.get("brood_inject_finish", 0)
+		if deadline > 0 and tick >= deadline:
+			nest["brood_release_remaining"] = LadderRules.INJECT_LARVAE
+			nest["brood_release_tick"] = tick
+			if int(nest.get("brood_inject_queued", 0)) > 0:
+				nest.brood_inject_queued -= 1
+				nest.brood_inject_finish = tick + ceili((LadderRules.INJECT_SECONDS + LadderRules.INJECT_HANDOFF_SECONDS) * TICK_RATE)
+			else:
+				nest.erase("brood_inject_finish")
+		if int(nest.get("brood_release_remaining", 0)) > 0 and tick >= int(nest.brood_release_tick):
+			if nest.brood_slots < LadderRules.LARVA_LIMIT:
+				_grant_larvae(nest, 1)
+			nest.brood_release_remaining -= 1
+			nest.brood_release_tick = tick + ceili(LadderRules.INJECT_RELEASE_SECONDS * TICK_RATE)
+		return
 	if nest.brood_slots - nest.brood_bonus_slots < BROOD_SLOTS and nest.brood_slots < BROOD_SLOT_CAP:
 		nest.brood_recharge += dt
 		if nest.brood_recharge >= BROOD_RECHARGE:
@@ -1917,25 +2676,126 @@ func _update_brood_slots(nest: Dictionary, dt: float) -> void:
 		nest.brood_bonus_slots += new_slots
 		nest.erase("brood_inject_finish")
 
+func _grant_larvae(nest: Dictionary, count: int) -> void:
+	if count <= 0:
+		return
+	var occupied := {}
+	for tag in nest.brood_larvae:
+		occupied[units[tag].brood_socket] = true
+	for job in nest.production_queue:
+		var egg: Dictionary = units.get(job.get("egg_tag", 0), {})
+		if not egg.is_empty():
+			occupied[egg.brood_socket] = true
+	for socket in range(occupied.size() + count):
+		if occupied.has(socket):
+			continue
+		var angle: float = TAU * float(socket % 24) / 24.0 + nest.facing
+		var ring := floori(float(socket) / 24.0)
+		var position: Vector2 = nest.pos + Vector2.from_angle(angle) * (nest.radius + 1.0 + float(ring) * 1.2)
+		var larva := spawn_unit("brood_larva", nest.owner, _resource_land_position(position))
+		larva["brood_parent"] = nest.tag
+		larva["brood_socket"] = socket
+		nest.brood_larvae.append(larva.tag)
+		nest.brood_slots = nest.brood_larvae.size()
+		if tick > 0:
+			ability_triggered.emit(larva, "brood_larva_ready", larva.pos)
+		count -= 1
+		if count == 0:
+			break
+
+func _update_larva_creep(larva: Dictionary) -> bool:
+	if has_living_ground(larva.pos):
+		larva.erase("brood_off_creep_since")
+		return false
+	if not larva.has("brood_off_creep_since"):
+		larva["brood_off_creep_since"] = tick
+	if tick - int(larva.brood_off_creep_since) < ceili(LadderRules.LARVA_OFF_CREEP_SECONDS * TICK_RATE):
+		return false
+	_remove_destroyed_unit(larva)
+	return true
+
 func _try_finish_production(structure: Dictionary, index: int, arrivals: Array[Dictionary]) -> bool:
 	var item: Dictionary = structure.production_queue[index]
+	if item.get("unit_type") == "tactical_charge":
+		structure.production_queue.remove_at(index)
+		structure["tactical_charge_ready"] = true
+		notice.emit(structure.owner, "Tactical Charge armed.", "info")
+		return true
+	if item.get("structure_evolution", false):
+		var form: String = item.unit_type
+		var definition := RTSData.get_unit_def(form)
+		structure.production_queue.remove_at(index)
+		structure["structure_form"] = form
+		structure.name = definition.name
+		structure.hp += float(definition.max_hp) - float(structure.max_hp)
+		structure.max_hp = float(definition.max_hp)
+		_ladder_last_progress_tick = tick
+		notice.emit(structure.owner, "%s evolution complete." % structure.name, "info")
+		return true
 	if item.has("upgrade"):
+		if ladder_rules and item.upgrade == "hub_operations" and not structure.get("passengers", []).is_empty() \
+				and not _drop_ground_squad(structure.passengers, structure.pos):
+			return false
+		if ladder_rules:
+			_ladder_last_progress_tick = tick
 		structure.production_queue.remove_at(index)
 		match item.upgrade:
+			"combat_shields":
+				players[structure.owner].upgrades["combat_shields"] = 1
+				for unit in units.values():
+					if unit.owner == structure.owner and unit.unit_type == "rifleman":
+						_apply_combat_shield(unit)
+					for passenger in unit.get("passengers", []):
+						if passenger.owner == structure.owner and passenger.unit_type == "rifleman":
+							_apply_combat_shield(passenger)
+				notice.emit(structure.owner, "Combat Shields complete.", "info")
+			"charge":
+				players[structure.owner].upgrades["charge"] = 1
+				for sunblade in units.values():
+					if sunblade.owner == structure.owner and sunblade.unit_type == "sunblade":
+						sunblade.speed = LadderRules.SUNBLADE_UPGRADED_SPEED
+				notice.emit(structure.owner, "Charge research complete.", "info")
 			"hub_operations":
 				structure["hub_operations"] = true
+				if ladder_rules:
+					structure.name = "Operations Colony Hub"
+					structure.energy = HUB_POWER_COST
 				notice.emit(structure.owner, "Colony Hub operations upgraded.", "info")
+			"fortify_hub":
+				_morph_unit_in_place(structure, "fortified_hub")
+				structure.armor = 2.0
+				structure.armed_structure = true
+				notice.emit(structure.owner, "Colony Hub fortification complete.", "info")
 			"surge_efficiency":
 				players[structure.owner].surge_efficiency = true
 				notice.emit(structure.owner, "Efficient Surge complete.", "info")
 			"fast_deployment":
 				players[structure.owner].fast_deployment = true
 				notice.emit(structure.owner, "Fast Deployment complete.", "info")
+			"tunneling_claws":
+				players[structure.owner].upgrades.tunneling_claws = 1
+				for crawler in units.values():
+					if crawler.owner == structure.owner and crawler.unit_type == "bile_crawler" and crawler.get("burrowed", false):
+						crawler["burrow_mobile"] = true
+						crawler.is_immobile = crawler.has("burrow_transition")
+				notice.emit(structure.owner, "Tunneling Claws complete.", "info")
+			"rolling_spores", "spore_burrow":
+				players[structure.owner].upgrades[item.upgrade] = 1
+				if item.upgrade == "rolling_spores":
+					for fighter in units.values():
+						if fighter.owner == structure.owner and fighter.unit_type == "sporeburst":
+							_apply_rolling_spores(fighter)
+						for passenger in fighter.get("passengers", []):
+							if passenger.owner == structure.owner and passenger.unit_type == "sporeburst":
+								_apply_rolling_spores(passenger)
+				notice.emit(structure.owner, "%s complete." % str(item.upgrade).capitalize(), "info")
 			_:
 				players[structure.owner].upgrades[item.upgrade] = item.level
 				notice.emit(structure.owner, "%s level %d complete." % [str(item.upgrade).capitalize(), item.level], "info")
 		return true
 	var utype: String = item.unit_type
+	var egg_tag := int(item.get("egg_tag", 0))
+	var spawn_origin: Dictionary = units.get(egg_tag, structure)
 	var is_worker := bool(RTSData.get_unit_def(utype).get("is_worker", false))
 	var route: Array = structure.rally_route
 	if structure.unit_type == "brood_nest" and is_worker:
@@ -1946,34 +2806,135 @@ func _try_finish_production(structure: Dictionary, index: int, arrivals: Array[D
 	var deployment: Vector2 = item.get("deployment_pos", Vector2.INF)
 	var deploy_remotely := deployment.is_finite() and fast_deployment_ticks(structure) == 0 and is_powered(structure.owner, structure.pos) \
 		and _fast_deployment_site_valid(structure.owner, deployment, utype, arrivals, true)
-	var spawn_pos := deployment if deploy_remotely else _rally_spawn_position(structure, first, utype, arrivals)
+	var spawn_pos := deployment if deploy_remotely else _rally_spawn_position(spawn_origin, first, utype, arrivals)
 	if not spawn_pos.is_finite():
 		return false
+	var positions := [spawn_pos]
+	if int(item.get("hatch_count", 1)) == 2:
+		var first_birth := {"pos": spawn_pos, "radius": RTSData.get_unit_def(utype).radius, "is_structure": false, "flight_height": 0.0}
+		var occupied := arrivals.duplicate()
+		occupied.append(first_birth)
+		var second := _rally_spawn_position(spawn_origin, first, utype, occupied)
+		if not second.is_finite():
+			return false
+		positions.append(second)
 	# The job already reserves this supply. Remove it before spawn_unit counts
 	# the recruit so the reservation is transferred exactly once.
 	structure.production_queue.remove_at(index)
-	var new_unit := spawn_unit(utype, structure.owner, spawn_pos)
-	if new_unit.is_empty():
-		return true
-	arrivals.append(new_unit)
-	players[structure.owner].units_trained += 1
-	if deploy_remotely:
-		structure["fast_deployment_until"] = tick + FAST_DEPLOYMENT_COOLDOWN_TICKS
-	unit_production_finished.emit(new_unit, structure)
-	if deploy_remotely:
-		return true
-	if deployment.is_finite():
-		notice.emit(structure.owner, "Deployment site unavailable. Unit used the normal exit.", "info")
-	if not route.is_empty():
-		_apply_rally_route(new_unit, route)
-	elif is_worker and not match_state.is_empty():
-		issue_SmartHarvest(new_unit.tag)
-	elif first.distance_to(structure.pos) > structure.radius + 1.5:
-		issue_command([new_unit.tag], "move", first)
+	if egg_tag != 0:
+		ability_triggered.emit(spawn_origin, "brood_egg_hatch", spawn_origin.pos)
+		units.erase(egg_tag)
+	for position in positions:
+		var new_unit := spawn_unit(utype, structure.owner, position)
+		if new_unit.is_empty():
+			continue
+		arrivals.append(new_unit)
+		players[structure.owner].units_trained += 1
+		if ladder_rules:
+			_ladder_last_progress_tick = tick
+		if deploy_remotely:
+			structure["fast_deployment_until"] = tick + FAST_DEPLOYMENT_COOLDOWN_TICKS
+		unit_production_finished.emit(new_unit, structure)
+		if deploy_remotely:
+			continue
+		if deployment.is_finite():
+			notice.emit(structure.owner, "Deployment site unavailable. Unit used the normal exit.", "info")
+		if not route.is_empty():
+			_apply_rally_route(new_unit, route)
+		elif is_worker and not match_state.is_empty():
+			issue_SmartHarvest(new_unit.tag)
+		elif first.distance_to(structure.pos) > structure.radius + 1.5:
+			issue_command([new_unit.tag], "move", first)
 	return true
 
 func fast_deployment_ticks(structure: Dictionary) -> int:
 	return maxi(0, int(structure.get("fast_deployment_until", 0)) - tick)
+
+func transit_morph_block_reason(gate: Dictionary, command: String) -> String:
+	var expected := "waystone" if command == "open_transit" else "transit_waystone"
+	if not ladder_rules or gate.unit_type != expected or gate.build_progress < 1.0:
+		return "Select a completed Waystone in the matching mode."
+	if not players[gate.owner].upgrades.get("transit", 0):
+		return "Research Transit at the Concord Core first."
+	if gate.has("transit_morph") or not gate.production_queue.is_empty():
+		return "Finish the current production job or transformation."
+	return "" if is_powered(gate.owner, gate.pos) else "The Waystone needs a friendly power field."
+
+func _step_transit_morph(gate: Dictionary) -> void:
+	if not is_powered(gate.owner, gate.pos):
+		return
+	gate.transit_morph.ticks -= 1
+	if gate.transit_morph.ticks <= 0:
+		_morph_unit_in_place(gate, gate.transit_morph.target)
+		gate.erase("transit_morph")
+		ability_triggered.emit(gate, "transit_mode_ready", gate.pos)
+
+func transit_deploy_block_reason(gate: Dictionary, unit_type: String) -> String:
+	if not ladder_rules or gate.unit_type != "transit_waystone" or gate.build_progress < 1.0 or not LadderRules.TRANSIT_COOLDOWNS.has(unit_type):
+		return "Select a completed Transit Waystone."
+	if gate.has("transit_morph") or not is_powered(gate.owner, gate.pos):
+		return "The Transit Waystone is unavailable."
+	var charge: float = gate.get("transit_charge", 0.0)
+	if charge > 0.0:
+		return "Transit recharges in %.1fs." % charge
+	for prerequisite in RTSData.get_unit_def(unit_type).get("requires", []):
+		if not has_tech_structure(gate.owner, prerequisite):
+			return "Requires a completed %s." % RTSData.get_unit_def(prerequisite).name
+	return ""
+
+func transit_field_time(owner: int, position: Vector2) -> float:
+	var slow := false
+	for source in units.values():
+		if source.owner != owner or not power_source_covers(source, position):
+			continue
+		if source.unit_type == "lumen_carrier":
+			return LadderRules.TRANSIT_FAST_SECONDS
+		slow = true
+		for anchor in units.values():
+			if (anchor.owner == owner and anchor.unit_type in ["heartstone", "transit_waystone"]
+					and anchor.build_progress >= 1.0 and power_source_covers(source, anchor.pos)):
+				return LadderRules.TRANSIT_FAST_SECONDS
+	return LadderRules.TRANSIT_SLOW_SECONDS if slow else 0.0
+
+func _begin_transit_projection(gate: Dictionary, unit_type: String, point: Vector2) -> bool:
+	if not transit_deploy_block_reason(gate, unit_type).is_empty():
+		return false
+	var definition := RTSData.get_unit_def(unit_type)
+	if not _fast_deployment_site_valid(gate.owner, point, unit_type) or _ground_mobile_overlaps(point, definition.radius):
+		return false
+	var player: Dictionary = players[gate.owner]
+	if player.crystal < definition.crystal_cost or player.aether < definition.aether_cost or player.supply_used + definition.supply_cost > player.supply_cap:
+		return false
+	var duration := ceili(transit_field_time(gate.owner, point) * TICK_RATE)
+	player.crystal -= definition.crystal_cost
+	player.aether -= definition.aether_cost
+	gate["transit_charge"] = LadderRules.TRANSIT_COOLDOWNS[unit_type]
+	var unit := spawn_unit(unit_type, gate.owner, point)
+	unit.build_progress = 0.0
+	unit.is_immobile = true
+	unit["transit_source"] = gate.tag
+	unit["transit_finish"] = tick + duration
+	unit["transit_duration"] = duration
+	ability_triggered.emit(unit, "transit_start", point)
+	return true
+
+func _update_transit_projection(unit: Dictionary) -> void:
+	if not is_powered(unit.owner, unit.pos):
+		_remove_destroyed_unit(unit)
+		return
+	var remaining: int = maxi(0, int(unit.transit_finish) - tick)
+	unit.build_progress = 1.0 - float(remaining) / float(unit.transit_duration)
+	if remaining > 0:
+		return
+	var producer: Dictionary = units.get(unit.transit_source, {})
+	unit.erase("transit_finish")
+	unit.erase("transit_duration")
+	unit.erase("transit_source")
+	unit.is_immobile = false
+	players[unit.owner].units_trained += 1
+	_ladder_last_progress_tick = tick
+	unit_production_finished.emit(unit, producer)
+	ability_triggered.emit(unit, "transit_ready", unit.pos)
 
 func fast_deployment_block_reason(structure: Dictionary) -> String:
 	if structure.unit_type != "waystone" or structure.build_progress < 1.0:
@@ -2022,34 +2983,38 @@ func _rally_spawn_position(structure: Dictionary, first: Vector2, unit_type: Str
 	var definition: Dictionary = RTSData.get_unit_def(unit_type)
 	var radius: float = definition.get("radius", 0.85)
 	var flying: bool = float(definition.get("flight_height", 0.0)) > 0.0
-	var cliff_walk := unit_type == "spire_walker"
+	var cliff_walk := bool(RTSData.get_unit_def(unit_type).get("cliff_walk", false))
 	var direction: Vector2 = (first - structure.pos).normalized()
 	if direction.is_zero_approx():
 		direction = Vector2.RIGHT if structure.owner == 1 else Vector2.LEFT
 	var rim: float = structure.radius + radius + 0.05
 	var distance: float = maxf(structure.radius + 1.8, rim)
-	var nearby := query_units_in_radius(structure.pos, distance + radius)
+	var distances := [distance]
+	if structure.unit_type == "brood_egg":
+		distances.append_array([distance + 2.0 * radius, distance + 4.0 * radius])
+	var nearby := query_units_in_radius(structure.pos, float(distances.back()) + radius)
 	# The spatial index is built before production. Account for earlier births
 	# in this tick, including parallel jobs at the same Brood Nest.
 	nearby.append_array(arrivals)
-	for i in range(16):
-		var turn := ((i + 1) / 2) * (1 if i % 2 == 1 else -1)
-		var heading := direction.rotated(float(turn) * TAU / 16.0)
-		var position: Vector2 = structure.pos + heading * distance
-		if _map_clamped_position(position, radius) != position:
-			continue
-		if not flying and not _ground_production_exit_open(structure.pos + heading * rim, position, heading, radius, cliff_walk):
-			continue
-		var occupied := false
-		for other in nearby:
-			if (other.is_structure and other.flight_height <= 0.0) or other.get("burrowed", false) or (other.flight_height > 0.0) != flying:
+	for exit_distance in distances:
+		for i in range(16):
+			var turn := ((i + 1) / 2) * (1 if i % 2 == 1 else -1)
+			var heading := direction.rotated(float(turn) * TAU / 16.0)
+			var position: Vector2 = structure.pos + heading * float(exit_distance)
+			if _map_clamped_position(position, radius) != position:
 				continue
-			var clearance: float = radius + other.radius
-			if position.distance_squared_to(other.pos) < clearance * clearance:
-				occupied = true
-				break
-		if not occupied:
-			return position
+			if not flying and not _ground_production_exit_open(structure.pos + heading * rim, position, heading, radius, cliff_walk):
+				continue
+			var occupied := false
+			for other in nearby:
+				if (other.is_structure and other.flight_height <= 0.0) or other.get("burrowed", false) or other.get("nonblocking", false) or (other.flight_height > 0.0) != flying:
+					continue
+				var clearance: float = radius + other.radius
+				if position.distance_squared_to(other.pos) < clearance * clearance:
+					occupied = true
+					break
+			if not occupied:
+				return position
 	return Vector2.INF
 
 func _ground_production_exit_open(rim: Vector2, position: Vector2, heading: Vector2, radius: float, cliff_walk: bool) -> bool:
@@ -2063,11 +3028,40 @@ func _ground_production_exit_open(rim: Vector2, position: Vector2, heading: Vect
 	return false
 
 func _update_unit_timers(u: Dictionary, dt: float) -> void:
+	if u.has("stasis_until") and tick >= int(u.stasis_until):
+		u.is_immobile = u.get("stasis_was_immobile", false)
+		u.erase("stasis_until")
+		u.erase("stasis_was_immobile")
+	var regeneration := float(u.get("hp_regen", 0.0))
+	if ladder_rules and u.unit_type == "bile_crawler" and u.get("burrowed", false):
+		regeneration += LadderRules.BILE_CRAWLER_BURROW_REGEN
+	if ladder_rules and LadderRules.CRAWLER_ROOT_SECONDS.has(u.unit_type) and u.build_progress >= 1.0 \
+			and not u.get("crawler_uprooted", false) and not has_living_ground(u.pos):
+		u.hp -= LadderRules.CRAWLER_OFF_CREEP_DAMAGE * dt
+	elif regeneration > 0.0 and u.hp > 0.0 and u.hp < u.max_hp and u.out_of_combat_timer >= u.get("hp_regen_delay", 0.0):
+		u.hp = minf(u.max_hp, u.hp + regeneration * dt)
+	if u.has("transfuse_until"):
+		if tick <= int(u.transfuse_until):
+			u.hp = minf(u.max_hp, u.hp + 50.0 * dt / LadderRules.TRANSFUSE_SECONDS)
+		else:
+			u.erase("transfuse_until")
 	if u.has("power_field_until") and carrier_power_ticks(u) == 0:
 		_set_carrier_field(u, false)
+	if u.has("power_field_transition") and tick >= int(u.power_field_transition.finish):
+		var deploy: bool = u.power_field_transition.deploy
+		u.erase("power_field_transition")
+		_set_carrier_field(u, deploy)
 	if u.has("energy_profile"):
 		u.energy = minf(float(u.energy_profile.max), u.energy + float(u.energy_profile.regen) * dt)
-	if u.unit_type == "skirmisher":
+	if u.get("pulsar_active", false):
+		u.energy = maxf(0.0, u.energy - LadderRules.ORACLE_BEAM_DRAIN * dt)
+		if u.energy == 0.0:
+			_disable_pulsar_beam(u)
+	if u.unit_type in ["shade_agent", "night_harrier"] and u.get("cloaked", false):
+		u.energy = maxf(0.0, u.energy - LadderRules.AGENT_CLOAK_DRAIN * dt)
+		if u.energy == 0.0:
+			u["cloaked"] = false
+	if u.unit_type == "skirmisher" and not ladder_rules:
 		if u.get("cloaked", false):
 			u.energy = maxf(0.0, u.energy - CLOAK_DRAIN * dt)
 			if u.energy <= 0.0:
@@ -2083,22 +3077,97 @@ func _update_unit_timers(u: Dictionary, dt: float) -> void:
 	if u["slow_timer"] > 0.0:
 		u["slow_timer"] = max(0.0, u["slow_timer"] - dt)
 
-	# Aegis Shield Regeneration (2.0 shields/sec after 3.5s out of combat)
 	u["out_of_combat_timer"] += dt
-	if u["max_shields"] > 0.0 and u["shields"] < u["max_shields"] and u["out_of_combat_timer"] >= 3.5:
-		u["shields"] = min(u["max_shields"], u["shields"] + 6.0 * dt)
+	var shield_delay := LadderRules.SHIELD_REGEN_DELAY_SECONDS if ladder_rules else 3.5
+	if u["max_shields"] > 0.0 and u["shields"] < u["max_shields"] and u["out_of_combat_timer"] >= shield_delay:
+		var shield_regeneration := LadderRules.SHIELD_REGEN_PER_SECOND if ladder_rules else 6.0
+		u["shields"] = minf(u["max_shields"], u["shields"] + shield_regeneration * dt)
 
-	var atk_speed_mult = 1.5 if u["surge_timer"] > 0.0 else 1.0
 	if u["weapon_cooldown"] > 0.0:
-		u["weapon_cooldown"] = max(0.0, u["weapon_cooldown"] - dt * atk_speed_mult)
+		u["weapon_cooldown"] = max(0.0, u["weapon_cooldown"] - dt * _attack_speed_multiplier(u))
 
 	if u["pushed_timer"] > 0.0:
 		u["pushed_timer"] = max(0.0, u["pushed_timer"] - dt)
 
+func _attack_speed_multiplier(unit: Dictionary) -> float:
+	var multiplier := 1.5 if unit.surge_timer > 0.0 else 1.0
+	if unit.unit_type == "mirage_adept" and players.get(unit.owner, {}).get("upgrades", {}).get("resonant_glaives", 0):
+		multiplier *= 1.45
+	if ladder_rules and unit.unit_type == "skitterling" and players[unit.owner].upgrades.get("adrenal_glands", 0):
+		multiplier *= 1.4
+	if _time_warp_covers(unit):
+		multiplier *= 0.6
+	return multiplier
+
 func _update_unit_orders(u: Dictionary, dt: float) -> void:
 	u["vel"] = Vector2.ZERO
+	if u.unit_type == "dreadnought":
+		if _step_dreadnought_ability(u):
+			return
+		_step_dreadnought_weapon(u)
+	if u.unit_type == "fleet_carrier":
+		_step_fleet_hangar(u)
+	if u.unit_type == "pursuit_fighter":
+		_step_pursuit_fighter(u, dt)
+		return
+	if u.has("vehicle_transition"):
+		if tick >= int(u.vehicle_transition.finish):
+			_finish_vehicle_mode(u)
+		return
+	if u.has("sky_transition"):
+		if tick >= int(u.sky_transition.finish):
+			_finish_sky_mode(u)
+		return
+	if u.unit_type == "sentinel_mine_armed":
+		_step_sentinel_mine(u)
+		return
+	if u.unit_type == "vortex_rover":
+		_step_vortex_lock(u)
+	if u.has("agent_snipe"):
+		_step_agent_snipe(u)
+		return
+	if u.has("agent_strike"):
+		if tick >= int(u.agent_strike.ends):
+			_finish_agent_strike(u)
+		return
+	if u.has("gravity_lifted_by"):
+		return
+	if u.has("gravity_lift_target"):
+		if tick >= int(u.gravity_lift_ends):
+			_end_gravity_lift(u)
+		return
+	if u.has("siphon_target"):
+		_step_wyrm_siphon(u)
+		return
+	if u.unit_type == "locust_flying" and _step_flying_locust(u):
+		return
+	if u.has("caustic_spray"):
+		_step_caustic_spray(u)
+		return
+	if u.unit_type == "brood_mimic" and not u.has("disguise_type") and tick % 8 == int(u.tag) % 8:
+		_disguise_brood_mimic(u)
+	if u.has("crawler_transition"):
+		if tick >= int(u.crawler_transition.finish):
+			_finish_crawler_transition(u)
+		return
+	if u.has("burrow_transition"):
+		if tick >= int(u.burrow_transition.finish):
+			_finish_burrow_transition(u)
+		return
+	if u.has("flight_transition"):
+		return
 	if u.unit_type == "field_bunker":
 		_update_bunker_garrison(u, dt)
+		return
+	if u.unit_type == "sporeburst_cocoon":
+		if tick >= int(u.get("sporeburst_morph_until", tick)):
+			_finish_sporeburst_morph(u)
+		return
+	if u.has("brood_morph"):
+		if tick >= int(u.brood_morph.finish):
+			_finish_brood_morph(u)
+		return
+	if u.unit_type in ["rupture_cocoon", "ambusher_cocoon", "seer_cocoon", "hauler_cocoon", "siege_flyer_cocoon"]:
 		return
 	if u.has("carapace_morph_until"):
 		if tick >= int(u.carapace_morph_until):
@@ -2108,7 +3177,13 @@ func _update_unit_orders(u: Dictionary, dt: float) -> void:
 		if tick >= int(u.fighter_mode_until):
 			_finish_fighter_mode(u)
 		return
-	if u.get("burrowed", false):
+	if u.get("burrowed", false) and u.unit_type != "spine_ambusher":
+		if u.get("burrow_mobile", false) and not u.orders.is_empty():
+			if u.orders[0].type == "move":
+				_step_move_order(u, u.orders[0], dt)
+			elif u.orders[0].type == "stop":
+				u.orders.pop_front()
+				u.path.clear()
 		return
 
 	if u["attack_state"] == "windup":
@@ -2117,23 +3192,31 @@ func _update_unit_orders(u: Dictionary, dt: float) -> void:
 			u["attack_state"] = "idle"
 		else:
 			u["attack_state_timer"] -= dt
-			u["facing"] = (target["pos"] - u["pos"]).angle()
+			_face_attack_target(u, target)
 			if u["attack_state_timer"] <= 0.0:
-				if not _execute_weapon_hit(u, target):
+				var wpn: Dictionary = u.get("windup_weapon", {})
+				if wpn.is_empty():
+					wpn = _active_weapon(u, target)
+				var range_slop: float = LadderRules.WEAPON_RANGE_SLOP_OVERRIDES.get(u.unit_type, LadderRules.WEAPON_RANGE_SLOP)
+				if (ladder_rules and _edge_distance(u, target) > weapon_range_against(u, target) + range_slop) \
+						or not _execute_weapon_hit(u, target, {}, wpn):
 					u.attack_state = "idle"
 					return
-				var def = RTSData.get_unit_def(u["unit_type"])
-				var wpn = def.get("weapon", {})
-				u["weapon_cooldown"] = float(wpn.get("period", 0.8))
+				u.weapon_cooldown = _weapon_period(u, wpn)
+				if ladder_rules:
+					var windup_ticks := maxi(1, ceili(float(u.attack_windup_duration) * TICK_RATE))
+					u.weapon_cooldown = maxf(0.0, u.weapon_cooldown - float(windup_ticks) / TICK_RATE * _attack_speed_multiplier(u))
 				u["attack_state"] = "backswing"
 				u["attack_state_timer"] = float(wpn.get("backswing", 0.25))
+				if ladder_rules:
+					u.attack_state_timer /= _attack_speed_multiplier(u)
 			return
 
 	elif u["attack_state"] == "backswing":
 		u["attack_state_timer"] -= dt
-		if u["attack_state_timer"] <= 0.0:
+		if u["attack_state_timer"] <= 0.0 or (ladder_rules and u.weapon_cooldown <= 0.0):
 			u["attack_state"] = "idle"
-		if u["orders"].size() > 0 and u["orders"][0]["type"] != "move":
+		if (not ladder_rules or u.attack_state == "backswing") and u["orders"].size() > 0 and u["orders"][0]["type"] != "move":
 			return
 
 	_start_waiting_target_order(u)
@@ -2141,18 +3224,19 @@ func _update_unit_orders(u: Dictionary, dt: float) -> void:
 		if u.get("auto_repair", false) and tick % 8 == u.tag % 8 and _begin_auto_repair(u):
 			return
 		# Skirmish guards fire in place until the director commits them.
-		var range_only: bool = u.is_structure
+		var range_only: bool = u.is_structure or u.unit_type == "spine_ambusher"
 		if not range_only and not u.is_worker:
 			var directive: Dictionary = RTSCommanderAI.player_directives.get(u.owner, {})
 			range_only = directive.get("enabled", false) and directive.get("mode") == "skirmish"
 		var enemy = _find_best_attack_target(u, range_only)
 		if not enemy.is_empty():
-			var wpn_range = _get_weapon_range(u)
+			var wpn_range = weapon_range_against(u, enemy)
 			var dist_edge = _edge_distance(u, enemy)
 			if dist_edge <= wpn_range:
 				_begin_attack_on(u, enemy)
 				return
 			elif not u["is_immobile"] and not u["is_worker"]:
+				_try_automatic_charge(u, enemy)
 				_approach_target(u, enemy["pos"], dt)
 				return
 
@@ -2166,15 +3250,39 @@ func _update_unit_orders(u: Dictionary, dt: float) -> void:
 	var otype = str(order.get("type", "move"))
 
 	match otype:
+		"sky_defender_mode":
+			var point: Vector2 = order.target_pos
+			var reach := sky_deploy_range(u)
+			if u.pos.distance_squared_to(point) > reach * reach:
+				_follow_order_path(u, point, dt, reach)
+			else:
+				_begin_sky_mode(u, point, true)
+		"root_watch":
+			var point: Vector2 = order.target_pos
+			if u.pos.distance_squared_to(point) > 0.25:
+				_follow_order_path(u, point, dt)
+				return
+			if not _crawler_root_site_valid(u, point):
+				u.orders.pop_front()
+				u.path.clear()
+				notice.emit(u.owner, "Rooting requires clear living ground.", "warn")
+				return
+			u.pos = point
+			u.prev_pos = point
+			_begin_crawler_transition(u, true)
 		"inject_brood":
 			var nest: Dictionary = units.get(order.target_tag, {})
 			if brood_inject_block_reason(u, nest).is_empty():
-				if _edge_distance(u, nest) > BROOD_INJECT_RANGE:
-					_follow_order_path(u, nest.pos, dt, u.radius + nest.radius + BROOD_INJECT_RANGE)
+				var cast_range := 1.0 if ladder_rules else BROOD_INJECT_RANGE
+				if _edge_distance(u, nest) > cast_range:
+					_follow_order_path(u, nest.pos, dt, u.radius + nest.radius + cast_range)
 					return
 				u.energy -= BROOD_INJECT_COST
 				u.facing = (nest.pos - u.pos).angle()
-				nest["brood_inject_finish"] = tick + BROOD_INJECT_DELAY
+				if ladder_rules and nest.get("brood_inject_finish", 0) > 0:
+					nest["brood_inject_queued"] = int(nest.get("brood_inject_queued", 0)) + 1
+				else:
+					nest["brood_inject_finish"] = tick + (ceili(LadderRules.INJECT_SECONDS * TICK_RATE) if ladder_rules else BROOD_INJECT_DELAY)
 				ability_triggered.emit(u, "inject_brood", nest.pos)
 			u.orders.pop_front()
 			u.path.clear()
@@ -2190,26 +3298,16 @@ func _update_unit_orders(u: Dictionary, dt: float) -> void:
 				u.path.clear()
 				notice.emit(u.owner, reason, "warn")
 				return
-			_land_production(u, position)
+			u.pos = position
+			u.prev_pos = position
+			_begin_production_flight_transition(u, "land", u.flight_height, get_elevation_at(position))
 
 		"move":
-			var target_pos := _prepare_order_path(u, order)
-			var arrival_rad: float = float(order.get("arrival_radius", 0.9))
-			if u.path.size() == 1 and u.pos.distance_to(target_pos) <= arrival_rad:
-				if not _can_finish_path_order(u, order):
-					return
-				u["orders"].pop_front()
-				u["path"].clear()
-				u["home_pos"] = u["pos"]
-				u["has_home_pos"] = true
-			else:
-				if _can_finish_path_order(u, order) and _should_settle_in_group_arrival(u, target_pos, arrival_rad):
-					u["orders"].pop_front()
-					u["path"].clear()
-					u["home_pos"] = u["pos"]
-					u["has_home_pos"] = true
-				else:
-					_follow_path(u, dt)
+			_step_move_order(u, order, dt)
+			if u.unit_type == "dawn_interceptor" and u.weapon_cooldown <= 0.0 and not u.vel.is_zero_approx():
+				var target := _find_best_attack_target(u, true)
+				if not target.is_empty() and _execute_weapon_hit(u, target):
+					u.weapon_cooldown = _weapon_period(u, _active_weapon(u, target))
 
 		"hold_position":
 			if u.orders.size() > 1:
@@ -2240,10 +3338,12 @@ func _update_unit_orders(u: Dictionary, dt: float) -> void:
 					# extend the chase just by staying within the moving scan radius.
 					pursuit_origins[enemy.tag] = u.pos
 					order["_pursuit_origins"] = pursuit_origins
-				var wpn_range = _get_weapon_range(u)
+				var wpn_range = weapon_range_against(u, enemy)
 				if _edge_distance(u, enemy) <= wpn_range:
 					_begin_attack_on(u, enemy)
 				else:
+					if not range_only:
+						_try_automatic_charge(u, enemy)
 					_approach_target(u, enemy["pos"], dt)
 					if u.has("skirmish_route"):
 						var reach: float = wpn_range + u.radius + enemy.radius + 0.75
@@ -2287,12 +3387,13 @@ func _update_unit_orders(u: Dictionary, dt: float) -> void:
 				u.path.clear()
 				return
 			order.target_pos = enemy.pos
-			var wpn_range = _get_weapon_range(u)
+			var wpn_range = weapon_range_against(u, enemy)
 			if _edge_distance(u, enemy) <= wpn_range:
 				_begin_attack_on(u, enemy)
 			elif not u["is_immobile"]:
+				_try_automatic_charge(u, enemy)
 				_approach_target(u, enemy["pos"], dt)
-			elif u.armed_structure:
+			elif u.armed_structure or u.unit_type == "spine_ambusher":
 				u.orders.pop_front()
 
 		"harvest":
@@ -2306,7 +3407,10 @@ func _update_unit_orders(u: Dictionary, dt: float) -> void:
 			if u.pos.distance_squared_to(order.target_pos) > 1.0:
 				_move_toward_point(u, order.target_pos, dt)
 			else:
-				if not _unload_transport(u, order.target_pos):
+				if ladder_rules and u.unit_type == "rampart_transport":
+					if not _step_rampart_unload(u, order):
+						return
+				elif not _unload_transport(u, order.target_pos):
 					notice.emit(u.owner, "Deployment site blocked. Troops remain aboard.", "warn")
 				u.orders.pop_front()
 				u.path.clear()
@@ -2317,6 +3421,8 @@ func _update_unit_orders(u: Dictionary, dt: float) -> void:
 			if not _is_friendly_mobile(leader, u.owner):
 				u.orders.pop_front()
 				u.path.clear()
+			elif leader.unit_type == "settlement_truck" and _escort_engage(u):
+				return
 			elif _edge_distance(u, leader) > 1.5:
 				if u.get("nav_goal", Vector2.INF).distance_squared_to(leader.pos) > 1.0:
 					u.path.clear()
@@ -2336,7 +3442,33 @@ func _update_unit_orders(u: Dictionary, dt: float) -> void:
 				_embark_ground_unit(garrison, u)
 				bunker["passengers"] = garrison
 			else:
-				_approach_target(u, bunker.pos, dt)
+				_follow_order_path(u, bunker.pos, dt, bunker.radius + u.radius + 1.2)
+
+		"enter_rampart":
+			var transport: Dictionary = units.get(order.target_tag, {})
+			if not can_enter_rampart(u, transport):
+				u.orders.pop_front()
+				u.path.clear()
+			elif _edge_distance(u, transport) <= 2.5:
+				var cargo: Array = transport.get("passengers", [])
+				_embark_ground_unit(cargo, u)
+				transport["passengers"] = cargo
+			else:
+				_approach_target(u, transport.pos, dt)
+
+		"enter_brood_tunnel":
+			var endpoint: Dictionary = units.get(order.target_tag, {})
+			if not can_enter_brood_tunnel(u, endpoint):
+				u.orders.pop_front()
+				u.path.clear()
+			elif _edge_distance(u, endpoint) <= 1.2 and _has_carrier_access(u.pos, u.radius, endpoint):
+				if tick >= int(endpoint.get("brood_tunnel_load_ready", 0)):
+					if not brood_tunnel_cargo.has(u.owner):
+						brood_tunnel_cargo[u.owner] = []
+					_embark_ground_unit(brood_tunnel_cargo[u.owner], u)
+					endpoint["brood_tunnel_load_ready"] = tick + ceili(LadderRules.BROOD_TUNNEL_LOAD_SECONDS * TICK_RATE)
+			else:
+				_approach_target(u, endpoint.pos, dt)
 
 		"build":
 			_process_worker_build_order(u, order, dt)
@@ -2370,6 +3502,10 @@ func _waiting_target_lost(unit: Dictionary, order: Dictionary) -> bool:
 			return not _is_friendly_mobile(target, unit.owner)
 		"enter_bunker":
 			return not can_enter_bunker(unit, target)
+		"enter_rampart":
+			return not can_enter_rampart(unit, target)
+		"enter_brood_tunnel":
+			return not can_enter_brood_tunnel(unit, target)
 		"harvest":
 			var source: Dictionary = resources.get(order.target_tag, {})
 			if source.is_empty():
@@ -2398,25 +3534,54 @@ func _confirm_waiting_attack_loss(target: Dictionary) -> void:
 				order["target_lost"] = true
 
 func _release_mining_slot(worker: Dictionary) -> void:
-	if worker.harvest_timer <= 0.0:
-		return
-	if not worker.orders.is_empty() and worker.orders[0].type == "harvest":
-		var patch: Dictionary = resources.get(int(worker.orders[0].target_tag), {})
-		if int(patch.get("mining_worker", 0)) == worker.tag:
-			patch.mining_worker = 0
+	var source_tag: int = worker.get("mining_source_tag", 0)
+	var patch: Dictionary = resources.get(source_tag, units.get(source_tag, {}))
+	if int(patch.get("mining_worker", 0)) == worker.tag:
+		patch.mining_worker = 0
+	if patch.has("gas_queue"):
+		patch.gas_queue.erase(worker.tag)
+	worker.erase("mining_source_tag")
+	if worker.erase("gas_extracting"):
+		worker.pos = worker.gas_exit_pos
+		worker.prev_pos = worker.pos
+		worker.erase("gas_exit_pos")
+		worker.nonblocking = false
 	worker.harvest_timer = 0.0
 
 func _claim_mining_slot(worker: Dictionary, patch: Dictionary) -> bool:
-	var holder: int = patch.mining_worker
+	if ladder_rules and worker.unit_type == "prospector" and patch.get("resource_type") == "crystal_field":
+		return true
+	var holder: int = patch.get("mining_worker", 0)
 	if holder == worker.tag:
 		return true
 	var miner: Dictionary = units.get(holder, {})
 	if not miner.is_empty() and miner.hp > 0.0 and miner.cargo_amount == 0 and not miner.orders.is_empty():
 		var active: Dictionary = miner.orders[0]
-		if active.type == "harvest" and active.target_tag == patch.tag and _edge_distance(miner, patch) <= HARVEST_REACH:
+		if active.type == "harvest" and int(miner.get("mining_source_tag", 0)) == patch.tag:
 			return false
 	patch.mining_worker = worker.tag
+	worker["mining_source_tag"] = patch.tag
 	worker.harvest_timer = 0.0
+	return true
+
+func _enter_aether_extractor(worker: Dictionary, source: Dictionary, center: Vector2) -> bool:
+	if worker.get("gas_extracting", false):
+		return true
+	if not source.has("gas_queue"):
+		source["gas_queue"] = []
+	var queue: Array = source.gas_queue
+	if int(worker.get("mining_source_tag", 0)) != source.tag:
+		_release_mining_slot(worker)
+		worker["mining_source_tag"] = source.tag
+		queue.append(worker.tag)
+	if queue.is_empty() or queue.front() != worker.tag or not _claim_mining_slot(worker, source):
+		return false
+	queue.pop_front()
+	worker["gas_exit_pos"] = worker.pos
+	worker["gas_extracting"] = true
+	worker.nonblocking = true
+	worker.pos = center
+	worker.path.clear()
 	return true
 
 func _deliver_worker_cargo(worker: Dictionary, dt: float, hall_tag: int = 0) -> bool:
@@ -2440,6 +3605,8 @@ func _deliver_worker_cargo(worker: Dictionary, dt: float, hall_tag: int = 0) -> 
 	return true
 
 func _record_income(owner_id: int, cargo: String, amount: int) -> void:
+	if ladder_rules and amount > 0:
+		_ladder_last_progress_tick = tick
 	if not _income_buckets.has(owner_id):
 		_income_buckets[owner_id] = {}
 	var buckets: Dictionary = _income_buckets[owner_id]
@@ -2504,9 +3671,12 @@ func _reachable_dropoff(worker: Dictionary) -> Dictionary:
 func _process_worker_harvest_order(u: Dictionary, order: Dictionary, dt: float) -> void:
 	var hall_tag := _harvest_dropoff(u, order)
 	if hall_tag < 0:
+		_release_mining_slot(u)
 		return
 	var res_tag = int(order.get("target_tag", u["harvest_target_tag"]))
 	if u["cargo_amount"] > 0:
+		if int(u.get("harvest_leave_tick", 0)) > tick:
+			return
 		var crystal_trip: bool = u.cargo_type == "crystal"
 		if _deliver_worker_cargo(u, dt, hall_tag):
 			if u.orders.size() > 1:
@@ -2539,12 +3709,14 @@ func _process_worker_harvest_order(u: Dictionary, order: Dictionary, dt: float) 
 
 	var dist = u["pos"].distance_to(target_entity["pos"]) - (u["radius"] + float(target_entity.get("radius", 1.8)))
 	var source_tag = res_tag
+	var extractor: Dictionary = {}
 	if is_gas:
 		# Links change only when structures change. Scanning the whole army and
 		# every map deposit for each gas worker at 64 Hz dominated late-game CPU.
 		var tap_tag = res_tag if units.has(res_tag) else int(_gas_tap_by_vent.get(Vector2i(u.owner, res_tag), 0))
-		var extractor: Dictionary = units.get(tap_tag, {})
+		extractor = units.get(tap_tag, {})
 		if extractor.is_empty() or extractor.owner != u.owner:
+			_release_mining_slot(u)
 			u.orders.pop_front()
 			return
 		if extractor.build_progress < 1.0:
@@ -2552,6 +3724,8 @@ func _process_worker_harvest_order(u: Dictionary, order: Dictionary, dt: float) 
 				_follow_order_path(u, target_entity.pos, dt, u.radius + target_entity.radius + HARVEST_REACH)
 			return
 		source_tag = int(_gas_source_by_tap.get(tap_tag, res_tag))
+		target_entity = extractor
+		dist = _edge_distance(u, extractor)
 	if resources.has(source_tag) and int(resources[source_tag].amount) <= 0 and not unlimited_resources:
 		_release_mining_slot(u)
 		u.orders.pop_front()
@@ -2561,7 +3735,15 @@ func _process_worker_harvest_order(u: Dictionary, order: Dictionary, dt: float) 
 	if dist <= HARVEST_REACH:
 		u["vel"] = Vector2.ZERO
 		u["facing"] = (target_entity["pos"] - u["pos"]).angle()
-		if not is_gas and not _claim_mining_slot(u, target_entity):
+		var mining_source: Dictionary = resources.get(source_tag, {})
+		if not is_gas and campaign != null and campaign.mutators != null and campaign.mutators.mineral_shield_blocks(self, source_tag):
+			_release_mining_slot(u)
+			u.harvest_timer = 0.0
+			return
+		if is_gas:
+			if not _enter_aether_extractor(u, mining_source if not mining_source.is_empty() else extractor, extractor.pos):
+				return
+		elif not mining_source.is_empty() and not _claim_mining_slot(u, mining_source):
 			u.harvest_timer = 0.0
 			return
 		var prev_timer: float = float(u["harvest_timer"])
@@ -2569,13 +3751,18 @@ func _process_worker_harvest_order(u: Dictionary, order: Dictionary, dt: float) 
 		if not is_gas and prev_timer <= 0.0 and u["harvest_timer"] > 0.0:
 			if not resources.has(source_tag) or int(resources[source_tag].amount) > 0 or unlimited_resources:
 				emit_signal("resource_gathered", u, "crystal", target_entity["pos"])
-		if u["harvest_timer"] >= 1.75:
+		var gather_seconds := 1.75
+		if ladder_rules:
+			gather_seconds = LadderRules.AETHER_GATHER_SECONDS if is_gas else LadderRules.CRYSTAL_GATHER_SECONDS
+		if u["harvest_timer"] >= gather_seconds:
 			_release_mining_slot(u)
+			if ladder_rules and not is_gas:
+				u["harvest_leave_tick"] = tick + ceili(LadderRules.CRYSTAL_LEAVE_SECONDS * TICK_RATE)
 			u.cargo_type = "aether" if is_gas else "crystal"
 			var source: Dictionary = resources.get(source_tag, {})
 			u.cargo_amount = deposit_yield(source) if not source.is_empty() else (4 if is_gas else 5)
 			if u.unit_type == "prospector":
-				u.cargo_amount *= 2
+				u.cargo_amount = LadderRules.PROSPECTOR_LADDER_YIELD if ladder_rules else u.cargo_amount * 2
 			if resources.has(source_tag) and not unlimited_resources:
 				u.cargo_amount = mini(u.cargo_amount, int(source.amount))
 				source.amount -= u.cargo_amount
@@ -2584,8 +3771,7 @@ func _process_worker_harvest_order(u: Dictionary, order: Dictionary, dt: float) 
 						nav_dirty = true
 					resource_depleted.emit(u.owner, source.resource_type)
 	else:
-		if not is_gas:
-			_release_mining_slot(u)
+		_release_mining_slot(u)
 		var reach: float = u.radius + target_entity.radius + HARVEST_REACH
 		_prepare_path(u, target_entity.pos, 3.0, reach)
 		if not is_gas and u.orders.size() == 1 and tick % TICK_RATE == u.tag % TICK_RATE:
@@ -2624,7 +3810,7 @@ func _process_worker_build_order(u: Dictionary, order: Dictionary, dt: float) ->
 			if p["crystal"] >= m_cost and p["aether"] >= v_cost:
 				p["crystal"] -= m_cost
 				p["aether"] -= v_cost
-				var s_unit = spawn_unit(struct_type, u["owner"], build_pos, "", 0.1)
+				var s_unit = spawn_unit(struct_type, u["owner"], build_pos, "", 0.0)
 				order["structure_tag"] = s_unit["tag"]
 				s_unit["builder_tag"] = u.tag
 				s_unit["construction_cost"] = Vector2i(m_cost, v_cost)
@@ -2655,17 +3841,27 @@ func _process_worker_build_order(u: Dictionary, order: Dictionary, dt: float) ->
 		if dist <= 1.8:
 			u["vel"] = Vector2.ZERO
 			u["facing"] = (s_unit["pos"] - u["pos"]).angle()
-			var rate = dt / max(1.0, float(s_unit["build_total_time"]) * build_time_scale())
-			s_unit["build_progress"] = min(1.0, s_unit["build_progress"] + rate)
-			s_unit["hp"] = min(s_unit["max_hp"], s_unit["hp"] + s_unit["max_hp"] * rate)
-			if s_unit["build_progress"] >= 1.0:
+			if _advance_construction(s_unit, dt):
 				players[u["owner"]]["structures_built"] += 1
+				if ladder_rules and _qualifies_for_elimination(s_unit):
+					_ladder_last_progress_tick = tick
 				_recompute_supplies()
 				emit_signal("notice", u["owner"], "%s complete." % s_unit["name"], "info")
 				emit_signal("structure_construction_finished", s_unit)
 				u["orders"].pop_front()
+				if s_unit.is_extractor and u.orders.is_empty() and not worker_rally_resource(u.owner, s_unit.tag).is_empty():
+					issue_command([u.tag], "harvest", s_unit.pos, s_unit.tag)
 		else:
 			_approach_target(u, s_unit["pos"], dt)
+
+func _advance_construction(site: Dictionary, dt: float) -> bool:
+	var rate := dt / maxf(1.0, float(site.build_total_time))
+	site.hp = minf(site.max_hp, site.hp + site.max_hp * rate)
+	site.build_progress = minf(1.0, site.build_progress + rate)
+	if site.build_progress >= 1.0 - 0.0000001:
+		site.build_progress = 1.0
+		return true
+	return false
 
 func can_resume_construction(worker: Dictionary, site: Dictionary) -> bool:
 	if site.is_empty() or not site.is_structure or site.owner != worker.owner or site.faction != worker.faction:
@@ -2683,7 +3879,7 @@ func construction_builder(site: Dictionary) -> Dictionary:
 	return builder if order.type == "build" and int(order.get("structure_tag", 0)) == site.tag else {}
 
 func _cancel_construction(site: Dictionary) -> bool:
-	if not units.has(site.tag) or not site.is_structure or site.build_progress >= 1.0:
+	if not units.has(site.tag) or not site.is_structure or site.build_progress >= 1.0 or (ladder_rules and site.unit_type == "brood_growth_node"):
 		return false
 	var costs: Vector2i = site.get("construction_cost", Vector2i.ZERO)
 	_refund_structure(site, costs)
@@ -2699,6 +3895,7 @@ func _refund_structure(site: Dictionary, costs: Vector2i) -> void:
 	player.crystal += floori(costs.x * CONSTRUCTION_REFUND)
 	player.aether += floori(costs.y * CONSTRUCTION_REFUND)
 	_unlink_attachment(site)
+	_lose_brood_tunnel_cargo_if_last(site)
 	_confirm_waiting_attack_loss(site)
 	units.erase(site.tag)
 	nav_dirty = true
@@ -2708,34 +3905,48 @@ func _is_finished_silo(unit: Dictionary, owner_id: int) -> bool:
 	return not unit.is_empty() and unit.owner == owner_id and unit.unit_type in ["silo", "silo_retracted"] and unit.build_progress >= 1.0
 
 func can_use_hub_power(unit: Dictionary) -> bool:
-	return unit.unit_type == "colony_hub" and unit.build_progress >= 1.0 and unit.energy >= HUB_POWER_COST
+	return unit.unit_type == "colony_hub" and unit.build_progress >= 1.0 and unit.energy >= HUB_POWER_COST \
+		and (not ladder_rules or (unit.get("hub_operations", false) and unit.flight_height <= 0.0 and not unit.has("flight_transition")))
 
-func hub_upgrade_block_reason(hub: Dictionary) -> String:
+func hub_upgrade_offer(ability: String) -> Dictionary:
+	if ability == "fortify_hub":
+		return LadderRules.FORTIFICATION_OFFER if ladder_rules else {}
+	return LadderRules.OPERATIONS_OFFER if ladder_rules else HUB_OPERATIONS_OFFER
+
+func hub_upgrade_block_reason(hub: Dictionary, ability: String = "upgrade_hub") -> String:
 	if hub.unit_type != "colony_hub" or hub.build_progress < 1.0:
 		return "Requires a completed Colony Hub."
+	if ladder_rules and (hub.flight_height > 0.0 or hub.has("flight_transition")):
+		return "The Colony Hub must be grounded."
+	var offer := hub_upgrade_offer(ability)
+	if offer.is_empty():
+		return "This conversion requires ladder rules."
 	if hub.get("hub_operations", false):
 		return "Operations already upgraded."
-	if hub.production_queue.any(func(item): return item.get("upgrade") == "hub_operations"):
+	if hub.production_queue.any(func(item): return item.get("upgrade") in ["hub_operations", "fortify_hub"]):
 		return "Upgrade already queued."
-	if not has_tech_structure(hub.owner, "muster_hall"):
-		return "Requires Muster Hall."
+	for requirement in offer.requires:
+		if not has_tech_structure(hub.owner, requirement):
+			return "Requires %s." % RTSData.get_unit_def(requirement).name
 	if hub.production_queue.size() >= PRODUCTION_QUEUE_CAPACITY:
 		return "Colony Hub queue is full."
 	var player: Dictionary = players[hub.owner]
-	if player.crystal < HUB_OPERATIONS_OFFER.crystal:
+	if player.crystal < offer.crystal:
 		return "Not enough crystal."
-	if player.aether < HUB_OPERATIONS_OFFER.aether:
+	if player.aether < offer.aether:
 		return "Not enough aether."
 	return ""
 
-func _enqueue_hub_upgrade(hub: Dictionary) -> bool:
-	if not hub_upgrade_block_reason(hub).is_empty():
+func _enqueue_hub_upgrade(hub: Dictionary, ability: String) -> bool:
+	if not hub_upgrade_block_reason(hub, ability).is_empty():
 		return false
+	var offer := hub_upgrade_offer(ability)
 	var player: Dictionary = players[hub.owner]
-	player.crystal -= HUB_OPERATIONS_OFFER.crystal
-	player.aether -= HUB_OPERATIONS_OFFER.aether
-	hub.production_queue.append({"upgrade": "hub_operations", "level": 1, "crystal_cost": HUB_OPERATIONS_OFFER.crystal,
-		"aether_cost": HUB_OPERATIONS_OFFER.aether, "progress": 0.0, "total_time": HUB_OPERATIONS_OFFER.time * build_time_scale()})
+	player.crystal -= offer.crystal
+	player.aether -= offer.aether
+	var upgrade := "fortify_hub" if ability == "fortify_hub" else "hub_operations"
+	hub.production_queue.append({"upgrade": upgrade, "level": 1, "crystal_cost": offer.crystal,
+		"aether_cost": offer.aether, "progress": 0.0, "total_time": offer.time})
 	return true
 
 func can_use_production_boost(unit: Dictionary) -> bool:
@@ -2745,9 +3956,11 @@ func production_boost_ticks(unit: Dictionary) -> int:
 	return maxi(0, int(unit.get("production_boost_until", 0)) - tick)
 
 func production_boost_target_reason(owner: int, producer: Dictionary) -> String:
-	if producer.is_empty() or producer.owner != owner or not producer.is_structure or producer.build_progress < 1.0 or RTSData.get_unit_def(producer.unit_type).get("trains", []).is_empty():
+	if producer.is_empty() or producer.owner != owner or not producer.is_structure or producer.build_progress < 1.0:
 		return "Select a completed friendly producer."
-	if not is_powered(owner, producer.pos):
+	if RTSData.get_unit_def(producer.unit_type).get("trains", []).is_empty() and not (ladder_rules and producer.unit_type in ["concord_core", "transit_waystone", "twilight_array", "prism_forge", "robotics_annex", "canticle_archive", "veil_sanctum"]):
+		return "Select a completed friendly producer."
+	if not (ladder_rules and producer.unit_type == "heartstone") and not is_powered(owner, producer.pos):
 		return "The producer needs a friendly power field."
 	if production_boost_ticks(producer) > 0:
 		return "Production boost is already active."
@@ -2757,7 +3970,49 @@ func _cast_production_boost(source: Dictionary, producer: Dictionary) -> bool:
 	if not can_use_production_boost(source) or not production_boost_target_reason(source.owner, producer).is_empty():
 		return false
 	source.energy -= PRODUCTION_BOOST_COST
-	producer["production_boost_until"] = tick + PRODUCTION_BOOST_TICKS
+	producer["production_boost_until"] = tick + (LadderRules.CONCORD_BOOST_SECONDS * TICK_RATE if ladder_rules else PRODUCTION_BOOST_TICKS)
+	return true
+
+func energy_recharge_ticks(owner: int) -> int:
+	return maxi(0, int(players.get(owner, {}).get("energy_recharge_ready", 0)) - tick)
+
+func energy_recharge_radius() -> float:
+	return LadderRules.ENERGY_RECHARGE_RANGE
+
+func energy_recharge_block_reason(source: Dictionary) -> String:
+	if not ladder_rules or source.unit_type != "heartstone" or source.build_progress < 1.0 or source.hp <= 0.0:
+		return "Select a completed ladder Heartstone."
+	if energy_recharge_ticks(source.owner) > 0:
+		return "Energy Recharge ready in %.1fs." % (energy_recharge_ticks(source.owner) * TICK_DT)
+	return "Requires 50 Heartstone energy." if source.energy < LadderRules.ENERGY_RECHARGE_COST else ""
+
+func energy_recharge_target_reason(owner: int, target: Dictionary) -> String:
+	if target.is_empty() or target.owner != owner or target.build_progress < 1.0 or target.hp <= 0.0 \
+			or RTSData.get_unit_def(target.unit_type).get("faction", "") != RTSData.FACTION_ALIENS or _unit_energy_capacity(target) <= 0.0:
+		return "Select a completed friendly Concord unit or structure with energy."
+	if target.energy >= _unit_energy_capacity(target):
+		return "This target already has full energy."
+	return "" if _near_friendly_heartstone(owner, target.pos) else "Target must be near a completed friendly Heartstone."
+
+func _near_friendly_heartstone(owner: int, point: Vector2) -> bool:
+	for heartstone in units.values():
+		if heartstone.owner == owner and heartstone.unit_type == "heartstone" and heartstone.build_progress >= 1.0 and heartstone.hp > 0.0 \
+				and point.distance_squared_to(heartstone.pos) <= energy_recharge_radius() ** 2:
+			return true
+	return false
+
+func _unit_energy_capacity(unit: Dictionary) -> float:
+	return float(unit.get("energy_profile", {}).get("max", unit.get("support", {}).get("max_energy", 0.0)))
+
+func _cast_energy_recharge(source: Dictionary, target: Dictionary) -> bool:
+	if not energy_recharge_block_reason(source).is_empty() or not energy_recharge_target_reason(source.owner, target).is_empty():
+		return false
+	if source.tag == target.tag:
+		return false
+	source.energy -= LadderRules.ENERGY_RECHARGE_COST
+	target.energy = minf(_unit_energy_capacity(target), target.energy + LadderRules.ENERGY_RECHARGE_AMOUNT)
+	players[source.owner]["energy_recharge_ready"] = tick + LadderRules.ENERGY_RECHARGE_SECONDS * TICK_RATE
+	ability_triggered.emit(target, "energy_recharge", target.pos)
 	return true
 
 func defensive_recall_block_reason(source: Dictionary) -> String:
@@ -2765,51 +4020,87 @@ func defensive_recall_block_reason(source: Dictionary) -> String:
 		return "Select a completed Heartstone."
 	if _defensive_recalls.has(source.owner):
 		return "A defensive recall is already in progress."
+	var remaining := defensive_recall_cooldown_ticks(source.owner)
+	if remaining > 0:
+		return "Defensive Recall ready in %.1fs." % (remaining * TICK_DT)
 	return "Requires 50 Heartstone energy." if source.energy < DEFENSIVE_RECALL_COST else ""
+
+func defensive_recall_cooldown_ticks(owner: int) -> int:
+	return maxi(0, int(players.get(owner, {}).get("defensive_recall_ready", 0)) - tick)
+
+func defensive_recall_radius() -> float:
+	return LadderRules.RECALL_RADIUS if ladder_rules else DEFENSIVE_RECALL_RADIUS
 
 func defensive_recall_markers_for(owner: int) -> Array[Dictionary]:
 	var markers: Array[Dictionary] = []
-	for player in _defensive_recalls:
-		if owner != 0 and player != owner:
+	for recall in _defensive_recalls.values():
+		if owner != 0 and int(recall.owner) != owner:
 			continue
-		var recall: Dictionary = _defensive_recalls[player]
 		var position: Vector2 = recall.pos
 		var remaining := maxi(0, int(recall.finish_tick) - tick)
-		markers.append({"x": position.x, "y": position.y, "radius": DEFENSIVE_RECALL_RADIUS, "ticks": remaining})
+		markers.append({"x": position.x, "y": position.y, "radius": recall.radius, "ticks": remaining})
 	return markers
 
-func _can_remain_in_recall(unit: Dictionary, owner: int, position: Vector2) -> bool:
-	return not unit.is_empty() and unit.owner == owner and not unit.is_structure and not unit.is_immobile \
+func _can_remain_in_recall(unit: Dictionary, owner: int, position: Vector2, radius: float) -> bool:
+	return not unit.is_empty() and unit.owner == owner and not unit.is_structure and (not unit.is_immobile or unit.has("recall_channel")) \
 		and unit.hp > 0.0 and unit.build_progress >= 1.0 \
-		and position.distance_squared_to(unit.pos) <= DEFENSIVE_RECALL_RADIUS * DEFENSIVE_RECALL_RADIUS
+		and position.distance_squared_to(unit.pos) <= radius * radius
 
-func _cast_defensive_recall(source: Dictionary, position: Vector2) -> bool:
-	if not defensive_recall_block_reason(source).is_empty():
+func _cast_defensive_recall(source: Dictionary, position: Vector2, flagship := false) -> bool:
+	if not flagship and not defensive_recall_block_reason(source).is_empty():
 		return false
 	if not position.is_finite() or not Rect2(0.0, 0.0, map_width, map_height).has_point(position) or not can_see_position(source.owner, position):
 		return false
 	var tags: Array[int] = []
+	var radius := LadderRules.FLAGSHIP_RECALL_RADIUS if flagship else defensive_recall_radius()
 	for unit in units.values():
-		if _can_remain_in_recall(unit, source.owner, position):
+		if (unit.tag != source.tag and not unit.has("recall_channel") and unit.unit_type != "pursuit_fighter"
+				and _can_remain_in_recall(unit, source.owner, position, radius)):
 			tags.append(unit.tag)
 	if tags.is_empty():
 		return false
-	source.energy -= DEFENSIVE_RECALL_COST
-	_defensive_recalls[source.owner] = {"source_tag": source.tag, "pos": position, "finish_tick": tick + DEFENSIVE_RECALL_TICKS, "tags": tags}
+	if not flagship:
+		source.energy -= DEFENSIVE_RECALL_COST
+	var duration := DEFENSIVE_RECALL_TICKS
+	if ladder_rules:
+		duration = (LadderRules.FLAGSHIP_RECALL_SECONDS if flagship else LadderRules.RECALL_CHANNEL_SECONDS) * TICK_RATE
+		if not flagship:
+			players[source.owner]["defensive_recall_ready"] = tick + LadderRules.RECALL_COOLDOWN_SECONDS * TICK_RATE
+		for tag in tags:
+			var unit: Dictionary = units[tag]
+			unit["recall_channel"] = true
+			unit.is_immobile = true
+			unit.vel = Vector2.ZERO
+			unit.attack_state = "idle"
+	var key: int = source.tag if flagship else source.owner
+	_defensive_recalls[key] = {"source_tag": source.tag, "owner": source.owner, "pos": position,
+		"radius": radius, "finish_tick": tick + duration, "tags": tags}
 	return true
 
+func _release_recall_channel(unit: Dictionary) -> void:
+	if unit.erase("recall_channel"):
+		unit.is_immobile = false
+
 func _update_defensive_recalls() -> void:
-	for owner in _defensive_recalls.keys():
-		var recall: Dictionary = _defensive_recalls[owner]
+	for key in _defensive_recalls.keys():
+		var recall: Dictionary = _defensive_recalls[key]
+		var owner: int = recall.owner
 		var source: Dictionary = units.get(recall.source_tag, {})
 		if source.is_empty():
-			_defensive_recalls.erase(owner)
-			notice.emit(owner, "Recall cancelled. The Heartstone was destroyed.", "warn")
+			for tag in recall.tags:
+				_release_recall_channel(units.get(tag, {}))
+			_defensive_recalls.erase(key)
+			notice.emit(owner, "Recall cancelled. Its source was destroyed.", "warn")
 			continue
-		recall.tags = recall.tags.filter(func(tag): return _can_remain_in_recall(units.get(tag, {}), owner, recall.pos))
+		recall.tags = recall.tags.filter(func(tag):
+			var unit: Dictionary = units.get(tag, {})
+			var eligible := _can_remain_in_recall(unit, owner, recall.pos, recall.radius)
+			if not eligible:
+				_release_recall_channel(unit)
+			return eligible)
 		if tick < int(recall.finish_tick):
 			continue
-		_defensive_recalls.erase(owner)
+		_defensive_recalls.erase(key)
 		var recalled := _finish_defensive_recall(source, recall.pos, recall.tags)
 		var message := "Recalled one unit." if recalled == 1 else "Recalled %d units." % recalled
 		if recall.tags.is_empty():
@@ -2831,6 +4122,7 @@ func _finish_defensive_recall(source: Dictionary, position: Vector2, tags: Array
 	var arrivals: Array[Dictionary] = []
 	for tag in tags:
 		var unit: Dictionary = units[tag]
+		_release_recall_channel(unit)
 		var landing := _rally_spawn_position(source, position, unit.unit_type, arrivals)
 		if not landing.is_finite():
 			continue
@@ -2846,6 +4138,8 @@ func _finish_defensive_recall(source: Dictionary, position: Vector2, tags: Array
 		unit["prev_pos"] = landing
 		unit["home_pos"] = landing
 		unit["has_home_pos"] = true
+		if ladder_rules:
+			unit["recall_protection_until"] = tick + ceili(LadderRules.RECALL_ARRIVAL_PROTECTION_SECONDS * TICK_RATE)
 		arrivals.append(unit)
 		unit_phased.emit(origin, landing, tag)
 	if not arrivals.is_empty():
@@ -2858,19 +4152,32 @@ func _use_hub_power(hub: Dictionary, command: String, position: Vector2, target_
 	if command == "recon_sweep":
 		if vision == null or not position.is_finite() or not Rect2(0, 0, map_width, map_height).has_point(position):
 			return false
-		vision.add_sweep(hub.owner, position, SWEEP_RADIUS, tick + SWEEP_TICKS)
+		var radius := LadderRules.LADDER_SWEEP_RADIUS if ladder_rules else SWEEP_RADIUS
+		var duration := ceili(LadderRules.LADDER_SWEEP_SECONDS * TICK_RATE) if ladder_rules else SWEEP_TICKS
+		vision.add_sweep(hub.owner, position, radius, tick + duration)
 		_refresh_vision()
 	elif command == "deploy_prospector":
 		var deposit: Dictionary = resources.get(target_tag, {})
-		if not hub.get("hub_operations", false) or deposit.get("resource_type") != "crystal_field" or not deposit_present(deposit) or not can_see_position(hub.owner, deposit.pos):
+		if not hub.get("hub_operations", false):
 			return false
 		var radius: float = RTSData.get_unit_def("prospector").radius
-		var landing := _interaction_destination(hub.pos, deposit.pos, Vector2.INF, radius, radius + deposit.radius + HARVEST_REACH, false)
+		var landing := Vector2.INF
+		if deposit.get("resource_type") == "crystal_field" and deposit_present(deposit) and can_see_position(hub.owner, deposit.pos):
+			var dropoff: Vector2 = hub.pos
+			if ladder_rules:
+				for base in units.values():
+					if is_dropoff(base, hub.owner) and base.pos.distance_squared_to(deposit.pos) < dropoff.distance_squared_to(deposit.pos):
+						dropoff = base.pos
+			landing = _interaction_destination(dropoff, deposit.pos, Vector2.INF, radius, radius + deposit.radius + HARVEST_REACH, false)
+		elif ladder_rules and target_tag == 0 and position.is_finite() and Rect2(0, 0, map_width, map_height).has_point(position) \
+				and can_see_position(hub.owner, position) and not _is_point_blocked_by_static(position, radius):
+			landing = position
 		if not landing.is_finite():
 			return false
 		var helper := spawn_unit("prospector", hub.owner, landing)
-		helper["expires_tick"] = tick + PROSPECTOR_LIFETIME_TICKS
-		issue_command([helper.tag], "harvest", deposit.pos, deposit.tag)
+		helper["expires_tick"] = tick + (LadderRules.PROSPECTOR_LADDER_SECONDS * TICK_RATE if ladder_rules else PROSPECTOR_LIFETIME_TICKS)
+		if not deposit.is_empty():
+			issue_command([helper.tag], "harvest", deposit.pos, deposit.tag)
 		ability_triggered.emit(helper, command, landing)
 		unit_production_finished.emit(helper, hub)
 	else:
@@ -2878,27 +4185,35 @@ func _use_hub_power(hub: Dictionary, command: String, position: Vector2, target_
 		if not _is_finished_silo(silo, hub.owner) or silo.get("supply_reinforced", false):
 			return false
 		silo["supply_reinforced"] = true
+		if ladder_rules:
+			silo.max_hp = 500.0
+			silo.hp = 500.0
 		_recompute_supplies()
 		emit_signal("notice", hub.owner, "Provision Silo reinforced.", "info")
 	hub.energy -= HUB_POWER_COST
 	return true
 
-func _toggle_salvage(silo: Dictionary) -> bool:
-	if not _is_finished_silo(silo, silo.owner):
+func _toggle_salvage(structure: Dictionary) -> bool:
+	var allowed: bool = structure.unit_type in ["field_bunker", "radar_beacon"] and structure.build_progress >= 1.0 if ladder_rules else _is_finished_silo(structure, structure.owner)
+	if not allowed:
 		return false
-	if silo.get("salvage_finish", 0) > 0:
-		silo.erase("salvage_finish")
-		emit_signal("notice", silo.owner, "Salvage cancelled.", "info")
+	if structure.get("salvage_finish", 0) > 0:
+		structure.erase("salvage_finish")
+		emit_signal("notice", structure.owner, "Salvage cancelled.", "info")
 	else:
-		silo["salvage_finish"] = tick + SALVAGE_TICKS
-		emit_signal("notice", silo.owner, "Salvaging Provision Silo.", "info")
+		structure["salvage_finish"] = tick + salvage_duration_ticks()
+		emit_signal("notice", structure.owner, "Salvaging %s." % structure.name, "info")
 	return true
+
+func salvage_duration_ticks() -> int:
+	return ceili(5.0 / 1.4 * TICK_RATE) if ladder_rules else SALVAGE_TICKS
 
 func supply_from(unit: Dictionary) -> int:
 	return int(RTSData.get_unit_def(unit.unit_type).get("supply_provided", 0)) + (REINFORCED_SUPPLY if unit.get("supply_reinforced", false) else 0)
 
 func can_repair(worker: Dictionary, target: Dictionary) -> bool:
-	return worker.unit_type == "pioneer" and not target.is_empty() and target.owner == worker.owner and target.tag != worker.tag and target.build_progress >= 1.0 and target.hp < target.max_hp and target.attributes.has("Mechanical")
+	var valid_worker: bool = worker.unit_type == "pioneer" or (ladder_rules and worker.unit_type == "prospector")
+	return valid_worker and not target.is_empty() and target.owner == worker.owner and target.tag != worker.tag and target.build_progress >= 1.0 and target.hp < target.max_hp and target.attributes.has("Mechanical")
 
 func _begin_auto_repair(worker: Dictionary) -> bool:
 	if players[worker.owner].crystal <= 0:
@@ -2925,9 +4240,12 @@ func _process_repair_order(worker: Dictionary, order: Dictionary, dt: float) -> 
 		worker.path.clear()
 		return
 	if _edge_distance(worker, target) > 1.1:
-		_follow_order_path(worker, target.pos, dt)
+		_follow_order_path(worker, target.pos, dt, target.radius + worker.radius + 1.1)
 		return
 	worker.facing = (target.pos - worker.pos).angle()
+	if ladder_rules:
+		_repair_ladder_target(target, player, dt)
+		return
 	var replacement_cost: float = RTSData.get_unit_def(target.unit_type).get("crystal_cost", 0)
 	var price_per_hp: float = replacement_cost * 0.25 / target.max_hp
 	var hp := minf(REPAIR_HP_PER_SECOND * dt, target.max_hp - target.hp)
@@ -2940,13 +4258,40 @@ func _process_repair_order(worker: Dictionary, order: Dictionary, dt: float) -> 
 		target["repair_credit"] = maxf(0.0, credit + charge - price)
 	target.hp += hp
 
+func _repair_ladder_target(target: Dictionary, player: Dictionary, dt: float) -> void:
+	var definition := RTSData.get_unit_def(target.unit_type)
+	var duration := maxf(1.0, float(definition.get("build_time", target.build_total_time)))
+	var hp := minf(float(target.max_hp) / duration * dt, target.max_hp - target.hp)
+	var prices := {
+		"crystal": float(definition.get("crystal_cost", 0)) * 0.25 / target.max_hp,
+		"aether": float(definition.get("aether_cost", 0)) * 0.25 / target.max_hp,
+	}
+	for resource in prices:
+		var price_per_hp: float = prices[resource]
+		if price_per_hp > 0.0:
+			var credit: float = target.get("repair_credit_" + resource, 0.0)
+			hp = minf(hp, (float(player[resource]) + credit) / price_per_hp)
+	for resource in prices:
+		var price_per_hp: float = prices[resource]
+		if price_per_hp <= 0.0:
+			continue
+		var key: String = "repair_credit_" + resource
+		var credit: float = target.get(key, 0.0)
+		var payment: int = clampi(ceili(hp * price_per_hp - credit - 0.000001), 0, int(player[resource]))
+		player[resource] -= payment
+		target[key] = maxf(0.0, credit + payment - hp * price_per_hp)
+	target.hp += hp
+
 func can_restore(source: Dictionary, target: Dictionary) -> bool:
 	if not source.has("support") or target.is_empty() or target.tag == source.tag:
 		return false
-	if target.owner != source.owner or target.hp <= 0.0 or target.build_progress < 1.0:
+	if target.owner != source.owner or target.hp <= 0.0 or target.build_progress < 1.0 or int(target.get("stasis_until", 0)) > tick:
 		return false
 	if source.support.stat == "hp":
-		return not target.is_structure and target.flight_height <= 0.0 and target.attributes.has("Biological") and target.hp < target.max_hp
+		var reachable: bool = target.flight_height <= 0.0 or (source.unit_type == "rampart_transport" and target.has("gravity_lifted_by"))
+		return not target.is_structure and reachable and target.attributes.has("Biological") and target.hp < target.max_hp
+	if source.unit_type == "aegis_capacitor" and target.is_structure and target.unit_type != "aegis_relay":
+		return false
 	return target.shields < target.max_shields
 
 func _step_support(source: Dictionary, dt: float) -> bool:
@@ -2955,13 +4300,18 @@ func _step_support(source: Dictionary, dt: float) -> bool:
 	source.support_target_tag = 0
 	if source.build_progress < 1.0 or (source.is_structure and not is_powered(source.owner, source.pos)):
 		return false
-	source.energy = minf(config.max_energy, source.energy + float(config.regen) * dt)
+	var regen := float(config.regen)
+	if source.unit_type == "rampart_transport" and players[source.owner].upgrades.get("rampart_reactor", 0):
+		regen *= 2.0
+	source.energy = minf(config.max_energy, source.energy + regen * dt)
+	if systems_jammed(source):
+		return false
 	var order: Dictionary = source.orders.front() if not source.orders.is_empty() else {}
 	var triage: bool = source.unit_type == "triage_specialist"
-	var auto_heal: bool = triage and source.get("auto_heal", false)
+	var auto_heal: bool = config.stat == "hp" and source.get("auto_heal", false)
 	var advancing: bool = auto_heal and order.get("type") == "attack_move"
 	var target: Dictionary = {}
-	if order.get("type") == "restore_vitals":
+	if order.get("type") in ["restore_vitals", "restore_aegis"]:
 		target = units.get(order.target_tag, {})
 		if not can_restore(source, target):
 			source.orders.pop_front()
@@ -2969,18 +4319,25 @@ func _step_support(source: Dictionary, dt: float) -> bool:
 			return false
 		source.vel = Vector2.ZERO
 		if _edge_distance(source, target) > float(config.range):
+			if source.is_structure:
+				source.orders.pop_front()
+				return false
 			_follow_order_path(source, target.pos, dt, source.radius + target.radius + float(config.range))
 			return true
 		source.path.clear()
 	elif advancing or order.is_empty() or (order.type == "hold_position" and source.orders.size() == 1):
-		if not triage or auto_heal:
+		if auto_heal or (config.stat == "shields" and source.get("auto_aegis", true)):
 			target = _automatic_support_target(source, previous, float(config.range), triage)
 	if target.is_empty():
 		return false
 	var stat: String = config.stat
-	var amount := minf(minf(float(config.rate) * dt, source.energy), float(target["max_" + stat]) - float(target[stat]))
+	var healing_multiplier: float = source.get("campaign_healing_multiplier", 1.0)
+	var energy_yield := float(config.get("hp_per_energy", config.get("shield_per_energy", 1.0)))
+	var amount := minf(minf(float(config.rate) * dt, source.energy * energy_yield) * healing_multiplier, float(target["max_" + stat]) - float(target[stat]))
+	if amount <= 0.0:
+		return false
 	target[stat] += amount
-	source.energy -= amount
+	source.energy -= amount / (healing_multiplier * energy_yield)
 	source.support_target_tag = target.tag
 	if not advancing:
 		source.vel = Vector2.ZERO
@@ -3034,7 +4391,7 @@ func _prepare_order_path(u: Dictionary, order: Dictionary) -> Vector2:
 		# full-distance scan. Obstructed approaches use the regular pathfinder.
 		var anchor := _map_clamped_position(goal, u.radius)
 		var flying: bool = u.flight_height > 0.0
-		var cliff_walk: bool = u.unit_type == "spire_walker"
+		var cliff_walk: bool = u.get("cliff_walk", false)
 		if flying or not _is_point_blocked_by_static(anchor, u.radius, cliff_walk):
 			var slot := _find_group_arrival(u, order["_formation"], anchor)
 			if slot.is_finite() and (flying or _has_clear_line_of_walk(u.pos, slot, u.radius, cliff_walk)):
@@ -3058,7 +4415,7 @@ func _update_path_reach(u: Dictionary, order: Dictionary, requested: Vector2, en
 	var shortened := requested.is_finite() and endpoint.distance_squared_to(requested) > 1.0
 	var status := ""
 	if revised or (show_feedback and shortened):
-		var projected: Vector2 = _project_destination(u.pos, requested, u.radius, u.unit_type == "spire_walker") if requested.is_finite() else u.pos
+		var projected: Vector2 = _project_destination(u.pos, requested, u.radius, u.get("cliff_walk", false)) if requested.is_finite() else u.pos
 		var reaches_goal := endpoint.distance_squared_to(projected) <= 1.0
 		if revised:
 			# A raised gate or new foundation can cover the click itself.
@@ -3083,8 +4440,11 @@ func _prepare_path(u: Dictionary, target_pos: Vector2, tolerance: float, reach: 
 	if u.path.is_empty() or u.get("nav_goal", Vector2.INF).distance_squared_to(target_pos) > tolerance * tolerance:
 		if u.flight_height > 0.0:
 			u.path = [_map_clamped_position(target_pos, u.radius) if target_pos.is_finite() else u.pos]
+		elif _can_crush_phase_barriers(u) and target_pos.is_finite() \
+				and _has_clear_line_of_walk(u.pos, target_pos, u.radius, u.get("cliff_walk", false), true):
+			u.path = [target_pos]
 		else:
-			u.path = compute_smooth_path(u.pos, target_pos, u.radius, u.unit_type == "spire_walker", reach)
+			u.path = compute_smooth_path(u.pos, target_pos, u.radius, u.get("cliff_walk", false), reach)
 		u["nav_goal"] = target_pos
 		return true
 	return false
@@ -3096,7 +4456,7 @@ func _apply_group_arrival(u: Dictionary, order: Dictionary) -> void:
 	var anchor: Vector2 = u.path.back()
 	var slot: Vector2 = order.get("arrival_pos", Vector2.INF)
 	var flying: bool = u.flight_height > 0.0
-	var cliff_walk: bool = u.unit_type == "spire_walker"
+	var cliff_walk: bool = u.get("cliff_walk", false)
 	if not slot.is_finite() or not anchor.is_equal_approx(order.get("_formation_anchor", Vector2.INF)) or (not flying and not _has_clear_line_of_walk(anchor, slot, u.radius, cliff_walk)):
 		if slot.is_finite() and int(formation.slots.get(slot, {}).get("tag", 0)) == int(u.tag):
 			formation.slots.erase(slot)
@@ -3129,7 +4489,7 @@ func _reserve_group_arrival(u: Dictionary, order: Dictionary, anchor: Vector2, s
 
 func _find_group_arrival(u: Dictionary, formation: MoveFormation, anchor: Vector2) -> Vector2:
 	var flying: bool = u.flight_height > 0.0
-	var cliff_walk: bool = u.unit_type == "spire_walker"
+	var cliff_walk: bool = u.get("cliff_walk", false)
 	var anchor_key := Vector3(anchor.x, anchor.y, u.radius)
 	var start_ring: int = formation.first_open_ring.get(anchor_key, 0)
 	for ring in range(start_ring, formation.rings.size()):
@@ -3168,12 +4528,12 @@ func _follow_path(u: Dictionary, dt: float) -> void:
 	var path: Array = u.path
 	var waypoint: Vector2 = path.front()
 	if path.size() > 1 and u.pos.distance_to(waypoint) <= maxf(1.1, u.radius * 1.2):
-		if _has_clear_line_of_walk(u.pos, path[1], u.radius, u.unit_type == "spire_walker"):
+		if _has_clear_line_of_walk(u.pos, path[1], u.radius, u.get("cliff_walk", false)):
 			path.pop_front()
 			waypoint = path.front()
 	_move_toward_point(u, waypoint, dt)
 
-func _move_toward_point(u: Dictionary, wp: Vector2, _dt: float) -> void:
+func _move_toward_point(u: Dictionary, wp: Vector2, dt: float) -> void:
 	if u["is_immobile"]:
 		u["vel"] = Vector2.ZERO
 		return
@@ -3182,24 +4542,146 @@ func _move_toward_point(u: Dictionary, wp: Vector2, _dt: float) -> void:
 		u["vel"] = Vector2.ZERO
 		return
 	dir = dir.normalized()
-	u["vel"] = dir * effective_move_speed(u)
-	u["facing"] = dir.angle()
+	var speed := effective_move_speed(u)
+	var heading: float = dir.angle()
+	var profile: Vector3 = LadderRules.MOVEMENT_PROFILES.get(u.unit_type, Vector3.ZERO) if ladder_rules else Vector3.ZERO
+	if profile == Vector3.ZERO:
+		u.vel = dir * speed
+		u.facing = heading
+		return
+	var last_move_tick: int = u.get("motion_tick", -2)
+	var previous_speed: float = u.get("motion_speed", 0.0) if last_move_tick >= tick - 1 else 0.0
+	var turn_rate := profile.y if previous_speed > 0.05 else profile.z
+	u.facing = rotate_toward(u.facing, heading, deg_to_rad(turn_rate * 1.4 * dt))
+	if u.unit_type in LadderRules.TURN_BEFORE_MOVING and absf(angle_difference(u.facing, heading)) > deg_to_rad(11.25):
+		u.vel = Vector2.ZERO
+		u.erase("motion_speed")
+		return
+	var acceleration := profile.x * 1.4 * 1.4 * 2.5
+	var next_speed := minf(speed, previous_speed + (0.0 if last_move_tick == tick else acceleration * dt))
+	u.vel = dir * next_speed
+	u["motion_tick"] = tick
+	u["motion_speed"] = next_speed
+
+func _step_move_order(unit: Dictionary, order: Dictionary, dt: float) -> void:
+	var target := _prepare_order_path(unit, order)
+	var radius: float = order.get("arrival_radius", 0.9)
+	var arrived: bool = unit.path.size() == 1 and unit.pos.distance_to(target) <= radius
+	var can_finish := _can_finish_path_order(unit, order)
+	if can_finish and (arrived or _should_settle_in_group_arrival(unit, target, radius)):
+		unit.orders.pop_front()
+		unit.path.clear()
+		unit.home_pos = unit.pos
+		unit.has_home_pos = true
+	elif not arrived:
+		_follow_path(unit, dt)
 
 func active_living_ground_speed_bonus(unit: Dictionary) -> float:
 	var bonus := float(unit.get("living_ground_speed_bonus", 0.0))
+	if ladder_rules and unit.unit_type == "blight_hurler" and players[unit.owner].upgrades.get("muscular_augments", 0):
+		bonus = LadderRules.HURLER_UPGRADED_CREEP_BONUS
+	if ladder_rules and unit.unit_type == "carapace_bulwark" and players[unit.owner].upgrades.get("anabolic_synthesis", 0):
+		bonus = LadderRules.BULWARK_UPGRADED_CREEP_BONUS
 	return bonus if bonus > 0.0 and not unit.is_immobile and unit.flight_height <= 0.0 and has_living_ground(unit.pos) else 0.0
 
 func effective_move_speed(unit: Dictionary) -> float:
 	if unit.is_immobile:
 		return 0.0
 	var speed: float = unit.speed
+	if unit.get("crawler_uprooted", false):
+		return LadderRules.CRAWLER_CREEP_SPEED if has_living_ground(unit.pos) else LadderRules.CRAWLER_MOBILE_SPEED
+	if ladder_rules and LadderRules.DRIFT_UPGRADED_SPEED.has(unit.unit_type) and players[unit.owner].upgrades.get("pneumatized_carapace", 0):
+		speed = LadderRules.DRIFT_UPGRADED_SPEED[unit.unit_type]
+	if ladder_rules and unit.unit_type == "bile_crawler":
+		var glial: bool = players[unit.owner].upgrades.get("glial_reconstitution", 0) > 0
+		if unit.get("burrow_mobile", false):
+			speed = LadderRules.BILE_CRAWLER_GLIAL_TUNNEL_SPEED if glial else LadderRules.BILE_CRAWLER_TUNNEL_SPEED
+		elif glial:
+			speed = LadderRules.BILE_CRAWLER_GLIAL_SPEED
+	if ladder_rules and unit.unit_type == "blight_hurler" and players[unit.owner].upgrades.get("muscular_augments", 0):
+		speed = LadderRules.HURLER_UPGRADED_SPEED
+	if unit.unit_type == "mireweaver" and unit.get("burrow_mobile", false):
+		speed = 2.0 * 1.4 * 2.5
+	if ladder_rules and unit.unit_type == "skitterling" and players[unit.owner].upgrades.get("metabolic_boost", 0):
+		speed = 6.58 * 2.5
+	if unit.unit_type == "prism_ray":
+		if int(unit.get("alignment_until", 0)) > tick:
+			speed = 2.89 * 2.5
+		elif players[unit.owner].upgrades.get("flux_vanes", 0):
+			speed = 4.65 * 2.5
+	if unit.unit_type == "rampart_transport" and int(unit.get("rampart_boost_until", 0)) > tick:
+		speed = LadderRules.RAMPART_BOOST_SPEED
+	if unit.unit_type == "night_harrier" and players[unit.owner].upgrades.get("harrier_rotors", 0):
+		speed = 5.25 * 2.5
+	if tick < int(unit.get("hurler_lunge_until", 0)):
+		speed *= 2.0
+	if ladder_rules and unit.unit_type == "spine_ambusher" and players[unit.owner].upgrades.get("adaptive_talons", 0):
+		speed = LadderRules.AMBUSHER_UPGRADED_SPEED
+	if ladder_rules and unit.unit_type == "carapace_bulwark" and players[unit.owner].upgrades.get("anabolic_synthesis", 0):
+		speed = LadderRules.BULWARK_UPGRADED_SPEED
+	if ladder_rules and unit.unit_type in ["farsight_wisp", "lumen_carrier"]:
+		var upgrades: Dictionary = players.get(unit.owner, {}).get("upgrades", {})
+		if unit.unit_type == "farsight_wisp" and upgrades.get("wisp_thrusters", 0):
+			speed = LadderRules.WISP_UPGRADED_SPEED
+		elif unit.unit_type == "lumen_carrier" and upgrades.get("lumen_drive", 0):
+			speed = LadderRules.LUMEN_UPGRADED_SPEED
 	if unit.surge_timer > 0.0:
 		speed *= 1.5
 	if unit.charge_timer > 0.0:
-		speed *= 1.8
-	if unit.slow_timer > 0.0:
+		speed = LadderRules.CHARGE_SPEED if ladder_rules else speed * 1.8
+	if fungal_grasp_active(unit) and not _is_frenzied(unit):
+		speed *= 0.25
+	elif unit.slow_timer > 0.0:
 		speed *= 0.5
+	if _time_warp_covers(unit) and not _is_frenzied(unit):
+		speed *= 0.6
+	if campaign != null and campaign.mutators != null and Mutators.enemy(unit) and campaign.mutators.has("speed_freaks"):
+		speed *= 1.5
 	return speed * (1.0 + active_living_ground_speed_bonus(unit))
+
+func concord_combat_research_block_reason(owner: int, upgrade: String) -> String:
+	if ladder_rules and not players.get(owner, {}).get("upgrades", {}).get(upgrade, 0):
+		if upgrade == "shadow_stride":
+			return "Requires Shadow Stride research at a Veil Sanctum."
+		return "Requires %s research at a Twilight Array." % ("Charge" if upgrade == "charge" else "Phase Step")
+	return ""
+
+func _try_automatic_charge(unit: Dictionary, target: Dictionary) -> void:
+	if unit.get("auto_charge", false):
+		_begin_ladder_charge(unit, target)
+
+func _phase_step_site_valid(unit: Dictionary, point: Vector2) -> bool:
+	return (unit.pos.distance_squared_to(point) <= LadderRules.PHASE_STEP_RANGE ** 2
+		and can_see_position(unit.owner, point) and _map_clamped_position(point, unit.radius) == point
+		and not _is_point_blocked_by_static(point, unit.radius) and not _ground_mobile_overlaps(point, unit.radius))
+
+func _ladder_phase_step_landing(unit: Dictionary, requested: Vector2, spread: bool) -> Vector2:
+	if not requested.is_finite() or unit.pos.distance_squared_to(requested) > LadderRules.PHASE_STEP_RANGE ** 2 \
+			or not can_see_position(unit.owner, requested):
+		return Vector2.INF
+	if _phase_step_site_valid(unit, requested):
+		return requested
+	if spread:
+		for ring in [2.8, 5.6, 8.4]:
+			for spoke in range(12):
+				var point: Vector2 = requested + Vector2.from_angle(spoke * TAU / 12.0) * ring
+				if _phase_step_site_valid(unit, point):
+					return point
+	return Vector2.INF
+
+func _begin_ladder_charge(unit: Dictionary, target: Dictionary) -> bool:
+	if unit.unit_type != "sunblade" or unit.is_immobile or int(unit.get("charge_ready_tick", 0)) > tick \
+			or not concord_combat_research_block_reason(unit.owner, "charge").is_empty():
+		return false
+	if target.is_empty() or target.owner <= 0 or target.owner == unit.owner or not can_attack(unit, target) or not can_see_unit(unit.owner, target):
+		return false
+	var distance := _edge_distance(unit, target)
+	if distance <= weapon_range_against(unit, target) or distance > LadderRules.CHARGE_RANGE:
+		return false
+	unit.charge_timer = LadderRules.CHARGE_DURATION_SECONDS
+	unit["charge_ready_tick"] = tick + ceili(LadderRules.CHARGE_COOLDOWN_SECONDS * TICK_RATE)
+	ability_triggered.emit(unit, "charge", unit.pos)
+	return true
 
 func _should_settle_in_group_arrival(u: Dictionary, target_pos: Vector2, base_arrival: float) -> bool:
 	var dist = u["pos"].distance_to(target_pos)
@@ -3228,7 +4710,7 @@ func _start_choke_yield(leader: Dictionary, blocker: Dictionary, direction: Vect
 		# A consistent direction wins a head-on tie across the whole line.
 		if (direction.x if absf(direction.x) >= absf(direction.y) else direction.y) < 0.0:
 			return
-	var cliff_walk: bool = blocker.unit_type == "spire_walker"
+	var cliff_walk: bool = blocker.get("cliff_walk", false)
 	if not (_is_point_blocked_by_static(midpoint + across * gap, blocker.radius, cliff_walk) and _is_point_blocked_by_static(midpoint - across * gap, blocker.radius, cliff_walk)):
 		return
 	for unit in query_units_in_radius(blocker.pos, 9.0):
@@ -3248,7 +4730,7 @@ func _start_choke_yield(leader: Dictionary, blocker: Dictionary, direction: Vect
 func _find_choke_berth(unit: Dictionary, direction: Vector2, across: Vector2, gap: float) -> Array[Vector2]:
 	var from: Vector2 = unit.pos
 	var radius: float = unit.radius
-	var cliff_walk: bool = unit.unit_type == "spire_walker"
+	var cliff_walk: bool = unit.get("cliff_walk", false)
 	var side := 1.0 if unit.tag % 2 == 0 else -1.0
 	for step in range(25):
 		var turn := from + direction * float(step) * 0.5
@@ -3265,7 +4747,7 @@ func _follow_choke_yield(unit: Dictionary, dt: float, mineral_walkers: Dictionar
 	var leader: Dictionary = units.get(yield_order.leader, {})
 	var direction: Vector2 = yield_order.direction
 	var point: Vector2 = yield_order.point
-	if leader.is_empty() or unit.attack_state != "idle" or tick >= int(yield_order.expires) or _is_point_blocked_by_static(point, unit.radius, unit.unit_type == "spire_walker"):
+	if leader.is_empty() or unit.attack_state != "idle" or tick >= int(yield_order.expires) or _is_point_blocked_by_static(point, unit.radius, unit.get("cliff_walk", false)):
 		unit.erase("choke_yield")
 		unit.path.clear()
 		return
@@ -3299,7 +4781,10 @@ func _apply_steering_and_push_resolution(all_tags: Array, dt: float, mineral_wal
 		if not units.has(tag):
 			continue
 		var u: Dictionary = units[tag]
-		if (u.is_structure and u.flight_height <= 0.0) or u.is_immobile:
+		if (u.is_structure and u.flight_height <= 0.0 and not u.get("crawler_uprooted", false)) or u.is_immobile or u.get("gas_extracting", false) or u.get("campaign_road_vehicle", false):
+			continue
+		if u.unit_type in ["rift_nova", "mirage_shade"]:
+			_move_on_terrain(u, u.pos + u.vel * dt)
 			continue
 		if u.has("choke_yield"):
 			if mineral_walkers.has(tag):
@@ -3321,7 +4806,7 @@ func _apply_steering_and_push_resolution(all_tags: Array, dt: float, mineral_wal
 		var flying: bool = u.flight_height > 0.0
 		for neighbor in neighbors:
 			var n: Dictionary = neighbor
-			if n["tag"] == tag or flying != (n.flight_height > 0.0) or n.get("burrowed", false):
+			if n["tag"] == tag or flying != (n.flight_height > 0.0) or not _shares_burrow_collision_layer(u, n) or n.get("nonblocking", false) or n.get("campaign_road_vehicle", false):
 				continue
 			if n["is_structure"] and n["is_walkable_structure"]:
 				continue
@@ -3370,7 +4855,7 @@ func _apply_steering_and_push_resolution(all_tags: Array, dt: float, mineral_wal
 			# through a choke. Replan from its new approach if the wall stops it.
 			var minimum_progress := speed * dt * 0.2
 			if position.distance_squared_to(u.pos) < minimum_progress * minimum_progress:
-				var cliff_walk: bool = u.unit_type == "spire_walker"
+				var cliff_walk: bool = u.get("cliff_walk", false)
 				if not _is_point_blocked_by_static(u.pos, radius, cliff_walk) and not _has_clear_line_of_walk(u.pos, u.path.front(), radius, cliff_walk):
 					u.path.clear()
 
@@ -3378,7 +4863,8 @@ func _apply_steering_and_push_resolution(all_tags: Array, dt: float, mineral_wal
 		if not units.has(tag):
 			continue
 		var u: Dictionary = units[tag]
-		if (u.is_structure and u.flight_height <= 0.0) or u.get("burrowed", false):
+		if (u.is_structure and u.flight_height <= 0.0 and not u.get("crawler_uprooted", false)) \
+				or (u.get("burrowed", false) and not u.get("burrow_mobile", false)) or u.get("nonblocking", false) or u.get("campaign_road_vehicle", false):
 			continue
 		# Ground structures never moved between the passes; nearby mobiles moved by less
 		# than a tick. The wider steering query already covers collision contacts.
@@ -3386,7 +4872,7 @@ func _apply_steering_and_push_resolution(all_tags: Array, dt: float, mineral_wal
 		var mineral_walking := mineral_walkers.has(tag)
 		var flying: bool = u.flight_height > 0.0
 		for n in neighbors:
-			if n["tag"] <= u["tag"] or flying != (n.flight_height > 0.0) or n.get("burrowed", false):
+			if n["tag"] <= u["tag"] or flying != (n.flight_height > 0.0) or not _shares_burrow_collision_layer(u, n) or n.get("nonblocking", false) or n.get("campaign_road_vehicle", false):
 				continue
 			if n["is_structure"] and n["is_walkable_structure"]:
 				continue
@@ -3398,7 +4884,9 @@ func _apply_steering_and_push_resolution(all_tags: Array, dt: float, mineral_wal
 			if dist < min_dist:
 				var nrm = diff / dist if dist > 0.001 else Vector2.RIGHT
 				var pen = min_dist - dist
-				if (n.is_structure and not flying) or n.is_immobile:
+				if u.is_immobile and n.is_immobile:
+					continue
+				if (n.is_structure and not flying and not n.get("crawler_uprooted", false)) or n.is_immobile:
 					_move_on_terrain(u, u.pos + nrm * pen)
 				elif u["is_immobile"]:
 					_move_on_terrain(n, n.pos - nrm * pen)
@@ -3406,13 +4894,36 @@ func _apply_steering_and_push_resolution(all_tags: Array, dt: float, mineral_wal
 					_move_on_terrain(u, u.pos + nrm * (pen * 0.5))
 					_move_on_terrain(n, n.pos - nrm * (pen * 0.5))
 
+func _shares_burrow_collision_layer(first: Dictionary, second: Dictionary) -> bool:
+	if first.get("burrowed", false):
+		return first.get("burrow_mobile", false) and (second.is_structure or second.get("burrow_mobile", false))
+	return not second.get("burrowed", false)
+
 func _move_on_terrain(unit: Dictionary, pos: Vector2) -> void:
 	if unit.flight_height > 0.0:
 		unit.pos = _map_clamped_position(pos, unit.radius)
 	else:
-		unit.pos = _clamp_to_walkable(pos, unit.radius, unit.unit_type == "spire_walker", unit.pos)
+		if _can_crush_phase_barriers(unit) and unit.pos != pos:
+			_crush_phase_barriers_on_step(unit, pos)
+		unit.pos = _clamp_to_walkable(pos, unit.radius, unit.get("cliff_walk", false), unit.pos)
+
+func _can_crush_phase_barriers(unit: Dictionary) -> bool:
+	return ladder_rules and not unit.get("burrowed", false) and unit.attributes.has("Massive")
+
+func _crush_phase_barriers_on_step(unit: Dictionary, pos: Vector2) -> void:
+	for field in _footprint_bins.get(_footprint_bin(pos), NO_FOOTPRINTS):
+		if field.get("unit_type") != "phase_barrier" or not units.has(field.tag):
+			continue
+		var reach: float = unit.radius + field.radius
+		var closest := Geometry2D.get_closest_point_to_segment(field.pos, unit.pos, pos)
+		if closest.distance_squared_to(field.pos) < reach * reach \
+				and _has_clear_line_of_walk(unit.pos, pos, unit.radius, unit.get("cliff_walk", false), true):
+			_remove_destroyed_unit(field)
 
 func _map_clamped_position(p: Vector2, radius: float) -> Vector2:
+	if terrain_grid:
+		var bounds := terrain_grid.bounds.grow(-radius - 0.01)
+		return p.clamp(bounds.position, bounds.end)
 	return Vector2(
 		clampf(p.x, radius + 1.0, map_width - radius - 1.0),
 		clampf(p.y, radius + 1.0, map_height - radius - 1.0)
@@ -3420,16 +4931,18 @@ func _map_clamped_position(p: Vector2, radius: float) -> Vector2:
 
 func _clamp_to_walkable(p: Vector2, radius: float, ignore_cliffs: bool = false, previous: Vector2 = Vector2.INF) -> Vector2:
 	var res := _map_clamped_position(p, radius)
+	if terrain_grid and previous.is_finite() and terrain_grid.blocks_segment(previous, res, radius, ignore_cliffs, _walk_segment_enters_rect):
+		return _slide_along_static(previous, res, radius, ignore_cliffs)
+	if not water_cells.is_empty():
+		var clearance := radius * 0.5
+		var touches_water := _walk_segment_hits_water(previous, res, clearance) if previous.is_finite() else is_water_at(res, clearance)
+		if touches_water:
+			if previous.is_finite() and not is_water_at(previous, clearance):
+				return _slide_along_static(previous, res, radius, ignore_cliffs)
+			if is_water_at(res, clearance):
+				var grid := _navigation_grid(radius, ignore_cliffs)
+				res = grid.get_point_position(_find_nearest_walkable_cell(grid, res, res))
 	if not ignore_cliffs:
-		if not water_cells.is_empty():
-			var clearance := radius * 0.5
-			var touches_water := _walk_segment_hits_water(previous, res, clearance) if previous.is_finite() else is_water_at(res, clearance)
-			if touches_water:
-				if previous.is_finite() and not is_water_at(previous, clearance):
-					return _slide_along_static(previous, res, radius, ignore_cliffs)
-				if is_water_at(res, clearance):
-					var cell := _find_nearest_walkable_cell(astar_grid, res, res)
-					res = astar_grid.get_point_position(cell)
 		for obs in terrain_obstacles:
 			var exp_rect := obs.grow(radius)
 			if previous.is_finite() and not exp_rect.has_point(previous) and _walk_segment_enters_rect(previous, res, exp_rect):
@@ -3448,8 +4961,12 @@ func _clamp_to_walkable(p: Vector2, radius: float, ignore_cliffs: bool = false, 
 					res.y = exp_rect.position.y - 0.05
 				else:
 					res.y = exp_rect.end.y + 0.05
+		if previous.is_finite() and _walk_segment_hits_ledge(previous, res, radius):
+			return _slide_along_static(previous, res, radius, ignore_cliffs)
 	var before_collision := res
 	for footprint in _footprint_bins.get(_footprint_bin(res), NO_FOOTPRINTS):
+		if footprint.get("removed_phase_barrier", false):
+			continue
 		var separation := float(footprint.radius) + radius
 		var delta: Vector2 = res - footprint.pos
 		if delta.length_squared() >= separation * separation:
@@ -3464,8 +4981,9 @@ func _clamp_to_walkable(p: Vector2, radius: float, ignore_cliffs: bool = false, 
 		if delta.is_zero_approx():
 			delta = Vector2.RIGHT
 		res = footprint.pos + delta.normalized() * (separation + 0.02)
-	if res != before_collision and previous.is_finite() and _is_point_blocked_by_static(res, radius, ignore_cliffs):
-		return previous
+	if res != before_collision and previous.is_finite():
+		if _is_point_blocked_by_static(res, radius, ignore_cliffs) or (not ignore_cliffs and _walk_segment_hits_ledge(previous, res, radius)):
+			return previous
 	return res
 
 func _slide_along_static(previous: Vector2, target: Vector2, radius: float, ignore_cliffs: bool) -> Vector2:
@@ -3476,10 +4994,38 @@ func _slide_along_static(previous: Vector2, target: Vector2, radius: float, igno
 			return slide
 	return previous
 
-func _get_weapon_range(u: Dictionary) -> float:
-	var def = RTSData.get_unit_def(u["unit_type"])
-	var wpn = def.get("weapon", {})
-	return float(wpn.get("range", 0.0))
+func weapon_range_against(unit: Dictionary, target: Dictionary = {}) -> float:
+	if ladder_rules and unit.unit_type == "field_bunker":
+		var occupied_range := 0.0
+		for passenger in unit.get("passengers", []):
+			var gun := _active_weapon(passenger, target)
+			if not gun.is_empty() and (target.is_empty() or _weapon_can_hit(gun, target)):
+				occupied_range = maxf(occupied_range, _bunker_weapon_range(unit, gun))
+		return occupied_range
+	var weapon := _active_weapon(unit, target)
+	var reach := float(weapon.get("range", 0.0))
+	if reach > 0.0 and unit.unit_type == "sky_sentry_defender" and players[unit.owner].upgrades.get("sky_ballistics", 0):
+		reach += LadderRules.SKY_BALLISTICS_BONUS
+	if unit.unit_type == "dawn_interceptor" and players[unit.owner].upgrades.get("pulse_crystals", 0):
+		reach += 5.0
+	if ladder_rules and unit.unit_type == "spire_walker" and players.get(unit.owner, {}).get("upgrades", {}).get("extended_prism", 0):
+		reach += LadderRules.EXTENDED_PRISM_BONUS
+	if ladder_rules and unit.unit_type == "blight_hurler" and players[unit.owner].upgrades.get("grooved_spines", 0):
+		reach += LadderRules.HURLER_RANGE_BONUS
+	if reach > 0.0 and unit.unit_type == "spine_ambusher" and players[unit.owner].upgrades.get("seismic_spines", 0):
+		reach += LadderRules.AMBUSHER_RANGE_BONUS
+	if ladder_rules and unit.unit_type in ["sentry_turret", "bastion_turret", "fortified_hub"] and players[unit.owner].upgrades.get("precision_tracking", 0):
+		reach += 2.5
+	if reach > 1.0 and _blinding_cloud_covers(unit):
+		return 1.0
+	if reach > 0.0 and campaign != null and campaign.mutators != null and Mutators.enemy(unit) \
+			and campaign.mutators.has("long_range") and is_ranged_weapon(weapon):
+		reach += 4.0
+	return reach
+
+func _blinding_cloud_covers(unit: Dictionary) -> bool:
+	return unit.flight_height <= 0.0 and blinding_clouds.any(func(cloud):
+		return tick < int(cloud.ends) and unit.pos.distance_squared_to(cloud.pos) <= LadderRules.BLINDING_CLOUD_RADIUS ** 2)
 
 func _edge_distance(a: Dictionary, b: Dictionary) -> float:
 	var position: Vector2 = a.pos
@@ -3487,22 +5033,66 @@ func _edge_distance(a: Dictionary, b: Dictionary) -> float:
 
 func can_attack(attacker: Dictionary, target: Dictionary) -> bool:
 	if attacker.unit_type == "field_bunker":
-		return attacker.get("passengers", []).any(func(unit): return _weapon_can_hit(_active_weapon(unit), target))
-	return not attacker.get("burrowed", false) and _weapon_can_hit(_active_weapon(attacker), target)
+		return attacker.get("passengers", []).any(func(unit): return _weapon_can_hit(_active_weapon(unit, target), target))
+	return _can_hit_with_weapon(attacker, _active_weapon(attacker, target), target)
 
-func _active_weapon(unit: Dictionary) -> Dictionary:
-	return RTSData.get_unit_def(unit.unit_type).get("weapon", {})
+func _active_weapon(unit: Dictionary, target: Dictionary = {}) -> Dictionary:
+	if unit.has("vehicle_transition") or unit.has("sky_transition") or systems_jammed(unit):
+		return {}
+	if unit.unit_type == "sunseer" and not unit.get("pulsar_active", false):
+		return {}
+	if unit.get("crawler_uprooted", false) or unit.has("crawler_transition"):
+		return {}
+	var buried: bool = unit.get("burrowed", false)
+	if unit.has("burrow_transition") or buried != (unit.unit_type == "spine_ambusher"):
+		return {}
+	var definition := unit_definition_for(unit.unit_type, unit.owner)
+	if target.get("flight_height", 0.0) > 0.0 and definition.has("air_weapon"):
+		return definition.air_weapon
+	return definition.get("weapon", {})
+
+func is_ranged_weapon(weapon: Dictionary) -> bool:
+	return weapon.get("attack_type", "ranged" if float(weapon.get("range", 0.0)) > 3.5 else "melee") == "ranged"
 
 func _weapon_can_hit(weapon: Dictionary, target: Dictionary) -> bool:
-	return target.get("unit_type") != "phase_barrier" and not weapon.is_empty() \
-		and bool(weapon.get("targets_air", false) if target.flight_height > 0.0 else weapon.get("targets_ground", true))
+	var airborne: bool = target.flight_height > 0.0
+	var tall_ground_unit: bool = ladder_rules and target.unit_type == "spire_walker"
+	var matches_ground: bool = not airborne and weapon.get("targets_ground", true)
+	var matches_air: bool = (airborne or tall_ground_unit) and weapon.get("targets_air", false)
+	return target.get("unit_type") != "phase_barrier" and int(target.get("stasis_until", 0)) <= tick \
+		and not target.get("nonblocking", false) and not weapon.is_empty() \
+		and (not weapon.get("no_structures", false) or not target.is_structure) \
+		and (matches_ground or matches_air)
 
-func _bunker_shot_in_range(bunker: Dictionary, weapon: Dictionary, target: Dictionary) -> bool:
+func _can_hit_with_weapon(attacker: Dictionary, weapon: Dictionary, target: Dictionary) -> bool:
+	if not _weapon_can_hit(weapon, target):
+		return false
+	if attacker.unit_type != "sky_sentry_defender":
+		return true
+	var zone: Dictionary = attacker.get("sky_zone", {})
+	return not zone.is_empty() and target.pos.distance_squared_to(zone.pos) <= float(zone.radius) ** 2
+
+func _howitzer_splash_is_safe(gun: Dictionary, target: Dictionary, weapon: Dictionary) -> bool:
+	var radius := float(weapon.get("splash_radius", 0.0))
+	if radius <= 0.0 or float(weapon.get("friendly_splash", 0.0)) <= 0.0:
+		return true
+	for ally in query_units_in_radius(target.pos, radius):
+		if ally.owner == gun.owner and ally.tag != gun.tag and ally.hp > 0.0 and _weapon_can_hit(weapon, ally):
+			return false
+	return true
+
+func _bunker_shot_in_range(bunker: Dictionary, weapon: Dictionary, target: Dictionary, range_slop: float = 0.0) -> bool:
 	if target.is_empty() or target.hp <= 0.0 or not _weapon_can_hit(weapon, target):
 		return false
 	var distance := _edge_distance(bunker, target)
-	return distance <= minf(_get_weapon_range(bunker), float(weapon.get("range", 5.0))) \
+	return distance <= _bunker_weapon_range(bunker, weapon) + range_slop \
 		and distance >= float(weapon.get("min_range", 0.0)) and can_see_unit(bunker.owner, target)
+
+func _bunker_weapon_range(bunker: Dictionary, weapon: Dictionary) -> float:
+	var reach := float(weapon.get("range", 5.0))
+	if ladder_rules:
+		return 1.0 if _blinding_cloud_covers(bunker) else reach + 2.5
+	return minf(weapon_range_against(bunker), reach)
 
 func _update_bunker_garrison(bunker: Dictionary, dt: float) -> void:
 	_start_waiting_target_order(bunker)
@@ -3511,7 +5101,7 @@ func _update_bunker_garrison(bunker: Dictionary, dt: float) -> void:
 		var order: Dictionary = bunker.orders[0]
 		focus = units.get(order.get("target_tag", 0), {})
 		if focus.is_empty() or not can_attack(bunker, focus) or not can_see_unit(bunker.owner, focus) \
-			or _edge_distance(bunker, focus) > _get_weapon_range(bunker):
+			or _edge_distance(bunker, focus) > weapon_range_against(bunker, focus):
 			bunker.orders.pop_front()
 			focus = {}
 
@@ -3523,12 +5113,13 @@ func _update_bunker_garrison(bunker: Dictionary, dt: float) -> void:
 			continue
 		if shooter.attack_state == "windup":
 			var target: Dictionary = units.get(shooter.attack_target_tag, {})
-			if _bunker_shot_in_range(bunker, weapon, target):
+			if _bunker_shot_in_range(bunker, weapon, target, LadderRules.WEAPON_RANGE_SLOP if ladder_rules else 0.0):
 				shooter.attack_state_timer -= dt
 				if shooter.attack_state_timer > 0.0:
 					continue
 				_execute_weapon_hit(bunker, target, shooter)
-				shooter.weapon_cooldown = maxf(float(ports.period), float(weapon.get("period", 0.8)))
+				var period := _weapon_period(shooter, weapon)
+				shooter.weapon_cooldown = maxf(0.0, period - float(weapon.get("damage_point", 0.0))) if ladder_rules else maxf(float(ports.period), period)
 			shooter.attack_state = "idle"
 		if shooter.weapon_cooldown > 0.0:
 			continue
@@ -3537,20 +5128,27 @@ func _update_bunker_garrison(bunker: Dictionary, dt: float) -> void:
 			bunker.facing = (target.pos - bunker.pos).angle()
 			shooter.attack_state = "windup"
 			shooter.attack_target_tag = target.tag
-			shooter.attack_state_timer = maxf(float(ports.damage_point), float(weapon.get("damage_point", 0.08)))
+			var damage_point := float(weapon.get("damage_point", 0.08))
+			shooter.attack_state_timer = damage_point if ladder_rules else maxf(float(ports.damage_point), damage_point)
 
 func _find_best_attack_target(u: Dictionary, range_only: bool, pursuit_origins: Dictionary = {}, garrison_weapon: Dictionary = {}) -> Dictionary:
 	if u.get("hold_fire", false):
 		return {}
-	var wpn := _active_weapon(u) if garrison_weapon.is_empty() else garrison_weapon
+	var definition := RTSData.get_unit_def(u.unit_type)
+	var wpn: Dictionary = _active_weapon(u) if garrison_weapon.is_empty() else garrison_weapon
 	if wpn.is_empty():
 		return {}
-	var wpn_range = float(wpn.get("range", 5.0))
+	var wpn_range := weapon_range_against(u) if garrison_weapon.is_empty() else float(wpn.get("range", 5.0))
+	var air_weapon: Dictionary = {}
 	if not garrison_weapon.is_empty():
-		wpn_range = minf(wpn_range, _get_weapon_range(u))
-	var min_range = float(wpn.get("min_range", 0.0))
-	var scan_radius: float = (wpn_range if range_only else maxf(wpn_range, float(u["sight_range"]))) + 2.5
-	var preferences: Dictionary = wpn.get("target_priority", {})
+		wpn_range = _bunker_weapon_range(u, wpn)
+	else:
+		air_weapon = definition.get("air_weapon", {})
+	var air_range := float(air_weapon.get("range", 0.0))
+	if air_range > 1.0 and _blinding_cloud_covers(u):
+		air_range = 1.0
+	var longest_range := maxf(wpn_range, air_range)
+	var scan_radius: float = (longest_range if range_only else maxf(longest_range, float(u["sight_range"]))) + 2.5
 	var focus_triage: bool = campaign != null and campaign.difficulty == "brutal" and u.owner == 2
 
 	var candidates = query_units_in_radius(u["pos"], scan_radius, u["owner"])
@@ -3558,20 +5156,25 @@ func _find_best_attack_target(u: Dictionary, range_only: bool, pursuit_origins: 
 	var best_score: float = -999999.0
 
 	for c in candidates:
-		if c["owner"] == 0 or c["owner"] == u["owner"] or c["hp"] <= 0.0:
+		if not is_hostile_contact(u.owner, c) or c["hp"] <= 0.0:
 			continue
 		# The optional monuments are deliberate targets. Attack-move keeps
 		# the squad on the mission route after it clears their guards.
 		if c.unit_type == "propaganda_statue":
 			continue
-		if not _weapon_can_hit(wpn, c):
+		var use_air_weapon: bool = not air_weapon.is_empty() and c.flight_height > 0.0
+		var candidate_weapon := air_weapon if use_air_weapon else wpn
+		var reach: float = air_range if use_air_weapon else wpn_range
+		if not _can_hit_with_weapon(u, candidate_weapon, c):
+			continue
+		if u.unit_type == "sporeburst" and c.is_structure and not u.get("target_structures", false):
 			continue
 		var d_edge = _edge_distance(u, c)
-		if d_edge < min_range:
+		if d_edge < float(candidate_weapon.get("min_range", 0.0)):
 			continue
-		if range_only and d_edge > wpn_range:
+		if range_only and d_edge > reach:
 			continue
-		if d_edge > wpn_range and pursuit_origins.has(c.tag):
+		if d_edge > reach and pursuit_origins.has(c.tag):
 			var origin: Vector2 = pursuit_origins[c.tag]
 			var limit := scan_radius + float(c.radius)
 			if maxf(origin.distance_squared_to(c.pos), origin.distance_squared_to(u.pos)) > limit * limit:
@@ -3582,67 +5185,144 @@ func _find_best_attack_target(u: Dictionary, range_only: bool, pursuit_origins: 
 			prio = 20.0
 		elif c["is_worker"]:
 			prio = 100.0
-		if d_edge <= wpn_range:
+		if d_edge <= reach:
 			prio += 50.0
 			if focus_triage and c.unit_type == "triage_specialist":
 				prio += 175.0
+			var preferences: Dictionary = candidate_weapon.get("target_priority", {})
 			for attr in preferences:
 				if c.attributes.has(attr):
 					prio += float(preferences[attr])
-		var score = prio - d_edge * 2.5 - (c["hp"] / c["max_hp"]) * 10.0
+		var score = prio + float(c.get("target_priority", 0)) - d_edge * 2.5 - (c["hp"] / c["max_hp"]) * 10.0
+		if u.unit_type == "sporeburst" or (ladder_rules and u.unit_type == "needlewing"):
+			score = -d_edge
 		# Only candidates that can win the current priority check need a fog query.
 		if score > best_score and can_see_unit(u.owner, c):
+			if u.unit_type == "howitzer_emplaced" and RTSCommanderAI.controls_howitzers(u.owner) and not _howitzer_splash_is_safe(u, c, wpn):
+				continue
 			best_score = score
 			best = c
 
 	return best
 
 func _begin_attack_on(u: Dictionary, target: Dictionary) -> void:
+	if u.has("vortex_lock_state") or u.unit_type == "dreadnought":
+		return
 	u["vel"] = Vector2.ZERO
-	u["facing"] = (target["pos"] - u["pos"]).angle()
+	_face_attack_target(u, target)
+	if not _within_needlewing_arc(u, target):
+		return
+	if ladder_rules and u.charge_timer > 0.0:
+		u.charge_timer = 0.0
 	if u["weapon_cooldown"] > 0.0:
 		return
-	var wpn := _active_weapon(u)
+	var wpn := _active_weapon(u, target)
 	if not _weapon_can_hit(wpn, target) or _edge_distance(u, target) < float(wpn.get("min_range", 0.0)):
 		return
-	var atk_speed_mult = 1.5 if u["surge_timer"] > 0.0 else 1.0
+	if u.unit_type == "sporeburst":
+		_detonate_sporeburst(u, target.tag)
+		return
+	var atk_speed_mult := _attack_speed_multiplier(u)
 	u["attack_state"] = "windup"
 	u["attack_target_tag"] = target["tag"]
+	u["windup_weapon"] = wpn
 	u["attack_windup_duration"] = float(wpn.get("damage_point", 0.08)) / atk_speed_mult
 	u["attack_state_timer"] = u["attack_windup_duration"]
 
-func _execute_weapon_hit(attacker: Dictionary, primary_target: Dictionary, shooter: Dictionary = {}) -> bool:
+func _weapon_period(unit: Dictionary, weapon: Dictionary) -> float:
+	var period := float(weapon.get("period", 0.8))
+	if ladder_rules and unit.unit_type not in ["dreadnought", "crownspire", "pursuit_fighter"] and not weapon.get("carrier_launch", false):
+		period += weapon_rng.randf_range(LadderRules.WEAPON_JITTER_MIN, LadderRules.WEAPON_JITTER_MAX)
+	return period
+
+func _face_attack_target(unit: Dictionary, target: Dictionary) -> void:
+	var offset: Vector2 = target.pos - unit.pos
+	unit.facing = (rotate_toward(unit.facing, offset.angle(), deg_to_rad(LadderRules.NEEDLEWING_TURN_DEGREES_PER_SECOND * TICK_DT))
+		if ladder_rules and unit.unit_type == "needlewing" else offset.angle())
+
+func _within_needlewing_arc(unit: Dictionary, target: Dictionary) -> bool:
+	if not ladder_rules or unit.unit_type != "needlewing":
+		return true
+	var offset: Vector2 = target.pos - unit.pos
+	return offset.is_zero_approx() or absf(angle_difference(unit.facing, offset.angle())) <= deg_to_rad(LadderRules.NEEDLEWING_WEAPON_ARC * 0.5)
+
+func _execute_weapon_hit(attacker: Dictionary, primary_target: Dictionary, shooter: Dictionary = {}, committed_weapon: Dictionary = {}) -> bool:
 	if shooter.is_empty():
 		shooter = attacker
-	var wpn := _active_weapon(shooter)
-	if not _weapon_can_hit(wpn, primary_target):
+	if shooter.has("vortex_lock_state") or systems_jammed(shooter):
 		return false
+	var wpn := _active_weapon(shooter, primary_target) if committed_weapon.is_empty() else committed_weapon
+	if not _can_hit_with_weapon(shooter, wpn, primary_target):
+		return false
+	if wpn.get("carrier_launch", false):
+		shooter["fighter_target"] = primary_target.tag
+		return _launch_pursuit_fighter(shooter, primary_target)
+	if not _within_needlewing_arc(shooter, primary_target) or (_blinding_cloud_covers(attacker) and _edge_distance(attacker, primary_target) > 1.0):
+		return false
+	var minimum := float(wpn.get("min_range", 0.0))
+	if minimum > 0.0 and _edge_distance(attacker, primary_target) < minimum:
+		return false
+	if shooter.unit_type == "howitzer_emplaced" and RTSCommanderAI.controls_howitzers(shooter.owner):
+		if _edge_distance(attacker, primary_target) > float(wpn.range) or not _howitzer_splash_is_safe(attacker, primary_target, wpn):
+			return false
 
-	var base_dmg = float(wpn.get("damage", 6.0)) + unit_upgrade_level(shooter, "weapons")
+	var upgrade := unit_upgrade_level(shooter, "weapons")
+	var base_dmg := float(wpn.get("damage", 6.0)) + upgrade * float(wpn.get("damage_per_upgrade", 1))
+	if shooter.unit_type == "prism_ray" and int(shooter.get("alignment_until", 0)) > tick and primary_target.attributes.has("Armored"):
+		base_dmg += 6.0
+	if shooter.unit_type == "horizon_lancer" and primary_target.is_structure and players[shooter.owner].upgrades.get("tectonic_resonance", 0):
+		base_dmg += 40.0
 	var bonus_dict: Dictionary = wpn.get("bonus", {})
-	var splash_rad = float(wpn.get("splash_radius", 0.0))
-	var slow_factor = float(wpn.get("concussive_slow", 0.0))
+	if upgrade > 0 and wpn.has("bonus_per_upgrade"):
+		bonus_dict = bonus_dict.duplicate()
+		for attribute in wpn.bonus_per_upgrade:
+			bonus_dict[attribute] = float(bonus_dict.get(attribute, 0.0)) + upgrade * float(wpn.bonus_per_upgrade[attribute])
+		wpn = wpn.duplicate()
+		wpn["bonus"] = bonus_dict
+	if shooter.unit_type in ["cinder_runner", "cinder_guard"] and players[shooter.owner].upgrades.get("infernal_catalyst", 0):
+		bonus_dict = bonus_dict.duplicate()
+		bonus_dict["Light"] = float(bonus_dict.get("Light", 0.0)) + (5.0 if shooter.unit_type == "cinder_runner" else 12.0)
+	var attacks := int(wpn.get("attacks", 1)) if ladder_rules or shooter.unit_type == "ridge_scout" else 1
+	if shooter.unit_type == "sentry_turret":
+		_launch_sentry_volley(attacker, primary_target, wpn, base_dmg, bonus_dict, attacks)
+		return true
+
+	var splash_rad := float(wpn.get("splash_radius", 0.0))
+	var slow_factor := float(wpn.get("concussive_slow", 0.0))
 	var hit_shields: bool = float(primary_target.get("shields", 0.0)) > 0.0
-
-	_apply_damage_to_target(attacker, primary_target, base_dmg, bonus_dict, 1.0)
-	if slow_factor > 0.0 and not primary_target["is_structure"]:
+	var durability_before: float = primary_target.hp + primary_target.shields
+	for hit in range(attacks):
+		if primary_target.hp <= 0.0:
+			break
+		_apply_damage_to_target(attacker, primary_target, base_dmg, bonus_dict, 1.0, wpn.get("ignores_armor", false), wpn)
+	if (ladder_rules and primary_target.owner > 0 and attacker.owner != primary_target.owner
+			and primary_target.hp + primary_target.shields < durability_before
+			and not can_see_unit(primary_target.owner, attacker)):
+		_note_unseen_weapon_hit(primary_target)
+	if slow_factor > 0.0 and not primary_target["is_structure"] and not _is_frenzied(primary_target):
 		primary_target["slow_timer"] = 2.0
+	if ladder_rules and shooter.unit_type == "breacher" and players[shooter.owner].upgrades.get("concussive_shells", 0) \
+			and not primary_target.is_structure and primary_target.flight_height <= 0.0 and not primary_target.attributes.has("Massive"):
+		primary_target.slow_timer = maxf(primary_target.slow_timer, LadderRules.CONCUSSIVE_SECONDS)
 
-	if splash_rad > 0.0:
-		var friendly_scale := float(wpn.get("friendly_splash", 0.0))
-		var splashed = query_units_in_radius(primary_target["pos"], splash_rad)
-		for s in splashed:
-			if s["tag"] == primary_target["tag"] or s["tag"] == attacker["tag"] or s["hp"] <= 0.0 or not _weapon_can_hit(wpn, s):
-				continue
-			var allegiance_scale := friendly_scale if s["owner"] == attacker["owner"] else 1.0
-			if allegiance_scale <= 0.0:
-				continue
-			# The outer query includes units by footprint overlap. Use the
-			# same boundary for the inner band so large units match the ring.
-			var distance_to_footprint: float = primary_target.pos.distance_to(s.pos) - float(s.radius)
-			var mult := 0.5 if distance_to_footprint <= splash_rad * SPLASH_INNER_RADIUS_RATIO else 0.25
-			_apply_damage_to_target(attacker, s, base_dmg, bonus_dict, mult * allegiance_scale)
+	_apply_weapon_splash(attacker, primary_target.tag, primary_target.pos, wpn, base_dmg, [], primary_target.flight_height > 0.0)
+	if wpn.has("bounce_falloff"):
+		_apply_weapon_bounces(attacker, primary_target, wpn, base_dmg)
+	if wpn.has("line_splash_width"):
+		_apply_line_splash(attacker, primary_target, wpn, base_dmg, bonus_dict)
+	if wpn.has("cone_angle"):
+		_apply_cone_splash(attacker, primary_target, wpn, base_dmg, bonus_dict)
+	if wpn.has("cleave_radius"):
+		_apply_bulwark_cleave(attacker, primary_target, wpn, base_dmg)
+	if wpn.has("spawn_broodlings"):
+		_spawn_attack_broodlings(attacker, primary_target, int(wpn.spawn_broodlings))
+	if wpn.has("secondary_targets"):
+		_apply_flagship_secondary_targets(shooter, primary_target, wpn)
 
+	_emit_weapon_fire(attacker, primary_target, wpn, hit_shields, splash_rad > 0.0)
+	return true
+
+func _emit_weapon_fire(attacker: Dictionary, primary_target: Dictionary, wpn: Dictionary, hit_shields: bool, splash: bool) -> void:
 	var evt = {
 		"tick": tick,
 		"type": "weapon_fire",
@@ -3651,26 +5331,187 @@ func _execute_weapon_hit(attacker: Dictionary, primary_target: Dictionary, shoot
 		"from": [attacker["pos"].x, attacker["pos"].y],
 		"to": [primary_target["pos"].x, primary_target["pos"].y],
 		"weapon": str(wpn.get("name", "Weapon")),
-		"splash": splash_rad > 0.0,
+		"splash": splash,
 		"owner": attacker["owner"]
 	}
 	recent_events.append(evt)
 	if recent_events.size() > 80:
 		recent_events.pop_front()
 	emit_signal("weapon_attack", attacker, primary_target, wpn, hit_shields)
-	emit_signal("projectile_fired", attacker["pos"], primary_target["pos"], str(wpn.get("name", "")), splash_rad > 0.0, attacker["owner"])
-	return true
+	emit_signal("projectile_fired", attacker["pos"], primary_target["pos"], str(wpn.get("name", "")), splash, attacker["owner"])
 
-func _apply_damage_to_target(attacker: Dictionary, target: Dictionary, base_dmg: float, bonus_dict: Dictionary, mult: float) -> void:
-	# The stranded militia trade fire until contact without clearing the pocket or dying off-screen.
-	if attacker.get("campaign_stranded", false) or target.get("campaign_stranded", false) or int(target.get("rescue_cover_until", 0)) > tick:
+func _launch_sentry_volley(attacker: Dictionary, target: Dictionary, weapon: Dictionary, damage: float, bonuses: Dictionary, attacks: int) -> void:
+	var distance: float = attacker.pos.distance_to(target.pos)
+	var flight_ticks := ceili(clampf(0.17 + distance / 75.0, 0.19, 0.43) * TICK_RATE)
+	# A twin volley shares one launch cue, with the second tube firing one tick later.
+	for index in range(attacks):
+		sentry_missiles.append({"source": attacker, "target": target.tag, "weapon": weapon,
+			"damage": damage, "bonuses": bonuses, "impact": tick + flight_ticks + index})
+	var first_tube := int(attacker.get("sentry_next_tube", 0))
+	attacker["sentry_next_tube"] = (first_tube + attacks) % 2
+	var volley := weapon.merged({"sentry_flight_ticks": flight_ticks, "sentry_volley_size": attacks, "sentry_first_tube": first_tube})
+	_emit_weapon_fire(attacker, target, volley, false, false)
+
+func _step_sentry_missiles() -> void:
+	var pending: Array[Dictionary] = []
+	for shot in sentry_missiles:
+		if tick < int(shot.impact):
+			pending.append(shot)
+			continue
+		var source: Dictionary = shot.source
+		var target: Dictionary = units.get(shot.target, {})
+		if target.is_empty() or target.hp <= 0.0 or target.owner == source.owner or not _weapon_can_hit(shot.weapon, target):
+			continue
+		var durability: float = target.hp + target.shields
+		_apply_damage_to_target(source, target, shot.damage, shot.bonuses, 1.0, shot.weapon.get("ignores_armor", false), shot.weapon)
+		if target.hp + target.shields < durability:
+			if ladder_rules and target.owner > 0 and not can_see_unit(target.owner, source):
+				_note_unseen_weapon_hit(target)
+			ability_triggered.emit(target, "sentry_missile_impact", target.pos)
+	sentry_missiles = pending
+
+func _note_unseen_weapon_hit(victim: Dictionary) -> void:
+	var previous: Dictionary = unseen_weapon_hits.get(victim.owner, {})
+	var nearby: bool = (not previous.is_empty() and tick - int(previous.tick) <= 4 * TICK_RATE
+		and victim.pos.distance_squared_to(previous.pos) <= 14.0 ** 2)
+	unseen_weapon_hits[victim.owner] = {"pos": victim.pos, "tick": tick, "count": int(previous.count) + 1 if nearby else 1}
+
+func _apply_line_splash(attacker: Dictionary, target: Dictionary, weapon: Dictionary, damage: float, bonuses: Dictionary) -> void:
+	var origin: Vector2 = attacker.pos
+	var direction := origin.direction_to(target.pos)
+	var reach := float(weapon.get("line_splash_length", weapon_range_against(attacker, target) + float(attacker.radius)))
+	var end := origin + direction * reach
+	var width: float = weapon.line_splash_width
+	for candidate in query_units_in_radius(origin, reach + 3.0, attacker.owner):
+		if candidate.tag == target.tag or candidate.owner == 0 or candidate.hp <= 0.0 or not _weapon_can_hit(weapon, candidate):
+			continue
+		if (candidate.pos - origin).dot(direction) <= 0.0:
+			continue
+		var closest := Geometry2D.get_closest_point_to_segment(candidate.pos, origin, end)
+		if closest.distance_squared_to(candidate.pos) <= (width + candidate.radius) ** 2:
+			_apply_damage_to_target(attacker, candidate, damage, bonuses, 1.0, false, weapon)
+
+func _apply_cone_splash(attacker: Dictionary, primary: Dictionary, weapon: Dictionary, damage: float, bonuses: Dictionary) -> void:
+	var facing: Vector2 = attacker.pos.direction_to(primary.pos)
+	var angle_limit := cos(deg_to_rad(float(weapon.cone_angle) * 0.5))
+	for candidate in query_units_in_radius(attacker.pos, float(weapon.range) + float(attacker.radius), attacker.owner):
+		if candidate.tag == primary.tag or candidate.owner == 0 or not _weapon_can_hit(weapon, candidate):
+			continue
+		if attacker.pos.direction_to(candidate.pos).dot(facing) >= angle_limit:
+			_apply_damage_to_target(attacker, candidate, damage, bonuses, 1.0, false, weapon)
+
+func _apply_bulwark_cleave(attacker: Dictionary, primary: Dictionary, weapon: Dictionary, damage: float) -> void:
+	var facing: Vector2 = attacker.pos.direction_to(primary.pos)
+	for target in query_units_in_radius(primary.pos, float(weapon.cleave_radius), attacker.owner):
+		if target.tag != primary.tag and target.owner > 0 and target.hp > 0.0 and _weapon_can_hit(weapon, target) \
+				and facing.dot(target.pos - attacker.pos) >= 0.0:
+			_apply_damage_to_target(attacker, target, damage, {}, weapon.cleave_fraction, false, weapon)
+
+func _is_frenzied(unit: Dictionary) -> bool:
+	return ladder_rules and unit.unit_type == "carapace_bulwark"
+
+func _spawn_attack_broodlings(attacker: Dictionary, target: Dictionary, count: int) -> void:
+	var direction: Vector2 = attacker.pos.direction_to(target.pos)
+	var arrivals: Array[Dictionary] = []
+	for index in range(count):
+		var side := -1.0 if index % 2 == 0 else 1.0
+		var approach: Vector2 = target.pos - direction * 2.0 + direction.orthogonal() * side
+		var site := _rally_spawn_position(target, approach, "broodling", arrivals)
+		if not site.is_finite():
+			continue
+		var broodling := spawn_unit("broodling", attacker.owner, site)
+		arrivals.append(broodling)
+		if units.has(target.tag):
+			issue_command([broodling.tag], "attack_target", target.pos, target.tag)
+
+func _apply_weapon_bounces(attacker: Dictionary, first_target: Dictionary, weapon: Dictionary, damage: float) -> void:
+	var hit_tags := [first_target.tag]
+	var origin: Vector2 = first_target.pos
+	var radius := float(weapon.bounce_range)
+	for multiplier in weapon.bounce_falloff:
+		var next_target := {}
+		var closest := radius * radius
+		for candidate in query_units_in_radius(origin, radius, attacker.owner):
+			if candidate.owner == 0 or candidate.hp <= 0.0 or candidate.tag in hit_tags or not _weapon_can_hit(weapon, candidate):
+				continue
+			var distance := origin.distance_squared_to(candidate.pos)
+			if distance > closest or not can_see_unit(attacker.owner, candidate):
+				continue
+			if next_target.is_empty() or distance < closest or candidate.tag < next_target.tag:
+				next_target = candidate
+				closest = distance
+		if next_target.is_empty():
+			break
+		hit_tags.append(next_target.tag)
+		origin = next_target.pos
+		_apply_damage_to_target(attacker, next_target, damage, {}, float(multiplier), false, weapon)
+
+func _apply_weapon_splash(attacker: Dictionary, direct_tag: int, center: Vector2, weapon: Dictionary, damage: float, wave: Array = [], air_target: bool = false) -> void:
+	var radius := float(weapon.get("splash_radius", 0.0))
+	if radius <= 0.0:
 		return
+	var friendly_scale := float(weapon.get("friendly_splash", 0.0))
+	for target in query_units_in_radius(center, radius):
+		if target.tag == direct_tag or target.tag == attacker.tag or target.hp <= 0.0 or not _weapon_can_hit(weapon, target):
+			continue
+		if not wave.is_empty() and target.tag not in wave:
+			continue
+		if weapon.get("splash_same_plane", false) and (target.flight_height > 0.0) != air_target:
+			continue
+		var allegiance := friendly_scale if target.owner == attacker.owner else 1.0
+		if allegiance <= 0.0:
+			continue
+		# Both splash bands are measured from the edge of the target's footprint.
+		var edge_distance: float = center.distance_to(target.pos) - float(target.radius)
+		if weapon.get("uniform_splash", false):
+			for hit in range(int(weapon.get("attacks", 1))):
+				if target.hp <= 0.0:
+					break
+				_apply_damage_to_target(attacker, target, damage, weapon.get("bonus", {}), allegiance, false, weapon)
+			continue
+		var falloff := 0.5 if edge_distance <= float(weapon.get("half_splash_radius", radius * SPLASH_INNER_RADIUS_RATIO)) else 0.25
+		if weapon.has("full_splash_radius") and edge_distance <= float(weapon.full_splash_radius):
+			falloff = 1.0
+		if not wave.is_empty():
+			target["uprising_hit_tick"] = tick
+			target["uprising_hit_origin"] = center
+		_apply_damage_to_target(attacker, target, damage, weapon.get("bonus", {}), falloff * allegiance, false, weapon)
+
+func apply_uprising_blast(source: Dictionary, target: Dictionary, center: Vector2, wave: Array) -> void:
+	var mortar: Dictionary = RTSData.get_unit_def("howitzer_emplaced").weapon
+	var direct_tag := 0
+	if not target.is_empty() and target.tag in wave and center.distance_to(target.pos) <= 1.0 + float(target.radius):
+		direct_tag = target.tag
+		target["uprising_hit_tick"] = tick
+		target["uprising_hit_origin"] = center
+		_apply_damage_to_target(source, target, float(mortar.damage), mortar.bonus, 1.0)
+	_apply_weapon_splash(source, direct_tag, center, mortar, float(mortar.damage), wave)
+
+func _apply_damage_to_target(attacker: Dictionary, target: Dictionary, base_dmg: float, bonus_dict: Dictionary, mult: float, bypass_armor: bool = false, weapon: Dictionary = {}) -> void:
+	if int(target.get("stasis_until", 0)) > tick or target.get("dread_in_transit", false) or target.get("gas_extracting", false):
+		return
+	# Stranded militia trade harmless fire while they wait for help.
+	if attacker.get("hallucinated", false) or attacker.get("campaign_stranded", false) or int(target.get("rescue_cover_until", 0)) > tick:
+		return
+	if int(target.get("recall_protection_until", 0)) > tick or target.unit_type in ["rift_nova", "mirage_shade"]:
+		return
+	if campaign != null and attacker.owner == 1 and target.owner == 2 and not attacker.get("campaign_scripted", false):
+		campaign.on_player_hit_enemy(self, target.tag)
+	if target.has("agent_snipe"):
+		_end_agent_snipe(target)
 	var dmg = base_dmg
 	var attrs: Array = target.get("attributes", [])
 	for attr in bonus_dict.keys():
 		if attrs.has(attr):
 			dmg += float(bonus_dict[attr])
+	if target.get("hallucinated", false):
+		mult *= 2.0
 	dmg = max(0.5, dmg * mult)
+	if not weapon.is_empty() and is_ranged_weapon(weapon):
+		if not guardian_shields.is_empty() and _guardian_covers(target):
+			dmg = maxf(0.5, dmg - LadderRules.GUARDIAN_SHIELD_REDUCTION)
+		if not microbial_shrouds.is_empty() and _microbial_shroud_covers(target):
+			dmg = maxf(0.5, dmg * 0.5)
 
 	target["out_of_combat_timer"] = 0.0
 	if target.erase("salvage_finish"):
@@ -3678,47 +5519,283 @@ func _apply_damage_to_target(attacker: Dictionary, target: Dictionary, base_dmg:
 	if target.owner != attacker.owner:
 		emit_signal("unit_damaged", target["owner"], target["pos"])
 
+	var mutations: Mutators = campaign.mutators if campaign != null and not attacker.get("campaign_scripted", false) else null
+	var previous_hp: float = target.hp
+	var previous_shields: float = target.shields
+	if mutations != null:
+		dmg = mutations.absorb_hit(target, dmg, tick, TICK_RATE)
+		if dmg <= 0.0:
+			return
+	if target.unit_type == "bastion_walker":
+		if target.get("auto_bastion_barrier", false):
+			_activate_bastion_barrier(target)
+		if int(target.get("bastion_barrier_until", 0)) > tick:
+			var blocked := minf(dmg, float(target.get("bastion_barrier_hp", 0.0)))
+			target.bastion_barrier_hp -= blocked
+			dmg -= blocked
+			if dmg <= 0.0:
+				return
+
 	# Aegis Shields absorb damage before HP
+	var armor_penalty := 2.0 if not bypass_armor and int(target.get("armor_breaker_until", 0)) > tick else 0.0
 	if target["shields"] > 0.0:
-		if target["shields"] >= dmg:
-			target["shields"] -= dmg
-			attacker["damage_dealt"] += dmg
+		var shield_armor := 0 if bypass_armor else unit_upgrade_level(target, "shields")
+		dmg = maxf(0.5, dmg - shield_armor + armor_penalty)
+		var shield_hit := float(dmg) + float(weapon.get("shield_bonus", 0.0)) * mult
+		if target["shields"] >= shield_hit:
+			target["shields"] -= shield_hit
+			attacker["damage_dealt"] += shield_hit
+			if mutations != null:
+				mutations.on_hit(attacker, target, shield_hit)
 			return
 		else:
-			var overflow = dmg - target["shields"]
+			var overflow := minf(dmg, shield_hit - target.shields)
 			attacker["damage_dealt"] += target["shields"]
 			target["shields"] = 0.0
 			dmg = overflow
 
-	var hp_dmg = max(0.5, dmg - float(target.get("armor", 0.0)) - unit_upgrade_level(target, "armor"))
+	var armor := 0.0 if bypass_armor else float(target.get("armor", 0.0)) + unit_upgrade_level(target, "armor")
+	var hp_dmg = max(0.5, dmg - armor + armor_penalty)
 	target["hp"] = max(0.0, target["hp"] - hp_dmg)
 	attacker["damage_dealt"] += hp_dmg
+	if mutations != null:
+		mutations.on_hit(attacker, target, previous_hp + previous_shields - target.hp - target.shields)
 
 	if target["hp"] <= 0.0:
-		var lost_count: int = 1 + target.get("passengers", []).size()
-		if target.owner != 0 and attacker.owner != target.owner:
+		if mutations != null and mutations.revive(target):
+			return
+		var lost_count: int = 1 + (0 if ladder_rules and target.unit_type == "field_bunker" else target.get("passengers", []).size())
+		if target.owner != 0 and attacker.owner != target.owner and not target.get("hallucinated", false):
+			if ladder_rules and _qualifies_for_elimination(target):
+				_ladder_last_progress_tick = tick
 			attacker["kills"] += lost_count
 			if players.has(attacker["owner"]):
 				players[attacker["owner"]]["units_killed"] += lost_count
-		if players.has(target["owner"]):
-			players[target["owner"]]["units_lost"] += lost_count
-		var dead = target.duplicate(true)
-		if target.has("attachment_tag"):
-			detach_production_attachment(target)
-		if target.has("attachment_parent_tag"):
-			_unlink_attachment(target)
-		_confirm_waiting_attack_loss(target)
-		units.erase(target["tag"])
-		if target.detection_radius > 0.0:
-			_detectors.erase(target)
-		if dead["is_structure"]:
-			nav_dirty = true
-		_recompute_supplies()
-		emit_signal("unit_destroyed", dead)
+		if target.unit_type == "sporeburst":
+			_detonate_sporeburst(target)
+		else:
+			_remove_destroyed_unit(target)
+
+func _apply_mutation_damage(target: Dictionary, amount: float, bypass_shields: bool = false) -> void:
+	if int(target.get("stasis_until", 0)) > tick or int(target.get("rescue_cover_until", 0)) > tick \
+			or int(target.get("recall_protection_until", 0)) > tick or target.get("dread_in_transit", false):
+		return
+	target.out_of_combat_timer = 0.0
+	if not bypass_shields:
+		var blocked := minf(amount, target.shields)
+		target.shields -= blocked
+		amount -= blocked
+	target.hp = maxf(0.0, target.hp - amount)
+	if target.hp <= 0.0:
+		if target.unit_type == "sporeburst":
+			_detonate_sporeburst(target)
+		else:
+			_remove_destroyed_unit(target)
+
+func bastion_barrier_ticks(unit: Dictionary) -> int:
+	return maxi(0, int(unit.get("bastion_barrier_ready", 0)) - tick)
+
+func _activate_bastion_barrier(unit: Dictionary) -> bool:
+	if unit.unit_type != "bastion_walker" or unit.build_progress < 1.0 or bastion_barrier_ticks(unit) > 0:
+		return false
+	unit["bastion_barrier_until"] = tick + LadderRules.BASTION_BARRIER_SECONDS * TICK_RATE
+	unit["bastion_barrier_ready"] = tick + LadderRules.BASTION_BARRIER_COOLDOWN * TICK_RATE
+	unit["bastion_barrier_hp"] = LadderRules.BASTION_BARRIER_HP
+	ability_triggered.emit(unit, "bastion_barrier", unit.pos)
+	return true
+
+func rift_nova_ticks(unit: Dictionary) -> int:
+	return maxi(0, int(unit.get("rift_nova_ready", 0)) - tick)
+
+func rift_nova_radius() -> float:
+	return LadderRules.RIFT_NOVA_RADIUS
+
+func _cast_rift_nova(engine: Dictionary, point: Vector2) -> bool:
+	if engine.unit_type != "rift_engine" or engine.is_immobile or rift_nova_ticks(engine) > 0:
+		return false
+	if not point.is_finite() or engine.pos.distance_squared_to(point) > LadderRules.RIFT_NOVA_RANGE ** 2 \
+			or not can_see_position(engine.owner, point) or not Rect2(0, 0, map_width, map_height).has_point(point):
+		return false
+	var nova := spawn_unit("rift_nova", engine.owner, engine.pos)
+	nova["rift_engine"] = engine.tag
+	nova["rift_finish"] = tick + ceili(LadderRules.RIFT_NOVA_SECONDS * TICK_RATE)
+	engine["active_rift_nova"] = nova.tag
+	engine["rift_nova_ready"] = tick + LadderRules.RIFT_NOVA_COOLDOWN * TICK_RATE
+	_stop_for_mode_change(engine)
+	engine.is_immobile = true
+	issue_command([nova.tag], "move", point)
+	ability_triggered.emit(engine, "rift_nova_cast", nova.pos)
+	return true
+
+func _finish_rift_nova_if_due(nova: Dictionary) -> bool:
+	var engine: Dictionary = units.get(nova.get("rift_engine", 0), {})
+	if not engine.is_empty() and tick < int(nova.rift_finish):
+		return false
+	if not engine.is_empty():
+		engine.erase("active_rift_nova")
+		engine.is_immobile = false
+		var center: Vector2 = nova.pos
+		for target in query_units_in_radius(center, LadderRules.RIFT_NOVA_RADIUS):
+			if target.is_structure or target.flight_height > 0.0 or target.get("nonblocking", false):
+				continue
+			if center.distance_squared_to(target.pos) <= (LadderRules.RIFT_NOVA_RADIUS + target.radius) ** 2:
+				var bonus := minf(LadderRules.RIFT_NOVA_SHIELD_DAMAGE, target.shields)
+				_apply_damage_to_target(engine, target, LadderRules.RIFT_NOVA_DAMAGE + bonus, {}, 1.0, true)
+		ability_triggered.emit(nova, "rift_nova_blast", center)
+	units.erase(nova.tag)
+	return true
+
+func mirage_transfer_ticks(unit: Dictionary) -> int:
+	return maxi(0, int(unit.get("mirage_transfer_ready", 0)) - tick)
+
+func _cast_mirage_transfer(adept: Dictionary, point: Vector2) -> bool:
+	if not ladder_rules or adept.unit_type != "mirage_adept" or adept.is_immobile or mirage_transfer_ticks(adept) > 0:
+		return false
+	if not point.is_finite() or not Rect2(0, 0, map_width, map_height).has_point(point):
+		return false
+	var shade := spawn_unit("mirage_shade", adept.owner, adept.pos)
+	shade["mirage_adept_tag"] = adept.tag
+	shade["mirage_finish"] = tick + LadderRules.MIRAGE_SHADE_SECONDS * TICK_RATE
+	adept["mirage_shade_tag"] = shade.tag
+	adept["mirage_transfer_ready"] = tick + LadderRules.MIRAGE_SHADE_COOLDOWN * TICK_RATE
+	issue_command([shade.tag], "move", point)
+	ability_triggered.emit(adept, "mirage_transfer", adept.pos)
+	return true
+
+func _cancel_mirage_transfer(unit: Dictionary) -> bool:
+	var adept: Dictionary = units.get(unit.get("mirage_adept_tag", 0), {}) if unit.unit_type == "mirage_shade" else unit
+	if adept.get("unit_type") == "mirage_adept" and units.erase(adept.get("mirage_shade_tag", 0)):
+		adept.erase("mirage_shade_tag")
+		return true
+	return false
+
+func _finish_mirage_shade_if_due(shade: Dictionary) -> bool:
+	var adept: Dictionary = units.get(shade.mirage_adept_tag, {})
+	if not adept.is_empty() and tick < int(shade.mirage_finish):
+		return false
+	units.erase(shade.tag)
+	if not adept.is_empty():
+		adept.erase("mirage_shade_tag")
+		var point: Vector2 = shade.pos
+		var radius: float = adept.radius
+		var candidates := PackedVector2Array([point])
+		for offset in [radius * 2.0, radius * 4.0]:
+			for spoke in range(8):
+				candidates.append(point + Vector2.from_angle(spoke * TAU / 8.0) * offset)
+		for candidate in candidates:
+			if (_map_clamped_position(candidate, radius) != candidate
+					or _is_point_blocked_by_static(candidate, radius)
+					or (candidate != point and not _has_clear_line_of_walk(point, candidate, radius))
+					or _ground_mobile_overlaps(candidate, radius, adept.tag)):
+				continue
+			_stop_for_mode_change(adept)
+			adept.attack_state = "idle"
+			adept.pos = candidate
+			adept.prev_pos = candidate
+			ability_triggered.emit(adept, "mirage_arrival", candidate)
+			break
+	return true
+
+func _remove_destroyed_unit(unit: Dictionary) -> void:
+	if unit.is_worker:
+		_release_mining_slot(unit)
+	if ladder_rules and unit.unit_type == "field_bunker" and not unit.get("passengers", []).is_empty():
+		_drop_ground_squad(unit.passengers, unit.pos, {}, unit.tag)
+	if unit.unit_type == "pursuit_fighter":
+		var carrier: Dictionary = units.get(unit.get("carrier_parent", 0), {})
+		if not carrier.is_empty():
+			carrier.active_fighters.erase(unit.tag)
+	elif unit.unit_type == "fleet_carrier":
+		for tag in unit.active_fighters.duplicate():
+			var fighter: Dictionary = units.get(tag, {})
+			if not fighter.is_empty():
+				_remove_destroyed_unit(fighter)
+	if unit.has("gravity_lift_target"):
+		_end_gravity_lift(unit)
+	if unit.has("gravity_lifted_by"):
+		var interceptor: Dictionary = units.get(unit.gravity_lifted_by, {})
+		if not interceptor.is_empty():
+			_end_gravity_lift(interceptor)
+	if neural_tethers.has(unit.tag):
+		_end_neural_tether(unit.tag)
+	if unit.has("neural_caster"):
+		_end_neural_tether(unit.neural_caster)
+	for cloud in parasitic_clouds:
+		if cloud.target == unit.tag:
+			cloud.pos = unit.pos
+			cloud.target = 0
+	_lose_brood_tunnel_cargo_if_last(unit)
+	if unit.unit_type == "phase_barrier":
+		unit["removed_phase_barrier"] = true
+	if ladder_rules:
+		if unit.unit_type == "brood_larva":
+			var nest: Dictionary = units.get(unit.get("brood_parent", 0), {})
+			if not nest.is_empty():
+				nest.brood_larvae.erase(unit.tag)
+				nest.brood_slots = nest.brood_larvae.size()
+		elif unit.unit_type == "brood_egg":
+			var nest: Dictionary = units.get(unit.get("brood_parent", 0), {})
+			if not nest.is_empty():
+				var index := _brood_egg_index(nest, unit.tag)
+				if index >= 0:
+					nest.production_queue.remove_at(index)
+		elif unit.unit_type == "brood_nest":
+			for job in unit.production_queue:
+				var egg: Dictionary = units.get(job.get("egg_tag", 0), {})
+				if not egg.is_empty():
+					egg.brood_parent = 0
+					egg.production_queue.append(job)
+					egg.rally_route = unit.worker_rally_route if RTSData.get_unit_def(job.unit_type).get("is_worker", false) else unit.rally_route
+	if players.has(unit.owner) and not unit.get("hallucinated", false):
+		players[unit.owner].units_lost += 1 + unit.get("passengers", []).size()
+	var dead := unit.duplicate(true)
+	if unit.has("attachment_tag"):
+		detach_production_attachment(unit)
+	if unit.has("attachment_parent_tag"):
+		_unlink_attachment(unit)
+	_confirm_waiting_attack_loss(unit)
+	units.erase(unit.tag)
+	if unit.detection_radius > 0.0:
+		_detectors.erase(unit)
+	if unit.is_structure:
+		nav_dirty = true
+	_recompute_supplies()
+	if campaign != null and campaign.mutators != null:
+		campaign.mutators.on_death(dead)
+	unit_destroyed.emit(dead)
+
+func _detonate_sporeburst(unit: Dictionary, contact_tag: int = 0) -> void:
+	if not units.has(unit.tag) or unit.get("detonated", false):
+		return
+	unit["detonated"] = true
+	unit.hp = 0.0
+	var weapon: Dictionary = RTSData.get_unit_def(unit.unit_type).weapon
+	ability_triggered.emit(unit, "detonate_sporeburst", unit.pos)
+	recent_events.append({"tick": tick, "type": "sporeburst", "attacker_tag": unit.tag,
+		"target_tag": contact_tag, "from": [unit.pos.x, unit.pos.y], "owner": unit.owner})
+	if recent_events.size() > 80:
+		recent_events.pop_front()
+	var melee_level := int(players.get(unit.owner, {}).get("upgrades", {}).get("brood_melee", 0))
+	# Units may have boarded or hatched since the last spatial rebuild.
+	for target in query_units_in_radius(unit.pos, float(weapon.splash_radius), unit.owner):
+		if not units.has(target.tag) or target.owner == 0 or target.hp <= 0.0 or not _weapon_can_hit(weapon, target):
+			continue
+		if target.is_structure:
+			_apply_damage_to_target(unit, target, float(weapon.structure_damage) + 5.0 * melee_level, {}, 1.0, true)
+		else:
+			_apply_damage_to_target(unit, target, float(weapon.damage) + 2.0 * melee_level, weapon.bonus, 1.0)
+	_remove_destroyed_unit(unit)
+
+func _escort_engage(unit: Dictionary) -> bool:
+	var enemy := _find_best_attack_target(unit, true)
+	if enemy.is_empty():
+		return false
+	_begin_attack_on(unit, enemy)
+	return true
 
 func campaign_allows_ability(owner: int, ability_id: String) -> bool:
 	if campaign == null or owner != 1:
-		return ability_id not in ["build_field_bunker", "build_field_armory"]
+		return ability_id not in ["build_field_bunker", "build_field_armory", "train_torchguard", "call_roadwardens"]
 	return campaign.allows_ability(ability_id, RTSData.get_ability_def(ability_id))
 
 func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vector2.ZERO, target_tag: int = 0, extra: String = "", queue: bool = false, stay_on_route: bool = false) -> Dictionary:
@@ -3737,6 +5814,9 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 		return {"ok": false, "accepted": 0, "error": "No valid unit tags"}
 	if cmd_type == "fill_gas":
 		return _fill_gas(valid_units, target_tag)
+	if cmd_type == "merge_archon":
+		var merged := _order_archon_merge(valid_units)
+		return {"ok": merged, "accepted": 2 if merged else 0}
 
 	var group_size = valid_units.size()
 	var dynamic_arrival = clampf(0.85 + sqrt(float(group_size)) * 0.65, 0.85, 5.5)
@@ -3757,8 +5837,164 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 
 	for u in valid_units:
 		var ctype = cmd_type.to_lower()
+		if ctype == "cancel_queued_build":
+			if accepted == 0 and _cancel_queued_build(u, target_pos, extra):
+				accepted += 1
+			continue
+		if ladder_rules and ctype == "larva_morph_unit" and u.unit_type == "brood_larva":
+			ctype = "train_" + extra
+		var phase_destination := target_pos
+		if int(u.get("stasis_until", 0)) > tick:
+			continue
+		if u.has("dread_jump") or u.has("dread_beam"):
+			continue
+		if systems_jammed(u) and ctype not in ["move", "stop", "hold_position", "hold_fire", "patrol", "follow"]:
+			continue
+		if ctype in ["deploy_bastion_turret", "systems_jammer", "armor_breaker"]:
+			if accepted == 0 and _cast_watchkeeper_spell(u, ctype, target_pos, units.get(target_tag, {})):
+				accepted += 1
+			continue
+		if ctype in ["dreadnought_jump", "dreadnought_beam"]:
+			if accepted == 0 and _cast_dreadnought_ability(u, ctype, target_pos, units.get(target_tag, {})):
+				accepted += 1
+			continue
+		if LadderRules.VEHICLE_MODES.has(ctype):
+			if _begin_vehicle_mode(u, ctype):
+				accepted += 1
+			continue
+		if ctype == "vortex_lock":
+			if accepted == 0 and _begin_vortex_lock(u, units.get(target_tag, {})):
+				accepted += 1
+			continue
+		if ctype == "auto_vortex_lock":
+			if u.unit_type == "vortex_rover":
+				u.auto_vortex_lock = not u.auto_vortex_lock
+				accepted += 1
+			continue
+		if ctype == "sentinel_missiles":
+			if accepted == 0 and _begin_sentinel_missile(u, units.get(target_tag, {})):
+				accepted += 1
+			continue
+		if ctype == "auto_sentinel_missiles":
+			if u.unit_type == "sentinel_mine_armed":
+				u.auto_sentinel_missiles = not u.auto_sentinel_missiles
+				accepted += 1
+			continue
+		if u.unit_type == "sentinel_mine_armed" and ctype == "stop":
+			u.erase("mine_target")
+			accepted += 1
+			continue
+		if u.unit_type == "vortex_rover" and ctype == "stop":
+			_end_vortex_lock(u)
+		if u.has("agent_snipe"):
+			if ctype in ["move", "stop", "hold_position", "patrol"] and not queue:
+				_end_agent_snipe(u)
+			else:
+				continue
+		if u.has("agent_strike"):
+			if ctype in ["move", "stop", "hold_position", "patrol"] and not queue:
+				u.erase("agent_strike")
+				u.is_immobile = false
+			else:
+				continue
+		if ctype in ["agent_cloak", "agent_snipe", "agent_emp", "agent_strike"]:
+			if accepted == 0 and _cast_agent_spell(u, ctype, target_pos, units.get(target_tag, {})):
+				accepted += 1
+			continue
+		if ctype in ["pulsar_beam", "end_pulsar_beam", "revelation", "seed_stasis_ward"]:
+			if accepted == 0 and _cast_sunseer_spell(u, ctype, target_pos):
+				accepted += 1
+			continue
+		if ctype in ["flagship_cloak", "time_warp", "flagship_recall"]:
+			if accepted == 0 and _cast_flagship_spell(u, ctype, target_pos):
+				accepted += 1
+			continue
+		if u.unit_type == "pursuit_fighter":
+			continue
+		if ctype == "build_pursuit_fighter":
+			if _enqueue_pursuit_fighter(u):
+				accepted += 1
+			continue
+		if ctype == "auto_build_fighters":
+			if u.unit_type == "fleet_carrier":
+				u.auto_build_fighters = not u.auto_build_fighters
+				accepted += 1
+			continue
+		if u.unit_type == "fleet_carrier" and ctype in ["stop", "hold_fire"]:
+			u.erase("fighter_target")
+		if u.has("gravity_lifted_by"):
+			continue
+		if u.has("gravity_lift_target"):
+			if ctype in ["move", "stop", "hold_position", "patrol"] and not queue:
+				_end_gravity_lift(u)
+			else:
+				continue
+		if neural_tethers.has(u.tag):
+			if ctype == "stop":
+				_end_neural_tether(u.tag)
+				accepted += 1
+			continue
+		if u.has("siphon_target"):
+			if ctype not in ["move", "stop", "hold_position", "patrol"] or queue:
+				continue
+			_end_wyrm_siphon(u)
+		if u.has("transit_finish") or u.has("recall_channel") or u.has("active_rift_nova") or u.has("archon_warp_finish"):
+			continue
+		if u.has("burrow_transition"):
+			var transition: Dictionary = u.burrow_transition
+			if not transition.down and ctype in ["move", "attack", "attack_move", "attack_target", "patrol", "stop", "hold_position"]:
+				if not queue:
+					transition.orders.clear()
+				transition.orders.append({"type": ctype, "pos": target_pos, "tag": target_tag, "queue": queue})
+				accepted += 1
+			continue
+		if u.has("locust_descent"):
+			continue
+		var underground_move: bool = u.get("burrow_mobile", false) and ctype in ["move", "stop"]
+		var underground_attack: bool = u.unit_type == "spine_ambusher" \
+			and (ctype in ["attack_target", "hold_fire", "stop"] or (ctype == "attack" and target_tag > 0))
+		if ladder_rules and u.get("burrowed", false) and not underground_move and not underground_attack \
+				and ctype not in ["burrow", "surface", "detonate_sporeburst", "neural_tether", "launch_locusts", "spread_growth_node"]:
+			continue
+		if u.has("archon_partner") and not queue and ctype in ["move", "attack", "attack_move", "attack_target", "hold_position", "stop", "patrol"]:
+			_cancel_archon_approach(mini(u.tag, int(u.archon_partner)))
+		if u.get("nonblocking", false) and ctype not in RTSData.get_unit_def(u.unit_type).abilities:
+			continue
+		if u.get("hallucinated", false) and ctype not in ["move", "stop", "hold_position", "attack", "attack_move", "attack_target", "force_attack", "patrol", "follow", "hold_fire"]:
+			continue
 		if not campaign_allows_ability(u.owner, ctype):
 			notice.emit(u.owner, "That command is unavailable in this mission.", "warn")
+			continue
+		if u.has("crawler_transition"):
+			continue
+		if u.has("caustic_spray") and not queue and ctype in ["move", "stop", "hold_position", "patrol", "attack", "attack_move", "attack_target"]:
+			_end_caustic_spray(u)
+		if ctype == "caustic_spray":
+			if accepted == 0 and _begin_caustic_spray(u, units.get(target_tag, {})):
+				accepted += 1
+			continue
+		if ctype in ["crawler_root", "crawler_uproot"]:
+			var rooted: bool = ctype == "crawler_root"
+			var reason := crawler_mode_block_reason(u, rooted)
+			if reason.is_empty() and (not rooted or _crawler_root_site_valid(u, target_pos)):
+				if rooted:
+					if not queue:
+						_stop_for_mode_change(u)
+					u.orders.append({"type": "root_watch", "target_pos": target_pos})
+				else:
+					_begin_crawler_transition(u, false)
+				accepted += 1
+			else:
+				notice.emit(u.owner, reason if not reason.is_empty() else "Rooting requires clear living ground.", "warn")
+			continue
+		if ctype in ["evolve_brood_lair", "evolve_brood_hive", "evolve_greater_blight_spire"]:
+			var form: String = RTSData.get_ability_def(ctype).structure_evolution
+			var reason := structure_evolution_block_reason(u, form)
+			if reason.is_empty():
+				_enqueue_structure_evolution(u, form)
+				accepted += 1
+			else:
+				notice.emit(u.owner, reason, "warn")
 			continue
 		if ctype == "morph_carapace":
 			var reason := carapace_morph_block_reason(u)
@@ -3772,12 +6008,93 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 			if _cancel_carapace_morph(u):
 				accepted += 1
 			continue
+		if u.unit_type == "sporeburst_cocoon":
+			if ctype == "cancel_sporeburst_morph" and u.has("sporeburst_morph_until"):
+				_cancel_sporeburst_morph(u)
+				accepted += 1
+			continue
+		if ctype == "morph_sporeburst":
+			var reason := sporeburst_morph_block_reason(u)
+			if reason.is_empty():
+				_begin_sporeburst_morph(u)
+				accepted += 1
+			else:
+				notice.emit(u.owner, reason, "warn")
+			continue
+		if u.has("brood_morph"):
+			if ctype == brood_morph_cancel_command(u):
+				_cancel_brood_morph(u)
+				accepted += 1
+			continue
+		if ctype.begins_with("morph_"):
+			var form := str(RTSData.get_ability_def(ctype).get("unit_morph", ""))
+			if not form.is_empty():
+				var reason := brood_morph_block_reason(u, form)
+				if reason.is_empty():
+					_begin_brood_morph(u, form)
+					accepted += 1
+				else:
+					notice.emit(u.owner, reason, "warn")
+				continue
+		if ctype in ["seer_oversight", "seer_mobile"]:
+			if ladder_rules and u.unit_type == "spore_seer" and u.is_immobile == (ctype == "seer_mobile"):
+				u.is_immobile = ctype == "seer_oversight"
+				u.sight_range = LadderRules.SEER_OVERSIGHT_SIGHT if u.is_immobile else LadderRules.SEER_MOBILE_SIGHT
+				u.detection_radius = u.sight_range
+				_stop_for_mode_change(u)
+				_refresh_vision()
+				accepted += 1
+			continue
+		if ctype == "contaminate_production":
+			if accepted == 0 and _contaminate_production(u, units.get(target_tag, {})):
+				accepted += 1
+			continue
+		if ctype == "spawn_brood_mimic":
+			if _spawn_brood_mimic(u):
+				accepted += 1
+			continue
+		if ctype == "generate_drift_creep":
+			if drift_creep_block_reason(u).is_empty():
+				u["generating_creep"] = not u.get("generating_creep", false)
+				u["creep_half_extent"] = LadderRules.DRIFT_CREEP_HALF_EXTENT
+				u["living_ground_radius"] = LadderRules.DRIFT_CREEP_HALF_EXTENT.length() + LivingGround.CELL_SIZE
+				if u.generating_creep:
+					_stop_for_mode_change(u)
+				living_ground.update(units, tick, _can_spread_living_ground, LadderRules.CREEP_SPREAD_TICKS)
+				accepted += 1
+			continue
+		if u.unit_type == "spore_seer" and u.is_immobile:
+			continue
+		if u.unit_type == "sporeburst" and ctype == "detonate_sporeburst":
+			_detonate_sporeburst(u)
+			accepted += 1
+			continue
+		if u.unit_type == "sporeburst" and ctype == "sporeburst_structures" and not u.get("burrowed", false):
+			u["target_structures"] = not u.get("target_structures", false)
+			accepted += 1
+			continue
 		if ctype == "link_tunnel":
-			if accepted == 0 and _link_tunnel(u, units.get(target_tag, {})):
+			if not ladder_rules and accepted == 0 and _link_tunnel(u, units.get(target_tag, {})):
 				accepted += 1
 			continue
 		if ctype == "send_tunnel_squad":
-			if _send_tunnel_squad(u):
+			if not ladder_rules and _send_tunnel_squad(u):
+				accepted += 1
+			continue
+		if ctype == "summon_brood_worm":
+			if accepted == 0 and _summon_brood_worm(u, target_pos):
+				accepted += 1
+			continue
+		if ctype == "load_brood_tunnel":
+			if accepted == 0 and can_enter_brood_tunnel(units.get(target_tag, {}), u):
+				if issue_command([target_tag], "enter_brood_tunnel", u.pos, u.tag, "", queue).ok:
+					accepted += 1
+			continue
+		if ctype == "stop" and u.erase("brood_tunnel_unload"):
+			accepted += 1
+			continue
+		if ctype == "unload_brood_tunnel":
+			if _start_brood_tunnel_unload(u):
 				accepted += 1
 			continue
 		if ctype == "phase_barrier":
@@ -3785,11 +6102,80 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 				accepted += 1
 			continue
 		if ctype == "lattice_burst":
-			if accepted == 0 and _cast_lattice_burst(u, target_pos):
+			if not ladder_rules and accepted == 0 and _cast_lattice_burst(u, target_pos):
+				accepted += 1
+			continue
+		if ctype == "guardian_shield":
+			if guardian_shield_block_reason(u).is_empty():
+				u.energy -= LadderRules.GUARDIAN_SHIELD_COST
+				guardian_shields[u.tag] = tick + ceili(LadderRules.GUARDIAN_SHIELD_SECONDS * TICK_RATE)
+				ability_triggered.emit(u, "guardian_shield", u.pos)
+				accepted += 1
+			continue
+		if ctype.begins_with("hallucinate_"):
+			if accepted == 0 and _cast_hallucination(u, ctype.trim_prefix("hallucinate_")):
 				accepted += 1
 			continue
 		if ctype == "corrosive_miasma":
-			if accepted == 0 and _cast_miasma(u, target_pos):
+			if not ladder_rules and accepted == 0 and _cast_miasma(u, target_pos):
+				accepted += 1
+			continue
+		if ctype == "caustic_barrage":
+			if accepted == 0 and _cast_caustic_barrage(u, target_pos):
+				accepted += 1
+			continue
+		if ctype == "canticle_storm":
+			if accepted == 0 and _cast_canticle_storm(u, target_pos):
+				accepted += 1
+			continue
+		if ctype in ["fungal_grasp", "microbial_shroud"]:
+			if accepted == 0 and _cast_mireweaver_spell(u, ctype, target_pos):
+				accepted += 1
+			continue
+		if ctype == "neural_tether":
+			if accepted == 0 and _cast_neural_tether(u, units.get(target_tag, {})):
+				accepted += 1
+			continue
+		if ctype == "gravity_lift":
+			if accepted == 0 and _begin_gravity_lift(u, units.get(target_tag, {})):
+				accepted += 1
+			continue
+		if ctype == "prism_alignment":
+			if prism_alignment_block_reason(u).is_empty():
+				u["alignment_until"] = tick + ceili(LadderRules.PRISM_ALIGNMENT_SECONDS * TICK_RATE)
+				u["alignment_ready"] = tick + ceili(LadderRules.PRISM_ALIGNMENT_COOLDOWN * TICK_RATE)
+				ability_triggered.emit(u, ctype, u.pos)
+				accepted += 1
+			continue
+		if ctype == "launch_locusts":
+			if _launch_locusts(u, target_pos):
+				accepted += 1
+			continue
+		if ctype in ["seed_growth_node", "spread_growth_node"]:
+			if accepted == 0 and _seed_growth_node(u, ctype, target_pos):
+				accepted += 1
+			continue
+		if ctype == "transfuse_brood":
+			if accepted == 0 and _transfuse_brood(u, units.get(target_tag, {})):
+				accepted += 1
+			continue
+		if ctype in ["siphon_structure", "wyrm_grasp", "blinding_cloud", "parasitic_cloud"]:
+			if accepted == 0 and _cast_siphon_wyrm_spell(u, ctype, target_pos, units.get(target_tag, {})):
+				accepted += 1
+			continue
+		if ctype == "locust_swoop":
+			if u.unit_type == "locust_flying" and _begin_locust_swoop(u, target_pos):
+				accepted += 1
+			continue
+		if ctype == "auto_locust_swoop":
+			if u.unit_type == "locust_flying":
+				u["auto_locust_swoop"] = not u.get("auto_locust_swoop", true)
+				accepted += 1
+			continue
+		if u.unit_type == "locust_flying" and ctype in ["move", "stop", "hold_position"]:
+			u.erase("locust_destination")
+		if ctype == "scribe_feedback":
+			if accepted == 0 and _cast_scribe_feedback(u, units.get(target_tag, {})):
 				accepted += 1
 			continue
 		if ctype in ["fighter_assault", "fighter_intercept"]:
@@ -3797,7 +6183,12 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 			if not reason.is_empty():
 				notice.emit(u.owner, reason, "warn")
 				continue
-			u.fighter_mode_until = tick + FIGHTER_TRANSITION_TICKS
+			var duration := FIGHTER_TRANSITION_TICKS
+			if ladder_rules:
+				var accelerated := bool(players[u.owner].upgrades.get("smart_servos", 0))
+				duration = ceili((LadderRules.KESTREL_SERVOS_SECONDS if accelerated else LadderRules.KESTREL_MODE_SECONDS) * TICK_RATE)
+			u.fighter_mode_started = tick
+			u.fighter_mode_until = tick + duration
 			u.is_immobile = true
 			u.attack_state = "idle"
 			u.attack_state_timer = 0.0
@@ -3807,32 +6198,82 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 			ability_triggered.emit(u, ctype, u.pos)
 			accepted += 1
 			continue
+		if ctype == "rampart_boost":
+			if rampart_boost_block_reason(u).is_empty():
+				u["rampart_boost_until"] = tick + ceili(LadderRules.RAMPART_BOOST_SECONDS * TICK_RATE)
+				u["rampart_boost_ready"] = tick + ceili(LadderRules.RAMPART_BOOST_COOLDOWN * TICK_RATE)
+				ability_triggered.emit(u, ctype, u.pos)
+				accepted += 1
+			continue
+		if ctype == "harrier_cloak":
+			if harrier_cloak_block_reason(u).is_empty():
+				_toggle_personal_cloak(u)
+				ability_triggered.emit(u, ctype, u.pos)
+				accepted += 1
+			continue
+		if ctype in ["sky_defender_mode", "sky_fighter_mode"]:
+			if not sky_mode_block_reason(u, ctype).is_empty():
+				continue
+			if ctype == "sky_fighter_mode":
+				_begin_sky_mode(u, u.pos, false)
+			elif target_pos.is_finite() and Rect2(0.0, 0.0, map_width, map_height).has_point(target_pos):
+				if not queue:
+					_clear_controlled_unit_orders(u)
+				u.orders.append({"type": ctype, "target_pos": target_pos})
+			else:
+				continue
+			accepted += 1
+			continue
 		if ctype in ["deploy_power_field", "retract_power_field"]:
 			var deploy: bool = ctype == "deploy_power_field"
 			if carrier_field_block_reason(u, deploy).is_empty():
-				_set_carrier_field(u, deploy)
+				if ladder_rules:
+					var duration := LadderRules.CARRIER_ANCHOR_SECONDS if deploy else LadderRules.CARRIER_FOLD_SECONDS
+					u["power_field_transition"] = {"deploy": deploy, "finish": tick + ceili(duration * TICK_RATE)}
+					u.is_immobile = true
+					_stop_for_mode_change(u)
+				else:
+					_set_carrier_field(u, deploy)
 				accepted += 1
 			continue
-		if u.unit_type == "lumen_carrier" and u.is_immobile and ctype != "stop":
+		if ctype == "surveillance_mode":
+			if ladder_rules and u.unit_type == "farsight_wisp":
+				u.is_immobile = not u.is_immobile
+				u["cloaked"] = not u.is_immobile
+				u.sight_range = LadderRules.WISP_SURVEILLANCE_SIGHT if u.is_immobile else LadderRules.WISP_MOBILE_SIGHT
+				u.detection_radius = u.sight_range
+				_stop_for_mode_change(u)
+				_refresh_vision()
+				accepted += 1
+			continue
+		if u.unit_type == "lumen_carrier" and u.is_immobile and ctype != "stop" \
+				and not (u.get("carrier_anchored", false) and ctype in ["load_transport", "unload_transport"]):
+			continue
+		if u.unit_type == "farsight_wisp" and u.is_immobile and ctype != "stop":
 			continue
 		if ctype in ["burrow", "surface"]:
 			var underground: bool = ctype == "burrow"
 			var reason := burrow_block_reason(u, underground)
 			if reason.is_empty():
-				_set_burrowed(u, underground)
+				if ladder_rules:
+					_begin_burrow_transition(u, underground)
+				else:
+					_set_burrowed(u, underground)
 				ability_triggered.emit(u, ctype, u.pos)
 				accepted += 1
 			elif bool(u.get("burrowed", false)) != underground:
 				notice.emit(u.owner, reason, "warn")
 			continue
-		if u.get("burrowed", false):
+		if u.get("burrowed", false) and not underground_move and not underground_attack:
 			continue
 		if u.unit_type == "field_bunker" and ctype == "unload_bunker":
 			if not u.get("passengers", []).is_empty() and _drop_ground_squad(u.passengers, u.pos):
 				accepted += 1
 			continue
 		var boarding_bunker: bool = u.unit_type == "field_bunker" and ctype == "load_transport"
-		if u.armed_structure and not boarding_bunker and not ctype in ["attack", "attack_target", "force_attack", "hold_fire", "stop", "cancel_construction"]:
+		if u.has("flight_transition") and ctype != "cancel_training":
+			continue
+		if u.armed_structure and not u.get("is_town_hall", false) and not u.get("crawler_uprooted", false) and not boarding_bunker and not ctype in ["attack", "attack_target", "force_attack", "hold_fire", "stop", "cancel_construction", "salvage"]:
 			continue
 		if u.armed_structure and (ctype == "attack_target" or ctype == "force_attack" or ctype == "attack") and (u.build_progress < 1.0 or target_tag <= 0):
 			continue
@@ -3841,8 +6282,8 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 			if not reason.is_empty():
 				notice.emit(u.owner, reason, "error")
 				continue
-			detach_production_attachment(u)
-			_set_producer_airborne(u, true)
+			u.orders.clear()
+			_begin_production_flight_transition(u, "lift", get_elevation_at(u.pos), PRODUCTION_FLIGHT_HEIGHT)
 			accepted += 1
 			continue
 		if ctype == "land":
@@ -3859,7 +6300,7 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 			continue
 		if u.is_structure and u.flight_height > 0.0 and not ctype in ["move", "stop", "cancel_training"]:
 			continue
-		if u.is_structure and u.flight_height <= 0.0 and ctype == "move":
+		if u.is_structure and u.flight_height <= 0.0 and ctype == "move" and not u.get("crawler_uprooted", false):
 			continue
 		if ctype == "undo_queued_order":
 			if not u.is_structure and u.orders.size() > 1:
@@ -3874,7 +6315,7 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 				accepted += 1
 			continue
 		if ctype == "phase_cloak":
-			if u.unit_type != "skirmisher":
+			if u.unit_type != "skirmisher" or ladder_rules:
 				continue
 			if u.get("cloaked", false):
 				u["cloaked"] = false
@@ -3898,19 +6339,43 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 			if accepted == 0 and _use_hub_power(u, ctype, target_pos, target_tag):
 				accepted += 1
 			continue
-		if ctype == "upgrade_hub":
-			if _enqueue_hub_upgrade(u):
+		if ctype in ["upgrade_hub", "fortify_hub"]:
+			if _enqueue_hub_upgrade(u, ctype):
 				accepted += 1
+			continue
+		if ctype in ["load_hub_workers", "unload_hub_workers"]:
+			if hub_worker_cargo_available(u, ctype):
+				var changed := _board_ground_squad(u, 5) if ctype == "load_hub_workers" else _drop_ground_squad(u.passengers, u.pos)
+				if changed:
+					accepted += 1
 			continue
 		if ctype == "production_boost":
 			if accepted == 0 and _cast_production_boost(u, units.get(target_tag, {})):
 				accepted += 1
 			continue
+		if ctype == "energy_recharge":
+			if accepted == 0 and _cast_energy_recharge(u, units.get(target_tag, {})):
+				accepted += 1
+			continue
+		if ctype in ["open_transit", "close_transit"]:
+			if transit_morph_block_reason(u, ctype).is_empty():
+				u["transit_morph"] = {"target": "transit_waystone" if ctype == "open_transit" else "waystone",
+					"ticks": ceili(LadderRules.TRANSIT_MORPH_SECONDS * TICK_RATE)}
+				accepted += 1
+			continue
+		if ctype.begins_with("transit_"):
+			if accepted == 0 and _begin_transit_projection(u, ctype.trim_prefix("transit_"), target_pos):
+				accepted += 1
+			continue
 		if ctype == "load_transport":
 			if _load_transport(u):
 				accepted += 1
-			elif RTSData.get_unit_def(u.unit_type).has("transport_capacity") and u.get("passengers", []).size() < RTSData.get_unit_def(u.unit_type).transport_capacity:
+			elif RTSData.get_unit_def(u.unit_type).has("transport_capacity") and transport_slots_used(u) < RTSData.get_unit_def(u.unit_type).transport_capacity:
 				notice.emit(u.owner, "No troops in boarding range.", "warn")
+			continue
+		if ctype == "unload_transport" and u.get("carrier_anchored", false):
+			if u.pos.distance_squared_to(target_pos) <= 36.0 and _valid_unload_order(u, target_pos) and _unload_transport(u, target_pos):
+				accepted += 1
 			continue
 		if ctype == "unload_transport" and not _valid_unload_order(u, target_pos):
 			continue
@@ -3931,10 +6396,48 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 				accepted += 1
 			continue
 		if ctype == "auto_heal":
-			if u.unit_type == "triage_specialist":
+			if u.get("support", {}).get("stat") == "hp":
 				u["auto_heal"] = not u.get("auto_heal", false)
 				if not u.auto_heal and (u.orders.is_empty() or u.orders[0].type != "restore_vitals"):
 					u.support_target_tag = 0
+				accepted += 1
+			continue
+		if ctype == "auto_aegis":
+			if u.unit_type == "aegis_capacitor":
+				u["auto_aegis"] = not u.auto_aegis
+				accepted += 1
+			continue
+		if ctype == "auto_charge":
+			if ladder_rules and u.unit_type == "sunblade" and concord_combat_research_block_reason(u.owner, "charge").is_empty():
+				u["auto_charge"] = not u.auto_charge
+				accepted += 1
+			continue
+		if ctype == "bastion_barrier":
+			if _activate_bastion_barrier(u):
+				accepted += 1
+			continue
+		if ctype == "auto_bastion_barrier":
+			if u.unit_type == "bastion_walker":
+				u["auto_bastion_barrier"] = not u.auto_bastion_barrier
+				accepted += 1
+			continue
+		if ctype == "rift_nova_cast":
+			if accepted == 0 and _cast_rift_nova(u, target_pos):
+				accepted += 1
+			continue
+		if ctype == "mirage_transfer":
+			if _cast_mirage_transfer(u, target_pos):
+				accepted += 1
+			continue
+		if ctype == "hurler_lunge":
+			if hurler_lunge_block_reason(u).is_empty() and issue_command([u.tag], "move", target_pos).ok:
+				u["hurler_lunge_until"] = tick + ceili(LadderRules.HURLER_LUNGE_SECONDS * TICK_RATE)
+				u["hurler_lunge_ready"] = tick + LadderRules.HURLER_LUNGE_COOLDOWN * TICK_RATE
+				ability_triggered.emit(u, "hurler_lunge", u.pos)
+				accepted += 1
+			continue
+		if ctype == "cancel_mirage_transfer":
+			if _cancel_mirage_transfer(u):
 				accepted += 1
 			continue
 		if ctype == "cancel_construction":
@@ -3952,6 +6455,25 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 			continue
 		if ctype == "restore_vitals" and (u.is_structure or not can_restore(u, units.get(target_tag, {}))):
 			continue
+		if ctype == "restore_aegis":
+			var ally: Dictionary = units.get(target_tag, {})
+			if u.unit_type != "aegis_capacitor" or not is_powered(u.owner, u.pos) or not can_restore(u, ally) or _edge_distance(u, ally) > u.support.range:
+				continue
+		if ctype == "charge" and ladder_rules:
+			var enemy: Dictionary = units.get(target_tag, {})
+			if _begin_ladder_charge(u, enemy) and issue_command([u.tag], "attack_target", enemy.pos, enemy.tag).ok:
+				accepted += 1
+			continue
+		if ctype in ["phase_step", "shadow_stride"] and ladder_rules:
+			var expected := "duskblade" if ctype == "shadow_stride" else "skirmisher"
+			if fungal_grasp_active(u):
+				continue
+			if u.unit_type != expected or u.is_immobile or u.phase_cooldown > 0.0 \
+					or not concord_combat_research_block_reason(u.owner, ctype).is_empty():
+				continue
+			phase_destination = _ladder_phase_step_landing(u, target_pos, group_size > 1)
+			if not phase_destination.is_finite():
+				continue
 		if ctype == "inject_brood":
 			if accepted > 0:
 				continue
@@ -3962,6 +6484,10 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 		if ctype == "follow" and (u.is_structure or u.is_immobile or u.tag == target_tag or not _is_friendly_mobile(units.get(target_tag, {}), u.owner)):
 			continue
 		if ctype == "enter_bunker" and not can_enter_bunker(u, units.get(target_tag, {})):
+			continue
+		if ctype == "enter_rampart" and not can_enter_rampart(u, units.get(target_tag, {})):
+			continue
+		if ctype == "enter_brood_tunnel" and not can_enter_brood_tunnel(u, units.get(target_tag, {})):
 			continue
 		if ctype == "harvest" and (not u.is_worker or u.is_immobile):
 			continue
@@ -4006,23 +6532,29 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 			accepted += 1
 			continue
 
+		if ctype == "ridge_charge":
+			if accepted == 0 and _throw_ridge_charge(u, target_pos):
+				accepted += 1
+			continue
+
 		# An appended order must leave the active shot and recovery alone.
 		# Phase Step is an immediate ability even when Shift is held.
-		var immediate := not queue or ctype == "phase_step"
-		if immediate and u["attack_state"] == "backswing" and ctype in ["move", "attack_move", "patrol", "phase_step"]:
+		var immediate := not queue or ctype in ["phase_step", "shadow_stride"]
+		if immediate and u["attack_state"] == "backswing" and ctype in ["move", "attack_move", "patrol", "phase_step", "shadow_stride"]:
 			u["attack_state"] = "idle"
 			u["attack_state_timer"] = 0.0
 			if players.has(u["owner"]):
 				players[u["owner"]]["stutter_step_cancels"] += 1
-		elif immediate and u["attack_state"] == "windup" and ctype in ["move", "stop", "phase_step"]:
+		elif immediate and u["attack_state"] == "windup" and ctype in ["move", "stop", "phase_step", "shadow_stride"]:
 			u["attack_state"] = "idle"
 			u["attack_state_timer"] = 0.0
 
 		if ctype == "surge":
-			var hp_cost := surge_hp_cost(u)
-			if u["unit_type"] in ["rifleman", "breacher"] and u["hp"] > hp_cost:
-				u["hp"] -= hp_cost
+			if surge_block_reason(u).is_empty():
+				u["hp"] -= surge_hp_cost(u)
 				u["surge_timer"] = float(RTSData.get_ability_def("surge").duration)
+				if ladder_rules:
+					u["surge_ready"] = tick + ceili(LadderRules.SURGE_COOLDOWN_SECONDS * TICK_RATE)
 				emit_signal("ability_triggered", u, "surge", u["pos"])
 				accepted += 1
 			continue
@@ -4034,37 +6566,39 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 				accepted += 1
 			continue
 
-		elif ctype == "phase_step":
-			if u["unit_type"] == "skirmisher" and u["phase_cooldown"] <= 0.0:
+		elif ctype in ["phase_step", "shadow_stride"]:
+			var stride: bool = ctype == "shadow_stride"
+			var expected := "duskblade" if stride else "skirmisher"
+			if u.unit_type == expected and u.phase_cooldown <= 0.0 and (ladder_rules or not stride):
 				var old_pos: Vector2 = u["pos"]
 				var delta_b: Vector2 = target_pos - old_pos
-				if delta_b.length() > 18.0:
+				if not ladder_rules and delta_b.length() > 18.0:
 					delta_b = delta_b.normalized() * 18.0
-				var dest := _project_destination(old_pos, old_pos + delta_b, u.radius, true)
+				var dest := phase_destination if ladder_rules else _project_destination(old_pos, old_pos + delta_b, u.radius, true)
 				u["pos"] = dest
 				u["prev_pos"] = dest
 				u["home_pos"] = dest
-				u["phase_cooldown"] = 7.0
+				u["phase_cooldown"] = LadderRules.SHADOW_STRIDE_COOLDOWN if stride else 7.0
+				if stride:
+					u.weapon_cooldown = maxf(u.weapon_cooldown, LadderRules.SHADOW_STRIDE_ATTACK_DELAY)
 				u["orders"].clear()
 				u["path"].clear()
 				if players.has(u["owner"]):
 					players[u["owner"]]["phase_steps_executed"] += 1
 				emit_signal("unit_phased", old_pos, dest, u["tag"])
-				emit_signal("ability_triggered", u, "phase_step", dest)
+				emit_signal("ability_triggered", u, ctype, dest)
 				accepted += 1
 			continue
 
-		elif ctype in ["emplace", "emplace"]:
-			if u["unit_type"] == "howitzer":
-				_morph_unit_in_place(u, "howitzer_emplaced")
-				emit_signal("ability_triggered", u, "emplace", u["pos"])
-				accepted += 1
-			continue
-
-		elif ctype in ["mobilize", "mobile_mode"]:
-			if u["unit_type"] == "howitzer_emplaced":
-				_morph_unit_in_place(u, "howitzer")
-				emit_signal("ability_triggered", u, "mobilize", u["pos"])
+		elif ctype in ["emplace", "mobilize", "mobile_mode"]:
+			var emplacing: bool = ctype == "emplace"
+			if u.unit_type == ("howitzer" if emplacing else "howitzer_emplaced"):
+				_morph_unit_in_place(u, "howitzer_emplaced" if emplacing else "howitzer")
+				u.path.clear()
+				u.attack_state = "idle"
+				u.attack_target_tag = 0
+				u.attack_state_timer = 0.0
+				ability_triggered.emit(u, "emplace" if emplacing else "mobilize", u.pos)
 				accepted += 1
 			continue
 
@@ -4077,14 +6611,22 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 				if not reason.is_empty():
 					notice.emit(u.owner, reason, "warn")
 					continue
-			_morph_unit_in_place(u, "silo" if raising else "silo_retracted")
+				u["silo_raise_until"] = tick + SILO_RAISE_TICKS
+			else:
+				_morph_unit_in_place(u, "silo_retracted")
 			ability_triggered.emit(u, ctype, u.pos)
 			accepted += 1
 			continue
 
 		elif ctype.begins_with("train_"):
 			var train_type = ctype.replace("train_", "")
-			if _enqueue_unit_production(u, train_type):
+			var producer: Dictionary = units.get(u.get("brood_parent", 0), {}) if u.unit_type == "brood_larva" else u
+			var larva_tag: int = u.tag if u.unit_type == "brood_larva" else 0
+			if not producer.is_empty() and _enqueue_unit_production(producer, train_type, larva_tag):
+				accepted += 1
+			continue
+		elif ctype == "call_roadwardens":
+			if campaign != null and campaign.evacuation != null and campaign.evacuation.call_roadwardens(self, u):
 				accepted += 1
 			continue
 
@@ -4097,8 +6639,15 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 				accepted += 1
 			continue
 
-		elif ctype == "cancel_training":
-			if (extra.is_empty() or extra.is_valid_int()) and _cancel_training(u, int(extra) if not extra.is_empty() else u.production_queue.size() - 1):
+		elif ctype in ["cancel_training", "cancel_brood_egg"]:
+			if ctype == "cancel_brood_egg" and u.unit_type != "brood_egg":
+				continue
+			var producer := u
+			var index: int = int(extra) if not extra.is_empty() else u.production_queue.size() - 1
+			if u.unit_type == "brood_egg" and u.get("brood_parent", 0) != 0:
+				producer = units.get(u.brood_parent, {})
+				index = _brood_egg_index(producer, u.tag)
+			if not producer.is_empty() and (extra.is_empty() or extra.is_valid_int()) and _cancel_training(producer, index):
 				accepted += 1
 			continue
 
@@ -4155,8 +6704,8 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 			u.has_home_pos = false
 			accepted += 1
 
-		elif ctype == "enter_bunker":
-			_append_target_order(u, {"type": "enter_bunker", "target_tag": target_tag, "target_pos": units[target_tag].pos})
+		elif ctype in ["enter_bunker", "enter_brood_tunnel", "enter_rampart"]:
+			_append_target_order(u, {"type": ctype, "target_tag": target_tag, "target_pos": units[target_tag].pos})
 			accepted += 1
 
 		elif ctype in ["attack", "attack_move"]:
@@ -4204,7 +6753,7 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 				site["builder_tag"] = u.tag
 			accepted += 1
 
-		elif ctype in ["repair", "restore_vitals", "inject_brood"]:
+		elif ctype in ["repair", "restore_vitals", "restore_aegis", "inject_brood"]:
 			u.orders.append({"type": ctype, "target_tag": target_tag})
 			accepted += 1
 		elif ctype == "unload_transport":
@@ -4241,6 +6790,22 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 
 	return {"ok": accepted > 0, "accepted": accepted, "tick": tick}
 
+func _cancel_queued_build(worker: Dictionary, point: Vector2, structure_type: String) -> bool:
+	if not worker.is_worker:
+		return false
+	for index in worker.orders.size():
+		var order: Dictionary = worker.orders[index]
+		if (order.type != "build" or order.structure_tag != 0
+				or order.target_pos != point or order.structure_type != structure_type):
+			continue
+		worker.orders.remove_at(index)
+		if index == 0:
+			worker.path.clear()
+			worker.vel = Vector2.ZERO
+			worker.erase("choke_yield")
+		return true
+	return false
+
 func _append_target_order(unit: Dictionary, order: Dictionary) -> void:
 	if not unit.orders.is_empty():
 		order["waiting_for_turn"] = true
@@ -4272,7 +6837,8 @@ func _fill_gas(workers: Array[Dictionary], tap_tag: int) -> Dictionary:
 	return {"ok": accepted > 0, "accepted": accepted, "tick": tick}
 
 func _is_friendly_mobile(unit: Dictionary, owner_id: int) -> bool:
-	return not unit.is_empty() and unit.owner == owner_id and not unit.is_structure and unit.hp > 0.0
+	return not unit.is_empty() and unit.owner == owner_id and not unit.is_structure and unit.hp > 0.0 \
+		and not unit.has("transit_finish") and not unit.has("recall_channel")
 
 func warden_cast_block_reason(caster: Dictionary, cost: float) -> String:
 	if caster.get("unit_type") != "aegis_warden" or caster.build_progress < 1.0:
@@ -4281,15 +6847,75 @@ func warden_cast_block_reason(caster: Dictionary, cost: float) -> String:
 		return "Requires %d energy." % int(cost)
 	return ""
 
+func guardian_shield_ticks(caster: Dictionary) -> int:
+	return maxi(0, int(guardian_shields.get(caster.tag, 0)) - tick)
+
+func guardian_shield_block_reason(caster: Dictionary) -> String:
+	if not ladder_rules:
+		return "Guardian Shield is available under the ladder rules."
+	if guardian_shield_ticks(caster) > 0:
+		return "Guardian Shield is active."
+	return warden_cast_block_reason(caster, LadderRules.GUARDIAN_SHIELD_COST)
+
+func guardian_shield_radius() -> float:
+	return LadderRules.GUARDIAN_SHIELD_RADIUS
+
+func hallucination_block_reason(caster: Dictionary) -> String:
+	if not ladder_rules or caster.get("hallucinated", false) or caster.get("is_immobile", false):
+		return "Select an available ladder Aegis Warden."
+	return warden_cast_block_reason(caster, LadderRules.HALLUCINATION_COST)
+
+func hallucination_types() -> Array:
+	return LadderRules.HALLUCINATIONS.keys()
+
+func _cast_hallucination(caster: Dictionary, unit_type: String) -> bool:
+	if not LadderRules.HALLUCINATIONS.has(unit_type) or not hallucination_block_reason(caster).is_empty():
+		return false
+	var definition := RTSData.get_unit_def(unit_type)
+	var radius: float = definition.radius
+	var flying := float(definition.get("flight_height", 0.0)) > 0.0
+	var count: int = LadderRules.HALLUCINATIONS[unit_type].count
+	var positions: Array[Vector2] = []
+	for spoke in range(12):
+		var direction := Vector2.from_angle(float(caster.facing) + spoke * TAU / 12.0)
+		var point: Vector2 = caster.pos + direction * (caster.radius + radius + 1.5)
+		if _map_clamped_position(point, radius) != point:
+			continue
+		if not flying and (_is_point_blocked_by_static(point, radius) or _ground_mobile_overlaps(point, radius)):
+			continue
+		if positions.any(func(other): return point.distance_squared_to(other) < (2.0 * radius) ** 2):
+			continue
+		positions.append(point)
+		if positions.size() == count:
+			break
+	if positions.size() < count:
+		return false
+	caster.energy -= LadderRules.HALLUCINATION_COST
+	for point in positions:
+		spawn_unit(unit_type, caster.owner, point, "", 1.0, true)
+	ability_triggered.emit(caster, "hallucination", caster.pos)
+	return true
+
+func phase_barrier_cast_range() -> float:
+	return LadderRules.PHASE_BARRIER_CAST_RANGE if ladder_rules else PHASE_BARRIER_RANGE
+
+func _guardian_covers(target: Dictionary) -> bool:
+	if target.is_structure:
+		return false
+	for tag in guardian_shields:
+		var caster: Dictionary = units.get(tag, {})
+		if (not caster.is_empty() and caster.owner == target.owner and guardian_shield_ticks(caster) > 0
+				and caster.pos.distance_squared_to(target.pos) <= LadderRules.GUARDIAN_SHIELD_RADIUS ** 2):
+			return true
+	return false
+
 func _cast_phase_barrier(caster: Dictionary, point: Vector2) -> bool:
 	if not warden_cast_block_reason(caster, PHASE_BARRIER_COST).is_empty() or not point.is_finite() or not Rect2(0, 0, map_width, map_height).has_point(point):
 		return false
-	if caster.pos.distance_squared_to(point) > PHASE_BARRIER_RANGE * PHASE_BARRIER_RANGE or not can_see_position(caster.owner, point):
+	if caster.pos.distance_squared_to(point) > phase_barrier_cast_range() ** 2 or not can_see_position(caster.owner, point):
 		return false
 	var radius: float = RTSData.get_unit_def("phase_barrier").radius
-	# The center must be open. The edge can touch cliff walls to seal a lane,
-	# but a ground unit already occupying the circle cannot be trapped inside.
-	if _is_point_blocked_by_static(point, 0.0) or _ground_mobile_overlaps(point, radius):
+	if _is_point_blocked_by_static(point, 0.0) or (not ladder_rules and _ground_mobile_overlaps(point, radius)):
 		return false
 	for unit in units.values():
 		if not unit.is_structure or unit.is_walkable_structure or unit.flight_height > 0.0:
@@ -4297,10 +6923,45 @@ func _cast_phase_barrier(caster: Dictionary, point: Vector2) -> bool:
 		var clearance: float = unit.radius + (radius if unit.unit_type == "phase_barrier" else 0.0)
 		if unit.pos.distance_squared_to(point) < clearance * clearance:
 			return false
-	var barrier := spawn_unit("phase_barrier", 0, point)
-	barrier["cast_owner"] = caster.owner
+	var crushed := false
+	if ladder_rules:
+		var occupants := units.values().filter(func(unit):
+			return (not unit.is_structure and unit.flight_height <= 0.0 and not unit.get("burrowed", false)
+				and not unit.get("nonblocking", false) and unit.pos.distance_squared_to(point) < (radius + unit.radius) ** 2))
+		crushed = occupants.any(func(unit): return unit.attributes.has("Massive"))
+		if not crushed and not _displace_phase_barrier_occupants(occupants, caster, point, radius):
+			return false
+	if not crushed:
+		var barrier := spawn_unit("phase_barrier", 0, point)
+		barrier["cast_owner"] = caster.owner
 	caster.energy -= PHASE_BARRIER_COST
 	ability_triggered.emit(caster, "phase_barrier", point)
+	return true
+
+func _displace_phase_barrier_occupants(occupants: Array, caster: Dictionary, point: Vector2, radius: float) -> bool:
+	var destinations: Array[Dictionary] = []
+	for unit in occupants:
+		var offset: Vector2 = unit.pos - point
+		var heading: float = caster.facing if offset.is_zero_approx() else offset.angle()
+		var body: float = unit.radius
+		var destination := Vector2.INF
+		for spoke in range(12):
+			var candidate := point + Vector2.from_angle(heading + spoke * TAU / 12.0) * (radius + body + 0.12)
+			if (_map_clamped_position(candidate, body) != candidate or _ground_mobile_overlaps(candidate, body, unit.tag)
+					or not _has_clear_line_of_walk(unit.pos, candidate, body, unit.get("cliff_walk", false))):
+				continue
+			if destinations.any(func(entry): return candidate.distance_squared_to(entry.pos) < (body + entry.unit.radius) ** 2):
+				continue
+			destination = candidate
+			break
+		if not destination.is_finite():
+			return false
+		destinations.append({"unit": unit, "pos": destination})
+	for entry in destinations:
+		entry.unit.pos = entry.pos
+		entry.unit.prev_pos = entry.pos
+		entry.unit.vel = Vector2.ZERO
+		entry.unit.path.clear()
 	return true
 
 func visible_phase_barriers(perspective: int) -> Array[Dictionary]:
@@ -4322,6 +6983,51 @@ func _cast_lattice_burst(caster: Dictionary, point: Vector2) -> bool:
 	caster.energy -= LATTICE_BURST_COST
 	ability_triggered.emit(caster, "lattice_burst", point)
 	return true
+
+func ridge_charge_remaining(unit: Dictionary) -> float:
+	return float(maxi(0, int(unit.get("ridge_charge_ready", 0)) - tick)) * TICK_DT
+
+func _throw_ridge_charge(scout: Dictionary, point: Vector2) -> bool:
+	if scout.unit_type != "ridge_scout" or ridge_charge_remaining(scout) > 0.0:
+		return false
+	if not point.is_finite() or not Rect2(0, 0, map_width, map_height).has_point(point) or not can_see_position(scout.owner, point):
+		return false
+	if scout.pos.distance_squared_to(point) > RIDGE_CHARGE_RANGE * RIDGE_CHARGE_RANGE:
+		return false
+	scout["ridge_charge_ready"] = tick + RIDGE_CHARGE_COOLDOWN_TICKS
+	ridge_charges.append({"source": scout, "pos": point, "burst_tick": tick + RIDGE_CHARGE_DELAY_TICKS})
+	ability_triggered.emit(scout, "ridge_charge", point)
+	return true
+
+func _step_ridge_charges() -> void:
+	while not ridge_charges.is_empty() and tick >= int(ridge_charges[0].burst_tick):
+		var charge: Dictionary = ridge_charges.pop_front()
+		var center: Vector2 = charge.pos
+		# Positions have already advanced for this tick.
+		var targets := units.values()
+		targets.sort_custom(func(a, b): return a.tag < b.tag)
+		for target in targets:
+			if target.hp <= 0.0 or target.owner == 0 or target.is_structure or target.flight_height > 0.0:
+				continue
+			if target.pos.distance_squared_to(center) > RIDGE_CHARGE_RADIUS * RIDGE_CHARGE_RADIUS:
+				continue
+			_apply_damage_to_target(charge.source, target, 5.0, {}, 1.0, true)
+			if target.hp <= 0.0 or target.get("burrowed", false) or target.attributes.has("Massive") or target.is_immobile:
+				continue
+			var away: Vector2 = center.direction_to(target.pos)
+			if away.is_zero_approx():
+				away = Vector2.RIGHT.rotated(target.facing)
+			target.pos = _clamp_to_walkable(target.pos + away * 3.0, target.radius, target.get("cliff_walk", false), target.pos)
+			target.path.clear()
+			target.pushed_timer = 0.35
+		ability_triggered.emit(charge.source, "ridge_charge_impact", center)
+
+func visible_ridge_charges(perspective: int) -> Array[Dictionary]:
+	var visible: Array[Dictionary] = []
+	for charge in ridge_charges:
+		if perspective == charge.source.owner or can_see_position(perspective, charge.pos):
+			visible.append({"pos": charge.pos, "ticks": int(charge.burst_tick) - tick})
+	return visible
 
 func visible_lattice_bursts(perspective: int) -> Array[Dictionary]:
 	var visible: Array[Dictionary] = []
@@ -4387,23 +7093,1014 @@ func _step_miasma() -> void:
 					target.slow_timer = maxf(target.slow_timer, 1.0)
 					_apply_damage_to_target(zone.source, target, 9.0, {}, 1.0)
 
+func canticle_storm_block_reason(caster: Dictionary) -> String:
+	if caster.unit_type != "storm_scribe" or caster.is_immobile:
+		return "Select an available Storm Scribe."
+	if not players.get(caster.owner, {}).get("upgrades", {}).get("canticle_storm", 0):
+		return "Requires Canticle Storm research at a Canticle Archive."
+	if caster.energy < LadderRules.STORM_ENERGY:
+		return "Requires 75 energy."
+	if tick < int(caster.get("canticle_storm_ready", 0)):
+		return "Canticle Storm is recharging."
+	return ""
+
+func canticle_storm_radius() -> float:
+	return LadderRules.STORM_RADIUS
+
+func _cast_canticle_storm(caster: Dictionary, point: Vector2) -> bool:
+	if not canticle_storm_block_reason(caster).is_empty() or not point.is_finite():
+		return false
+	if not Rect2(0, 0, map_width, map_height).has_point(point) or not can_see_position(caster.owner, point) \
+			or caster.pos.distance_squared_to(point) > LadderRules.STORM_RANGE ** 2:
+		return false
+	caster.energy -= LadderRules.STORM_ENERGY
+	caster["canticle_storm_ready"] = tick + ceili(LadderRules.STORM_COOLDOWN * TICK_RATE)
+	canticle_storms.append({"pos": point, "source": caster, "ends": tick + LadderRules.STORM_SECONDS * TICK_RATE})
+	ability_triggered.emit(caster, "canticle_storm", point)
+	return true
+
+func _cast_scribe_feedback(caster: Dictionary, target: Dictionary) -> bool:
+	if caster.unit_type != "storm_scribe" or caster.is_immobile or caster.energy < LadderRules.FEEDBACK_ENERGY:
+		return false
+	if (target.is_empty() or target.owner <= 0 or target.owner == caster.owner or target.is_structure or target.energy <= 0.0
+			or target.get("nonblocking", false) or not can_see_unit(caster.owner, target)
+			or _edge_distance(caster, target) > LadderRules.FEEDBACK_RANGE):
+		return false
+	caster.energy -= LadderRules.FEEDBACK_ENERGY
+	var damage: float = target.energy * 0.5
+	target.energy = 0.0
+	_apply_damage_to_target(caster, target, damage, {}, 1.0, true)
+	ability_triggered.emit(caster, "scribe_feedback", target.pos)
+	return true
+
+func visible_canticle_storms(perspective: int) -> Array[Dictionary]:
+	return canticle_storms.filter(func(zone):
+		return zone.source.owner == perspective or can_see_position(perspective, zone.pos))
+
+func _step_canticle_storms() -> void:
+	var pulse_interval := TICK_RATE / 4
+	var damage := LadderRules.STORM_DAMAGE / (LadderRules.STORM_SECONDS * 4.0)
+	var hit: Dictionary = {}
+	for index in range(canticle_storms.size() - 1, -1, -1):
+		var zone := canticle_storms[index]
+		if tick > int(zone.ends):
+			canticle_storms.remove_at(index)
+		elif tick % pulse_interval == 0:
+			var targets := query_units_in_radius(zone.pos, LadderRules.STORM_RADIUS)
+			targets.sort_custom(func(a, b): return a.tag < b.tag)
+			for target in targets:
+				if target.is_structure or target.hp <= 0.0 or target.get("nonblocking", false) or hit.has(target.tag):
+					continue
+				if target.pos.distance_squared_to(zone.pos) <= LadderRules.STORM_RADIUS ** 2:
+					hit[target.tag] = true
+					_apply_damage_to_target(zone.source, target, damage, {}, 1.0, true)
+
+func mireweaver_spell_block_reason(caster: Dictionary, spell: String) -> String:
+	if not ladder_rules or caster.unit_type != "mireweaver" or caster.is_immobile or caster.get("burrowed", false):
+		return "Select a surfaced Mireweaver."
+	if spell == "microbial_shroud" and not players[caster.owner].upgrades.get("microbial_shroud", 0):
+		return "Evolve Microbial Shroud at an Infestation Pit."
+	var cost := LadderRules.MICROBIAL_SHROUD_COST if spell == "microbial_shroud" else LadderRules.FUNGAL_GRASP_COST
+	return "Requires %d energy." % cost if caster.energy < cost else ""
+
+func _cast_mireweaver_spell(caster: Dictionary, spell: String, point: Vector2) -> bool:
+	if not point.is_finite() or not mireweaver_spell_block_reason(caster, spell).is_empty():
+		return false
+	var shroud := spell == "microbial_shroud"
+	var cast_range := LadderRules.MICROBIAL_SHROUD_RANGE if shroud else LadderRules.FUNGAL_GRASP_RANGE
+	var distance: float = caster.pos.distance_to(point)
+	if distance > cast_range or not can_see_position(caster.owner, point):
+		return false
+	caster.energy -= LadderRules.MICROBIAL_SHROUD_COST if shroud else LadderRules.FUNGAL_GRASP_COST
+	if shroud:
+		microbial_shrouds.append({"pos": point, "ends": tick + LadderRules.MICROBIAL_SHROUD_SECONDS * TICK_RATE})
+	else:
+		var travel_ticks := maxi(1, ceili(distance * TICK_RATE / LadderRules.FUNGAL_GRASP_PROJECTILE_SPEED))
+		fungal_projectiles.append({"pos": point, "source": caster, "impact": tick + travel_ticks})
+		projectile_fired.emit(caster.pos, point, "Fungal Grasp", true, caster.owner)
+	ability_triggered.emit(caster, spell, point)
+	return true
+
+func fungal_grasp_active(unit: Dictionary) -> bool:
+	return int(fungal_infections.get(unit.get("tag", 0), {}).get("ends", 0)) > tick
+
+func _step_fungal_grasp() -> void:
+	var interval := TICK_RATE / 4
+	for index in range(fungal_projectiles.size() - 1, -1, -1):
+		var shot := fungal_projectiles[index]
+		if tick < int(shot.impact):
+			continue
+		fungal_projectiles.remove_at(index)
+		ability_triggered.emit(shot.source, "fungal_impact", shot.pos)
+		for target in query_units_in_radius(shot.pos, LadderRules.FUNGAL_GRASP_RADIUS, shot.source.owner):
+			if (target.owner <= 0 or target.is_structure or target.hp <= 0.0 or target.get("nonblocking", false)
+					or target.pos.distance_squared_to(shot.pos) > LadderRules.FUNGAL_GRASP_RADIUS ** 2):
+				continue
+			var next_pulse := int(fungal_infections.get(target.tag, {}).get("pulse", tick + interval))
+			fungal_infections[target.tag] = {"source": shot.source, "pulse": next_pulse,
+				"ends": tick + LadderRules.FUNGAL_GRASP_SECONDS * TICK_RATE}
+	var tags := fungal_infections.keys()
+	tags.sort()
+	for tag in tags:
+		var infection: Dictionary = fungal_infections[tag]
+		var target: Dictionary = units.get(tag, {})
+		if target.is_empty() or target.hp <= 0.0 or tick > int(infection.ends):
+			fungal_infections.erase(tag)
+		elif tick >= int(infection.pulse):
+			infection.pulse += interval
+			_apply_damage_to_target(infection.source, target, LadderRules.FUNGAL_GRASP_DAMAGE / (LadderRules.FUNGAL_GRASP_SECONDS * 4), {}, 1.0, true)
+
+func visible_microbial_shrouds(perspective: int) -> Array[Dictionary]:
+	return microbial_shrouds.filter(func(zone): return can_see_position(perspective, zone.pos))
+
+func _microbial_shroud_covers(target: Dictionary) -> bool:
+	if target.is_structure or target.flight_height > 0.0:
+		return false
+	return microbial_shrouds.any(func(zone):
+		return tick < int(zone.ends) and target.pos.distance_squared_to(zone.pos) <= LadderRules.MICROBIAL_SHROUD_RADIUS ** 2)
+
+func neural_tether_block_reason(caster: Dictionary) -> String:
+	if not ladder_rules or caster.unit_type != "mireweaver" or caster.is_immobile or caster.has("burrow_transition"):
+		return "Select an available Mireweaver."
+	if not players[caster.owner].upgrades.get("neural_tether", 0):
+		return "Evolve Neural Tether at an Infestation Pit."
+	return "Requires 100 energy." if caster.energy < LadderRules.NEURAL_TETHER_COST else ""
+
+func _cast_neural_tether(caster: Dictionary, target: Dictionary) -> bool:
+	if not neural_tether_block_reason(caster).is_empty() or target.is_empty():
+		return false
+	if (target.owner <= 0 or target.owner == caster.owner or target.hp <= 0.0 or target.is_structure
+			or target.attributes.has("Heroic") or _is_frenzied(target) or target.get("nonblocking", false)
+			or target.unit_type in ["brood_egg", "brood_larva", "pursuit_fighter"] or target.has("brood_morph")
+			or target.has("neural_original_owner") or neural_tethers.has(target.tag)
+			or not can_see_unit(caster.owner, target) or _edge_distance(caster, target) > LadderRules.NEURAL_TETHER_RANGE):
+		return false
+	caster.energy -= LadderRules.NEURAL_TETHER_COST
+	_clear_controlled_unit_orders(caster)
+	caster.is_immobile = true
+	_clear_controlled_unit_orders(target)
+	target["neural_caster"] = caster.tag
+	target["neural_original_owner"] = target.owner
+	target.owner = caster.owner
+	neural_tethers[caster.tag] = {"target": target.tag, "ends": tick + LadderRules.NEURAL_TETHER_SECONDS * TICK_RATE}
+	_rebuild_spatial_grid()
+	_refresh_vision()
+	ability_triggered.emit(caster, "neural_tether", target.pos)
+	return true
+
+func _step_neural_tethers() -> void:
+	var tags := neural_tethers.keys()
+	tags.sort()
+	for tag in tags:
+		var tether: Dictionary = neural_tethers[tag]
+		var caster: Dictionary = units.get(tag, {})
+		var target: Dictionary = units.get(tether.target, {})
+		if (caster.is_empty() or target.is_empty() or tick >= int(tether.ends)
+				or _edge_distance(caster, target) > LadderRules.NEURAL_TETHER_LEASH):
+			_end_neural_tether(tag)
+
+func _end_neural_tether(tag: int) -> void:
+	if not neural_tethers.has(tag):
+		return
+	var tether: Dictionary = neural_tethers[tag]
+	neural_tethers.erase(tag)
+	var caster: Dictionary = units.get(tag, {})
+	if not caster.is_empty():
+		caster.is_immobile = false
+	var target: Dictionary = units.get(tether.target, {})
+	if not target.is_empty():
+		_clear_controlled_unit_orders(target)
+		target.owner = target.neural_original_owner
+		target.erase("neural_original_owner")
+		target.erase("neural_caster")
+	_rebuild_spatial_grid()
+	_refresh_vision()
+
+func _clear_controlled_unit_orders(unit: Dictionary) -> void:
+	if unit.is_worker:
+		_release_mining_slot(unit)
+	unit.orders.clear()
+	unit.path.clear()
+	unit.vel = Vector2.ZERO
+	unit.attack_state = "idle"
+	unit.attack_state_timer = 0.0
+	unit.attack_target_tag = 0
+	unit.has_home_pos = false
+	unit.erase("choke_yield")
+
+func gravity_lift_block_reason(interceptor: Dictionary) -> String:
+	if not ladder_rules or interceptor.unit_type != "dawn_interceptor" or interceptor.is_immobile:
+		return "Select an available Dawn Interceptor."
+	return "Requires 50 energy." if interceptor.energy < LadderRules.GRAVITY_LIFT_COST else ""
+
+func _begin_gravity_lift(interceptor: Dictionary, target: Dictionary) -> bool:
+	if not gravity_lift_block_reason(interceptor).is_empty() or target.is_empty():
+		return false
+	if (target.owner <= 0 or target.owner == interceptor.owner or target.hp <= 0.0 or target.is_structure or target.flight_height > 0.0
+			or target.attributes.has("Massive") or target.attributes.has("Heroic") or target.get("nonblocking", false)
+			or target.get("burrowed", false) or target.has("burrow_transition") or target.has("recall_channel")
+			or target.unit_type in ["brood_larva", "brood_egg"] or not can_see_unit(interceptor.owner, target)
+			or _edge_distance(interceptor, target) > LadderRules.GRAVITY_LIFT_RANGE):
+		return false
+	if neural_tethers.has(target.tag):
+		_end_neural_tether(target.tag)
+	_interrupt_displaced_channels(target)
+	_clear_controlled_unit_orders(interceptor)
+	_clear_controlled_unit_orders(target)
+	interceptor.energy -= LadderRules.GRAVITY_LIFT_COST
+	interceptor.facing = interceptor.pos.direction_to(target.pos).angle()
+	interceptor.is_immobile = true
+	interceptor["gravity_lift_target"] = target.tag
+	interceptor["gravity_lift_ends"] = tick + ceili(LadderRules.GRAVITY_LIFT_SECONDS * TICK_RATE)
+	target["gravity_lifted_by"] = interceptor.tag
+	target["gravity_was_immobile"] = target.is_immobile
+	target.is_immobile = true
+	target.flight_height = get_elevation_at(target.pos) + 3.6
+	ability_triggered.emit(interceptor, "gravity_lift", target.pos)
+	return true
+
+func _end_gravity_lift(interceptor: Dictionary) -> void:
+	var target: Dictionary = units.get(interceptor.gravity_lift_target, {})
+	interceptor.erase("gravity_lift_target")
+	interceptor.erase("gravity_lift_ends")
+	interceptor.is_immobile = false
+	if target.is_empty():
+		return
+	target.flight_height = 0.0
+	target.is_immobile = target.gravity_was_immobile
+	target.erase("gravity_lifted_by")
+	target.erase("gravity_was_immobile")
+
+func prism_alignment_block_reason(ray: Dictionary) -> String:
+	if not ladder_rules or ray.unit_type != "prism_ray":
+		return "Select a Prism Ray."
+	var remaining := int(ray.get("alignment_ready", 0)) - tick
+	return "Prismatic Alignment ready in %d s." % ceili(remaining * TICK_DT) if remaining > 0 else ""
+
+func carrier_fighter_count(carrier: Dictionary) -> int:
+	return int(carrier.get("fighter_reserve", 0)) + carrier.get("active_fighters", []).size()
+
+func pursuit_fighter_block_reason(carrier: Dictionary) -> String:
+	if not ladder_rules or carrier.unit_type != "fleet_carrier":
+		return "Select a Fleet Carrier."
+	if carrier_fighter_count(carrier) + int(carrier.fighter_orders) >= LadderRules.CARRIER_FIGHTER_CAP:
+		return "The hangar has reached its eight-fighter limit."
+	return "Requires 15 crystal." if players[carrier.owner].crystal < LadderRules.CARRIER_FIGHTER_COST else ""
+
+func _enqueue_pursuit_fighter(carrier: Dictionary) -> bool:
+	if not pursuit_fighter_block_reason(carrier).is_empty():
+		return false
+	players[carrier.owner].crystal -= LadderRules.CARRIER_FIGHTER_COST
+	carrier.fighter_orders += 1
+	if not carrier.has("fighter_finish"):
+		carrier["fighter_finish"] = tick + LadderRules.CARRIER_FIGHTER_BUILD_SECONDS * TICK_RATE
+	return true
+
+func _step_fleet_hangar(carrier: Dictionary) -> void:
+	if carrier.has("fighter_finish") and tick >= int(carrier.fighter_finish):
+		carrier.fighter_reserve += 1
+		carrier.fighter_orders -= 1
+		carrier.erase("fighter_finish")
+		if carrier.fighter_orders > 0:
+			carrier["fighter_finish"] = tick + LadderRules.CARRIER_FIGHTER_BUILD_SECONDS * TICK_RATE
+	if carrier.auto_build_fighters and carrier.fighter_orders == 0:
+		_enqueue_pursuit_fighter(carrier)
+	var target: Dictionary = units.get(carrier.get("fighter_target", 0), {})
+	if _carrier_can_engage(carrier, target):
+		_launch_pursuit_fighter(carrier, target)
+	else:
+		carrier.erase("fighter_target")
+
+func _carrier_can_engage(carrier: Dictionary, target: Dictionary) -> bool:
+	return (not target.is_empty() and target.hp > 0.0 and target.owner != carrier.owner
+		and _edge_distance(carrier, target) <= LadderRules.CARRIER_FIGHTER_LEASH and can_see_unit(carrier.owner, target))
+
+func _launch_pursuit_fighter(carrier: Dictionary, target: Dictionary) -> bool:
+	if (carrier.fighter_reserve <= 0 or tick < int(carrier.get("fighter_launch_ready", 0))
+			or not _carrier_can_engage(carrier, target) or _edge_distance(carrier, target) > weapon_range_against(carrier, target)):
+		return false
+	var fighter := spawn_unit("pursuit_fighter", carrier.owner, carrier.pos)
+	fighter["carrier_parent"] = carrier.tag
+	fighter["fighter_target"] = target.tag
+	carrier.active_fighters.append(fighter.tag)
+	carrier.fighter_reserve -= 1
+	carrier["fighter_launch_ready"] = tick + ceili(LadderRules.CARRIER_LAUNCH_INTERVAL * TICK_RATE)
+	ability_triggered.emit(carrier, "pursuit_fighter_launch", carrier.pos)
+	return true
+
+func _step_pursuit_fighter(fighter: Dictionary, dt: float) -> void:
+	var carrier: Dictionary = units.get(fighter.get("carrier_parent", 0), {})
+	if carrier.is_empty():
+		_remove_destroyed_unit(fighter)
+		return
+	var target: Dictionary = units.get(carrier.get("fighter_target", 0), {})
+	if _carrier_can_engage(carrier, target):
+		var distance := _edge_distance(fighter, target)
+		if fighter.weapon_cooldown <= 0.0 and distance <= weapon_range_against(fighter, target):
+			if _execute_weapon_hit(fighter, target):
+				fighter.weapon_cooldown = _weapon_period(fighter, _active_weapon(fighter, target))
+		if distance > 1.0:
+			_move_toward_point(fighter, target.pos, dt)
+		else:
+			var angle := tick * TICK_DT * 3.0 + int(fighter.tag % 8) * TAU / 8.0
+			_move_toward_point(fighter, target.pos + Vector2.from_angle(angle) * (float(target.radius) + 2.2), dt)
+		return
+	if _edge_distance(fighter, carrier) <= 1.0:
+		carrier.active_fighters.erase(fighter.tag)
+		carrier.fighter_reserve += 1
+		units.erase(fighter.tag)
+	else:
+		_move_toward_point(fighter, carrier.pos, dt)
+
+func flagship_production_block_reason(owner: int) -> String:
+	var flagship: Dictionary = units.get(players[owner].get("crownspire_tag", 0), {})
+	if not flagship.is_empty():
+		return "Only one Crownspire can be active."
+	for unit in units.values():
+		if unit.owner == owner and unit.unit_type == "heartstone" and unit.production_queue.any(func(item): return item.get("unit_type") == "crownspire"):
+			return "A Crownspire is already in production."
+	return ""
+
+func flagship_spell_block_reason(flagship: Dictionary, spell: String) -> String:
+	if not ladder_rules or flagship.unit_type != "crownspire" or flagship.is_immobile:
+		return "Select an available Crownspire."
+	var remaining := int(flagship.get(spell + "_ready", 0)) - tick
+	return "Ready in %d s." % ceili(remaining * TICK_DT) if remaining > 0 else ""
+
+func _cast_flagship_spell(flagship: Dictionary, spell: String, point: Vector2) -> bool:
+	if not flagship_spell_block_reason(flagship, spell).is_empty():
+		return false
+	match spell:
+		"flagship_cloak":
+			point = flagship.pos
+			flagship["flagship_cloak_until"] = tick + LadderRules.FLAGSHIP_CLOAK_SECONDS * TICK_RATE
+			flagship["flagship_cloak_ready"] = tick + LadderRules.FLAGSHIP_CLOAK_COOLDOWN * TICK_RATE
+		"time_warp":
+			if (not point.is_finite() or flagship.pos.distance_squared_to(point) > LadderRules.TIME_WARP_RANGE ** 2
+					or not can_see_position(flagship.owner, point)):
+				return false
+			var activates := tick + ceili(LadderRules.TIME_WARP_ARMING * TICK_RATE)
+			time_warps.append({"pos": point, "owner": flagship.owner, "activates": activates,
+				"ends": activates + LadderRules.TIME_WARP_SECONDS * TICK_RATE})
+			flagship["time_warp_ready"] = tick + LadderRules.TIME_WARP_COOLDOWN * TICK_RATE
+		"flagship_recall":
+			if not _cast_defensive_recall(flagship, point, true):
+				return false
+			flagship["flagship_recall_ready"] = tick + LadderRules.FLAGSHIP_RECALL_COOLDOWN * TICK_RATE
+	ability_triggered.emit(flagship, spell, point)
+	return true
+
+func flagship_cloaks(unit: Dictionary) -> bool:
+	if not ladder_rules or unit.faction != RTSData.FACTION_ALIENS or unit.unit_type == "crownspire":
+		return false
+	var flagship: Dictionary = units.get(players.get(unit.owner, {}).get("crownspire_tag", 0), {})
+	return (not flagship.is_empty() and flagship.hp > 0.0 and int(flagship.get("flagship_cloak_until", 0)) > tick
+		and unit.pos.distance_squared_to(flagship.pos) <= LadderRules.FLAGSHIP_CLOAK_RADIUS ** 2)
+
+func _time_warp_covers(unit: Dictionary) -> bool:
+	return time_warps.any(func(zone):
+		return (zone.owner != unit.owner and tick >= int(zone.activates) and tick < int(zone.ends)
+			and unit.pos.distance_squared_to(zone.pos) <= float(zone.get("radius", LadderRules.TIME_WARP_RADIUS)) ** 2))
+
+func _apply_flagship_secondary_targets(flagship: Dictionary, primary: Dictionary, weapon: Dictionary) -> void:
+	var range_limit := weapon_range_against(flagship, primary)
+	var targets := query_units_in_radius(flagship.pos, range_limit, flagship.owner).filter(func(unit):
+		return (unit.tag != primary.tag and unit.hp > 0.0 and is_hostile_contact(flagship.owner, unit)
+			and _weapon_can_hit(weapon, unit) and _edge_distance(flagship, unit) <= range_limit and can_see_unit(flagship.owner, unit)))
+	targets.sort_custom(func(a, b):
+		var da: float = flagship.pos.distance_squared_to(a.pos)
+		var db: float = flagship.pos.distance_squared_to(b.pos)
+		return a.tag < b.tag if da == db else da < db)
+	var secondary := weapon.duplicate()
+	secondary.erase("secondary_targets")
+	for index in range(mini(targets.size(), int(weapon.secondary_targets))):
+		_execute_weapon_hit(flagship, targets[index], {}, secondary)
+
+func sunseer_spell_block_reason(caster: Dictionary, spell: String) -> String:
+	if not ladder_rules or caster.unit_type != "sunseer" or caster.is_immobile:
+		return "Select an available Sunseer."
+	if spell == "end_pulsar_beam":
+		return ""
+	if spell == "pulsar_beam" and caster.get("pulsar_active", false):
+		return "The Pulsar Beam is already active."
+	if spell == "revelation" and int(caster.get("revelation_ready", 0)) > tick:
+		return "Revelation is recharging."
+	return "Requires 25 energy." if caster.energy < LadderRules.ORACLE_CAST_ENERGY else ""
+
+func _cast_sunseer_spell(caster: Dictionary, spell: String, point: Vector2) -> bool:
+	if not sunseer_spell_block_reason(caster, spell).is_empty():
+		return false
+	match spell:
+		"pulsar_beam":
+			caster["pulsar_active"] = true
+			point = caster.pos
+		"end_pulsar_beam":
+			_disable_pulsar_beam(caster)
+			return true
+		"revelation":
+			if (not point.is_finite() or caster.pos.distance_squared_to(point) > LadderRules.REVELATION_RANGE ** 2
+					or not can_see_position(caster.owner, point)):
+				return false
+			_rebuild_spatial_grid()
+			for enemy in query_units_in_radius(point, LadderRules.REVELATION_RADIUS, caster.owner):
+				if enemy.owner <= 0 or enemy.pos.distance_squared_to(point) > LadderRules.REVELATION_RADIUS ** 2:
+					continue
+				if not enemy.has("revealed_to"):
+					enemy["revealed_to"] = {}
+				enemy.revealed_to[caster.owner] = tick + LadderRules.REVELATION_SECONDS * TICK_RATE
+			caster["revelation_ready"] = tick + LadderRules.REVELATION_COOLDOWN * TICK_RATE
+		"seed_stasis_ward":
+			if (not point.is_finite() or caster.pos.distance_squared_to(point) > LadderRules.STASIS_WARD_RANGE ** 2
+					or not can_see_position(caster.owner, point) or not can_place_structure("stasis_ward", point)):
+				return false
+			var ward := spawn_unit("stasis_ward", caster.owner, point, "", 0.0)
+			ward["auto_summon"] = true
+	caster.energy -= LadderRules.ORACLE_CAST_ENERGY
+	ability_triggered.emit(caster, spell, point)
+	return true
+
+func _disable_pulsar_beam(caster: Dictionary) -> void:
+	caster.erase("pulsar_active")
+	caster.attack_state = "idle"
+	caster.attack_state_timer = 0.0
+
+func _step_stasis_ward(ward: Dictionary) -> void:
+	if tick % 4 != int(ward.tag) % 4:
+		return
+	var nearby := query_units_in_radius(ward.pos, LadderRules.STASIS_WARD_RADIUS, ward.owner).filter(func(unit):
+		return (unit.owner > 0 and unit.hp > 0.0 and not unit.is_structure and unit.flight_height <= 0.0
+			and not _is_frenzied(unit) and not unit.get("nonblocking", false)
+			and int(unit.get("stasis_until", 0)) <= tick and unit.pos.distance_squared_to(ward.pos) <= LadderRules.STASIS_WARD_RADIUS ** 2))
+	if not nearby.any(func(unit):
+		return (unit.pos.distance_squared_to(ward.pos) <= LadderRules.STASIS_TRIGGER_RADIUS ** 2 and can_see_unit(ward.owner, unit))):
+		return
+	var until := tick + ceili(LadderRules.STASIS_SECONDS * TICK_RATE)
+	for unit in nearby:
+		if neural_tethers.has(unit.tag):
+			_end_neural_tether(unit.tag)
+		_interrupt_displaced_channels(unit)
+		_clear_controlled_unit_orders(unit)
+		unit["stasis_was_immobile"] = unit.is_immobile
+		unit["stasis_until"] = until
+		unit.is_immobile = true
+	ability_triggered.emit(ward, "stasis_ward_detonate", ward.pos)
+	units.erase(ward.tag)
+
+func agent_spell_block_reason(agent: Dictionary, spell: String) -> String:
+	if not ladder_rules or agent.unit_type != "shade_agent" or agent.is_immobile:
+		return "Select an available Shade Agent."
+	if spell == "agent_strike":
+		return "Arm a Tactical Charge at a Specter Academy." if _ready_tactical_charge(agent.owner).is_empty() else ""
+	if spell == "agent_cloak":
+		if agent.get("cloaked", false):
+			return ""
+		if not players[agent.owner].upgrades.get("agent_cloak", 0):
+			return "Research Personal Cloaking at the Specter Academy."
+	var cost: float = {"agent_cloak": LadderRules.AGENT_CLOAK_COST, "agent_snipe": LadderRules.AGENT_SNIPE_COST,
+		"agent_emp": LadderRules.AGENT_EMP_COST}[spell]
+	return "Requires %d energy." % cost if agent.energy < cost else ""
+
+func _cast_agent_spell(agent: Dictionary, spell: String, point: Vector2, target: Dictionary) -> bool:
+	if not agent_spell_block_reason(agent, spell).is_empty():
+		return false
+	match spell:
+		"agent_cloak":
+			_toggle_personal_cloak(agent)
+			point = agent.pos
+		"agent_snipe":
+			if not _valid_agent_snipe_target(agent, target, LadderRules.AGENT_SNIPE_RANGE):
+				return false
+			agent.energy -= LadderRules.AGENT_SNIPE_COST
+			_clear_controlled_unit_orders(agent)
+			agent.is_immobile = true
+			point = target.pos
+			agent.facing = agent.pos.direction_to(point).angle()
+			agent["agent_snipe"] = {"target": target.tag, "ends": tick + ceili(LadderRules.AGENT_SNIPE_SECONDS * TICK_RATE)}
+		"agent_emp":
+			if (not point.is_finite() or agent.pos.distance_squared_to(point) > LadderRules.AGENT_EMP_RANGE ** 2
+					or not can_see_position(agent.owner, point)):
+				return false
+			agent.energy -= LadderRules.AGENT_EMP_COST
+			var flight := maxi(1, ceili(agent.pos.distance_to(point) * TICK_RATE / LadderRules.AGENT_EMP_PROJECTILE_SPEED))
+			emp_projectiles.append({"source": agent, "pos": point, "impact": tick + flight})
+		"agent_strike":
+			if (not point.is_finite() or agent.pos.distance_squared_to(point) > LadderRules.AGENT_STRIKE_RANGE ** 2
+					or not can_see_position(agent.owner, point)):
+				return false
+			_ready_tactical_charge(agent.owner).erase("tactical_charge_ready")
+			_clear_controlled_unit_orders(agent)
+			agent.is_immobile = true
+			agent.facing = agent.pos.direction_to(point).angle()
+			agent["agent_strike"] = {"pos": point, "ends": tick + LadderRules.AGENT_STRIKE_SECONDS * TICK_RATE}
+			for owner in players:
+				if owner != agent.owner:
+					notice.emit(owner, "Tactical strike detected.", "warn")
+	ability_triggered.emit(agent, spell, point)
+	return true
+
+func _valid_agent_snipe_target(agent: Dictionary, target: Dictionary, reach: float) -> bool:
+	return (not target.is_empty() and target.owner > 0 and target.owner != agent.owner and target.hp > 0.0
+		and not target.is_structure and target.attributes.has("Biological") and not target.get("nonblocking", false)
+		and int(target.get("stasis_until", 0)) <= tick and can_see_unit(agent.owner, target) and _edge_distance(agent, target) <= reach)
+
+func _step_agent_snipe(agent: Dictionary) -> void:
+	var shot: Dictionary = agent.agent_snipe
+	var target: Dictionary = units.get(shot.target, {})
+	if not _valid_agent_snipe_target(agent, target, LadderRules.AGENT_SNIPE_LEASH):
+		_end_agent_snipe(agent)
+		return
+	if tick >= int(shot.ends):
+		_end_agent_snipe(agent)
+		_apply_damage_to_target(agent, target, 130.0, {"Psionic": 40.0}, 1.0, true)
+		ability_triggered.emit(agent, "agent_snipe_hit", target.pos)
+
+func _end_agent_snipe(agent: Dictionary) -> void:
+	agent.erase("agent_snipe")
+	agent.is_immobile = false
+
+func _ready_tactical_charge(owner: int) -> Dictionary:
+	for structure in units.values():
+		if structure.owner == owner and structure.unit_type == "specter_academy" and structure.get("tactical_charge_ready", false):
+			return structure
+	return {}
+
+func _finish_agent_strike(agent: Dictionary) -> void:
+	var center: Vector2 = agent.agent_strike.pos
+	agent.erase("agent_strike")
+	agent.is_immobile = false
+	_rebuild_spatial_grid()
+	for target in query_units_in_radius(center, LadderRules.AGENT_STRIKE_RADIUS):
+		var distance: float = center.distance_to(target.pos)
+		if target.hp <= 0.0 or target.get("nonblocking", false) or distance > LadderRules.AGENT_STRIKE_RADIUS:
+			continue
+		var fraction := 1.0 if distance <= 10.0 else (0.5 if distance <= 15.0 else 0.25)
+		_apply_damage_to_target(agent, target, 500.0 if target.is_structure else 300.0, {}, fraction, true)
+	ability_triggered.emit(agent, "agent_strike_impact", center)
+
+func _step_emp_projectiles() -> void:
+	for index in range(emp_projectiles.size() - 1, -1, -1):
+		var shot := emp_projectiles[index]
+		if tick < int(shot.impact):
+			continue
+		emp_projectiles.remove_at(index)
+		for target in query_units_in_radius(shot.pos, LadderRules.AGENT_EMP_BARRIER_RADIUS):
+			var distance: float = shot.pos.distance_squared_to(target.pos)
+			if target.unit_type == "phase_barrier" and distance <= LadderRules.AGENT_EMP_BARRIER_RADIUS ** 2:
+				_remove_destroyed_unit(target)
+				continue
+			if (target.owner <= 0 or target.hp <= 0.0
+					or target.get("nonblocking", false) or int(target.get("stasis_until", 0)) > tick
+					or distance > LadderRules.AGENT_EMP_RADIUS ** 2):
+				continue
+			target.energy = maxf(0.0, target.energy - 100.0)
+			if target.shields > 0.0:
+				target.shields = maxf(0.0, target.shields - 100.0)
+				target.out_of_combat_timer = 0.0
+				if target.has("agent_snipe"):
+					_end_agent_snipe(target)
+			if not target.get("burrowed", false):
+				target["emp_reveal_until"] = tick + ceili(LadderRules.AGENT_EMP_REVEAL_SECONDS * TICK_RATE)
+		ability_triggered.emit(shot.source, "agent_emp_impact", shot.pos)
+
+func siphon_wyrm_spell_block_reason(caster: Dictionary, spell: String) -> String:
+	if not ladder_rules or caster.unit_type != "siphon_wyrm" or caster.is_immobile:
+		return "Select an available Siphon Wyrm."
+	if spell == "siphon_structure":
+		return "Energy is full." if caster.energy >= _unit_energy_capacity(caster) else ""
+	var cost: float = {"wyrm_grasp": LadderRules.GRASP_COST, "blinding_cloud": LadderRules.BLINDING_CLOUD_COST,
+		"parasitic_cloud": LadderRules.PARASITIC_CLOUD_COST}[spell]
+	return "Requires %d energy." % cost if caster.energy < cost else ""
+
+func _cast_siphon_wyrm_spell(caster: Dictionary, spell: String, point: Vector2, target: Dictionary) -> bool:
+	if not siphon_wyrm_spell_block_reason(caster, spell).is_empty():
+		return false
+	if spell == "blinding_cloud":
+		if (not point.is_finite() or caster.pos.distance_squared_to(point) > LadderRules.BLINDING_CLOUD_RANGE ** 2
+				or not can_see_position(caster.owner, point)):
+			return false
+		blinding_clouds.append({"pos": point, "ends": tick + ceili(LadderRules.BLINDING_CLOUD_SECONDS * TICK_RATE)})
+		caster.energy -= LadderRules.BLINDING_CLOUD_COST
+	else:
+		if target.is_empty() or target.tag == caster.tag or target.hp <= 0.0 or not can_see_unit(caster.owner, target):
+			return false
+		point = target.pos
+		match spell:
+			"siphon_structure":
+				if not _can_siphon_structure(caster, target):
+					return false
+				_clear_controlled_unit_orders(caster)
+				caster.is_immobile = true
+				caster["siphon_target"] = target.tag
+				caster["siphon_ends"] = tick + ceili(LadderRules.SIPHON_SECONDS * TICK_RATE)
+			"wyrm_grasp":
+				if not _grasp_unit(caster, target):
+					return false
+				caster.energy -= LadderRules.GRASP_COST
+			"parasitic_cloud":
+				if (target.owner <= 0 or target.owner == caster.owner or target.flight_height <= 0.0 or target.is_structure
+						or target.get("nonblocking", false) or _edge_distance(caster, target) > LadderRules.PARASITIC_CLOUD_RANGE
+						or parasitic_clouds.any(func(cloud): return cloud.target == target.tag)):
+					return false
+				parasitic_clouds.append({"source": caster, "target": target.tag, "pos": point,
+					"ends": tick + LadderRules.PARASITIC_CLOUD_SECONDS * TICK_RATE})
+				caster.energy -= LadderRules.PARASITIC_CLOUD_COST
+	ability_triggered.emit(caster, spell, point)
+	return true
+
+func _can_siphon_structure(caster: Dictionary, target: Dictionary) -> bool:
+	return (not target.is_empty() and target.owner == caster.owner and target.faction == RTSData.FACTION_MONSTERS
+		and target.is_structure and target.build_progress >= 1.0 and target.hp > LadderRules.SIPHON_HP_FLOOR
+		and _edge_distance(caster, target) <= LadderRules.SIPHON_RANGE)
+
+func _step_wyrm_siphon(caster: Dictionary) -> void:
+	var target: Dictionary = units.get(caster.siphon_target, {})
+	var capacity := _unit_energy_capacity(caster)
+	if not _can_siphon_structure(caster, target) or caster.energy >= capacity:
+		_end_wyrm_siphon(caster)
+		return
+	var duration := ceili(LadderRules.SIPHON_SECONDS * TICK_RATE)
+	var drain := minf(LadderRules.SIPHON_DRAIN / duration, minf(target.hp - LadderRules.SIPHON_HP_FLOOR, (capacity - caster.energy) * 4.0))
+	target.hp = maxf(LadderRules.SIPHON_HP_FLOOR, target.hp - drain)
+	caster.energy += drain * 0.25
+	if tick >= int(caster.siphon_ends) or target.hp <= LadderRules.SIPHON_HP_FLOOR or caster.energy >= capacity:
+		_end_wyrm_siphon(caster)
+
+func _end_wyrm_siphon(caster: Dictionary) -> void:
+	caster.erase("siphon_target")
+	caster.erase("siphon_ends")
+	caster.is_immobile = false
+
+func _grasp_unit(caster: Dictionary, target: Dictionary) -> bool:
+	if (target.owner <= 0 or target.is_structure or target.attributes.has("Heroic") or target.get("nonblocking", false)
+			or target.get("burrowed", false) or target.has("flight_transition") or target.has("recall_channel")
+			or target.has("gravity_lifted_by") or target.has("dread_jump")
+			or target.unit_type in ["howitzer", "howitzer_emplaced", "brood_egg", "brood_larva"]
+			or _edge_distance(caster, target) > LadderRules.GRASP_RANGE):
+		return false
+	var airborne: bool = target.flight_height > 0.0
+	var landing := _map_clamped_position(caster.pos, target.radius)
+	if not airborne and not _grasp_landing_clear(target, landing):
+		landing = Vector2.INF
+		for radius in [2.0, 4.0, 6.0]:
+			for step in range(8):
+				var candidate: Vector2 = caster.pos + Vector2.from_angle(step * TAU / 8.0) * radius
+				if _grasp_landing_clear(target, candidate):
+					landing = candidate
+					break
+			if landing.is_finite():
+				break
+	if not landing.is_finite():
+		return false
+	if neural_tethers.has(target.tag):
+		_end_neural_tether(target.tag)
+	_interrupt_displaced_channels(target)
+	_clear_controlled_unit_orders(target)
+	target.pos = landing
+	target.prev_pos = landing
+	target.home_pos = landing
+	return true
+
+func _interrupt_displaced_channels(unit: Dictionary) -> void:
+	if unit.has("caustic_spray"):
+		_end_caustic_spray(unit)
+	if unit.has("siphon_target"):
+		_end_wyrm_siphon(unit)
+	if unit.has("agent_snipe"):
+		_end_agent_snipe(unit)
+	if unit.erase("agent_strike"):
+		unit.is_immobile = false
+	_end_vortex_lock(unit)
+	unit.erase("mine_target")
+
+func _grasp_landing_clear(unit: Dictionary, point: Vector2) -> bool:
+	return (_map_clamped_position(point, unit.radius) == point and not _is_point_blocked_by_static(point, unit.radius)
+		and not _ground_mobile_overlaps(point, unit.radius, unit.tag))
+
+func _step_parasitic_clouds() -> void:
+	var hit: Dictionary = {}
+	var interval := TICK_RATE / 4
+	for index in range(parasitic_clouds.size() - 1, -1, -1):
+		var cloud := parasitic_clouds[index]
+		if tick > int(cloud.ends):
+			parasitic_clouds.remove_at(index)
+			continue
+		var anchor: Dictionary = units.get(cloud.target, {})
+		if not anchor.is_empty():
+			cloud.pos = anchor.pos
+		if tick % interval != 0:
+			continue
+		var targets := query_units_in_radius(cloud.pos, LadderRules.PARASITIC_CLOUD_RADIUS, cloud.source.owner)
+		targets.sort_custom(func(a, b): return a.tag < b.tag)
+		for target in targets:
+			if (target.owner <= 0 or target.flight_height <= 0.0 or target.is_structure or target.get("nonblocking", false)
+					or target.hp <= 0.0 or hit.has(target.tag) or target.pos.distance_squared_to(cloud.pos) > LadderRules.PARASITIC_CLOUD_RADIUS ** 2):
+				continue
+			hit[target.tag] = true
+			_apply_damage_to_target(cloud.source, target, LadderRules.PARASITIC_CLOUD_DAMAGE / (LadderRules.PARASITIC_CLOUD_SECONDS * 4), {}, 1.0, true)
+
+func growth_node_block_reason(source: Dictionary, ability: String) -> String:
+	if not ladder_rules:
+		return "Growth Tumors are available in ladder games."
+	if ability == "seed_growth_node":
+		if source.unit_type != "brood_keeper" or source.is_immobile:
+			return "Select a surfaced Brood Keeper."
+		return "Requires 25 energy." if source.energy < LadderRules.TUMOR_ENERGY else ""
+	if source.unit_type != "brood_growth_node" or source.build_progress < 1.0:
+		return "The Growth Tumor is still forming."
+	if source.get("growth_node_spent", false):
+		return "This Tumor has already seeded a daughter."
+	var remaining := int(source.get("growth_node_ready", 0)) - tick
+	return "Ready in %d s." % ceili(remaining * TICK_DT) if remaining > 0 else ""
+
+func _seed_growth_node(source: Dictionary, ability: String, point: Vector2) -> bool:
+	if not growth_node_block_reason(source, ability).is_empty() or not point.is_finite():
+		return false
+	var parent := ability == "spread_growth_node"
+	var reach := LadderRules.TUMOR_SPREAD_RANGE if parent else LadderRules.TUMOR_SEED_RANGE + float(source.radius)
+	if (source.pos.distance_squared_to(point) > reach * reach or not has_living_ground(point)
+			or not can_see_position(source.owner, point) or not can_place_structure("brood_growth_node", point)):
+		return false
+	var tumor := spawn_unit("brood_growth_node", source.owner, point, "", 0.0)
+	tumor["auto_summon"] = true
+	if parent:
+		source["growth_node_spent"] = true
+		tumor["growth_node_parent"] = source.tag
+	else:
+		source.energy -= LadderRules.TUMOR_ENERGY
+	ability_triggered.emit(tumor, "growth_node_seeded", point)
+	return true
+
+func transfuse_block_reason(keeper: Dictionary) -> String:
+	if not ladder_rules or keeper.unit_type != "brood_keeper" or keeper.is_immobile:
+		return "Select a surfaced Brood Keeper."
+	if keeper.energy < LadderRules.TRANSFUSE_ENERGY:
+		return "Requires 50 energy."
+	if int(keeper.get("transfuse_ready", 0)) > tick:
+		return "Transfuse is recharging."
+	return "The Keeper must be on living ground." if not has_living_ground(keeper.pos) else ""
+
+func _transfuse_brood(keeper: Dictionary, target: Dictionary) -> bool:
+	if not transfuse_block_reason(keeper).is_empty() or target.is_empty():
+		return false
+	if (target.tag == keeper.tag or target.owner != keeper.owner or target.hp <= 0.0 or target.hp >= target.max_hp
+			or target.build_progress < 1.0 or not target.attributes.has("Biological")
+			or _edge_distance(keeper, target) > LadderRules.TRANSFUSE_RANGE or not has_living_ground(target.pos)):
+		return false
+	keeper.energy -= LadderRules.TRANSFUSE_ENERGY
+	keeper["transfuse_ready"] = tick + TICK_RATE
+	target.hp = minf(target.max_hp, target.hp + 75.0)
+	target["transfuse_until"] = tick + LadderRules.TRANSFUSE_SECONDS * TICK_RATE
+	ability_triggered.emit(keeper, "transfuse_brood", target.pos)
+	return true
+
+func launch_locusts_block_reason(brooder: Dictionary) -> String:
+	if not ladder_rules or brooder.unit_type != "locust_brooder" or brooder.has("burrow_transition"):
+		return "Select a ready Locust Brooder."
+	var remaining := int(brooder.get("locust_launch_ready", 0)) - tick
+	return "Locusts ready in %d s." % ceili(remaining * TICK_DT) if remaining > 0 else ""
+
+func _launch_locusts(brooder: Dictionary, point: Vector2) -> bool:
+	if not launch_locusts_block_reason(brooder).is_empty() or not point.is_finite():
+		return false
+	var radius: float = RTSData.get_unit_def("locust_flying").radius
+	if _map_clamped_position(point, 0.0) != point:
+		return false
+	var heading: Vector2 = brooder.pos.direction_to(point)
+	if heading.is_zero_approx():
+		heading = Vector2.RIGHT
+	for side in [-1.0, 1.0]:
+		var spawn := _map_clamped_position(brooder.pos + heading * 1.25 + heading.orthogonal() * side * radius, radius)
+		var locust := spawn_unit("locust_flying", brooder.owner, spawn)
+		issue_command([locust.tag], "move", point)
+		locust["locust_destination"] = point
+	brooder["locust_launch_ready"] = tick + LadderRules.LOCUST_LAUNCH_COOLDOWN * TICK_RATE
+	ability_triggered.emit(brooder, "launch_locusts", brooder.pos)
+	return true
+
+func _locust_site_clear(locust: Dictionary, point: Vector2) -> bool:
+	return (locust.pos.distance_squared_to(point) <= LadderRules.LOCUST_SWOOP_RANGE ** 2
+		and _map_clamped_position(point, locust.radius) == point and can_see_position(locust.owner, point)
+		and not _is_point_blocked_by_static(point, locust.radius) and not _ground_mobile_overlaps(point, locust.radius)
+		and not _locust_landing_reserved(locust, point))
+
+func _locust_landing_reserved(locust: Dictionary, point: Vector2) -> bool:
+	for nearby in query_units_in_radius(point, LadderRules.LOCUST_SWOOP_RANGE + locust.radius * 2.0):
+		if nearby.tag != locust.tag and nearby.has("locust_descent"):
+			var combined: float = nearby.radius + locust.radius
+			if point.distance_squared_to(nearby.locust_descent.pos) < combined * combined:
+				return true
+	return false
+
+func _begin_locust_swoop(locust: Dictionary, point: Vector2, find_nearby := false) -> bool:
+	if (not point.is_finite() or locust.pos.distance_squared_to(point) > LadderRules.LOCUST_SWOOP_RANGE ** 2
+			or not can_see_position(locust.owner, point)):
+		return false
+	var landing := point if _locust_site_clear(locust, point) else Vector2.INF
+	if not landing.is_finite() and find_nearby:
+		for radius in [2.0, 4.0, 6.0, 8.0]:
+			for step in range(8):
+				var candidate: Vector2 = point + Vector2.from_angle(step * TAU / 8.0) * radius
+				if _locust_site_clear(locust, candidate):
+					landing = candidate
+					break
+			if landing.is_finite():
+				break
+	if not landing.is_finite():
+		return false
+	locust.orders.clear()
+	locust.path.clear()
+	locust.erase("locust_destination")
+	locust.is_immobile = true
+	locust["locust_descent"] = {"from": locust.pos, "pos": landing, "start": tick,
+		"ends": tick + ceili(LadderRules.LOCUST_SWOOP_SECONDS * TICK_RATE)}
+	ability_triggered.emit(locust, "locust_swoop", landing)
+	return true
+
+func _step_flying_locust(locust: Dictionary) -> bool:
+	if locust.has("locust_descent"):
+		var descent: Dictionary = locust.locust_descent
+		var progress := inverse_lerp(float(descent.start), float(descent.ends), float(tick))
+		locust.pos = descent.from.lerp(descent.pos, clampf(progress, 0.0, 1.0))
+		if tick >= int(descent.ends):
+			locust.erase("locust_descent")
+			locust.is_immobile = false
+			if _locust_site_clear(locust, locust.pos):
+				_morph_unit_in_place(locust, "locust_landed")
+				locust.flight_height = 0.0
+				locust.attributes = RTSData.get_unit_def("locust_landed").attributes.duplicate()
+				locust.living_ground_speed_bonus = 0.4
+				locust.home_pos = locust.pos
+				locust.has_home_pos = true
+		return true
+	if not locust.get("auto_locust_swoop", true) or tick % 8 != int(locust.tag) % 8:
+		return false
+	if locust.has("locust_destination"):
+		var destination: Vector2 = locust.locust_destination
+		if _begin_locust_swoop(locust, destination, true):
+			return true
+	for enemy in query_units_in_radius(locust.pos, LadderRules.LOCUST_SWOOP_RANGE, locust.owner):
+		if (enemy.flight_height <= 0.0 and is_hostile_contact(locust.owner, enemy)
+				and can_see_unit(locust.owner, enemy) and _begin_locust_swoop(locust, enemy.pos, true)):
+			return true
+	return false
+
+func can_merge_archon_unit(unit: Dictionary) -> bool:
+	return (ladder_rules and unit.unit_type in ["storm_scribe", "duskblade"] and unit.hp > 0.0
+		and not unit.is_immobile and not unit.has("archon_partner") and not unit.get("hallucinated", false))
+
+func _order_archon_merge(selection: Array[Dictionary]) -> bool:
+	var owner: int = selection[0].owner
+	var eligible := selection.filter(func(unit): return unit.owner == owner and can_merge_archon_unit(unit))
+	if eligible.size() < 2:
+		return false
+	var first: Dictionary = eligible[0]
+	var second: Dictionary = eligible[1]
+	var radius: float = RTSData.get_unit_def("lattice_archon").radius
+	var first_pos: Vector2 = first.pos
+	var second_pos: Vector2 = second.pos
+	for point in [first_pos.lerp(second_pos, 0.5), first_pos, second_pos]:
+		if (_map_clamped_position(point, radius) != point or _is_point_blocked_by_static(point, radius)
+				or _ground_mobile_overlaps(point, radius, first.tag, second.tag)):
+			continue
+		var reachable := true
+		for unit in [first, second]:
+			if unit.pos.distance_squared_to(point) > 9.0 and compute_smooth_path(unit.pos, point, unit.radius).is_empty():
+				reachable = false
+				break
+		if not reachable:
+			continue
+		for unit in [first, second]:
+			issue_command([unit.tag], "move", point, 0, "", false, true)
+		first["archon_partner"] = second.tag
+		second["archon_partner"] = first.tag
+		archon_approaches[mini(first.tag, second.tag)] = {"second": maxi(first.tag, second.tag), "point": point}
+		return true
+	return false
+
+func _cancel_archon_approach(tag: int) -> void:
+	var approach: Dictionary = archon_approaches.get(tag, {})
+	if approach.is_empty():
+		return
+	archon_approaches.erase(tag)
+	for member in [tag, approach.second]:
+		var unit: Dictionary = units.get(member, {})
+		if not unit.is_empty():
+			unit.erase("archon_partner")
+			_stop_for_mode_change(unit)
+
+func _step_archon_approaches() -> void:
+	var radius: float = RTSData.get_unit_def("lattice_archon").radius
+	for tag in archon_approaches.keys():
+		var approach: Dictionary = archon_approaches[tag]
+		var first: Dictionary = units.get(tag, {})
+		var second: Dictionary = units.get(approach.second, {})
+		if first.is_empty() or second.is_empty():
+			_cancel_archon_approach(tag)
+			continue
+		var point: Vector2 = approach.point
+		if first.pos.distance_squared_to(point) > 9.0 or second.pos.distance_squared_to(point) > 9.0:
+			if first.orders.is_empty() and second.orders.is_empty():
+				_cancel_archon_approach(tag)
+			continue
+		if _is_point_blocked_by_static(point, radius) or _ground_mobile_overlaps(point, radius, first.tag, second.tag):
+			if first.orders.is_empty() and second.orders.is_empty():
+				_cancel_archon_approach(tag)
+			continue
+		archon_approaches.erase(tag)
+		units.erase(tag)
+		units.erase(second.tag)
+		var archon := spawn_unit("lattice_archon", first.owner, point)
+		archon.build_progress = 0.0
+		archon.is_immobile = true
+		archon["archon_warp_finish"] = tick + ceili(LadderRules.ARCHON_WARP_SECONDS * TICK_RATE)
+		archon_merged.emit(tag, second.tag, archon.tag)
+		ability_triggered.emit(archon, "archon_warp", point)
+
+func caustic_barrage_ticks(caster: Dictionary) -> int:
+	return maxi(0, int(caster.get("caustic_barrage_ready", 0)) - tick)
+
+func caustic_barrage_radius() -> float:
+	return LadderRules.CAUSTIC_BARRAGE_RADIUS
+
+func _cast_caustic_barrage(caster: Dictionary, point: Vector2) -> bool:
+	if not ladder_rules or caster.unit_type != "rupture_crawler" or caster.is_immobile or caustic_barrage_ticks(caster) > 0:
+		return false
+	if (not point.is_finite() or not Rect2(0, 0, map_width, map_height).has_point(point)
+			or caster.pos.distance_squared_to(point) > LadderRules.CAUSTIC_BARRAGE_RANGE ** 2):
+		return false
+	var impact := tick + ceili(LadderRules.CAUSTIC_BARRAGE_DELAY * TICK_RATE)
+	caster["caustic_barrage_ready"] = tick + LadderRules.CAUSTIC_BARRAGE_COOLDOWN * TICK_RATE
+	caustic_strikes.append({"pos": point, "source": caster, "impact": impact})
+	ability_triggered.emit(caster, "caustic_barrage", point)
+	return true
+
+func visible_caustic_strikes(perspective: int) -> Array[Dictionary]:
+	return caustic_strikes.filter(func(strike):
+		return strike.source.owner == perspective or can_see_position(perspective, strike.pos))
+
+func _step_caustic_strikes() -> void:
+	var radius := LadderRules.CAUSTIC_BARRAGE_RADIUS
+	for index in range(caustic_strikes.size() - 1, -1, -1):
+		var strike := caustic_strikes[index]
+		if tick < int(strike.impact):
+			continue
+		caustic_strikes.remove_at(index)
+		var hits := query_units_in_radius(strike.pos, radius)
+		hits.sort_custom(func(a, b): return a.tag < b.tag)
+		for target in hits:
+			if not units.has(target.tag) or target.get("nonblocking", false) or strike.pos.distance_squared_to(target.pos) > (radius + target.radius) ** 2:
+				continue
+			if target.unit_type == "phase_barrier":
+				_remove_destroyed_unit(target)
+			else:
+				_apply_damage_to_target(strike.source, target, LadderRules.CAUSTIC_BARRAGE_DAMAGE, {}, 1.0, true)
+		ability_triggered.emit(strike.source, "caustic_impact", strike.pos)
+
 func _load_transport(transport: Dictionary) -> bool:
 	if transport.build_progress < 1.0:
 		return false
 	var capacity: int = RTSData.get_unit_def(transport.unit_type).get("transport_capacity", 0)
 	return _board_ground_squad(transport, capacity)
 
+func transport_slots_used(transport: Dictionary) -> int:
+	var used := 0
+	for passenger in transport.get("passengers", []):
+		used += int(RTSData.get_unit_def(passenger.unit_type).get("cargo_size", 1))
+	return used
+
+func hub_worker_cargo_available(hub: Dictionary, ability: String) -> bool:
+	if not ladder_rules or hub.unit_type not in ["colony_hub", "fortified_hub"] or hub.get("hub_operations", false) \
+			or hub.build_progress < 1.0 or hub.flight_height > 0.0 or hub.has("flight_transition"):
+		return false
+	var passengers: Array = hub.get("passengers", [])
+	return passengers.size() < 5 if ability == "load_hub_workers" else not passengers.is_empty()
+
 func can_enter_bunker(unit: Dictionary, bunker: Dictionary) -> bool:
+	if fungal_grasp_active(unit) or unit.has("neural_original_owner") or neural_tethers.has(unit.get("tag", 0)):
+		return false
 	if bunker.get("unit_type") != "field_bunker" or bunker.build_progress < 1.0 or bunker.hp <= 0.0:
 		return false
+	var occupied: int = transport_slots_used(bunker) if ladder_rules else bunker.get("passengers", []).size()
+	var incoming := int(RTSData.get_unit_def(unit.unit_type).get("cargo_size", 1)) if ladder_rules else 1
 	return _is_friendly_mobile(unit, bunker.owner) and is_bunker_infantry(unit) \
-		and bunker.get("passengers", []).size() < RTSData.get_unit_def(bunker.unit_type).transport_capacity
+		and occupied + incoming <= RTSData.get_unit_def(bunker.unit_type).transport_capacity
+
+func can_enter_rampart(unit: Dictionary, transport: Dictionary) -> bool:
+	if not ladder_rules or transport.get("unit_type") != "rampart_transport" or transport.hp <= 0.0 or transport.build_progress < 1.0:
+		return false
+	if (not _is_friendly_mobile(unit, transport.owner) or unit.flight_height > 0.0 or unit.is_immobile
+			or unit.get("nonblocking", false) or unit.get("burrowed", false) or fungal_grasp_active(unit)
+			or unit.has("neural_original_owner") or neural_tethers.has(unit.tag)):
+		return false
+	return transport_slots_used(transport) + int(RTSData.get_unit_def(unit.unit_type).get("cargo_size", 1)) <= 8
 
 func is_bunker_infantry(unit: Dictionary) -> bool:
 	return unit.flight_height <= 0.0 and not unit.is_immobile and not unit.get("burrowed", false) \
 		and not unit.get("campaign_scripted", false) and RTSData.get_unit_def(unit.unit_type).get("bunker_garrison", false)
 
 func _embark_ground_unit(passengers: Array, passenger: Dictionary) -> void:
+	if passenger.is_worker:
+		_release_mining_slot(passenger)
 	passenger.orders.clear()
 	passenger.path.clear()
 	passenger.attack_state = "idle"
@@ -4414,24 +8111,37 @@ func _embark_ground_unit(passengers: Array, passenger: Dictionary) -> void:
 
 func _board_ground_squad(carrier: Dictionary, capacity: int, tunnel: bool = false) -> bool:
 	var passengers: Array = carrier.get("passengers", [])
-	if passengers.size() >= capacity:
+	var free_slots := capacity - (passengers.size() if tunnel else transport_slots_used(carrier))
+	var restricted_unit := str(RTSData.get_unit_def(carrier.unit_type).get("transport_unit", ""))
+	if free_slots <= 0:
 		return false
+	var accepts_worker: bool = ladder_rules and (carrier.get("is_town_hall", false) or carrier.unit_type in ["lumen_carrier", "drift_hauler", "rampart_transport"])
+	var pickup := 12.5 if accepts_worker else TRANSPORT_PICKUP_RADIUS
 	var candidates := units.values().filter(func(unit):
-		if carrier.pos.distance_squared_to(unit.pos) > TRANSPORT_PICKUP_RADIUS * TRANSPORT_PICKUP_RADIUS:
+		if carrier.pos.distance_squared_to(unit.pos) > pickup * pickup:
 			return false
 		if carrier.unit_type == "field_bunker":
 			return can_enter_bunker(unit, carrier)
-		return _is_friendly_mobile(unit, carrier.owner) and unit.flight_height <= 0.0 and not unit.is_worker and not unit.is_immobile \
-			and not unit.get("campaign_scripted", false) and (not tunnel or _has_carrier_access(unit.pos, unit.radius, carrier)))
+		if fungal_grasp_active(unit) or unit.has("neural_original_owner") or neural_tethers.has(unit.tag):
+			return false
+		if not restricted_unit.is_empty() and unit.unit_type != restricted_unit:
+			return false
+		return _is_friendly_mobile(unit, carrier.owner) and unit.flight_height <= 0.0 and (not unit.is_worker or accepts_worker) and not unit.is_immobile \
+			and not unit.get("campaign_scripted", false) \
+			and ((not tunnel and not carrier.get("is_town_hall", false)) or _has_carrier_access(unit.pos, unit.radius, carrier)))
 	candidates.sort_custom(func(a, b):
 		var a_distance: float = carrier.pos.distance_squared_to(a.pos)
 		var b_distance: float = carrier.pos.distance_squared_to(b.pos)
 		return a.tag < b.tag if a_distance == b_distance else a_distance < b_distance)
 	var loaded := false
 	for passenger in candidates:
-		if passengers.size() >= capacity:
+		if free_slots <= 0:
 			break
+		var size := int(RTSData.get_unit_def(passenger.unit_type).get("cargo_size", 1)) if not tunnel else 1
+		if size > free_slots:
+			continue
 		_embark_ground_unit(passengers, passenger)
+		free_slots -= size
 		loaded = true
 	if loaded:
 		carrier["passengers"] = passengers
@@ -4443,6 +8153,8 @@ func _valid_unload_order(transport: Dictionary, point: Vector2) -> bool:
 	return not can_see_position(transport.owner, point) or not _is_point_blocked_by_static(point, INFANTRY_CLEARANCE)
 
 func is_embarked(tag: int, owner: int) -> bool:
+	if brood_tunnel_cargo.get(owner, []).any(func(passenger): return passenger.tag == tag):
+		return true
 	for unit in units.values():
 		if unit.owner == owner and unit.has("passengers") and unit.passengers.any(func(passenger): return passenger.tag == tag):
 			return true
@@ -4453,19 +8165,38 @@ func _unload_transport(transport: Dictionary, center: Vector2) -> bool:
 		return false
 	return _drop_ground_squad(transport.passengers, center)
 
-func _drop_ground_squad(passengers: Array, center: Vector2, mouth: Dictionary = {}) -> bool:
-	var ground := units.values().filter(func(unit): return unit.flight_height <= 0.0 and not unit.get("burrowed", false) and unit.pos.distance_squared_to(center) < 100.0)
+func _step_rampart_unload(transport: Dictionary, order: Dictionary) -> bool:
+	if transport.passengers.is_empty():
+		return true
+	if tick < int(transport.get("rampart_drop_ready", 0)):
+		return false
+	var next_passenger: Array = [transport.passengers[0]]
+	if not _drop_ground_squad(next_passenger, order.target_pos):
+		notice.emit(transport.owner, "Deployment site blocked. Troops remain aboard.", "warn")
+		return true
+	transport.passengers.pop_front()
+	transport["rampart_drop_ready"] = tick + ceili(TICK_RATE / 1.4)
+	return transport.passengers.is_empty()
+
+func _drop_ground_squad(passengers: Array, center: Vector2, mouth: Dictionary = {}, vacated_tag: int = 0) -> bool:
+	var tunnel_exit := _is_brood_tunnel_endpoint(mouth)
+	var search_radius := 16.0 if tunnel_exit else 10.0
+	var ground := units.values().filter(func(unit):
+		return (unit.tag != vacated_tag and unit.flight_height <= 0.0 and not unit.get("burrowed", false)
+			and unit.pos.distance_squared_to(center) < search_radius * search_radius))
 	var landing_order := passengers.duplicate()
 	landing_order.sort_custom(func(a, b): return a.tag < b.tag if a.radius == b.radius else a.radius > b.radius)
 	var positions: Array[Vector2] = []
 	var candidates: Array[Vector2] = [center]
-	for distance in [2.7, 5.4]:
+	var rings := [2.7, 5.4, 8.1, 10.8] if tunnel_exit else [2.7, 5.4]
+	for distance in rings:
 		for step in range(12):
 			candidates.append(center + Vector2.from_angle(TAU * step / 12.0) * float(distance))
 	for passenger in landing_order:
 		var spot := Vector2.INF
 		for candidate in candidates:
-			if _map_clamped_position(candidate, passenger.radius) != candidate or _is_point_blocked_by_static(candidate, passenger.radius):
+			if _map_clamped_position(candidate, passenger.radius) != candidate \
+					or _is_point_blocked_by_static(candidate, passenger.radius, false, vacated_tag):
 				continue
 			if not mouth.is_empty() and not _has_carrier_access(candidate, passenger.radius, mouth):
 				continue
@@ -4480,7 +8211,9 @@ func _drop_ground_squad(passengers: Array, center: Vector2, mouth: Dictionary = 
 				spot = candidate
 				break
 		if not spot.is_finite():
-			return false
+			if vacated_tag == 0:
+				return false
+			spot = center
 		positions.append(spot)
 	for i in range(landing_order.size()):
 		var passenger: Dictionary = landing_order[i]
@@ -4545,6 +8278,81 @@ func _step_tunnel_squad(mouth: Dictionary) -> void:
 	else:
 		mouth["tunnel_retry"] = tick + TUNNEL_EXIT_RETRY_TICKS
 
+func _is_brood_tunnel_endpoint(unit: Dictionary) -> bool:
+	return ladder_rules and unit.get("unit_type", "") in ["tunnel_mouth", "brood_tunnel_worm"]
+
+func brood_tunnel_cargo_count(endpoint: Dictionary) -> int:
+	return brood_tunnel_cargo.get(endpoint.owner, []).size() if _is_brood_tunnel_endpoint(endpoint) else 0
+
+func _lose_brood_tunnel_cargo_if_last(endpoint: Dictionary) -> void:
+	if not _is_brood_tunnel_endpoint(endpoint) or not brood_tunnel_cargo.has(endpoint.owner):
+		return
+	if units.values().any(func(other):
+		return (other.tag != endpoint.tag and other.owner == endpoint.owner and other.hp > 0.0
+			and _is_brood_tunnel_endpoint(other))):
+		return
+	var lost: Array = brood_tunnel_cargo[endpoint.owner]
+	players[endpoint.owner].units_lost += lost.size()
+	brood_tunnel_cargo.erase(endpoint.owner)
+	for passenger in lost:
+		unit_destroyed.emit(passenger)
+
+func can_enter_brood_tunnel(unit: Dictionary, endpoint: Dictionary) -> bool:
+	return (_is_brood_tunnel_endpoint(endpoint) and endpoint.hp > 0.0 and endpoint.build_progress >= 1.0
+		and _is_friendly_mobile(unit, endpoint.owner) and unit.flight_height <= 0.0
+		and not unit.is_immobile and not unit.get("burrowed", false) and not unit.get("nonblocking", false)
+		and not unit.has("neural_original_owner") and not fungal_grasp_active(unit)
+		and unit.unit_type not in ["brood_larva", "brood_egg"] and brood_tunnel_cargo_count(endpoint) < LadderRules.BROOD_TUNNEL_CAPACITY)
+
+func brood_worm_block_reason(network: Dictionary) -> String:
+	if not _is_brood_tunnel_endpoint(network) or network.unit_type != "tunnel_mouth" or network.build_progress < 1.0:
+		return "Select a completed Brood Tunnel Network."
+	if tick < int(network.get("brood_worm_ready", 0)):
+		return "The Network is still recovering."
+	if players[network.owner].crystal < 75 or players[network.owner].aether < 75:
+		return "Requires 75 crystal and 75 aether."
+	return ""
+
+func _summon_brood_worm(network: Dictionary, point: Vector2) -> bool:
+	if not brood_worm_block_reason(network).is_empty() or not point.is_finite() or not can_see_position(network.owner, point):
+		return false
+	var definition := RTSData.get_unit_def("brood_tunnel_worm")
+	if (not can_place_structure("brood_tunnel_worm", point) or _ground_mobile_overlaps(point, definition.radius)
+			or not _has_clear_line_of_walk(point, point, definition.radius)):
+		return false
+	var worm := spawn_unit("brood_tunnel_worm", network.owner, point, "", 0.0)
+	worm["auto_summon"] = true
+	worm["armor"] = float(definition.armor) + 2.0
+	worm["construction_cost"] = Vector2i(75, 75)
+	players[network.owner].crystal -= 75
+	players[network.owner].aether -= 75
+	network["brood_worm_ready"] = tick + ceili(LadderRules.BROOD_TUNNEL_WORM_SECONDS * TICK_RATE)
+	ability_triggered.emit(worm, "brood_worm_emerge", point)
+	return true
+
+func _start_brood_tunnel_unload(endpoint: Dictionary) -> bool:
+	if (not _is_brood_tunnel_endpoint(endpoint) or endpoint.build_progress < 1.0 or endpoint.has("brood_tunnel_unload")
+			or brood_tunnel_cargo_count(endpoint) <= 0):
+		return false
+	endpoint["brood_tunnel_unload"] = tick + ceili(LadderRules.BROOD_TUNNEL_UNLOAD_SECONDS * TICK_RATE)
+	return true
+
+func _step_brood_tunnel_unload(endpoint: Dictionary) -> void:
+	if tick < int(endpoint.brood_tunnel_unload):
+		return
+	var cargo: Array = brood_tunnel_cargo.get(endpoint.owner, [])
+	if cargo.is_empty():
+		endpoint.erase("brood_tunnel_unload")
+		return
+	var disembarking := [cargo.front()]
+	if _drop_ground_squad(disembarking, endpoint.pos, endpoint):
+		var passenger: Dictionary = cargo.pop_front()
+		_apply_rally_route(passenger, endpoint.rally_route)
+		if cargo.is_empty():
+			endpoint.erase("brood_tunnel_unload")
+			return
+	endpoint.brood_tunnel_unload = tick + ceili(LadderRules.BROOD_TUNNEL_UNLOAD_SECONDS * TICK_RATE)
+
 func default_rally_position(structure: Dictionary) -> Vector2:
 	return structure.pos + (Vector2(8.0, 0.0) if structure.owner == 1 else Vector2(-8.0, 0.0))
 
@@ -4554,7 +8362,8 @@ func rally_waypoint_position(waypoint: Dictionary) -> Vector2:
 	return waypoint.pos
 
 func _set_rally(structure: Dictionary, position: Vector2, target_tag: int, append: bool, workers: bool = false) -> bool:
-	if not structure.is_structure or structure.build_progress < 1.0 or not RTSData.get_unit_def(structure.unit_type).has("trains"):
+	if (not structure.is_structure or structure.build_progress < 1.0
+			or (not RTSData.get_unit_def(structure.unit_type).has("trains") and not _is_brood_tunnel_endpoint(structure))):
 		return false
 	if workers and structure.unit_type != "brood_nest":
 		return false
@@ -4644,8 +8453,180 @@ func _morph_unit_in_place(u: Dictionary, new_type: String) -> void:
 	u["is_walkable_structure"] = bool(def.get("is_walkable_structure", false))
 	u["orders"].clear()
 	u["vel"] = Vector2.ZERO
+	u.erase("motion_tick")
+	u.erase("motion_speed")
 	if u["is_structure"]:
 		nav_dirty = true
+
+func vehicle_mode_block_reason(unit: Dictionary, ability: String) -> String:
+	var mode: Dictionary = LadderRules.VEHICLE_MODES.get(ability, {})
+	if not ladder_rules or mode.is_empty() or unit.unit_type != mode.source:
+		return "Select a vehicle in the matching mode."
+	if unit.has("vehicle_transition"):
+		return "Vehicle is unavailable for conversion."
+	var tech := str(mode.get("tech", ""))
+	if not tech.is_empty() and not has_tech_structure(unit.owner, tech):
+		return "Requires a completed Vehicle Armory."
+	if ability == "mine_surface" and (_is_point_blocked_by_static(unit.pos, unit.radius) or _ground_mobile_overlaps(unit.pos, unit.radius, unit.tag)):
+		return "The surface above the mine is occupied."
+	return ""
+
+func _begin_vehicle_mode(unit: Dictionary, ability: String) -> bool:
+	if not vehicle_mode_block_reason(unit, ability).is_empty():
+		return false
+	var mode: Dictionary = LadderRules.VEHICLE_MODES[ability]
+	var accelerated := bool(players[unit.owner].upgrades.get(mode.upgrade, 0))
+	var duration := float(mode.fast if accelerated else mode.duration)
+	unit["vehicle_transition"] = {"ability": ability, "form": mode.form, "finish": tick + ceili(duration * TICK_RATE)}
+	unit.is_immobile = true
+	unit.attack_state = "idle"
+	unit.erase("mine_target")
+	ability_triggered.emit(unit, ability, unit.pos)
+	return true
+
+func _finish_vehicle_mode(unit: Dictionary) -> void:
+	var change: Dictionary = unit.vehicle_transition
+	unit.erase("vehicle_transition")
+	if not vehicle_mode_block_reason(unit, change.ability).is_empty():
+		unit.is_immobile = bool(RTSData.get_unit_def(unit.unit_type).get("is_immobile", false))
+		return
+	var pending: Array = unit.orders.duplicate() if change.form not in ["sentinel_mine_armed", "sentinel_mine"] else []
+	_change_mobile_form(unit, change.form)
+	unit["burrowed"] = change.form == "sentinel_mine_armed"
+	unit.orders = pending
+	ability_triggered.emit(unit, "vehicle_mode_ready", unit.pos)
+
+func _valid_missile_target(source: Dictionary, target: Dictionary, reach: float, weapon: Dictionary) -> bool:
+	return not target.is_empty() and is_hostile_contact(source.owner, target) and target.hp > 0.0 \
+		and _weapon_can_hit(weapon, target) and _edge_distance(source, target) <= reach and can_see_unit(source.owner, target)
+
+func _nearest_missile_target(source: Dictionary, reach: float, weapon: Dictionary, air_reach: float = INF) -> Dictionary:
+	var best: Dictionary = {}
+	var best_distance := INF
+	for candidate in query_units_in_radius(source.pos, reach + float(source.radius), source.owner):
+		var target_reach := minf(air_reach, reach) if candidate.flight_height > 0.0 else reach
+		if not _valid_missile_target(source, candidate, target_reach, weapon):
+			continue
+		var distance := _edge_distance(source, candidate)
+		if distance < best_distance or (distance == best_distance and int(candidate.tag) < int(best.tag)):
+			best = candidate
+			best_distance = distance
+	return best
+
+const SENTINEL_MISSILE := {"name": "Sentinel Missile", "sfx": "sentinel_missile", "targets_air": true, "targets_ground": true,
+	"no_structures": true}
+const VORTEX_MISSILE := {"name": "Vortex Lock", "sfx": "vortex_missile", "targets_air": true, "targets_ground": true}
+
+func sentinel_missile_block_reason(mine: Dictionary) -> String:
+	if mine.unit_type != "sentinel_mine_armed" or mine.has("vehicle_transition"):
+		return "Select a burrowed Sentinel Mine."
+	if mine.has("mine_target") or int(mine.get("mine_ready", 0)) > tick:
+		return "Sentinel Missiles are engaged or recharging."
+	return ""
+
+func _begin_sentinel_missile(mine: Dictionary, target: Dictionary) -> bool:
+	if not sentinel_missile_block_reason(mine).is_empty() or not _valid_missile_target(mine, target, LadderRules.MINE_RANGE, SENTINEL_MISSILE):
+		return false
+	mine["mine_target"] = {"tag": target.tag, "fire": tick + ceili(LadderRules.MINE_LAUNCH_SECONDS * TICK_RATE)}
+	ability_triggered.emit(mine, "mine_lock", target.pos)
+	return true
+
+func _step_sentinel_mine(mine: Dictionary) -> void:
+	if int(mine.get("mine_ready", 0)) > tick:
+		return
+	var lock_state: Dictionary = mine.get("mine_target", {})
+	if lock_state.is_empty():
+		if not mine.auto_sentinel_missiles or tick % 4 != int(mine.tag) % 4:
+			return
+		_begin_sentinel_missile(mine, _nearest_missile_target(mine, LadderRules.MINE_RANGE, SENTINEL_MISSILE))
+		return
+	var target: Dictionary = units.get(lock_state.tag, {})
+	if not _valid_missile_target(mine, target, LadderRules.MINE_RANGE, SENTINEL_MISSILE):
+		mine.erase("mine_target")
+		return
+	if tick < int(lock_state.fire):
+		return
+	mine.erase("mine_target")
+	mine["mine_ready"] = tick + LadderRules.MINE_REARM_SECONDS * TICK_RATE
+	sentinel_missiles.append({"source": mine, "target": target.tag, "pos": mine.pos, "speed": 0.0,
+		"guidance_tick": tick + ceili(LadderRules.MINE_MISSILE_RISE_SECONDS * TICK_RATE)})
+	weapon_attack.emit(mine, target, SENTINEL_MISSILE, false)
+	projectile_fired.emit(mine.pos, target.pos, SENTINEL_MISSILE.name, true, mine.owner)
+
+func _step_sentinel_missiles() -> void:
+	for index in range(sentinel_missiles.size() - 1, -1, -1):
+		var missile := sentinel_missiles[index]
+		var target: Dictionary = units.get(missile.target, {})
+		if target.is_empty() or not _weapon_can_hit(SENTINEL_MISSILE, target):
+			sentinel_missiles.remove_at(index)
+			continue
+		if tick < int(missile.guidance_tick) or not _advance_guided_missile(missile, target.pos, LadderRules.MINE_MISSILE_ACCELERATION, LadderRules.MINE_MISSILE_MAX_SPEED):
+			continue
+		sentinel_missiles.remove_at(index)
+		_resolve_sentinel_missile(missile.source, target)
+
+func _resolve_sentinel_missile(mine: Dictionary, target: Dictionary) -> void:
+	var center: Vector2 = target.pos
+	_apply_damage_to_target(mine, target, 125.0, {}, 1.0, true, {"shield_bonus": 35.0})
+	for nearby in query_units_in_radius(center, LadderRules.MINE_SPLASH):
+		if nearby.tag == target.tag or nearby.tag == mine.tag or nearby.hp <= 0.0 or not _weapon_can_hit(SENTINEL_MISSILE, nearby):
+			continue
+		if nearby.owner == mine.owner and nearby.unit_type in ["sentinel_mine", "sentinel_mine_armed"]:
+			continue
+		_apply_damage_to_target(mine, nearby, 40.0, {}, 1.0, true, {"shield_bonus": 25.0})
+	ability_triggered.emit(mine.merged({"visual_target_tag": target.tag}), "sentinel_impact", center)
+
+func _advance_guided_missile(missile: Dictionary, destination: Vector2, acceleration: float, max_speed: float) -> bool:
+	missile.speed = minf(max_speed, float(missile.speed) + acceleration * TICK_DT)
+	var travel: float = missile.speed * TICK_DT
+	if missile.pos.distance_squared_to(destination) <= travel * travel:
+		return true
+	missile.pos = missile.pos.move_toward(destination, travel)
+	return false
+
+func vortex_lock_block_reason(unit: Dictionary) -> String:
+	if not ladder_rules or unit.unit_type != "vortex_rover" or unit.is_immobile:
+		return "Select an available Vortex Rover."
+	if unit.has("vortex_lock_state") or int(unit.get("vortex_lock_ready", 0)) > tick:
+		return "Vortex Lock is engaged or recharging."
+	return ""
+
+func _begin_vortex_lock(unit: Dictionary, target: Dictionary, automatic: bool = false) -> bool:
+	var reach := LadderRules.VORTEX_GROUND_AUTO_RANGE if automatic and target.get("flight_height", 0.0) <= 0.0 else LadderRules.VORTEX_LOCK_RANGE
+	if not vortex_lock_block_reason(unit).is_empty() or not _valid_missile_target(unit, target, reach, VORTEX_MISSILE):
+		return false
+	unit["vortex_lock_state"] = {"tag": target.tag, "started": tick, "shots": 0}
+	unit.attack_state = "idle"
+	ability_triggered.emit(unit, "vortex_lock", target.pos)
+	return true
+
+func _end_vortex_lock(unit: Dictionary) -> void:
+	if unit.erase("vortex_lock_state"):
+		unit["vortex_lock_ready"] = tick + ceili(LadderRules.VORTEX_LOCK_COOLDOWN * TICK_RATE)
+
+func _step_vortex_lock(unit: Dictionary) -> void:
+	var lock_state: Dictionary = unit.get("vortex_lock_state", {})
+	if lock_state.is_empty():
+		if unit.auto_vortex_lock and int(unit.get("vortex_lock_ready", 0)) <= tick and tick % 4 == int(unit.tag) % 4:
+			var candidate := _nearest_missile_target(unit, LadderRules.VORTEX_GROUND_AUTO_RANGE, VORTEX_MISSILE, LadderRules.VORTEX_LOCK_RANGE)
+			if not candidate.is_empty():
+				_begin_vortex_lock(unit, candidate, true)
+		return
+	var target: Dictionary = units.get(lock_state.tag, {})
+	if not _valid_missile_target(unit, target, LadderRules.VORTEX_LOCK_LEASH, VORTEX_MISSILE):
+		_end_vortex_lock(unit)
+		return
+	var next_shot := int(lock_state.started) + ceili((int(lock_state.shots) + 1) * LadderRules.VORTEX_LOCK_SHOT_SECONDS * TICK_RATE)
+	if tick < next_shot:
+		return
+	var shield_hit: bool = target.shields > 0.0
+	var damage := 30.0 if players[unit.owner].upgrades.get("mag_accelerator", 0) else 20.0
+	_apply_damage_to_target(unit, target, damage, {}, 1.0, true)
+	weapon_attack.emit(unit, target, VORTEX_MISSILE, shield_hit)
+	projectile_fired.emit(unit.pos, target.pos, VORTEX_MISSILE.name, false, unit.owner)
+	lock_state.shots += 1
+	if int(lock_state.shots) >= LadderRules.VORTEX_LOCK_SHOTS or target.hp <= 0.0:
+		_end_vortex_lock(unit)
 
 func _fighter_landing_clear(fighter: Dictionary) -> bool:
 	var point: Vector2 = fighter.pos
@@ -4663,6 +8644,7 @@ func fighter_mode_block_reason(fighter: Dictionary, ability: String) -> String:
 
 func _finish_fighter_mode(fighter: Dictionary) -> void:
 	fighter.erase("fighter_mode_until")
+	fighter.erase("fighter_mode_started")
 	fighter.is_immobile = false
 	var landing: bool = fighter.unit_type == "kestrel_interceptor"
 	if landing and not _fighter_landing_clear(fighter):
@@ -4677,8 +8659,204 @@ func _finish_fighter_mode(fighter: Dictionary) -> void:
 	fighter.flight_height = float(def.flight_height)
 	fighter.attributes = def.attributes.duplicate()
 
+func rampart_boost_block_reason(transport: Dictionary) -> String:
+	if not ladder_rules or transport.unit_type != "rampart_transport" or transport.is_immobile:
+		return "Select an available Rampart Transport."
+	return "Afterburners are recharging." if int(transport.get("rampart_boost_ready", 0)) > tick else ""
+
+func systems_jammed(unit: Dictionary) -> bool:
+	return int(unit.get("systems_jammed_until", 0)) > tick
+
+func watchkeeper_spell_block_reason(unit: Dictionary, spell: String) -> String:
+	if not ladder_rules or unit.unit_type != "watchkeeper" or unit.is_immobile or systems_jammed(unit):
+		return "Select an available Watchkeeper."
+	if spell == "systems_jammer" and not players[unit.owner].upgrades.get("systems_jamming", 0):
+		return "Research Systems Jammer at an attached Research Module."
+	var energy := 50.0 if spell == "deploy_bastion_turret" else 75.0
+	return "Requires %d energy." % int(energy) if unit.energy < energy else ""
+
+func _cast_watchkeeper_spell(unit: Dictionary, spell: String, point: Vector2, target: Dictionary) -> bool:
+	if not watchkeeper_spell_block_reason(unit, spell).is_empty():
+		return false
+	if spell == "deploy_bastion_turret":
+		var radius: float = RTSData.get_unit_def("bastion_turret").radius
+		if (not point.is_finite() or unit.pos.distance_squared_to(point) > LadderRules.TURRET_DEPLOY_RANGE ** 2
+				or not can_see_position(unit.owner, point) or not can_place_structure("bastion_turret", point)
+				or _ground_mobile_overlaps(point, radius)):
+			return false
+		spawn_unit("bastion_turret", unit.owner, point)
+		unit.energy -= 50.0
+	else:
+		var jamming := spell == "systems_jammer"
+		var reach := LadderRules.SYSTEMS_JAM_RANGE if jamming else LadderRules.ARMOR_MISSILE_RANGE
+		if (target.is_empty() or not is_hostile_contact(unit.owner, target) or target.is_structure
+				or target.get("nonblocking", false) or int(target.get("stasis_until", 0)) > tick
+				or not can_see_unit(unit.owner, target) or _edge_distance(unit, target) > reach):
+			return false
+		if jamming and (target.has("dread_jump") or (not target.attributes.has("Mechanical") and not target.attributes.has("Psionic"))
+				or systems_jammed(target) or watchkeeper_missiles.any(func(shot): return shot.spell == spell and shot.target == target.tag)):
+			return false
+		point = target.pos
+		var lifetime := ceili((5.0 if not jamming else 16.0) / 1.4 * TICK_RATE)
+		watchkeeper_missiles.append({"spell": spell, "target": target.tag, "pos": unit.pos, "speed": 0.0,
+			"expires": tick + lifetime, "source": unit})
+		unit.energy -= 75.0
+	var visual := unit if target.is_empty() else unit.merged({"visual_target_tag": target.tag})
+	ability_triggered.emit(visual, spell, point)
+	return true
+
+func _step_watchkeeper_missiles() -> void:
+	for index in range(watchkeeper_missiles.size() - 1, -1, -1):
+		var shot := watchkeeper_missiles[index]
+		var target: Dictionary = units.get(shot.target, {})
+		if (tick >= int(shot.expires) or target.is_empty() or target.get("nonblocking", false)
+				or int(target.get("stasis_until", 0)) > tick or (shot.spell == "systems_jammer" and target.has("dread_jump"))):
+			watchkeeper_missiles.remove_at(index)
+			continue
+		if not _advance_guided_missile(shot, target.pos, LadderRules.WATCHKEEPER_MISSILE_ACCELERATION[shot.spell],
+				LadderRules.WATCHKEEPER_MISSILE_MAX_SPEED[shot.spell]):
+			continue
+		watchkeeper_missiles.remove_at(index)
+		if shot.spell == "systems_jammer":
+			target["systems_jammed_until"] = tick + LadderRules.SYSTEMS_JAM_SECONDS * TICK_RATE
+			_interrupt_displaced_channels(target)
+			if target.has("gravity_lift_target"):
+				_end_gravity_lift(target)
+			if target.erase("dread_beam"):
+				target.is_immobile = false
+			target.attack_state = "idle"
+		else:
+			var expires := tick + ceili(LadderRules.ARMOR_MISSILE_SECONDS * TICK_RATE)
+			for nearby in query_units_in_radius(target.pos, LadderRules.ARMOR_MISSILE_RADIUS):
+				if (not nearby.is_structure and not nearby.get("nonblocking", false) and int(nearby.get("stasis_until", 0)) <= tick
+						and nearby.pos.distance_squared_to(target.pos) <= LadderRules.ARMOR_MISSILE_RADIUS ** 2):
+					nearby["armor_breaker_until"] = expires
+		ability_triggered.emit(shot.source.merged({"visual_target_tag": target.tag}), str(shot.spell) + "_impact", target.pos)
+
+func dreadnought_ability_block_reason(unit: Dictionary, ability: String) -> String:
+	if not ladder_rules or unit.unit_type != "dreadnought" or unit.is_immobile or systems_jammed(unit):
+		return "Select an available Dreadnought."
+	if ability == "dreadnought_beam" and not players[unit.owner].upgrades.get("dreadnought_refit", 0):
+		return "Research Weapon Refit at the Ignition Core."
+	var ready := int(unit.get("dread_jump_ready" if ability == "dreadnought_jump" else "dread_beam_ready", 0))
+	return "Ability is recharging." if ready > tick else ""
+
+func _cast_dreadnought_ability(unit: Dictionary, ability: String, point: Vector2, target: Dictionary) -> bool:
+	if not dreadnought_ability_block_reason(unit, ability).is_empty():
+		return false
+	if ability == "dreadnought_jump":
+		if not point.is_finite() or not Rect2(0.0, 0.0, map_width, map_height).has_point(point):
+			return false
+		unit["dread_jump"] = {"pos": _map_clamped_position(point, unit.radius),
+			"depart": tick + LadderRules.DREADNOUGHT_JUMP_WINDUP * TICK_RATE,
+			"finish": tick + (LadderRules.DREADNOUGHT_JUMP_WINDUP + LadderRules.DREADNOUGHT_JUMP_TRANSIT) * TICK_RATE}
+		unit["dread_jump_ready"] = tick + LadderRules.DREADNOUGHT_COOLDOWN * TICK_RATE
+	else:
+		if (target.is_empty() or not is_hostile_contact(unit.owner, target) or target.get("nonblocking", false)
+				or not can_see_unit(unit.owner, target) or _edge_distance(unit, target) > LadderRules.DREADNOUGHT_BEAM_RANGE):
+			return false
+		point = target.pos
+		unit["dread_beam"] = {"target": target.tag, "finish": tick + ceili(LadderRules.DREADNOUGHT_BEAM_SECONDS * TICK_RATE)}
+		unit["dread_beam_ready"] = tick + LadderRules.DREADNOUGHT_COOLDOWN * TICK_RATE
+		unit.facing = unit.pos.direction_to(point).angle()
+	_clear_controlled_unit_orders(unit)
+	unit.is_immobile = true
+	ability_triggered.emit(unit, ability, unit.pos if ability == "dreadnought_jump" else point)
+	return true
+
+func _step_dreadnought_ability(unit: Dictionary) -> bool:
+	if unit.has("dread_jump"):
+		var jump: Dictionary = unit.dread_jump
+		if tick >= int(jump.finish):
+			unit.pos = jump.pos
+			unit.prev_pos = jump.pos
+			unit.home_pos = jump.pos
+			unit.is_immobile = false
+			unit.erase("dread_jump")
+			unit.erase("dread_in_transit")
+			unit.erase("nonblocking")
+			_refresh_vision()
+			ability_triggered.emit(unit, "dreadnought_arrival", unit.pos)
+		elif tick >= int(jump.depart) and not unit.get("dread_in_transit", false):
+			unit["dread_in_transit"] = true
+			unit["nonblocking"] = true
+			_refresh_vision()
+		return true
+	if not unit.has("dread_beam"):
+		return false
+	if tick >= int(unit.dread_beam.finish):
+		var target: Dictionary = units.get(unit.dread_beam.target, {})
+		unit.erase("dread_beam")
+		unit.is_immobile = false
+		if not target.is_empty() and not target.get("nonblocking", false) and can_see_unit(unit.owner, target):
+			_apply_damage_to_target(unit, target, 240.0, {}, 1.0, true)
+			ability_triggered.emit(unit.merged({"visual_target_tag": target.tag}), "dreadnought_beam_hit", target.pos)
+	return true
+
+func _step_dreadnought_weapon(unit: Dictionary) -> void:
+	if unit.weapon_cooldown > 0.0 or systems_jammed(unit):
+		return
+	var target: Dictionary = {}
+	if not unit.orders.is_empty() and unit.orders[0].type in ["attack_target", "force_attack"]:
+		target = units.get(unit.orders[0].target_tag, {})
+	if not _dreadnought_in_firing_range(unit, target) and not unit.get("hold_fire", false):
+		target = units.get(unit.attack_target_tag, {})
+	if not _dreadnought_in_firing_range(unit, target):
+		target = _find_best_attack_target(unit, true)
+	if not target.is_empty() and _execute_weapon_hit(unit, target):
+		unit.attack_target_tag = target.tag
+		unit.weapon_cooldown = float(_active_weapon(unit, target).period)
+	else:
+		unit.attack_target_tag = 0
+
+func _dreadnought_in_firing_range(unit: Dictionary, target: Dictionary) -> bool:
+	return (not target.is_empty() and target.hp > 0.0 and can_see_unit(unit.owner, target) and can_attack(unit, target)
+		and _edge_distance(unit, target) <= weapon_range_against(unit, target))
+
+func harrier_cloak_block_reason(harrier: Dictionary) -> String:
+	if not ladder_rules or harrier.unit_type != "night_harrier" or harrier.is_immobile:
+		return "Select an available Night Harrier."
+	if harrier.get("cloaked", false):
+		return ""
+	if not players[harrier.owner].upgrades.get("harrier_cloaking", 0):
+		return "Research Stealth Field at an attached Research Module."
+	return "Requires 25 energy." if harrier.energy < LadderRules.AGENT_CLOAK_COST else ""
+
+func _toggle_personal_cloak(unit: Dictionary) -> void:
+	var activating: bool = not unit.get("cloaked", false)
+	if activating:
+		unit.energy -= LadderRules.AGENT_CLOAK_COST
+	unit["cloaked"] = activating
+
+func sky_mode_block_reason(gunship: Dictionary, ability: String) -> String:
+	if not ladder_rules or gunship.unit_type != ("sky_sentry" if ability == "sky_defender_mode" else "sky_sentry_defender"):
+		return "Select a Sky Sentry in the matching mode."
+	return "Sky Sentry is switching modes." if gunship.has("sky_transition") else ""
+
+func sky_deploy_range(gunship: Dictionary) -> float:
+	return LadderRules.SKY_DEPLOY_RANGE + (LadderRules.SKY_BALLISTICS_BONUS if players[gunship.owner].upgrades.get("sky_ballistics", 0) else 0.0)
+
+func _begin_sky_mode(gunship: Dictionary, point: Vector2, deploy: bool) -> void:
+	_clear_controlled_unit_orders(gunship)
+	gunship.is_immobile = true
+	if deploy:
+		gunship.facing = gunship.pos.direction_to(point).angle()
+	else:
+		gunship.erase("sky_zone")
+	var duration := LadderRules.SKY_DEPLOY_SECONDS if deploy else LadderRules.SKY_MOBILE_SECONDS
+	gunship["sky_transition"] = {"deploy": deploy, "pos": point, "finish": tick + ceili(duration * TICK_RATE)}
+	ability_triggered.emit(gunship, "sky_defender_mode" if deploy else "sky_fighter_mode", point)
+
+func _finish_sky_mode(gunship: Dictionary) -> void:
+	var transition: Dictionary = gunship.sky_transition
+	gunship.erase("sky_transition")
+	_change_mobile_form(gunship, "sky_sentry_defender" if transition.deploy else "sky_sentry")
+	if transition.deploy:
+		gunship["sky_zone"] = {"pos": transition.pos, "radius": LadderRules.SKY_ZONE_RADIUS}
+	_refresh_vision()
+
 func carapace_morph_block_reason(unit: Dictionary) -> String:
-	if unit.unit_type != "bile_crawler" or unit.is_immobile or not players.has(unit.owner):
+	if ladder_rules or unit.unit_type != "bile_crawler" or unit.is_immobile or not players.has(unit.owner):
 		return "Select a Bile Crawler ready to evolve."
 	if not has_tech_structure(unit.owner, "blight_spire"):
 		return "Requires a completed Blight Spire."
@@ -4727,6 +8905,131 @@ func _finish_carapace_morph(unit: Dictionary) -> void:
 	_recompute_supplies()
 	ability_triggered.emit(unit, "carapace_ready", unit.pos)
 
+func sporeburst_morph_block_reason(unit: Dictionary) -> String:
+	if unit.unit_type != "skitterling" or unit.is_immobile or not players.has(unit.owner):
+		return "Select a surfaced Skitterling."
+	if not has_tech_structure(unit.owner, "spore_nursery"):
+		return "Requires a completed Spore Nursery."
+	var cost := RTSData.get_unit_def("sporeburst")
+	var stock: Dictionary = players[unit.owner]
+	if stock.crystal < cost.crystal_cost or stock.aether < cost.aether_cost:
+		return "Requires 25 crystal and 25 aether."
+	return ""
+
+func brood_morph_block_reason(unit: Dictionary, form: String) -> String:
+	var spec: Dictionary = LadderRules.BROOD_MORPHS[form]
+	var source_type := str(unit.get("unit_type", ""))
+	if not ladder_rules or (source_type != spec.source and source_type != spec.get("alternate_source")) or unit.is_immobile:
+		return "Select an available %s." % RTSData.get_unit_def(spec.source).name
+	if not unit.get("passengers", []).is_empty():
+		return "Unload the passengers before morphing."
+	var definition := RTSData.get_unit_def(form)
+	for required in definition.requires:
+		if not has_tech_structure(unit.owner, required):
+			return "Requires a completed %s." % RTSData.get_unit_def(required).name
+	var bank: Dictionary = players[unit.owner]
+	if bank.crystal < definition.crystal_cost or bank.aether < definition.aether_cost:
+		return "Requires %d crystal and %d aether." % [definition.crystal_cost, definition.aether_cost]
+	var extra_supply := brood_morph_supply(form)
+	if bank.supply_used + extra_supply > bank.supply_cap:
+		return "Requires one additional supply."
+	return ""
+
+func brood_morph_supply(form: String) -> float:
+	var source: String = LadderRules.BROOD_MORPHS[form].source
+	return float(RTSData.get_unit_def(form).supply_cost) - float(RTSData.get_unit_def(source).supply_cost)
+
+func brood_morph_cancel_command(unit: Dictionary) -> String:
+	return LadderRules.BROOD_MORPHS[unit.brood_morph.form].cancel
+
+func _begin_brood_morph(unit: Dictionary, form: String) -> void:
+	var definition := RTSData.get_unit_def(form)
+	var bank: Dictionary = players[unit.owner]
+	bank.crystal -= definition.crystal_cost
+	bank.aether -= definition.aether_cost
+	unit["brood_morph"] = {"form": form, "origin_type": unit.unit_type, "origin_hp": unit.hp,
+		"finish": tick + ceili(float(definition.build_time) * TICK_RATE)}
+	_change_mobile_form(unit, LadderRules.BROOD_MORPHS[form].cocoon)
+	unit.hp = unit.max_hp
+	_recompute_supplies()
+
+func _cancel_brood_morph(unit: Dictionary) -> void:
+	var morph: Dictionary = unit.brood_morph
+	var damage: float = unit.max_hp - unit.hp
+	unit.erase("brood_morph")
+	_change_mobile_form(unit, morph.origin_type)
+	unit.hp = maxf(1.0, float(morph.origin_hp) - damage)
+	var definition := RTSData.get_unit_def(morph.form)
+	var bank: Dictionary = players[unit.owner]
+	bank.crystal += definition.crystal_cost
+	bank.aether += definition.aether_cost
+	_recompute_supplies()
+
+func _finish_brood_morph(unit: Dictionary) -> void:
+	var form: String = unit.brood_morph.form
+	var damage: float = unit.max_hp - unit.hp
+	unit.erase("brood_morph")
+	_change_mobile_form(unit, form)
+	unit.hp = unit.max_hp - damage
+	ability_triggered.emit(unit, LadderRules.BROOD_MORPHS[form].ready, unit.pos)
+
+func _begin_sporeburst_morph(unit: Dictionary) -> void:
+	var cost := RTSData.get_unit_def("sporeburst")
+	players[unit.owner].crystal -= cost.crystal_cost
+	players[unit.owner].aether -= cost.aether_cost
+	unit["sporeburst_morph_until"] = tick + roundi(float(cost.build_time) / TICK_DT)
+	_change_mobile_form(unit, "sporeburst_cocoon")
+
+func _cancel_sporeburst_morph(unit: Dictionary) -> void:
+	unit.erase("sporeburst_morph_until")
+	var cost := RTSData.get_unit_def("sporeburst")
+	players[unit.owner].crystal += cost.crystal_cost
+	players[unit.owner].aether += cost.aether_cost
+	_change_mobile_form(unit, "skitterling")
+
+func _finish_sporeburst_morph(unit: Dictionary) -> void:
+	unit.erase("sporeburst_morph_until")
+	_change_mobile_form(unit, "sporeburst")
+	if players.get(unit.owner, {}).get("upgrades", {}).get("rolling_spores", 0):
+		_apply_rolling_spores(unit)
+	ability_triggered.emit(unit, "sporeburst_ready", unit.pos)
+
+func _change_mobile_form(unit: Dictionary, next: String) -> void:
+	var health_ratio: float = unit.hp / unit.max_hp
+	_morph_unit_in_place(unit, next)
+	var definition := RTSData.get_unit_def(next)
+	unit.max_hp = definition.max_hp
+	unit.hp = unit.max_hp * health_ratio
+	unit.radius = definition.radius
+	unit.armor = float(definition.get("armor", 0.0))
+	unit.living_ground_speed_bonus = float(definition.get("living_ground_speed_bonus", 0.0))
+	unit["hp_regen"] = definition.get("hp_regen", 0.0)
+	unit.erase("generating_creep")
+	unit.erase("living_ground_radius")
+	unit["detection_radius"] = definition.get("detection_radius", 0.0)
+	if unit.detection_radius > 0.0 and not _detectors.has(unit):
+		_detectors.append(unit)
+	if definition.has("energy_profile"):
+		unit["energy_profile"] = definition.energy_profile
+		unit.energy = definition.energy_profile.start
+	if int(definition.get("transport_capacity", 0)) > 0 and not unit.has("passengers"):
+		unit["passengers"] = []
+	unit["target_priority"] = definition.get("target_priority", 0)
+	unit.attributes = definition.attributes.duplicate()
+	unit.attack_state = "idle"
+	unit.attack_state_timer = 0.0
+	unit.attack_target_tag = 0
+	unit.weapon_cooldown = 0.0
+	unit.path.clear()
+	unit.home_pos = unit.pos
+	unit.erase("choke_yield")
+
+func _apply_rolling_spores(unit: Dictionary) -> void:
+	unit["rolling_spores"] = true
+	unit.speed *= 4.13 / 3.5
+	unit.max_hp += 5.0
+	unit.hp += 5.0
+
 func campaign_training_block_reason(structure: Dictionary, unit_type: String) -> String:
 	if campaign == null or structure.owner != 1:
 		return ""
@@ -4736,17 +9039,33 @@ func campaign_training_block_reason(structure: Dictionary, unit_type: String) ->
 		return "Requires an attached Research Module."
 	return ""
 
-func _enqueue_unit_production(structure: Dictionary, unit_type: String) -> bool:
-	if not structure["is_structure"] or structure["build_progress"] < 1.0 or structure.flight_height > 0.0:
+func training_block_reason(structure: Dictionary, unit_type: String) -> String:
+	if attachment_under_construction(structure):
+		return "Training is paused while the attachment is under construction."
+	var reason := campaign_training_block_reason(structure, unit_type)
+	if not reason.is_empty():
+		return reason
+	if unit_type == "tactical_charge" and (structure.get("tactical_charge_ready", false)
+			or structure.production_queue.any(func(item): return item.get("unit_type") == "tactical_charge")):
+		return "This Academy already has a Tactical Charge."
+	var required: String = RTSData.get_unit_def(unit_type).get("attachment_required", "")
+	if not required.is_empty() and production_attachment(structure).get("unit_type") != required:
+		return "Requires an attached %s." % RTSData.get_unit_def(required).name
+	return ""
+
+func _enqueue_unit_production(structure: Dictionary, unit_type: String, larva_tag := 0) -> bool:
+	if not structure["is_structure"] or structure["build_progress"] < 1.0 or structure.flight_height > 0.0 or structure.has("transit_morph"):
 		return false
 	var u_def = RTSData.get_unit_def(unit_type)
 	if u_def.is_empty():
 		return false
 	if not RTSData.get_unit_def(structure["unit_type"]).get("trains", []).has(unit_type):
 		return false
-	var campaign_reason := campaign_training_block_reason(structure, unit_type)
-	if not campaign_reason.is_empty():
-		notice.emit(structure.owner, campaign_reason, "error")
+	if unit_type == "crownspire" and ladder_rules and not flagship_production_block_reason(structure.owner).is_empty():
+		return false
+	var training_reason := training_block_reason(structure, unit_type)
+	if not training_reason.is_empty():
+		notice.emit(structure.owner, training_reason, "error")
 		return false
 	if requires_power(structure.unit_type) and not is_powered(structure.owner, structure.pos):
 		notice.emit(structure.owner, "Waystone needs a friendly power field.", "error")
@@ -4755,7 +9074,10 @@ func _enqueue_unit_production(structure: Dictionary, unit_type: String) -> bool:
 		if not has_tech_structure(structure.owner, requirement):
 			notice.emit(structure.owner, "Requires %s." % RTSData.get_unit_def(requirement).name, "error")
 			return false
-	if uses_brood_slots(structure) and structure.brood_slots <= 0:
+	var consumes_larva := training_uses_brood_slot(structure, unit_type)
+	if larva_tag != 0 and (not consumes_larva or not structure.brood_larvae.has(larva_tag)):
+		return false
+	if consumes_larva and structure.brood_slots <= 0:
 		notice.emit(structure.owner, "No brood slots ready.", "error")
 		return false
 	var p = players.get(structure["owner"], {})
@@ -4763,23 +9085,28 @@ func _enqueue_unit_production(structure: Dictionary, unit_type: String) -> bool:
 		return false
 	var m_cost = int(u_def.get("crystal_cost", 50))
 	var v_cost = int(u_def.get("aether_cost", 0))
-	var s_cost = int(u_def.get("supply_cost", 1))
+	var hatch_count := int(u_def.get("hatch_count", 1))
+	var s_cost := float(u_def.get("supply_cost", 1)) * hatch_count
 	if p["crystal"] < m_cost:
 		emit_signal("notice", structure["owner"], "Not enough crystal.", "error")
 		return false
 	if p["aether"] < v_cost:
 		emit_signal("notice", structure["owner"], "Not enough aether.", "error")
 		return false
-	if s_cost > 0 and p["supply_used"] + s_cost > p["supply_cap"]:
-		emit_signal("notice", structure["owner"], "Supply blocked. Build more supply structures.", "error")
+	# Larva morph into active eggs as soon as the command is accepted.
+	if ladder_rules and consumes_larva and s_cost > 0 and p.supply_used + s_cost > p.supply_cap:
+		_warn_supply_required(structure.owner)
 		return false
-	if structure["production_queue"].size() >= PRODUCTION_QUEUE_CAPACITY:
+	var same_lane: int = structure.production_queue.size()
+	if ladder_rules and uses_brood_slots(structure):
+		same_lane = 0 if consumes_larva else _structure_lane_size(structure)
+	if same_lane >= PRODUCTION_QUEUE_CAPACITY:
 		emit_signal("notice", structure["owner"], "Production queue is full.", "error")
 		return false
 	p["crystal"] -= m_cost
 	p["aether"] -= v_cost
 	var bonus_slot := false
-	if uses_brood_slots(structure):
+	if consumes_larva and not ladder_rules:
 		bonus_slot = structure.brood_bonus_slots > 0
 		if bonus_slot:
 			structure.brood_bonus_slots -= 1
@@ -4788,42 +9115,364 @@ func _enqueue_unit_production(structure: Dictionary, unit_type: String) -> bool:
 		"unit_type": unit_type,
 		"crystal_cost": m_cost,
 		"aether_cost": v_cost,
+		"hatch_count": hatch_count,
+		"supply_cost": s_cost,
 		"progress": 0.0,
-		"total_time": max(2.5, float(u_def.get("build_time", 12.0)) * build_time_scale())
+		"total_time": float(u_def.get("build_time", 12.0))
 	}
+	if u_def.has("attachment_required"):
+		job["requires_attachment"] = u_def.attachment_required
 	if bonus_slot:
 		job["brood_bonus_slot"] = true
+	if consumes_larva and ladder_rules:
+		var larva: Dictionary = units[larva_tag if larva_tag != 0 else structure.brood_larvae.front()]
+		structure.brood_larvae.erase(larva.tag)
+		structure.brood_slots = structure.brood_larvae.size()
+		_morph_unit_in_place(larva, "brood_egg")
+		var egg_def := RTSData.get_unit_def("brood_egg")
+		larva.radius = egg_def.radius
+		larva.attributes = egg_def.attributes.duplicate()
+		larva.hp = egg_def.max_hp
+		larva.max_hp = egg_def.max_hp
+		larva.erase("brood_off_creep_since")
+		job["egg_tag"] = larva.tag
+		ability_triggered.emit(larva, "brood_egg_morph", larva.pos)
 	structure.production_queue.append(job)
 	_recompute_supplies()
 	return true
 
 func unit_upgrade_level(unit: Dictionary, upgrade: String) -> int:
 	var campaign_bonus := int(unit.get("campaign_" + upgrade, 0)) if campaign != null and unit.owner == 2 else 0
+	var upgrades: Dictionary = players.get(unit.get("neural_original_owner", unit.owner), {}).get("upgrades", {})
+	var airborne: bool = unit.flight_height > 0.0 and not unit.has("gravity_lifted_by")
+	if ladder_rules and unit.faction == RTSData.FACTION_HUMANS:
+		if unit.is_structure:
+			return 2 if upgrade == "armor" and upgrades.get("reinforced_structure_armor", 0) else 0
+		if upgrade == "shields":
+			return 0
+		if unit.unit_type == "pioneer":
+			return int(upgrades.get("infantry_armor", 0)) if upgrade == "armor" else 0
+		if unit.unit_type in LadderRules.MERIDIAN_INFANTRY:
+			return int(upgrades.get("infantry_" + upgrade, 0))
+		if unit.unit_type in LadderRules.MERIDIAN_VEHICLES:
+			return int(upgrades.get("vehicle_weapons" if upgrade == "weapons" else "vehicle_plating", 0))
+		if airborne or unit.unit_type == "kestrel_assault":
+			return int(upgrades.get("ship_weapons" if upgrade == "weapons" else "vehicle_plating", 0))
+		return 0
+	if ladder_rules and unit.faction == RTSData.FACTION_ALIENS:
+		if upgrade == "shields":
+			return int(upgrades.get("concord_shields", 0))
+		if not unit.is_structure and not airborne:
+			return int(upgrades.get("concord_ground_" + upgrade, 0))
+		if not unit.is_structure and airborne:
+			return int(upgrades.get("concord_air_" + upgrade, 0))
+		return 0
+	if ladder_rules and unit.faction == RTSData.FACTION_MONSTERS:
+		if airborne and unit.unit_type != "locust_flying" and upgrade in ["weapons", "armor"]:
+			return int(upgrades.get("brood_air_" + upgrade, 0))
+		if upgrade == "weapons":
+			return int(upgrades.get(LadderRules.BROOD_WEAPON_UPGRADE.get(unit.unit_type, ""), 0))
+		if upgrade == "armor" and (unit.is_worker or LadderRules.BROOD_WEAPON_UPGRADE.has(unit.unit_type)
+				or unit.unit_type in ["locust_flying", "locust_brooder", "mireweaver"]):
+			var plating := LadderRules.BULWARK_PLATING_ARMOR if _is_frenzied(unit) and upgrades.get("chitinous_plating", 0) else 0
+			return int(upgrades.get("brood_carapace", 0)) + plating
+		return 0
+	if upgrade == "shields":
+		return 0
+	if upgrade == "armor" and unit.faction == "monsters" and not unit.is_structure and unit.flight_height <= 0.0:
+		return campaign_bonus + int(upgrades.get("brood_carapace", 0))
 	if unit.faction != "humans" or unit.is_structure or unit.is_worker:
 		return campaign_bonus
-	return campaign_bonus + int(players.get(unit.owner, {}).get("upgrades", {}).get(upgrade, 0))
+	return campaign_bonus + int(upgrades.get(upgrade, 0))
 
 func surge_hp_cost(unit: Dictionary) -> float:
 	var base_cost := float(RTSData.get_ability_def("surge").hp_cost)
+	if ladder_rules:
+		return 20.0 if unit.unit_type == "breacher" else base_cost
 	return base_cost * 0.5 if players.get(unit.owner, {}).get("surge_efficiency", false) else base_cost
+
+func surge_block_reason(unit: Dictionary) -> String:
+	if unit.unit_type not in ["rifleman", "breacher"]:
+		return "Select a Rifleman or Breacher."
+	if ladder_rules and not players[unit.owner].upgrades.get("stim_injectors", 0):
+		return "Research Surge Injectors at a Muster Hall with a Research Module."
+	if ladder_rules and int(unit.get("surge_ready", 0)) > tick:
+		return "Surge is recharging."
+	return "Not enough health." if unit.hp <= surge_hp_cost(unit) else ""
+
+func _apply_combat_shield(rifleman: Dictionary) -> void:
+	rifleman.max_hp += 10.0
+	rifleman.hp += 10.0
+
+func hurler_lunge_block_reason(unit: Dictionary) -> String:
+	if not ladder_rules or unit.get("unit_type") != "blight_hurler" or unit.is_immobile or unit.has("burrow_transition"):
+		return "Select a surfaced Blight Hurler."
+	if not players[unit.owner].upgrades.get("nanomuscular_swell", 0):
+		return "Research Nanomuscular Swell at a Spine Den."
+	if tick < int(unit.get("hurler_lunge_ready", 0)):
+		return "Lunge is recharging."
+	return ""
+
+func _contaminate_production(seer: Dictionary, target: Dictionary) -> bool:
+	if not ladder_rules or seer.unit_type != "spore_seer" or seer.energy < LadderRules.CONTAMINATE_COST:
+		return false
+	if target.is_empty() or target.owner <= 0 or target.owner == seer.owner or not target.is_structure \
+			or target.build_progress < 1.0 or target.hp <= 0.0 or tick < int(target.get("contaminated_until", 0)) \
+			or not can_see_unit(seer.owner, target) or _edge_distance(seer, target) > LadderRules.CONTAMINATE_RANGE:
+		return false
+	var definition := RTSData.get_unit_def(target.unit_type)
+	if definition.get("trains", []).is_empty() and not definition.get("abilities", []).any(func(id): return RTSData.get_ability_def(id).has("upgrade")):
+		return false
+	seer.energy -= LadderRules.CONTAMINATE_COST
+	target["contaminated_until"] = tick + ceili(LadderRules.CONTAMINATE_SECONDS * TICK_RATE)
+	ability_triggered.emit(seer, "contaminate_production", target.pos)
+	return true
+
+func caustic_spray_ready(unit: Dictionary) -> bool:
+	return ladder_rules and unit.get("unit_type", "") == "corrosion_flyer" and not unit.is_immobile \
+		and tick >= int(unit.get("caustic_spray_ready", 0))
+
+func _valid_caustic_spray_target(caster: Dictionary, target: Dictionary) -> bool:
+	return not target.is_empty() and target.owner > 0 and target.owner != caster.owner and target.is_structure \
+		and target.hp > 0.0 and can_see_unit(caster.owner, target) and _edge_distance(caster, target) <= LadderRules.CAUSTIC_SPRAY_RANGE
+
+func _begin_caustic_spray(caster: Dictionary, target: Dictionary) -> bool:
+	if not caustic_spray_ready(caster) or not _valid_caustic_spray_target(caster, target):
+		return false
+	caster["caustic_spray"] = {"target": target.tag, "start": tick, "next_pulse": tick + LadderRules.CAUSTIC_SPRAY_PULSE_TICKS}
+	caster["caustic_spray_ready"] = tick + ceili(LadderRules.CAUSTIC_SPRAY_COOLDOWN * TICK_RATE)
+	caster.is_immobile = true
+	caster.attack_state = "idle"
+	caster.facing = caster.pos.direction_to(target.pos).angle()
+	_stop_for_mode_change(caster)
+	ability_triggered.emit(caster, "caustic_spray", target.pos)
+	return true
+
+func _step_caustic_spray(caster: Dictionary) -> void:
+	var spray: Dictionary = caster.caustic_spray
+	var target: Dictionary = units.get(spray.target, {})
+	if not _valid_caustic_spray_target(caster, target):
+		_end_caustic_spray(caster)
+		return
+	if tick < int(spray.next_pulse):
+		return
+	var pulse := LadderRules.CAUSTIC_SPRAY_PULSE_TICKS
+	var elapsed: int = int(spray.next_pulse) - int(spray.start)
+	var ramp := ceili(LadderRules.CAUSTIC_SPRAY_RAMP * TICK_RATE)
+	var boosted := clampi(elapsed - ramp, 0, pulse)
+	var damage := (float(pulse - boosted) * LadderRules.CAUSTIC_SPRAY_INITIAL_DPS + float(boosted) * LadderRules.CAUSTIC_SPRAY_RAMPED_DPS) * TICK_DT
+	_apply_damage_to_target(caster, target, damage, {}, 1.0, true)
+	spray.next_pulse += pulse
+	if elapsed % (4 * pulse) == 0:
+		ability_triggered.emit(caster, "caustic_spray_pulse", target.pos)
+
+func _end_caustic_spray(caster: Dictionary) -> void:
+	caster.erase("caustic_spray")
+	caster.is_immobile = false
+
+func drift_creep_block_reason(unit: Dictionary) -> String:
+	if not ladder_rules or unit.get("unit_type", "") not in ["drift_sac", "drift_hauler"]:
+		return "Requires a Drift Sac or Hauler."
+	return "" if unit.get("generating_creep", false) or has_tech_structure(unit.owner, "brood_lair") else "Requires a completed Brood Lair."
+
+func _spawn_brood_mimic(seer: Dictionary) -> bool:
+	if not ladder_rules or seer.unit_type != "spore_seer" or seer.energy < LadderRules.BROOD_MIMIC_ENERGY:
+		return false
+	var site := _rally_spawn_position(seer, seer.pos + Vector2(3.0, 0.0), "brood_mimic", [])
+	if not site.is_finite():
+		return false
+	seer.energy -= LadderRules.BROOD_MIMIC_ENERGY
+	var mimic := spawn_unit("brood_mimic", seer.owner, site)
+	ability_triggered.emit(mimic, "spawn_brood_mimic", site)
+	return true
+
+func _disguise_brood_mimic(mimic: Dictionary) -> void:
+	var contact := {}
+	var best := float(mimic.sight_range) ** 2
+	for target in query_units_in_radius(mimic.pos, mimic.sight_range, mimic.owner):
+		if not is_hostile_contact(mimic.owner, target) or target.hp <= 0.0 or not can_see_unit(mimic.owner, target):
+			continue
+		var distance: float = target.pos.distance_squared_to(mimic.pos)
+		if distance < best:
+			contact = target
+			best = distance
+	if contact.is_empty():
+		return
+	var form: String = LadderRules.BROOD_MIMIC_FORMS.get(players[contact.owner].faction, "rifleman")
+	var definition := RTSData.get_unit_def(form)
+	mimic["disguise_type"] = form
+	mimic["disguise_owner"] = contact.owner
+	mimic.radius = definition.radius
+	mimic.speed = definition.speed
+	mimic.sight_range = 20.0 if form == "skitterling" else 22.5
+	var upgrades: Dictionary = players[contact.owner].upgrades
+	if form == "rifleman" and upgrades.get("combat_shields", 0):
+		mimic["disguise_detail"] = "combat_shield"
+	elif form == "skitterling" and upgrades.get("metabolic_boost", 0):
+		mimic["disguise_detail"] = "wings"
+		mimic.speed = 6.58 * 2.5
+	if definition.has("living_ground_speed_bonus"):
+		mimic["living_ground_speed_bonus"] = definition.living_ground_speed_bonus
+
+func crawler_mode_block_reason(unit: Dictionary, rooted: bool) -> String:
+	if not ladder_rules or not LadderRules.CRAWLER_ROOT_SECONDS.has(unit.get("unit_type", "")) or unit.build_progress < 1.0:
+		return "Requires a completed Gnarl defense."
+	if unit.has("crawler_transition"):
+		return "Defense transition in progress."
+	if bool(unit.get("crawler_uprooted", false)) != rooted:
+		return "Already rooted." if rooted else "Already uprooted."
+	return ""
+
+func _crawler_root_site_valid(unit: Dictionary, point: Vector2) -> bool:
+	return (point.is_finite() and can_see_position(unit.owner, point) and has_living_ground(point)
+		and can_place_structure(unit.unit_type, point, unit.tag))
+
+func _begin_crawler_transition(unit: Dictionary, rooted: bool) -> void:
+	var duration: float = LadderRules.CRAWLER_ROOT_SECONDS[unit.unit_type] if rooted else LadderRules.CRAWLER_UPROOT_SECONDS
+	unit["crawler_transition"] = {"rooted": rooted, "start": tick, "finish": tick + ceili(duration * TICK_RATE)}
+	unit["detection_radius"] = 0.0
+	unit.is_immobile = true
+	unit.attack_state = "idle"
+	unit.attack_state_timer = 0.0
+	unit.attack_target_tag = 0
+	_stop_for_mode_change(unit)
+	_refresh_vision()
+	ability_triggered.emit(unit, "crawler_root" if rooted else "crawler_uproot", unit.pos)
+
+func _finish_crawler_transition(unit: Dictionary) -> void:
+	var rooted: bool = unit.crawler_transition.rooted
+	unit.erase("crawler_transition")
+	if rooted and (not _crawler_root_site_valid(unit, unit.pos) or _ground_mobile_overlaps(unit.pos, unit.radius, unit.tag)):
+		unit.is_immobile = false
+		notice.emit(unit.owner, "The rooting site became blocked.", "warn")
+		return
+	var definition := RTSData.get_unit_def(unit.unit_type)
+	unit["crawler_uprooted"] = not rooted
+	unit.is_immobile = rooted
+	unit.speed = 0.0 if rooted else LadderRules.CRAWLER_MOBILE_SPEED
+	unit["detection_radius"] = float(definition.get("detection_radius", 0.0)) if rooted else 0.0
+	if unit.detection_radius > 0.0 and not _detectors.has(unit):
+		_detectors.append(unit)
+	nav_dirty = true
+	_refresh_vision()
 
 func research_offer(owner_id: int, upgrade: String) -> Dictionary:
 	var player: Dictionary = players.get(owner_id, {})
 	if player.is_empty():
 		return {}
+	var campaign_research := campaign != null and owner_id == 1
+	if campaign_research and not campaign.allows_research(upgrade):
+		return {}
 	if upgrade == "surge_efficiency":
-		return {} if player.get("surge_efficiency", false) else {"level": 1, "crystal": 100, "aether": 100, "supply": 0, "time": 45.0, "requires": []}
+		return {} if ladder_rules or player.get("surge_efficiency", false) else {"level": 1, "crystal": 100, "aether": 100, "supply": 0, "time": 45.0, "requires": []}
 	if upgrade == "fast_deployment":
-		return {} if player.get("fast_deployment", false) else {"level": 1, "crystal": 150, "aether": 150, "supply": 0, "time": 45.0, "requires": []}
+		return {} if ladder_rules or player.get("fast_deployment", false) else {"level": 1, "crystal": 150, "aether": 150, "supply": 0, "time": 45.0, "requires": []}
 	var upgrades: Dictionary = player.get("upgrades", {})
+	if LadderRules.MERIDIAN_GROUP_RESEARCH.has(upgrade):
+		var level := int(upgrades.get(upgrade, 0))
+		if not ladder_rules or level >= MAX_UPGRADE_LEVEL:
+			return {}
+		var price: int = LadderRules.MERIDIAN_GROUP_RESEARCH[upgrade][level]
+		return {"level": level + 1, "crystal": price, "aether": price, "supply": 0,
+			"time": LadderRules.MERIDIAN_GROUP_TIMES[level], "requires": ["vehicle_armory"] if level > 0 and upgrade.begins_with("infantry_") else []}
+	if LadderRules.MERIDIAN_SUPPORT_RESEARCH.has(upgrade):
+		return LadderRules.MERIDIAN_SUPPORT_RESEARCH[upgrade] if ladder_rules and not upgrades.get(upgrade, 0) else {}
+	if ladder_rules and upgrade in ["weapons", "armor"]:
+		return {}
+	var factory_research: Dictionary = LadderRules.FACTORY_RESEARCH.get(upgrade, {})
+	if not factory_research.is_empty():
+		return factory_research if ladder_rules and not upgrades.get(upgrade, 0) else {}
+	if upgrade == "burrow":
+		return LadderRules.BURROW_RESEARCH if ladder_rules and not upgrades.get(upgrade, 0) else {}
+	if upgrade in ["tunneling_claws", "glial_reconstitution"]:
+		return LadderRules.BILE_WARREN_RESEARCH if ladder_rules and not upgrades.get(upgrade, 0) else {}
+	if upgrade == "grooved_spines":
+		return LadderRules.GROOVED_SPINES_RESEARCH if ladder_rules and not upgrades.get(upgrade, 0) else {}
+	if upgrade == "muscular_augments":
+		return LadderRules.MUSCULAR_AUGMENTS_RESEARCH if ladder_rules and not upgrades.get(upgrade, 0) else {}
+	if upgrade == "nanomuscular_swell":
+		return LadderRules.NANOMUSCULAR_SWELL_RESEARCH if ladder_rules and not upgrades.get(upgrade, 0) else {}
+	if upgrade == "adaptive_talons":
+		return LadderRules.AMBUSHER_TALONS_RESEARCH if ladder_rules and not upgrades.get(upgrade, 0) else {}
+	if upgrade == "seismic_spines":
+		return LadderRules.AMBUSHER_SPINES_RESEARCH if ladder_rules and not upgrades.get(upgrade, 0) else {}
+	if upgrade == "chitinous_plating":
+		return LadderRules.CHITINOUS_PLATING_RESEARCH if ladder_rules and not upgrades.get(upgrade, 0) else {}
+	if upgrade == "anabolic_synthesis":
+		return LadderRules.ANABOLIC_SYNTHESIS_RESEARCH if ladder_rules and not upgrades.get(upgrade, 0) else {}
+	if upgrade == "pneumatized_carapace":
+		return LadderRules.PNEUMATIZED_CARAPACE_RESEARCH if ladder_rules and not upgrades.get(upgrade, 0) else {}
+	if upgrade == "microbial_shroud":
+		return LadderRules.MICROBIAL_SHROUD_RESEARCH if ladder_rules and not upgrades.get(upgrade, 0) else {}
+	if upgrade == "neural_tether":
+		return LadderRules.NEURAL_TETHER_RESEARCH if ladder_rules and not upgrades.get(upgrade, 0) else {}
+	if upgrade == "transit":
+		return LadderRules.TRANSIT_RESEARCH if ladder_rules and not upgrades.get("transit", 0) else {}
+	if upgrade == "resonant_glaives":
+		return LadderRules.GLAIVE_RESEARCH if ladder_rules and not upgrades.get(upgrade, 0) else {}
+	if upgrade == "canticle_storm":
+		return LadderRules.STORM_RESEARCH if ladder_rules and not upgrades.get(upgrade, 0) else {}
+	if upgrade == "shadow_stride":
+		return LadderRules.SHADOW_STRIDE_RESEARCH if ladder_rules and not upgrades.get(upgrade, 0) else {}
+	if upgrade in ["charge", "phase_step"]:
+		if not ladder_rules or upgrades.get(upgrade, 0):
+			return {}
+		return LadderRules.CHARGE_RESEARCH if upgrade == "charge" else LadderRules.PHASE_STEP_RESEARCH
+	if LadderRules.ROBOTICS_UPGRADES.has(upgrade):
+		return LadderRules.ROBOTICS_UPGRADES[upgrade] if ladder_rules and not upgrades.get(upgrade, 0) else {}
+	if LadderRules.CONCORD_FORGE_UPGRADES.has(upgrade):
+		var completed := int(upgrades.get(upgrade, 0))
+		if not ladder_rules or completed >= MAX_UPGRADE_LEVEL:
+			return {}
+		var price: int = LadderRules.CONCORD_FORGE_UPGRADES[upgrade][completed]
+		return {"level": completed + 1, "crystal": price, "aether": price, "supply": 0,
+			"time": LadderRules.CONCORD_FORGE_TIMES[completed], "requires": ["twilight_array"] if completed > 0 else []}
+	if upgrade in ["rolling_spores", "spore_burrow"]:
+		if ladder_rules:
+			return LadderRules.ROLLING_SPORES_RESEARCH if upgrade == "rolling_spores" and not upgrades.get(upgrade, 0) else {}
+		var rolling := upgrade == "rolling_spores"
+		return {} if upgrades.get(upgrade, 0) else {"level": 1, "crystal": 100 if rolling else 50,
+			"aether": 100 if rolling else 50, "supply": 0, "time": 71.0 if rolling else 45.0,
+			"requires": ["blight_spire"] if rolling else []}
+	if upgrade == "metabolic_boost":
+		return LadderRules.METABOLIC_BOOST_RESEARCH if ladder_rules and not upgrades.get(upgrade, 0) else {}
+	if upgrade == "adrenal_glands":
+		return LadderRules.ADRENAL_GLANDS_RESEARCH if ladder_rules and not upgrades.get(upgrade, 0) else {}
+	if upgrade == "pulse_crystals":
+		return LadderRules.PULSE_CRYSTALS_RESEARCH if ladder_rules and not upgrades.get(upgrade, 0) else {}
+	if upgrade == "flux_vanes":
+		return LadderRules.FLUX_VANES_RESEARCH if ladder_rules and not upgrades.get(upgrade, 0) else {}
+	if upgrade == "tectonic_resonance":
+		return LadderRules.TECTONIC_RESONANCE_RESEARCH if ladder_rules and not upgrades.get(upgrade, 0) else {}
+	if upgrade == "agent_cloak":
+		return LadderRules.PERSONAL_CLOAK_RESEARCH if ladder_rules and not upgrades.get(upgrade, 0) else {}
+	if upgrade in ["concord_air_weapons", "concord_air_armor"]:
+		var level := int(upgrades.get(upgrade, 0))
+		if not ladder_rules or level >= MAX_UPGRADE_LEVEL:
+			return {}
+		var cost := 100 + level * 75
+		return {"level": level + 1, "crystal": cost, "aether": cost, "supply": 0,
+			"time": LadderRules.CONCORD_AIR_TIMES[level], "requires": ["fleet_spire"] if level > 0 else []}
+	if ladder_rules and upgrade in ["brood_melee", "brood_missiles", "brood_carapace", "brood_air_weapons", "brood_air_armor"]:
+		var level := int(upgrades.get(upgrade, 0))
+		if level >= MAX_UPGRADE_LEVEL:
+			return {}
+		var cost := 100 + level * 75 if upgrade.begins_with("brood_air_") else (150 if upgrade == "brood_carapace" else 100) + level * 50
+		return {"level": level + 1, "crystal": cost, "aether": cost, "supply": 0,
+			"time": LadderRules.BROOD_GROUND_UPGRADE_TIMES[level], "requires": LadderRules.BROOD_GROUND_UPGRADE_TECH[level]}
+	if upgrade in ["brood_melee", "brood_carapace"]:
+		var level := int(upgrades.get(upgrade, 0))
+		return {} if level >= MAX_UPGRADE_LEVEL else {"level": level + 1, "crystal": 100 + level * 50,
+			"aether": 100 + level * 50, "supply": 0, "time": 40.0 + level * 15.0,
+			"requires": ["blight_spire"] if level > 0 else []}
 	if not upgrades.has(upgrade):
 		return {}
 	var completed: int = upgrades[upgrade]
-	var max_level := 1 if campaign != null and owner_id == 1 else MAX_UPGRADE_LEVEL
+	var max_level := 1 if campaign_research else MAX_UPGRADE_LEVEL
 	if completed >= max_level:
 		return {}
 	return {"level": completed + 1, "crystal": 100 + completed * 75, "aether": 100 + completed * 75,
-		"supply": 0, "time": 40.0 + completed * 15.0, "requires": []}
+		"supply": 0, "time": Campaign.INFANTRY_RESEARCH_SECONDS if campaign_research else 40.0 + completed * 15.0, "requires": []}
 
 func research_block_reason(owner_id: int, upgrade: String) -> String:
 	if research_offer(owner_id, upgrade).is_empty():
@@ -4836,23 +9485,53 @@ func research_block_reason(owner_id: int, upgrade: String) -> String:
 				return "Research already queued."
 	return ""
 
-func research_producer_block_reason(structure: Dictionary, upgrade: String) -> String:
+func _research_module_parent(module: Dictionary) -> Dictionary:
+	var parent: Dictionary = units.get(int(module.get("attachment_parent_tag", 0)), {})
+	return parent if _attachment_link_valid(parent, module) and not parent.has("flight_transition") else {}
+
+func research_module_abilities(module: Dictionary) -> Array:
+	var parent := _research_module_parent(module)
+	if parent.is_empty():
+		return []
+	var abilities: Array = RTSData.get_unit_def(parent.unit_type).get("abilities", [])
+	return abilities.filter(func(id): return RTSData.get_ability_def(id).get("requires_attachment") == "research_module")
+
+func research_producer_block_reason(selected: Dictionary, upgrade: String) -> String:
 	var ability: Dictionary = RTSData.get_ability_def("research_" + upgrade)
+	var structure := selected
+	if ladder_rules and selected.get("unit_type") == "research_module":
+		if ability.get("requires_attachment") != "research_module":
+			return "This research does not belong to a Research Module."
+		structure = _research_module_parent(selected)
 	var producer_matches: bool = structure.get("unit_type") == ability.get("producer") or (structure.get("unit_type") == "field_armory" and upgrade in ["weapons", "armor"])
-	if structure.is_empty() or not producer_matches or structure.build_progress < 1.0 or structure.flight_height > 0.0:
+	if structure.is_empty() or not producer_matches or structure.build_progress < 1.0 or structure.flight_height > 0.0 or structure.has("flight_transition"):
 		return "Requires a completed research producer."
+	if campaign != null and structure.owner == 1 and structure.unit_type != "field_armory":
+		return "Campaign infantry research requires a Field Armory."
+	for required in research_offer(structure.owner, upgrade).get("requires", []):
+		if not has_tech_structure(structure.owner, required):
+			return "Requires a completed %s." % RTSData.get_unit_def(required).name
 	if requires_power(structure.unit_type) and not is_powered(structure.owner, structure.pos):
-		return "The Waystone needs a friendly power field."
+		return "The structure needs a friendly power field."
 	var required_attachment := str(ability.get("requires_attachment", ""))
-	if not required_attachment.is_empty() and production_attachment(structure).get("unit_type") != required_attachment:
-		return "Requires a completed Research Module."
-	if structure.production_queue.size() >= PRODUCTION_QUEUE_CAPACITY:
-		return "%s queue is full." % structure.name
+	var queue_owner := structure
+	if not required_attachment.is_empty():
+		var attachment := production_attachment(structure)
+		if attachment.get("unit_type") != required_attachment:
+			return "Requires a completed Research Module."
+		if ladder_rules:
+			queue_owner = attachment
+	if _structure_lane_size(queue_owner) >= PRODUCTION_QUEUE_CAPACITY:
+		return "%s queue is full." % queue_owner.name
 	return ""
 
-func _enqueue_research(structure: Dictionary, upgrade: String) -> bool:
-	if not research_producer_block_reason(structure, upgrade).is_empty():
+func _enqueue_research(selected: Dictionary, upgrade: String) -> bool:
+	if not research_producer_block_reason(selected, upgrade).is_empty():
 		return false
+	var required_attachment: String = RTSData.get_ability_def("research_" + upgrade).get("requires_attachment", "")
+	var structure := selected
+	if ladder_rules and required_attachment == "research_module" and selected.unit_type != "research_module":
+		structure = production_attachment(selected)
 	if not research_block_reason(structure.owner, upgrade).is_empty():
 		return false
 	var offer := research_offer(structure.owner, upgrade)
@@ -4864,23 +9543,61 @@ func _enqueue_research(structure: Dictionary, upgrade: String) -> bool:
 	var job := {
 		"upgrade": upgrade, "level": offer.level,
 		"crystal_cost": offer.crystal, "aether_cost": offer.aether,
-		"progress": 0.0, "total_time": offer.time * build_time_scale(),
+		"progress": 0.0, "total_time": offer.time * research_time_scale(structure.owner),
 	}
-	var required_attachment: String = RTSData.get_ability_def("research_" + upgrade).get("requires_attachment", "")
-	if not required_attachment.is_empty():
+	if not ladder_rules and not required_attachment.is_empty():
 		job["requires_attachment"] = required_attachment
 	structure.production_queue.append(job)
 	return true
 
+func structure_evolution_block_reason(producer: Dictionary, form: String) -> String:
+	var source: String = LadderRules.GNARL_STRUCTURE_EVOLUTIONS[form]
+	if not ladder_rules or producer.get("structure_form", producer.get("unit_type")) != source or producer.build_progress < 1.0:
+		return "Requires a completed %s." % RTSData.get_unit_def(source).name
+	if producer.production_queue.any(func(item): return item.get("structure_evolution", false)):
+		return "This structure already has an evolution queued."
+	if _structure_lane_size(producer) >= PRODUCTION_QUEUE_CAPACITY:
+		return "%s queue is full." % producer.name
+	var definition := RTSData.get_unit_def(form)
+	for required in definition.requires:
+		if not has_tech_structure(producer.owner, required):
+			return "Requires a completed %s." % RTSData.get_unit_def(required).name
+	var bank: Dictionary = players[producer.owner]
+	if bank.crystal < definition.crystal_cost or bank.aether < definition.aether_cost:
+		return "Requires %d crystal and %d aether." % [definition.crystal_cost, definition.aether_cost]
+	return ""
+
+func _enqueue_structure_evolution(producer: Dictionary, form: String) -> void:
+	var definition := RTSData.get_unit_def(form)
+	var bank: Dictionary = players[producer.owner]
+	bank.crystal -= definition.crystal_cost
+	bank.aether -= definition.aether_cost
+	producer.production_queue.append({"unit_type": form, "structure_evolution": true, "supply_cost": 0,
+		"crystal_cost": definition.crystal_cost, "aether_cost": definition.aether_cost,
+		"progress": 0.0, "total_time": definition.build_time})
+
+func _structure_lane_size(producer: Dictionary) -> int:
+	if ladder_rules and uses_brood_slots(producer):
+		return producer.production_queue.filter(func(item): return not item.has("egg_tag")).size()
+	return producer.production_queue.size()
+
+func _brood_egg_index(nest: Dictionary, tag: int) -> int:
+	var jobs: Array = nest.get("production_queue", [])
+	for index in range(jobs.size()):
+		if jobs[index].get("egg_tag", 0) == tag:
+			return index
+	return -1
+
 func _cancel_training(structure: Dictionary, index: int) -> bool:
 	var queue: Array = structure.production_queue
-	if not structure.is_structure or index < 0 or index >= queue.size():
+	if (not structure.is_structure and structure.unit_type != "brood_egg") or index < 0 or index >= queue.size():
 		return false
 	var player: Dictionary = players.get(structure.owner, {})
 	if player.is_empty():
 		return false
 	var item: Dictionary = queue.pop_at(index)
-	if uses_brood_slots(structure) and structure.brood_slots < BROOD_SLOT_CAP:
+	units.erase(int(item.get("egg_tag", 0)))
+	if not ladder_rules and uses_brood_slots(structure) and structure.brood_slots < BROOD_SLOT_CAP:
 		if item.get("brood_bonus_slot", false):
 			structure.brood_bonus_slots += 1
 			structure.brood_slots += 1
@@ -4889,13 +9606,19 @@ func _cancel_training(structure: Dictionary, index: int) -> bool:
 			if structure.brood_slots - structure.brood_bonus_slots == BROOD_SLOTS:
 				structure.brood_recharge = 0.0
 	var definition: Dictionary = RTSData.get_unit_def(item.get("unit_type", ""))
-	player.crystal += int(item.get("crystal_cost", definition.get("crystal_cost", 50)))
-	player.aether += int(item.get("aether_cost", definition.get("aether_cost", 0)))
+	var refund := 0.75 if item.get("structure_evolution", false) else 1.0
+	player.crystal += floori(int(item.get("crystal_cost", definition.get("crystal_cost", 50))) * refund)
+	player.aether += floori(int(item.get("aether_cost", definition.get("aether_cost", 0))) * refund)
 	_recompute_supplies()
 	return true
 
-func build_time_scale() -> float:
-	return 1.0 if not match_state.is_empty() else 0.25
+func construction_time(unit_type: String) -> float:
+	if campaign != null and Campaign.CONSTRUCTION_TIMES.has(unit_type):
+		return Campaign.CONSTRUCTION_TIMES[unit_type]
+	return float(RTSData.get_unit_def(unit_type).get("build_time", 20.0))
+
+func research_time_scale(owner_id: int) -> float:
+	return 1.0 if ladder_rules or not match_state.is_empty() or (campaign != null and owner_id == 1) else 0.25
 
 func _recompute_supplies() -> void:
 	for pid in players.keys():
@@ -4903,35 +9626,37 @@ func _recompute_supplies() -> void:
 		players[pid]["supply_cap"] = 0
 
 	for u in units.values():
-		var pid = u["owner"]
-		if not players.has(pid) or u.get("campaign_reserve", false):
+		var pid = u.get("neural_original_owner", u.owner)
+		if not players.has(pid) or u.get("campaign_reserve", false) or u.get("hallucinated", false):
 			continue
 		var def = RTSData.get_unit_def(u["unit_type"])
 		if u.build_progress >= 1.0:
 			players[pid]["supply_cap"] += supply_from(u)
-		if u["is_structure"]:
+		if u["is_structure"] or u.unit_type == "brood_egg":
 			for q in u["production_queue"]:
-				if q.has("upgrade"):
-					continue
-				var q_def = RTSData.get_unit_def(str(q["unit_type"]))
-				players[pid]["supply_used"] += int(q_def.get("supply_cost", 1))
+				players[pid]["supply_used"] += production_supply_reserved(q)
 		else:
-			players[pid]["supply_used"] += int(def.get("supply_cost", 1))
+			players[pid]["supply_used"] += def.get("supply_cost", 1)
 			if u.has("carapace_morph_until"):
 				players[pid]["supply_used"] += CARAPACE_MORPH_OFFER.supply
 		for passenger in u.get("passengers", []):
-			players[pid]["supply_used"] += int(RTSData.get_unit_def(passenger.unit_type).get("supply_cost", 1))
+			if not passenger.get("hallucinated", false):
+				players[passenger.owner]["supply_used"] += RTSData.get_unit_def(passenger.unit_type).get("supply_cost", 1)
 	for pid in players:
+		for passenger in brood_tunnel_cargo.get(pid, []):
+			if not passenger.get("hallucinated", false):
+				players[pid]["supply_used"] += RTSData.get_unit_def(passenger.unit_type).get("supply_cost", 1)
 		players[pid]["supply_cap"] = mini(200, players[pid]["supply_cap"])
 
 func is_dropoff(unit: Dictionary, owner_id: int) -> bool:
-	return not unit.is_empty() and unit.owner == owner_id and unit.build_progress >= 1.0 and unit.hp > 0.0 and RTSData.get_unit_def(unit.unit_type).get("is_town_hall", false)
+	return (not unit.is_empty() and unit.owner == owner_id and unit.build_progress >= 1.0 and unit.hp > 0.0
+		and unit.get("is_town_hall", false) and unit.flight_height <= 0.0 and not unit.has("flight_transition"))
 
 func _find_nearest_town_hall(owner_id: int, pos: Vector2) -> Dictionary:
 	var best: Dictionary = {}
 	var best_d: float = 999999.0
 	for u in _town_halls:
-		if u.owner == owner_id and u.build_progress >= 1.0 and u.hp > 0:
+		if is_dropoff(u, owner_id):
 			var d = pos.distance_squared_to(u.pos)
 			if d < best_d:
 				best_d = d
@@ -5051,13 +9776,17 @@ func get_observation(perspective_player: int = 0) -> Dictionary:
 		var u = units[tag]
 		if perspective_player != 0 and not can_see_unit(perspective_player, u):
 			continue
+		var disguised: bool = perspective_player > 0 and u.owner != perspective_player and u.has("disguise_type")
+		var visible_type: String = u.disguise_type if disguised else u.unit_type
+		var visible_owner: int = u.disguise_owner if disguised else u.owner
+		var visible_definition := RTSData.get_unit_def(visible_type) if disguised else {}
 		unit_list.append({
 			"tag": u["tag"],
-			"id": u["id"],
-			"unit_type": u["unit_type"],
-			"faction": u["faction"],
-			"name": u["name"],
-			"owner": u["owner"],
+			"id": visible_type if disguised else u["id"],
+			"unit_type": visible_type,
+			"faction": visible_definition.faction if disguised else u["faction"],
+			"name": visible_definition.name if disguised else u["name"],
+			"owner": visible_owner,
 			"pos": {"x": snappedf(u["pos"].x, 0.01), "y": snappedf(u["pos"].y, 0.01), "z": snappedf(unit_elevation(u), 0.01)},
 			"hp": snappedf(u["hp"], 0.1),
 			"max_hp": u["max_hp"],
@@ -5079,28 +9808,57 @@ func get_observation(perspective_player: int = 0) -> Dictionary:
 			"kills": u["kills"]
 		})
 		var entry: Dictionary = unit_list.back()
+		if can_identify_hallucination(perspective_player, u):
+			entry["hallucinated"] = true
 		if u.owner == perspective_player or perspective_player == 0:
+			if u.has("disguise_type"):
+				entry["disguised_as"] = u.disguise_type
 			if u.get("campaign_scripted", false):
 				entry["campaign_scripted"] = true
 			if u.has("passengers"):
 				entry["passengers"] = u.passengers.map(func(passenger): return passenger.tag)
-			if u.unit_type == "tunnel_mouth":
+			if _is_brood_tunnel_endpoint(u):
+				entry["tunnel_cargo"] = brood_tunnel_cargo_count(u)
+			elif u.unit_type == "tunnel_mouth":
 				entry["tunnel_partner"] = linked_tunnel(u).get("tag", 0)
 				if u.has("tunnel_arrival"):
 					entry["tunnel_ticks"] = maxi(0, int(u.tunnel_arrival) - tick)
-		if u.has("expires_tick"):
+		if u.has("expires_tick") and not disguised:
 			entry["lifetime_ticks"] = maxi(0, int(u.expires_tick) - tick)
 		if u.get("burrowed", false):
 			entry["burrowed"] = true
+		if u.get("rich_extractor", false):
+			entry["rich_extractor"] = true
+		if u.has("structure_form"):
+			entry["structure_form"] = u.structure_form
+		if u.get("crawler_uprooted", false):
+			entry["crawler_uprooted"] = true
+		if u.has("crawler_transition"):
+			entry["crawler_transition_ticks"] = maxi(0, int(u.crawler_transition.finish) - tick)
+		if u.has("burrow_transition"):
+			entry["burrow_transition"] = "down" if u.burrow_transition.down else "up"
+			entry["burrow_transition_ticks"] = maxi(0, int(u.burrow_transition.finish) - tick)
 		if u.has("living_ground_speed_bonus"):
 			entry["effective_speed"] = snappedf(effective_move_speed(u), 0.01)
 			entry["living_ground_speed_bonus"] = active_living_ground_speed_bonus(u)
 		if u.flight_height > 0.0:
 			entry["airborne"] = true
+		if u.has("flight_transition"):
+			entry["flight_transition"] = u.flight_transition.kind
+			entry["flight_transition_ticks"] = maxi(0, int(u.flight_transition.end) - tick)
+		if u.has("silo_raise_until"):
+			entry["silo_raise_ticks"] = int(u.silo_raise_until) - tick
 		if u.has("fighter_mode_until") and (not limited or u.owner == perspective_player):
 			entry["fighter_mode_ticks"] = maxi(0, int(u.fighter_mode_until) - tick)
 		if u.has("carapace_morph_until"):
 			entry["carapace_morph_ticks"] = maxi(0, int(u.carapace_morph_until) - tick)
+		if u.has("sporeburst_morph_until"):
+			entry["sporeburst_morph_ticks"] = maxi(0, int(u.sporeburst_morph_until) - tick)
+		if u.has("brood_morph") and (not limited or u.owner == perspective_player):
+			entry["brood_morph_ticks"] = maxi(0, int(u.brood_morph.finish) - tick)
+		if u.unit_type == "sporeburst":
+			entry["target_structures"] = u.get("target_structures", false)
+			entry["rolling_spores"] = u.get("rolling_spores", false)
 		if u.get("hold_fire", false):
 			entry["hold_fire"] = true
 		match u.unit_type:
@@ -5109,17 +9867,18 @@ func get_observation(perspective_player: int = 0) -> Dictionary:
 				entry["hub_operations"] = u.get("hub_operations", false)
 			"skirmisher":
 				entry["energy"] = snappedf(u.energy, 0.01)
-				entry["cloaked"] = u.get("cloaked", false)
+				entry["cloaked"] = u.get("cloaked", false) or flagship_cloaks(u)
 			"lumen_carrier":
-				entry["power_field_active"] = carrier_power_ticks(u) > 0
+				entry["power_field_active"] = carrier_power_active(u)
 				if not limited or u.owner == perspective_player:
 					entry["power_field_ticks"] = carrier_power_ticks(u)
 					entry["power_field_rearm_ticks"] = carrier_rearm_ticks(u)
 			"silo", "silo_retracted":
 				entry["supply_reinforced"] = u.get("supply_reinforced", false)
-				entry["salvage_ticks"] = maxi(0, int(u.get("salvage_finish", 0)) - tick)
-			"pioneer":
-				entry["auto_repair"] = u.get("auto_repair", false)
+		if u.has("salvage_finish"):
+			entry["salvage_ticks"] = maxi(0, int(u.get("salvage_finish", 0)) - tick)
+		if u.unit_type == "pioneer":
+			entry["auto_repair"] = u.get("auto_repair", false)
 		if not limited or u.owner == perspective_player:
 			if u.unit_type == "waystone":
 				entry["fast_deployment_ticks"] = fast_deployment_ticks(u)
@@ -5139,7 +9898,7 @@ func get_observation(perspective_player: int = 0) -> Dictionary:
 				entry["energy"] = snappedf(u.energy, 0.01)
 				entry["max_energy"] = u.support.max_energy
 				entry["support_target_tag"] = u.support_target_tag
-				if u.unit_type == "triage_specialist":
+				if u.support.stat == "hp":
 					entry["auto_heal"] = u.get("auto_heal", false)
 			if not u.rally_route.is_empty():
 				entry["rally_route"] = _observed_rally(u.rally_route)
@@ -5221,6 +9980,9 @@ func get_observation(perspective_player: int = 0) -> Dictionary:
 		observation.map["watch_stations"] = watch_stations.map(func(station):
 			return {"x": station.pos.x, "y": station.pos.y, "owner": visible_watch_station_owner(station, perspective_player), "capture_radius": WATCH_STATION_CAPTURE, "sight_radius": WATCH_STATION_SIGHT}
 		)
+	if terrain_grid:
+		var bounds := terrain_grid.bounds
+		observation.map["playable_bounds"] = {"x": bounds.position.x, "y": bounds.position.y, "w": bounds.size.x, "h": bounds.size.y}
 	if not miasma_zones.is_empty():
 		observation["miasma"] = visible_miasma(perspective_player)
 	if not lattice_bursts.is_empty():

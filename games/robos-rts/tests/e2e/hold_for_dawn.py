@@ -363,12 +363,12 @@ class HoldForDawn(LiveMatch):
             if cue in mission["cue_history"] and index not in self.called_at:
                 self.called_at[index] = elapsed
                 marker = next((m for m in mission["markers"] if m["label"] == "Rescue militia"), None)
-                self.highlight(f"Distress call | {place}", obs, "The stranded squad holds its position until friendly infantry arrive",
+                self.highlight(f"Distress call | {place}", obs, "The stranded squad has three game minutes of cover",
                                tuple(marker["point"]) if marker else BRIDGES, f"distress-{index + 1}")
         index = mission["bonus_done"]
         if self.expedition and index > self.expedition_index:
             troops = [u for u in rifles + medics if u["tag"] in self.expedition or distance(u, self.expedition_target) < 10]
-            self.highlight(f"Militia rescued | {index} of 3", obs, "The militia joins the army and has six game seconds of cover to pull back",
+            self.highlight(f"Militia rescued | {index} of 3", obs, "The first hit on the guards brings the militia into the army",
                            self.expedition_target, f"rescue-{index}")
             self._command("move", troops, BRIDGES)
             self.defenders.difference_update(u["tag"] for u in troops)

@@ -25,7 +25,7 @@ Feature: Brood flyers hatch from the paid Nest command card
     When the commander frames (47, 29) at zoom height 60
     And the commander clicks unit "nest"
     And the commander presses "N"
-    Then player 1 has 200 crystal, 50 aether and 2 supply used
+    Then player 1 has 200 crystal, 50 aether and 0 supply used
     When the simulation advances 470 ticks
     And the commander selects the completed "needlewing"
     And the commander right-clicks terrain at (75, 27)

@@ -66,7 +66,7 @@ Feature: RTS command profiles and battlefield feedback
     And the commander presses "Shift+A"
     And the simulation advances 96 ticks
     Then the two halls have a balanced batch of five units in production
-    And player 1 has 150 crystal, 150 aether and 5 supply used
+    And player 1 has 150 crystal, 150 aether and 2 supply used
     And the multi-building production and supply HUD is captured
 
   Scenario: Only visible deposits can be inspected and a finite field reports depletion

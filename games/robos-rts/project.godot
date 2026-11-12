@@ -16,8 +16,10 @@ config/icon="res://icon.svg"
 RTSData="*res://scripts/engine/RTSData.gd"
 SimEngine="*res://scripts/engine/SimEngine.gd"
 RTSAudio="*res://scripts/RTSAudio.gd"
+RTSMusic="*res://scripts/RTSMusic.gd"
 RTSCommanderAI="*res://scripts/engine/RTSCommanderAI.gd"
 GameControlServer="*res://scripts/GameControlServer.gd"
+RTSNetwork="*res://scripts/network/RTSNetwork.gd"
 RTSDisplay="*res://scripts/RTSDisplay.gd"
 
 [display]

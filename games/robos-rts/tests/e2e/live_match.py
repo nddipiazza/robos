@@ -53,6 +53,8 @@ class LiveMatch:
         if self.record and not self.window_capture:
             self.frames_dir.mkdir()
         self.created = time.monotonic()
+        self.audio_started = None
+        self.audio_path = context.record_audio_path if self.record else None
         self.actions = PlayerActions(self.client)
         self.bot = None if build == "idle" else FrontierBuildBot(self.actions, build)
         self.opening = None
@@ -87,6 +89,11 @@ class LiveMatch:
         return True
 
     def capture(self):
+        if self.record and self.audio_started is None:
+            before = time.monotonic()
+            result = self.client._request("POST", "/capture/audio", {"action": "start"})
+            assert result.get("ok"), result
+            self.audio_started = (before + time.monotonic()) / 2
         if self.window_capture:
             if self.window_capture.started is None:
                 self.window_capture.start()
@@ -201,6 +208,9 @@ class LiveMatch:
         if self.window_capture and self.window_capture.started is not None:
             self.window_capture.stop()
             video_offset = self.window_capture.started - self.created
+        if self.audio_started is not None:
+            result = self.client._request("POST", "/capture/audio", {"action": "stop"})
+            assert result.get("ok") and self.audio_path.is_file(), result
         self.final = self.final or self.client.get_observation()
         health = self.client.health()
         report = {"status": status, "purpose": self.purpose, "build": self.build, "speed": self.speed, "wall_seconds": self.wall_seconds,
@@ -223,7 +233,10 @@ class LiveMatch:
             f"# Live RTS: {self.slug}\n\nResult: {status}. Speed: {self.speed}x. Manual step requests: {health.get('manual_step_requests')}.\n\n"
             f"{self.walkthrough_intro}\n\n"
             "| Wall time | Game time | Visible step |\n|---|---|---|\n"+"\n".join(rows)+"\n", encoding="utf-8")
-        if self.record and self.frames:
+        if self.window_capture and self.window_capture.started is not None:
+            self.write_video(["-i", str(self.window_capture.video)], ["-c:v", "copy"], self.window_capture.started)
+            self.window_capture.video.unlink()
+        elif self.record and self.frames:
             self.encode_video()
         archive = Path.home()/".robos"/"development"/"walkthroughs"/f"rts-live-{self.slug}"
         history = archive/"history"/self.output.name
@@ -244,12 +257,24 @@ class LiveMatch:
             lines.append(f"duration {max(0.05, following-captured):.4f}")
         lines.append(f"file 'frames/{self.frames[-1][0].name}'")
         concat.write_text("\n".join(lines)+"\n", encoding="utf-8")
-        video = self.output/"walkthrough.mp4"
-        command = [shutil.which("ffmpeg"), "-hide_banner", "-loglevel", "error", "-y", "-safe", "0", "-f", "concat", "-i", str(concat),
-                   "-vf", "fps=10", "-c:v", "libx264", "-preset", "veryfast", "-crf", "24", "-pix_fmt", "yuv420p", "-movflags", "+faststart", str(video)]
-        with (self.output/"encoding.log").open("w", encoding="utf-8") as log:
-            subprocess.run(command, stdout=log, stderr=subprocess.STDOUT, check=True, timeout=120)
-        assert video.stat().st_size > 0
+        self.write_video(
+            ["-safe", "0", "-f", "concat", "-i", str(concat)],
+            ["-vf", "fps=10", "-c:v", "libx264", "-preset", "veryfast", "-crf", "24", "-pix_fmt", "yuv420p"],
+            self.created + self.frames[0][1],
+        )
         assert self.frames_dir.resolve().parent == self.output.resolve(), "Frame cleanup escaped the run directory"
         shutil.rmtree(self.frames_dir)
         concat.unlink()
+
+    def write_video(self, video_input, video_encoding, video_started):
+        offset = video_started - self.audio_started
+        audio_input = ["-ss", f"{max(0, offset):.6f}", "-i", str(self.audio_path)]
+        delay_ms = round(max(0, -offset) * 1000)
+        video = self.output / "walkthrough.mp4"
+        command = [shutil.which("ffmpeg"), "-hide_banner", "-loglevel", "error", "-y",
+                   *video_input, *audio_input, "-map", "0:v:0", "-map", "1:a:0", *video_encoding,
+                   "-af", f"adelay={delay_ms}:all=1,apad", "-c:a", "aac", "-b:a", "160k",
+                   "-shortest", "-movflags", "+faststart", str(video)]
+        with (self.output / "encoding.log").open("a", encoding="utf-8") as log:
+            subprocess.run(command, stdout=log, stderr=subprocess.STDOUT, check=True, timeout=120)
+        assert video.stat().st_size > 0

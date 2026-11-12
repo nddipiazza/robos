@@ -37,7 +37,7 @@ class WindowCapture:
     def __init__(self, ffmpeg, pid, output):
         self.ffmpeg = ffmpeg
         self.pid = pid
-        self.video = output / "walkthrough.mp4"
+        self.video = output / "window-video.mp4"
         self.log = output / "encoding.log"
         self.process = None
         self.started = None

@@ -42,8 +42,8 @@ func _test_paid_injection() -> void:
 	var enemy: Dictionary = bases[1]
 	_check(sim.issue_command([nest.tag], "rally", Vector2(60, 30)).ok, "The paid Keeper receives the normal Nest rally")
 	_check(sim.issue_command([nest.tag], TRAIN).ok and nest.brood_slots == 2, "Training the Keeper reserves a brood slot")
-	_check(sim.players[1].crystal == 275 and sim.players[1].aether == 125 and sim.players[1].supply_used == 2, "The paid job reserves its exact resources and supply")
-	sim.step_ticks(2600)
+	_check(sim.players[1].crystal == 275 and sim.players[1].aether == 125 and sim.players[1].supply_used == 0, "The queued Keeper pays its resource cost before reserving supply")
+	sim.step_ticks(59 * sim.TICK_RATE)
 	var trained: Array = sim.units.values().filter(func(unit): return unit.unit_type == "brood_keeper")
 	if not _check(trained.size() == 1, "A Keeper hatches through normal production"):
 		return
@@ -71,10 +71,10 @@ func _test_paid_injection() -> void:
 	_check(not _cast(second, nest) and second.energy > 25.0, "A full Nest rejects another clutch")
 	for i in range(5):
 		_check(sim.issue_command([nest.tag], "train_skitterling").ok, "All five available slots accept paid work")
-	_check(nest.brood_slots == 0 and sim.active_production_slots(nest) == 5 and sim.players[1].crystal == 150 and sim.players[1].supply_used == 9, "All paid jobs run concurrently and hold resources")
+	_check(nest.brood_slots == 0 and sim.active_production_slots(nest) == 5 and sim.players[1].crystal == 150 and sim.players[1].supply_used == 4, "All five jobs have a lane and pay their costs before starting")
 	for i in range(2):
 		_check(sim.issue_command([nest.tag], "cancel_training", Vector2.ZERO, 0, "0").ok, "Bonus jobs can be canceled normally")
-	_check(nest.brood_slots == 2 and nest.brood_bonus_slots == 2 and sim.players[1].crystal == 200 and sim.players[1].supply_used == 7, "Cancellation restores the two injected slots and exact resources")
+	_check(nest.brood_slots == 2 and nest.brood_bonus_slots == 2 and sim.players[1].crystal == 200 and sim.players[1].supply_used == 4, "Cancellation restores the injected slots and resources without changing supply")
 	var air: Dictionary = sim.spawn_unit("kestrel_interceptor", 2, keeper.pos + Vector2(0, -7))
 	_check(sim.issue_command([keeper.tag], "attack_target", air.pos, air.tag).ok, "The Keeper can defend against an airborne threat")
 	sim.step_ticks(32)

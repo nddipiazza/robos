@@ -1,0 +1,19 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/kgraph#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#"
+  },
+  "@id": "urn:robos:rts:scenario:riflemen-vs-sporebursts",
+  "@type": "robos:RTSTestScenario",
+  "rdfs:label": "Riflemen vs Sporebursts",
+  "seed": 44,
+  "map": {"width": 88, "height": 62},
+  "players": {"1": {"faction": "humans"}, "2": {"faction": "monsters"}},
+  "units": [
+    {"id": "rifle_squad", "type": "rifleman", "owner": 1, "count": 8, "x": 28, "y": 31, "spread": 1.7},
+    {"id": "sporeburst_pack", "type": "sporeburst", "owner": 2, "count": 7, "x": 58, "y": 31, "spread": 2.7}
+  ],
+  "directives": [
+    {"player": 2, "mode": "swarm_rush", "enabled": true, "target_x": 28, "target_y": 31}
+  ]
+}

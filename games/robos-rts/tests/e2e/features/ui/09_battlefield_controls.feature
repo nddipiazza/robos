@@ -37,7 +37,7 @@ Feature: Battlefield powers, production and camera controls
     When the commander Ctrl-clicks unit "hall_a"
     And the commander presses "Shift+A"
     Then the two halls have a balanced batch of five units in production
-    And player 1 has 150 crystal, 150 aether and 5 supply used
+    And player 1 has 150 crystal, 150 aether and 0 supply used
 
   Scenario: An idle Pioneer automatically repairs nearby machinery
     Given an RTS test scenario

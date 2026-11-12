@@ -32,5 +32,8 @@ Feature: Gas assignment and construction feedback
     And the commander presses "R"
     And the snapped build grid is captured near (42, 28)
     And the commander clicks a targeted point at (42, 28)
-    And the simulation advances 700 ticks
+    And the simulation advances 2200 ticks
     Then a finished "aether_tap" stands at (45, 27)
+    And "builder" has orders "harvest"
+    When the simulation advances 640 ticks
+    Then player 1 has gathered aether

@@ -17,6 +17,7 @@ func _run() -> void:
 	_test_all_wav_files_loaded()
 	_test_unit_weapon_metadata()
 	_test_ranged_gunfire_and_splash_sfx()
+	_test_sentry_missile_timing()
 	_test_melee_attack_strike_sfx()
 	_test_abilities_and_deaths_sfx()
 	_test_economy_and_ui_sfx()
@@ -24,7 +25,11 @@ func _run() -> void:
 	_test_asymmetric_worker_voices()
 	_test_support_cues()
 	_test_concord_support_cues()
+	_test_ladder_dialogues()
+	_test_transformed_unit_dialogues()
 	_test_brood_support_cues()
+	_test_campaign_voices()
+	_test_captain_vale_voice()
 	print("PASS test_audio_sfx (%d SFX and %d voice streams verified)" % [audio.SOUND_FILES.size(), audio.voice_streams.size()])
 	quit(0)
 
@@ -48,7 +53,7 @@ func _test_all_wav_files_loaded() -> void:
 func _test_unit_weapon_metadata() -> void:
 	var armed_units := [
 		"pioneer", "rifleman", "breacher", "howitzer", "howitzer_emplaced", "kestrel_interceptor",
-		"kestrel_assault", "forager", "skitterling", "bile_crawler", "blight_hurler", "brood_keeper", "carapace_bulwark", "needlewing",
+		"kestrel_assault", "forager", "skitterling", "sporeburst", "bile_crawler", "blight_hurler", "brood_keeper", "carapace_bulwark", "needlewing",
 		"mote", "sunblade", "skirmisher", "spire_walker", "crownspire"
 	]
 	for utype in armed_units:
@@ -78,7 +83,7 @@ func _test_ranged_gunfire_and_splash_sfx() -> void:
 	_assert_combat_sfx("rifleman", "bile_crawler", ["rifle_fire"])
 	_assert_combat_sfx("breacher", "bile_crawler", ["breach_charge"])
 	_assert_combat_sfx("howitzer", "bile_crawler", ["autocannon_fire"])
-	_assert_combat_sfx("sentry_turret", "bile_crawler", ["sentry_fire"])
+	_assert_combat_sfx("sentry_turret", "bile_crawler", ["sentry_fire", "sentry_impact"])
 	_assert_combat_sfx("howitzer_emplaced", "bile_crawler", ["mortar_fire", "explosion_splash"])
 	_assert_combat_sfx("bile_crawler", "rifleman", ["acid_spit"])
 	_assert_combat_sfx("blight_hurler", "rifleman", ["corrosive_lob", "explosion_splash"])
@@ -86,8 +91,34 @@ func _test_ranged_gunfire_and_splash_sfx() -> void:
 	_assert_combat_sfx("spire_walker", "skirmisher", ["prism_beam", "explosion_splash", "shield_hit"])
 	_assert_combat_sfx("crownspire", "spire_walker", ["crown_lance", "shield_hit"])
 
+func _test_sentry_missile_timing() -> void:
+	for ladder in [false, true]:
+		sim.reset_state(181, 64.0, 64.0)
+		sim.ladder_rules = ladder
+		data.ladder_active = ladder
+		audio.reset_stats()
+		var turret: Dictionary = sim.spawn_unit("sentry_turret", 1, Vector2(20, 32))
+		var aircraft: Dictionary = sim.spawn_unit("needlewing", 2, Vector2(31, 32))
+		turret.hold_fire = true
+		var initial_hp: float = aircraft.hp
+		assert(sim._execute_weapon_hit(turret, aircraft))
+		assert(aircraft.hp == initial_hp and sim.sentry_missiles.size() == (2 if ladder else 1))
+		assert(audio.sfx_counts.get("sentry_fire", 0) == 1 and not audio.sfx_counts.has("sentry_impact"))
+		var impact_tick: int = sim.sentry_missiles[0].impact
+		sim.step_ticks(impact_tick - sim.tick - 1)
+		assert(aircraft.hp == initial_hp, "Sentry missiles must reach the target before applying damage")
+		sim.step_ticks(1)
+		assert(aircraft.hp < initial_hp and audio.sfx_counts.get("sentry_impact", 0) == 1)
+		if ladder:
+			var hp_after_first: float = aircraft.hp
+			sim.step_ticks(1)
+			assert(aircraft.hp < hp_after_first and audio.sfx_counts.get("sentry_fire", 0) == 1)
+		assert(sim.sentry_missiles.is_empty())
+	sim.reset_state(181, 64.0, 64.0)
+
 func _test_melee_attack_strike_sfx() -> void:
 	_assert_combat_sfx("skitterling", "rifleman", ["claw_slash", "melee_hit"])
+	_assert_combat_sfx("sporeburst", "rifleman", ["volatile_burst"])
 	_assert_combat_sfx("sunblade", "rifleman", ["light_blade_strike", "melee_hit"])
 	_assert_combat_sfx("forager", "rifleman", ["mandible_bite", "melee_hit"])
 	_assert_combat_sfx("pioneer", "skitterling", ["arc_welder", "melee_hit"])
@@ -232,7 +263,8 @@ func _test_human_unit_dialogues_and_voices() -> void:
 			"target_pos": silo["pos"],
 			"structure_tag": silo["tag"]
 		}]
-		sim.step_ticks(4)
+		var remaining_seconds := (1.0 - float(silo.build_progress)) * float(silo.build_total_time)
+		sim.step_ticks(ceili(remaining_seconds / sim.TICK_DT) + 1)
 		seen_jobs[audio.last_spoken_line_id] = true
 	assert(seen_jobs.size() == 5, "Expected 5 distinct pioneer job_done lines across 5 completed builds, got %s" % str(seen_jobs))
 
@@ -310,3 +342,44 @@ func _test_brood_support_cues() -> void:
 	sim.step_ticks(1)
 	assert(audio.sfx_counts.get("brood_inject", 0) == 1)
 	assert(audio.dialogue_counts.get("brood_keeper:support", 0) == 1)
+
+func _test_ladder_dialogues() -> void:
+	for unit_type in ["bastion_walker", "rift_engine", "mirage_adept", "storm_scribe", "duskblade", "lattice_archon", "rupture_crawler"]:
+		for category in ["select", "move", "attack", "ready"]:
+			var lines: Array = data.get_unit_dialogues(unit_type, category)
+			assert(not lines.is_empty(), "Missing %s %s dialogue" % [unit_type, category])
+			for line in lines:
+				assert(audio.voice_streams.has(line.id), "Missing %s" % line.id)
+
+func _test_transformed_unit_dialogues() -> void:
+	var transformations := {
+		"atlas_walker_precision": "atlas_walker",
+		"cinder_guard": "cinder_runner",
+		"locust_landed": "locust_flying",
+		"sentinel_mine_armed": "sentinel_mine",
+		"sky_sentry_defender": "sky_sentry",
+	}
+	for form in transformations:
+		for category in ["select", "move", "attack"]:
+			var original: Array = data.get_unit_dialogues(transformations[form], category)
+			assert(not original.is_empty(), "Missing base %s dialogue for %s" % [category, form])
+			assert(data.get_unit_dialogues(form, category) == original, "Mismatched %s dialogue for %s" % [category, form])
+
+func _test_campaign_voices() -> void:
+	var campaign = preload("res://scripts/engine/RTSCampaign.gd")
+	for cue_id in campaign.CUES:
+		var stream: AudioStreamWAV = audio.load_campaign_voice(cue_id)
+		assert(stream != null and stream.data.size() > 2000, "Missing campaign voice for %s" % cue_id)
+		assert(stream.get_length() <= float(campaign.CUES[cue_id][2]), "Campaign voice outlasts cue %s" % cue_id)
+
+func _test_captain_vale_voice() -> void:
+	assert(sim.start_campaign(0, "normal").ok)
+	var vale: Dictionary = sim.units[sim.campaign.tags_by_id["captain_vale"]]
+	var rifleman: Dictionary = sim.units.values().filter(func(unit):
+		return unit.owner == 1 and unit.unit_type == "rifleman" and unit.tag != vale.tag
+	).front()
+	audio.reset_stats()
+	for category in ["select", "move", "attack"]:
+		assert(str(audio.play_character_dialogue(vale, category, true).get("id", "")).begins_with("captain_vale_" + category))
+		assert(str(audio.play_character_dialogue(rifleman, category, true).get("id", "")).begins_with("rifleman_" + category))
+	assert(data.named_voice_profiles["captain_vale"].unit_name == "Captain Vale")

@@ -20,6 +20,7 @@ Proposals for RobOS features that are not built, or only partly built. The publi
 
 | Proposal | Page |
 |:---|:---|
+| Frontier Hunters online AI 1v1 | [specs/frontier-hunters-online-ai-1v1.md](specs/frontier-hunters-online-ai-1v1.md) |
 | RobOS Household: family finances and US taxes | [specs/robos-household.md](specs/robos-household.md) |
 | Ask My Files: private local document search and answers | [specs/ask-my-files.md](https://github.com/nddipiazza/robos/blob/main/docs/ideas/specs/ask-my-files.md) |
 | Dev Central as an agent review hub | [specs/dev-central-ai-agent-review-development.md](https://github.com/nddipiazza/robos/blob/main/docs/ideas/specs/dev-central-ai-agent-review-development.md) |
