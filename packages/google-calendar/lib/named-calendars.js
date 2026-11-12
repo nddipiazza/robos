@@ -240,7 +240,7 @@ try:
         j = json.load(f)
     for l in j.get("logins", []):
         realm = l.get("httpRealm", "")
-        if "calendar" in realm or "caldav" in realm or "google" in realm.lower():
+        if "calendar" in realm.lower() or "caldav" in realm.lower():
             u = decrypt(l.get("encryptedUsername", ""))
             rt = decrypt(l.get("encryptedPassword", ""))
             if u and rt:
@@ -481,7 +481,7 @@ async function discoverNamedCalendars(accountIdOrEmail = null, options = {}) {
               shared: !isPrimary,
               writable: !calId.includes('@virtual'),
               accessRole: isPrimary ? 'owner' : 'writer',
-              caldavUrl: meta.uri || `https://apidata.googleusercontent.com/caldav/v2/${encodeURIComponent(calId)}/events/`,
+              caldavUrl: `${String(meta.uri || `https://apidata.googleusercontent.com/caldav/v2/${encodeURIComponent(calId)}/events`).replace(/\/+$/, '')}/`,
               source: 'thunderbird-registry',
             });
           }
@@ -1787,7 +1787,7 @@ async function listEventsAcrossNamedCalendars(accountIdOrEmail = null, options =
                 'Content-Type': 'application/xml; charset=utf-8',
               },
               body: reportXml,
-              signal: AbortSignal.timeout(7000),
+              signal: AbortSignal.timeout(15000),
             });
             if (!res.ok && res.status !== 207) return;
             const xml = await res.text();
@@ -1867,9 +1867,34 @@ async function listEventsAcrossNamedCalendars(accountIdOrEmail = null, options =
               }
 
               const localOverride = localEvents.find((le) => le.uid === uidVal);
+              const familyCal = calendars.find((c) => c.isFamilyCalendar);
+              const familyEmails = new Set(
+                (familyCal?.sharedWith || []).map((m) => String(m.email || '').toLowerCase()).filter(Boolean)
+              );
+              const attendeeEmailList = attendees
+                .map((a) => {
+                  const m = String(a).match(/<([^>]+)>/);
+                  return (m ? m[1] : String(a)).trim().toLowerCase();
+                })
+                .filter(Boolean);
+              const matchedByExclusiveAttendee =
+                cal.primary &&
+                attendeeEmailList.length > 0 &&
+                calendars.find(
+                  (c) =>
+                    c.isCustomSharedCalendar &&
+                    Array.isArray(c.sharedWith) &&
+                    c.sharedWith.some((m) => {
+                      const em = String(m.email || '').toLowerCase();
+                      return em && !familyEmails.has(em) && attendeeEmailList.includes(em);
+                    })
+                );
               const matchedCustomCal =
                 (catVal && calendars.find((c) => c.name.toLowerCase() === catVal.toLowerCase())) ||
-                (localOverride?.calendarId && calendars.find((c) => c.id === localOverride.calendarId));
+                (localOverride?.calendarId &&
+                  localOverride.calendarId !== cal.id &&
+                  calendars.find((c) => c.id === localOverride.calendarId)) ||
+                matchedByExclusiveAttendee;
               const effectiveCal = matchedCustomCal || cal;
 
               caldavEvents.push({
@@ -1921,6 +1946,71 @@ async function listEventsAcrossNamedCalendars(accountIdOrEmail = null, options =
     calendars,
     familyMembers: discovered.familyMembers,
     events: merged,
+  };
+}
+
+/**
+ * Strictly scopes a full calendar state object to a single Named Calendar so that
+ * anyone opening that calendar's Invite Google Doc / WebApp link ONLY sees:
+ *   1. That specific calendar (`targetCal`)
+ *   2. The members who belong to that calendar (`targetCal.sharedWith`) — never unrelated
+ *      people from other calendars who are not in their calendar invites
+ *   3. Events belonging to that calendar
+ */
+function scopeCalendarStateForCalendar(state = {}, calendarIdOrName = '') {
+  const q = String(calendarIdOrName || '').trim().toLowerCase();
+  if (!q) return state;
+  const calendars = Array.isArray(state.calendars) ? state.calendars : [];
+  const targetCal =
+    calendars.find((c) => String(c.id || '').toLowerCase() === q) ||
+    calendars.find((c) => String(c.name || '').toLowerCase() === q) ||
+    calendars.find((c) => String(c.name || '').toLowerCase().includes(q));
+  if (!targetCal) return state;
+
+  const allowedMemberEmails = new Set(
+    (targetCal.sharedWith || []).map((m) => String(m.email || '').toLowerCase()).filter(Boolean)
+  );
+  if (state.email && targetCal.primary) {
+    allowedMemberEmails.add(String(state.email).toLowerCase());
+  }
+
+  const allFamilyEmails = new Set(
+    (state.familyMembers || []).map((m) => String(m.email || '').toLowerCase()).filter(Boolean)
+  );
+
+  // Only expose people who belong to this specific calendar
+  const scopedMembers =
+    allowedMemberEmails.size > 0
+      ? (state.familyMembers || []).filter((fm) => allowedMemberEmails.has(String(fm.email || '').toLowerCase()))
+      : [];
+
+  // Only expose events on this calendar (and never expose an event that has a member from another calendar not in this calendar)
+  const scopedEvents = (state.events || []).filter((ev) => {
+    const sameCal =
+      String(ev.calendarId || '').toLowerCase() === String(targetCal.id || '').toLowerCase() ||
+      String(ev.calendarName || '').toLowerCase() === String(targetCal.name || '').toLowerCase();
+    if (!sameCal) return false;
+    if (allowedMemberEmails.size > 0 && Array.isArray(ev.attendees)) {
+      for (const att of ev.attendees) {
+        const m = String(att).match(/<([^>]+)>/);
+        const em = (m ? m[1] : String(att)).trim().toLowerCase();
+        // If attendee is a known RobOS person who is NOT in this calendar's allowed members, exclude/hide
+        if (allFamilyEmails.has(em) && !allowedMemberEmails.has(em)) {
+          return false;
+        }
+      }
+    }
+    return true;
+  });
+
+  return {
+    ...state,
+    scopedCalendarId: targetCal.id,
+    scopedCalendarName: targetCal.name,
+    defaultCalendarId: targetCal.id,
+    calendars: [targetCal],
+    familyMembers: scopedMembers,
+    events: scopedEvents,
   };
 }
 
@@ -2514,6 +2604,7 @@ module.exports = {
   moveNamedCalendarEvent,
   advanceRecurringStartEnd,
   listEventsAcrossNamedCalendars,
+  scopeCalendarStateForCalendar,
   parseItineraryOrInviteText,
   parseNaturalLanguageEvent,
 };
