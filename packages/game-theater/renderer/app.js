@@ -222,20 +222,23 @@ async function performResendShare({ uid, name, email, message = '', fallbackUrl 
     const res = await window.robos.invitePlayer({ uid, email, message });
     if (res?.ok) {
       sendingShareUids.delete(uid);
-      recentlySentShareUntil.set(uid, Date.now() + 4500);
       const docUrl = res.playerDoc?.docUrl || fallbackUrl;
-      if (res.delivery === 'owner-doc-ready') {
+      if (res.notificationEmailSent === false || res.delivery === 'owner-doc-ready') {
+        recentlyCopiedUidUntil.set(uid, Date.now() + 4500);
         if (docUrl) await window.robos.copyText(docUrl);
         setBanner(
-          `Synced ${res.player?.name || name}'s Google Doc (you own this doc as ${res.invitedEmail}) — share link copied to clipboard!`,
+          `Google Drive suppresses self-share emails to ${res.invitedEmail} because you own this Doc — copied your Google Doc link to clipboard instead (click ✉️ to send to another email).`,
+          true,
         );
       } else if (res.delivery === 'thunderbird-email') {
+        recentlySentShareUntil.set(uid, Date.now() + 4500);
         if (docUrl) await window.robos.copyText(docUrl);
         setBanner(
-          `Emailed ${res.player?.name || name}'s Google Doc share link to ${res.invitedEmail} via Thunderbird (and copied link to clipboard)!`,
+          `Emailed ${res.player?.name || name}'s Google Doc share link to ${res.invitedEmail} via Thunderbird!`,
         );
       } else {
-        setBanner(`Resent Google Doc share email to ${res.player?.name || name} (${res.invitedEmail})!`);
+        recentlySentShareUntil.set(uid, Date.now() + 4500);
+        setBanner(`Sent Google Doc share invitation email to ${res.player?.name || name} (${res.invitedEmail})!`);
       }
       await refreshState();
     } else {
