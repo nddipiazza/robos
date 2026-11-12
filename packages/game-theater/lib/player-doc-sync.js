@@ -330,6 +330,19 @@ function createGoogleDocsDriveApi({ accountId, homeDir, tokens, fetchImpl } = {}
     );
   }
 
+  async function listPermissions(fileId) {
+    const url = `/drive/v3/files/${encodeURIComponent(fileId)}/permissions?fields=${encodeURIComponent('permissions(id,type,role,emailAddress)')}&supportsAllDrives=true`;
+    const res = await request('GET', url);
+    return res?.permissions || [];
+  }
+
+  async function deletePermission(fileId, permissionId) {
+    return request(
+      'DELETE',
+      `/drive/v3/files/${encodeURIComponent(fileId)}/permissions/${encodeURIComponent(permissionId)}?supportsAllDrives=true`,
+    );
+  }
+
   async function shareFile(fileId, { email, role = 'reader', sendNotificationEmail = false, emailMessage = '' } = {}) {
     const params = new URLSearchParams({
       sendNotificationEmail: sendNotificationEmail ? 'true' : 'false',
@@ -357,6 +370,8 @@ function createGoogleDocsDriveApi({ accountId, homeDir, tokens, fetchImpl } = {}
     findFolderByName,
     createFolder,
     listChildren,
+    listPermissions,
+    deletePermission,
     shareFile,
     createDocFromHtml: ({ name, parentId, html }) =>
       createMultipartFile({
@@ -542,7 +557,9 @@ async function syncPlayerLaunchDocsWithGoogleDrive(options = {}) {
 }
 
 /**
- * Adds/finds a player and sends them an official Google Docs share invitation to their Launch Doc.
+ * Syncs a player's Launch Google Doc and (re)sends an official Google Docs share invitation link.
+ * Removes any pre-existing silent/reader permission first so Google Drive always dispatches
+ * a fresh notification email when clicking "Resend Share".
  */
 async function invitePlayerToTheaterDoc({ uid, name, email, gamerTag, message = '' } = {}, options = {}) {
   let target = null;
@@ -559,26 +576,111 @@ async function invitePlayerToTheaterDoc({ uid, name, email, gamerTag, message = 
   }
   if (!target && name) {
     target = upsertTheaterPlayer({ name, email, gamerTag }, options);
-  } else if (target && email && target.email !== email) {
-    target = upsertTheaterPlayer({ ...target, email }, options);
+  } else if (target && email && String(email).trim() && target.email !== String(email).trim()) {
+    target = upsertTheaterPlayer({ ...target, email: String(email).trim() }, options);
   }
   if (!target) {
     throw new Error('Player not found.');
   }
 
+  const targetEmail = String(email || target.email || '').trim().toLowerCase();
+  if (!isShareableEmail(targetEmail)) {
+    const err = new Error(`Enter a valid Google email address for ${target.name} to send their Google Doc share link.`);
+    err.code = 'EMAIL_REQUIRED';
+    throw err;
+  }
+
+  // 1. Ensure the player's Google Doc is freshly synced with the latest HTTPS launch button
   const syncRes = await syncPlayerLaunchDocsWithGoogleDrive({
     ...options,
     onlyPlayerUids: [target.uid],
-    sendNotificationEmail: Boolean(isShareableEmail(target.email)),
-    emailMessage:
-      message ||
-      `You are invited to RobOS AI Multiplayer Game Theater as ${target.name} (@${target.gamerTag})!\n\nOpen this Google Doc and click the Launch Button to enter the Godot 4 Multiplayer Lobby.`,
+    shareWithPlayers: false,
   });
+  const pDoc = syncRes.playerDocs[target.uid];
+  if (!pDoc || !pDoc.docId) {
+    throw new Error(`Could not find or create Google Doc for ${target.name}.`);
+  }
+
+  const api = options.driveApi || createGoogleDocsDriveApi({
+    accountId: options.accountId || null,
+    homeDir: options.homeDir,
+    tokens: options.tokens,
+    fetchImpl: options.fetchImpl,
+  });
+  const ownerEmail = String(
+    options.ownerEmail || (typeof api.getAboutEmail === 'function' ? await api.getAboutEmail() : ''),
+  ).trim().toLowerCase();
+
+  const defaultMessage =
+    message ||
+    `You are invited to RobOS AI Multiplayer Game Theater as ${target.name} (@${target.gamerTag})!\n\nOpen this Google Doc and click the Launch Button to enter the Godot 4 Multiplayer Lobby:\n${pDoc.docUrl}`;
+
+  let delivery = 'google-drive-share';
+  let notificationEmailSent = false;
+
+  if (ownerEmail && targetEmail === ownerEmail) {
+    // Owner already owns the Google Doc (Drive suppresses owner-to-self share emails).
+    // Attempt Thunderbird Bridge self-email if running; otherwise return owner-doc-ready so UI copies link too.
+    let sentViaTb = false;
+    try {
+      const tbMail = requireRobosLib('thunderbird-mail');
+      const st = await tbMail.getStatus(options);
+      if (st?.addonConnected) {
+        await tbMail.sendEmail(
+          {
+            to: [targetEmail],
+            subject: pDoc.docTitle,
+            text: `${defaultMessage}\n\nDirect Launch Link: ${pDoc.launchUrl}`,
+          },
+          { launch: false },
+        );
+        sentViaTb = true;
+      }
+    } catch {}
+    delivery = sentViaTb ? 'thunderbird-email' : 'owner-doc-ready';
+    notificationEmailSent = sentViaTb;
+  } else {
+    // Delete any pre-existing non-owner permission first so Google Drive ALWAYS resends the notification email!
+    try {
+      if (typeof api.listPermissions === 'function' && typeof api.deletePermission === 'function') {
+        const perms = await api.listPermissions(pDoc.docId);
+        for (const perm of perms) {
+          if (String(perm.emailAddress || '').toLowerCase() === targetEmail && perm.role !== 'owner' && perm.id) {
+            await api.deletePermission(pDoc.docId, perm.id);
+          }
+        }
+      }
+    } catch {}
+
+    await api.shareFile(pDoc.docId, {
+      email: targetEmail,
+      role: 'reader',
+      sendNotificationEmail: true,
+      emailMessage: defaultMessage,
+    });
+    notificationEmailSent = true;
+  }
+
+  const sharedAt = new Date().toISOString();
+  const settings = loadRawSettings(options);
+  const updatedPlayerDocs = {
+    ...(settings.playerDocs || {}),
+    [target.uid]: {
+      ...pDoc,
+      sharedWithEmail: targetEmail,
+      lastSharedAt: sharedAt,
+    },
+  };
+  updateTheaterSettings({ playerDocs: updatedPlayerDocs }, options);
 
   return {
     ok: true,
+    delivery,
+    notificationEmailSent,
+    invitedEmail: targetEmail,
+    sharedAt,
     player: target,
-    playerDoc: syncRes.playerDocs[target.uid],
+    playerDoc: updatedPlayerDocs[target.uid],
     folderUrl: syncRes.folderUrl,
   };
 }

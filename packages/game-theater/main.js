@@ -1,8 +1,8 @@
 'use strict';
 
-let app, BrowserWindow, ipcMain, shell, dialog;
+let app, BrowserWindow, ipcMain, shell, dialog, clipboard;
 try {
-  ({ app, BrowserWindow, ipcMain, shell, dialog } = require('electron'));
+  ({ app, BrowserWindow, ipcMain, shell, dialog, clipboard } = require('electron'));
 } catch (error) {
   if (process.versions.electron) throw error;
   app = {
@@ -18,6 +18,7 @@ try {
   ipcMain = { handle: () => {} };
   shell = { openExternal: () => {} };
   dialog = {};
+  clipboard = { writeText: () => {} };
 }
 
 const path = require('node:path');
@@ -195,6 +196,10 @@ ipcMain.handle('theater:save-game-source', (_e, { gameId, manifest, serverJs, cl
 );
 ipcMain.handle('theater:open-external', (_e, url) => {
   if (url) shell.openExternal(String(url));
+  return { ok: true };
+});
+ipcMain.handle('theater:copy-text', (_e, text) => {
+  clipboard?.writeText?.(String(text || ''));
   return { ok: true };
 });
 ipcMain.handle('theater:open-player-window', (_e, info) => openIsolatedPlayerClientWindow(info));

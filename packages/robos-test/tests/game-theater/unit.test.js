@@ -13,6 +13,7 @@ const {
 } = require('../../../game-theater/lib/player-registry');
 const {
   syncPlayerLaunchDocsWithGoogleDrive,
+  invitePlayerToTheaterDoc,
   getPlayerLaunchDocTitle,
 } = require('../../../game-theater/lib/player-doc-sync');
 const { GameTheaterRuntime } = require('../../../game-theater/lib/game-runtime');
@@ -60,10 +61,14 @@ function makeTempEnv() {
 
 function createMockDriveApi() {
   const docs = new Map();
+  const permsByFile = new Map();
+  const deletedPerms = [];
   const shares = [];
   let seq = 1;
   return {
     docs,
+    permsByFile,
+    deletedPerms,
     shares,
     api: {
       getAboutEmail: async () => 'host@example.com',
@@ -81,9 +86,28 @@ function createMockDriveApi() {
         cur.html = html;
         return cur;
       },
+      listPermissions: async (fileId) => [...(permsByFile.get(fileId) || [])],
+      deletePermission: async (fileId, permissionId) => {
+        deletedPerms.push({ fileId, permissionId });
+        const cur = permsByFile.get(fileId) || [];
+        permsByFile.set(
+          fileId,
+          cur.filter((p) => p.id !== permissionId),
+        );
+        return null;
+      },
       shareFile: async (fileId, opts) => {
-        shares.push({ fileId, ...opts });
-        return { id: `perm_${seq++}` };
+        const perm = {
+          id: `perm_${seq++}`,
+          type: 'user',
+          role: opts.role || 'reader',
+          emailAddress: opts.email,
+        };
+        const cur = permsByFile.get(fileId) || [];
+        cur.push(perm);
+        permsByFile.set(fileId, cur);
+        shares.push({ fileId, ...opts, id: perm.id });
+        return perm;
       },
     },
   };
@@ -156,6 +180,33 @@ describe('RobOS AI Multiplayer Game Theater', () => {
         assert.equal(authed.ok, true);
         assert.equal(authed.player.uid, p.uid);
       }
+
+      // Resending the share link removes the pre-existing reader permission first so Drive always emails
+      const aliceDoc = syncRes.playerDocs['alice-roe'];
+      const initialAliceShares = mockDrive.shares.filter((s) => s.fileId === aliceDoc.docId);
+      assert.equal(initialAliceShares.length, 1);
+      assert.equal(initialAliceShares[0].sendNotificationEmail, false);
+
+      const resendRes = await invitePlayerToTheaterDoc(
+        { uid: 'alice-roe', email: 'alice@example.com' },
+        {
+          configDir: env.dir,
+          seedPeople: env.seedPeople,
+          driveApi: mockDrive.api,
+          webAppUrl: 'https://theater-demo.trycloudflare.com',
+        },
+      );
+      assert.equal(resendRes.ok, true);
+      assert.equal(resendRes.delivery, 'google-drive-share');
+      assert.equal(resendRes.notificationEmailSent, true);
+      assert.equal(mockDrive.deletedPerms.length, 1);
+      assert.equal(mockDrive.deletedPerms[0].fileId, aliceDoc.docId);
+      assert.equal(mockDrive.deletedPerms[0].permissionId, initialAliceShares[0].id);
+
+      const postResendAliceShares = mockDrive.shares.filter((s) => s.fileId === aliceDoc.docId);
+      assert.equal(postResendAliceShares.length, 2);
+      assert.equal(postResendAliceShares[1].sendNotificationEmail, true);
+      assert.ok(postResendAliceShares[1].emailMessage.includes(aliceDoc.docUrl));
     } finally {
       env.cleanup();
     }

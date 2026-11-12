@@ -41,13 +41,27 @@
             <tr>
               <th>Player</th>
               <th>GamerTag</th>
-              <th>Google Doc</th>
+              <th>Google Doc &amp; Share Link</th>
               <th>Play in Godot 4</th>
             </tr>
           </thead>
           <tbody id="players-tbody"></tbody>
         </table>
       </div>
+
+      <dialog id="resend-share-dialog" class="share-dialog">
+        <form id="resend-share-form" method="dialog" class="share-dialog-form">
+          <h3 id="resend-dialog-title">📨 Resend Google Doc Share Link</h3>
+          <p class="hint" id="resend-dialog-hint">Enter or confirm the Google email address to receive this player's personal Google Doc launch link.</p>
+          <input id="resend-dialog-uid" type="hidden" />
+          <input id="resend-dialog-email" type="email" placeholder="player@gmail.com" required class="full-input" />
+          <textarea id="resend-dialog-message" rows="2" placeholder="Optional personal note (included in the Google Docs share email)..."></textarea>
+          <div class="dialog-actions">
+            <button type="button" id="btn-cancel-resend" class="btn btn-secondary btn-sm">Cancel</button>
+            <button type="submit" id="btn-confirm-resend" class="btn btn-primary btn-sm">📨 Send Share Email</button>
+          </div>
+        </form>
+      </dialog>
 
       <form id="add-player-form" class="inline-form">
         <input id="new-player-name" type="text" placeholder="Add player name (e.g. Sam)" required />

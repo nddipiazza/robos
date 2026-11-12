@@ -501,13 +501,16 @@ function createGameTheaterServer(options = {}) {
       if (req.method === 'POST' && /^\/api\/players\/[^/]+\/invite$/.test(pathname)) {
         const uid = decodeURIComponent(pathname.split('/')[3]);
         const body = await readJsonBody(req);
+        const active = runtime.getActiveGame();
         const invited = await invitePlayerToTheaterDoc(
           { uid, email: body.email, message: body.message },
           {
             ...options,
             lanHttpsUrl: serverEndpoints.lanHttpsUrl || undefined,
+            activeGameTitle: active ? active.manifest.title : '',
           },
         );
+        broadcastSnapshots();
         return sendJson(res, 200, invited, extraHeaders);
       }
 
