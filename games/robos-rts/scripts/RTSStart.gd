@@ -4,12 +4,16 @@ const BATTLE_SCENE := "res://scenes/RTSMain.tscn"
 const EDITOR_SCENE := "res://scenes/MapEditor.tscn"
 const BACKDROP := "res://assets/ui/starfall-orbit.webp"
 const MatchMenu = preload("res://scripts/RTSMatchMenu.gd")
+const LeaveConfirmation = preload("res://scripts/RTSLeaveConfirmation.gd")
 const GameInput = preload("res://scripts/RTSGameInput.gd")
 const Campaign = preload("res://scripts/engine/RTSCampaign.gd")
+const Mutators = preload("res://scripts/engine/RTSCampaignMutators.gd")
+const MutatorIcon = preload("res://scripts/RTSMutatorIcon.gd")
 const SCENARIOS := [
 	["starfall-canyon", "Starfall Canyon", "Three-faction showcase"],
 	["colony-macro-economy", "Colony Economy", "Gather, build, and train an army"],
 	["stutter-step-micro", "Rifleman Maneuvers", "Practice movement between volleys"],
+	["riflemen-vs-sporebursts", "Riflemen vs Sporebursts", "Spread your infantry before the Brood closes in"],
 	["howitzer-canyon-defense", "Canyon Defense", "Hold a choke with Howitzers"],
 	["phase-step-spire-walker-vs-monsters", "Aurelian Assault", "Practice Phase Step and cliff-walking"],
 	["crowd-push-priority", "Choke Maneuvers", "Move mixed squads through tight ground"],
@@ -21,8 +25,20 @@ var _page := "main"
 var _home: Control
 var _scenarios: Control
 var _campaign: Control
+var _online: Control
+var _online_address: LineEdit
+var _online_port: SpinBox
+var _online_faction: OptionButton
+var _online_code: LineEdit
+var _online_connect: Button
+var _online_ai_host: Button
+var _online_ai_watch: Button
+var _online_status: Label
+var _online_factions: Array = []
 var _campaign_error: Label
 var _campaign_difficulty: OptionButton
+var _mutator_buttons: Dictionary = {}
+var _mutator_total: Label
 var _mission_buttons: Array[Button] = []
 var _options: CanvasLayer
 var _first_button: Button
@@ -30,6 +46,7 @@ var _back_focus: Button
 var _menu_buttons: Dictionary = {}
 var _scenario_buttons: Dictionary = {}
 var _error: Label
+var _leave_confirmation: LeaveConfirmation
 
 func _ready() -> void:
 	if not SimEngine.startup_complete and _direct_launch():
@@ -38,6 +55,8 @@ func _ready() -> void:
 		return
 	SimEngine.paused = true
 	SimEngine.scenario_loaded.connect(_on_scenario_loaded)
+	_leave_confirmation = LeaveConfirmation.new()
+	add_child(_leave_confirmation)
 	_build_background()
 	var brand := _label(self, "ROBOS  /  REAL-TIME STRATEGY", 18, Color("#8bd5e0"))
 	brand.position = Vector2(130, 104)
@@ -46,6 +65,9 @@ func _ready() -> void:
 	_build_main_page()
 	_build_scenario_page()
 	_build_campaign_page()
+	if not OS.has_feature("web"):
+		_build_online_page()
+		RTSNetwork.status_changed.connect(_update_online_status)
 	_first_button.grab_focus()
 
 func waiting_on_title() -> bool:
@@ -116,13 +138,114 @@ func _build_main_page() -> void:
 	if not _first_button:
 		_first_button = campaign
 	_add_menu_button(buttons, "skirmish", "Skirmish", "1 vs. AI", func(): _open_options(MatchMenu.Layout.SKIRMISH, "skirmish"))
+	if not OS.has_feature("web"):
+		var online := _stack(_home, Vector2(660, 440), 300)
+		_add_menu_button(online, "online", "Online 1v1", "", _open_online)
 	_add_menu_button(buttons, "scenarios", "Scenarios", "Practice and showcases", _open_scenarios)
 	_add_menu_button(buttons, "editor", "Map Editor", "Create a battlefield", func(): _change_scene(EDITOR_SCENE))
 	var gap := Control.new()
 	gap.custom_minimum_size.y = 10
 	buttons.add_child(gap)
 	_add_menu_button(buttons, "settings", "Settings", "Sound and display", func(): _open_options(MatchMenu.Layout.SETTINGS, "settings"))
-	_add_menu_button(buttons, "quit", "Quit", "", func(): get_tree().quit())
+	_add_menu_button(buttons, "quit", "Quit", "", func():
+		_confirm_replacing_battle("Quit Starfall Command?", func(): get_tree().quit()))
+	var credit_panel := PanelContainer.new()
+	credit_panel.position = Vector2(130, 920)
+	credit_panel.add_theme_stylebox_override("panel", _button_style(Color("#102331"), Color("#3a6577"), 2))
+	_home.add_child(credit_panel)
+	var credit := LinkButton.new()
+	credit.name = "SoundtrackCredit"
+	credit.text = "Soundtrack  ·  " + RTSMusic.CREDIT
+	credit.uri = RTSMusic.ARTIST_CHANNEL_URL
+	credit.tooltip_text = "Open Mattowarrior777 on YouTube"
+	credit.custom_minimum_size.y = 38
+	credit.add_theme_font_size_override("font_size", 20)
+	credit.add_theme_color_override("font_color", Color("#d1eef7"))
+	credit_panel.add_child(credit)
+
+func _build_online_page() -> void:
+	_online = Control.new()
+	add_child(_online)
+	var title := _label(_online, "Online 1v1", 54, Color("#ecf5ff"))
+	title.position = Vector2(126, 156)
+	var form := _stack(_online, Vector2(130, 255), 550)
+	_label(form, "Server address", 19, Color("#b7cbd9"))
+	_online_address = LineEdit.new()
+	_online_address.text = "127.0.0.1"
+	_online_address.placeholder_text = "Hostname or IP address"
+	_online_address.custom_minimum_size.y = 44
+	_online_address.max_length = 253
+	form.add_child(_online_address)
+	_label(form, "UDP port", 19, Color("#b7cbd9"))
+	_online_port = SpinBox.new()
+	_online_port.min_value = 1
+	_online_port.max_value = 65535
+	_online_port.value = RTSNetwork.DEFAULT_PORT
+	_online_port.custom_minimum_size.y = 44
+	form.add_child(_online_port)
+	_label(form, "Your faction", 19, Color("#b7cbd9"))
+	_online_faction = OptionButton.new()
+	_online_faction.custom_minimum_size.y = 44
+	_online_factions = RTSData.faction_info.keys() + ["random"]
+	for faction in _online_factions:
+		_online_faction.add_item(RTSData.get_faction_name(faction))
+	form.add_child(_online_faction)
+	_label(form, "Room code", 19, Color("#b7cbd9"))
+	_online_code = LineEdit.new()
+	_online_code.placeholder_text = "Optional"
+	_online_code.secret = true
+	_online_code.max_length = 64
+	_online_code.custom_minimum_size.y = 44
+	form.add_child(_online_code)
+	_online_connect = _menu_button(form, "Join match", "", _join_online)
+	_menu_button(form, "Back", "", _show_home)
+	_online_status = _label(form, "", 19, Color("#a4c4d4"))
+	_online_status.custom_minimum_size.x = 550
+	_online_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	var ai_form := _stack(_online, Vector2(760, 255), 550)
+	_label(ai_form, "AI vs AI · Frontier Hunters", 28, Color("#ecf5ff"))
+	var picks: Array[OptionButton] = []
+	for label_text in ["Commander 1", "Commander 2"]:
+		_label(ai_form, label_text, 19, Color("#b7cbd9"))
+		var pick := OptionButton.new()
+		pick.custom_minimum_size.y = 44
+		for faction in _online_factions:
+			pick.add_item(RTSData.get_faction_name(faction))
+		pick.select(_online_factions.find("random"))
+		ai_form.add_child(pick)
+		picks.append(pick)
+	_online_ai_host = _menu_button(ai_form, "Create AI lobby", "", func():
+		if RTSNetwork.hosting_ai and RTSNetwork.state == "waiting":
+			RTSNetwork.launch_ai_match()
+		else:
+			_confirm_replacing_battle("Create an AI lobby?", func():
+				RTSNetwork.join_match(_online_address.text, int(_online_port.value), _online_factions[picks[0].selected],
+					_online_code.text, "host_ai", _online_factions[picks[1].selected])))
+	_online_ai_watch = _menu_button(ai_form, "Join as viewer", "", func():
+		_confirm_replacing_battle("Join as viewer?", func():
+			RTSNetwork.join_match(_online_address.text, int(_online_port.value), "random", _online_code.text, "watch")))
+	_online.hide()
+
+func _open_online() -> void:
+	_back_focus = _menu_buttons.online
+	_page = "online"
+	_home.hide()
+	_online.show()
+	_update_online_status(RTSNetwork.status_message)
+	_online_address.grab_focus()
+
+func _join_online() -> void:
+	_confirm_replacing_battle("Join an online match?", func():
+		RTSNetwork.join_match(_online_address.text, int(_online_port.value), _online_factions[_online_faction.selected], _online_code.text))
+
+func _update_online_status(message: String) -> void:
+	_online_status.text = message
+	var idle := RTSNetwork.state == "idle"
+	var can_launch := RTSNetwork.hosting_ai and RTSNetwork.state == "waiting"
+	_online_connect.disabled = not idle
+	_online_ai_watch.disabled = not idle
+	_online_ai_host.disabled = not idle and not can_launch
+	_online_ai_host.text = "Start AI match" if can_launch else "Create AI lobby"
 
 func _build_scenario_page() -> void:
 	_scenarios = Control.new()
@@ -172,7 +295,108 @@ func _build_campaign_page() -> void:
 		_mission_buttons.append(button)
 	_menu_button(buttons, "Back", "", _show_home)
 	_campaign_error = _label(buttons, "", 18, Color("#ff948c"))
+	_build_mutator_picker()
 	_campaign.hide()
+
+func _build_mutator_picker() -> void:
+	var frame := PanelContainer.new()
+	frame.position = Vector2(960, 342)
+	frame.size = Vector2(830, 590)
+	frame.add_theme_stylebox_override("panel", _button_style(Color("#101c2b"), Color("#3a6577"), 2))
+	_campaign.add_child(frame)
+	var margin := MarginContainer.new()
+	for side in ["left", "right", "top", "bottom"]:
+		margin.add_theme_constant_override("margin_" + side, 22)
+	frame.add_child(margin)
+	var body := VBoxContainer.new()
+	body.add_theme_constant_override("separation", 12)
+	margin.add_child(body)
+	var heading := HBoxContainer.new()
+	body.add_child(heading)
+	_label(heading, "Mutators", 26, Color("#ecf5ff")).size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_mutator_total = _label(heading, "", 16, Color("#a4b5c6"))
+	var scroll := ScrollContainer.new()
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.follow_focus = true
+	body.add_child(scroll)
+	var entries := VBoxContainer.new()
+	entries.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	entries.add_theme_constant_override("separation", 14)
+	scroll.add_child(entries)
+	var available := _mutator_grid(entries)
+	var enabled: Array = SimEngine.campaign.selected_mutators() if SimEngine.campaign != null else []
+	for id in Mutators.ACTIVE:
+		var info: Array = Mutators.ACTIVE[id]
+		var choice := _mutator_tile(available, id, info[0], info[1])
+		choice.button_pressed = id in enabled
+		_mutator_buttons[id] = choice
+		choice.toggled.connect(func(_pressed): _update_mutator_total())
+	_update_mutator_total()
+	_label(entries, "Coming soon", 21, Color("#a4b5c6"))
+	var upcoming := _mutator_grid(entries)
+	for title in Mutators.UPCOMING:
+		_mutator_tile(upcoming, "", title)
+
+func _mutator_grid(parent: Container) -> GridContainer:
+	var grid := GridContainer.new()
+	grid.columns = 5
+	grid.add_theme_constant_override("h_separation", 8)
+	grid.add_theme_constant_override("v_separation", 8)
+	parent.add_child(grid)
+	return grid
+
+func _mutator_tile(grid: GridContainer, id: String, title: String, description := "") -> Button:
+	var available := not id.is_empty()
+	var tile := Button.new()
+	tile.custom_minimum_size = Vector2(145, 104 if available else 84)
+	tile.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	tile.toggle_mode = true
+	tile.disabled = not available
+	tile.clip_contents = true
+	tile.tooltip_text = "%s\n%s" % [title, description.replace("\n", " ") if available else "Coming soon"]
+	tile.add_theme_stylebox_override("normal", _button_style(Color("#152638"), Color("#35546a"), 1))
+	tile.add_theme_stylebox_override("hover", _button_style(Color("#1a3448"), Color("#6c9eb1"), 1))
+	tile.add_theme_stylebox_override("pressed", _button_style(Color("#173d4a"), Color("#82d7e6"), 3))
+	tile.add_theme_stylebox_override("hover_pressed", _button_style(Color("#215060"), Color("#a5ebf1"), 3))
+	tile.add_theme_stylebox_override("disabled", _button_style(Color("#111d2a"), Color("#2a4154"), 1))
+	grid.add_child(tile)
+	var body := VBoxContainer.new()
+	body.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	body.offset_left = 8
+	body.offset_right = -8
+	body.offset_top = 6
+	body.offset_bottom = -5
+	body.add_theme_constant_override("separation", 2)
+	body.alignment = BoxContainer.ALIGNMENT_CENTER
+	body.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	tile.add_child(body)
+	var icon := MutatorIcon.new()
+	icon.kind = id
+	icon.custom_minimum_size = Vector2(30, 30)
+	icon.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	body.add_child(icon)
+	var name_label := _label(body, title, 15, Color("#ecf5ff") if available else Color("#8398a8"))
+	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	if available:
+		var font := name_label.get_theme_font("font")
+		if font.get_string_size(title, HORIZONTAL_ALIGNMENT_LEFT, -1, 15).x > 129.0:
+			name_label.add_theme_font_size_override("font_size", 14)
+		var detail := _label(body, description, 13, Color("#a4b5c6"))
+		detail.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		detail.add_theme_constant_override("line_spacing", 0)
+	else:
+		name_label.add_theme_font_size_override("font_size", 14)
+		name_label.add_theme_constant_override("line_spacing", 0)
+		name_label.autowrap_mode = TextServer.AUTOWRAP_WORD
+	return tile
+
+func _update_mutator_total() -> void:
+	_mutator_total.text = "%d selected" % _selected_mutators().size()
+
+func _selected_mutators() -> Array:
+	return _mutator_buttons.keys().filter(func(id): return _mutator_buttons[id].button_pressed)
 
 func _open_campaign() -> void:
 	_back_focus = _menu_buttons.campaign
@@ -188,7 +412,10 @@ func _open_campaign() -> void:
 	_mission_buttons.back().grab_focus()
 
 func _play_mission(index: int) -> void:
-	var result := SimEngine.start_campaign(index, Campaign.DIFFICULTIES[_campaign_difficulty.selected])
+	_confirm_replacing_battle("Start a campaign mission?", _start_mission.bind(index))
+
+func _start_mission(index: int) -> void:
+	var result := SimEngine.start_campaign(index, Campaign.DIFFICULTIES[_campaign_difficulty.selected], _selected_mutators())
 	if not result.ok:
 		_campaign_error.text = result.error
 
@@ -268,6 +495,9 @@ func _open_options(layout: int, page: String) -> void:
 	_options.open_title_panel()
 
 func _show_home() -> void:
+	if _online and _online.visible:
+		RTSNetwork.leave_match()
+		_online.hide()
 	if _options:
 		_options.panel.hide()
 		_options.queue_free()
@@ -282,6 +512,9 @@ func _show_home() -> void:
 		_first_button.grab_focus()
 
 func _play_scenario(slug: String) -> void:
+	_confirm_replacing_battle("Start a scenario?", _start_scenario.bind(slug))
+
+func _start_scenario(slug: String) -> void:
 	if slug == "starfall-canyon":
 		SimEngine.load_legacy_scenario()
 		RTSCommanderAI.configure_from_scenario([])
@@ -306,7 +539,23 @@ func _change_scene(path: String) -> void:
 		_leaving = true
 		get_tree().call_deferred("change_scene_to_file", path)
 
+func _confirm_replacing_battle(heading: String, action: Callable) -> void:
+	if SimEngine.resume_from_title:
+		var message := "Progress in the paused match will be lost."
+		if SimEngine.campaign != null:
+			message = "Progress in the paused mission will be lost."
+		_leave_confirmation.ask(heading, message, action)
+	else:
+		action.call()
+
+func _confirmation_title() -> String:
+	if _leave_confirmation and _leave_confirmation.visible:
+		return _leave_confirmation.title
+	return _options.confirmation_title() if _options else ""
+
 func _unhandled_key_input(event: InputEvent) -> void:
+	if not _confirmation_title().is_empty():
+		return
 	if event.pressed and event.keycode == KEY_ESCAPE and _page != "main":
 		_show_home()
 		get_viewport().set_input_as_handled()
@@ -319,7 +568,10 @@ func inject_input(request: Dictionary) -> void:
 func ui_state() -> Dictionary:
 	return {
 		"screen": "title", "page": _page, "resume_available": SimEngine.resume_from_title,
+		"confirmation": _confirmation_title(),
+		"online_status": RTSNetwork.state, "online_seat": RTSNetwork.seat,
 		"campaign_unlocked": _mission_buttons.map(func(button): return not button.disabled),
+		"campaign_mutators": _selected_mutators(),
 		"campaign_difficulty": Campaign.DIFFICULTIES[_campaign_difficulty.selected] if _campaign_difficulty else "normal",
 		"fullscreen": RTSDisplay.is_fullscreen(),
 	}

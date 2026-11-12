@@ -27,6 +27,7 @@ Feature: Start and resume Starfall Command from its title screen
     Then the title shows the "campaign" page
     And campaign mission access is [true, false, false]
     When the commander presses "Enter"
+    And the commander confirms replacing a paused battle if prompted
     Then mission 1 begins with its voiced cinematic
     When the commander skips the cinematic and clears the route
     Then Cut the Signal is complete and five survivors have joined
@@ -47,10 +48,13 @@ Feature: Start and resume Starfall Command from its title screen
     And the active mission difficulty is "hard"
     When the commander skips the cinematic and waits for the first Directorate raid
     Then the dig site is sending raiders toward the staging base
-    When the commander leaves the campaign for the title
+    When the commander cancels leaving an active campaign
+    And the commander leaves the campaign for the title
     And the commander clicks Campaign on the title screen
     Then the title shows the "campaign" page
     And campaign mission access is [true, true, false]
+    When the commander cancels replacing the paused mission
+    Then the title shows the "campaign" page
     When the commander presses "Escape"
     Then the title shows the "main" page
 
@@ -59,6 +63,7 @@ Feature: Start and resume Starfall Command from its title screen
     Then the title shows the "scenarios" page
     When the commander presses "Down"
     And the commander presses "Enter"
+    And the commander confirms replacing a paused battle if prompted
     Then Colony Macro Economy is open in the battlefield
     When the commander returns to the title from the battlefield
     And the commander clicks Map Editor on the title screen

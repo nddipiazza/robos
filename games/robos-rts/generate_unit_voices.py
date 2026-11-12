@@ -12,6 +12,7 @@ Synthesizes spoken dialogue lines for Starfall Command units across their intera
 Uses Microsoft Edge Neural TTS (edge-tts) + ffmpeg to produce 16-bit 22050 Hz mono PCM
 .wav files in assets/audio/voice/ with subtle tactical radio-comm styling, and exports
 assets/audio/voice/manifest.json for RTSAudio.gd & RTSData.gd.
+The generator keeps the shipped VoiceDesign recordings by default.
 """
 
 from __future__ import annotations
@@ -31,6 +32,360 @@ SAMPLE_RATE = 22050
 VOICE_DIR = Path(__file__).resolve().parent / "assets" / "audio" / "voice"
 
 UNIT_VOICE_PROFILES: dict[str, dict] = {
+    "shade_agent": {
+        "unit_name": "Shade Agent",
+        "voice": "en-US-GuyNeural",
+        "rate": "-10%",
+        "pitch": "-8Hz",
+        "comm_filter": True,
+        "lines": {
+            "select": [
+                {"id": "shade_agent_select_1", "text": "Shade on your frequency."},
+                {"id": "shade_agent_select_2", "text": "Who are we watching?"},
+                {"id": "shade_agent_select_3", "text": "I have a clear sightline."},
+                {"id": "shade_agent_select_4", "text": "Comms are quiet."},
+                {"id": "shade_agent_select_5", "text": "Waiting on the signal."},
+            ],
+            "move": [
+                {"id": "shade_agent_move_1", "text": "Moving under cover."},
+                {"id": "shade_agent_move_2", "text": "I'll take the flank."},
+                {"id": "shade_agent_move_3", "text": "Crossing now."},
+                {"id": "shade_agent_move_4", "text": "Changing position."},
+            ],
+            "attack": [
+                {"id": "shade_agent_attack_1", "text": "Target in sight."},
+                {"id": "shade_agent_attack_2", "text": "Hold for my shot."},
+                {"id": "shade_agent_attack_3", "text": "Their shields are my problem."},
+                {"id": "shade_agent_attack_4", "text": "I have the angle."},
+                {"id": "shade_agent_attack_5", "text": "Sending one downrange."},
+            ],
+            "ready": [
+                {"id": "shade_agent_ready_1", "text": "Shade Agent in position."},
+                {"id": "shade_agent_ready_2", "text": "Canister rifle checked."},
+            ],
+        },
+    },
+    "spine_ambusher": {
+        "unit_name": "Spine Ambusher",
+        "voice": "en-US-ChristopherNeural",
+        "rate": "-12%",
+        "pitch": "-15Hz",
+        "comm_filter": False,
+        "lines": {
+            "select": [
+                {"id": "spine_ambusher_select_1", "text": "I hear their footfalls."},
+                {"id": "spine_ambusher_select_2", "text": "The soil is soft here."},
+                {"id": "spine_ambusher_select_3", "text": "Where will they cross?"},
+                {"id": "spine_ambusher_select_4", "text": "My spines are set."},
+                {"id": "spine_ambusher_select_5", "text": "Let them come closer."},
+            ],
+            "move": [
+                {"id": "spine_ambusher_move_1", "text": "Taking a new position."},
+                {"id": "spine_ambusher_move_2", "text": "I will wait there."},
+                {"id": "spine_ambusher_move_3", "text": "Keep the crossing in sight."},
+                {"id": "spine_ambusher_move_4", "text": "Scythes forward."},
+            ],
+            "attack": [
+                {"id": "spine_ambusher_attack_1", "text": "Split their line."},
+                {"id": "spine_ambusher_attack_2", "text": "The ground has teeth."},
+                {"id": "spine_ambusher_attack_3", "text": "Let the spines rise."},
+                {"id": "spine_ambusher_attack_4", "text": "They walked into it."},
+                {"id": "spine_ambusher_attack_5", "text": "Straight through."},
+            ],
+            "ready": [
+                {"id": "spine_ambusher_ready_1", "text": "Spine Ambusher grown."},
+                {"id": "spine_ambusher_ready_2", "text": "Find me a choke point."},
+            ],
+        },
+    },
+    "rupture_crawler": {
+        "unit_name": "Rupture Crawler",
+        "voice": "en-US-TonyNeural",
+        "rate": "-13%",
+        "pitch": "-17Hz",
+        "lines": {
+            "select": [
+                {"id": "rupture_crawler_select_1", "text": "Rupture Crawler awake."},
+                {"id": "rupture_crawler_select_2", "text": "The sac is full."},
+                {"id": "rupture_crawler_select_3", "text": "Find me a tight group."},
+                {"id": "rupture_crawler_select_4", "text": "The ground will open."},
+                {"id": "rupture_crawler_select_5", "text": "Gnarl charge ready."},
+            ],
+            "move": [
+                {"id": "rupture_crawler_move_1", "text": "Crawling into range."},
+                {"id": "rupture_crawler_move_2", "text": "I smell the crossing."},
+                {"id": "rupture_crawler_move_3", "text": "Moving my sacs."},
+                {"id": "rupture_crawler_move_4", "text": "Through the gap."},
+            ],
+            "attack": [
+                {"id": "rupture_crawler_attack_1", "text": "Bile in the air."},
+                {"id": "rupture_crawler_attack_2", "text": "Scatter while you can."},
+                {"id": "rupture_crawler_attack_3", "text": "The barrier will melt."},
+                {"id": "rupture_crawler_attack_4", "text": "Mark the landing."},
+                {"id": "rupture_crawler_attack_5", "text": "The acid falls."},
+            ],
+            "ready": [
+                {"id": "rupture_crawler_ready_1", "text": "The cocoon opens."},
+                {"id": "rupture_crawler_ready_2", "text": "Rupture Crawler grown."},
+            ],
+        },
+    },
+    "duskblade": {
+        "unit_name": "Duskblade",
+        "voice": "en-US-DavisNeural",
+        "rate": "-6%",
+        "pitch": "-8Hz",
+        "lines": {
+            "select": [
+                {"id": "duskblade_select_1", "text": "Duskblade ready."},
+                {"id": "duskblade_select_2", "text": "I can pass unseen."},
+                {"id": "duskblade_select_3", "text": "Where is the breach?"},
+                {"id": "duskblade_select_4", "text": "The Veil holds."},
+                {"id": "duskblade_select_5", "text": "Give me an opening."},
+            ],
+            "move": [
+                {"id": "duskblade_move_1", "text": "Moving through the shadows."},
+                {"id": "duskblade_move_2", "text": "I'll take the quiet route."},
+                {"id": "duskblade_move_3", "text": "Crossing now."},
+                {"id": "duskblade_move_4", "text": "I see the path."},
+            ],
+            "attack": [
+                {"id": "duskblade_attack_1", "text": "One clean strike."},
+                {"id": "duskblade_attack_2", "text": "I have their flank."},
+                {"id": "duskblade_attack_3", "text": "They haven't seen me."},
+                {"id": "duskblade_attack_4", "text": "The blade is out."},
+                {"id": "duskblade_attack_5", "text": "I'll cut through."},
+            ],
+            "ready": [
+                {"id": "duskblade_ready_1", "text": "Duskblade online."},
+                {"id": "duskblade_ready_2", "text": "I walk unseen."},
+            ],
+        },
+    },
+    "lattice_archon": {
+        "unit_name": "Lattice Archon",
+        "voice": "en-US-GuyNeural",
+        "rate": "-18%",
+        "pitch": "-15Hz",
+        "lines": {
+            "select": [
+                {"id": "lattice_archon_select_1", "text": "We are the Lattice."},
+                {"id": "lattice_archon_select_2", "text": "Our charge is stable."},
+                {"id": "lattice_archon_select_3", "text": "We stand together."},
+                {"id": "lattice_archon_select_4", "text": "Where do we hold?"},
+                {"id": "lattice_archon_select_5", "text": "The field is ours."},
+            ],
+            "move": [
+                {"id": "lattice_archon_move_1", "text": "We move as one."},
+                {"id": "lattice_archon_move_2", "text": "Our course is set."},
+                {"id": "lattice_archon_move_3", "text": "We cross together."},
+                {"id": "lattice_archon_move_4", "text": "We advance."},
+            ],
+            "attack": [
+                {"id": "lattice_archon_attack_1", "text": "Feel the current."},
+                {"id": "lattice_archon_attack_2", "text": "Their line breaks here."},
+                {"id": "lattice_archon_attack_3", "text": "Discharge."},
+                {"id": "lattice_archon_attack_4", "text": "We have them."},
+                {"id": "lattice_archon_attack_5", "text": "Release the charge."},
+            ],
+            "ready": [
+                {"id": "lattice_archon_ready_1", "text": "The Lattice is whole."},
+                {"id": "lattice_archon_ready_2", "text": "The warp is complete."},
+            ],
+        },
+    },
+    "storm_scribe": {
+        "unit_name": "Storm Scribe",
+        "voice": "en-US-ChristopherNeural",
+        "rate": "-8%",
+        "pitch": "-5Hz",
+        "lines": {
+            "select": [
+                {"id": "storm_scribe_select_1", "text": "Storm Scribe at your call."},
+                {"id": "storm_scribe_select_2", "text": "The field is steady."},
+                {"id": "storm_scribe_select_3", "text": "I can hear their energy."},
+                {"id": "storm_scribe_select_4", "text": "Show me where they're gathering."},
+                {"id": "storm_scribe_select_5", "text": "The Archive trained me for this."},
+            ],
+            "move": [
+                {"id": "storm_scribe_move_1", "text": "I'll find the high ground."},
+                {"id": "storm_scribe_move_2", "text": "Moving behind the line."},
+                {"id": "storm_scribe_move_3", "text": "Keep the approach clear."},
+                {"id": "storm_scribe_move_4", "text": "On my way."},
+            ],
+            "attack": [
+                {"id": "storm_scribe_attack_1", "text": "Channeling now."},
+                {"id": "storm_scribe_attack_2", "text": "Let them come closer."},
+                {"id": "storm_scribe_attack_3", "text": "That's a crowded line."},
+                {"id": "storm_scribe_attack_4", "text": "I'll drain their charge."},
+                {"id": "storm_scribe_attack_5", "text": "Clear the field."},
+            ],
+            "ready": [
+                {"id": "storm_scribe_ready_1", "text": "Storm Scribe ready."},
+                {"id": "storm_scribe_ready_2", "text": "My channel is open."},
+            ],
+        },
+    },
+    "mirage_adept": {
+        "unit_name": "Mirage Adept",
+        "voice": "en-US-AriaNeural",
+        "rate": "+3%",
+        "pitch": "-3Hz",
+        "lines": {
+            "select": [
+                {"id": "mirage_adept_select_1", "text": "Mirage Adept standing by."},
+                {"id": "mirage_adept_select_2", "text": "The light bends with me."},
+                {"id": "mirage_adept_select_3", "text": "Show me the approach."},
+                {"id": "mirage_adept_select_4", "text": "Mirage here. I can scout ahead."},
+                {"id": "mirage_adept_select_5", "text": "My glaive is charged."},
+            ],
+            "move": [
+                {"id": "mirage_adept_move_1", "text": "Moving up."},
+                {"id": "mirage_adept_move_2", "text": "I'll check the crossing."},
+                {"id": "mirage_adept_move_3", "text": "On your signal."},
+                {"id": "mirage_adept_move_4", "text": "Taking the flank."},
+            ],
+            "attack": [
+                {"id": "mirage_adept_attack_1", "text": "Glaive out."},
+                {"id": "mirage_adept_attack_2", "text": "Cutting through their line."},
+                {"id": "mirage_adept_attack_3", "text": "I'll clear the light infantry."},
+                {"id": "mirage_adept_attack_4", "text": "Found an opening."},
+                {"id": "mirage_adept_attack_5", "text": "Watch the flank."},
+            ],
+            "ready": [
+                {"id": "mirage_adept_ready_1", "text": "Mirage Adept ready."},
+                {"id": "mirage_adept_ready_2", "text": "Transfer field online."},
+            ],
+        },
+    },
+    "bastion_walker": {
+        "unit_name": "Bastion Walker",
+        "voice": "en-US-GuyNeural",
+        "rate": "-8%",
+        "pitch": "-12Hz",
+        "lines": {
+            "select": [
+                {"id": "bastion_walker_select_1", "text": "Bastion Walker standing by."},
+                {"id": "bastion_walker_select_2", "text": "Phase coils stable."},
+                {"id": "bastion_walker_select_3", "text": "I can hold this line."},
+                {"id": "bastion_walker_select_4", "text": "Point me at their armor."},
+                {"id": "bastion_walker_select_5", "text": "Bastion crew listening."},
+            ],
+            "move": [
+                {"id": "bastion_walker_move_1", "text": "I'll take the front."},
+                {"id": "bastion_walker_move_2", "text": "Moving at your pace."},
+                {"id": "bastion_walker_move_3", "text": "Coming around."},
+                {"id": "bastion_walker_move_4", "text": "Crossing now."},
+            ],
+            "attack": [
+                {"id": "bastion_walker_attack_1", "text": "Focus their armor."},
+                {"id": "bastion_walker_attack_2", "text": "Opening both emitters."},
+                {"id": "bastion_walker_attack_3", "text": "They're in range."},
+                {"id": "bastion_walker_attack_4", "text": "Put the shield to work."},
+                {"id": "bastion_walker_attack_5", "text": "Hold steady. Firing."},
+            ],
+            "ready": [
+                {"id": "bastion_walker_ready_1", "text": "Bastion Walker online."},
+                {"id": "bastion_walker_ready_2", "text": "Phase cannons charged."},
+            ],
+        },
+    },
+    "rift_engine": {
+        "unit_name": "Rift Engine",
+        "voice": "en-US-AvaNeural",
+        "rate": "-4%",
+        "pitch": "-6Hz",
+        "lines": {
+            "select": [
+                {"id": "rift_engine_select_1", "text": "Rift Engine online."},
+                {"id": "rift_engine_select_2", "text": "Containment is steady."},
+                {"id": "rift_engine_select_3", "text": "Show me the target."},
+                {"id": "rift_engine_select_4", "text": "Which lane needs clearing?"},
+                {"id": "rift_engine_select_5", "text": "I'll keep the core quiet."},
+            ],
+            "move": [
+                {"id": "rift_engine_move_1", "text": "Moving the engine."},
+                {"id": "rift_engine_move_2", "text": "Taking the long way."},
+                {"id": "rift_engine_move_3", "text": "Course set."},
+                {"id": "rift_engine_move_4", "text": "Drifting into position."},
+            ],
+            "attack": [
+                {"id": "rift_engine_attack_1", "text": "Nova away. Clear the lane."},
+                {"id": "rift_engine_attack_2", "text": "Keep back from the blast."},
+                {"id": "rift_engine_attack_3", "text": "Sending a pulse."},
+                {"id": "rift_engine_attack_4", "text": "The core is out."},
+                {"id": "rift_engine_attack_5", "text": "Stand clear."},
+            ],
+            "ready": [
+                {"id": "rift_engine_ready_1", "text": "Rift Engine ready."},
+                {"id": "rift_engine_ready_2", "text": "Containment checks passed."},
+            ],
+        },
+    },
+    "ridge_scout": {
+        "unit_name": "Ridge Scout",
+        "voice": "en-US-GuyNeural",
+        "rate": "+8%",
+        "pitch": "+4Hz",
+        "lines": {
+            "select": [
+                {"id": "ridge_scout_select_1", "text": "Ridge Scout checking in."},
+                {"id": "ridge_scout_select_2", "text": "Both nozzles green."},
+                {"id": "ridge_scout_select_3", "text": "Where do you need eyes?"},
+                {"id": "ridge_scout_select_4", "text": "I've got the high side."},
+                {"id": "ridge_scout_select_5", "text": "Radio's good. Go ahead."},
+            ],
+            "move": [
+                {"id": "ridge_scout_move_1", "text": "I'll take the ledge."},
+                {"id": "ridge_scout_move_2", "text": "Cutting across."},
+                {"id": "ridge_scout_move_3", "text": "I see the route."},
+                {"id": "ridge_scout_move_4", "text": "Moving on your mark."},
+            ],
+            "attack": [
+                {"id": "ridge_scout_attack_1", "text": "Caught them looking downhill."},
+                {"id": "ridge_scout_attack_2", "text": "Two pistols. One problem."},
+                {"id": "ridge_scout_attack_3", "text": "I'll clear the overlook."},
+                {"id": "ridge_scout_attack_4", "text": "Their flank's wide open."},
+                {"id": "ridge_scout_attack_5", "text": "Taking the shot."},
+            ],
+            "ready": [
+                {"id": "ridge_scout_ready_1", "text": "Pack charged, pistols loaded."},
+                {"id": "ridge_scout_ready_2", "text": "Ridge Scout ready to climb."},
+            ],
+        },
+    },
+    "sporeburst": {
+        "unit_name": "Sporeburst",
+        "voice": "en-US-ChristopherNeural",
+        "rate": "+8%",
+        "pitch": "-16Hz",
+        "lines": {
+            "select": [
+                {"id": "sporeburst_select_1", "text": "I smell the front line."},
+                {"id": "sporeburst_select_2", "text": "Keep the sac intact."},
+                {"id": "sporeburst_select_3", "text": "The brood sends me."},
+                {"id": "sporeburst_select_4", "text": "I hear your signal."},
+                {"id": "sporeburst_select_5", "text": "The pressure builds."},
+            ],
+            "move": [
+                {"id": "sporeburst_move_1", "text": "Low and fast."},
+                {"id": "sporeburst_move_2", "text": "Scuttling through."},
+                {"id": "sporeburst_move_3", "text": "I'll go around."},
+                {"id": "sporeburst_move_4", "text": "Follow my trail."},
+            ],
+            "attack": [
+                {"id": "sporeburst_attack_1", "text": "Right into the pack."},
+                {"id": "sporeburst_attack_2", "text": "One burst is enough."},
+                {"id": "sporeburst_attack_3", "text": "Their line is too tight."},
+                {"id": "sporeburst_attack_4", "text": "I can reach them."},
+                {"id": "sporeburst_attack_5", "text": "Let the pressure out."},
+            ],
+            "ready": [
+                {"id": "sporeburst_ready_1", "text": "The shell is open."},
+                {"id": "sporeburst_ready_2", "text": "Sporeburst ready."},
+            ],
+        },
+    },
     "crownspire": {
         "unit_name": "Crownspire Dreadnought",
         "voice": "en-US-BrianNeural",
@@ -784,14 +1139,21 @@ async def _synthesize_one(
 async def generate_all_voices(unit_filter: str | None = None, force: bool = False) -> dict:
     import imageio_ffmpeg
 
+    add_airframe_voices()
+    add_campaign_voices()
     ffmpeg_exe = imageio_ffmpeg.get_ffmpeg_exe()
     VOICE_DIR.mkdir(parents=True, exist_ok=True)
     sem = asyncio.Semaphore(2)
     tasks = []
-    manifest: dict[str, dict] = {}
+    manifest_path = VOICE_DIR / "manifest.json"
+    manifest: dict[str, dict] = (
+        json.loads(manifest_path.read_text(encoding="utf-8")) if manifest_path.exists() else {}
+    )
 
     for unit_id, profile in UNIT_VOICE_PROFILES.items():
         if unit_filter and unit_id != unit_filter:
+            continue
+        if not force and manifest.get(unit_id, {}).get("voice") == "Qwen3-TTS VoiceDesign":
             continue
         manifest[unit_id] = {
             "unit_name": profile["unit_name"],
@@ -824,14 +1186,75 @@ async def generate_all_voices(unit_filter: str | None = None, force: bool = Fals
                 )
 
     paths = await asyncio.gather(*tasks)
-    manifest_path = VOICE_DIR / "manifest.json"
-    if unit_filter and manifest_path.exists():
-        existing = json.loads(manifest_path.read_text(encoding="utf-8"))
-        existing.update(manifest)
-        manifest = existing
     manifest_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
     print(f"Synthesized {len(paths)} unit voice dialogue WAV files in {VOICE_DIR}")
     return manifest
+
+
+def add_airframe_voices() -> None:
+    aircraft = {
+        "night_harrier": ("Night Harrier", "en-US-AvaNeural", "-3%", "-2Hz", {
+            "select": ["Harrier on station.", "Pick a route below the radar."],
+            "move": ["Keeping low.", "Swinging around the flank."],
+            "attack": ["Both racks away.", "Clearing the ground below."],
+            "ready": ["Harrier fueled and armed.", "Rocket racks checked."],
+        }),
+        "sky_sentry": ("Sky Sentry", "en-US-EricNeural", "-6%", "-4Hz", {
+            "select": ["Sky Sentry overhead.", "I can cover that approach."],
+            "move": ["Changing altitude.", "Shifting the patrol."],
+            "attack": ["Tracking both contacts.", "Clear the marked ground."],
+            "ready": ["Sky Sentry ready for patrol.", "Ventral cannon checked."],
+        }),
+        "watchkeeper": ("Watchkeeper", "en-US-EmmaNeural", "-4%", "+0Hz", {
+            "select": ["Watchkeeper reading clear.", "What should I watch?"],
+            "move": ["Moving the sensor sweep.", "Repositioning for a better return."],
+            "attack": ["Tracking the signal.", "I'll shut down their weapons."],
+            "ready": ["Watchkeeper's sensors are live.", "Telemetry is coming through."],
+        }),
+        "dreadnought": ("Dreadnought", "en-US-DavisNeural", "-13%", "-11Hz", {
+            "select": ["Dreadnought bridge here.", "Bridge standing by."],
+            "move": ["Bring us onto that heading.", "Helm, make way."],
+            "attack": ["Fire the forward batteries.", "Charge the siege emitter."],
+            "ready": ["Dreadnought cleared for departure.", "All batteries report ready."],
+        }),
+    }
+    for unit_id, (name, voice, rate, pitch, categories) in aircraft.items():
+        UNIT_VOICE_PROFILES[unit_id] = {
+            "unit_name": name,
+            "voice": voice,
+            "rate": rate,
+            "pitch": pitch,
+            "comm_filter": True,
+            "lines": {
+                category: [
+                    {"id": f"{unit_id}_{category}_{index}", "text": line}
+                    for index, line in enumerate(lines, start=1)
+                ]
+                for category, lines in categories.items()
+            },
+        }
+
+def add_campaign_voices() -> None:
+    unit_id = "torchguard"
+    categories = {
+        "select": ["Torchguard standing by.", "Fuel pressure is good.", "Point me at the swarm.",
+                   "I can clear that road.", "Both burners are ready."],
+        "move": ["Moving up.", "Keeping the burners low.", "I'll take point.", "On that road."],
+        "attack": ["Clear behind me.", "Burners on.", "I've got the close ones.", "Light them up.",
+                   "Sweeping the lane."],
+        "ready": ["Torchguard ready to deploy.", "Fuel topped off. Where's the convoy?"],
+    }
+    UNIT_VOICE_PROFILES[unit_id] = {
+        "unit_name": "Torchguard",
+        "voice": "en-US-DavisNeural",
+        "rate": "-6%",
+        "pitch": "-8Hz",
+        "lines": {
+            category: [{"id": f"{unit_id}_{category}_{index}", "text": line}
+                       for index, line in enumerate(lines, start=1)]
+            for category, lines in categories.items()
+        },
+    }
 
 
 def main() -> None:

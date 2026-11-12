@@ -1,5 +1,7 @@
 extends SceneTree
 
+const Rules = preload("res://scripts/engine/RTSLadderRules.gd")
+
 var sim: Node
 var data: Node
 var failures: Array[String] = []
@@ -15,6 +17,7 @@ func _run() -> void:
 	_test_workshop_queue()
 	_test_landing_validation()
 	_test_targeting_and_victory()
+	_test_ladder_module_swap()
 	print("Relocatable production checks: ", "passed" if failures.is_empty() else str(failures))
 	quit(0 if failures.is_empty() else 1)
 
@@ -51,8 +54,35 @@ func _finish_module(producer: Dictionary) -> Dictionary:
 	var attachment: Dictionary = sim.production_attachment(producer, false)
 	if attachment.is_empty():
 		return {}
-	sim.step_ticks(ceili(float(attachment.build_total_time) * sim.build_time_scale() / sim.TICK_DT))
+	sim.step_ticks(ceili(float(attachment.build_total_time) / sim.TICK_DT))
 	return sim.production_attachment(producer)
+
+func _test_ladder_module_swap() -> void:
+	sim.load_scenario_dict({"ruleset": Rules.ID, "paused": true, "map": {"width": 112, "height": 72},
+		"players": {"1": {"faction": "humans", "crystal": 900, "aether": 900}, "2": {"faction": "humans"}}})
+	var hall: Dictionary = sim.spawn_unit("muster_hall", 1, Vector2(28, 29))
+	var hangar: Dictionary = sim.spawn_unit("airframe_hangar", 2, Vector2(42, 29))
+	sim._refresh_vision()
+	_check(sim.issue_command([hall.tag], "attach_research_module").ok, "The ladder Hall builds a module")
+	var module := _finish_module(hall)
+	if not _check(not module.is_empty(), "The ladder module completes"):
+		return
+	_check(sim.research_module_abilities(module).has("research_combat_shields")
+		and sim.issue_command([module.tag], "research_combat_shields").ok, "The Hall module offers infantry research")
+	var paid := _stock()
+	_check(not sim.issue_command([hall.tag], "lift").ok, "A researching module prevents lift")
+	_check(sim.issue_command([module.tag], "cancel_training", Vector2.ZERO, 0, "0").ok
+		and _stock() == paid + Vector2i(100, 100), "Cancel on the module refunds the waiting research")
+	var original: Vector2 = hall.pos
+	_check(sim.issue_command([hall.tag], "lift").ok and sim.issue_command([hangar.tag], "lift").ok, "Both production hulls lift")
+	sim.step_ticks(64)
+	_check(not module.has("attachment_parent_tag") and sim.research_module_abilities(module).is_empty(),
+		"The abandoned module offers no research")
+	_check(sim.issue_command([hangar.tag], "land", original + Vector2(0.7, 0.3)).ok, "A rival Hangar can land at the module")
+	_step_until_grounded(hangar)
+	_check(hangar.pos == original and module.owner == 2 and sim.production_attachment(hangar).get("tag") == module.tag
+		and sim.research_module_abilities(module).has("research_harrier_cloaking")
+		and not sim.research_module_abilities(module).has("research_combat_shields"), "The Hangar claims the module and changes its research options")
 
 func _test_hall_and_module() -> void:
 	_load([
@@ -79,7 +109,15 @@ func _test_hall_and_module() -> void:
 	var paid := _stock()
 	var progress: float = front.progress
 	_check(progress > 0.0 and second.progress == progress, "Both paid jobs are active before lift")
-	_check(sim.issue_command([hall.tag], "lift").ok and hall.flight_height > 0.0 and hall.is_structure
+	_check(sim.issue_command([hall.tag], "lift").ok and hall.flight_height == 0.0 and hall.has("flight_transition"),
+		"Liftoff begins while the Hall is still grounded")
+	var lift_ticks := ceili(float(data.get_unit_def("muster_hall").lift_duration_ms) * sim.TICK_RATE / 1000.0)
+	sim.step_ticks(lift_ticks - 1)
+	_check(hall.flight_height == 0.0 and sim._is_point_blocked_by_static(original, 0.85) and front.progress == progress
+		and not sim.issue_command([hall.tag], "move", Vector2(48, 29)).ok
+		and sim.unit_visual_elevation(hall) > 0.0, "The ascending Hall retains its footprint and pauses movement and production")
+	sim.step_ticks(1)
+	_check(hall.flight_height > 0.0 and hall.is_structure
 		and sim.units.has(module.tag) and not module.has("attachment_parent_tag"),
 		"The same structure takes off and leaves its finished module on the ground")
 	_check(sim.issue_command([hall.tag], "move", Vector2(48, 29)).ok, "The Hall moves only after takeoff")
@@ -91,6 +129,15 @@ func _test_hall_and_module() -> void:
 	var near_pad := original + Vector2(0.9, 0.5)
 	_check(sim.issue_command([hall.tag], "land", near_pad).ok and hall.flight_height > 0.0
 		and hall.orders.front().target_pos == original, "Landing travels to the snapped site beside its compatible module")
+	for _i in range(4096):
+		if hall.has("flight_transition") or hall.orders.is_empty():
+			break
+		sim.step_ticks(1)
+	_check(hall.has("flight_transition"), "The Hall starts descending once it reaches the site")
+	var land_ticks := ceili(float(data.get_unit_def("muster_hall").land_duration_ms) * sim.TICK_RATE / 1000.0)
+	sim.step_ticks(land_ticks - 1)
+	_check(hall.flight_height > 0.0 and front.progress == progress and sim.unit_visual_elevation(hall) < hall.flight_height,
+		"The descending Hall remains airborne and pauses production through the configured delay")
 	_step_until_grounded(hall)
 	_check(hall.pos == original and hall.flight_height == 0.0 and sim.production_attachment(hall).get("tag") == module.tag
 		and sim._is_point_blocked_by_static(original, 0.85), "Touchdown restores the footprint and reconnects the existing module")
@@ -117,6 +164,7 @@ func _test_workshop_queue() -> void:
 	_check(sim.issue_command([workshop.tag], "cancel_training", Vector2.ZERO, 0, "1").ok
 		and _stock() == paid + Vector2i(unit.crystal_cost, unit.aether_cost) and sim.players[1].supply_used == 0,
 		"A waiting airborne job can be refunded at exact cost")
+	sim.step_ticks(ceili(float(data.get_unit_def("workshop").lift_duration_ms) * sim.TICK_RATE / 1000.0))
 	_check(sim.issue_command([workshop.tag], "land", Vector2(60, 33)).ok, "A clear landing point accepts the Workshop")
 	_step_until_grounded(workshop)
 	_check(workshop.flight_height == 0.0 and workshop.pos == Vector2(60, 33) and job.progress == progress,
@@ -133,6 +181,7 @@ func _test_landing_validation() -> void:
 	], {"water_channels": [{"width": 5, "points": [[46, 0], [46, 72]]}]})
 	var hall := _unit("hall")
 	_check(sim.issue_command([hall.tag], "lift").ok, "Lift before testing landing sites")
+	sim.step_ticks(ceili(float(data.get_unit_def("muster_hall").lift_duration_ms) * sim.TICK_RATE / 1000.0))
 	sim.spawn_resource("crystal_field", Vector2(58, 14))
 	for point in [Vector2(46, 30), Vector2(1, 30), Vector2(54, 44), Vector2(69, 44), Vector2(58, 14)]:
 		_check(not sim.issue_command([hall.tag], "land", point).ok and hall.orders.is_empty(),
@@ -146,11 +195,22 @@ func _test_landing_validation() -> void:
 	sim.issue_command([blocker.tag], "move", Vector2(69, 30))
 	sim.step_ticks(128)
 	_check(sim.issue_command([hall.tag], "land", destination).ok, "The site can be retried once the blocker leaves")
+	sim.step_ticks(1)
+	_check(hall.get("flight_transition", {}).get("kind") == "land", "Clear ground starts descent")
+	var late_blocker: Dictionary = sim.spawn_unit("pioneer", 1, destination)
+	_step_until_grounded(hall)
+	_check(hall.flight_height > 0.0 and hall.get("flight_transition", {}).get("kind") == "abort",
+		"A unit entering during descent makes the Hall climb away")
+	sim.issue_command([late_blocker.tag], "move", Vector2(69, 25))
+	sim.step_ticks(128)
+	_check(sim.issue_command([hall.tag], "land", destination).ok, "An aborted landing can be retried")
 	_step_until_grounded(hall)
 	_check(hall.flight_height == 0.0 and hall.pos == destination, "The Hall crosses water in flight and lands on clear ground")
 	var enemy_module: Dictionary = sim.spawn_unit("research_module", 2, destination + sim.ATTACHMENT_PAD_OFFSET)
 	var beside_enemy := destination + Vector2(-0.5, 0.6)
-	_check(sim.issue_command([hall.tag], "lift").ok and sim.issue_command([hall.tag], "land", beside_enemy).ok,
+	_check(sim.issue_command([hall.tag], "lift").ok, "The Hall can take off again")
+	sim.step_ticks(ceili(float(data.get_unit_def("muster_hall").lift_duration_ms) * sim.TICK_RATE / 1000.0))
+	_check(sim.issue_command([hall.tag], "land", beside_enemy).ok,
 		"Clear land beside an enemy module remains usable")
 	_step_until_grounded(hall)
 	_check(hall.pos == beside_enemy and sim.production_attachment(hall).is_empty() and not enemy_module.has("attachment_parent_tag"),
@@ -167,9 +227,11 @@ func _test_targeting_and_victory() -> void:
 	var gun := _unit("gun")
 	var interceptor := _unit("interceptor")
 	sim.issue_command([gun.tag, interceptor.tag], "hold_fire")
-	_check(sim.issue_command([gun.tag], "attack_target", hall.pos, hall.tag).ok, "Ground artillery acquires the landed structure")
+	_check(sim.issue_command([hall.tag], "lift").ok, "The Hall starts taking off")
+	sim.step_ticks(ceili(float(data.get_unit_def("muster_hall").lift_duration_ms) * sim.TICK_RATE / 1000.0) - 2)
+	_check(sim.issue_command([gun.tag], "attack_target", hall.pos, hall.tag).ok, "Ground artillery can still acquire a structure taking off")
 	sim.step_ticks(1)
-	_check(gun.attack_state == "windup" and sim.issue_command([hall.tag], "lift").ok, "Lift takes the target out of the ground layer before impact")
+	_check(gun.attack_state == "windup" and hall.flight_height == 0.0, "The gun winds up before takeoff completes")
 	sim.step_ticks(40)
 	_check(sim.units.has(hall.tag) and hall.hp == 1.0 and gun.weapon_cooldown == 0.0
 		and not sim.issue_command([gun.tag], "attack_target", hall.pos, hall.tag).ok,

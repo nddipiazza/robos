@@ -20,6 +20,8 @@ func _ready() -> void:
 	_generate.call_deferred()
 
 func get_icon(type_id: String) -> Texture2D:
+	if type_id == "aegis_relay" and RTSData.ladder_active:
+		return icons.get("aegis_relay_ladder", icons.get(type_id))
 	return icons.get(type_id, null)
 
 func _owner_for_faction(faction: String) -> int:
@@ -56,9 +58,18 @@ func _generate() -> void:
 	_cam.far = 200.0
 	_vp.add_child(_cam)
 
-	for type_id in RTSData.units.keys():
-		var def: Dictionary = RTSData.units[type_id]
-		var model: Node3D = Models.build(str(type_id), _owner_for_faction(str(def.get("faction", "humans"))))
+	# Initialize the offscreen render target before capturing the first model.
+	_vp.render_target_update_mode = SubViewport.UPDATE_ONCE
+	await RenderingServer.frame_post_draw
+
+	var portrait_ids := RTSData.units.keys()
+	portrait_ids.append("captain_vale")
+	portrait_ids.append("aegis_relay_ladder")
+	for portrait_id in portrait_ids:
+		var is_vale: bool = portrait_id == "captain_vale"
+		var type_id: String = "rifleman" if is_vale else portrait_id
+		var def: Dictionary = RTSData.units["aegis_relay" if type_id == "aegis_relay_ladder" else type_id]
+		var model: Node3D = Models.build(type_id, _owner_for_faction(str(def.get("faction", "humans"))), is_vale)
 		_vp.add_child(model)
 		_frame_camera(model)
 		# A transparent readback is not a portrait. Give the viewport one
@@ -68,7 +79,7 @@ func _generate() -> void:
 			await RenderingServer.frame_post_draw
 			var img: Image = _vp.get_texture().get_image()
 			if img and img.get_used_rect().has_area():
-				icons[type_id] = ImageTexture.create_from_image(img)
+				icons[portrait_id] = ImageTexture.create_from_image(img)
 				break
 		model.queue_free()
 

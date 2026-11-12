@@ -75,6 +75,9 @@ def before_all(context) -> None:
     context.display_prefs = tempfile.TemporaryDirectory(prefix="starfall-test-")
     env["RTS_DISPLAY_PREFS"] = str(Path(context.display_prefs.name) / "display.cfg")
     env["RTS_CAMPAIGN_PROGRESS_PATH"] = str(Path(context.display_prefs.name) / "campaign.cfg")
+    if context.record_live:
+        context.record_audio_path = Path(context.display_prefs.name) / "game-audio.wav"
+        env["RTS_RECORD_AUDIO_PATH"] = str(context.record_audio_path)
 
     cmd = [godot_bin, "--path", str(PROJECT_DIR)]
     if context.rts_mode == "backend" or context.live_headless:

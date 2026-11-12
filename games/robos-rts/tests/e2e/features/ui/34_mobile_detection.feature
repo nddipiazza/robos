@@ -23,7 +23,7 @@ Feature: A paid Concord Veilseeker reveals concealed enemies within its ring
     And the commander clicks the projected body of "source" at (0.0, 1.15)
     And the commander presses "T"
     And the commander presses "V"
-    Then player 1 has 255 crystal, 105 aether and 5 supply used
+    Then player 1 has 255 crystal, 105 aether and 2 supply used
     When the simulation advances 1791 ticks
     Then no "veilseeker" exists
     When the simulation advances 1 ticks

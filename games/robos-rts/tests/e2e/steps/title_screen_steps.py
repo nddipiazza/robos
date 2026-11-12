@@ -28,6 +28,19 @@ def key(context, name, **mods):
     context.client.key(name, pressed=False, **mods)
 
 
+def confirm_leave(context, heading):
+    wait_for(lambda: menu_state(context), lambda state: state.get("confirmation") == heading)
+    key(context, "Tab")
+    key(context, "Enter")
+
+
+@when("the commander confirms replacing a paused battle if prompted")
+def confirm_title_replacement(context):
+    state = menu_state(context)
+    if state.get("resume_available"):
+        confirm_leave(context, {"campaign": "Start a campaign mission?", "scenarios": "Start a scenario?"}[state["page"]])
+
+
 @given("Starfall Command is idle on the title screen")
 def fresh_title(context):
     title_page(context, "main")
@@ -182,6 +195,7 @@ def pause_campaign(context):
     key(context, "Tab")
     key(context, "Tab")
     key(context, "Enter")
+    confirm_leave(context, "Return to the main menu?")
     title_page(context, "main")
 
 
@@ -210,7 +224,34 @@ def return_to_title(context):
     for _ in range(3):
         key(context, "Tab", shift=True)
     key(context, "Enter")
+    confirm_leave(context, "Return to the main menu?")
     title_page(context, "main")
+
+
+@when("the commander cancels leaving an active campaign")
+def cancel_leave_mission(context):
+    key(context, "F8")
+    wait_for(lambda: menu_state(context), lambda state: state["match_menu_visible"])
+    before = context.client.get_observation()["campaign"]
+    for name in ("Tab", "Tab", "Enter"):
+        key(context, name)
+    wait_for(lambda: menu_state(context), lambda state: state["confirmation"] == "Return to the main menu?")
+    key(context, "Escape")
+    wait_for(lambda: menu_state(context), lambda state: state["match_menu_visible"] and not state["confirmation"])
+    assert context.client.get_observation()["campaign"] == before
+    assert context.client.health()["paused"]
+    key(context, "F8")
+
+
+@when("the commander cancels replacing the paused mission")
+def cancel_replacing_mission(context):
+    before = context.client.get_observation()["campaign"]
+    key(context, "Enter")
+    wait_for(lambda: menu_state(context), lambda state: state["confirmation"] == "Start a campaign mission?")
+    key(context, "Enter")
+    state = wait_for(lambda: menu_state(context), lambda state: not state["confirmation"])
+    assert state["resume_available"]
+    assert context.client.get_observation()["campaign"] == before
 
 
 @then("the match is paused at the title")

@@ -18,6 +18,12 @@ def remaining_worker(context):
     assert sum(not u["orders"] for u in workers) == 1
 
 
+@then("player 1 has gathered aether")
+def gathered_aether(context):
+    player = context.client.get_observation()["players"]["1"]
+    assert player["aether_collected"] > 0, player
+
+
 @when("the snapped build grid is captured near ({x:d}, {y:d})")
 def capture_build_grid(context, x, y):
     screen = context.client.project((x, y))[0]

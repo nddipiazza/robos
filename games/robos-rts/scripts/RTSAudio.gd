@@ -15,9 +15,41 @@ const MAX_RECENT_SFX: int = 32
 const SOUND_FILES: Dictionary = {
 	# Ranged Gunfire, Beams & Artillery
 	"rifle_fire": "res://assets/audio/sfx/rifle_fire.wav",
+	"shade_rifle": "res://assets/audio/sfx/shade_rifle.wav",
+	"shade_snipe_lock": "res://assets/audio/sfx/shade_snipe_lock.wav",
+	"shade_snipe_fire": "res://assets/audio/sfx/shade_snipe_fire.wav",
+	"shade_emp_launch": "res://assets/audio/sfx/shade_emp_launch.wav",
+	"shade_emp_burst": "res://assets/audio/sfx/shade_emp_burst.wav",
+	"shade_strike_warning": "res://assets/audio/sfx/shade_strike_warning.wav",
+	"shade_strike_blast": "res://assets/audio/sfx/shade_strike_blast.wav",
+	"workshop_flame": "res://assets/audio/sfx/workshop_flame.wav",
+	"sentinel_missile": "res://assets/audio/sfx/sentinel_missile.wav",
+	"vortex_missile": "res://assets/audio/sfx/vortex_missile.wav",
+	"atlas_airburst": "res://assets/audio/sfx/atlas_airburst.wav",
+	"atlas_precision": "res://assets/audio/sfx/atlas_precision.wav",
+	"harrier_rockets": "res://assets/audio/sfx/harrier_rockets.wav",
+	"sky_airburst": "res://assets/audio/sfx/sky_airburst.wav",
+	"sky_defender_cannon": "res://assets/audio/sfx/sky_defender_cannon.wav",
+	"bastion_railgun": "res://assets/audio/sfx/bastion_railgun.wav",
+	"dreadnought_laser": "res://assets/audio/sfx/dreadnought_laser.wav",
+	"fortified_hub_cannon": "res://assets/audio/sfx/fortified_hub_cannon.wav",
+	"watchkeeper_jam_launch": "res://assets/audio/sfx/watchkeeper_jam_launch.wav",
+	"systems_jammer_impact": "res://assets/audio/sfx/systems_jammer_impact.wav",
+	"watchkeeper_armor_launch": "res://assets/audio/sfx/watchkeeper_armor_launch.wav",
+	"armor_breaker_impact": "res://assets/audio/sfx/armor_breaker_impact.wav",
+	"bastion_deploy": "res://assets/audio/sfx/bastion_deploy.wav",
+	"dreadnought_beam": "res://assets/audio/sfx/dreadnought_beam.wav",
+	"dreadnought_beam_hit": "res://assets/audio/sfx/dreadnought_beam_hit.wav",
+	"dreadnought_jump": "res://assets/audio/sfx/dreadnought_jump.wav",
+	"dreadnought_arrival": "res://assets/audio/sfx/dreadnought_arrival.wav",
+	"sunseer_pulsar": "res://assets/audio/sfx/sunseer_pulsar.wav",
+	"sunseer_revelation": "res://assets/audio/sfx/sunseer_revelation.wav",
+	"stasis_seed": "res://assets/audio/sfx/stasis_seed.wav",
+	"stasis_ward_detonate": "res://assets/audio/sfx/stasis_ward_detonate.wav",
 	"breach_charge": "res://assets/audio/sfx/breach_charge.wav",
 	"autocannon_fire": "res://assets/audio/sfx/autocannon_fire.wav",
 	"sentry_fire": "res://assets/audio/sfx/sentry_fire.wav",
+	"sentry_impact": "res://assets/audio/sfx/sentry_impact.wav",
 	"mortar_fire": "res://assets/audio/sfx/mortar_fire.wav",
 	"acid_spit": "res://assets/audio/sfx/acid_spit.wav",
 	"corrosive_lob": "res://assets/audio/sfx/corrosive_lob.wav",
@@ -36,6 +68,7 @@ const SOUND_FILES: Dictionary = {
 	# Combat Impacts & Shields
 	"shield_hit": "res://assets/audio/sfx/shield_hit.wav",
 	"explosion_splash": "res://assets/audio/sfx/explosion_splash.wav",
+	"volatile_burst": "res://assets/audio/sfx/volatile_burst.wav",
 
 	# Unit Abilities & Transforms
 	"surge_activate": "res://assets/audio/sfx/surge_activate.wav",
@@ -43,6 +76,37 @@ const SOUND_FILES: Dictionary = {
 	"phase_step": "res://assets/audio/sfx/phase_step.wav",
 	"phase_barrier": "res://assets/audio/sfx/phase_barrier.wav",
 	"lattice_burst": "res://assets/audio/sfx/lattice_burst.wav",
+	"ridge_pistols": "res://assets/audio/sfx/ridge_pistols.wav",
+	"ridge_charge_throw": "res://assets/audio/sfx/ridge_charge_throw.wav",
+	"ridge_charge_impact": "res://assets/audio/sfx/ridge_charge_impact.wav",
+	"hatchling_pool_ready": "res://assets/audio/sfx/hatchling_pool_ready.wav",
+	"transit_start": "res://assets/audio/sfx/transit_start.wav",
+	"transit_ready": "res://assets/audio/sfx/transit_ready.wav",
+	"transit_mode_ready": "res://assets/audio/sfx/transit_mode_ready.wav",
+	"forge_relay_fire": "res://assets/audio/sfx/forge_relay_fire.wav",
+	"bastion_phase_fire": "res://assets/audio/sfx/bastion_phase_fire.wav",
+	"bastion_barrier": "res://assets/audio/sfx/bastion_barrier.wav",
+	"rift_nova_launch": "res://assets/audio/sfx/rift_nova_launch.wav",
+	"rift_nova_blast": "res://assets/audio/sfx/rift_nova_blast.wav",
+	"mirage_glaive_fire": "res://assets/audio/sfx/mirage_glaive_fire.wav",
+	"mirage_transfer": "res://assets/audio/sfx/mirage_transfer.wav",
+	"mirage_arrival": "res://assets/audio/sfx/mirage_arrival.wav",
+	"canticle_spark": "res://assets/audio/sfx/canticle_spark.wav",
+	"scribe_feedback": "res://assets/audio/sfx/scribe_feedback.wav",
+	"canticle_storm": "res://assets/audio/sfx/canticle_storm.wav",
+	"duskblade_slash": "res://assets/audio/sfx/duskblade_slash.wav",
+	"archon_shockwave": "res://assets/audio/sfx/archon_shockwave.wav",
+	"archon_warp": "res://assets/audio/sfx/archon_warp.wav",
+	"archon_ready": "res://assets/audio/sfx/archon_ready.wav",
+	"rupture_discharge": "res://assets/audio/sfx/rupture_discharge.wav",
+	"spine_line": "res://assets/audio/sfx/spine_line.wav",
+	"corrosion_spore": "res://assets/audio/sfx/corrosion_spore.wav",
+	"corrosion_spray": "res://assets/audio/sfx/corrosion_spray.wav",
+	"broodling_launch": "res://assets/audio/sfx/broodling_launch.wav",
+	"locust_launch": "res://assets/audio/sfx/locust_launch.wav",
+	"rupture_launch": "res://assets/audio/sfx/rupture_launch.wav",
+	"rupture_impact": "res://assets/audio/sfx/rupture_impact.wav",
+	"bile_warren_ready": "res://assets/audio/sfx/bile_warren_ready.wav",
 	"power_field_anchor": "res://assets/audio/sfx/power_field_anchor.wav",
 	"power_field_fold": "res://assets/audio/sfx/power_field_fold.wav",
 	"siege_transform": "res://assets/audio/sfx/siege_transform.wav",
@@ -68,6 +132,7 @@ const SOUND_FILES: Dictionary = {
 	"ui_build_place": "res://assets/audio/sfx/ui_build_place.wav",
 	"ui_error": "res://assets/audio/sfx/ui_error.wav",
 	"alert_under_attack": "res://assets/audio/sfx/alert_under_attack.wav",
+	"alert_supply_required": "res://assets/audio/sfx/alert_supply_required.wav",
 	"match_victory": "res://assets/audio/sfx/match_victory.wav",
 	"match_defeat": "res://assets/audio/sfx/match_defeat.wav"
 }
@@ -84,6 +149,8 @@ const WEAPON_NAME_TO_SFX: Dictionary = {
 	"Breach Charge": "breach_charge",
 	"Mobile Autocannon": "autocannon_fire",
 	"Sentry Coilgun": "sentry_fire",
+	"Longbow Missile": "sentry_fire",
+	"Longbow Missiles": "sentry_fire",
 	"155mm Siege Mortar": "mortar_fire",
 	"Mandibles": "mandible_bite",
 	"Razor Claws": "claw_slash",
@@ -107,7 +174,7 @@ const SOUND_VOLUME_OFFSET_DB: Dictionary = {
 	"rifle_fire": -2.0,
 	"breach_charge": -1.0,
 	"autocannon_fire": -1.5,
-	"mortar_fire": 1.0,
+	"mortar_fire": -3.0,
 	"acid_spit": -2.0,
 	"corrosive_lob": -1.0,
 	"needler_fire": -2.0,
@@ -121,6 +188,7 @@ const SOUND_VOLUME_OFFSET_DB: Dictionary = {
 	"melee_hit": -2.0,
 	"shield_hit": -2.5,
 	"explosion_splash": 1.0,
+	"volatile_burst": 1.0,
 	"surge_activate": -1.0,
 	"charge_activate": -1.0,
 	"phase_step": -0.5,
@@ -143,11 +211,15 @@ const SOUND_VOLUME_OFFSET_DB: Dictionary = {
 	"ui_build_place": -2.0,
 	"ui_error": -2.0,
 	"alert_under_attack": 0.5,
+	"alert_supply_required": 1.0,
 	"match_victory": 1.0,
 	"match_defeat": 0.5
 }
 
 const SOUND_MIN_INTERVAL_SEC: Dictionary = {
+	"alert_supply_required": 2.0,
+	"sentry_fire": 0.085,
+	"sentry_impact": 0.08,
 	"rifle_fire": 0.035,
 	"breach_charge": 0.045,
 	"autocannon_fire": 0.045,
@@ -165,6 +237,7 @@ const SOUND_MIN_INTERVAL_SEC: Dictionary = {
 	"melee_hit": 0.035,
 	"shield_hit": 0.04,
 	"explosion_splash": 0.055,
+	"volatile_burst": 0.035,
 	"harvest_hit": 0.45,
 	"ui_select": 0.04,
 	"ui_command_move": 0.045,
@@ -179,6 +252,8 @@ var voice_texts: Dictionary = {}
 var _world_players: Array[AudioStreamPlayer] = []
 var _ui_players: Array[AudioStreamPlayer] = []
 var _voice_player: AudioStreamPlayer = null
+var _recording: AudioEffectRecord
+var _recording_gain: AudioEffectAmplify
 var _world_player_cursor: int = 0
 var _ui_player_cursor: int = 0
 
@@ -186,7 +261,6 @@ var world_3d: Node = null
 var local_player_id: int = 1
 var muted: bool = false
 var volume_percent: int = 100
-var master_volume_db: float = 0.0
 var cooldown_enabled: bool = true
 var force_headless_playback: bool = false
 
@@ -208,6 +282,10 @@ var last_spoken_text: String = ""
 var recent_dialogues: Array[Dictionary] = []
 
 func _ready() -> void:
+	var prefs := ConfigFile.new()
+	prefs.load(prefs_path())
+	volume_percent = clampi(int(prefs.get_value("audio", "sfx_volume", 100)), 0, 100)
+	set_bus_percent("SFX", volume_percent)
 	_pitch_rng.seed = 9001
 	_init_sound_catalog()
 	_init_voice_catalog()
@@ -234,21 +312,23 @@ func _init_voice_catalog() -> void:
 		return
 	for utype in RTSData.units.keys():
 		var u_def: Dictionary = RTSData.units[utype]
-		var dlgs: Dictionary = u_def.get("dialogues", {})
-		for category in dlgs.keys():
-			var lines: Array = dlgs[category]
-			for item in lines:
-				var line_id: String = str(item.get("id", "")).strip_edges().to_lower()
-				var text: String = str(item.get("text", ""))
-				if line_id == "":
-					continue
-				var wav_path: String = "res://assets/audio/voice/%s.wav" % line_id
-				voice_texts[line_id] = text
-				sound_effects[line_id] = wav_path
-				if not voice_streams.has(line_id):
-					var stream := _load_wav_stream(wav_path, line_id)
-					voice_streams[line_id] = stream
-					sound_streams[line_id] = stream
+		_register_dialogues(u_def.get("dialogues", {}))
+	for profile in RTSData.named_voice_profiles.values():
+		_register_dialogues(profile.get("categories", {}))
+
+func _register_dialogues(categories: Dictionary) -> void:
+	for lines in categories.values():
+		for item in lines:
+			var line_id: String = str(item.get("id", "")).strip_edges().to_lower()
+			if line_id.is_empty():
+				continue
+			var wav_path := "res://assets/audio/voice/%s.wav" % line_id
+			voice_texts[line_id] = str(item.get("text", ""))
+			sound_effects[line_id] = wav_path
+			if not voice_streams.has(line_id):
+				var stream := _load_wav_stream(wav_path, line_id)
+				voice_streams[line_id] = stream
+				sound_streams[line_id] = stream
 
 func _init_player_pools() -> void:
 	for p in _world_players:
@@ -265,20 +345,20 @@ func _init_player_pools() -> void:
 	for i in range(WORLD_PLAYER_POOL_SIZE):
 		var player := AudioStreamPlayer.new()
 		player.name = "WorldSFXPlayer_%d" % i
-		player.bus = "Master"
+		player.bus = "SFX"
 		add_child(player)
 		_world_players.append(player)
 
 	for i in range(UI_PLAYER_POOL_SIZE):
 		var player := AudioStreamPlayer.new()
 		player.name = "UISFXPlayer_%d" % i
-		player.bus = "Master"
+		player.bus = "SFX"
 		add_child(player)
 		_ui_players.append(player)
 
 	_voice_player = AudioStreamPlayer.new()
 	_voice_player.name = "UnitVoicePlayer"
-	_voice_player.bus = "Master"
+	_voice_player.bus = "SFX"
 	add_child(_voice_player)
 
 func _connect_sim_signals() -> void:
@@ -298,6 +378,8 @@ func _connect_sim_signals() -> void:
 		SimEngine.resource_gathered.connect(_on_resource_gathered)
 	if not SimEngine.unit_production_finished.is_connected(_on_unit_production_finished):
 		SimEngine.unit_production_finished.connect(_on_unit_production_finished)
+	if not SimEngine.militia_recruited.is_connected(_on_militia_recruited):
+		SimEngine.militia_recruited.connect(_on_militia_recruited)
 	if not SimEngine.structure_construction_finished.is_connected(_on_structure_construction_finished):
 		SimEngine.structure_construction_finished.connect(_on_structure_construction_finished)
 	if not SimEngine.notice.is_connected(_on_sim_notice):
@@ -307,6 +389,39 @@ func _connect_sim_signals() -> void:
 
 func can_play_campaign_voice() -> bool:
 	return _should_output_audio()
+
+func unit_voice_playing() -> bool:
+	return volume_percent > 0 and is_instance_valid(_voice_player) and _voice_player.playing and not _voice_player.stream_paused
+
+func record_mix(action: String) -> Dictionary:
+	var path := OS.get_environment("RTS_RECORD_AUDIO_PATH")
+	if path.is_empty() or DisplayServer.get_name() == "headless":
+		return {"ok": false, "error": "Audio recording is disabled"}
+	var master := AudioServer.get_bus_index("Master")
+	if action == "start" and _recording == null:
+		# Leave headroom in the recording for simultaneous effects.
+		_recording_gain = AudioEffectAmplify.new()
+		_recording_gain.volume_db = -12.0
+		AudioServer.add_bus_effect(master, _recording_gain)
+		_recording = AudioEffectRecord.new()
+		_recording.format = AudioStreamWAV.FORMAT_16_BITS
+		AudioServer.add_bus_effect(master, _recording)
+		_recording.set_recording_active(true)
+		return {"ok": true}
+	if action != "stop" or _recording == null:
+		return {"ok": false, "error": "Invalid audio recording operation"}
+	_recording.set_recording_active(false)
+	var stream := _recording.get_recording()
+	for index in range(AudioServer.get_bus_effect_count(master) - 1, -1, -1):
+		var effect := AudioServer.get_bus_effect(master, index)
+		if effect == _recording or effect == _recording_gain:
+			AudioServer.remove_bus_effect(master, index)
+	_recording = null
+	_recording_gain = null
+	if stream == null or stream.get_length() <= 0.0:
+		return {"ok": false, "error": "The audio mixer did not produce a recording"}
+	var error := stream.save_to_wav(path)
+	return {"ok": error == OK, "error": error_string(error), "seconds": stream.get_length()}
 
 func load_campaign_voice(cue_id: String) -> AudioStreamWAV:
 	return _parse_riff_wav(FileAccess.get_file_as_bytes("res://assets/audio/campaign/%s.wav" % cue_id))
@@ -393,19 +508,32 @@ func get_stream(sfx_key: String) -> AudioStreamWAV:
 	return sound_streams.get(resolved, null)
 
 func set_volume_percent(pct: int) -> void:
-	volume_percent = clampi(pct, 0, 100)
-	if volume_percent <= 0:
-		muted = true
-		master_volume_db = -80.0
-	else:
-		muted = false
-		master_volume_db = linear_to_db(float(volume_percent) / 100.0)
+	pct = clampi(pct, 0, 100)
+	if pct == volume_percent:
+		return
+	volume_percent = pct
+	set_bus_percent("SFX", pct)
+	save_volume("sfx_volume", pct)
+
+func set_bus_percent(bus: String, percent: int) -> void:
+	var index := AudioServer.get_bus_index(bus)
+	AudioServer.set_bus_volume_db(index, linear_to_db(maxi(1, percent) / 100.0))
+	AudioServer.set_bus_mute(index, percent == 0)
+
+func save_volume(key: String, percent: int) -> void:
+	var path := prefs_path()
+	var prefs := ConfigFile.new()
+	prefs.load(path)
+	prefs.set_value("audio", key, percent)
+	prefs.save(path)
+
+func prefs_path() -> String:
+	var override := OS.get_environment("RTS_DISPLAY_PREFS")
+	return "user://rts-display.cfg" if override.is_empty() else override
 
 func toggle_mute() -> bool:
 	muted = not muted
-	if not muted and volume_percent <= 0:
-		volume_percent = 100
-		master_volume_db = 0.0
+	AudioServer.set_bus_mute(AudioServer.get_bus_index("Master"), muted)
 	return muted
 
 func reset_stats() -> void:
@@ -421,6 +549,12 @@ func reset_stats() -> void:
 	_last_auto_attack_voice_sec = -999.0
 	_last_weapon_attack_tick = -1
 	_last_weapon_attack_pos = Vector2.INF
+
+func play_character_dialogue(unit: Dictionary, category: String, force: bool = false) -> Dictionary:
+	return play_unit_dialogue(_voice_profile_for(unit), category, force)
+
+func _voice_profile_for(unit: Dictionary) -> String:
+	return str(unit.get("voice_profile", unit.get("unit_type", "")))
 
 func play_unit_dialogue(unit_type: String, category: String, force: bool = false) -> Dictionary:
 	if RTSData == null:
@@ -471,7 +605,7 @@ func play_unit_dialogue(unit_type: String, category: String, force: bool = false
 		if stream != null:
 			_voice_player.stop()
 			_voice_player.stream = stream
-			_voice_player.volume_db = clampf(master_volume_db + 1.5, -60.0, 6.0)
+			_voice_player.volume_db = 1.5
 			_voice_player.pitch_scale = 1.0
 			_voice_player.play()
 
@@ -494,7 +628,7 @@ func play_ui(sfx_key: String, volume_offset_db: float = 0.0, pitch_scale: float 
 		return false
 
 	var base_db: float = float(SOUND_VOLUME_OFFSET_DB.get(resolved, 0.0))
-	var final_db: float = clampf(master_volume_db + base_db + volume_offset_db, -60.0, 6.0)
+	var final_db: float = clampf(base_db + volume_offset_db, -60.0, 6.0)
 	var player := _acquire_ui_player()
 	player.stream = stream
 	player.volume_db = final_db
@@ -526,7 +660,7 @@ func play_at(sfx_key: String, world_pos: Vector2, volume_offset_db: float = 0.0,
 		return false
 
 	var base_db: float = float(SOUND_VOLUME_OFFSET_DB.get(resolved, 0.0))
-	var final_db: float = clampf(master_volume_db + base_db + volume_offset_db + spatial_db, -60.0, 6.0)
+	var final_db: float = clampf(base_db + volume_offset_db + spatial_db, -60.0, 6.0)
 	var pitch: float = 1.0
 	if pitch_jitter > 0.0:
 		pitch = _pitch_rng.randf_range(1.0 - pitch_jitter, 1.0 + pitch_jitter)
@@ -649,25 +783,31 @@ func _on_weapon_attack(attacker: Dictionary, target: Dictionary, weapon: Diction
 	_last_weapon_attack_pos = attacker_pos
 
 	if SimEngine.can_see_unit(local_player_id, attacker):
-		play_at(get_weapon_sfx(weapon, unit_type), attacker_pos, 0.0, 0.055)
+		var launch_db := -5.0 if weapon.has("sentry_flight_ticks") else 0.0
+		play_at(get_weapon_sfx(weapon, unit_type), attacker_pos, launch_db, 0.055)
+	if weapon.has("sentry_flight_ticks"):
+		return
 
 	if SimEngine.can_see_unit(local_player_id, target):
 		if is_melee_weapon(weapon):
 			play_at("melee_hit", target_pos, -2.5, 0.06)
 		var impact_sfx: String = str(weapon.get("impact_sfx", ""))
 		if impact_sfx != "" and has_sfx(impact_sfx):
-			play_at(impact_sfx, target_pos, -1.0, 0.05)
+			# Keep headroom when the siege report and splash play on the same tick.
+			var impact_db := -9.5 if unit_type == "howitzer_emplaced" else -1.0
+			play_at(impact_sfx, target_pos, impact_db, 0.05)
 		elif float(weapon.get("splash_radius", 0.0)) > 0.0:
 			play_at("explosion_splash", target_pos, -1.5, 0.05)
 		if hit_shields or float(target.get("shields", 0.0)) > 0.0:
 			play_at("shield_hit", target_pos, -2.0, 0.05)
 
-	if not attacker.is_structure and int(attacker.get("owner", 0)) == local_player_id and not RTSData.get_unit_dialogues(unit_type, "attack").is_empty():
+	var voice_profile := _voice_profile_for(attacker)
+	if not attacker.is_structure and int(attacker.get("owner", 0)) == local_player_id and not RTSData.get_unit_dialogues(voice_profile, "attack").is_empty():
 		var now_sec: float = float(Time.get_ticks_msec()) * 0.001
 		if not cooldown_enabled or (now_sec - _last_auto_attack_voice_sec >= 7.0 and now_sec - _last_voice_time_sec >= 2.5):
 			if _compute_spatial_db(attacker_pos) > -79.0:
 				_last_auto_attack_voice_sec = now_sec
-				play_unit_dialogue(unit_type, "attack", true)
+				play_unit_dialogue(voice_profile, "attack", true)
 
 func _on_projectile_fired(from_pos: Vector2, to_pos: Vector2, weapon_name: String, is_splash: bool, _owner_id: int) -> void:
 	if SimEngine != null and _last_weapon_attack_tick == SimEngine.tick and _last_weapon_attack_pos.distance_squared_to(from_pos) < 0.05:
@@ -681,30 +821,79 @@ func _on_projectile_fired(from_pos: Vector2, to_pos: Vector2, weapon_name: Strin
 
 func _on_ability_triggered(unit: Dictionary, ability_id: String, pos: Vector2) -> void:
 	var ab_id: String = ability_id.to_lower()
+	if ab_id == "sentry_missile_impact":
+		play_at("sentry_impact", pos, -6.5, 0.04)
+		return
+	if ab_id == "mutation_nuclear_warning":
+		play_at("shade_strike_warning", pos)
+		return
+	if ab_id in ["mutation_nuclear_impact", "mutation_death_impact"]:
+		if SimEngine.can_see_position(local_player_id, pos):
+			play_at("shade_strike_blast" if ab_id == "mutation_nuclear_impact" else "explosion_splash", pos)
+		return
+	if ab_id == "ridge_charge_impact":
+		if SimEngine.can_see_position(local_player_id, pos):
+			play_at(ab_id, pos, -3.0, 0.05)
+		return
+	if ab_id == "uprising_impact":
+		if SimEngine.can_see_position(local_player_id, pos):
+			play_at("explosion_splash", pos, -3.0, 0.06)
+		return
+	if ab_id == "detonate_sporeburst":
+		if unit.owner == local_player_id or SimEngine.can_see_position(local_player_id, pos):
+			play_at("volatile_burst", pos, -2.0, 0.05)
+		return
 	var cue_unit: Dictionary = unit
 	if ab_id in ["restore_vitals", "restore_aegis"]:
 		cue_unit = SimEngine.units.get(unit.get("support_target_tag", 0), unit)
-	if not SimEngine.can_see_unit(local_player_id, cue_unit):
+	var ground_cue := ab_id in ["canticle_storm", "scribe_feedback", "caustic_impact", "agent_emp_impact", "agent_strike_impact", "agent_snipe_hit",
+		"systems_jammer_impact", "armor_breaker_impact", "dreadnought_beam_hit", "sentinel_impact", "stasis_ward_detonate"]
+	var visible := SimEngine.can_see_position(local_player_id, pos) if ground_cue else SimEngine.can_see_unit(local_player_id, cue_unit)
+	if not visible:
 		return
 	var ab_def: Dictionary = RTSData.get_ability_def(ab_id)
 	var sfx_key: String = str(ab_def.get("sfx", ""))
 	if sfx_key == "":
 		match ab_id:
+			"agent_snipe_hit":
+				sfx_key = "shade_snipe_fire"
+			"agent_emp_impact":
+				sfx_key = "shade_emp_burst"
+			"agent_strike_impact":
+				sfx_key = "shade_strike_blast"
+			"systems_jammer_impact", "armor_breaker_impact", "dreadnought_beam_hit", "dreadnought_arrival", "stasis_ward_detonate":
+				sfx_key = ab_id
+			"sentinel_impact":
+				sfx_key = "explosion_splash"
 			"surge":
 				sfx_key = "surge_activate"
 			"charge":
 				sfx_key = "charge_activate"
 			"phase_step":
 				sfx_key = "phase_step"
+			"energy_recharge":
+				sfx_key = "aegis_restore"
+			"rift_nova_blast", "mirage_arrival", "archon_warp", "archon_ready":
+				sfx_key = ab_id
+			"caustic_impact":
+				sfx_key = "rupture_impact"
+			"rupture_ready", "ambusher_ready", "seer_ready", "hauler_ready", "siege_flyer_ready":
+				sfx_key = "brood_egg_hatch"
 			"emplace", "mobilize", "mobile_mode":
 				sfx_key = "siege_transform"
 			"retract_silo", "extend_silo":
 				sfx_key = "silo_gate"
+			"brood_larva_ready", "brood_egg_morph", "brood_egg_hatch", "transit_start", "transit_ready", "transit_mode_ready":
+				sfx_key = ab_id
 	if sfx_key != "":
 		play_at(sfx_key, pos, 0.0, 0.035)
 	if ab_id in ["restore_vitals", "inject_brood", "phase_barrier"] and unit.owner == local_player_id:
 		play_unit_dialogue(unit.unit_type, "support")
-	elif ab_id == "carapace_ready" and unit.owner == local_player_id:
+	elif ab_id in ["systems_jammer", "armor_breaker", "dreadnought_beam"] and unit.owner == local_player_id:
+		play_unit_dialogue(unit.unit_type, "attack")
+	elif ab_id == "rift_nova_cast" and unit.owner == local_player_id:
+		play_unit_dialogue(unit.unit_type, "attack")
+	elif ab_id in ["carapace_ready", "sporeburst_ready", "archon_ready", "rupture_ready", "ambusher_ready"] and unit.owner == local_player_id:
 		play_unit_dialogue(unit.unit_type, "ready")
 
 func _on_unit_phased(_from_pos: Vector2, to_pos: Vector2, unit_tag: int) -> void:
@@ -713,7 +902,7 @@ func _on_unit_phased(_from_pos: Vector2, to_pos: Vector2, unit_tag: int) -> void
 		play_at("phase_step", to_pos, 0.0, 0.035)
 
 func _on_unit_destroyed(dead: Dictionary) -> void:
-	if dead.unit_type == "phase_barrier" or not SimEngine.can_see_unit(local_player_id, dead):
+	if dead.unit_type in ["phase_barrier", "sporeburst"] or not SimEngine.can_see_unit(local_player_id, dead):
 		return
 	var pos: Vector2 = dead.get("pos", Vector2.ZERO)
 	if bool(dead.get("is_structure", false)):
@@ -738,10 +927,20 @@ func _on_unit_production_finished(unit: Dictionary, _structure: Dictionary) -> v
 		play_unit_dialogue(str(unit.get("unit_type", "")), "ready")
 
 func _on_structure_construction_finished(structure: Dictionary) -> void:
-	if int(structure.get("owner", 0)) == local_player_id:
-		play_at("structure_complete", structure.get("pos", Vector2.ZERO), 0.0, 0.02)
+	var owner := int(structure.get("owner", 0))
+	var position: Vector2 = structure.pos
+	var type: String = structure.unit_type
+	if type in ["hatchling_pool", "bile_warren"] and (owner == local_player_id or SimEngine.can_see_position(local_player_id, position)):
+		play_at(type + "_ready", position, -2.0, 0.02)
+	if owner == local_player_id:
+		if type not in ["hatchling_pool", "bile_warren"]:
+			play_at("structure_complete", position, 0.0, 0.02)
 		var worker: String = RTSData.faction_info.get(structure.faction, {}).get("worker", "")
 		play_unit_dialogue(worker, "job_done", true)
+
+func _on_militia_recruited(owner_id: int) -> void:
+	if owner_id == local_player_id:
+		play_ui("unit_ready")
 
 func _on_sim_notice(owner_id: int, text: String, kind: String) -> void:
 	var lower_text: String = text.to_lower()
@@ -756,8 +955,11 @@ func _on_sim_notice(owner_id: int, text: String, kind: String) -> void:
 		else:
 			play_ui("match_defeat")
 		return
-	if owner_id == local_player_id and kind == "error":
-		play_ui("ui_error")
+	if owner_id == local_player_id:
+		if text == SimEngine.SUPPLY_REQUIRED_NOTICE:
+			play_ui("alert_supply_required")
+		elif kind == "error":
+			play_ui("ui_error")
 
 func _on_scenario_loaded(_scenario_name: String) -> void:
 	_last_weapon_attack_tick = -1

@@ -17,7 +17,7 @@ func _run() -> void:
 	root.get_node("RTSCommanderAI").configure_from_scenario([])
 	var definition: Dictionary = root.get_node("RTSData").get_unit_def(MODULE)
 	cost = Vector2i(definition.crystal_cost, definition.aether_cost)
-	build_ticks = ceili(float(definition.build_time) * sim.build_time_scale() / sim.TICK_DT)
+	build_ticks = ceili(float(definition.build_time) / sim.TICK_DT)
 	_test_blocked_pads()
 	_test_payment_and_cancel()
 	_test_training_around_pad()
@@ -88,7 +88,7 @@ func _test_payment_and_cancel() -> void:
 	_check(sim.production_attachment(hall).is_empty() and _stock() == starting - cost, "An unfinished attachment is paid but grants no completed link")
 	_check(not sim.issue_command([hall.tag], ABILITY).ok and _stock() == starting - cost, "One Hall has exactly one paid attachment slot")
 	sim.step_ticks(32)
-	_check(site.build_progress > 0.1 and site.build_progress < 1.0, "The attachment constructs itself without taking a worker")
+	_check(is_equal_approx(site.build_progress, 0.5 / 50.0), "The attachment constructs itself at its listed Normal rate")
 	var refund := Vector2i(floori(cost.x * sim.CONSTRUCTION_REFUND), floori(cost.y * sim.CONSTRUCTION_REFUND))
 	_check(sim.issue_command([site.tag], "cancel_construction").ok and _stock() == starting - cost + refund,
 		"Cancel refunds the standard paid construction fraction")
@@ -113,14 +113,20 @@ func _test_training_around_pad() -> void:
 	sim.spawn_unit("colony_hub", 1, Vector2(16, 18))
 	var goal := Vector2(52, 30)
 	sim.issue_command([hall.tag], "rally", goal)
+	for _unit in range(2):
+		if not _check(sim.issue_command([hall.tag], "train_rifleman").ok, "The Hall accepts training before construction"):
+			return
+	sim.step_ticks(32)
+	var progress: float = hall.production_queue[0].progress
 	var site := _start(hall)
 	if site.is_empty():
 		return
-	for _unit in range(2):
-		_check(sim.issue_command([hall.tag], "train_rifleman").ok, "The Hall accepts normal training during attachment construction")
+	var paid := _stock()
+	_check(not sim.issue_command([hall.tag], "train_rifleman").ok and _stock() == paid and hall.production_queue.size() == 2,
+		"The Hall rejects new training without charging for it while its attachment builds")
 	sim.step_ticks(64)
-	_check(hall.production_queue[0].progress > 0.0 and hall.production_queue[1].progress == 0.0 and site.build_progress < 1.0,
-		"An unfinished module leaves the existing production lane in place")
+	_check(progress > 0.0 and hall.production_queue[0].progress == progress and hall.production_queue[1].progress == 0.0
+		and site.build_progress < 1.0, "An unfinished module pauses paid jobs at their current progress")
 	sim.step_ticks(build_ticks * 4)
 	var recruits: Array = sim.units.values().filter(func(unit): return unit.unit_type == "rifleman" and unit.owner == 1)
 	_check(recruits.size() == 2 and recruits.all(func(unit): return unit.pos.distance_to(goal) < 5.0),

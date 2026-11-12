@@ -18,7 +18,7 @@ Feature: A Muster Hall builds a Fabrication Module on its adjacent pad
     When the commander clicks unit "hall"
     And the commander presses "C"
     And the commander presses "C"
-    And the simulation advances 300 ticks
+    And the simulation advances 3200 ticks
     Then a finished "fabrication_module" stands at (36, 30)
     And player 1 has 137 crystal, 68 aether and 0 supply used
     And the battlefield is captured as "production-attachment"
@@ -46,7 +46,9 @@ Feature: A Muster Hall builds a Fabrication Module on its adjacent pad
       """
     When the commander clicks unit "hall"
     And the commander presses "C"
-    And the simulation advances 300 ticks
+    And the commander presses "A"
+    Then player 1 has 250 crystal, 75 aether and 0 supply used
+    When the simulation advances 3200 ticks
     And the commander presses "A"
     And the commander presses "A"
     And the simulation advances 64 ticks
@@ -74,7 +76,7 @@ Feature: A Muster Hall builds a Fabrication Module on its adjacent pad
     Then player 1 has 400 crystal, 250 aether and 1 supply used
     When the commander presses "X"
     And the commander presses "C"
-    And the simulation advances 300 ticks
+    And the simulation advances 1600 ticks
     Then a finished "research_module" stands at (36, 30)
     And no "fabrication_module" exists
     When the commander presses "T"
@@ -99,10 +101,11 @@ Feature: A Muster Hall builds a Fabrication Module on its adjacent pad
     When the commander frames (46, 32) at zoom height 58
     And the commander clicks unit "hall"
     And the commander presses "C"
-    And the simulation advances 300 ticks
+    And the simulation advances 3200 ticks
     And the commander presses "A"
     And the simulation advances 64 ticks
     And the commander presses "L"
+    And the simulation advances 64 ticks
     Then "hall" is airborne with 1 reserved job
     When the commander right-clicks terrain at (43, 36)
     And the simulation advances 320 ticks
@@ -117,9 +120,9 @@ Feature: A Muster Hall builds a Fabrication Module on its adjacent pad
     Then the command card is targeting "land"
     And "hall" is airborne with 1 reserved job
     When the commander clicks a targeted point at (31, 30)
-    And the simulation advances 340 ticks
+    And the simulation advances 404 ticks
     Then unit "hall" is within 0.1 units of (30.5, 30.0)
     And "hall" is grounded with a "fabrication_module" attached
-    When the simulation advances 320 ticks
+    When the simulation advances 1600 ticks
     Then player 1 has 1 surviving "rifleman" units
     And player 1 has 300 crystal, 75 aether and 1 supply used

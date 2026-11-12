@@ -18,7 +18,7 @@ Feature: Concord carriers anchor temporary power for Waystones and landing sites
     And the commander clicks the projected body of "home" at (0.0, 1.15)
     And the commander presses "F"
     And the commander presses "L"
-    Then player 1 has 900 crystal, 375 aether and 3 supply used
+    Then player 1 has 900 crystal, 375 aether and 0 supply used
     And no "lumen_carrier" exists
     When the simulation advances 4928 ticks
     Then Fast Deployment research is complete

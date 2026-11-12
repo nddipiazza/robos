@@ -35,12 +35,12 @@ func covers(position: Vector2, owner: int = 0, require_source: bool = false) -> 
 		return int(counts.get(owner, 0)) > 0
 	return not counts.is_empty() if owner == 0 else counts.has(owner)
 
-func update(units: Dictionary, tick: int, can_spread: Callable) -> void:
+func update(units: Dictionary, tick: int, can_spread: Callable, ladder_interval: int = 0) -> void:
 	for tag in _sources.keys():
 		var unit: Dictionary = units.get(tag, {})
 		var source: Dictionary = _sources[tag]
 		if not _eligible(unit) or unit.owner != source.owner or _cell_at(unit.pos) != source.origin:
-			_retire_source(source, tick)
+			_retire_source(source, tick, ladder_interval)
 			_sources.erase(tag)
 
 	for unit in units.values():
@@ -56,15 +56,20 @@ func update(units: Dictionary, tick: int, can_spread: Callable) -> void:
 				"owner": unit.owner, "origin": origin, "radius": unit.living_ground_radius,
 				"covered": {origin: true}, "frontier": [origin], "next_tick": tick,
 			}
+			if unit.get("generating_creep", false):
+				_sources[tag]["half_extent"] = unit.creep_half_extent
 			_add_coverage(origin, unit.owner)
 		var source: Dictionary = _sources[tag]
 		if tick >= source.next_tick and not source.frontier.is_empty():
 			_spread(source, can_spread)
-			source.next_tick = tick + SPREAD_TICKS
+			var interval := UPDATE_TICKS if source.has("half_extent") else SPREAD_TICKS
+			source.next_tick = tick + (ladder_interval if ladder_interval > 0 else interval)
 	_expire_coverage(tick)
 
 func _eligible(unit: Dictionary) -> bool:
-	return float(unit.get("living_ground_radius", 0.0)) > 0.0 and unit.hp > 0.0 and unit.build_progress >= 1.0 and unit.owner > 0 and unit.flight_height <= 0.0
+	return (float(unit.get("living_ground_radius", 0.0)) > 0.0 and unit.hp > 0.0
+		and unit.build_progress >= 1.0 and unit.owner > 0 and
+		(unit.flight_height <= 0.0 or (unit.get("generating_creep", false) and unit.orders.is_empty() and unit.vel.length_squared() < 0.01)))
 
 func _spread(source: Dictionary, can_spread: Callable) -> void:
 	var origin := cell_center(source.origin)
@@ -80,6 +85,11 @@ func _spread(source: Dictionary, can_spread: Callable) -> void:
 			var to := cell_center(candidate)
 			if origin.distance_squared_to(to) > radius_squared or not can_spread.call(from, to):
 				continue
+			if source.has("half_extent"):
+				var delta := (to - origin).abs()
+				# A cell touched by the footprint contributes cover on the coarse vision grid.
+				if delta.x > float(source.half_extent.x) + CELL_SIZE * 0.5 or delta.y > float(source.half_extent.y) + CELL_SIZE * 0.5:
+					continue
 			covered[candidate] = true
 			next_frontier.append(candidate)
 			_add_coverage(candidate, source.owner)
@@ -97,16 +107,18 @@ func _add_coverage(cell: Vector2i, owner: int) -> void:
 		if expires.is_empty():
 			_decaying.erase(cell)
 
-func _retire_source(source: Dictionary, tick: int) -> void:
+func _retire_source(source: Dictionary, tick: int, ladder_interval: int) -> void:
 	var owner: int = source.owner
 	var origin := cell_center(source.origin)
+	var delay := ladder_interval if ladder_interval > 0 else DECAY_DELAY_TICKS
+	var interval := ladder_interval if ladder_interval > 0 else DECAY_RING_TICKS
 	for cell in source.covered:
 		var counts: Dictionary = cells[cell]
 		counts[owner] = int(counts[owner]) - 1
 		if counts[owner] == 0:
 			var rings := floori(maxf(0.0, float(source.radius) - origin.distance_to(cell_center(cell))) / CELL_SIZE)
 			var expires: Dictionary = _decaying.get(cell, {})
-			expires[owner] = tick + DECAY_DELAY_TICKS + rings * DECAY_RING_TICKS
+			expires[owner] = tick + delay + rings * interval
 			_decaying[cell] = expires
 
 func _expire_coverage(tick: int) -> void:

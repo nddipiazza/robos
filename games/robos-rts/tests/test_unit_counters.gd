@@ -131,7 +131,7 @@ func _test_upgrade_tiers() -> void:
 			var stock := Vector2i(player.crystal, player.aether)
 			for upgrade in ["weapons", "armor"]:
 				var offer: Dictionary = sim.research_offer(1, upgrade)
-				duration += float(offer.time) * sim.build_time_scale()
+				duration += float(offer.time) * sim.research_time_scale(1)
 				cost += Vector2i(offer.crystal, offer.aether)
 				_check(sim.issue_command([workshop.tag], "research_" + upgrade).ok, "Pay for level %d %s" % [level, upgrade])
 			_check(Vector2i(player.crystal, player.aether) == stock - cost, "Weapon and armor tiers charge their listed costs")

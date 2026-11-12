@@ -6,9 +6,9 @@ const GOLD := Color("#ffcd77")
 
 var battle: Node2D
 var state: Dictionary = {}
-var _objectives: PanelContainer
-var _title: Label
+var _objectives: VBoxContainer
 var _primary: Label
+var _optional: HBoxContainer
 var _bonus: Label
 var _extra: Label
 var _note: Label
@@ -28,6 +28,7 @@ var _next: Button
 var _retry: Button
 var _restart_picker: PanelContainer
 var _restart_heading: Label
+var _restart_message: Label
 var _restart_difficulty: OptionButton
 var _restart_error: Label
 var _restart_source: Control
@@ -43,18 +44,28 @@ var _reported_result := false
 
 func _ready() -> void:
 	layer = 9
-	_objectives = _panel(Vector2(28, 92), 460)
-	_objectives.self_modulate = Color.TRANSPARENT
-	var objectives := _body(_objectives)
-	_title = _label(objectives, 19, CYAN)
-	_primary = _label(objectives, 22)
-	_bonus = _label(objectives, 17, GOLD)
-	_extra = _label(objectives, 17, GOLD)
-	_note = _label(objectives, 17)
-	_timing = _label(objectives, 17, CYAN)
-	for label in [_title, _primary, _bonus, _extra, _note, _timing]:
+	_objectives = VBoxContainer.new()
+	_objectives.position = Vector2(20, 48)
+	_objectives.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_objectives.add_theme_constant_override("separation", 2)
+	add_child(_objectives)
+	_primary = _label(_objectives, 18)
+	_optional = HBoxContainer.new()
+	_optional.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_optional.add_theme_constant_override("separation", 8)
+	_objectives.add_child(_optional)
+	var optional_heading := _label(_optional, 15, GOLD)
+	optional_heading.text = "Optional"
+	optional_heading.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	var optional_list := _body(_optional)
+	optional_list.add_theme_constant_override("separation", 1)
+	_bonus = _label(optional_list, 15, GOLD)
+	_extra = _label(optional_list, 15, GOLD)
+	_note = _label(_objectives, 15)
+	_timing = _label(_objectives, 15, CYAN)
+	for label in [_primary, optional_heading, _bonus, _extra, _note, _timing]:
 		label.add_theme_color_override("font_outline_color", Color("#071018"))
-		label.add_theme_constant_override("outline_size", 4)
+		label.add_theme_constant_override("outline_size", 3)
 	_top_bar = _bar(Vector2.ZERO, Vector2(1920, 106))
 	_bottom_bar = _bar(Vector2(0, 883), Vector2(1920, 197))
 	_captions = _panel(Vector2(455, 728), 1010)
@@ -78,15 +89,17 @@ func _ready() -> void:
 	_button(buttons, "Main menu", _to_title)
 	_build_restart_picker()
 	_voice = AudioStreamPlayer.new()
-	_voice.bus = "Master"
+	_voice.bus = "SFX"
 	add_child(_voice)
+	RTSMusic.watch_campaign_voice(_voice)
 	reset()
 
 func _build_restart_picker() -> void:
 	_restart_picker = _panel(Vector2(680, 378), 560, true)
 	var body := _body(_restart_picker)
 	_restart_heading = _label(body, 30, CYAN)
-	_label(body, 18).text = "Choose a difficulty for this mission."
+	_restart_message = _label(body, 18)
+	_restart_message.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_restart_difficulty = OptionButton.new()
 	_restart_difficulty.custom_minimum_size.y = 44
 	_restart_difficulty.add_theme_font_size_override("font_size", 20)
@@ -98,7 +111,7 @@ func _build_restart_picker() -> void:
 	var buttons := HBoxContainer.new()
 	buttons.add_theme_constant_override("separation", 12)
 	body.add_child(buttons)
-	_button(buttons, "Restart mission", _restart_mission)
+	_button(buttons, "Confirm restart", _restart_mission)
 	_button(buttons, "Cancel", cancel_restart)
 
 func _panel(at: Vector2, width: float, interactive: bool = false) -> PanelContainer:
@@ -170,13 +183,15 @@ func _process(_delta: float) -> void:
 		return
 	state = SimEngine.campaign.snapshot(SimEngine, battle.viewing_player())
 	var finished: bool = state.status != "playing"
+	battle.world_3d.sync_campaign_pickups([] if finished else state.markers)
 	_update_cue(state.cue, finished)
 	_objectives.visible = not _cinematic and not finished and not battle.hud_hidden
-	_title.text = "MISSION %02d  /  %s" % [state.mission, state.title.to_upper()]
 	_primary.text = state.primary
-	_bonus.text = "Optional  •  %s  %d/%d" % [state.bonus, state.bonus_done, state.bonus_total]
+	_optional.visible = state.bonus_total > 0 or state.extra_total > 0
+	_bonus.visible = state.bonus_total > 0
+	_bonus.text = "%s  %d/%d" % [state.bonus, state.bonus_done, state.bonus_total]
 	_extra.visible = state.extra_total > 0
-	_extra.text = "Optional  •  %s  %d/%d" % [state.extra, state.extra_done, state.extra_total]
+	_extra.text = "%s  %d/%d" % [state.extra, state.extra_done, state.extra_total]
 	_note.visible = not state.mission_note.is_empty()
 	_note.text = state.mission_note
 	_timing.visible = state.rescue_in >= 0
@@ -208,7 +223,6 @@ func _update_cue(cue: Dictionary, finished: bool) -> void:
 					_voice.stream = voice
 					_voice.play()
 					_voice_started = true
-	_voice.volume_db = -80.0 if RTSAudio.muted else RTSAudio.master_volume_db
 	_voice.stream_paused = SimEngine.paused and not finished
 	_captions.visible = not key.is_empty() and not _skipped
 	_skip.visible = _cinematic
@@ -248,6 +262,9 @@ func open_restart_picker() -> void:
 	_restart_focus = get_viewport().gui_get_focus_owner()
 	_restart_source.hide()
 	_restart_heading.text = "Restart %s" % Campaign.MISSIONS[SimEngine.campaign.mission_index].title
+	_restart_message.text = "Choose a difficulty for this mission."
+	if not SimEngine._scenario_finished():
+		_restart_message.text += "\nRestarting will discard progress in the current attempt."
 	_restart_difficulty.select(Campaign.DIFFICULTIES.find(SimEngine.campaign.difficulty))
 	_restart_error.hide()
 	_restart_picker.show()
@@ -264,7 +281,7 @@ func cancel_restart() -> void:
 
 func _restart_mission() -> void:
 	var difficulty: String = Campaign.DIFFICULTIES[_restart_difficulty.selected]
-	var result := SimEngine.start_campaign(SimEngine.campaign.mission_index, difficulty)
+	var result := SimEngine.start_campaign(SimEngine.campaign.mission_index, difficulty, SimEngine.campaign.selected_mutators())
 	if not result.ok:
 		_restart_error.text = result.error
 		_restart_error.show()
@@ -290,14 +307,14 @@ func _show_result() -> void:
 	_result_extra.text = "%s  •  %d/%d" % [state.extra, state.extra_done, state.extra_total]
 	_next.visible = won and state.mission < Campaign.MISSIONS.size()
 	_retry.text = "Replay mission" if won else "Retry mission"
-	if won and Campaign.save_completion(state.mission - 1) != OK:
+	if won and Campaign.save_completion(state.mission - 1, state.get("brood_research", 0)) != OK:
 		_result_reason.text += "\nCampaign progress could not be saved."
 	RTSAudio.play_ui("match_victory" if won else "match_defeat")
 	_result.show()
 	(_next if _next.visible else _retry).grab_focus()
 
 func _launch_next_mission() -> void:
-	var result := SimEngine.start_campaign(SimEngine.campaign.mission_index + 1, SimEngine.campaign.difficulty)
+	var result := SimEngine.start_campaign(SimEngine.campaign.mission_index + 1, SimEngine.campaign.difficulty, SimEngine.campaign.selected_mutators())
 	if not result.ok:
 		_result_reason.text = result.error
 

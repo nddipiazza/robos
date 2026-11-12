@@ -1,5 +1,7 @@
 extends SceneTree
 
+const LadderRules = preload("res://scripts/engine/RTSLadderRules.gd")
+
 var sim: Node
 var failures: Array[String] = []
 
@@ -10,10 +12,12 @@ func _run() -> void:
 	await process_frame
 	sim = root.get_node("SimEngine")
 	root.get_node("RTSCommanderAI").configure_from_scenario([])
-	_test_crystal()
-	_test_rich_aether()
-	_test_reassignment()
-	_test_gas_transfer()
+	for ruleset in ["", LadderRules.ID]:
+		_test_crystal(ruleset)
+		_test_rich_aether(ruleset)
+		_test_aether_queue(ruleset)
+		_test_reassignment(ruleset)
+		_test_gas_transfer(ruleset)
 	_test_builder_under_fire()
 	_test_shared_repair_budget()
 	_test_default_rally()
@@ -25,8 +29,11 @@ func _check(ok: bool, label: String) -> void:
 	if not ok:
 		failures.append(label)
 
-func _test_crystal() -> void:
-	sim.reset_state(42, 104, 64)
+func _load_economy(ruleset: String) -> void:
+	sim.load_scenario_dict({"ruleset": ruleset, "paused": true, "map": {"width": 104, "height": 64}})
+
+func _test_crystal(ruleset: String) -> void:
+	_load_economy(ruleset)
 	sim.spawn_unit("colony_hub", 1, Vector2(18, 24))
 	var patch: Dictionary = sim.spawn_resource("crystal_field", Vector2(34, 24), 7, "gold", true)
 	var worker: Dictionary = sim.spawn_unit("pioneer", 1, Vector2(29, 24))
@@ -41,9 +48,9 @@ func _test_crystal() -> void:
 	sim.step_ticks(61 * 64)
 	_check(sim.recent_income(1).crystal == 0, "Old deliveries expire from the income window")
 
-func _test_rich_aether() -> void:
+func _test_rich_aether(ruleset: String) -> void:
 	for roster in [["colony_hub", "aether_tap", "pioneer"], ["brood_nest", "spore_tap", "forager"], ["heartstone", "aether_prism", "mote"]]:
-		sim.reset_state(42, 104, 64)
+		_load_economy(ruleset)
 		sim.spawn_unit(roster[0], 1, Vector2(18, 24))
 		var vent: Dictionary = sim.spawn_resource("aether_vent", Vector2(34, 24), 6, "", true)
 		var tap: Dictionary = sim.spawn_unit(roster[1], 1, vent.pos)
@@ -55,8 +62,74 @@ func _test_rich_aether() -> void:
 		_check(vent.amount == 0 and sim.recent_income(1).aether == 6, "%s extracts a rich six-unit load" % roster[1])
 		_check(sim.deposit_present(vent), "An empty vent retains its physical footprint")
 
-func _test_reassignment() -> void:
-	sim.reset_state(42, 104, 64)
+func _test_aether_queue(ruleset: String) -> void:
+	_load_economy(ruleset)
+	sim.spawn_unit("colony_hub", 1, Vector2(17, 24))
+	var vent: Dictionary = sim.spawn_resource("aether_vent", Vector2(42, 24), 12)
+	var tap: Dictionary = sim.spawn_unit("aether_tap", 1, vent.pos)
+	var workers: Array[Dictionary] = []
+	for i in range(3):
+		workers.append(sim.spawn_unit("pioneer", 1, Vector2(32, 24)))
+	sim._rebuild_astar_grid()
+	for i in range(workers.size()):
+		var target: Dictionary = vent if i == 1 else tap
+		_check(sim.issue_command([workers[i].tag], "harvest", target.pos, target.tag).ok, "Each worker can target the same extractor")
+	var entries: Array[int] = []
+	var entered_at := {}
+	var left := {}
+	var occupied_correctly := true
+	var overlap := false
+	var duration := LadderRules.AETHER_GATHER_SECONDS if ruleset == LadderRules.ID else 1.75
+	for i in range(12 * sim.TICK_RATE):
+		sim.step_ticks(1)
+		var inside := workers.filter(func(worker): return worker.get("gas_extracting", false))
+		occupied_correctly = occupied_correctly and inside.size() <= 1
+		if inside.size() == 1:
+			var worker: Dictionary = inside[0]
+			occupied_correctly = occupied_correctly and worker.pos == tap.pos and not sim.can_see_unit(1, worker)
+			if not entered_at.has(worker.tag):
+				entries.append(worker.tag)
+				entered_at[worker.tag] = sim.tick
+		if inside.size() == 1 and entries.size() == 1:
+			overlap = overlap or workers[1].pos.distance_to(workers[2].pos) < workers[1].radius
+		for worker in workers:
+			if not left.has(worker.tag) and worker.cargo_type == "aether":
+				_check(entered_at.has(worker.tag) and sim.tick - entered_at[worker.tag] == ceili(duration * sim.TICK_RATE) - 1,
+					"A worker exits with its load after the full extraction time")
+				_check(sim.can_see_unit(1, worker) and worker.pos.distance_to(tap.pos) >= tap.radius,
+					"The loaded worker reappears outside the extractor")
+				left[worker.tag] = true
+		if sim.players[1].aether_collected == 12:
+			break
+	_check(occupied_correctly and overlap, "Workers overlap on approach and wait outside while one worker gathers inside")
+	_check(entries == workers.map(func(worker): return worker.tag) and left.size() == 3
+		and vent.amount == 0 and sim.players[1].aether_collected == 12,
+		"Three workers take turns and deliver one load apiece (entries %s, loads %d, delivered %d)" %
+		[entries, left.size(), sim.players[1].aether_collected])
+
+	sim.issue_command(workers.map(func(worker): return worker.tag), "stop")
+	vent.amount = 12
+	for index in range(2):
+		var worker: Dictionary = sim.spawn_unit("pioneer", 1, Vector2(37, 24))
+		workers[index] = worker
+		sim.issue_command([worker.tag], "harvest", tap.pos, tap.tag)
+	for _tick in range(sim.TICK_RATE):
+		sim.step_ticks(1)
+		if workers[0].get("gas_extracting", false) and vent.gas_queue.has(workers[1].tag):
+			break
+	_check(workers[0].get("gas_extracting", false) and vent.gas_queue.has(workers[1].tag),
+		"One worker has entered while another is queued")
+	_check(sim.issue_command([workers[0].tag], "stop").ok, "An extracting worker accepts a stop command")
+	sim.step_ticks(1)
+	_check(sim.can_see_unit(1, workers[0]) and workers[1].get("gas_extracting", false),
+		"Stopping extraction frees the slot for the next worker")
+	sim._remove_destroyed_unit(tap)
+	sim.step_ticks(1)
+	_check(sim.can_see_unit(1, workers[1]) and vent.amount == 12 and vent.mining_worker == 0 and vent.gas_queue.is_empty(),
+		"Losing the extractor releases the worker and leaves the aether intact")
+
+func _test_reassignment(ruleset: String) -> void:
+	_load_economy(ruleset)
 	var home: Dictionary = sim.spawn_unit("colony_hub", 1, Vector2(18, 24))
 	var backup: Dictionary = sim.spawn_unit("colony_hub", 1, Vector2(63, 24))
 	var old_patch: Dictionary = sim.spawn_resource("crystal_field", Vector2(30, 24))
@@ -71,8 +144,8 @@ func _test_reassignment() -> void:
 	_check(worker.orders[0].target_tag == new_patch.tag and worker.orders[0].dropoff_tag == backup.tag, "Workers transfer to a surviving base and its mineral line")
 	_check(sim.players[1].crystal_collected > 0, "Transferred workers resume paying income")
 
-func _test_gas_transfer() -> void:
-	sim.reset_state(42, 104, 64)
+func _test_gas_transfer(ruleset: String) -> void:
+	_load_economy(ruleset)
 	sim.spawn_unit("colony_hub", 1, Vector2(18, 24))
 	var vent: Dictionary = sim.spawn_resource("aether_vent", Vector2(42, 24))
 	var site: Dictionary = sim.spawn_unit("aether_tap", 1, vent.pos, "", 0.4)
@@ -96,9 +169,14 @@ func _test_gas_transfer() -> void:
 	_check(sim.construction_builder(site).is_empty(), "Stopping a builder releases the foundation")
 	sim.issue_command([workers[4]], "resume_construction", site.pos, site.tag)
 	_check(sim.construction_builder(site).get("tag") == workers[4], "Another Pioneer can claim the released foundation")
-	sim.step_ticks(1200)
+	var destination := Vector2(46, 34)
+	sim.issue_command([workers[4]], "move", destination, 0, "", true)
+	sim.step_ticks(ceili((site.build_total_time * (1.0 - site.build_progress) + 8.0) * sim.TICK_RATE))
 	_check(site.build_progress >= 1.0 and sim.players[1].crystal >= initial_crystal, "Handoff completes construction without an extra fee")
 	_check(sim.players[1].aether_collected > 0, "Waiting workers begin gathering after completion")
+	var builder: Dictionary = sim.units[workers[4]]
+	_check(builder.orders.is_empty() and builder.pos.distance_to(destination) < 2.0,
+		"The builder executes its queued move after finishing the extractor")
 
 func _test_default_rally() -> void:
 	sim.start_skirmish("iron-narrows", {"seed": 42})
@@ -144,7 +222,7 @@ func _test_builder_under_fire() -> void:
 	sim.step_ticks(8)
 	_check(site.build_progress == progress, "Construction waits while the dead builder is unassigned")
 	_check(sim.issue_command([replacement.tag], "resume_construction", location, site.tag).ok, "The surviving Pioneer claims the same foundation")
-	sim.step_ticks(1600)
+	sim.step_ticks(ceili((site.build_total_time + 2.0) * sim.TICK_RATE))
 	_check(site.build_progress == 1.0 and sim.players[1].structures_built == 1, "The replacement finishes the original structure once")
 	_check(sim.players[1].crystal == 150 and sim.players[1].aether == 40, "Taking over the foundation costs nothing extra")
 

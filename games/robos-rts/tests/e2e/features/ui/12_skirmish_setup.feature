@@ -14,7 +14,7 @@ Feature: Choose a duel, display settings and a postgame perspective
 
   Scenario: Observer mode can inspect the AI and then restore player fog
     Given a Frontier Hunters match on "normal" difficulty with "siege" AI and seed 4
-    When the commander surrenders and records the finished match
+    When the commander cancels and then confirms surrender from the match menu
     And the commander presses "O"
     Then the observer can select the hidden enemy base
     When the commander presses "O"

@@ -1,0 +1,42 @@
+---
+title: "The Last Road made me build a better base"
+nav_label: "The Last Road"
+date: 2026-11-12 23:30:00 +0000
+date_label: "Nov 12, 2026"
+tags:
+  - "Starfall Command"
+  - "RTS Campaigns"
+  - "Gameplay Testing"
+summary: "Mission 4 turns a cramped settlement into a convoy staging base. A Normal run reached 111 supply, staffed both bunkers, and rescued 57 colonists."
+description: "How Starfall Command made Bracken buildable, staffed two roadside bunkers, and won a Normal convoy playthrough with 57 colonists rescued."
+og_image: /assets/games/starfall-command/last-road.webp
+og_image_alt: "Bracken’s starting base and crystal line in The Last Road"
+---
+<div class="blog-body">
+  <p>The first problem with <strong>The Last Road</strong> was right at home. Bracken looked like a base, but there was barely room for one. The mineral line crowded the Colony Hub, the Aether Tap sat beside it, and stretches of flat ground rejected new buildings. Then a truck would leave and the escort was still waiting for Riflemen.</p>
+
+  <figure class="blog-fig">
+    <img src="{{ '/assets/games/starfall-command/last-road.webp' | relative_url }}" width="1440" height="810" loading="lazy" alt="Pioneers mine crystal at the widened Bracken settlement beside the convoy road">
+    <figcaption>Bracken has a wider crystal line, a separate gas tap, and room to move around the Colony Hub.</figcaption>
+  </figure>
+
+  <h2>Build around the road</h2>
+  <p>The mission sends trucks automatically. Your job is to get 50 colonists to the colony ships. I opened construction space on the settlement’s flat ground and kept the convoy lane clear. The placement grid now marks the terrain restrictions you hit when placing a building. In a construction check, Pioneers completed a Silo, a Muster Hall, and a Field Armory on the revised map.</p>
+
+  <h2>Give the escort a steady supply of troops</h2>
+  <p>The automated pilot now builds Silos before it runs out of supply, trains enough Pioneers to work the crystal line and gas tap, and reserves crystal for buildings while workers walk to the site. Three Riflemen and a Torchguard fill each roadside bunker. A Pioneer handles repairs at each strongpoint, and the rest of the infantry goes with the trucks.</p>
+  <p>On Normal, the pilot rescued <strong>57 colonists</strong> and lost seven. It peaked at <strong>111 supply capacity, 22 Pioneers, and 57 infantry on escort duty</strong>. Both bunkers reached four occupants and the army finished both +1 infantry upgrades. The pilot still ended with 3,453 crystal and 1,439 aether. That bank shows where it can do better next time.</p>
+
+  <h2>Watch the update</h2>
+  <p>I recorded a 49-second tour with the battle simulator, campaign mutators, online lobby, and map editor. LAN parties and co-op are on the roadmap. I’m looking for help with code, maps, art, and playtesting.</p>
+  <p><a href="https://www.youtube.com/shorts/7MgYpn01bng">Watch the narrated Starfall Command Short on YouTube</a>.</p>
+
+  <h2>Run the Normal playthrough</h2>
+  <pre class="blog-log"><code>godot --headless --path games/robos-rts --script res://tests/e2e/play_evacuation.gd</code></pre>
+</div>
+<div class="blog-links">
+  <a href="{{ '/games/robos-rts/' | relative_url }}">Starfall Command →</a>
+  <a href="{{ '/games/robos-rts/docs/' | relative_url }}">Game guide →</a>
+  <a href="https://discord.gg/6PjxzkHujE">Join the Discord →</a>
+  <a href="https://github.com/nddipiazza/robos/commit/e40b46bc4bef05389c3599c24bad36b4480a37e3">Source changes →</a>
+</div>

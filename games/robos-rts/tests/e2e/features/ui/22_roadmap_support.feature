@@ -11,7 +11,7 @@ Feature: Paid healing and shield support
     When the commander frames (43, 26) at zoom height 44
     And the commander clicks unit "hall"
     And the commander presses "E"
-    Then player 1 has 325 crystal, 125 aether and 4 supply used
+    Then player 1 has 325 crystal, 125 aether and 2 supply used
     When the simulation advances 420 ticks
     And the commander selects the completed "triage_specialist"
     And the commander right-clicks terrain at (57, 25)

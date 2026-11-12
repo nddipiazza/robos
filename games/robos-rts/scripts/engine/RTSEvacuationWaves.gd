@@ -1,0 +1,95 @@
+extends RefCounted
+
+# Wave counts are ordered Casual, Normal, Hard, and Brutal.
+# Causeway checkpoints and encounter counts come from THanson01.
+const CHECKPOINTS := [
+	[4, Vector2(44.63, 130.67)],
+	[6, Vector2(48.61, 122.37)],
+	[7, Vector2(55.79, 115.18)],
+	[9, Vector2(63.34, 108.51)],
+	[10, Vector2(69.58, 101.22)],
+	[12, Vector2(75.05, 92.52)],
+	[14, Vector2(79.15, 83.35)],
+	[15, Vector2(77.17, 73.74)],
+	[17, Vector2(75.21, 63.81)],
+	[18, Vector2(82.03, 57.42)],
+	[19, Vector2(86.66, 51.97)],
+]
+
+# Each encounter has a checkpoint index, entry kind, position, and roster.
+# Tunnel encounters also carry the number of timed packs.
+const CONVOYS := [
+	[  # Convoy 1
+		[6, "burrow", Vector2(83.42, 83.39), {"skitterling": [3, 3, 3, 5], "blight_hurler": [0, 0, 1, 1]}],
+		[7, "west", Vector2.ZERO, {"skitterling": [4, 5, 8, 12]}],
+	],
+	[  # Convoy 2
+		[0, "west", Vector2.ZERO, {"skitterling": [7, 7, 9, 12]}],
+		[1, "west", Vector2.ZERO, {"skitterling": [8, 8, 10, 5], "blight_hurler": [0, 0, 0, 1]}],
+		[3, "east", Vector2.ZERO, {"blight_hurler": [1, 1, 1, 1], "skitterling": [0, 0, 6, 10]}],
+		[4, "east", Vector2.ZERO, {"skitterling": [6, 6, 7, 10]}],
+		[5, "east", Vector2.ZERO, {"skitterling": [6, 6, 8, 11]}],
+		[6, "west", Vector2.ZERO, {"skitterling": [5, 5, 7, 11], "blight_hurler": [1, 1, 1, 0]}],
+		[7, "west", Vector2.ZERO, {"skitterling": [9, 9, 12, 12], "blight_hurler": [1, 1, 1, 1], "bile_crawler": [0, 0, 0, 1]}],
+		[9, "west", Vector2.ZERO, {"skitterling": [5, 5, 7, 9]}],
+	],
+	[  # Convoy 3
+		[0, "west", Vector2.ZERO, {"skitterling": [17, 10, 14, 21], "blight_hurler": [0, 1, 1, 1]}],
+		[2, "west", Vector2.ZERO, {"bile_crawler": [0, 0, 0, 2]}],
+		[2, "east", Vector2.ZERO, {"skitterling": [4, 4, 8, 5]}],
+		[4, "east", Vector2.ZERO, {"skitterling": [9, 9, 13, 18], "blight_hurler": [1, 1, 1, 1]}],
+		[4, "burrow", Vector2(70.04, 114.96), {"skitterling": [3, 3, 8, 5], "blight_hurler": [0, 0, 0, 1]}],
+		[6, "west", Vector2.ZERO, {"skitterling": [8, 14, 14, 11], "blight_hurler": [1, 1, 1, 1], "bile_crawler": [0, 0, 2, 3]}],
+		[7, "east", Vector2.ZERO, {"needlewing": [0, 1, 2, 2]}],
+		[9, "burrow", Vector2(74.42, 49.01), {"skitterling": [2, 2, 3, 7], "blight_hurler": [0, 0, 1, 1]}],
+	],
+	[  # Convoy 4
+		[1, "drop", Vector2(42.01, 117.79), {"skitterling": [4, 4, 8, 12]}],
+		[1, "west", Vector2.ZERO, {"needlewing": [0, 0, 0, 1]}],
+		[2, "drop", Vector2(48.97, 110.00), {"skitterling": [14, 14, 16, 12], "bile_crawler": [0, 0, 1, 2]}],
+		[3, "drop", Vector2(57.98, 115.60), {"skitterling": [5, 5, 4, 9], "blight_hurler": [1, 1, 1, 0], "bile_crawler": [0, 0, 1, 2]}],
+		[5, "drop", Vector2(94.13, 93.33), {"skitterling": [11, 17, 22, 25]}],
+		[6, "drop", Vector2(83.22, 82.44), {"blight_hurler": [1, 2, 2, 1], "bile_crawler": [0, 0, 0, 1]}],
+		[6, "west", Vector2.ZERO, {"skitterling": [8, 0, 12, 13], "sporeburst": [0, 0, 1, 1]}],
+		[7, "west", Vector2.ZERO, {"skitterling": [5, 5, 9, 11], "needlewing": [0, 1, 1, 0], "sporeburst": [0, 0, 1, 2]}],
+		[8, "drop", Vector2(76.91, 63.76), {"skitterling": [4, 4, 8, 12], "blight_hurler": [1, 1, 1, 1], "bile_crawler": [0, 0, 1, 2]}],
+	],
+	[  # Convoy 5
+		[0, "west", Vector2.ZERO, {"skitterling": [8, 12, 13, 8], "blight_hurler": [1, 1, 0, 1], "sporeburst": [0, 0, 2, 3]}],
+		[2, "tunnel", Vector2(44.84, 113.74), {"skitterling": [2, 2, 2, 2]}, [4, 4, 6, 7]],
+		[5, "east", Vector2.ZERO, {"skitterling": [7, 7, 8, 12], "blight_hurler": [1, 1, 1, 2], "bile_crawler": [0, 0, 2, 2], "needlewing": [0, 0, 1, 1]}],
+		[6, "tunnel", Vector2(89.43, 88.76), {"skitterling": [2, 2, 0, 0], "blight_hurler": [0, 0, 1, 1]}, [3, 4, 1, 1]],
+		[6, "west", Vector2.ZERO, {"blight_hurler": [3, 3, 0, 0], "skitterling": [0, 0, 12, 16], "needlewing": [0, 0, 1, 1]}],
+		[8, "tunnel", Vector2(62.42, 61.79), {"skitterling": [2, 2, 0, 0], "bile_crawler": [0, 0, 1, 2]}, [3, 3, 1, 1]],
+		[10, "tunnel", Vector2(89.09, 59.70), {"skitterling": [2, 2, 2, 2]}, [2, 2, 3, 0]],
+		[10, "tunnel", Vector2(89.09, 59.70), {"sporeburst": [1, 1, 1, 1]}, [0, 0, 0, 1]],
+	],
+	[  # Convoy 6
+		[0, "west", Vector2.ZERO, {"skitterling": [12, 8, 7, 10], "blight_hurler": [1, 2, 1, 0], "carapace_bulwark": [0, 0, 1, 1]}],
+		[1, "drop", Vector2(52.30, 123.18), {"bile_crawler": [0, 0, 2, 2], "blight_hurler": [0, 0, 0, 1]}],
+		[1, "tunnel", Vector2(41.31, 119.89), {"skitterling": [2, 2, 2, 2]}, [4, 4, 5, 6]],
+		[2, "west", Vector2.ZERO, {"needlewing": [0, 1, 1, 1]}],
+		[3, "east", Vector2.ZERO, {"needlewing": [0, 0, 0, 1]}],
+		[5, "east", Vector2.ZERO, {"skitterling": [12, 16, 22, 25], "mireweaver": [0, 0, 0, 1], "sporeburst": [0, 0, 1, 0]}],
+		[6, "tunnel", Vector2(76.47, 82.24), {"skitterling": [2, 2, 2, 2]}, [3, 3, 4, 5]],
+		[7, "west", Vector2.ZERO, {"skitterling": [12, 12, 7, 19], "blight_hurler": [1, 1, 1, 0], "sporeburst": [0, 0, 2, 3]}],
+		[7, "east", Vector2.ZERO, {"needlewing": [0, 1, 1, 1]}],
+		[8, "drop", Vector2(70.70, 59.76), {"skitterling": [9, 9, 13, 16], "bile_crawler": [0, 0, 1, 1]}],
+		[9, "tunnel", Vector2(79.88, 58.41), {"skitterling": [2, 2, 2, 2]}, [3, 3, 3, 3]],
+		[9, "west", Vector2.ZERO, {"bile_crawler": [0, 0, 2, 0]}],
+		[10, "burrow", Vector2(89.96, 58.16), {"carapace_bulwark": [0, 0, 0, 1]}],
+	],
+	[  # Alternating final convoy on Brutal
+		[0, "west", Vector2.ZERO, {"skitterling": [11, 13, 10, 7], "blight_hurler": [1, 1, 0, 0], "carapace_bulwark": [0, 0, 1, 1], "mireweaver": [0, 0, 0, 1], "bile_crawler": [0, 0, 0, 1]}],
+		[1, "drop", Vector2(41.64, 126.66), {"skitterling": [5, 5, 8, 12]}],
+		[1, "tunnel", Vector2(44.25, 108.90), {"bile_crawler": [2, 2, 2, 2]}, [1, 1, 2, 2]],
+		[3, "west", Vector2.ZERO, {"needlewing": [0, 1, 1, 1]}],
+		[3, "east", Vector2.ZERO, {"needlewing": [0, 1, 1, 1]}],
+		[5, "east", Vector2.ZERO, {"skitterling": [12, 16, 19, 22], "sporeburst": [0, 0, 1, 2], "blight_hurler": [0, 0, 1, 1], "needlewing": [0, 0, 1, 1]}],
+		[6, "tunnel", Vector2(84.45, 78.26), {"skitterling": [2, 2, 2, 2]}, [3, 3, 4, 4]],
+		[7, "west", Vector2.ZERO, {"skitterling": [7, 7, 13, 17], "blight_hurler": [1, 1, 1, 1], "sporeburst": [0, 0, 2, 0], "needlewing": [0, 0, 1, 1]}],
+		[8, "drop", Vector2(78.36, 60.78), {"skitterling": [6, 6, 0, 0], "blight_hurler": [0, 0, 1, 0], "bile_crawler": [0, 0, 0, 2]}],
+		[9, "tunnel", Vector2(95.71, 59.46), {"skitterling": [2, 2, 2, 2]}, [3, 3, 4, 3]],
+		[9, "burrow", Vector2(63.96, 59.52), {"carapace_bulwark": [0, 0, 1, 1]}],
+	],
+]

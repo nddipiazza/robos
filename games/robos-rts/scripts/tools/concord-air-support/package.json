@@ -1,0 +1,12 @@
+{
+  "name": "starfall-concord-air-support",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Deterministic offline generator and validator for Starfall Command Aurelian Concord air & support GLB assets",
+  "scripts": {
+    "build": "node build.mjs",
+    "validate": "node validate.mjs",
+    "preview": "node src/render-preview.mjs"
+  }
+}
