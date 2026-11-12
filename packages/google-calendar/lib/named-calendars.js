@@ -191,19 +191,22 @@ function getCaldavAccessToken(email, options = {}) {
     return options.mockCaldavToken || '';
   }
 
-  const tokenCachePath = path.join(os.tmpdir(), 'robos-tb-oauth-token-cache.json');
+  const tokenCachePath = path.join(os.tmpdir(), 'robos-tb-caldav-oauth-token-cache.json');
   const nowSec = Math.floor(Date.now() / 1000);
   const emailKey = String(email || '').trim().toLowerCase();
 
-  try {
-    if (fs.existsSync(tokenCachePath)) {
-      const cache = JSON.parse(fs.readFileSync(tokenCachePath, 'utf8'));
-      const entry = (emailKey && cache[emailKey]) || Object.values(cache)[0];
-      if (entry && entry.access_token && Number(entry.expires_at || 0) > nowSec + 60) {
-        return entry.access_token;
+  if (!options.forceRefresh) {
+    try {
+      if (fs.existsSync(tokenCachePath)) {
+        const cache = JSON.parse(fs.readFileSync(tokenCachePath, 'utf8'));
+        const entry = (emailKey && cache[emailKey]) || Object.values(cache)[0];
+        const hasCalendarScope = !entry?.scope || /calendar|caldav/i.test(String(entry.scope));
+        if (entry && entry.access_token && hasCalendarScope && Number(entry.expires_at || 0) > nowSec + 60) {
+          return entry.access_token;
+        }
       }
-    }
-  } catch {}
+    } catch {}
+  }
 
   const tbStatus = thunderbirdGoogle.detectThunderbird(options);
   const profilePath = tbStatus?.primaryProfilePath;
@@ -275,6 +278,7 @@ for u_lower, rt in refresh_tokens.items():
         if at:
             tok_cache[u_lower] = {
                 "access_token": at,
+                "scope": resp.get("scope", "https://www.googleapis.com/auth/calendar"),
                 "expires_at": now_ts + int(resp.get("expires_in", 3500)),
             }
             if not chosen or u_lower == target_email:
@@ -1263,6 +1267,15 @@ async function createNamedCalendarEvent(eventInput = {}, options = {}) {
     throw new Error('Event title / summary is required.');
   }
 
+  if (options.requireExplicitDateTime || eventInput.requireExplicitDateTime) {
+    if (eventInput.hasExplicitDate === false || (eventInput.hasExplicitTime === false && !eventInput.allDay)) {
+      throw new Error(
+        eventInput.missingDateTimeError ||
+          'Could not add the appointment because no date or time was given. Please try again and include the day and time, such as Friday at 2 PM.'
+      );
+    }
+  }
+
   const discovered = await discoverNamedCalendars(eventInput.accountId || null, options);
   const calendars = discovered.calendars || [];
 
@@ -1412,12 +1425,12 @@ async function createNamedCalendarEvent(eventInput = {}, options = {}) {
   const fetchImpl = options.fetchImpl || globalThis.fetch;
 
   if (!options.skipNetwork && typeof fetchImpl === 'function' && targetCal?.writable !== false) {
-    const caldavToken = getCaldavAccessToken(discovered.email, options);
+    let caldavToken = getCaldavAccessToken(discovered.email, options);
     if (caldavToken) {
       const caldavTargetId = targetCal.caldavBackingId || targetCal.id;
       caldavResourceUrl = `https://apidata.googleusercontent.com/caldav/v2/${encodeURIComponent(caldavTargetId)}/events/${encodeURIComponent(uid)}.ics`;
       try {
-        const putRes = await fetchImpl(caldavResourceUrl, {
+        let putRes = await fetchImpl(caldavResourceUrl, {
           method: 'PUT',
           headers: {
             Authorization: `Bearer ${caldavToken}`,
@@ -1426,6 +1439,21 @@ async function createNamedCalendarEvent(eventInput = {}, options = {}) {
           body: icsPayload,
           signal: AbortSignal.timeout(10000),
         });
+        if (putRes.status === 401 || putRes.status === 403) {
+          const freshToken = getCaldavAccessToken(discovered.email, { ...options, forceRefresh: true });
+          if (freshToken && freshToken !== caldavToken) {
+            caldavToken = freshToken;
+            putRes = await fetchImpl(caldavResourceUrl, {
+              method: 'PUT',
+              headers: {
+                Authorization: `Bearer ${caldavToken}`,
+                'Content-Type': 'text/calendar; charset=utf-8',
+              },
+              body: icsPayload,
+              signal: AbortSignal.timeout(10000),
+            });
+          }
+        }
         caldavStatus = putRes.status;
         syncedToGoogle = putRes.ok || putRes.status === 201 || putRes.status === 204;
       } catch {}
@@ -2263,7 +2291,14 @@ function parseItineraryOrInviteText(rawText, options = {}) {
       });
     }
 
-    const primary = { ...detectedEvents[0], detectedEvents };
+    const enrichedDetected = detectedEvents.map((ev) => ({
+      ...ev,
+      hasExplicitDate: true,
+      hasExplicitTime: true,
+      hasExplicitDateOrTime: true,
+      missingDateTimeError: '',
+    }));
+    const primary = { ...enrichedDetected[0], detectedEvents: enrichedDetected };
     return primary;
   }
 
@@ -2300,6 +2335,10 @@ function parseItineraryOrInviteText(rawText, options = {}) {
         location: locM ? locM[1].trim().replace(/\\,/g, ',') : '',
         description: descM ? descM[1].trim().replace(/\\n/g, '\n').replace(/\\,/g, ',') : '',
         attendees: matchedAttendees,
+        hasExplicitDate: true,
+        hasExplicitTime: true,
+        hasExplicitDateOrTime: true,
+        missingDateTimeError: '',
       };
       return { ...ev, detectedEvents: [ev] };
     }
@@ -2327,6 +2366,10 @@ function parseItineraryOrInviteText(rawText, options = {}) {
       location: locM ? locM[1].trim() : '',
       description: text,
       attendees: matchedAttendees,
+      hasExplicitDate: true,
+      hasExplicitTime: true,
+      hasExplicitDateOrTime: true,
+      missingDateTimeError: '',
     };
     return { ...ev, detectedEvents: [ev] };
   }
@@ -2447,7 +2490,16 @@ function normalizeCalendarVoiceTranscript(rawText) {
 function parseNaturalLanguageEvent(inputText, options = {}) {
   let raw = String(inputText || '').trim();
   if (!raw) {
-    return { summary: '', attendees: [], allDay: false };
+    return {
+      summary: '',
+      attendees: [],
+      allDay: false,
+      hasExplicitDate: false,
+      hasExplicitTime: false,
+      hasExplicitDateOrTime: false,
+      missingDateTimeError:
+        'Could not add the appointment because no date or time was given. Please try again and include the day and time, such as Friday at 2 PM.',
+    };
   }
 
   // First check if this is a pasted flight itinerary, hotel reservation, or .ics block
@@ -2775,6 +2827,38 @@ function parseNaturalLanguageEvent(inputText, options = {}) {
     raw = raw.replace(singleTimeBareM[0], ' ').trim();
   }
 
+  const hasExplicitDate = Boolean(
+    isoRangeM ||
+      monthDayRangeM ||
+      dayAfterTomorrowM ||
+      tomorrowM ||
+      todayM ||
+      isoDateM ||
+      slashDateM ||
+      monthDayM ||
+      dayOfMonthM ||
+      weekdayM ||
+      ordinalOnlyM
+  );
+  const hasExplicitTime = Boolean(rangeTimeM || singleTimeWithPrepM || singleTimeBareM || periodDefaultHour != null);
+  const hasExplicitDateOrTime = hasExplicitDate || hasExplicitTime;
+
+  let missingDateTimeError = '';
+  if (!hasExplicitDate && !hasExplicitTime) {
+    missingDateTimeError =
+      'Could not add the appointment because no date or time was given. Please try again and include the day and time, such as Friday at 2 PM.';
+  } else if (!hasExplicitDate) {
+    missingDateTimeError =
+      'Could not add the appointment because no date was given. Please try again and include both the day and time, such as Friday at 2 PM.';
+  } else if (!hasExplicitTime && !allDay) {
+    missingDateTimeError =
+      'Could not add the appointment because no time was given. Please try again and include both the day and time, such as Friday at 2 PM.';
+  }
+
+  if (options.requireExplicitDateTime && missingDateTimeError) {
+    throw new Error(missingDateTimeError);
+  }
+
   // 7. Detect location ("at Red Lobster", "in Living Room")
   let location = '';
   const locM = raw.match(/\bat\s+([A-Z][A-Za-z0-9 '&.,-]+)$/);
@@ -2832,6 +2916,10 @@ function parseNaturalLanguageEvent(inputText, options = {}) {
     recurrence,
     location,
     attendees: matchedAttendees.map((a) => ({ name: a.name, email: a.email, uid: a.uid, avatar: a.avatar })),
+    hasExplicitDate,
+    hasExplicitTime,
+    hasExplicitDateOrTime,
+    missingDateTimeError,
   };
 }
 
