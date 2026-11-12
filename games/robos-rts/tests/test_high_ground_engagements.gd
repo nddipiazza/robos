@@ -61,6 +61,23 @@ func _run() -> void:
 	_check(sim.unit_elevation(spotter) > 1.1 and sim.can_see_unit(1, target) and _is_observed(sim, target.tag), "The spotter restores uphill vision for the low-ground gun")
 	_check(target.hp < initial_hp and gun.pos.is_equal_approx(Vector2(66, 24)), "The stationary gun hits its reacquired target")
 	_check(beam_visible and sim.recent_events.any(func(event): return event.type == "weapon_fire" and event.target_tag == target.tag), "The revealed shot has both a rendered beam and fire event")
+	var world: Node = battle.world_3d
+	var tank: Node3D = world.unit_nodes[gun.tag]
+	var barrel := tank.get_node_or_null("SiegeGun") as Node3D
+	_check(barrel != null and tank.has_meta("siege_shot_time"), "The deployed barrel receives recoil when the shot commits")
+	if barrel:
+		var rig: Dictionary = tank.get_meta("siege_gun")
+		var rest: Transform3D = rig.rest
+		var heading := Basis(Vector3.UP, -float(gun.facing))
+		var muzzle: Vector3 = Vector3(gun.pos.x, sim.unit_visual_elevation(gun), gun.pos.y) + heading * (rest * rig.muzzle)
+		var smoke: Array = world.active_fx.filter(func(effect): return effect.kind == "burst" and effect.max > 0.5)
+		_check(smoke.size() == 1 and smoke[0].origin.is_equal_approx(muzzle), "Smoke starts at the actual muzzle after the tank turns")
+		var selected: Array[int] = []
+		world.sync_3d_entities(selected, 0.048, 1)
+		var kickback := (rest.origin - barrel.position).dot(rest.basis.x.normalized())
+		_check(kickback > 0.29 and kickback < 0.38, "The barrel slides backward along its bore within the turret clearance")
+		world.sync_3d_entities(selected, 0.22, 1)
+		_check(barrel.transform.is_equal_approx(rest) and not tank.has_meta("siege_shot_time"), "The barrel returns to its resting pose")
 	print("High-ground engagements: ", "passed" if failures.is_empty() else failures)
 	for player in root.get_node("RTSAudio").get_children():
 		if player is AudioStreamPlayer:

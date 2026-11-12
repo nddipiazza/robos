@@ -12,7 +12,7 @@ Feature: Paid aircraft and ground or air targeting
     When the commander frames (45, 28) at zoom height 52
     And the commander clicks unit "shop"
     And the commander presses "A"
-    Then player 1 has 275 crystal, 50 aether and 4 supply used
+    Then player 1 has 275 crystal, 50 aether and 1 supply used
     When the simulation advances 550 ticks
     And the commander selects the completed "kestrel_interceptor"
     And the commander presses "M"
@@ -40,7 +40,7 @@ Feature: Paid aircraft and ground or air targeting
     And the commander clicks control slot 1 with "Ctrl+Shift"
     And the commander clicks unit "hangar"
     And the commander presses "D"
-    Then player 1 has 300 crystal, 50 aether and 4 supply used
+    Then player 1 has 300 crystal, 50 aether and 2 supply used
     When the simulation advances 500 ticks
     And the commander selects the completed "rampart_transport"
     And the commander presses "L"

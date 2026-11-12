@@ -1,0 +1,59 @@
+{
+  "name": "The Last Road",
+  "seed": 914,
+  "decor": false,
+  "fog_of_war": true,
+  "map": {
+    "width": 152,
+    "height": 200,
+    "terrain_grid": "res://assets/terrain/campaign-last-road-terrain.json"
+  },
+  "players": {
+    "1": {"faction": "humans", "crystal": 400, "aether": 100},
+    "2": {"faction": "monsters", "crystal": 0, "aether": 0}
+  },
+  "resources": [
+    {"type": "crystal_field", "x": 24.5, "y": 157, "amount": 1254},
+    {"type": "crystal_field", "x": 26, "y": 160.4, "amount": 1453},
+    {"type": "crystal_field", "x": 26, "y": 164, "amount": 1403},
+    {"type": "crystal_field", "x": 30, "y": 163.5, "amount": 1850},
+    {"type": "crystal_field", "x": 34, "y": 163, "amount": 1535},
+    {"type": "crystal_field", "x": 37.5, "y": 160.5, "amount": 1230},
+    {"type": "crystal_field", "x": 40.5, "y": 157, "amount": 2131},
+    {"type": "aether_vent", "x": 47, "y": 145.5, "amount": 2751}
+  ],
+  "units": [
+    {"type": "torchguard", "owner": 1, "x": 113.35, "y": 149.55, "id": "escort_torch_1"},
+    {"type": "torchguard", "owner": 1, "x": 112.74, "y": 151.5, "id": "escort_torch_2"},
+    {"type": "triage_specialist", "owner": 1, "x": 116.53, "y": 150.0, "id": "escort_medic_1"},
+    {"type": "triage_specialist", "owner": 1, "x": 115.9, "y": 152.5, "id": "escort_medic_2"},
+    {"type": "colony_hub", "owner": 0, "x": 32, "y": 151, "id": "settlement_hub"},
+    {"type": "muster_hall", "owner": 0, "x": 26, "y": 139, "id": "evac_muster"},
+    {"type": "research_module", "owner": 0, "x": 31.5, "y": 139, "id": "evac_research"},
+    {"type": "silo", "owner": 0, "x": 24.5, "y": 147.5, "id": "settlement_silo"},
+    {"type": "contract_post", "owner": 0, "x": 32.5, "y": 133.5, "id": "roadwarden_post"},
+    {"type": "aether_tap", "owner": 0, "x": 47, "y": 145.5, "id": "settlement_tap"},
+    {"type": "pioneer", "owner": 0, "x": 26.5, "y": 152.5},
+    {"type": "pioneer", "owner": 0, "x": 28.5, "y": 155.5},
+    {"type": "pioneer", "owner": 0, "x": 32, "y": 157.5},
+    {"type": "pioneer", "owner": 0, "x": 36.5, "y": 155.5},
+    {"type": "rifleman", "owner": 0, "x": 39.5, "y": 146.5, "count": 2, "spread": 3},
+    {"type": "field_bunker", "owner": 0, "x": 53.5, "y": 104.5, "id": "road_bunker_west"},
+    {"type": "field_bunker", "owner": 0, "x": 72.5, "y": 60.5, "id": "road_bunker_north"},
+    {"type": "skitterling", "owner": 2, "x": 96, "y": 151.5, "count": 3, "spread": 1.8},
+    {"type": "skitterling", "owner": 2, "x": 79, "y": 153, "count": 3, "spread": 1.8},
+    {"type": "skitterling", "owner": 2, "x": 56, "y": 151, "count": 2, "spread": 1.8},
+    {"type": "skitterling", "owner": 2, "x": 27.5, "y": 97, "count": 3, "spread": 1.8},
+    {"type": "bile_crawler", "owner": 2, "x": 89, "y": 114.5},
+    {"type": "skitterling", "owner": 2, "x": 91.3, "y": 116, "count": 2, "spread": 1.8},
+    {"type": "blight_hurler", "owner": 2, "x": 95, "y": 55},
+    {"type": "skitterling", "owner": 2, "x": 92.5, "y": 62.5, "count": 2, "spread": 1.8},
+    {"type": "brood_nest", "owner": 2, "x": 120.5, "y": 91.5, "id": "evac_east_nest_1"},
+    {"type": "brood_nest", "owner": 2, "x": 117.5, "y": 100.5, "id": "evac_east_nest_2"},
+    {"type": "brood_nest", "owner": 2, "x": 36.5, "y": 75.5, "id": "evac_west_nest_1"},
+    {"type": "brood_nest", "owner": 2, "x": 29.5, "y": 57.5, "id": "evac_west_nest_2"},
+    {"type": "brood_hive", "owner": 2, "x": 116.5, "y": 76.5, "id": "evac_east_hive"},
+    {"type": "brood_hive", "owner": 2, "x": 35.5, "y": 51.5, "id": "evac_west_hive"},
+    {"type": "brood_hive", "owner": 2, "x": 46.5, "y": 39.5, "id": "evac_north_hive"}
+  ]
+}

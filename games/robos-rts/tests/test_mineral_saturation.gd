@@ -155,10 +155,15 @@ func _test_blocked_line() -> void:
 	_check(not returning.is_empty(), "A loaded worker returns while the gate is clear")
 	if not returning.is_empty():
 		var load: int = returning.cargo_amount
+		sim.issue_command(tags, "stop")
 		_check(sim.issue_command([gate.tag], "extend_silo").ok, "Raise the gate while its footprint is clear")
+		sim.step_ticks(sim.SILO_RAISE_TICKS)
+		_check(gate.unit_type == "silo", "The gate closes before the loaded worker starts back")
+		sim.issue_command([returning.tag], "harvest", patch.pos, patch.tag)
 		sim.step_ticks(320)
 		_check(returning.cargo_amount == load and returning.pos.x > gate.pos.x, "The blocked worker stays across the gate with its cargo intact")
 		sim.issue_command([gate.tag], "retract_silo")
+		sim.issue_command(tags, "harvest", patch.pos, patch.tag)
 	for _sample in range(180):
 		sim.step_ticks(32)
 		if sim.players[1].crystal_collected == 77:

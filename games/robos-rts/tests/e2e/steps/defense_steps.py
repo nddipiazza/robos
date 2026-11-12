@@ -97,9 +97,35 @@ def glassline_preview(context):
 
 @when("the commander starts the selected map from the picker")
 def start_from_map_picker(context):
-    for _ in range(7):
+    for _ in range(9):
         key(context, "Tab")
     key(context, "Enter")
+    confirm_replacement_match(context)
+
+
+def confirm_replacement_match(context):
+    assert context.client.ui()["state"]["confirmation"] == "Start a new match?"
+    key(context, "Tab")
+    key(context, "Enter")
+
+
+@when("the commander cancels and then confirms surrender from the match menu")
+def surrender_from_match_menu(context):
+    key(context, "F8")
+    for _ in range(5):
+        context.client.key("Tab", shift=True)
+        context.client.key("Tab", pressed=False, shift=True)
+    key(context, "Enter")
+    assert context.client.ui()["state"]["confirmation"] == "Surrender?"
+    key(context, "Escape")
+    state = context.client.ui()["state"]
+    assert state["match_menu_visible"] and not state["confirmation"]
+    assert context.client.get_observation()["match"]["status"] != "finished"
+    key(context, "Enter")
+    assert context.client.ui()["state"]["confirmation"] == "Surrender?"
+    key(context, "Tab")
+    key(context, "Enter")
+    assert context.client.get_observation()["match"]["reason"] == "surrender"
 
 
 @when('the commander filters battlefields to "{category}"')
@@ -122,8 +148,9 @@ def map_options(context, maps):
 
 @when("the commander clicks Start new match")
 def start_match_click(context):
-    context.client.mouse(960, 768)
-    context.client.mouse(960, 768, pressed=False)
+    context.client.mouse(960, 817)
+    context.client.mouse(960, 817, pressed=False)
+    confirm_replacement_match(context)
 
 
 @then("Glassline Basin starts with two economies and two flanking lanes")
@@ -146,7 +173,7 @@ def finite_setup(context):
 @when("the commander changes and restores the overhead health-bar mode")
 def toggle_health_mode(context):
     previous = context.client.ui()["state"]["health_bar_mode"]
-    for _ in range(6):
+    for _ in range(7):
         key(context, "Tab")
     direction = "Up" if previous == 2 else "Down"
     key(context, "Space")
@@ -161,6 +188,7 @@ def toggle_health_mode(context):
 
 @when("the commander starts the selected skirmish")
 def start_skirmish(context):
+    key(context, "Tab")
     key(context, "Tab")
     key(context, "Enter")
 

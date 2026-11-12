@@ -21,7 +21,8 @@ Feature: Deterministic RTS engine mechanics (Humans, Monsters, Aliens)
 
   Scenario: Humans Howitzers morph into Emplaced Mode and obliterate Monsters Swarm wave at canyon choke with splash damage
     Given the RTS test scenario "howitzer-canyon-defense" from the knowledge graph
-    When the simulation advances 480 ticks
+    # A breached gun can mobilize to help clear the rush and then redeploy.
+    When the simulation advances 640 ticks
     Then player 1 has at least 3 surviving "howitzer_emplaced" units
     And player 2 has 0 surviving "skitterling" units
 

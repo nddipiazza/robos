@@ -1,0 +1,12 @@
+{
+  "name": "starfall-meridian-command-assets",
+  "version": "1.0.0",
+  "description": "Deterministic procedural glTF 2.0 (.glb) generator for original Meridian Starfall Command RTS buildings.",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "generate": "node generate.js",
+    "validate": "node validate.js",
+    "build": "node generate.js && node validate.js"
+  }
+}

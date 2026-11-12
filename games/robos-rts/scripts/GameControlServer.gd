@@ -70,7 +70,7 @@ func _performance_snapshot() -> Dictionary:
 
 func _ready() -> void:
 	process_mode = PROCESS_MODE_ALWAYS
-	if OS.has_feature("web"):
+	if OS.has_feature("web") or "--dedicated-rts" in OS.get_cmdline_user_args():
 		set_process(false)
 		return
 	_determine_port()
@@ -197,6 +197,10 @@ func _process_http_request(client: StreamPeerTCP, raw_req: String) -> void:
 			var parsed = JSON.parse_string(raw_body)
 			if typeof(parsed) == TYPE_DICTIONARY:
 				body_dict = parsed
+
+	if SimEngine.network_clock and path in ["/step", "/action", "/command", "/directive", "/scenario", "/match", "/playback", "/pause", "/editor"]:
+		_send_json(client, 200, {"ok": false, "error": "The online server controls match simulation."})
+		return
 
 	match path:
 		"/performance":
@@ -377,6 +381,12 @@ func _process_http_request(client: StreamPeerTCP, raw_req: String) -> void:
 				_send_json(client, 500, {"ok": false, "error": "No viewport image available"})
 		"/capture":
 			_send_json(client, 200, _capture_job)
+
+		"/capture/audio":
+			if method == "POST":
+				_send_json(client, 200, RTSAudio.record_mix(str(body_dict.get("action", ""))))
+			else:
+				_send_json(client, 405, {"ok": false, "error": "Use POST to control audio recording"})
 
 		"/editor":
 			# Map Editor automation: GET (empty body) returns state, POST {"action": ...} edits the map.

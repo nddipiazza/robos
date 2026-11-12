@@ -239,7 +239,7 @@ func _build_top_bar() -> Control:
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	h.add_child(spacer)
 	h.add_child(_button("Main Menu", _return_to_title))
-	var play = _button("▶ Playtest (F5)", _playtest, "Load this map into the 2.5D game. Press F10 in-game to come back.")
+	var play = _button("▶ Playtest (F5)", _request_playtest, "Load this map into the 2.5D game. Press F10 in-game to come back.")
 	play.add_theme_color_override("font_color", Color("#4ade80"))
 	h.add_child(play)
 	return bar
@@ -789,6 +789,12 @@ func _nudge_selected(delta: Vector2) -> void:
 	doc.checkpoint()
 	doc.move_item_to(canvas.selected, Vector2(float(item["x"]), float(item["y"])) + delta)
 
+func _request_playtest() -> void:
+	if SimEngine.resume_from_title:
+		_ask("Start a playtest and replace the paused battle?", _playtest)
+	else:
+		_playtest()
+
 func _playtest(start_paused: bool = false) -> Dictionary:
 	var issues = doc.validate()
 	if not issues.is_empty():
@@ -835,7 +841,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			KEY_DELETE, KEY_BACKSPACE:
 				_delete_selected()
 			KEY_F5:
-				_playtest()
+				_request_playtest()
 			KEY_F:
 				canvas.fit_to_view()
 			KEY_ESCAPE:

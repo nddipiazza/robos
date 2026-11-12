@@ -13,10 +13,13 @@ var font: Font
 var draw_ms: float = 0.0
 var minimap_draw_ms: float = 0.0
 var _minimap_viewport: SubViewport
+var _terrain_grid_minimap: ImageTexture
 var _supply_region := Rect2()
 var _speed_region := Rect2()
 var _resource_regions: Dictionary = {}
 var technology_bounds := Rect2(12.0, 64.0, 760.0, 725.0)
+
+const LadderRules = preload("res://scripts/engine/RTSLadderRules.gd")
 
 class MinimapTerrain extends Node2D:
 	var hud: Node2D
@@ -30,6 +33,7 @@ func _ready() -> void:
 			_invalidate_minimap())
 
 func _invalidate_minimap(_scenario_name: String = "") -> void:
+	_terrain_grid_minimap = null
 	if _minimap_viewport:
 		remove_child(_minimap_viewport)
 		_minimap_viewport.queue_free()
@@ -83,6 +87,10 @@ func _draw() -> void:
 		_text(Vector2(740, 76), "Place a map ping   ·   Esc to cancel", 20, Color("#b093ff"))
 	elif main.pending_ability == "fill_gas":
 		_text(Vector2(740, 76), "Select a friendly extractor   ·   Esc to cancel", 20, C_AETHER)
+	elif main.pending_ability == "energy_recharge":
+		_text(Vector2(740, 76), "Select a friendly Concord energy user   ·   Esc to cancel", 20, C_AETHER)
+	elif RTSData.get_ability_def(main.pending_ability).has("transit_unit"):
+		_draw_transit_target()
 	if SimEngine.paused and SimEngine.match_state.get("status") != "finished" and not main.match_menu.panel.visible:
 		_text(Vector2(790, 48), "PAUSED   ·   Pause / F12 to resume", 20, C_GOLD)
 	var tracked: Dictionary = SimEngine.units.get(main._tracked_tag, {})
@@ -91,6 +99,17 @@ func _draw() -> void:
 	if main.show_help:
 		_draw_help()
 	draw_ms = (Time.get_ticks_usec() - started) / 1000.0
+
+func _draw_transit_target() -> void:
+	var screen: Vector2 = main.hover_pos()
+	var point: Vector2 = main.screen_to_world(screen)
+	var unit_type: String = RTSData.get_ability_def(main.pending_ability).transit_unit
+	var valid := SimEngine._fast_deployment_site_valid(main.local_player, point, unit_type)
+	var duration := SimEngine.transit_field_time(main.local_player, point) if valid else 0.0
+	var tint := Color("#d2baff") if duration > 0.0 else C_RED
+	var label := "Field deployment · %.2fs" % duration if duration > 0.0 else "Choose visible ground in a friendly power field"
+	_text(Vector2(740, 76), label + "   ·   Esc to cancel", 20, tint)
+	draw_arc(screen, 15.0, 0.0, TAU, 24, tint, 2.0, true)
 
 # ---------------------------------------------------------------------------
 # Drawing helpers
@@ -103,13 +122,21 @@ func _draw_match_status() -> void:
 	var state: Dictionary = SimEngine.match_state
 	if state.is_empty():
 		return
+	var draw_countdown := SimEngine.stalemate_seconds_remaining()
+	if draw_countdown > 0:
+		_text(Vector2(32, 82), "Stalemate draw in %s" % _fmt_time(draw_countdown), 18, C_GOLD)
 	if main.observer_player >= 0:
 		var perspective: String = ["All units", "Your vision", "AI vision"][main.observer_player]
+		if RTSNetwork.watching_ai and main.observer_player > 0:
+			perspective = "Commander %d camera" % main.observer_player
 		_text(Vector2(32, 55), "Observer  ·  %s  ·  O switches view" % perspective, 17, C_GOLD)
 		return
 	if state.status == "finished":
-		var outcome := "Victory" if state.winner == 1 else ("Draw" if state.winner == 0 else "Defeat")
+		var outcome := "Victory" if state.winner == main.local_player else ("Draw" if state.winner == 0 else "Defeat")
 		_text(Vector2(32, 55), "%s  ·  F8 Match menu" % outcome, 17, C_GOLD)
+		return
+	if state.mode == "online_1v1":
+		_text(Vector2(32, 55), "Online 1v1  ·  F8 Match menu", 17, C_MUTED)
 		return
 	_text(Vector2(32, 55), "1 vs AI · %s · %s · %.0f×   |   F8 Match menu" % [str(state.get("difficulty", "normal")).capitalize(), str(state.get("strategy", "balanced")).capitalize(), SimEngine.sim_speed], 17, C_MUTED)
 
@@ -142,6 +169,9 @@ func _icon_for(type_id: String) -> Texture2D:
 	if main.icons == null:
 		return null
 	return main.icons.get_icon(type_id)
+
+func _unit_portrait(unit: Dictionary) -> Texture2D:
+	return _icon_for("captain_vale" if unit.id == "captain_vale" else unit.unit_type)
 
 func _player_color() -> Color:
 	return RTSData.get_player_color(main.local_player)
@@ -176,7 +206,11 @@ func _person(c: Vector2, s: float, col: Color) -> void:
 func _draw_resource_bar() -> void:
 	_supply_region = Rect2()
 	_resource_regions.clear()
-	var p: Dictionary = SimEngine.players.get(main.local_player, {})
+	var perspective: int = main.viewing_player() if RTSNetwork.watching_ai else main.local_player
+	if perspective == 0:
+		_text_r(1896.0, 31.0, _fmt_time(SimEngine.sim_time), 20, C_MUTED)
+		return
+	var p: Dictionary = SimEngine.players.get(perspective, {})
 	if p.is_empty():
 		return
 	var strip := Rect2(1180.0, 0.0, 740.0, 46.0)
@@ -190,7 +224,7 @@ func _draw_resource_bar() -> void:
 	_text(Vector2(x - _text_w(clock, 20), y), clock, 20, C_MUTED)
 	x -= _text_w(clock, 20) + 40.0
 
-	var supply_used := int(p.get("supply_used", 0))
+	var supply_used := ceili(float(p.get("supply_used", 0)))
 	var supply_cap := int(p.get("supply_cap", 0))
 	var sup_txt := "%d/%d" % [supply_used, supply_cap]
 	var blocked := supply_cap > 0 and supply_used >= supply_cap
@@ -215,6 +249,14 @@ func _draw_resource_bar() -> void:
 	_gem(Vector2(x, y - 9.0), 13.0)
 
 func _draw_faction_label() -> void:
+	if RTSNetwork.watching_ai:
+		var start := 16.0
+		for player in [1, 2]:
+			var title := RTSData.get_faction_name(SimEngine.players[player].faction)
+			draw_rect(Rect2(start, 17, 9, 9), RTSData.get_player_color(player))
+			_text(Vector2(start + 17.0, 27), title, 17)
+			start += _text_w(title, 17) + 40.0
+		return
 	var p: Dictionary = SimEngine.players.get(main.local_player, {})
 	if p.is_empty():
 		return
@@ -243,7 +285,7 @@ func technology_state() -> Dictionary:
 		if not ability.has("structure") or not SimEngine.campaign_allows_ability(owner, ability_id):
 			continue
 		var type: String = ability.structure
-		var definition := RTSData.get_unit_def(type)
+		var definition := SimEngine.unit_definition_for(type, owner)
 		var requirement := _technology_requirement(owner, type, structures, states)
 		var requirements: Array[Dictionary] = []
 		for prerequisite in definition.get("requires", []):
@@ -454,7 +496,7 @@ func _draw_group_tabs() -> void:
 			continue
 		var first: Dictionary = SimEngine.units.get(members[0], {})
 		if not first.is_empty():
-			var tex := _icon_for(str(first["unit_type"]))
+			var tex := _unit_portrait(first)
 			if tex:
 				draw_texture_rect(tex, Rect2(r.position + Vector2(22, 2), Vector2(26, 26)), false)
 		_text(Vector2(r.position.x + 52, r.position.y + 22), str(members.size()), 15, C_TEXT)
@@ -491,6 +533,10 @@ func _draw_minimap_terrain(canvas: Node2D) -> void:
 	var sx := mm.size.x / SimEngine.map_width
 	var sy := mm.size.y / SimEngine.map_height
 	canvas.draw_rect(mm, Color("#56683a"))
+	if SimEngine.terrain_grid:
+		if not _terrain_grid_minimap:
+			_terrain_grid_minimap = _make_terrain_grid_minimap()
+		canvas.draw_texture_rect(_terrain_grid_minimap, mm, false)
 	if not SimEngine.ground_regions.is_empty():
 		canvas.draw_rect(mm, Color("#3f2c28"))
 		for region in SimEngine.ground_regions:
@@ -528,6 +574,23 @@ func _draw_minimap_terrain(canvas: Node2D) -> void:
 			color = C_GOLD if r.resource_type == "crystal_field" else Color("#a3e635")
 		canvas.draw_circle(p, 2.4, color)
 
+func _make_terrain_grid_minimap() -> ImageTexture:
+	var grid := SimEngine.terrain_grid
+	var image := Image.create(grid.size.x, grid.size.y, false, Image.FORMAT_RGB8)
+	for y in grid.size.y:
+		for x in grid.size.x:
+			var point := Vector2(x + 0.5, y + 0.5)
+			var kind := grid.cell_at(x, y)
+			var color := Color("#16364f")
+			if kind != grid.WATER:
+				color = Color("#a79b76") if grid.road_at(x, y) else Color("#56683a").lerp(Color("#9e9362"), clampf(grid.elevation_at(point) / 5.0, 0.0, 1.0))
+				if kind == grid.CLIFF:
+					color = color.darkened(0.38)
+			if not grid.bounds.has_point(point):
+				color = color.darkened(0.55)
+			image.set_pixel(x, y, color)
+	return ImageTexture.create_from_image(image)
+
 func _draw_minimap_units() -> void:
 	var mm: Rect2 = main.MINIMAP
 	var viewer: int = main.viewing_player()
@@ -557,6 +620,10 @@ func _draw_minimap_units() -> void:
 			draw_rect(Rect2(up - Vector2(3, 3), Vector2(6, 6)), Color(0, 0, 0, 0.8), false, 1.0)
 		else:
 			draw_rect(Rect2(up - Vector2(1.5, 1.5), Vector2(3, 3)), col)
+	for contact in SimEngine.radar_contacts(viewer):
+		var marker: Vector2 = main.world_to_minimap(contact)
+		draw_line(marker - Vector2(0, 4), marker, C_RED, 1.5, true)
+		draw_circle(marker + Vector2(0, 2), 1.0, C_RED)
 
 	if main.campaign_hud and main.campaign_hud.state.get("status") == "playing":
 		for objective in main.campaign_hud.state.markers:
@@ -661,7 +728,7 @@ func _draw_multi() -> void:
 		_vgrad(r, Color("#252c37"), Color("#141920"))
 		var is_prim: bool = str(u["unit_type"]) == prim
 		draw_rect(r, C_GOLD if is_prim else C_EDGE, false, 2.0 if is_prim else 1.0)
-		var tex := _icon_for(str(u["unit_type"]))
+		var tex := _unit_portrait(u)
 		if tex:
 			draw_texture_rect(tex, Rect2(r.position + Vector2(4, 2), Vector2(72, 70)), false)
 		var queue: Array = u.production_queue
@@ -714,7 +781,7 @@ func production_slot_at(position: Vector2, count: int) -> int:
 
 func _draw_single(u: Dictionary) -> void:
 	var sp: Rect2 = main.SEL_PANEL
-	var def: Dictionary = RTSData.get_unit_def(str(u["unit_type"]))
+	var def := SimEngine.unit_definition_for(u.unit_type, u.owner)
 	var is_own: bool = u["owner"] == main.local_player
 	var show_garrison: bool = is_own and u.unit_type == "field_bunker" and u.build_progress >= 1.0
 	var pcol := RTSData.get_player_color(int(u["owner"]))
@@ -722,7 +789,7 @@ func _draw_single(u: Dictionary) -> void:
 	# Portrait
 	var pr := Rect2(sp.position + Vector2(16, 16), Vector2(160, 160))
 	_vgrad(pr, Color("#2b3340"), Color("#10141a"))
-	var tex := _icon_for(str(u["unit_type"]))
+	var tex := _unit_portrait(u)
 	if tex:
 		draw_texture_rect(tex, pr.grow(-4.0), false)
 	draw_rect(pr, pcol, false, 3.0)
@@ -766,13 +833,16 @@ func _draw_single(u: Dictionary) -> void:
 	var wpn: Dictionary = {} if show_garrison else def.get("weapon", {})
 	var col_a: Array = []
 	var col_b: Array = []
-	if not wpn.is_empty():
-		var dmg := float(wpn.get("damage", 0)) + SimEngine.unit_upgrade_level(u, "weapons")
+	if wpn.get("carrier_launch", false):
+		col_a.append(["Fighters", "%d / 8" % SimEngine.carrier_fighter_count(u)])
+		col_a.append(["Launch range", "%.1f" % SimEngine.weapon_range_against(u)])
+	elif not wpn.is_empty():
+		var dmg := float(wpn.get("damage", 0)) + SimEngine.unit_upgrade_level(u, "weapons") * float(wpn.get("damage_per_upgrade", 1))
 		var atk := int(wpn.get("attacks", 1))
 		var dps := dmg * float(atk) / maxf(0.1, float(wpn.get("period", 1.0)))
 		col_a.append(["Damage", "%d" % int(dmg) if atk == 1 else "%d x %d" % [int(dmg), atk]])
 		col_b.append(["DPS", "%.1f" % dps])
-		col_a.append(["Range", "%.1f" % float(wpn.get("range", 0))])
+		col_a.append(["Range", "%.1f" % SimEngine.weapon_range_against(u)])
 	col_a.append(["Armor", "%d" % (int(u["armor"]) + SimEngine.unit_upgrade_level(u, "armor"))])
 	if float(def.get("speed", 0.0)) > 0.0 or u.flight_height > 0.0:
 		if u.has("living_ground_speed_bonus"):
@@ -799,10 +869,18 @@ func _draw_single(u: Dictionary) -> void:
 			_text(Vector2(rx + 177, ry + 14), status, 15, C_GOLD if builder.is_empty() else C_MUTED)
 		_bar(Rect2(rx, ry + 24, 420, 18), float(u["build_progress"]), C_GOLD, "%d%%" % int(float(u["build_progress"]) * 100.0))
 		ry += 62.0
+	elif u.has("transit_finish"):
+		_text(Vector2(rx, ry + 14), "Deploying", 18, C_TEXT)
+		var remaining := float(maxi(0, int(u.transit_finish) - SimEngine.tick)) * SimEngine.TICK_DT
+		_bar(Rect2(rx, ry + 24, 420, 18), float(u.build_progress), Color("#b093ff"), "%.1fs" % remaining)
+		ry += 62.0
 	elif show_garrison:
 		var passengers: Array = u.get("passengers", [])
 		var capacity: int = def.transport_capacity
-		_text(Vector2(rx, ry + 12), "Garrison  %d / %d" % [passengers.size(), capacity], 17, C_TEXT)
+		var label := "Garrison  %d / %d" % [passengers.size(), capacity]
+		if SimEngine.ladder_rules:
+			label = "Garrison  %d troops  ·  %d / %d slots" % [passengers.size(), SimEngine.transport_slots_used(u), capacity]
+		_text(Vector2(rx, ry + 12), label, 17, C_TEXT)
 		for i in range(capacity):
 			var slot := _production_rect(i)
 			_vgrad(slot, Color("#252c37"), Color("#12161c"))
@@ -812,13 +890,24 @@ func _draw_single(u: Dictionary) -> void:
 				if portrait:
 					draw_texture_rect(portrait, slot.grow(-3.0), false)
 		ry += 78.0
-	elif def.has("trains") and is_own:
-		_text(Vector2(rx, ry + 12), "Production", 15, C_MUTED)
+	elif is_own and (def.has("trains") or u.unit_type in ["field_armory", "vehicle_armory", "ignition_core", "specter_academy",
+			"concord_core", "twilight_array", "prism_forge", "robotics_annex", "transit_waystone", "canticle_archive", "veil_sanctum",
+			"research_module", "spine_den", "adaptation_chamber", "carapace_cavern", "infestation_pit", "blight_spire"]):
+		_text(Vector2(rx, ry + 12), "Production" if def.has("trains") or u.unit_type == "transit_waystone" else "Research", 15, C_MUTED)
 		var queue: Array = u["production_queue"]
 		var timers: Array[String] = []
 		var boost := SimEngine.production_boost_ticks(u)
 		if boost > 0:
 			timers.append("Boost %.1fs" % (boost * SimEngine.TICK_DT))
+		if u.unit_type == "heartstone" and SimEngine.ladder_rules:
+			var cooldown := SimEngine.energy_recharge_ticks(u.owner)
+			if cooldown > 0:
+				timers.append("Recharge %.1fs" % (cooldown * SimEngine.TICK_DT))
+		if u.has("transit_morph"):
+			timers.append("Transforming %.1fs" % (int(u.transit_morph.ticks) * SimEngine.TICK_DT))
+		elif u.unit_type == "transit_waystone":
+			var charge := float(u.get("transit_charge", 0.0))
+			timers.append("Deploy %.1fs" % charge if charge > 0.0 else "Deploy ready")
 		if u.unit_type == "waystone" and SimEngine.players[u.owner].get("fast_deployment", false):
 			var cooldown := SimEngine.fast_deployment_ticks(u)
 			if cooldown > 0:
@@ -832,17 +921,27 @@ func _draw_single(u: Dictionary) -> void:
 		var brood := SimEngine.uses_brood_slots(u)
 		var active_slots := SimEngine.active_production_slots(u)
 		var exit_blocked := queue.any(func(item): return item.has("exit_retry_tick"))
-		if u.flight_height > 0.0:
+		var supply_blocked := queue.any(func(item): return item.get("supply_blocked", false))
+		if SimEngine.tick < int(u.get("contaminated_until", 0)):
+			_text(Vector2(rx + 100.0, ry + 12), "Contaminated  ·  Production paused", 15, C_RED)
+		elif u.flight_height > 0.0:
 			_text(Vector2(rx + 100.0, ry + 12), "Airborne  ·  Production paused", 15, C_GOLD)
+		elif SimEngine.attachment_under_construction(u):
+			_text(Vector2(rx + 100.0, ry + 12), "Building attachment  ·  Production paused", 15, C_GOLD)
 		elif brood:
-			_text(Vector2(rx + 100.0, ry + 12), "Brood slots  %d/%d" % [u.brood_slots, SimEngine.BROOD_SLOT_CAP], 15, C_GOLD)
+			var brood_label := "Larvae" if SimEngine.ladder_rules else "Brood slots"
+			_text(Vector2(rx + 100.0, ry + 12), "%s  %d/%d" % [brood_label, u.brood_slots, SimEngine.brood_slot_cap()], 15, C_GOLD)
 			var clutch := SimEngine.brood_inject_remaining(u)
-			if exit_blocked:
+			if supply_blocked:
+				_text(Vector2(rx + 235.0, ry + 12), "Waiting for supply", 15, C_GOLD)
+			elif exit_blocked:
 				_text(Vector2(rx + 235.0, ry + 12), "Exit blocked", 15, C_GOLD)
 			if clutch > 0.0:
-				_text(Vector2(rx + (348.0 if exit_blocked else 235.0), ry + 12), "Clutch  %.1fs" % clutch, 15, C_GOLD)
+				_text(Vector2(rx + (380.0 if supply_blocked else (348.0 if exit_blocked else 235.0)), ry + 12), "Clutch  %.1fs" % clutch, 15, C_GOLD)
 		elif SimEngine.requires_power(u.unit_type) and not SimEngine.is_powered(u.owner, u.pos):
 			_text(Vector2(rx + 100.0, ry + 12), "Unpowered  ·  Production paused", 15, C_RED)
+		elif supply_blocked:
+			_text(Vector2(rx + 100.0, ry + 12), "Waiting for supply", 15, C_GOLD)
 		elif active_slots == 0 and not queue.is_empty() and queue[0].has("requires_attachment"):
 			_text(Vector2(rx + 100.0, ry + 12), "Research paused  ·  Module required", 15, C_RED)
 		elif exit_blocked:
@@ -867,7 +966,7 @@ func _draw_single(u: Dictionary) -> void:
 					var qt := _icon_for(str(item.unit_type))
 					if qt:
 						draw_texture_rect(qt, qr.grow(-3.0), false)
-				if i < active_slots or float(item.progress) > 0.0:
+				if not item.get("supply_blocked", false) and (i < active_slots or float(item.progress) > 0.0):
 					var prog := clampf(float(queue[i]["progress"]) / maxf(0.1, float(queue[i]["total_time"])), 0.0, 1.0)
 					_bar(Rect2(qr.position.x, qr.end.y + 3, qr.size.x, 6), prog, Color("#e5e7eb") if i < active_slots else C_MUTED)
 		ry += 98.0
@@ -879,6 +978,12 @@ func _draw_single(u: Dictionary) -> void:
 		status.append("Holding fire")
 	if u.get("cloaked", false):
 		status.append("Cloaked")
+	if SimEngine.systems_jammed(u):
+		status.append("Systems jammed %.1fs" % ((int(u.systems_jammed_until) - SimEngine.tick) * SimEngine.TICK_DT))
+	if int(u.get("armor_breaker_until", 0)) > SimEngine.tick:
+		status.append("Armor −2 for %.1fs" % ((int(u.armor_breaker_until) - SimEngine.tick) * SimEngine.TICK_DT))
+	if int(u.get("stasis_until", 0)) > SimEngine.tick:
+		status.append("In stasis %.1fs" % ((int(u.stasis_until) - SimEngine.tick) * SimEngine.TICK_DT))
 	if u.has("expires_tick"):
 		var label := "Flight time %.0fs" if u.unit_type == "farsight_wisp" else "Deployment ends in %.0fs"
 		status.append(label % ceilf(maxi(0, int(u.expires_tick) - SimEngine.tick) * SimEngine.TICK_DT))
@@ -886,11 +991,19 @@ func _draw_single(u: Dictionary) -> void:
 		status.append("%s %.1fs" % ["Landing" if u.flight_height > 0.0 else "Taking off", maxf(0.0, (u.fighter_mode_until - SimEngine.tick) * SimEngine.TICK_DT)])
 	elif u.unit_type in ["kestrel_interceptor", "kestrel_assault"]:
 		status.append("Interceptor Mode · Air only" if u.flight_height > 0.0 else "Assault Mode · Ground only")
+	if u.has("flight_transition"):
+		var transition: Dictionary = u.flight_transition
+		var label: String = {"lift": "Taking off", "land": "Landing", "abort": "Climbing away"}[transition.kind]
+		status.append("%s %.1fs" % [label, (transition.end - SimEngine.tick) * SimEngine.TICK_DT])
 	if u.has("carapace_morph_until"):
 		status.append("Evolving %.1fs" % ((u.carapace_morph_until - SimEngine.tick) * SimEngine.TICK_DT))
+	if u.has("sporeburst_morph_until"):
+		status.append("Evolving %.1fs" % ((u.sporeburst_morph_until - SimEngine.tick) * SimEngine.TICK_DT))
 	if is_own and u.unit_type != "field_bunker" and def.has("transport_capacity"):
-		status.append("Passengers %d / %d" % [u.get("passengers", []).size(), def.transport_capacity])
-	if is_own and u.unit_type == "tunnel_mouth" and not building:
+		status.append("Cargo %d / %d" % [SimEngine.transport_slots_used(u), def.transport_capacity])
+	if is_own and not building and SimEngine._is_brood_tunnel_endpoint(u):
+		status.append("%d in shared tunnel cargo" % SimEngine.brood_tunnel_cargo_count(u))
+	elif is_own and u.unit_type == "tunnel_mouth" and not building:
 		var partner := SimEngine.linked_tunnel(u)
 		var entrance := u if u.has("tunnel_arrival") else partner
 		if entrance.has("tunnel_arrival"):
@@ -904,12 +1017,23 @@ func _draw_single(u: Dictionary) -> void:
 	if is_own and u.unit_type == "lumen_carrier":
 		var field_time := SimEngine.carrier_power_ticks(u) * SimEngine.TICK_DT
 		var rearm_time := SimEngine.carrier_rearm_ticks(u) * SimEngine.TICK_DT
-		if field_time > 0.0:
+		if u.has("power_field_transition"):
+			status.append("Transforming %.1fs" % ((int(u.power_field_transition.finish) - SimEngine.tick) * SimEngine.TICK_DT))
+		elif u.get("carrier_anchored", false):
+			status.append("Anchored  ·  Fast deployment field active")
+		elif field_time > 0.0:
 			status.append("Anchored  ·  Power field %.1fs" % field_time)
 		elif rearm_time > 0.0:
 			status.append("Mobile  ·  Field recharges %.1fs" % rearm_time)
 		else:
 			status.append("Mobile  ·  Field ready")
+	if is_own and u.unit_type == "farsight_wisp" and SimEngine.ladder_rules:
+		status.append("Surveillance  ·  Revealed" if u.is_immobile else "Mobile  ·  Cloaked")
+	var shield_armor := SimEngine.unit_upgrade_level(u, "shields")
+	if u.max_shields > 0.0 and shield_armor > 0:
+		status.append("Shield armor %d" % shield_armor)
+	if u.unit_type == "bastion_walker" and int(u.get("bastion_barrier_until", 0)) > SimEngine.tick:
+		status.append("Barrier %d" % ceili(float(u.get("bastion_barrier_hp", 0.0))))
 	if u.get("burrowed", false):
 		status.append("Burrowed")
 	if is_own and u.unit_type == "workshop" and not building:
@@ -933,7 +1057,11 @@ func _draw_single(u: Dictionary) -> void:
 		elif u.orders.is_empty() and u.support_target_tag > 0:
 			status.append("Treating wounds")
 	if is_own and not u["is_structure"]:
-		if not (u.unit_type == "lumen_carrier" and u.is_immobile) and (not u.has("support") or not u.orders.is_empty() or u.support_target_tag == 0):
+		if u.has("archon_warp_finish"):
+			status.append("Forming  %.1fs" % ((u.archon_warp_finish - SimEngine.tick) * SimEngine.TICK_DT))
+		elif u.has("brood_morph"):
+			status.append("Morphing  %.1fs" % ((u.brood_morph.finish - SimEngine.tick) * SimEngine.TICK_DT))
+		elif not (u.unit_type == "lumen_carrier" and u.is_immobile) and (not u.has("support") or not u.orders.is_empty() or u.support_target_tag == 0):
 			status.append(_order_label(u))
 		if u.get("auto_repair", false):
 			status.append("Auto-repair on")
@@ -942,7 +1070,12 @@ func _draw_single(u: Dictionary) -> void:
 		if float(u["surge_timer"]) > 0.0:
 			status.append("Surge  %.0fs" % float(u["surge_timer"]))
 		if float(u["phase_cooldown"]) > 0.0:
-			status.append("Phase Step  %.0fs" % float(u["phase_cooldown"]))
+			status.append("%s  %.0fs" % ["Shadow Stride" if u.unit_type == "duskblade" else "Phase Step", float(u.phase_cooldown)])
+		var guardian_ticks := SimEngine.guardian_shield_ticks(u)
+		if guardian_ticks > 0:
+			status.append("Guardian Shield  %.1fs" % (guardian_ticks * SimEngine.TICK_DT))
+	if SimEngine.can_identify_hallucination(main.viewing_player(), u):
+		status.append("Hallucination")
 	if u["is_structure"] and not building:
 		var prov := SimEngine.supply_from(u)
 		if prov > 0:
@@ -1008,16 +1141,22 @@ func _draw_command_card() -> void:
 		var hov := r.has_point(hover)
 		_vgrad(r, Color("#2c3441"), Color("#161b22"))
 		var adef: Dictionary = btn["def"]
-		var def_id := str(adef.get("unit", adef.get("structure", "")))
+		var def_id := str(adef.get("unit", adef.get("transit_unit", adef.get("hallucination_unit", adef.get("structure", "")))))
 		var tex: Texture2D = _icon_for(def_id) if def_id != "" else null
 		if tex:
 			draw_texture_rect(tex, r.grow(-3.0), false)
 		else:
 			_glyph(str(btn["ability_id"]), r)
 		# cooldown sweep
-		if str(btn["ability_id"]) == "phase_step" and not pu.is_empty() and float(pu["phase_cooldown"]) > 0.0:
-			var f := clampf(float(pu["phase_cooldown"]) / 7.0, 0.0, 1.0)
+		if btn.ability_id in ["phase_step", "shadow_stride"] and not pu.is_empty() and float(pu.phase_cooldown) > 0.0:
+			var duration := LadderRules.SHADOW_STRIDE_COOLDOWN if btn.ability_id == "shadow_stride" else 7.0
+			var f := clampf(float(pu.phase_cooldown) / duration, 0.0, 1.0)
 			draw_rect(Rect2(r.position, Vector2(r.size.x, r.size.y * f)), Color(0, 0, 0, 0.6))
+		if btn.ability_id == "mirage_transfer" and not pu.is_empty():
+			var remaining := SimEngine.mirage_transfer_ticks(pu)
+			if remaining > 0:
+				var f := float(remaining) / (LadderRules.MIRAGE_SHADE_COOLDOWN * SimEngine.TICK_RATE)
+				draw_rect(Rect2(r.position, Vector2(r.size.x, r.size.y * f)), Color(0, 0, 0, 0.6))
 		if blocked:
 			draw_rect(r, Color(0.03, 0.04, 0.06, 0.55))
 		var border := C_EDGE
@@ -1089,10 +1228,23 @@ func _glyph(id: String, r: Rect2) -> void:
 		"hold_fire":
 			draw_arc(c, 18.0 * u, 0.0, TAU, 24, C_RED, 3.0 * u, true)
 			draw_line(c - Vector2(13, 13) * u, c + Vector2(13, 13) * u, C_RED, 3.0 * u)
-		"phase_cloak":
+		"phase_cloak", "agent_cloak", "harrier_cloak", "research_agent_cloak", "research_harrier_cloaking":
 			draw_arc(c, 18.0 * u, -2.8, 2.8, 24, accent, 3.0 * u, true)
 			draw_arc(c, 11.0 * u, 0.8, 5.4, 18, col, 2.0 * u, true)
-		"phase_barrier":
+		"agent_snipe", "vortex_lock", "sentinel_missiles", "sky_defender_mode", "dreadnought_beam":
+			var reticle := Color("#ffbd7a")
+			draw_arc(c, 13.0 * u, 0.0, TAU, 24, reticle, 2.6 * u, true)
+			for direction in [Vector2.RIGHT, Vector2.LEFT, Vector2.UP, Vector2.DOWN]:
+				draw_line(c + direction * 8.0 * u, c + direction * 19.0 * u, col, 2.2 * u, true)
+			draw_circle(c, 2.5 * u, reticle)
+		"agent_emp", "systems_jammer", "armor_breaker":
+			draw_arc(c, 18.0 * u, 0.0, TAU, 24, C_AETHER, 2.5 * u, true)
+			draw_polyline(P.call([[-13, 2], [-7, 2], [-3, -11], [3, 11], [7, -2], [13, -2]]), col, 2.7 * u, true)
+		"agent_strike", "train_tactical_charge":
+			draw_colored_polygon(P.call([[0, -19], [18, 15], [-18, 15]]), Color("#cf673e"))
+			draw_line(c + Vector2(0, -8) * u, c + Vector2(0, 3) * u, col, 3.5 * u, true)
+			draw_circle(c + Vector2(0, 8) * u, 2.3 * u, col)
+		"phase_barrier", "deploy_bastion_turret":
 			draw_colored_polygon(P.call([[-17, -10], [0, -17], [17, -10], [17, 10], [0, 17], [-17, 10]]), Color("#315979"))
 			draw_polyline(P.call([[-17, -10], [0, -17], [17, -10], [17, 10], [0, 17], [-17, 10], [-17, -10]]), Color("#78dfff"), 2.7 * u, true)
 			draw_line(c - Vector2(12, 0) * u, c + Vector2(12, 0) * u, col, 2.6 * u, true)
@@ -1100,16 +1252,26 @@ func _glyph(id: String, r: Rect2) -> void:
 			draw_circle(c, 17.0 * u, Color("#392953"))
 			draw_arc(c, 17.0 * u, 0.0, TAU, 32, Color("#c59aff"), 2.2 * u, true)
 			draw_polyline(P.call([[5, -12], [-6, 0], [3, 0], [-5, 12]]), Color("#ffd095"), 2.8 * u, true)
-		"research_weapons", "upgrade_hub":
+		"ridge_charge":
+			draw_colored_polygon(P.call([[-11, -5], [-6, -13], [6, -13], [11, -5], [9, 13], [-9, 13]]), Color("#819479"))
+			draw_line(c + Vector2(-3, -13) * u, c + Vector2(5, -19) * u, col, 2.7 * u, true)
+			draw_line(c + Vector2(-9, 3) * u, c + Vector2(9, 3) * u, Color("#f7b04c"), 3.0 * u, true)
+		"research_weapons", "research_concord_ground_weapons", "research_infantry_weapons", "research_vehicle_weapons", \
+				"research_ship_weapons", "research_sky_ballistics", "research_precision_tracking", "upgrade_hub":
 			draw_polyline(P.call([[-19, 12], [-7, 0], [0, 7], [20, -13]]), C_GOLD, 4.0 * u, true)
 			draw_polyline(P.call([[10, -13], [20, -13], [20, -3]]), C_GOLD, 4.0 * u, true)
-		"research_armor":
+		"research_armor", "research_concord_ground_armor", "research_infantry_armor", "research_vehicle_plating", \
+				"research_reinforced_structure_armor", "research_combat_shields":
 			draw_colored_polygon(P.call([[-16, -16], [16, -16], [16, 5], [0, 20], [-16, 5]]), Color("#6688b7"))
 			draw_polyline(P.call([[-8, 1], [-2, 7], [9, -6]]), col, 3.0 * u, true)
-		"morph_carapace":
+		"research_concord_shields", "bastion_barrier", "guardian_shield":
+			var cyan := Color("#89eaff")
+			draw_arc(c, 19.0 * u, 0.0, TAU, 24, cyan, 2.6 * u, true)
+			draw_colored_polygon(P.call([[0, -11], [10, -4], [7, 9], [0, 13], [-7, 9], [-10, -4]]), cyan)
+		"morph_carapace", "morph_rupture_crawler":
 			draw_colored_polygon(P.call([[-17, -14], [17, -14], [14, 8], [0, 19], [-14, 8]]), Color("#985987"))
 			draw_polyline(P.call([[-10, 5], [0, -8], [10, 5]]), C_GOLD, 3.0 * u, true)
-		"cancel_carapace_morph":
+		"cancel_carapace_morph", "cancel_sporeburst_morph", "cancel_mirage_transfer", "cancel_rupture_morph":
 			draw_line(c - Vector2(12, 12) * u, c + Vector2(12, 12) * u, C_RED, 4.0 * u, true)
 			draw_line(c + Vector2(-12, 12) * u, c + Vector2(12, -12) * u, C_RED, 4.0 * u, true)
 		"harvest", "deploy_prospector":
@@ -1117,28 +1279,32 @@ func _glyph(id: String, r: Rect2) -> void:
 		"return_cargo":
 			_gem(c + Vector2(5, -3) * u, 12.0 * u)
 			draw_polyline(P.call([[19, 15], [-19, 15], [-11, 7]]), accent, 3.0 * u, true)
-		"corrosive_miasma":
+		"corrosive_miasma", "caustic_barrage":
 			draw_arc(c, 17.0 * u, 0.0, TAU, 28, Color("#bcf264"), 2.7 * u, true)
 			for offset in [Vector2(-7, 5), Vector2(1, -6), Vector2(8, 7)]:
 				draw_circle(c + offset * u, 3.0 * u, Color("#e8c27a"))
+		"rift_nova_cast", "mirage_transfer", "research_resonant_glaives", "canticle_storm", "research_canticle_storm", "scribe_feedback", "merge_archon":
+			draw_arc(c, 18.0 * u, 0.0, TAU, 24, Color("#cf84ff"), 2.8 * u, true)
+			draw_circle(c, 8.0 * u, Color("#f6beff"))
 		"link_tunnel", "send_tunnel_squad":
 			draw_arc(c - Vector2(12, 0) * u, 8 * u, 0, TAU, 14, Color("#a3d270"), 2.4 * u, true)
 			draw_arc(c + Vector2(12, 0) * u, 8 * u, 0, TAU, 14, Color("#a3d270"), 2.4 * u, true)
 			draw_line(c - Vector2(5, 0) * u, c + Vector2(5, 0) * u, col, 3.2 * u)
-		"load_transport", "unload_transport", "unload_bunker", "fighter_assault", "fighter_intercept":
-			var direction := -1.0 if id in ["load_transport", "fighter_intercept"] else 1.0
+		"load_transport", "unload_transport", "unload_bunker", "fighter_assault", "fighter_intercept", "sky_fighter_mode", \
+				"cinder_guard_mode", "cinder_runner_mode", "atlas_precision_mode", "atlas_airburst_mode":
+			var direction := -1.0 if id in ["load_transport", "fighter_intercept", "sky_fighter_mode", "cinder_runner_mode", "atlas_airburst_mode"] else 1.0
 			draw_rect(Rect2(c - Vector2(16, 16) * u, Vector2(32, 14) * u), accent, false, 3.0 * u)
 			draw_line(c + Vector2(0, 7 - 10 * direction) * u, c + Vector2(0, 7 + 10 * direction) * u, col, 3.0 * u)
 			draw_polyline(P.call([[-7, 7 + 3 * direction], [0, 7 + 10 * direction], [7, 7 + 3 * direction]]), col, 3.0 * u, true)
-		"restore_vitals":
+		"restore_vitals", "restore_aegis":
 			draw_rect(Rect2(c - Vector2(6, 18) * u, Vector2(12, 36) * u), Color("#a6f2ba"))
 			draw_rect(Rect2(c - Vector2(18, 6) * u, Vector2(36, 12) * u), Color("#a6f2ba"))
 		"inject_brood":
 			draw_circle(c + Vector2(-8, 5) * u, 7 * u, accent)
 			draw_circle(c + Vector2(8, 5) * u, 7 * u, accent)
 			draw_circle(c - Vector2(0, 8) * u, 8 * u, col)
-		"burrow", "surface":
-			var direction := 1.0 if id == "burrow" else -1.0
+		"burrow", "surface", "mine_burrow", "mine_surface":
+			var direction := 1.0 if id in ["burrow", "mine_burrow"] else -1.0
 			draw_line(c - Vector2(17, -13) * u, c + Vector2(17, 13) * u, accent, 3.0 * u)
 			draw_polyline(P.call([[-9, 2 * direction], [0, 10 * direction], [9, 2 * direction]]), col, 3.0 * u, true)
 			draw_line(c - Vector2(0, 12 * direction) * u, c + Vector2(0, 8 * direction) * u, col, 3.0 * u)
@@ -1155,15 +1321,18 @@ func _glyph(id: String, r: Rect2) -> void:
 			draw_rect(Rect2(c - Vector2(17, 15) * u, Vector2(34, 30) * u), C_GOLD, false, 3.0 * u)
 			draw_line(c - Vector2(9, 0) * u, c + Vector2(9, 0) * u, C_GOLD, 3.0 * u)
 			draw_line(c - Vector2(0, 9) * u, c + Vector2(0, 9) * u, C_GOLD, 3.0 * u)
-		"production_boost":
+		"production_boost", "rampart_boost", "research_harrier_rotors", "research_stim_injectors", "dreadnought_jump":
 			draw_polyline(P.call([[-19, -13], [-5, 0], [-19, 13]]), Color("#b093ff"), 4.0 * u, true)
 			draw_polyline(P.call([[-2, -13], [12, 0], [-2, 13]]), Color("#b093ff"), 4.0 * u, true)
+		"energy_recharge":
+			draw_arc(c, 18.0 * u, -PI * 0.82, PI * 0.82, 24, C_AETHER, 2.7 * u, true)
+			draw_colored_polygon(P.call([[3, -15], [-8, 1], [0, 1], [-3, 15], [8, -3], [0, -3]]), C_AETHER)
 		"defensive_recall":
 			var mint := Color("#71f4b5")
 			draw_arc(c, 16.0 * u, -PI * 0.75, PI * 0.76, 22, mint, 3.0 * u, true)
 			draw_polyline(P.call([[-17, -14], [-10, -16], [-10, -8]]), mint, 3.0 * u, true)
 			draw_circle(c, 3.0 * u, mint)
-		"research_fast_deployment", "fast_deploy":
+		"research_fast_deployment", "fast_deploy", "research_transit", "open_transit", "close_transit":
 			draw_arc(c + Vector2(8, 0) * u, 13.0 * u, -1.25, 1.25, 20, Color("#b093ff"), 3.0 * u, true)
 			draw_polyline(P.call([[1, -9], [11, 0], [1, 9]]), Color("#b093ff"), 3.0 * u, true)
 			draw_line(c - Vector2(20, 0) * u, c + Vector2(10, 0) * u, Color("#b093ff"), 3.0 * u)
@@ -1172,6 +1341,15 @@ func _glyph(id: String, r: Rect2) -> void:
 			var violet := Color("#e2c2ff")
 			draw_arc(c, 17.0 * u, 0.0, TAU, 24, violet, 2.0 * u, true)
 			draw_polyline(P.call([[-7, -4 * direction], [0, 5 * direction], [7, -4 * direction]]), violet, 3.0 * u, true)
+		"surveillance_mode", "research_wisp_thrusters":
+			draw_arc(c, 18.0 * u, 0.0, TAU, 24, accent, 2.5 * u, true)
+			draw_circle(c, 6.0 * u, Color("#a9efff"))
+			draw_line(c, c + Vector2(13, -13) * u, accent, 2.5 * u)
+		"research_lumen_drive":
+			draw_polyline(P.call([[-20, 12], [-8, -10], [0, 4], [8, -10], [20, 12]]), accent, 4.0 * u, true)
+		"research_extended_prism":
+			draw_line(c - Vector2(18, 0) * u, c + Vector2(18, 0) * u, accent, 4.0 * u)
+			draw_circle(c + Vector2(18, 0) * u, 4.0 * u, col)
 		"salvage":
 			draw_polyline(P.call([[-17, -7], [0, 10], [17, -7]]), C_GOLD, 4.0 * u, true)
 			draw_line(c - Vector2(16, -17) * u, c + Vector2(16, 17) * u, C_GOLD, 3.0 * u)
@@ -1185,11 +1363,11 @@ func _glyph(id: String, r: Rect2) -> void:
 			draw_colored_polygon(P.call([[-10, 7 * direction], [0, 17 * direction], [10, 7 * direction]]), accent)
 		"surge", "research_surge_efficiency":
 			draw_colored_polygon(P.call([[5, -22], [-13, 3], [-2, 3], [-6, 22], [14, -5], [2, -5]]), Color("#ffd24a"))
-		"phase_step":
+		"phase_step", "research_phase_step", "shadow_stride", "research_shadow_stride":
 			draw_arc(c + Vector2(-10, 0) * u, 12.0 * u, 0.0, TAU, 24, Color(0.45, 0.8, 1.0, 0.55), 3.0 * u, true)
 			draw_circle(c + Vector2(11, 0) * u, 12.0 * u, Color("#59c5ff"))
 			draw_circle(c + Vector2(11, 0) * u, 6.0 * u, Color("#d9f3ff"))
-		"charge":
+		"charge", "research_charge":
 			for i in range(3):
 				draw_polyline(P.call([[-20 + i * 12, -13], [-8 + i * 12, 0], [-20 + i * 12, 13]]), Color("#ffd24a") if i == 2 else Color("#caa43a"), 5.0 * u)
 		"emplace":
@@ -1218,21 +1396,20 @@ func _glyph(id: String, r: Rect2) -> void:
 # ---------------------------------------------------------------------------
 func _draw_supply_tooltip() -> void:
 	var p: Dictionary = SimEngine.players[main.local_player]
-	var reserved := 0
+	var reserved := 0.0
 	var building := 0
 	for unit in SimEngine.units.values():
-		if unit.owner != main.local_player or not unit.is_structure:
+		if unit.owner != main.local_player or not (unit.is_structure or unit.unit_type == "brood_egg"):
 			continue
 		if unit.build_progress < 1.0:
 			building += SimEngine.supply_from(unit)
 		for item in unit.production_queue:
-			if item.has("unit_type"):
-				reserved += int(RTSData.get_unit_def(item.unit_type).get("supply_cost", 1))
+			reserved += SimEngine.production_supply_reserved(item)
 	var r := Rect2(1582, 54, 312, 122)
 	_frame(r, 0.97)
-	_text(r.position + Vector2(14, 27), "Supply  %d / %d" % [p.supply_used, p.supply_cap], 19, C_GOLD)
-	_text(r.position + Vector2(14, 54), "%d deployed  ·  %d reserved" % [p.supply_used - reserved, reserved], 16)
-	_text(r.position + Vector2(14, 79), "%d free now" % maxi(0, p.supply_cap - p.supply_used), 16)
+	_text(r.position + Vector2(14, 27), "Supply  %d / %d" % [ceili(p.supply_used), p.supply_cap], 19, C_GOLD)
+	_text(r.position + Vector2(14, 54), "%s deployed  ·  %s reserved" % [str(p.supply_used - reserved), str(reserved)], 16)
+	_text(r.position + Vector2(14, 79), "%s free now" % str(maxf(0, p.supply_cap - p.supply_used)), 16)
 	_text(r.position + Vector2(14, 104), "+%d capacity under construction" % mini(building, 200 - p.supply_cap), 16, C_MUTED)
 
 func speed_tooltip() -> String:
@@ -1291,7 +1468,7 @@ func _draw_tooltip() -> void:
 	var desc := str(adef.get("desc", ""))
 	var stats := ""
 	if desc == "" and not cost.is_empty():
-		var d: Dictionary = RTSData.get_unit_def(str(cost["def_id"]))
+		var d := SimEngine.unit_definition_for(str(cost["def_id"]), main.local_player)
 		desc = str(d.get("blurb", ""))
 		var wp: Dictionary = d.get("weapon", {})
 		stats = "Health %d" % int(d.get("max_hp", 0))
@@ -1342,9 +1519,8 @@ func _draw_tooltip() -> void:
 			_text(Vector2(x + 22, y), str(cost["supply"]), 17, C_TEXT)
 			x += 22.0 + _text_w(str(cost["supply"]), 17) + 18.0
 		if float(cost["time"]) > 0.0:
-			var secs: float = float(cost["time"]) * SimEngine.build_time_scale()
-			if adef.has("unit"):
-				secs = maxf(2.5, secs)
+			var scale := SimEngine.research_time_scale(main.local_player) if adef.has("upgrade") else 1.0
+			var secs: float = float(cost["time"]) * scale
 			_text_r(r.end.x - 14, y, "%.0f s" % secs, 16, C_MUTED)
 		y += 8.0
 	if stats != "":
@@ -1392,6 +1568,9 @@ func _draw_help() -> void:
 	if not SimEngine.match_state.is_empty():
 		right[6] = ["F2 / Shift + F2", "Select the army / only ungrouped combat units"]
 		right[7] = ["F8", "Match setup, speed, restart and surrender"]
+	if RTSNetwork.match_active:
+		right[0] = ["Arrow keys", "Pan the camera"]
+		right[7] = ["F8", "Online match settings and surrender"]
 	_text(r.position + Vector2(28, 622), "Alt+G Ping   ·   Alt+R Weapon ranges   ·   Alt+Y Reset rally   ·   Ctrl+Backspace Undo queued order", 16, C_GOLD)
 	_text(r.position + Vector2(28, 644), "Home Center on selection   ·   PgUp/PgDn Zoom   ·   , Idle production   ·   Ctrl+, Select all idle production", 16, C_MUTED)
 	for i in range(left.size()):

@@ -153,7 +153,7 @@ func _fire_and_check(attacker: Dictionary, target: Dictionary, cue: String, show
 				fired = true
 				break
 	_check(fired, "%s fires a real shot" % attacker.id)
-	var beam: bool = battle.world_3d.active_fx.any(func(fx): return fx.kind == "beam")
-	_check(beam == shown and audio.sfx_counts.has(cue) == shown,
+	var shot_visible: bool = battle.world_3d.active_fx.any(func(fx): return fx.kind in ["beam", "projectile"])
+	_check(shot_visible == shown and audio.sfx_counts.has(cue) == shown,
 		"%s fires with position cues only while visible" % attacker.id)
 	sim.issue_command([attacker.tag], "stop")

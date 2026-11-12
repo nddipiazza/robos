@@ -30,10 +30,11 @@ func _test_paid_transit(sim: Node) -> void:
 	_check(not sim.issue_command([west_builder.tag], "build_tunnel_mouth", Vector2(49, 27)).ok, "Reject an impassable entrance site")
 	_check(sim.issue_command([west_builder.tag], "build_tunnel_mouth", west).ok, "Pay for the west entrance")
 	_check(sim.issue_command([east_builder.tag], "build_tunnel_mouth", east).ok, "Pay for the east entrance")
-	sim.step_ticks(700)
+	sim.step_ticks(52 * sim.TICK_RATE)
 	var pair: Array = sim.units.values().filter(func(unit): return unit.unit_type == "tunnel_mouth")
 	var player: Dictionary = sim.players[1]
-	if not _check(pair.size() == 2 and player.crystal == 350 and player.aether == 200, "Both entrances complete through the paid route"):
+	if not _check(pair.size() == 2 and pair.all(func(unit): return unit.build_progress == 1.0)
+			and player.crystal == 350 and player.aether == 200, "Both entrances complete through the paid route"):
 		return
 	var source: Dictionary = pair[0]
 	var exit: Dictionary = pair[1]
@@ -50,7 +51,7 @@ func _test_paid_transit(sim: Node) -> void:
 	if not _check(squad.size() == 6 and squad.all(func(unit): return unit.unit_type == "skitterling"), "Six ground troops depart and the flyer stays"):
 		return
 	_check(sim.units.has(other.tag) and not sim.issue_command([exit.tag], "send_tunnel_squad").ok, "Only one squad can use the link")
-	_check(sim.issue_command([sim.units.values()[0].tag], "train_skitterling").ok and player.supply_used == reserve + 3, "Travelers reserve their supply")
+	_check(sim.issue_command([sim.units.values()[0].tag], "train_skitterling").ok and player.supply_used == reserve + 2, "Travelers and the flyer use supply before the new job starts")
 	var blockers: Array = []
 	for i in range(12):
 		var point: Vector2 = exit.pos + Vector2.from_angle(TAU * i / 12.0) * 5.4

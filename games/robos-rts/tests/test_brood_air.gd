@@ -19,10 +19,13 @@ func _run() -> void:
 	var worker: Dictionary = sim.units.values().back()
 	var player: Dictionary = sim.players[1]
 	_check(player.supply_used == 16 and player.supply_cap == 15, "Fixture begins supply blocked")
-	_check(not sim.issue_command([nest.tag], "train_needlewing").ok and player.crystal == 400, "Supply blocks paid combat fliers")
+	_check(sim.issue_command([nest.tag], "train_needlewing").ok and player.crystal == 300, "The Nest accepts a paid flier over capacity")
+	sim.step_ticks(1)
+	_check(nest.production_queue[0].progress == 0.0 and player.supply_used == 16, "Supply blocks the start of the paid combat flier")
+	_check(sim.issue_command([nest.tag], "cancel_training", Vector2.ZERO, 0, "0").ok and player.crystal == 400, "A waiting flier refunds its costs")
 	_check(sim.issue_command([nest.tag], "train_drift_sac").ok and player.crystal == 300, "A zero-supply Drift Sac can recover from oversupply")
 	_check(player.supply_cap == 15, "Queued Drift Sac does not count early")
-	sim.step_ticks(410)
+	sim.step_ticks(25 * sim.TICK_RATE)
 	var scout: Dictionary = _unit(sim, "drift_sac")
 	if _check(not scout.is_empty() and player.supply_cap == 23 and player.supply_used == 16, "Hatched Drift Sac grants eight supply"):
 		_check(not sim.can_see_unit(1, worker), "Enemy worker starts outside sight")
@@ -30,9 +33,9 @@ func _run() -> void:
 		sim.step_ticks(840)
 		_check(scout.pos.x > 63.0 and sim.can_see_unit(1, worker), "The airborne scout reveals the enemy worker")
 		_check(not sim.issue_command([scout.tag], "attack_target", worker.pos, worker.tag).ok, "The scout is unarmed")
-		_check(sim.issue_command([nest.tag], "train_needlewing").ok and player.crystal == 200 and player.aether == 50 and player.supply_used == 18,
-			"Now the Nest pays full resources and supply for a Needlewing")
-		sim.step_ticks(470)
+		_check(sim.issue_command([nest.tag], "train_needlewing").ok and player.crystal == 200 and player.aether == 50 and player.supply_used == 16,
+			"The Nest pays full resources to order a Needlewing")
+		sim.step_ticks(33 * sim.TICK_RATE)
 		var raider: Dictionary = _unit(sim, "needlewing")
 		if _check(not raider.is_empty() and raider.flight_height > 0.0, "Paid raider is airborne"):
 			_check(sim.issue_command([raider.tag], "attack_target", worker.pos, worker.tag).ok, "Needlewing can use the scout's sight")
