@@ -89,6 +89,8 @@ function compileGameServerModule(serverCode, filename = 'dynamic-game-server.js'
   const createInitialState = mod.createInitialState || mod.initState || mod.createGame;
   const onPlayerAction = mod.onPlayerAction || mod.onAction || mod.handleAction;
   const getPlayerView = mod.getPlayerView || mod.getViewForPlayer || mod.getView;
+  const onTick = typeof mod.onTick === 'function' ? mod.onTick : null;
+  const onSeatsChanged = typeof mod.onSeatsChanged === 'function' ? mod.onSeatsChanged : null;
 
   if (typeof createInitialState !== 'function') {
     throw new Error('server.js must export createInitialState(players, options).');
@@ -113,6 +115,7 @@ function compileGameServerModule(serverCode, filename = 'dynamic-game-server.js'
 
   return {
     meta: mod.meta && typeof mod.meta === 'object' ? deepCloneJson(mod.meta) : {},
+    hasTick: Boolean(onTick),
     createInitialState: (players, opts = {}) =>
       deepCloneJson(runWithTimeout(createInitialState, [deepCloneJson(players), deepCloneJson(opts)])),
     onPlayerAction: (state, player, action) => {
@@ -129,6 +132,35 @@ function compileGameServerModule(serverCode, filename = 'dynamic-game-server.js'
       }
       return { state: workingState, error: null };
     },
+    onTick: onTick
+      ? (state, nowMs = Date.now()) => {
+          const workingState = deepCloneJson(state);
+          const res = runWithTimeout(onTick, [workingState, Number(nowMs)]);
+          if (res && typeof res === 'object' && ('state' in res || 'changed' in res)) {
+            return {
+              state: res.state !== undefined ? deepCloneJson(res.state) : workingState,
+              changed: res.changed !== undefined ? Boolean(res.changed) : true,
+            };
+          }
+          if (res && typeof res === 'object') {
+            return { state: deepCloneJson(res), changed: true };
+          }
+          return { state: workingState, changed: false };
+        }
+      : null,
+    onSeatsChanged: onSeatsChanged
+      ? (state, seats) => {
+          const workingState = deepCloneJson(state);
+          const res = runWithTimeout(onSeatsChanged, [workingState, deepCloneJson(seats)]);
+          if (res && typeof res === 'object' && 'state' in res) {
+            return deepCloneJson(res.state);
+          }
+          if (res && typeof res === 'object') {
+            return deepCloneJson(res);
+          }
+          return workingState;
+        }
+      : null,
     getPlayerView: (state, viewerUid) =>
       deepCloneJson(runWithTimeout(getPlayerView, [deepCloneJson(state), String(viewerUid || '')])),
   };
@@ -161,8 +193,47 @@ class GameTheaterRuntime extends EventEmitter {
     };
     this.onlineCounts = new Map(); // uid -> count of open WS tabs
     this.onlineProfiles = new Map(); // uid -> public profile
+    this._tickTimer = null;
 
     this.reloadGamesFromDisk();
+  }
+
+  _stopTickTimer() {
+    if (this._tickTimer) {
+      clearInterval(this._tickTimer);
+      this._tickTimer = null;
+    }
+  }
+
+  _syncTickTimer() {
+    this._stopTickTimer();
+    const active = this.getActiveGame();
+    if (!active || this.matchStatus !== 'playing' || !this.matchState || !active.compiled.onTick) {
+      return;
+    }
+    const rawMs = Number(active.compiled.meta?.tickIntervalMs || 1000);
+    const intervalMs = Math.max(250, Math.min(10000, Number.isFinite(rawMs) ? rawMs : 1000));
+    this._tickTimer = setInterval(() => {
+      const cur = this.getActiveGame();
+      if (!cur || this.matchStatus !== 'playing' || !this.matchState || !cur.compiled.onTick) {
+        this._stopTickTimer();
+        return;
+      }
+      try {
+        const beforeJson = JSON.stringify(this.matchState);
+        const res = cur.compiled.onTick(this.matchState, Date.now());
+        const nextJson = JSON.stringify(res.state);
+        if (nextJson !== beforeJson) {
+          this.matchState = res.state;
+          this.emit('updated', { reason: 'game-tick' });
+        }
+      } catch {}
+    }, intervalMs);
+    this._tickTimer.unref?.();
+  }
+
+  close() {
+    this._stopTickTimer();
   }
 
   reloadGamesFromDisk() {
@@ -293,6 +364,7 @@ class GameTheaterRuntime extends EventEmitter {
       throw new Error(`Game "${gameId}" not found.`);
     }
     this.activeGameId = rec.id;
+    this._stopTickTimer();
     this.matchStatus = 'idle';
     this.matchState = null;
     this.matchId = null;
@@ -372,6 +444,16 @@ class GameTheaterRuntime extends EventEmitter {
       this.seats.length <= active.manifest.maxPlayers
     ) {
       this._initMatchInternal(active);
+    } else if (active && this.matchStatus === 'playing' && this.matchState) {
+      if (active.compiled.onSeatsChanged) {
+        try {
+          this.matchState = active.compiled.onSeatsChanged(this.matchState, this.seats);
+        } catch {}
+      } else if (Array.isArray(this.matchState.players)) {
+        if (!this.matchState.players.some((p) => p.uid === pub.uid)) {
+          this.matchState.players.push(pub);
+        }
+      }
     }
 
     this.emit('updated', { reason: 'seat-joined', uid: pub.uid });
@@ -384,9 +466,14 @@ class GameTheaterRuntime extends EventEmitter {
     if (this.seats.length !== before) {
       const active = this.getActiveGame();
       if (!active || this.seats.length < active.manifest.minPlayers) {
+        this._stopTickTimer();
         this.matchStatus = 'idle';
         this.matchState = null;
         this.matchId = null;
+      } else if (this.matchStatus === 'playing' && this.matchState && active.compiled.onSeatsChanged) {
+        try {
+          this.matchState = active.compiled.onSeatsChanged(this.matchState, this.seats);
+        } catch {}
       }
       this.emit('updated', { reason: 'seat-left', uid });
     }
@@ -398,6 +485,7 @@ class GameTheaterRuntime extends EventEmitter {
     this.matchState = activeRecord.compiled.createInitialState(this.seats, options);
     this.matchStatus = 'playing';
     this.lastActionError = null;
+    this._syncTickTimer();
   }
 
   startMatch(requestedByPlayer, options = {}) {
