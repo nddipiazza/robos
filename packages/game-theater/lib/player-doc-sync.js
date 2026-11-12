@@ -475,7 +475,9 @@ async function syncPlayerLaunchDocsWithGoogleDrive(options = {}) {
       } catch {}
     }
 
+    const prevEntry = existingPlayerDocs[player.uid] || {};
     const entry = {
+      ...prevEntry,
       uid: player.uid,
       playerName: player.name,
       gamerTag: player.gamerTag,
@@ -617,10 +619,11 @@ async function invitePlayerToTheaterDoc({ uid, name, email, gamerTag, message = 
 
   let delivery = 'google-drive-share';
   let notificationEmailSent = false;
+  let ownerRelayDocId = pDoc.ownerRelayDocId || '';
 
   if (ownerEmail && targetEmail === ownerEmail) {
-    // Owner already owns the Google Doc (Drive suppresses owner-to-self share emails).
-    // Attempt Thunderbird Bridge self-email if running; otherwise return owner-doc-ready so UI copies link too.
+    // Google Drive suppresses share-notification emails from an owner to themselves on a file they own.
+    // Strategy 1: Send via RobOS Thunderbird Bridge if connected.
     let sentViaTb = false;
     try {
       const tbMail = requireRobosLib('thunderbird-mail');
@@ -635,10 +638,115 @@ async function invitePlayerToTheaterDoc({ uid, name, email, gamerTag, message = 
           { launch: false },
         );
         sentViaTb = true;
+        delivery = 'thunderbird-email';
+        notificationEmailSent = true;
       }
     } catch {}
-    delivery = sentViaTb ? 'thunderbird-email' : 'owner-doc-ready';
-    notificationEmailSent = sentViaTb;
+
+    // Strategy 2: Relay the Google Docs share invitation through any secondary signed-in RobOS Google Cloud Account
+    // so Google Drive dispatches a real Google Docs share email directly to targetEmail's inbox!
+    if (!notificationEmailSent) {
+      const candidateAltApis = [];
+      if (options.altDriveApi) {
+        candidateAltApis.push(options.altDriveApi);
+      } else {
+        try {
+          const ca = requireRobosLib('cloud-accounts');
+          const rawList = ca.listAccounts(options.homeDir ? { homeDir: options.homeDir } : {});
+          const accounts = Array.isArray(rawList) ? rawList : rawList?.accounts || [];
+          for (const acc of accounts) {
+            if (
+              acc.provider === 'google' &&
+              acc.loggedIn &&
+              String(acc.email || '').trim().toLowerCase() !== targetEmail
+            ) {
+              candidateAltApis.push(
+                createGoogleDocsDriveApi({
+                  accountId: acc.id,
+                  homeDir: options.homeDir,
+                  fetchImpl: options.fetchImpl,
+                }),
+              );
+            }
+          }
+        } catch {}
+      }
+
+      const httpsPort = Number(options.httpsPort || process.env.GAME_THEATER_HTTPS_PORT || 19229);
+      const settingsSnap = loadRawSettings(options);
+      const lanHttpsUrl = options.lanHttpsUrl || settingsSnap.lanHttpsUrl || `https://${detectLanIp()}:${httpsPort}`;
+      const primaryWebUrl = String(options.webAppUrl || settingsSnap.publicTunnelUrl || lanHttpsUrl).replace(/\/+$/, '');
+      const relayHtml = renderPlayerLaunchDocHtml(target, {
+        webAppUrl: primaryWebUrl,
+        lanHttpsUrl,
+        activeGameTitle: options.activeGameTitle || '',
+      });
+
+      for (const altApi of candidateAltApis) {
+        try {
+          const altOwner = String(
+            typeof altApi.getAboutEmail === 'function' ? await altApi.getAboutEmail() : '',
+          ).trim().toLowerCase();
+          if (altOwner && altOwner === targetEmail) continue;
+
+          let altFolder = await altApi.findFolderByName(DEFAULT_FOLDER_NAME);
+          if (!altFolder?.id) {
+            altFolder = await altApi.createFolder(DEFAULT_FOLDER_NAME);
+          }
+
+          let rDocId = ownerRelayDocId;
+          if (!rDocId && altFolder?.id) {
+            const found = await altApi.listChildren(altFolder.id, { name: pDoc.docTitle, mimeType: GDOC_MIME });
+            if (found.length > 0) rDocId = found[0].id;
+          }
+          if (rDocId) {
+            try {
+              await altApi.updateDocFromHtml(rDocId, relayHtml);
+            } catch {
+              const created = await altApi.createDocFromHtml({
+                name: pDoc.docTitle,
+                parentId: altFolder.id,
+                html: relayHtml,
+              });
+              rDocId = created.id;
+            }
+          } else {
+            const created = await altApi.createDocFromHtml({
+              name: pDoc.docTitle,
+              parentId: altFolder.id,
+              html: relayHtml,
+            });
+            rDocId = created.id;
+          }
+
+          if (typeof altApi.listPermissions === 'function' && typeof altApi.deletePermission === 'function') {
+            try {
+              const perms = await altApi.listPermissions(rDocId);
+              for (const perm of perms) {
+                if (String(perm.emailAddress || '').toLowerCase() === targetEmail && perm.role !== 'owner' && perm.id) {
+                  await altApi.deletePermission(rDocId, perm.id);
+                }
+              }
+            } catch {}
+          }
+
+          await altApi.shareFile(rDocId, {
+            email: targetEmail,
+            role: 'reader',
+            sendNotificationEmail: true,
+            emailMessage: defaultMessage,
+          });
+          ownerRelayDocId = rDocId;
+          delivery = 'google-drive-alt-account';
+          notificationEmailSent = true;
+          break;
+        } catch {}
+      }
+    }
+
+    if (!notificationEmailSent) {
+      delivery = 'owner-doc-ready';
+    }
   } else {
     // Delete any pre-existing non-owner permission first so Google Drive ALWAYS resends the notification email!
     try {
@@ -667,6 +775,7 @@ async function invitePlayerToTheaterDoc({ uid, name, email, gamerTag, message = 
     ...(settings.playerDocs || {}),
     [target.uid]: {
       ...pDoc,
+      ...(ownerRelayDocId ? { ownerRelayDocId } : {}),
       sharedWithEmail: targetEmail,
       lastSharedAt: sharedAt,
     },

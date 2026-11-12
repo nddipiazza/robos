@@ -207,6 +207,45 @@ describe('RobOS AI Multiplayer Game Theater', () => {
       assert.equal(postResendAliceShares.length, 2);
       assert.equal(postResendAliceShares[1].sendNotificationEmail, true);
       assert.ok(postResendAliceShares[1].emailMessage.includes(aliceDoc.docUrl));
+
+      // When resending to the Drive owner's own address (targetEmail === ownerEmail),
+      // relays through secondary Google Cloud Account so Google Drive actually dispatches an invite email!
+      const altDrive = createMockDriveApi();
+      altDrive.api.getAboutEmail = async () => 'secondary-relay@example.com';
+
+      const ownerResend1 = await invitePlayerToTheaterDoc(
+        { uid: 'bob-smith', email: 'host@example.com' },
+        {
+          configDir: env.dir,
+          seedPeople: env.seedPeople,
+          driveApi: mockDrive.api,
+          altDriveApi: altDrive.api,
+          ownerEmail: 'host@example.com',
+          webAppUrl: 'https://theater-demo.trycloudflare.com',
+        },
+      );
+      assert.equal(ownerResend1.ok, true);
+      assert.equal(ownerResend1.delivery, 'google-drive-alt-account');
+      assert.equal(ownerResend1.notificationEmailSent, true);
+      assert.equal(altDrive.shares.length, 1);
+      assert.equal(altDrive.shares[0].email, 'host@example.com');
+      assert.equal(altDrive.shares[0].sendNotificationEmail, true);
+
+      // Clicking Resend Share a second time deletes the permission on the relay doc and emails again
+      const ownerResend2 = await invitePlayerToTheaterDoc(
+        { uid: 'bob-smith', email: 'host@example.com' },
+        {
+          configDir: env.dir,
+          seedPeople: env.seedPeople,
+          driveApi: mockDrive.api,
+          altDriveApi: altDrive.api,
+          ownerEmail: 'host@example.com',
+          webAppUrl: 'https://theater-demo.trycloudflare.com',
+        },
+      );
+      assert.equal(ownerResend2.notificationEmailSent, true);
+      assert.equal(altDrive.deletedPerms.length, 1);
+      assert.equal(altDrive.shares.length, 2);
     } finally {
       env.cleanup();
     }
