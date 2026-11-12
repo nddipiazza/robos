@@ -1,0 +1,5 @@
+node_modules/
+godot/.godot/
+godot/generated/
+web/godot/
+*.log

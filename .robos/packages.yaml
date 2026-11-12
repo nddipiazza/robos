@@ -390,5 +390,10 @@ packages:
     type: "robos:DesktopApp"
     repository: "packages/shopping-lists"
     technology: "Electron 28 / Google Drive v3 & Google Docs Mobile Sync / Mobile SSE Form Server / RobOS Household Suite"
+  - id: "urn:robos:desktop-app:game-theater"
+    title: "RobOS AI Multiplayer Game Theater"
+    type: "robos:DesktopApp"
+    repository: "packages/game-theater"
+    technology: "Electron 28 / Godot 4.3 HTTPS Web Client & Dynamic GDScript / RFC 6455 WebSocket Multiplayer Server / Google Drive v3 Per-Player Google Doc Launchers / robos-lib ai-agent"
 
 
