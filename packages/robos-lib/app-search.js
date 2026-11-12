@@ -98,6 +98,7 @@ const ALIASES = {
   'crpg-editor': 'rpg editor|game editor|campaign editor|characters|party|level design',
   'robos-tabletop': 'tabletop|games|board games|dungeons|quests|heroquest|campaigns|adventures|rpg',
   'party-game': 'party|party games|games|trivia|icebreaker|guests|friends|family|tv|ai host|survey|house party',
+  'game-theater': 'multiplayer game theater|create a multiplayer game|host a game night|browser party games',
   'game-playthrough': 'game playthrough|dragon warrior|dragon quest|watch gameplay|game checkpoints|replay adventures',
   'robos-tv': 'smart tv|televisions|roku|webos|tizen|tv apps|pair tv|tv remote|moonlight|sunshine',
   'personality': 'ai personality|ai character|ai companion|talk to ai|voice chat|talking face|avatar|robot face|virtual assistant|chatbot|conversation|talk',
