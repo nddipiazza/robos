@@ -138,16 +138,21 @@ class SkillsExecutor {
     }
 
     // 1.6 Google Calendar & Family Calendars Skill
+    let normalizedCalendarQuery = query;
+    try {
+      const { normalizeCalendarVoiceTranscript } = require('../../google-calendar/lib/named-calendars');
+      normalizedCalendarQuery = normalizeCalendarVoiceTranscript(query);
+    } catch {}
     const isCalendarSkillCmd =
-      /^\/google-calendar\b/i.test(query) ||
-      (/\b(?:calendar|appointment)\b/i.test(query) &&
-        /\b(?:add|create|schedule|put|book|list|show|what|sync)\b/i.test(query) &&
-        !/^(?:open|launch|start|switch\s+to)\s+(?:the\s+)?(?:robos\s+)?(?:google\s+)?calendar(?:\s+app|\s+window)?$/i.test(query));
+      /^\/google-calendar\b/i.test(normalizedCalendarQuery) ||
+      (/\b(?:calendar|calendars|appointment|appointments)\b/i.test(normalizedCalendarQuery) &&
+        /\b(?:add|create|schedule|put|book|make|set\s+up|list|show|what|which|sync|update)\b/i.test(normalizedCalendarQuery) &&
+        !/^(?:open|launch|start|switch\s+to)\s+(?:the\s+)?(?:robos\s+)?(?:google\s+)?calendar(?:\s+app|\s+window)?$/i.test(normalizedCalendarQuery));
     if (isCalendarSkillCmd) {
       try {
-        const namedCals = require('../../google-calendar/lib/named-calendars');
+        const namedCalendars = require('../../google-calendar/lib/named-calendars');
         const accessDocSync = require('../../google-calendar/lib/access-doc-sync');
-        const cleanCal = query.replace(/^\/google-calendar\s*/i, '').trim();
+        const cleanCal = normalizedCalendarQuery.replace(/^\/google-calendar\s*/i, '').trim();
 
         if (/\b(?:sync|create|update)\b.*\b(?:google\s+doc|access\s+doc|access\s+form)\b/i.test(cleanCal)) {
           const docRes = await accessDocSync.syncCalendarAccessDocWithGoogleDrive({
@@ -166,7 +171,7 @@ class SkillsExecutor {
           return { ok: true, skill: 'google-calendar', actionDone: msg, response: msg, data: disc };
         }
 
-        if (/\b(?:add|create|schedule|put|book)\b/i.test(cleanCal)) {
+        if (/\b(?:add|create|schedule|put|book|make|set\s+up)\b/i.test(cleanCal)) {
           const state = await namedCalendars.listEventsAcrossNamedCalendars(null, {
             homeDir: this.homeDir,
             configDir: this.configDir,
@@ -182,10 +187,27 @@ class SkillsExecutor {
             homeDir: this.homeDir,
             configDir: this.configDir,
           });
-          const msg = `Added "${created.event.summary}" to your ${created.event.calendarName} calendar on ${created.event.startDate || created.event.start.slice(0, 10)}.`;
+          const calNameRaw = String(created.event.calendarName || 'Family').trim();
+          const calLabel = /calendar$/i.test(calNameRaw) ? calNameRaw : `${calNameRaw} calendar`;
+          let spokenWhen = created.event.startDate || String(created.event.start || '').slice(0, 10);
+          try {
+            const dt = new Date(created.event.start);
+            if (!Number.isNaN(dt.getTime())) {
+              const datePart = dt.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+              if (created.event.allDay) {
+                spokenWhen = datePart;
+              } else {
+                const timePart = dt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+                spokenWhen = `${datePart} at ${timePart}`;
+              }
+            }
+          } catch {}
+          const msg = `Added "${created.event.summary}" to your ${calLabel} for ${spokenWhen}.`;
           return { ok: true, skill: 'google-calendar', actionDone: msg, response: msg, data: created };
         }
-      } catch {}
+      } catch (err) {
+        console.warn('[skills-executor] Google Calendar skill error:', err.message);
+      }
     }
 
     // 2. App Launching Intent:
@@ -807,6 +829,9 @@ class SkillsExecutor {
     if (/(?:validate|search|lookup)\s+(?:the\s+)?(?:knowledge\s+graph|kgraph)/i.test(query)) return true;
     if (/(?:impact\s+analysis|blast\s+radius)\s+(?:for\s+)?\S+/i.test(query)) return true;
     if (/(?:visualize|draw\s+diagram|graph\s+for)\s+(?:the\s+)?\S+/i.test(query)) return true;
+
+    // Household Shopping Lists & Google Calendar commands
+    if (/\b(?:shopping\s+lists?|grocery|target\s+list|costco|calendar|calendars|appointment|appointments)\b/i.test(query)) return true;
 
     // System commands
     if (/(?:restart\s+(?:taskbar|dock)|error\s+logs?|git\s+status|active\s+(?:app|window)|system\s+status)/i.test(query)) return true;

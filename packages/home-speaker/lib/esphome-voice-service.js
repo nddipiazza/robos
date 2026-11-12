@@ -1068,8 +1068,10 @@ class EspHomeVoiceService extends EventEmitter {
     // VoiceAssistantRequest (msgType 90) — Wake word, Center button, or Auto-Start (start_conversation=true) triggered voice stream!
     if (msgType === 90) {
       const start = getVarint(f, 1, 0) === 1;
-      const wakePhrase = getStr(f, 5, '') || (this._autoTriggeredMic ? 'Auto-Listen (No Wake Word)' : 'Center Button / Wake Word');
+      const wasAuto = Boolean(this._autoTriggeredMic);
+      const wakePhrase = getStr(f, 5, '') || (wasAuto ? 'Auto-Listen (No Wake Word)' : 'Center Button / Wake Word');
       this._autoTriggeredMic = false;
+      this._wasAutoTriggeredMic = wasAuto;
       if (start) {
         this._currentPcmChunks = [];
         this._captureStartTime = Date.now();
@@ -1094,7 +1096,7 @@ class EspHomeVoiceService extends EventEmitter {
         if (this._silenceTimer) clearTimeout(this._silenceTimer);
         this._silenceTimer = setTimeout(() => {
           this._finalizeCapturedUtterance(socket, ip, port);
-        }, 10000);
+        }, 12000);
       } else {
         this._finalizeCapturedUtterance(socket, ip, port);
       }
@@ -1107,8 +1109,9 @@ class EspHomeVoiceService extends EventEmitter {
       const endFlag = getVarint(f, 2, 0) === 1;
       if (Buffer.isBuffer(pcmData) && pcmData.length > 0) {
         const elapsedSinceStart = Date.now() - (this._captureStartTime || 0);
-        // Ignore first 550ms of speaker room reverberation after TTS ends
-        if (elapsedSinceStart > 550) {
+        // Only suppress first 550ms when auto-triggered after TTS reverb; for normal wake word ("Ok Nabu") start capturing immediately after 100ms
+        const reverbGuardMs = this._wasAutoTriggeredMic ? 550 : 100;
+        if (elapsedSinceStart > reverbGuardMs) {
           this._currentPcmChunks.push(pcmData);
           let sumSq = 0;
           const samples = Math.floor(pcmData.length / 2);
@@ -1123,9 +1126,9 @@ class EspHomeVoiceService extends EventEmitter {
             if (this._silenceTimer) clearTimeout(this._silenceTimer);
             this._silenceTimer = setTimeout(() => {
               this._finalizeCapturedUtterance(socket, ip, port);
-            }, 1150);
-          } else if (totalBytes > 256000) {
-            // Cap at ~8 seconds max per utterance
+            }, 1850);
+          } else if (totalBytes > 320000) {
+            // Cap at ~10 seconds max per utterance
             this._finalizeCapturedUtterance(socket, ip, port);
           }
         }
@@ -1244,6 +1247,10 @@ class EspHomeVoiceService extends EventEmitter {
     try {
       const { normalizeShoppingVoiceTranscript } = require('../../shopping-lists/lib/defaults');
       transcript = normalizeShoppingVoiceTranscript(transcript);
+    } catch {}
+    try {
+      const { normalizeCalendarVoiceTranscript } = require('../../google-calendar/lib/named-calendars');
+      transcript = normalizeCalendarVoiceTranscript(transcript);
     } catch {}
     this._sendVoiceEvent(socket, 4, [{ name: 'text', value: transcript }]); // VOICE_ASSISTANT_STT_END
 

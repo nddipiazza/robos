@@ -438,5 +438,35 @@ describe('Google Calendar: Thunderbird sync settings stick', () => {
     assert.ok(scopedKidsState.familyMembers.some((m) => m.email === 'coparent@example.com'));
     assert.strictEqual(scopedKidsState.events.length, 1);
     assert.strictEqual(scopedKidsState.events[0].summary, 'Kids Weekend');
+
+    // Voice Nabu command parsing for "ok nabu, add an appointment to the kids calendar {date time}"
+    const nabuParsed1 = namedCals.parseNaturalLanguageEvent(
+      'ok nabu, add an appointment to the kids calendar Friday at 2pm',
+      {
+        now: '2026-11-12T10:00:00Z',
+        calendars: [{ id: 'kids-calendar', name: 'Kids Calendar', isCustomSharedCalendar: true }],
+        familyMembers: [],
+      }
+    );
+    assert.strictEqual(nabuParsed1.summary, 'Appointment');
+    assert.strictEqual(nabuParsed1.calendarId, 'kids-calendar');
+    assert.strictEqual(nabuParsed1.calendarName, 'Kids Calendar');
+    assert.strictEqual(nabuParsed1.category, 'appointment');
+    assert.strictEqual(nabuParsed1.startDate, '2026-11-13');
+    assert.strictEqual(nabuParsed1.startTime, '14:00');
+
+    const nabuParsed2 = namedCals.parseNaturalLanguageEvent(
+      'ok nabu, add a new medical appointment to the kids calender November twentieth at two thirty p.m.',
+      {
+        now: '2026-11-12T10:00:00Z',
+        calendars: [{ id: 'kids-calendar', name: 'Kids Calendar', isCustomSharedCalendar: true }],
+        familyMembers: [],
+      }
+    );
+    assert.strictEqual(nabuParsed2.summary, 'Medical Appointment');
+    assert.strictEqual(nabuParsed2.calendarId, 'kids-calendar');
+    assert.strictEqual(nabuParsed2.category, 'appointment');
+    assert.strictEqual(nabuParsed2.startDate, '2026-11-20');
+    assert.strictEqual(nabuParsed2.startTime, '14:30');
   });
 });
