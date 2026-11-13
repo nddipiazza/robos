@@ -308,42 +308,55 @@ function renderSpectatorTvWallboardHtml({ tvName = '' } = {}) {
         if (clockEl) clockEl.textContent = '🕒 ' + t;
       }
 
+      function applySpectatorPayload(json) {
+        if (!json || !json.dashboard) return;
+        const sp = json.spectator || {};
+        const digest = JSON.stringify({
+          matchStatus: sp.matchStatus,
+          matchId: sp.matchId,
+          activeGame: sp.activeGame,
+          seats: sp.seats,
+          onlinePlayers: sp.onlinePlayers,
+          spectatorView: sp.spectatorView,
+          chatLog: sp.chatLog,
+          agentStatus: sp.agentStatus,
+        });
+        if (digest === lastDigest) return;
+        lastDigest = digest;
+
+        if (sp.activeGame && sp.activeGame.title) {
+          headlineEl.textContent = '🎭 ' + sp.activeGame.title + ' — Live Spectator Dashboard';
+          subEl.textContent = (sp.activeGame.description || 'Live RobOS AI Multiplayer Game Theater') + ' · Secret-Safe TV Wallboard';
+        }
+        dashEl.dashboard = json.dashboard;
+      }
+
       async function pullSpectatorDashboard() {
         try {
           const res = await fetch('/api/spectator-dashboard', { cache: 'no-store' });
           if (!res.ok) return;
           const json = await res.json();
-          if (!json || !json.dashboard) return;
-          const sp = json.spectator || {};
-          const digest = JSON.stringify({
-            matchStatus: sp.matchStatus,
-            matchId: sp.matchId,
-            activeGame: sp.activeGame,
-            seats: sp.seats,
-            onlinePlayers: sp.onlinePlayers,
-            spectatorView: sp.spectatorView,
-            chatLog: sp.chatLog,
-            agentStatus: sp.agentStatus,
-          });
-          if (digest === lastDigest) return;
-          lastDigest = digest;
-
-          if (sp.activeGame && sp.activeGame.title) {
-            headlineEl.textContent = '🎭 ' + sp.activeGame.title + ' — Live Spectator Dashboard';
-            subEl.textContent = (sp.activeGame.description || 'Live RobOS AI Multiplayer Game Theater') + ' · Secret-Safe TV Wallboard';
-          }
-          dashEl.dashboard = json.dashboard;
+          applySpectatorPayload(json);
         } catch {}
       }
 
       updateClock();
       setInterval(updateClock, 1000);
       pullSpectatorDashboard();
-      setInterval(pullSpectatorDashboard, 900);
+      setInterval(pullSpectatorDashboard, 350);
 
       try {
         const es = new EventSource('/api/spectator-events');
-        es.onmessage = () => pullSpectatorDashboard();
+        es.onmessage = (ev) => {
+          try {
+            const payload = JSON.parse(ev.data);
+            if (payload && payload.dashboard) {
+              applySpectatorPayload(payload);
+              return;
+            }
+          } catch {}
+          pullSpectatorDashboard();
+        };
       } catch {}
     })();
   </script>
@@ -507,9 +520,19 @@ function createGameTheaterServer(options = {}) {
         });
       } catch {}
     }
-    const ssePayload = `data: ${JSON.stringify({ type: 'theater-updated', ts: Date.now() })}\n\n`;
-    for (const res of sseClients) {
-      try { res.write(ssePayload); } catch {}
+    if (sseClients.size > 0) {
+      let resolved = null;
+      try {
+        resolved = buildResolvedSpectatorDashboard(runtime, options);
+      } catch {}
+      const ssePayload = `data: ${JSON.stringify({
+        type: 'theater-updated',
+        ts: Date.now(),
+        ...(resolved || {}),
+      })}\n\n`;
+      for (const res of sseClients) {
+        try { res.write(ssePayload); } catch {}
+      }
     }
   }
 
@@ -644,7 +667,11 @@ function createGameTheaterServer(options = {}) {
           Connection: 'keep-alive',
           'Access-Control-Allow-Origin': '*',
         });
-        res.write(`data: ${JSON.stringify({ type: 'connected', ts: Date.now() })}\n\n`);
+        let initialResolved = null;
+        try {
+          initialResolved = buildResolvedSpectatorDashboard(runtime, options);
+        } catch {}
+        res.write(`data: ${JSON.stringify({ type: 'connected', ts: Date.now(), ...(initialResolved || {}) })}\n\n`);
         sseClients.add(res);
         req.on('close', () => sseClients.delete(res));
         return;

@@ -224,7 +224,7 @@ class GameTheaterRuntime extends EventEmitter {
       return;
     }
     const rawMs = Number(active.compiled.meta?.tickIntervalMs || 1000);
-    const intervalMs = Math.max(250, Math.min(10000, Number.isFinite(rawMs) ? rawMs : 1000));
+    const intervalMs = Math.max(150, Math.min(10000, Number.isFinite(rawMs) ? rawMs : 1000));
     this._tickTimer = setInterval(() => {
       const cur = this.getActiveGame();
       if (!cur || this.matchStatus !== 'playing' || !this.matchState || !cur.compiled.onTick) {

@@ -1690,6 +1690,7 @@ end sub
     <field id="apiUrl" type="string" />
     <field id="progressUrl" type="string" />
     <field id="payloadJson" type="string" alwaysNotify="true" />
+    <field id="localFrameUri" type="string" alwaysNotify="true" />
   </interface>
   <script type="text/brightscript" uri="pkg:/components/DashboardTask.brs" />
 </component>
@@ -1700,6 +1701,8 @@ end sub
 
 sub pollDashboard()
     lastProgUrl = ""
+    lastFrameSeq = -1
+    localFileIdx = 0
     while true
         pUrl = m.top.progressUrl
         if pUrl <> "" and pUrl <> lastProgUrl
@@ -1710,16 +1713,52 @@ sub pollDashboard()
         end if
         raw = ""
         url = m.top.apiUrl
+        isAppCast = false
         if url <> ""
+            pollUrl = url
+            if lastFrameSeq >= 0
+                sep = "?"
+                if Instr(1, pollUrl, "?") > 0 then sep = "&"
+                pollUrl = pollUrl + sep + "afterSeq=" + lastFrameSeq.ToStr()
+            end if
             http = CreateObject("roUrlTransfer")
-            http.SetUrl(url)
+            http.SetUrl(pollUrl)
             raw = http.GetToString()
             if raw <> ""
+                isAppCast = (Instr(1, raw, Chr(34) + "appCastActive" + Chr(34) + ":true") > 0)
+                if isAppCast
+                    parsed = ParseJson(raw)
+                    if parsed <> invalid and parsed.appCast <> invalid and parsed.appCast.frameUrl <> invalid
+                        fSeq = 0
+                        if parsed.frameSeq <> invalid then fSeq = Int(parsed.frameSeq)
+                        if fSeq > 0 and fSeq <> lastFrameSeq
+                            fUrl = parsed.appCast.frameUrl.ToStr()
+                            fSep = "?"
+                            if Instr(1, fUrl, "?") > 0 then fSep = "&"
+                            localFileIdx = localFileIdx + 1
+                            tmpPath = "tmp:/cast_" + localFileIdx.ToStr() + ".jpg"
+                            imgHttp = CreateObject("roUrlTransfer")
+                            imgHttp.SetUrl(fUrl + fSep + "seq=" + fSeq.ToStr())
+                            dlCode = imgHttp.GetToFile(tmpPath)
+                            if dlCode = 200
+                                lastFrameSeq = fSeq
+                                m.top.localFrameUri = tmpPath
+                                if localFileIdx > 3
+                                    DeleteFile("tmp:/cast_" + (localFileIdx - 3).ToStr() + ".jpg")
+                                end if
+                            end if
+                        end if
+                    end if
+                else
+                    lastFrameSeq = -1
+                end if
                 m.top.payloadJson = raw
             end if
         end if
-        if Instr(1, raw, Chr(34) + "appCastActive" + Chr(34) + ":true") > 0 or Instr(1, raw, Chr(34) + "cinemaCastActive" + Chr(34) + ":true") > 0
-            sleep(700)
+        if isAppCast
+            sleep(15)
+        else if Instr(1, raw, Chr(34) + "cinemaCastActive" + Chr(34) + ":true") > 0
+            sleep(500)
         else
             sleep(2000)
         end if
@@ -2600,6 +2639,7 @@ sub init()
     m.dashTask = CreateObject("roSGNode", "DashboardTask")
     m.dashTask.apiUrl = "${portalUrl}/api/dashboard-cast"
     m.dashTask.observeField("payloadJson", "onPayloadUpdated")
+    m.dashTask.observeField("localFrameUri", "onLocalFrameReady")
     m.dashTask.control = "RUN"
     onClockTick()
 end sub
@@ -2768,34 +2808,72 @@ function cleanAscii(s as Dynamic) as String
     return s.ToStr()
 end function
 
-sub showAppCastFrame(frameUrl as String)
+sub ensureLivePosters()
     if m.livePosterA = invalid
         m.livePosterA = m.top.findNode("livePosterA")
         m.livePosterB = m.top.findNode("livePosterB")
         m.frontPoster = ""
         m.frameSeq = 0
+        m.posterLoading = false
+        m.pendingPosterUri = ""
     end if
-    m.frameSeq = m.frameSeq + 1
+end sub
+
+sub startPosterSwap(uri as String)
+    ensureLivePosters()
+    if uri = "" then return
+    if m.posterLoading = true
+        m.pendingPosterUri = uri
+        return
+    end if
+    m.posterLoading = true
     if m.frontPoster = "A" then target = m.livePosterB else target = m.livePosterA
-    sep = "?"
-    if Instr(1, frameUrl, "?") > 0 then sep = "&"
     target.unobserveField("loadStatus")
     target.observeField("loadStatus", "onLivePosterLoaded")
-    target.uri = frameUrl + sep + "seq=" + m.frameSeq.ToStr()
+    target.uri = uri
+end sub
+
+sub onLocalFrameReady()
+    if m.dashTask = invalid then return
+    localUri = m.dashTask.localFrameUri
+    if localUri = invalid or localUri = "" then return
+    if m.cinemaVideoActive = true then stopCinemaVideo()
+    if m.cinemaLibraryActive = true then hideCinemaLibrary()
+    startPosterSwap(localUri)
+end sub
+
+sub showAppCastFrame(frameUrl as String)
+    ensureLivePosters()
+    if m.dashTask <> invalid and m.dashTask.localFrameUri <> invalid and m.dashTask.localFrameUri <> ""
+        return
+    end if
+    m.frameSeq = m.frameSeq + 1
+    sep = "?"
+    if Instr(1, frameUrl, "?") > 0 then sep = "&"
+    startPosterSwap(frameUrl + sep + "seq=" + m.frameSeq.ToStr())
 end sub
 
 sub onLivePosterLoaded(evt as Object)
     p = evt.getRoSGNode()
-    if p.loadStatus <> "ready" then return
+    st = p.loadStatus
+    if st = "loading" then return
     p.unobserveField("loadStatus")
-    if p.id = "livePosterA"
-        m.livePosterA.opacity = 1.0
-        m.livePosterB.opacity = 0.0
-        m.frontPoster = "A"
-    else
-        m.livePosterB.opacity = 1.0
-        m.livePosterA.opacity = 0.0
-        m.frontPoster = "B"
+    m.posterLoading = false
+    if st = "ready"
+        if p.id = "livePosterA"
+            m.livePosterA.opacity = 1.0
+            m.livePosterB.opacity = 0.0
+            m.frontPoster = "A"
+        else
+            m.livePosterB.opacity = 1.0
+            m.livePosterA.opacity = 0.0
+            m.frontPoster = "B"
+        end if
+    end if
+    if m.pendingPosterUri <> ""
+        nextUri = m.pendingPosterUri
+        m.pendingPosterUri = ""
+        startPosterSwap(nextUri)
     end if
 end sub
 
@@ -2865,10 +2943,13 @@ end sub
 
 sub hideAppCastFrames()
     stopCastAudio()
+    if m.dashTask <> invalid then m.dashTask.localFrameUri = ""
     if m.livePosterA <> invalid
         m.livePosterA.opacity = 0.0
         m.livePosterB.opacity = 0.0
         m.frontPoster = ""
+        m.posterLoading = false
+        m.pendingPosterUri = ""
     end if
 end sub
 
@@ -5390,10 +5471,26 @@ function createTvEngine({
   // POST /api/app-cast-frame?tv=<id>. Frames are kept in the memory of the
   // process serving the portal, so apps push them over HTTP, not in-process.
   const appCastFrames = new Map();
+  const appCastFrameWaiters = new Map();
+  let appCastFrameSeq = 0;
+
+  function notifyAppCastWaiters(tvId) {
+    if (!tvId) return;
+    const key = String(tvId);
+    const waiters = appCastFrameWaiters.get(key);
+    if (!waiters || waiters.size === 0) return;
+    appCastFrameWaiters.delete(key);
+    for (const wake of waiters) {
+      try { wake(); } catch {}
+    }
+  }
 
   function setAppCastFrame(tvId, buf) {
     if (!tvId || !Buffer.isBuffer(buf) || buf.length < 500) return false;
-    appCastFrames.set(String(tvId), { buf, at: Date.now() });
+    const key = String(tvId);
+    appCastFrameSeq = (appCastFrameSeq % 1000000000) + 1;
+    appCastFrames.set(key, { buf, at: Date.now(), seq: appCastFrameSeq });
+    notifyAppCastWaiters(key);
     return true;
   }
 
@@ -5474,6 +5571,7 @@ function createTvEngine({
     if (!cast || !cast.active || (appId && cast.appId !== appId)) return { ok: false, error: 'No active app cast on that TV' };
     state.appCasts[tvId] = { ...cast, ...patch };
     saveState();
+    notifyAppCastWaiters(tvId);
     return { ok: true, appCast: state.appCasts[tvId] };
   }
 
@@ -5484,6 +5582,7 @@ function createTvEngine({
       if ((tvId && id !== tvId) || (appId && c.appId !== appId)) continue;
       casts[id] = { ...c, active: false, stoppedAt: new Date().toISOString() };
       appCastFrames.delete(id);
+      notifyAppCastWaiters(id);
     }
     state.appCasts = casts;
     saveState();
@@ -5665,11 +5764,82 @@ function createTvEngine({
 
         if (u.pathname === '/api/dashboard-cast') {
           const rokuAppCast = appCastForRequest(req, u, 'roku-os');
+          if (rokuAppCast) {
+            const afterSeqRaw = u.searchParams.get('afterSeq');
+            const afterSeq = afterSeqRaw !== null && afterSeqRaw !== '' ? Number(afterSeqRaw) : -1;
+            const sendRokuAppCastFast = () => {
+              if (res.writableEnded) return;
+              const currentCast = appCastForRequest(req, u, 'roku-os');
+              const activeFrameEntry = currentCast ? appCastFrames.get(currentCast.tvId) : null;
+              const fastBody = JSON.stringify({
+                ok: true,
+                appCastActive: Boolean(currentCast),
+                appCast: currentCast,
+                frameAt: activeFrameEntry ? activeFrameEntry.at : 0,
+                frameSeq: activeFrameEntry ? activeFrameEntry.seq || 1 : 0,
+                polledAt: Date.now(),
+                cinemaCastActive: false,
+                cinemaCast: null,
+                cinemaLibrary: null,
+                cast: state.activeDashboardCast || null,
+                slideshow: null,
+                dashboard: null,
+                allSlideCards: [],
+                keepAliveActive: true,
+                castUrl: `http://${hostIp}:${boundPort}/dashboard`,
+              });
+              res.writeHead(200, {
+                'Content-Type': 'application/json',
+                'Content-Length': Buffer.byteLength(fastBody),
+                'Cache-Control': 'no-store',
+                'Access-Control-Allow-Origin': '*',
+              });
+              res.end(fastBody);
+            };
+
+            const initialEntry = appCastFrames.get(rokuAppCast.tvId);
+            const currentSeq = initialEntry ? initialEntry.seq || 1 : 0;
+            if (afterSeq >= 0 && currentSeq === afterSeq) {
+              const tvKey = String(rokuAppCast.tvId);
+              let settled = false;
+              let timer = null;
+              const wake = () => {
+                if (settled) return;
+                settled = true;
+                if (timer) clearTimeout(timer);
+                const set = appCastFrameWaiters.get(tvKey);
+                if (set) {
+                  set.delete(wake);
+                  if (set.size === 0) appCastFrameWaiters.delete(tvKey);
+                }
+                sendRokuAppCastFast();
+              };
+              if (!appCastFrameWaiters.has(tvKey)) appCastFrameWaiters.set(tvKey, new Set());
+              appCastFrameWaiters.get(tvKey).add(wake);
+              timer = setTimeout(wake, 750);
+              if (typeof timer.unref === 'function') timer.unref();
+              req.on('close', () => {
+                if (settled) return;
+                settled = true;
+                if (timer) clearTimeout(timer);
+                const set = appCastFrameWaiters.get(tvKey);
+                if (set) {
+                  set.delete(wake);
+                  if (set.size === 0) appCastFrameWaiters.delete(tvKey);
+                }
+              });
+              return;
+            }
+
+            sendRokuAppCastFast();
+            return;
+          }
+
           const fixHostUrl = (val) => {
             if (!val || typeof val !== 'string') return val;
             return val.replace(/^http:\/\/(\d+\.\d+\.\d+\.\d+|localhost|127\.0\.0\.1):(\d+)\//i, `http://${hostIp}:$2/`);
           };
-          const activeCinema = !rokuAppCast && state.activeCinemaCast && state.activeCinemaCast.active !== false && state.activeCinemaCast.mediaUrl
+          const activeCinema = state.activeCinemaCast && state.activeCinemaCast.active !== false && state.activeCinemaCast.mediaUrl
             ? { ...state.activeCinemaCast, mediaUrl: fixHostUrl(state.activeCinemaCast.mediaUrl), active: true }
             : null;
           const rawCinemaItems = [
@@ -5693,7 +5863,7 @@ function createTvEngine({
               : undefined,
           }));
           const cinemaLibrary = {
-            active: Boolean(!rokuAppCast && state.activeCinemaLibrary && state.activeCinemaLibrary.active !== false),
+            active: Boolean(state.activeCinemaLibrary && state.activeCinemaLibrary.active !== false),
             defaultTab: state.activeCinemaLibrary?.defaultTab || null,
             tvIp: state.activeCinemaLibrary?.tvIp || null,
             tvName: state.activeCinemaLibrary?.tvName || null,
@@ -5702,16 +5872,16 @@ function createTvEngine({
           };
           const cinemaCastActive = Boolean(activeCinema || cinemaLibrary.active);
 
-          // Fast path: when the TV is playing a movie, in the 10-foot Movie Library, or showing an app cast,
+          // Fast path: when the TV is playing a movie or in the 10-foot Movie Library,
           // MainScene.brs returns before reading dashboard cards — skip expensive synchronous dashboard widget
           // resolution (git log, gh api, curl, pactl) so the host app's event loop never freezes!
-          if (cinemaCastActive || rokuAppCast) {
-            const activeFrameEntry = rokuAppCast ? appCastFrames.get(rokuAppCast.tvId) : null;
+          if (cinemaCastActive) {
             const fastBody = JSON.stringify({
               ok: true,
-              appCastActive: Boolean(rokuAppCast),
-              appCast: rokuAppCast,
-              frameAt: activeFrameEntry ? activeFrameEntry.at : 0,
+              appCastActive: false,
+              appCast: null,
+              frameAt: 0,
+              frameSeq: 0,
               polledAt: Date.now(),
               cinemaCastActive,
               cinemaCast: activeCinema,
