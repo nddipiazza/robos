@@ -151,17 +151,27 @@ function createTvBridge({
     });
 
     async function flushFrame() {
-      if (busy || win.isDestroyed() || !latestImage) return;
-      if (!fresh && Date.now() - lastPostMs < 4500) return;
+      if (busy || win.isDestroyed()) return;
       busy = true;
-      fresh = false;
       try {
+        if (!fresh && typeof win.webContents?.capturePage === 'function') {
+          try {
+            const snap = await win.webContents.capturePage();
+            if (snap) {
+              latestImage = snap;
+              fresh = true;
+            }
+          } catch {}
+        }
+        if (!latestImage || win.isDestroyed()) return;
+        if (!fresh && Date.now() - lastPostMs < 4500) return;
+        fresh = false;
         const size = latestImage.getSize();
         const img =
           size.width > 1920
             ? latestImage.resize({ width: 1920, height: 1080, quality: 'good' })
             : latestImage;
-        const jpg = img.toJPEG(82);
+        const jpg = img.toJPEG(85);
         if (jpg && jpg.length > 2000) {
           const code = await postFrame(getPortalPort(), tv.id, jpg, postFrameImpl);
           if (code >= 200 && code < 300) {

@@ -1689,7 +1689,7 @@ end sub
   <interface>
     <field id="apiUrl" type="string" />
     <field id="progressUrl" type="string" />
-    <field id="payloadJson" type="string" />
+    <field id="payloadJson" type="string" alwaysNotify="true" />
   </interface>
   <script type="text/brightscript" uri="pkg:/components/DashboardTask.brs" />
 </component>
@@ -2777,8 +2777,11 @@ sub showAppCastFrame(frameUrl as String)
     end if
     m.frameSeq = m.frameSeq + 1
     if m.frontPoster = "A" then target = m.livePosterB else target = m.livePosterA
+    sep = "?"
+    if Instr(1, frameUrl, "?") > 0 then sep = "&"
+    target.unobserveField("loadStatus")
     target.observeField("loadStatus", "onLivePosterLoaded")
-    target.uri = frameUrl + "&seq=" + m.frameSeq.ToStr()
+    target.uri = frameUrl + sep + "seq=" + m.frameSeq.ToStr()
 end sub
 
 sub onLivePosterLoaded(evt as Object)
@@ -5703,10 +5706,13 @@ function createTvEngine({
           // MainScene.brs returns before reading dashboard cards — skip expensive synchronous dashboard widget
           // resolution (git log, gh api, curl, pactl) so the host app's event loop never freezes!
           if (cinemaCastActive || rokuAppCast) {
+            const activeFrameEntry = rokuAppCast ? appCastFrames.get(rokuAppCast.tvId) : null;
             const fastBody = JSON.stringify({
               ok: true,
               appCastActive: Boolean(rokuAppCast),
               appCast: rokuAppCast,
+              frameAt: activeFrameEntry ? activeFrameEntry.at : 0,
+              polledAt: Date.now(),
               cinemaCastActive,
               cinemaCast: activeCinema,
               cinemaLibrary,
