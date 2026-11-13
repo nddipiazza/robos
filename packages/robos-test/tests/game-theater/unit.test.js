@@ -675,6 +675,24 @@ func apply_view(view: Dictionary, me: Dictionary, lobby: Dictionary) -> void:
         await new Promise((r) => setTimeout(r, 15));
         const rawPoll2 = await (await fetch(pollUrl)).text();
         assert.notEqual(rawPoll1, rawPoll2, 'Consecutive Roku /api/dashboard-cast polls MUST differ so payloadJson observeField fires every tick!');
+        const parsedPoll2 = JSON.parse(rawPoll2);
+        assert.equal(parsedPoll2.cinemaLibrary, null, 'Roku appCast fast-path must skip cinemaLibrary payload bloat');
+
+        // Verify instant afterSeq long-poll wakeup (<150ms instead of 750ms timeout) when a new frame is pushed
+        const framePostUrl = `http://127.0.0.1:${portalStarted.port}/api/app-cast-frame?tv=tv-roku-poll-test`;
+        await fetch(framePostUrl, { method: 'POST', body: Buffer.alloc(2048, 0xd8) });
+        const baseline = await (await fetch(pollUrl)).json();
+        assert.ok(baseline.frameSeq >= 1);
+
+        const waitStart = Date.now();
+        const longPollPromise = fetch(`${pollUrl}&afterSeq=${baseline.frameSeq}`).then((r) => r.json());
+        setTimeout(() => {
+          fetch(framePostUrl, { method: 'POST', body: Buffer.alloc(2048, 0xd9) }).catch(() => {});
+        }, 35);
+        const woken = await longPollPromise;
+        const wakeElapsedMs = Date.now() - waitStart;
+        assert.equal(woken.frameSeq, baseline.frameSeq + 1);
+        assert.ok(wakeElapsedMs < 350, `Expected instant afterSeq wakeup (<350ms), took ${wakeElapsedMs}ms`);
       } finally {
         await tvEng.stopPortalServer();
       }

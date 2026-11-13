@@ -15,7 +15,11 @@
 const http = require('node:http');
 
 const DEFAULT_PORTAL_PORT = 19210;
-const FRAME_INTERVAL_MS = 900;
+const FRAME_INTERVAL_MS = 150;
+const MIN_PAINT_PUSH_MS = 65;
+const CAPTURE_WIDTH = 1280;
+const CAPTURE_HEIGHT = 720;
+const CAPTURE_ZOOM = CAPTURE_WIDTH / 1920;
 
 function postFrame(portalPort, tvId, jpgBuffer, postImpl = null) {
   if (typeof postImpl === 'function') {
@@ -95,6 +99,11 @@ function createTvBridge({
     const s = streams.get(tvId);
     if (!s) return false;
     clearInterval(s.timer);
+    if (s.paintDebounceTimer) clearTimeout(s.paintDebounceTimer);
+    if (s.sseCaptureTimer) clearTimeout(s.sseCaptureTimer);
+    try {
+      if (s.sseReq) s.sseReq.destroy();
+    } catch {}
     try {
       if (s.win && typeof s.win.isDestroyed === 'function' && !s.win.isDestroyed()) {
         s.win.destroy();
@@ -111,13 +120,14 @@ function createTvBridge({
     let win;
     try {
       win = new BrowserWindow({
-        width: 1920,
-        height: 1080,
+        width: CAPTURE_WIDTH,
+        height: CAPTURE_HEIGHT,
         show: false,
         frame: false,
         backgroundColor: '#070b12',
         webPreferences: {
           offscreen: true,
+          zoomFactor: CAPTURE_ZOOM,
           contextIsolation: true,
           nodeIntegration: false,
           backgroundThrottling: false,
@@ -136,6 +146,9 @@ function createTvBridge({
     const entry = {
       win,
       timer: null,
+      paintDebounceTimer: null,
+      sseCaptureTimer: null,
+      sseReq: null,
       tvName: tv.name,
       startedAt: new Date().toISOString(),
       framesSent: 0,
@@ -144,17 +157,36 @@ function createTvBridge({
     let latestImage = null;
     let fresh = false;
     let busy = false;
+    let lastPaintMs = 0;
     let lastPostMs = 0;
+    let lastSentBuf = null;
     let resolveFirstFrame;
     const firstFramePromise = new Promise((r) => {
       resolveFirstFrame = r;
     });
 
-    async function flushFrame() {
+    function scheduleImmediatePaintFlush() {
+      if (win.isDestroyed()) return;
+      const elapsed = Date.now() - lastPostMs;
+      const waitMs = lastPostMs === 0 ? 0 : Math.max(0, MIN_PAINT_PUSH_MS - elapsed);
+      if (waitMs === 0 && !busy) {
+        flushFrame();
+        return;
+      }
+      if (!entry.paintDebounceTimer) {
+        entry.paintDebounceTimer = setTimeout(() => {
+          entry.paintDebounceTimer = null;
+          flushFrame();
+        }, Math.max(8, waitMs));
+        entry.paintDebounceTimer.unref?.();
+      }
+    }
+
+    async function flushFrame(forceCapture = false) {
       if (busy || win.isDestroyed()) return;
       busy = true;
       try {
-        if (!fresh && typeof win.webContents?.capturePage === 'function') {
+        if ((forceCapture || !fresh) && typeof win.webContents?.capturePage === 'function') {
           try {
             const snap = await win.webContents.capturePage();
             if (snap) {
@@ -164,17 +196,21 @@ function createTvBridge({
           } catch {}
         }
         if (!latestImage || win.isDestroyed()) return;
-        if (!fresh && Date.now() - lastPostMs < 4500) return;
+        if (!fresh && Date.now() - lastPostMs < 3500) return;
         fresh = false;
         const size = latestImage.getSize();
         const img =
-          size.width > 1920
-            ? latestImage.resize({ width: 1920, height: 1080, quality: 'good' })
+          size.width > CAPTURE_WIDTH && typeof latestImage.resize === 'function'
+            ? latestImage.resize({ width: CAPTURE_WIDTH, height: CAPTURE_HEIGHT, quality: 'good' })
             : latestImage;
-        const jpg = img.toJPEG(85);
-        if (jpg && jpg.length > 2000) {
+        const jpg = img.toJPEG(72);
+        if (jpg && jpg.length > 1500) {
+          if (lastSentBuf && jpg.equals(lastSentBuf) && Date.now() - lastPostMs < 3000) {
+            return;
+          }
           const code = await postFrame(getPortalPort(), tv.id, jpg, postFrameImpl);
           if (code >= 200 && code < 300) {
+            lastSentBuf = jpg;
             entry.framesSent += 1;
             lastPostMs = Date.now();
             resolveFirstFrame?.(true);
@@ -185,18 +221,48 @@ function createTvBridge({
         log({ msg: 'roku frame capture error', tvId: tv.id, err: err.message });
       } finally {
         busy = false;
+        if (fresh && !win.isDestroyed()) {
+          scheduleImmediatePaintFlush();
+        }
       }
     }
 
     win.webContents.on('paint', (_ev, _dirty, image) => {
       latestImage = image;
+      lastPaintMs = Date.now();
       fresh = true;
-      if (lastPostMs === 0 && !busy) {
-        flushFrame();
-      }
+      scheduleImmediatePaintFlush();
     });
-    win.webContents.setFrameRate?.(2);
+    win.webContents.setFrameRate?.(30);
     win.webContents.setAudioMuted?.(true);
+
+    // Subscribe directly to Game Theater SSE updates and request an immediate zero-copy
+    // offscreen paint (`invalidate()`) rather than a blocking `capturePage()` IPC readback.
+    try {
+      const sseReq = http.get(
+        {
+          hostname: '127.0.0.1',
+          port: getTheaterPort(),
+          path: '/api/spectator-events',
+          headers: { Accept: 'text/event-stream' },
+        },
+        (sseRes) => {
+          sseRes.on('data', () => {
+            if (win.isDestroyed()) return;
+            if (entry.sseCaptureTimer) clearTimeout(entry.sseCaptureTimer);
+            entry.sseCaptureTimer = setTimeout(() => {
+              entry.sseCaptureTimer = null;
+              if (win.isDestroyed()) return;
+              win.webContents?.invalidate?.();
+              flushFrame(true);
+            }, 22);
+            entry.sseCaptureTimer.unref?.();
+          });
+        },
+      );
+      sseReq.on('error', () => {});
+      entry.sseReq = sseReq;
+    } catch {}
 
     const localCaptureUrl = `${buildTvUrl('127.0.0.1', tv.name)}${tv.name ? '&' : '?'}capture=1`;
     const loadFn =
