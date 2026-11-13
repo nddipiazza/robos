@@ -25,6 +25,29 @@
   <div id="status-banner" class="status-banner hidden"></div>
 
   <main class="grid-layout">
+    <!-- Full-Width Row: Live RobOS Spectator Dashboard & 65" Roku / Smart TV Cast -->
+    <section class="card card-full-span">
+      <div class="card-header tv-card-header">
+        <div class="row-gap">
+          <h2>📺 Live RobOS Spectator Dashboard &amp; Smart TV Cast</h2>
+          <span id="tv-cast-pill" class="pill">Ready to Cast</span>
+        </div>
+        <div class="tv-cast-controls">
+          <select id="tv-select" class="select-input" title="Select Paired Smart TV or Roku TV"></select>
+          <button type="button" id="btn-cast-tv" class="btn btn-primary btn-sm">📺 Cast to Smart TV</button>
+          <button type="button" id="btn-stop-cast-tv" class="btn btn-secondary btn-sm hidden">⏹ Stop Cast</button>
+          <button type="button" id="btn-open-tv-wallboard" class="btn btn-secondary btn-sm" title="Open 10-foot Spectator Wallboard in Browser">🌐 Wallboard ↗</button>
+          <button type="button" id="btn-open-dashboards-app" class="btn btn-secondary btn-sm" title="Open Live Spectator in RobOS Dashboards App">📊 Open in RobOS Dashboards</button>
+        </div>
+      </div>
+      <p class="hint">
+        Secret-safe KGraph dashboard (<code>&lt;robos-widget-game-theater&gt;</code> · <code>urn:robos:dashboard:game-theater-spectator</code>). Streams live 1080p frames to Roku OS TVs and opens directly on Android TV, LG webOS &amp; Samsung Tizen without revealing hidden player answers!
+      </p>
+      <div class="spectator-embed-wrap">
+        <robos-dashboard id="embedded-spectator-dashboard" layout="hero-top-split"></robos-dashboard>
+      </div>
+    </section>
+
     <!-- Left Column: Per-Player Google Docs & Lobby Players -->
     <section class="card">
       <div class="card-header">
@@ -111,6 +134,7 @@
     </section>
   </main>
 
+  <script src="../../robos-ui/robos-dashboard.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

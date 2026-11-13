@@ -349,3 +349,31 @@ input:focus, textarea:focus, .select-input:focus {
   gap: 8px;
   margin-top: 4px;
 }
+
+.card-full-span {
+  grid-column: 1 / -1;
+}
+
+.tv-card-header {
+  flex-wrap: wrap;
+}
+
+.tv-cast-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.pill-green {
+  color: #6ee7b7;
+  background: rgba(16, 185, 129, 0.16);
+  border-color: rgba(16, 185, 129, 0.45);
+}
+
+.spectator-embed-wrap {
+  background: #090d14;
+  border: 1px solid #21262d;
+  border-radius: 10px;
+  padding: 12px;
+}

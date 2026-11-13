@@ -25,10 +25,12 @@ const path = require('node:path');
 const fs = require('node:fs');
 const os = require('node:os');
 const http = require('node:http');
+const { spawn } = require('node:child_process');
 
 const DEBUG_PORT = 19227;
 const HTTP_PORT = Number(process.env.GAME_THEATER_PORT || 19228);
 const HTTPS_PORT = Number(process.env.GAME_THEATER_HTTPS_PORT || 19229);
+const PORTAL_PORT = Number(process.env.ROBOS_TV_PORTAL_PORT || 19210);
 const HOME_DIR = process.env.HOME || os.homedir();
 const CONFIG_DIR = path.join(HOME_DIR, '.config', 'robos');
 
@@ -54,8 +56,27 @@ try {
 } catch {}
 
 const _debugServer = requireShared('dom-snapshot');
+const _tvEngineModule = requireShared('tv-engine');
+const _dashboardEngineModule = requireShared('dashboard-engine');
 const { createGameTheaterServer } = require('./lib/theater-server');
+const { detectLanIp } = require('./lib/tls-cert');
+const { createTvBridge } = require('./lib/tv-bridge');
 const { startPublicHttpsTunnel } = require('./serve');
+
+const _tvEngine = _tvEngineModule?.createTvEngine
+  ? _tvEngineModule.createTvEngine({
+      configDir: CONFIG_DIR,
+      portalPort: PORTAL_PORT,
+    })
+  : null;
+
+const _tvBridge = createTvBridge({
+  tvEngine: _tvEngine,
+  BrowserWindow,
+  getTheaterPort: () => HTTP_PORT,
+  getLanIp: () => detectLanIp(),
+  getPortalPort: () => PORTAL_PORT,
+});
 
 const userDataDir = path.join(CONFIG_DIR, 'electron', 'game-theater');
 app.setName('robos-game-theater');
@@ -177,6 +198,32 @@ function createWindow() {
 }
 
 ipcMain.handle('theater:get-state', () => apiRequest('GET', '/api/state'));
+ipcMain.handle('theater:get-spectator-dashboard', () => apiRequest('GET', '/api/spectator-dashboard'));
+ipcMain.handle('theater:get-tv-status', () => _tvBridge.getStatus());
+ipcMain.handle('theater:cast-tv', async (_e, payload = {}) => _tvBridge.castToTv(payload || {}));
+ipcMain.handle('theater:stop-tv-cast', async (_e, payload = {}) => _tvBridge.stopCast(payload || {}));
+ipcMain.handle('theater:open-robos-dashboards', async () => {
+  try {
+    if (_dashboardEngineModule?.createDashboardEngine) {
+      const dashEng = _dashboardEngineModule.createDashboardEngine({ configDir: CONFIG_DIR });
+      dashEng.setActiveDashboard('game-theater-spectator');
+    }
+    const dashAppMain = path.resolve(__dirname, '..', 'robos-dashboards', 'main.js');
+    const child = spawn(
+      process.execPath,
+      [dashAppMain, '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage'],
+      {
+        detached: true,
+        stdio: 'ignore',
+        env: { ...process.env },
+      },
+    );
+    child.unref();
+    return { ok: true, dashboardId: 'game-theater-spectator' };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
 ipcMain.handle('theater:sync-docs', (_e, opts) => apiRequest('POST', '/api/docs/sync', opts || {}));
 ipcMain.handle('theater:add-player', (_e, player) => apiRequest('POST', '/api/players', player || {}));
 ipcMain.handle('theater:invite-player', (_e, { uid, email, message }) =>
@@ -219,10 +266,13 @@ ipcMain.handle('theater:capture-player-window', async (_e, { uid, savePath }) =>
 
 app.whenReady().then(async () => {
   await ensureTheaterServerRunning();
+  await _tvBridge.ensurePortalStarted();
   createWindow();
 });
 
 app.on('window-all-closed', () => {
+  try { _tvBridge.stopCast(); } catch {}
+  try { _tvEngine?.stopPortalServer?.(); } catch {}
   if (_tunnelChild) {
     try { _tunnelChild.kill(); } catch {}
   }

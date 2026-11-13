@@ -486,4 +486,180 @@ func apply_view(view: Dictionary, me: Dictionary, lobby: Dictionary) -> void:
       env.cleanup();
     }
   });
+
+  it('resolves secret-safe RobOS Spectator Dashboard (<robos-widget-game-theater>), /tv wallboard, and Roku 1080p frame cast', async () => {
+    const env = makeTempEnv();
+    const { createDashboardEngine } = require('../../../robos-lib/dashboard-engine');
+    const { renderDashboardHtml } = require('../../../robos-ui/robos-dashboard');
+    const { createTvBridge } = require('../../../game-theater/lib/tv-bridge');
+    let srv = null;
+    try {
+      const players = loadTheaterPlayers({ configDir: env.dir, seedPeople: env.seedPeople });
+      const [alice, bob] = players;
+
+      srv = createGameTheaterServer({
+        configDir: env.dir,
+        seedPeople: env.seedPeople,
+        autoExportGodot: false,
+      });
+      const ep = await srv.listen({ httpPort: 0, enableHttps: false, host: '127.0.0.1' });
+
+      // Load a trivia game with hidden answer until reveal
+      const secretSafeTriviaJs = `
+        const meta = { title: 'Guess That Count', description: '500 real-world counts', minPlayers: 1, maxPlayers: 12 };
+        function createInitialState(players) {
+          const map = {};
+          players.forEach((p) => { map[p.uid] = { uid: p.uid, name: p.name, color: p.color, score: 3, streak: 2 }; });
+          return {
+            phase: 'question',
+            roundNumber: 7,
+            totalBankSize: 500,
+            secondsLeft: 24,
+            totalSeconds: 30,
+            category: 'Astronomy & Space',
+            subject: 'Moons orbiting Saturn (confirmed)',
+            options: ['83', '146', '62', '214'],
+            secretCorrectIndex: 1,
+            players: map,
+            answers: {}
+          };
+        }
+        function onPlayerAction(state, player, action) {
+          if (action.type === 'reveal') state.phase = 'reveal';
+          return { state };
+        }
+        function getPlayerView(state, viewerUid) {
+          const isReveal = state.phase === 'reveal';
+          return {
+            phase: state.phase,
+            roundNumber: state.roundNumber,
+            totalBankSize: state.totalBankSize,
+            secondsLeft: state.secondsLeft,
+            totalSeconds: state.totalSeconds,
+            category: state.category,
+            subject: state.subject,
+            options: state.options,
+            correctIndex: isReveal ? state.secretCorrectIndex : -1,
+            answeredCount: Object.keys(state.answers).length,
+            playerCount: Object.keys(state.players).length,
+            leaderboard: Object.values(state.players)
+          };
+        }
+        module.exports = { meta, createInitialState, onPlayerAction, getPlayerView };
+      `;
+
+      srv.runtime.saveAndActivateGame({
+        id: 'guess-that-count',
+        manifest: { id: 'guess-that-count', title: 'Guess That Count', minPlayers: 1, maxPlayers: 12 },
+        serverJs: secretSafeTriviaJs,
+        clientGd: 'extends Control\nvar send_action: Callable\nfunc apply_view(_v: Dictionary, _m: Dictionary, _l: Dictionary) -> void:\n\tpass\n',
+        activate: true,
+      });
+      srv.runtime.joinSeat(alice);
+      srv.runtime.joinSeat(bob);
+
+      // 1. Verify live-spectator.json + dashboard-engine resolution
+      const dashEng = createDashboardEngine({ configDir: env.dir });
+      const resolved = dashEng.resolveDashboard('game-theater-spectator');
+      assert.equal(resolved.ok, true);
+      assert.equal(resolved.dashboard.id, 'game-theater-spectator');
+      assert.equal(resolved.dashboard.cards.length, 3);
+      const stageCard = resolved.dashboard.cards.find((c) => c.id === 'game-theater-live-stage');
+      assert.equal(stageCard.liveData.spectatorView.correctIndex, -1, 'Unrevealed answer index must stay hidden on TV!');
+
+      const renderedHtml = renderDashboardHtml(resolved.dashboard);
+      assert.ok(renderedHtml.includes('Moons orbiting Saturn (confirmed)'));
+      assert.ok(renderedHtml.includes('ROUND #7 OF 500'));
+      assert.ok(!renderedHtml.includes('✔ CORRECT'), 'Must not highlight correct answer before reveal');
+
+      // 2. Verify unauthenticated public /api/spectator-dashboard and /tv wallboard endpoints
+      const specRes = await fetch(`${ep.localHttpUrl}/api/spectator-dashboard`);
+      assert.equal(specRes.status, 200);
+      const specJson = await specRes.json();
+      assert.equal(specJson.ok, true);
+      assert.equal(specJson.spectator.spectatorView.correctIndex, -1);
+
+      const tvHtmlRes = await fetch(`${ep.localHttpUrl}/tv`);
+      assert.equal(tvHtmlRes.status, 200);
+      const tvHtml = await tvHtmlRes.text();
+      assert.ok(tvHtml.includes('<robos-dashboard id="theater-tv-dashboard"'));
+
+      // 3. Verify Roku OS 1080p live frame cast bridge
+      const postedFrames = [];
+      let castedPayload = null;
+      class FakeOffscreenWindow {
+        constructor() {
+          this._destroyed = false;
+          this.webContents = {
+            on: (evt, cb) => {
+              if (evt === 'paint') {
+                setTimeout(() => {
+                  cb(
+                    {},
+                    {},
+                    {
+                      getSize: () => ({ width: 1920, height: 1080 }),
+                      toJPEG: () => Buffer.alloc(4096, 0xff),
+                    },
+                  );
+                }, 20);
+              }
+            },
+            setFrameRate: () => {},
+            setAudioMuted: () => {},
+            loadURL: async () => {},
+            once: () => {},
+          };
+        }
+        isDestroyed() {
+          return this._destroyed;
+        }
+        destroy() {
+          this._destroyed = true;
+        }
+      }
+
+      const bridge = createTvBridge({
+        BrowserWindow: FakeOffscreenWindow,
+        getTheaterPort: () => ep.httpPort,
+        getLanIp: () => '127.0.0.1',
+        getPortalPort: () => 19210,
+        postFrameImpl: async (_port, tvId, jpg) => {
+          postedFrames.push({ tvId, bytes: jpg.length });
+          return 200;
+        },
+        tvEngine: {
+          startPortalServer: async () => {},
+          getOverview: () => ({
+            tvs: [
+              {
+                id: 'tv-livingroom-roku-test',
+                name: '65" Roku TV Test',
+                ip: '127.0.0.1',
+                platformId: 'roku-os',
+                platformName: 'Roku OS',
+                online: true,
+              },
+            ],
+          }),
+          castAppToTv: async (payload) => {
+            castedPayload = payload;
+            return { ok: true, rokuChannelLaunched: true, message: 'Launched RobOS TV channel on Roku' };
+          },
+          stopAppCast: () => ({ ok: true }),
+          listAppCasts: () => (castedPayload ? [{ ...castedPayload, active: true }] : []),
+        },
+      });
+
+      const castRes = await bridge.castToTv({ tvId: 'tv-livingroom-roku-test', gameTitle: 'Guess That Count' });
+      assert.equal(castRes.ok, true);
+      assert.equal(castRes.mode, 'roku-live-frames');
+      assert.ok(postedFrames.length >= 1, 'Should immediately capture and POST 1080p JPEG frame for Roku');
+      assert.equal(castedPayload.appId, 'game-theater');
+      bridge.stopCast({ tvId: 'tv-livingroom-roku-test' });
+    } finally {
+      if (srv) await srv.close();
+      env.cleanup();
+    }
+  });
 });
