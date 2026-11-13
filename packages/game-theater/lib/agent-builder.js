@@ -246,8 +246,9 @@ IMPORTANT: Do NOT invoke any tools, file readers, or shell commands. Reply direc
      - Validate turn/role ownership and inputs! On illegal move or wrong player's turn, return \`{ state, error: "Clear explanation" }\`.
      - On valid move, update state and return \`{ state }\`.
    - \`onTick(state, nowMs)\` (OPTIONAL — called automatically on the server every \`meta.tickIntervalMs || 1000\` ms while a match is playing):
-     - Ideal for timed trivia rounds (e.g. cycling questions every 30 seconds), countdown clocks, or real-time mechanics!
+     - Ideal for timed trivia rounds (e.g. cycling questions every 20–30 seconds), countdown clocks, or real-time mechanics!
      - Update countdowns / advance expired rounds using \`nowMs\` and return \`{ state }\` (the runtime automatically broadcasts whenever \`state\` changes).
+     - For timed trivia or multi-round party games that enter a \`gameover\` / summary phase, set a celebration deadline (e.g. \`nowMs + 10000\`) and auto-start a fresh match in \`onTick\` when it expires so Smart TV spectator wallboards keep cycling continuously instead of freezing on the final round.
    - \`onSeatsChanged(state, seats)\` (OPTIONAL — called if a player joins/leaves a seat mid-match when \`seats.length <= maxPlayers\`):
      - Sync \`state.players\` / \`state.scores\` so newly seated players appear on the leaderboard immediately without resetting scores.
    - \`getPlayerView(state, viewerUid)\`:

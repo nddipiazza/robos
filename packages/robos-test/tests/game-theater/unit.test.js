@@ -569,10 +569,77 @@ func apply_view(view: Dictionary, me: Dictionary, lobby: Dictionary) -> void:
 
       const renderedHtml = renderDashboardHtml(resolved.dashboard);
       assert.ok(renderedHtml.includes('Moons orbiting Saturn (confirmed)'));
-      assert.ok(renderedHtml.includes('ROUND #7 OF 500'));
+      assert.ok(renderedHtml.includes('ROUND #7 · 500-Q BANK'));
+      assert.ok(renderedHtml.includes('var(--gt-prompt-size,27px)'));
       assert.ok(!renderedHtml.includes('✔ CORRECT'), 'Must not highlight correct answer before reveal');
 
-      // 2. Verify unauthenticated public /api/spectator-dashboard and /tv wallboard endpoints
+      // Also verify AI-generated trivia using `choices`, `prompt`, `remainingMs`, `totalRounds`, `answered`, and `roundDelta`
+      const choicesTriviaJs = `
+        const meta = { title: 'Youth Slang Quiz', minPlayers: 1, maxPlayers: 8 };
+        function createInitialState(players) {
+          return {
+            players,
+            phase: 'reveal',
+            roundNumber: 4,
+            totalRounds: 10,
+            category: 'Gaming Lore',
+            prompt: 'Which smash weapon deals more damage the higher you fall?',
+            choices: ['The Mace', 'Trident', 'Crossbow', 'Axe'],
+            correctIndex: 0
+          };
+        }
+        function onPlayerAction(state) { return { state }; }
+        function getPlayerView(state) {
+          return {
+            phase: state.phase,
+            roundNumber: state.roundNumber,
+            totalRounds: state.totalRounds,
+            category: state.category,
+            prompt: state.prompt,
+            choices: state.choices,
+            correctIndex: state.correctIndex,
+            remainingMs: 3800,
+            totalPhaseMs: 4500,
+            answeredCount: 2,
+            playerCount: state.players.length,
+            leaderboard: state.players.map((p, idx) => ({
+              uid: p.uid,
+              name: p.name,
+              color: p.color,
+              score: idx === 0 ? 850 : 0,
+              streak: idx === 0 ? 3 : 0,
+              answered: true,
+              roundDelta: idx === 0 ? 850 : 0,
+              rankTitle: idx === 0 ? 'Grand Champion' : 'Challenger'
+            }))
+          };
+        }
+        module.exports = { meta, createInitialState, onPlayerAction, getPlayerView };
+      `;
+      srv.runtime.saveAndActivateGame({
+        id: 'youth-slang-quiz',
+        manifest: { id: 'youth-slang-quiz', title: 'Youth Slang Quiz', minPlayers: 1, maxPlayers: 8 },
+        serverJs: choicesTriviaJs,
+        clientGd: 'extends Control\nvar send_action: Callable\nfunc apply_view(_v: Dictionary, _m: Dictionary, _l: Dictionary) -> void:\n\tpass\n',
+        activate: true,
+      });
+      srv.runtime.joinSeat(alice);
+      srv.runtime.joinSeat(bob);
+      const choicesResolved = dashEng.resolveDashboard('game-theater-spectator');
+      const choicesHtml = renderDashboardHtml(choicesResolved.dashboard);
+      assert.ok(choicesHtml.includes('ROUND #4 OF 10'));
+      assert.ok(choicesHtml.includes('Which smash weapon deals more damage the higher you fall?'));
+      assert.ok(choicesHtml.includes('The Mace'));
+      assert.ok(choicesHtml.includes('✔ CORRECT'));
+      assert.ok(choicesHtml.includes('+850 PTS ✔'));
+      assert.ok(choicesHtml.includes('Grand Champion'));
+
+      // Restore secret-safe unrevealed game for public /api/spectator-dashboard assertion below
+      srv.runtime.selectGame('guess-that-count');
+      srv.runtime.joinSeat(alice);
+      srv.runtime.joinSeat(bob);
+
+      // 2. Verify unauthenticated public /api/spectator-dashboard and /tv 10-foot wallboard endpoints
       const specRes = await fetch(`${ep.localHttpUrl}/api/spectator-dashboard`);
       assert.equal(specRes.status, 200);
       const specJson = await specRes.json();
@@ -582,7 +649,35 @@ func apply_view(view: Dictionary, me: Dictionary, lobby: Dictionary) -> void:
       const tvHtmlRes = await fetch(`${ep.localHttpUrl}/tv`);
       assert.equal(tvHtmlRes.status, 200);
       const tvHtml = await tvHtmlRes.text();
+      assert.ok(tvHtml.includes('class="tv-10ft"'));
       assert.ok(tvHtml.includes('<robos-dashboard id="theater-tv-dashboard"'));
+
+      // Verify tv-engine /api/dashboard-cast fast-path emits changing frameAt/polledAt so Roku SceneGraph never freezes on frame 1
+      const { createTvEngine } = require('../../../robos-lib/tv-engine');
+      const tvEng = createTvEngine({ configDir: env.dir, portalPort: 0, reusePortal: false });
+      const portalStarted = await tvEng.startPortalServer(0, { reuse: false });
+      assert.equal(portalStarted.ok, true);
+      try {
+        tvEng.addOrUpdateTv({
+          id: 'tv-roku-poll-test',
+          name: '65" Roku Test',
+          ip: '127.0.0.1',
+          platformId: 'roku-os',
+        });
+        await tvEng.castAppToTv({
+          tvId: 'tv-roku-poll-test',
+          appId: 'game-theater',
+          title: 'Game Theater',
+          url: `${ep.localHttpUrl}/tv`,
+        });
+        const pollUrl = `http://127.0.0.1:${portalStarted.port}/api/dashboard-cast?tv=tv-roku-poll-test`;
+        const rawPoll1 = await (await fetch(pollUrl)).text();
+        await new Promise((r) => setTimeout(r, 15));
+        const rawPoll2 = await (await fetch(pollUrl)).text();
+        assert.notEqual(rawPoll1, rawPoll2, 'Consecutive Roku /api/dashboard-cast polls MUST differ so payloadJson observeField fires every tick!');
+      } finally {
+        await tvEng.stopPortalServer();
+      }
 
       // 3. Verify Roku OS 1080p live frame cast bridge
       const postedFrames = [];

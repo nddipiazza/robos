@@ -167,19 +167,20 @@ function renderSpectatorTvWallboardHtml({ tvName = '' } = {}) {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       overflow-x: hidden;
     }
-    body {
-      padding: 24px 34px;
+    body.tv-10ft {
+      padding: 18px 28px;
       display: flex;
       flex-direction: column;
-      gap: 18px;
+      gap: 14px;
+      min-height: 100vh;
     }
     .tv-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 16px;
-      padding-bottom: 14px;
-      border-bottom: 1px solid var(--border);
+      padding-bottom: 10px;
+      border-bottom: 2px solid var(--border);
     }
     .tv-brand {
       display: flex;
@@ -187,25 +188,26 @@ function renderSpectatorTvWallboardHtml({ tvName = '' } = {}) {
       gap: 14px;
     }
     .tv-live-pill {
-      background: rgba(16, 185, 129, 0.2);
-      border: 1px solid rgba(16, 185, 129, 0.55);
+      background: rgba(16, 185, 129, 0.22);
+      border: 1.5px solid rgba(16, 185, 129, 0.6);
       color: #6ee7b7;
-      padding: 6px 13px;
+      padding: 7px 16px;
       border-radius: 999px;
-      font-size: 12px;
-      font-weight: 800;
+      font-size: 15px;
+      font-weight: 850;
       letter-spacing: 0.05em;
     }
     .tv-title {
-      font-size: 25px;
-      font-weight: 850;
+      font-size: 31px;
+      font-weight: 900;
       letter-spacing: -0.02em;
-      color: #f8fafc;
+      color: #ffffff;
     }
     .tv-sub {
-      font-size: 13px;
-      color: var(--muted);
+      font-size: 16px;
+      color: #cbd5e1;
       margin-top: 2px;
+      font-weight: 550;
     }
     .tv-pills {
       display: flex;
@@ -214,43 +216,64 @@ function renderSpectatorTvWallboardHtml({ tvName = '' } = {}) {
     }
     .tv-pill {
       background: var(--surface);
-      border: 1px solid var(--border);
-      padding: 7px 14px;
+      border: 1.5px solid var(--border);
+      padding: 8px 16px;
       border-radius: 999px;
-      font-size: 13px;
-      font-weight: 650;
+      font-size: 17px;
+      font-weight: 750;
       color: var(--text);
     }
     .tv-pill.cyan {
-      border-color: rgba(0, 188, 212, 0.45);
+      border-color: rgba(0, 188, 212, 0.55);
       color: #67e8f9;
-      background: rgba(0, 188, 212, 0.11);
+      background: rgba(0, 188, 212, 0.14);
+    }
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    robos-dashboard,
+    robos-dashboard .robos-embed-dashboard {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    robos-dashboard .robos-embed-grid {
+      flex: 1;
+      gap: 16px;
+      grid-template-rows: auto 1fr;
     }
     .tv-footer {
       margin-top: auto;
-      padding-top: 12px;
+      padding-top: 8px;
       border-top: 1px solid var(--border);
       display: flex;
       justify-content: space-between;
-      font-size: 12.5px;
+      font-size: 15px;
       color: var(--muted);
     }
-    /* Scale up embedded RobOS Dashboard slightly for crisp 10-foot 65" TV legibility */
+    /* True 10-foot living-room 65" TV card chrome */
     robos-dashboard .robos-embed-card {
-      padding: 18px 20px;
-      border-radius: 14px;
-      background: rgba(14, 22, 38, 0.92);
-      border-color: #1e2d47;
+      padding: 18px 24px;
+      border-radius: 16px;
+      background: rgba(14, 22, 38, 0.95);
+      border: 2px solid #243656;
     }
     robos-dashboard .robos-embed-card-title {
-      font-size: 14px;
+      font-size: 19px;
+      font-weight: 850;
+      letter-spacing: 0.04em;
+    }
+    robos-dashboard .robos-embed-card-tag {
+      display: none;
     }
   </style>
 </head>
-<body>
+<body class="tv-10ft">
   <header class="tv-header">
     <div class="tv-brand">
-      <span class="tv-live-pill">● LIVE ROBOS DASHBOARD</span>
+      <span class="tv-live-pill">● LIVE TV</span>
       <div>
         <div class="tv-title" id="tv-game-headline">RobOS AI Multiplayer Game Theater — Live Spectator</div>
         <div class="tv-sub" id="tv-game-sub">Secret-safe 10-foot spectator view · Showing on ${safeTv}</div>
@@ -259,7 +282,6 @@ function renderSpectatorTvWallboardHtml({ tvName = '' } = {}) {
     <div class="tv-pills">
       <span class="tv-pill cyan" id="tv-clock-pill" style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;">🕒 --:--:--</span>
       <span class="tv-pill cyan">📺 ${safeTv}</span>
-      <span class="tv-pill">🕸️ urn:robos:dashboard:game-theater-spectator</span>
     </div>
   </header>
 

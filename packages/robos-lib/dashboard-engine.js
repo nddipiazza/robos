@@ -4215,6 +4215,31 @@ function renderDashboardTvWallboardHtml({
       gap: 14px;
       min-width: 0;
     }
+    .robos-dashboard-grid {
+      --gt-meta-size: 20px;
+      --gt-pill-size: 19px;
+      --gt-round-size: 21px;
+      --gt-timer-size: 40px;
+      --gt-bar-h: 12px;
+      --gt-prompt-size: 44px;
+      --gt-prompt-long-size: 36px;
+      --gt-opt-size: 32px;
+      --gt-opt-badge: 48px;
+      --gt-opt-badge-font: 26px;
+      --gt-opt-pad: 18px 22px;
+      --gt-opt-gap: 16px;
+      --gt-stage-pad: 20px 26px;
+      --gt-lb-rank-size: 22px;
+      --gt-lb-name-size: 25px;
+      --gt-lb-score-size: 30px;
+      --gt-lb-badge-size: 17px;
+      --gt-lb-sub-size: 15px;
+      --gt-lb-pad: 12px 16px;
+      --gt-lobby-size: 19px;
+      --gt-phrase-size: 44px;
+      --gt-gallows-w: 190px;
+      --gt-gallows-h: 216px;
+    }
   </style>
 </head>
 <body>

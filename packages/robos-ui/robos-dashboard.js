@@ -313,6 +313,32 @@ robos-widget-sprint-radar, robos-widget-voice-dictation, robos-widget-game-theat
   white-space: pre-wrap;
   overflow-x: auto;
 }
+/* 10-Foot Living-Room Smart TV Typography Scale for Game Theater Spectator */
+.tv-10ft, .robos-dashboard-grid {
+  --gt-meta-size: 20px;
+  --gt-pill-size: 19px;
+  --gt-round-size: 21px;
+  --gt-timer-size: 40px;
+  --gt-bar-h: 12px;
+  --gt-prompt-size: 44px;
+  --gt-prompt-long-size: 36px;
+  --gt-opt-size: 32px;
+  --gt-opt-badge: 48px;
+  --gt-opt-badge-font: 26px;
+  --gt-opt-pad: 18px 22px;
+  --gt-opt-gap: 16px;
+  --gt-stage-pad: 20px 26px;
+  --gt-lb-rank-size: 22px;
+  --gt-lb-name-size: 25px;
+  --gt-lb-score-size: 30px;
+  --gt-lb-badge-size: 17px;
+  --gt-lb-sub-size: 15px;
+  --gt-lb-pad: 12px 16px;
+  --gt-lobby-size: 19px;
+  --gt-phrase-size: 44px;
+  --gt-gallows-w: 190px;
+  --gt-gallows-h: 216px;
+}
 `;
 
   function ensureStylesInjected() {
@@ -942,27 +968,44 @@ robos-widget-sprint-radar, robos-widget-voice-dictation, robos-widget-game-theat
       const view = data.spectatorView && typeof data.spectatorView === 'object' ? data.spectatorView : null;
       const chatLog = Array.isArray(data.chatLog) ? data.chatLog : [];
       const agentStatus = data.agentStatus && typeof data.agentStatus === 'object' ? data.agentStatus : {};
+      const isRoundReveal = Boolean(
+        view &&
+          (view.phase === 'reveal' ||
+            view.phase === 'gameover' ||
+            view.phase === 'round_over' ||
+            (Number.isInteger(view.correctIndex) && view.correctIndex >= 0))
+      );
 
       if (mode === 'leaderboard') {
         let rows = [];
         if (view && Array.isArray(view.leaderboard) && view.leaderboard.length > 0) {
-          rows = view.leaderboard.map((r) => ({
-            uid: r.uid,
-            name: r.name || r.shortName || r.uid,
-            color: r.color || '#00bcd4',
-            avatar: r.avatar || '🎮',
-            score: Number(r.score ?? r.points ?? 0),
-            streak: Number(r.streak || 0),
-            correctCount: r.correctCount,
-            badgeText: r.gotPoint
-              ? '+1 PT ✔'
-              : r.hasAnswered
-                ? '✔ Locked In'
-                : isPlaying
-                  ? '⏳ Playing'
-                  : 'Seated',
-            badgeColor: r.gotPoint ? '#10b981' : r.hasAnswered ? '#00bcd4' : '#64748b',
-          }));
+          rows = view.leaderboard.map((r) => {
+            const hasAns = Boolean(r.hasAnswered || r.answered);
+            const deltaPts = Number(r.roundDelta || 0);
+            const earned = Boolean(r.gotPoint || deltaPts > 0);
+            return {
+              uid: r.uid,
+              name: r.name || r.shortName || r.uid,
+              color: r.color || '#00bcd4',
+              avatar: r.avatar || '🎮',
+              score: Number(r.score ?? r.points ?? 0),
+              streak: Number(r.streak || 0),
+              correctCount: r.correctCount,
+              rankTitle: r.rankTitle || '',
+              badgeText: earned
+                ? deltaPts > 1
+                  ? `+${deltaPts} PTS ✔`
+                  : '+1 PT ✔'
+                : isRoundReveal && hasAns
+                  ? '✖ Missed'
+                  : hasAns
+                    ? '✔ Locked In'
+                    : isPlaying
+                      ? '⏳ Thinking…'
+                      : 'Seated',
+              badgeColor: earned ? '#6ee7b7' : isRoundReveal && hasAns ? '#fca5a5' : hasAns ? '#67e8f9' : '#cbd5e1',
+            };
+          });
         } else {
           const scoreMap = (view && view.scores && typeof view.scores === 'object') ? view.scores : {};
           const sourcePlayers =
@@ -979,6 +1022,7 @@ robos-widget-sprint-radar, robos-widget-voice-dictation, robos-widget-game-theat
                 avatar: p.avatar || '🎮',
                 score: Number(scoreMap[uid] ?? p.score ?? 0),
                 streak: Number(p.streak || 0),
+                rankTitle: '',
                 badgeText: isChooser
                   ? '📝 Chooser'
                   : isGuesser
@@ -986,7 +1030,7 @@ robos-widget-sprint-radar, robos-widget-voice-dictation, robos-widget-game-theat
                     : isPlaying
                       ? 'In Match'
                       : 'Seated',
-                badgeColor: isChooser ? '#a855f7' : isGuesser ? '#10b981' : '#00bcd4',
+                badgeColor: isChooser ? '#d8b4fe' : isGuesser ? '#6ee7b7' : '#67e8f9',
               };
             })
             .sort((a, b) => b.score - a.score);
@@ -994,97 +1038,106 @@ robos-widget-sprint-radar, robos-widget-voice-dictation, robos-widget-game-theat
 
         const maxSeats = activeGame?.maxPlayers || Math.max(2, seats.length);
         return `
-          <div class="robos-w-meta">
-            <span>🏆 <strong>${esc(activeGame ? activeGame.title : 'Game Theater')} Standings</strong></span>
-            <span class="robos-w-pill" style="background:rgba(16,185,129,0.16);color:#6ee7b7;border-color:rgba(16,185,129,0.4);">
+          <div class="robos-w-meta" style="font-size:var(--gt-meta-size,15px);margin-bottom:10px;">
+            <span>🏆 <strong style="color:#f8fafc;">${esc(activeGame ? activeGame.title : 'Game Theater')} Standings</strong></span>
+            <span class="robos-w-pill" style="background:rgba(16,185,129,0.18);color:#6ee7b7;border-color:rgba(16,185,129,0.45);font-size:var(--gt-pill-size,13px);padding:3px 12px;">
               Seats: ${seats.length}/${esc(maxSeats)}
             </span>
           </div>
           ${
             rows.length > 0
-              ? `<div style="display:flex;flex-direction:column;gap:7px;">
+              ? `<div style="display:flex;flex-direction:column;gap:9px;">
                   ${rows
-                    .slice(0, 8)
+                    .slice(0, 6)
                     .map(
                       (r, idx) => `
-                      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;background:#0d1117;border:1px solid #21262d;border-left:4px solid ${esc(r.color || '#00bcd4')};border-radius:8px;padding:8px 11px;">
-                        <div style="display:flex;align-items:center;gap:9px;min-width:0;">
-                          <span style="font-family:ui-monospace,monospace;font-size:12px;font-weight:900;color:${idx === 0 ? '#fcd34d' : '#8b949e'};min-width:22px;">#${idx + 1}</span>
-                          <span style="font-size:15px;">${esc(r.avatar || '🎮')}</span>
-                          <strong style="font-size:13.5px;color:#f0f6fc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(r.name)}</strong>
-                          ${
-                            r.streak > 1
-                              ? `<span style="font-size:10.5px;font-weight:800;padding:1px 6px;border-radius:999px;background:rgba(245,158,11,0.2);color:#fcd34d;">🔥 ${r.streak}x</span>`
-                              : ''
-                          }
+                      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;background:#0d1117;border:1px solid #263248;border-left:5px solid ${esc(r.color || '#00bcd4')};border-radius:10px;padding:var(--gt-lb-pad,10px 14px);">
+                        <div style="display:flex;align-items:center;gap:12px;min-width:0;">
+                          <span style="font-family:ui-monospace,monospace;font-size:var(--gt-lb-rank-size,16px);font-weight:900;color:${idx === 0 ? '#fcd34d' : '#94a3b8'};min-width:32px;">#${idx + 1}</span>
+                          <span style="font-size:var(--gt-lb-name-size,18px);">${esc(r.avatar || '🎮')}</span>
+                          <div style="min-width:0;">
+                            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                              <strong style="font-size:var(--gt-lb-name-size,18px);color:#ffffff;">${esc(r.name)}</strong>
+                              ${
+                                r.streak > 1
+                                  ? `<span style="font-size:var(--gt-lb-sub-size,13px);font-weight:800;padding:2px 8px;border-radius:999px;background:rgba(245,158,11,0.22);color:#fcd34d;">🔥 ${r.streak}x</span>`
+                                  : ''
+                              }
+                            </div>
+                            ${
+                              r.rankTitle
+                                ? `<div style="font-size:var(--gt-lb-sub-size,12.5px);color:#d8b4fe;font-weight:650;margin-top:2px;">${esc(r.rankTitle)}</div>`
+                                : ''
+                            }
+                          </div>
                         </div>
-                        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
-                          <span style="font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:5px;background:rgba(255,255,255,0.06);color:${esc(r.badgeColor)};border:1px solid rgba(255,255,255,0.1);">${esc(r.badgeText)}</span>
-                          <span style="font-family:ui-monospace,monospace;font-size:16px;font-weight:900;color:#67e8f9;min-width:54px;text-align:right;">${esc(r.score)} pts</span>
+                        <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
+                          <span style="font-size:var(--gt-lb-badge-size,13.5px);font-weight:800;padding:4px 10px;border-radius:7px;background:rgba(255,255,255,0.07);color:${esc(r.badgeColor)};border:1px solid rgba(255,255,255,0.14);">${esc(r.badgeText)}</span>
+                          <span style="font-family:ui-monospace,monospace;font-size:var(--gt-lb-score-size,22px);font-weight:900;color:#67e8f9;min-width:86px;text-align:right;">${esc(r.score)} pts</span>
                         </div>
                       </div>`
                     )
                     .join('')}
                 </div>`
-              : `<div style="background:#0d1117;border:1px dashed #30363d;border-radius:9px;padding:16px;text-align:center;color:#8b949e;font-size:12.5px;">
-                  No players seated yet — open your personal <strong>RobOS Game Theater Google Doc</strong> and click Launch to claim a seat!
+              : `<div style="background:#0d1117;border:1px dashed #30363d;border-radius:10px;padding:20px;text-align:center;color:#94a3b8;font-size:var(--gt-lobby-size,15px);">
+                  No players seated yet — open your personal <strong style="color:#f8fafc;">RobOS Game Theater Google Doc</strong> and click Launch!
                 </div>`
           }
         `;
       }
 
       if (mode === 'lobby') {
-        const recentChat = chatLog.slice(-4).reverse();
+        const recentChat = chatLog.slice(-3).reverse();
         const agentBusy = Boolean(agentStatus.busy);
         return `
-          <div class="robos-w-meta">
-            <span>🟢 <strong>${onlinePlayers.length}</strong> Player${onlinePlayers.length === 1 ? '' : 's'} Connected</span>
-            <span class="robos-w-pill" style="${agentBusy ? 'background:rgba(168,85,247,0.22);color:#e9d5ff;border-color:#a855f7;' : ''}">
+          <div class="robos-w-meta" style="font-size:var(--gt-meta-size,15px);margin-bottom:10px;">
+            <span>🟢 <strong style="color:#f8fafc;">${onlinePlayers.length}</strong> Player${onlinePlayers.length === 1 ? '' : 's'} Connected</span>
+            <span class="robos-w-pill" style="font-size:var(--gt-pill-size,13px);padding:3px 12px;${agentBusy ? 'background:rgba(168,85,247,0.22);color:#e9d5ff;border-color:#a855f7;' : ''}">
               ${agentBusy ? '🤖 Agent Building Live' : `📚 ${esc(data.gamesCount ?? (activeGame ? 1 : 0))} Games Ready`}
             </span>
           </div>
-          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;">
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
             ${
               onlinePlayers.length > 0
                 ? onlinePlayers
                     .map(
                       (p) =>
-                        `<span style="display:inline-flex;align-items:center;gap:5px;background:#0d1117;border:1px solid #30363d;border-radius:999px;padding:3px 9px;font-size:11.5px;color:#e6edf3;">
-                          <span style="width:7px;height:7px;border-radius:50%;background:#10b981;display:inline-block;"></span>
+                        `<span style="display:inline-flex;align-items:center;gap:7px;background:#0d1117;border:1px solid #30363d;border-radius:999px;padding:5px 14px;font-size:var(--gt-lobby-size,14.5px);color:#f8fafc;">
+                          <span style="width:9px;height:9px;border-radius:50%;background:#10b981;display:inline-block;"></span>
                           ${esc(p.avatar || '🎮')} <strong>${esc(p.shortName || p.name)}</strong>
                         </span>`
                     )
                     .join('')
-                : `<span style="font-size:11.5px;color:#8b949e;">Lobby open — waiting for Godot 4 HTTPS Web Clients to connect.</span>`
+                : `<span style="font-size:var(--gt-lobby-size,14.5px);color:#94a3b8;">Lobby open — waiting for Godot 4 HTTPS Web Clients to connect.</span>`
             }
           </div>
-          <div style="background:#0d1117;border:1px solid ${agentBusy ? '#7c3aed' : '#21262d'};border-left:3px solid ${agentBusy ? '#a855f7' : '#00bcd4'};border-radius:8px;padding:8px 10px;margin-bottom:8px;">
-            <div style="font-size:10.5px;font-weight:800;text-transform:uppercase;color:${agentBusy ? '#d8b4fe' : '#67e8f9'};">
+          <div style="background:#0d1117;border:1px solid ${agentBusy ? '#7c3aed' : '#263248'};border-left:4px solid ${agentBusy ? '#a855f7' : '#00bcd4'};border-radius:10px;padding:10px 14px;margin-bottom:10px;">
+            <div style="font-size:var(--gt-lb-sub-size,12.5px);font-weight:800;text-transform:uppercase;letter-spacing:0.04em;color:${agentBusy ? '#d8b4fe' : '#67e8f9'};">
               🤖 Dynamic RobOS Agent Game Studio
             </div>
-            <div style="font-size:12px;color:#e6edf3;margin-top:2px;">
+            <div style="font-size:var(--gt-lobby-size,14.5px);color:#f0f6fc;margin-top:4px;line-height:1.3;">
               ${
                 agentBusy
                   ? esc(`${agentStatus.requestedBy || 'Player'}: ${agentStatus.step || 'Generating server.js + Godot 4 client.gd…'}`)
                   : agentStatus.step
                     ? esc(agentStatus.step)
-                    : 'Any connected player can generate a new game or evolve rules live.'
+                    : 'Any player can generate a new game or evolve rules live from the lobby.'
               }
             </div>
           </div>
-          <div style="display:flex;flex-direction:column;gap:5px;">
+          <div style="display:flex;flex-direction:column;gap:6px;">
             ${
               recentChat.length > 0
                 ? recentChat
                     .map(
                       (m) => `
-                      <div style="background:#0d1117;border:1px solid #21262d;border-radius:6px;padding:5px 8px;font-size:11.5px;display:flex;gap:6px;align-items:baseline;">
+                      <div style="background:#0d1117;border:1px solid #21262d;border-radius:8px;padding:7px 11px;font-size:var(--gt-lobby-size,14.5px);display:flex;gap:8px;align-items:baseline;">
                         <strong style="color:#67e8f9;flex-shrink:0;">${esc(m.avatar || '💬')} ${esc(m.name)}:</strong>
-                        <span style="color:#e6edf3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(m.text)}</span>
+                        <span style="color:#f0f6fc;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(m.text)}</span>
                       </div>`
                     )
                     .join('')
-                : `<div style="font-size:11px;color:#8b949e;">💬 Live lobby chat messages appear here during play.</div>`
+                : `<div style="font-size:var(--gt-lobby-size,14px);color:#94a3b8;">💬 Live lobby chat messages appear here during play.</div>`
             }
           </div>
         `;
@@ -1092,69 +1145,108 @@ robos-widget-sprint-radar, robos-widget-voice-dictation, robos-widget-game-theat
 
       // Default mode === 'stage' (Hero 10-foot Spectator Stage, secret-safe!)
       const headerRightPill = isPlaying
-        ? `<span class="robos-w-pill" style="background:rgba(16,185,129,0.2);color:#6ee7b7;border-color:rgba(16,185,129,0.5);font-size:11.5px;padding:3px 10px;">● LIVE MATCH · ${seats.length}/${esc(activeGame.maxPlayers)} SEATED</span>`
-        : `<span class="robos-w-pill" style="background:rgba(245,158,11,0.16);color:#fcd34d;border-color:rgba(245,158,11,0.45);font-size:11.5px;padding:3px 10px;">● STAGE STANDBY${activeGame ? ` · ${seats.length}/${esc(activeGame.maxPlayers)} SEATED` : ''}</span>`;
+        ? `<span class="robos-w-pill" style="background:rgba(16,185,129,0.22);color:#6ee7b7;border-color:rgba(16,185,129,0.55);font-size:var(--gt-pill-size,13.5px);padding:4px 14px;font-weight:800;">● LIVE MATCH · ${seats.length}/${esc(activeGame.maxPlayers)} SEATED</span>`
+        : `<span class="robos-w-pill" style="background:rgba(245,158,11,0.18);color:#fcd34d;border-color:rgba(245,158,11,0.5);font-size:var(--gt-pill-size,13.5px);padding:4px 14px;font-weight:800;">● STAGE STANDBY${activeGame ? ` · ${seats.length}/${esc(activeGame.maxPlayers)} SEATED` : ''}</span>`;
 
-      // 1. Timed / Multiple-Choice Trivia Stage (e.g. Guess That Count)
-      if (isPlaying && view && Array.isArray(view.options) && view.options.length > 0) {
-        const isReveal = view.phase === 'reveal' || (Number.isInteger(view.correctIndex) && view.correctIndex >= 0);
-        const secsLeft = Number(view.secondsLeft ?? 0);
-        const totalSecs = Math.max(1, Number(view.totalSeconds || (isReveal ? 5 : 30)));
-        const pct = Math.max(3, Math.min(100, Math.round((secsLeft / totalSecs) * 100)));
+      // 1. Universal Timed / Multiple-Choice Trivia Stage (supports `options`, `choices`, or `answers`; `secondsLeft` or `remainingMs`)
+      const optionsList =
+        view && Array.isArray(view.options) && view.options.length > 0
+          ? view.options
+          : view && Array.isArray(view.choices) && view.choices.length > 0
+            ? view.choices
+            : view && Array.isArray(view.answers) && view.answers.length > 0
+              ? view.answers
+              : null;
+
+      if (isPlaying && view && optionsList) {
+        const isGameover = view.phase === 'gameover';
+        const isReveal = isRoundReveal;
+        const secsLeft =
+          view.secondsLeft !== undefined
+            ? Math.max(0, Math.ceil(Number(view.secondsLeft)))
+            : view.remainingMs !== undefined
+              ? Math.max(0, Math.ceil(Number(view.remainingMs) / 1000))
+              : 0;
+        const totalSecs = Math.max(
+          1,
+          view.totalSeconds !== undefined
+            ? Number(view.totalSeconds)
+            : view.totalPhaseMs !== undefined
+              ? Math.max(1, Math.ceil(Number(view.totalPhaseMs) / 1000))
+              : isReveal
+                ? 5
+                : 20
+        );
+        const pct = Math.max(4, Math.min(100, Math.round((secsLeft / totalSecs) * 100)));
         const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
-        const promptText = view.subject || view.question || view.prompt || activeGame.title;
+        const promptText = String(view.subject || view.prompt || view.question || view.text || activeGame.title);
+        const isLongPrompt = promptText.length > 115;
+        const totalRoundsSuffix = view.totalRounds
+          ? ` OF ${esc(view.totalRounds)}`
+          : view.totalBankSize
+            ? ` · ${esc(view.totalBankSize)}-Q BANK`
+            : '';
+        const timerLabel = isGameover
+          ? secsLeft > 0
+            ? `🏆 FINAL STANDINGS · NEXT IN ${secsLeft}s`
+            : '🏆 MATCH COMPLETE'
+          : isReveal
+            ? secsLeft > 0
+              ? `🎉 ANSWER REVEAL · ${secsLeft}s`
+              : '🎉 ANSWER REVEAL'
+            : `⏱ ${secsLeft}s`;
 
         return `
-          <div class="robos-w-meta" style="margin-bottom:8px;">
-            <span style="font-size:13px;">🎭 <strong style="color:#f0f6fc;">${esc(activeGame.title)}</strong> <code style="color:#67e8f9;">v${esc(activeGame.version || 1)}</code>${view.category ? ` · <span style="color:#d8b4fe;font-weight:700;">📂 ${esc(view.category)}</span>` : ''}</span>
+          <div class="robos-w-meta" style="font-size:var(--gt-meta-size,15px);margin-bottom:10px;">
+            <span>🎭 <strong style="color:#ffffff;">${esc(activeGame.title)}</strong> <code style="color:#67e8f9;">v${esc(activeGame.version || 1)}</code>${view.category ? ` · <span style="color:#e9d5ff;font-weight:800;">📂 ${esc(view.category)}</span>` : ''}</span>
             ${headerRightPill}
           </div>
-          <div style="background:#0d1117;border:1px solid #263248;border-radius:12px;padding:14px 16px;">
-            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;">
-              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-                <span style="background:rgba(0,188,212,0.16);color:#67e8f9;border:1px solid rgba(0,188,212,0.4);border-radius:6px;padding:3px 9px;font-size:12px;font-weight:800;">
-                  ROUND #${esc(view.roundNumber || view.round || 1)}${view.totalBankSize ? ` OF ${esc(view.totalBankSize)}` : ''}
+          <div style="background:#0a0f1a;border:2px solid #263248;border-radius:16px;padding:var(--gt-stage-pad,16px 20px);">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:12px;flex-wrap:wrap;">
+              <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+                <span style="background:rgba(0,188,212,0.2);color:#67e8f9;border:1.5px solid rgba(0,188,212,0.5);border-radius:8px;padding:5px 14px;font-size:var(--gt-round-size,14.5px);font-weight:900;letter-spacing:0.03em;">
+                  ROUND #${esc(view.roundNumber || view.round || 1)}${totalRoundsSuffix}
                 </span>
-                <span style="font-size:12px;color:#8b949e;font-weight:600;">
-                  🔒 Spectator Safe View · Locked In: <strong style="color:#f0f6fc;">${esc(view.answeredCount ?? 0)}/${esc(view.playerCount ?? seats.length)}</strong>
+                <span style="font-size:var(--gt-meta-size,14.5px);color:#cbd5e1;font-weight:700;">
+                  🔒 Locked In: <strong style="color:#ffffff;">${esc(view.answeredCount ?? 0)}/${esc(view.playerCount ?? seats.length)}</strong>
                 </span>
               </div>
-              <div style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:18px;font-weight:900;color:${isReveal ? '#6ee7b7' : secsLeft <= 7 ? '#fca5a5' : '#fcd34d'};">
-                ${isReveal ? '🎉 ANSWER REVEAL' : `⏱ ${esc(secsLeft)}s`}
+              <div style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:var(--gt-timer-size,24px);font-weight:900;color:${isGameover ? '#fcd34d' : isReveal ? '#6ee7b7' : secsLeft <= 5 ? '#fca5a5' : '#fcd34d'};">
+                ${esc(timerLabel)}
               </div>
             </div>
-            <div style="height:7px;background:#070b14;border-radius:999px;overflow:hidden;margin-bottom:14px;">
-              <div style="height:100%;width:${pct}%;background:${isReveal ? '#10b981' : secsLeft <= 7 ? '#ef4444' : 'linear-gradient(90deg,#00bcd4,#a855f7)'};"></div>
+            <div style="height:var(--gt-bar-h,8px);background:#050811;border-radius:999px;overflow:hidden;margin-bottom:18px;">
+              <div style="height:100%;width:${pct}%;background:${isGameover ? '#f59e0b' : isReveal ? '#10b981' : secsLeft <= 5 ? '#ef4444' : 'linear-gradient(90deg,#00bcd4,#a855f7)'};"></div>
             </div>
-            <div style="font-size:21px;font-weight:850;color:#f8fafc;line-height:1.3;margin-bottom:14px;letter-spacing:-0.01em;">
+            <div style="font-size:${isLongPrompt ? 'var(--gt-prompt-long-size,23px)' : 'var(--gt-prompt-size,27px)'};font-weight:850;color:#ffffff;line-height:1.22;margin-bottom:20px;letter-spacing:-0.015em;white-space:normal;word-break:break-word;">
               ${esc(promptText)}
             </div>
-            <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;">
-              ${view.options
+            <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--gt-opt-gap,12px);">
+              ${optionsList
                 .map((opt, idx) => {
                   const isCorrect = isReveal && Number(view.correctIndex) === idx;
-                  const borderCol = isCorrect ? '#10b981' : isReveal ? '#21262d' : '#30363d';
-                  const bgCol = isCorrect ? 'rgba(16,185,129,0.18)' : '#161b22';
-                  const badgeBg = isCorrect ? '#10b981' : 'rgba(0,188,212,0.18)';
-                  const badgeFg = isCorrect ? '#042f2e' : '#67e8f9';
+                  const borderCol = isCorrect ? '#10b981' : isReveal ? '#1e293b' : '#3b4c6b';
+                  const bgCol = isCorrect ? 'rgba(16,185,129,0.22)' : '#141d2e';
+                  const badgeBg = isCorrect ? '#10b981' : 'rgba(0,188,212,0.24)';
+                  const badgeFg = isCorrect ? '#022c22' : '#67e8f9';
                   return `
-                    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;background:${bgCol};border:2px solid ${borderCol};border-radius:10px;padding:11px 14px;opacity:${isReveal && !isCorrect ? '0.62' : '1'};">
-                      <div style="display:flex;align-items:center;gap:10px;min-width:0;">
-                        <span style="width:28px;height:28px;border-radius:7px;background:${badgeBg};color:${badgeFg};font-weight:900;font-size:13.5px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;background:${bgCol};border:3px solid ${borderCol};border-radius:14px;padding:var(--gt-opt-pad,13px 16px);opacity:${isReveal && !isCorrect ? '0.58' : '1'};">
+                      <div style="display:flex;align-items:center;gap:14px;min-width:0;flex:1;">
+                        <span style="width:var(--gt-opt-badge,34px);height:var(--gt-opt-badge,34px);border-radius:10px;background:${badgeBg};color:${badgeFg};font-weight:900;font-size:var(--gt-opt-badge-font,17px);display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">
                           ${esc(letters[idx] || idx + 1)}
                         </span>
-                        <span style="font-size:16px;font-weight:750;color:#f0f6fc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                        <span style="font-size:var(--gt-opt-size,20px);font-weight:800;color:#ffffff;line-height:1.2;white-space:normal;word-break:break-word;">
                           ${esc(opt)}
                         </span>
                       </div>
-                      ${isCorrect ? `<span style="font-size:11.5px;font-weight:900;color:#6ee7b7;flex-shrink:0;">✔ CORRECT</span>` : ''}
+                      ${isCorrect ? `<span style="font-size:var(--gt-round-size,14px);font-weight:900;color:#6ee7b7;flex-shrink:0;">✔ CORRECT</span>` : ''}
                     </div>`;
                 })
                 .join('')}
             </div>
             ${
               isReveal && view.lastWinnerSummary
-                ? `<div style="margin-top:12px;padding:8px 12px;border-radius:8px;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.35);color:#6ee7b7;font-size:13px;font-weight:700;">
+                ? `<div style="margin-top:14px;padding:10px 16px;border-radius:10px;background:rgba(16,185,129,0.14);border:1px solid rgba(16,185,129,0.4);color:#6ee7b7;font-size:var(--gt-meta-size,15px);font-weight:800;">
                     🏆 ${esc(view.lastWinnerSummary)}
                   </div>`
                 : ''
@@ -1175,51 +1267,51 @@ robos-widget-sprint-radar, robos-widget-voice-dictation, robos-widget-game-theat
             : String(view.maskedPhrase || '_ _ _ _ _');
 
         const gallowsSvg = `
-          <svg viewBox="0 0 140 160" width="132" height="150" style="flex-shrink:0;background:#161b22;border:1px solid #30363d;border-radius:10px;padding:6px;">
-            <line x1="18" y1="146" x2="122" y2="146" stroke="#64748b" stroke-width="4" stroke-linecap="round"/>
-            <line x1="40" y1="146" x2="40" y2="18" stroke="#64748b" stroke-width="4" stroke-linecap="round"/>
-            <line x1="40" y1="18" x2="92" y2="18" stroke="#64748b" stroke-width="4" stroke-linecap="round"/>
-            <line x1="92" y1="18" x2="92" y2="36" stroke="#00bcd4" stroke-width="3" stroke-linecap="round"/>
-            ${wrong >= 1 ? `<circle cx="92" cy="50" r="13" fill="none" stroke="#f8fafc" stroke-width="3.5"/>` : ''}
-            ${wrong >= 2 ? `<line x1="92" y1="63" x2="92" y2="102" stroke="#f8fafc" stroke-width="3.5" stroke-linecap="round"/>` : ''}
-            ${wrong >= 3 ? `<line x1="92" y1="74" x2="72" y2="92" stroke="#f8fafc" stroke-width="3.5" stroke-linecap="round"/>` : ''}
-            ${wrong >= 4 ? `<line x1="92" y1="74" x2="112" y2="92" stroke="#f8fafc" stroke-width="3.5" stroke-linecap="round"/>` : ''}
-            ${wrong >= 5 ? `<line x1="92" y1="102" x2="75" y2="128" stroke="#ef4444" stroke-width="3.5" stroke-linecap="round"/>` : ''}
-            ${wrong >= 6 ? `<line x1="92" y1="102" x2="109" y2="128" stroke="#ef4444" stroke-width="3.5" stroke-linecap="round"/>` : ''}
+          <svg viewBox="0 0 140 160" style="width:var(--gt-gallows-w,144px);height:var(--gt-gallows-h,164px);flex-shrink:0;background:#141d2e;border:2px solid #30363d;border-radius:12px;padding:8px;">
+            <line x1="18" y1="146" x2="122" y2="146" stroke="#94a3b8" stroke-width="4.5" stroke-linecap="round"/>
+            <line x1="40" y1="146" x2="40" y2="18" stroke="#94a3b8" stroke-width="4.5" stroke-linecap="round"/>
+            <line x1="40" y1="18" x2="92" y2="18" stroke="#94a3b8" stroke-width="4.5" stroke-linecap="round"/>
+            <line x1="92" y1="18" x2="92" y2="36" stroke="#00bcd4" stroke-width="3.5" stroke-linecap="round"/>
+            ${wrong >= 1 ? `<circle cx="92" cy="50" r="13" fill="none" stroke="#ffffff" stroke-width="4"/>` : ''}
+            ${wrong >= 2 ? `<line x1="92" y1="63" x2="92" y2="102" stroke="#ffffff" stroke-width="4" stroke-linecap="round"/>` : ''}
+            ${wrong >= 3 ? `<line x1="92" y1="74" x2="72" y2="92" stroke="#ffffff" stroke-width="4" stroke-linecap="round"/>` : ''}
+            ${wrong >= 4 ? `<line x1="92" y1="74" x2="112" y2="92" stroke="#ffffff" stroke-width="4" stroke-linecap="round"/>` : ''}
+            ${wrong >= 5 ? `<line x1="92" y1="102" x2="75" y2="128" stroke="#ef4444" stroke-width="4" stroke-linecap="round"/>` : ''}
+            ${wrong >= 6 ? `<line x1="92" y1="102" x2="109" y2="128" stroke="#ef4444" stroke-width="4" stroke-linecap="round"/>` : ''}
           </svg>`;
 
         return `
-          <div class="robos-w-meta" style="margin-bottom:8px;">
-            <span style="font-size:13px;">🎭 <strong style="color:#f0f6fc;">${esc(activeGame.title)}</strong> · Round #${esc(view.round || 1)}</span>
+          <div class="robos-w-meta" style="font-size:var(--gt-meta-size,15px);margin-bottom:10px;">
+            <span>🎭 <strong style="color:#ffffff;">${esc(activeGame.title)}</strong> · Round #${esc(view.round || 1)}</span>
             ${headerRightPill}
           </div>
-          <div style="display:flex;align-items:center;gap:16px;background:#0d1117;border:1px solid #263248;border-radius:12px;padding:14px 16px;">
+          <div style="display:flex;align-items:center;gap:22px;background:#0a0f1a;border:2px solid #263248;border-radius:16px;padding:var(--gt-stage-pad,16px 20px);">
             ${gallowsSvg}
             <div style="flex:1;min-width:0;">
-              <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;font-size:12px;">
-                <span style="background:rgba(168,85,247,0.18);color:#e9d5ff;border:1px solid rgba(168,85,247,0.4);padding:2px 9px;border-radius:6px;font-weight:700;">📝 Chooser: ${esc(view.chooserName || 'Player 1')}</span>
-                <span style="background:rgba(0,188,212,0.16);color:#67e8f9;border:1px solid rgba(0,188,212,0.4);padding:2px 9px;border-radius:6px;font-weight:700;">🎯 Guesser: ${esc(view.guesserName || 'Player 2')}</span>
-                <span style="background:rgba(239,68,68,0.16);color:#fca5a5;border:1px solid rgba(239,68,68,0.4);padding:2px 9px;border-radius:6px;font-weight:700;">✖ Wrong: ${wrong}/${maxWrong}</span>
+              <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px;font-size:var(--gt-meta-size,14.5px);">
+                <span style="background:rgba(168,85,247,0.2);color:#e9d5ff;border:1px solid rgba(168,85,247,0.45);padding:4px 12px;border-radius:8px;font-weight:800;">📝 Chooser: ${esc(view.chooserName || 'Player 1')}</span>
+                <span style="background:rgba(0,188,212,0.18);color:#67e8f9;border:1px solid rgba(0,188,212,0.45);padding:4px 12px;border-radius:8px;font-weight:800;">🎯 Guesser: ${esc(view.guesserName || 'Player 2')}</span>
+                <span style="background:rgba(239,68,68,0.18);color:#fca5a5;border:1px solid rgba(239,68,68,0.45);padding:4px 12px;border-radius:8px;font-weight:800;">✖ Wrong: ${wrong}/${maxWrong}</span>
               </div>
-              <div style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:24px;font-weight:900;letter-spacing:0.12em;color:${view.phase === 'choosing' ? '#fcd34d' : '#f8fafc'};background:#161b22;border:1px solid #30363d;border-radius:9px;padding:12px 14px;margin-bottom:10px;word-break:break-word;">
+              <div style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:var(--gt-phrase-size,28px);font-weight:900;letter-spacing:0.12em;color:${view.phase === 'choosing' ? '#fcd34d' : '#ffffff'};background:#141d2e;border:2px solid #30363d;border-radius:12px;padding:16px 20px;margin-bottom:14px;word-break:break-word;">
                 ${esc(displayPhrase)}
               </div>
-              <div style="display:flex;flex-wrap:wrap;gap:5px;align-items:center;">
-                <span style="font-size:11px;color:#8b949e;margin-right:4px;">Guessed:</span>
+              <div style="display:flex;flex-wrap:wrap;gap:7px;align-items:center;">
+                <span style="font-size:var(--gt-lobby-size,14px);color:#94a3b8;margin-right:4px;font-weight:700;">Guessed:</span>
                 ${
                   guessed.length > 0
                     ? guessed
                         .map((ch) => {
                           const bad = wrongSet.has(ch);
-                          return `<span style="font-family:ui-monospace,monospace;font-size:12px;font-weight:800;padding:2px 7px;border-radius:5px;background:${bad ? 'rgba(239,68,68,0.18)' : 'rgba(16,185,129,0.2)'};color:${bad ? '#fca5a5' : '#6ee7b7'};">${esc(ch)}</span>`;
+                          return `<span style="font-family:ui-monospace,monospace;font-size:var(--gt-lobby-size,15px);font-weight:900;padding:3px 10px;border-radius:7px;background:${bad ? 'rgba(239,68,68,0.22)' : 'rgba(16,185,129,0.24)'};color:${bad ? '#fca5a5' : '#6ee7b7'};">${esc(ch)}</span>`;
                         })
                         .join('')
-                    : `<span style="font-size:11.5px;color:#64748b;">None yet</span>`
+                    : `<span style="font-size:var(--gt-lobby-size,14px);color:#94a3b8;">None yet</span>`
                 }
               </div>
               ${
                 view.statusMessage
-                  ? `<div style="font-size:12.5px;color:#67e8f9;margin-top:8px;font-weight:600;">${esc(view.statusMessage)}</div>`
+                  ? `<div style="font-size:var(--gt-meta-size,15px);color:#67e8f9;margin-top:10px;font-weight:750;">${esc(view.statusMessage)}</div>`
                   : ''
               }
             </div>
@@ -1244,19 +1336,19 @@ robos-widget-sprint-radar, robos-widget-voice-dictation, robos-widget-game-theat
           .slice(0, 6);
 
         return `
-          <div class="robos-w-meta" style="margin-bottom:8px;">
-            <span style="font-size:13px;">🎭 <strong style="color:#f0f6fc;">${esc(activeGame.title)}</strong> <code style="color:#67e8f9;">v${esc(activeGame.version || 1)}</code></span>
+          <div class="robos-w-meta" style="font-size:var(--gt-meta-size,15px);margin-bottom:10px;">
+            <span>🎭 <strong style="color:#ffffff;">${esc(activeGame.title)}</strong> <code style="color:#67e8f9;">v${esc(activeGame.version || 1)}</code></span>
             ${headerRightPill}
           </div>
-          <div style="background:#0d1117;border:1px solid #263248;border-radius:12px;padding:14px 16px;">
-            <div style="font-size:18px;font-weight:800;color:#f8fafc;margin-bottom:10px;">${esc(headline)}</div>
-            <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;">
+          <div style="background:#0a0f1a;border:2px solid #263248;border-radius:16px;padding:var(--gt-stage-pad,16px 20px);">
+            <div style="font-size:var(--gt-prompt-long-size,24px);font-weight:850;color:#ffffff;line-height:1.25;margin-bottom:16px;">${esc(headline)}</div>
+            <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;">
               ${scalarPairs
                 .map(
                   ([k, v]) => `
-                  <div style="background:#161b22;border:1px solid #30363d;border-radius:8px;padding:8px 10px;">
-                    <div style="font-size:10px;text-transform:uppercase;color:#8b949e;font-weight:700;">${esc(k)}</div>
-                    <div style="font-size:14px;font-weight:800;color:#67e8f9;margin-top:2px;">${esc(String(v))}</div>
+                  <div style="background:#141d2e;border:1.5px solid #30363d;border-radius:10px;padding:12px 14px;">
+                    <div style="font-size:var(--gt-lb-sub-size,12px);text-transform:uppercase;color:#94a3b8;font-weight:800;letter-spacing:0.04em;">${esc(k)}</div>
+                    <div style="font-size:var(--gt-lb-score-size,20px);font-weight:900;color:#67e8f9;margin-top:4px;">${esc(String(v))}</div>
                   </div>`
                 )
                 .join('')}
@@ -1267,24 +1359,24 @@ robos-widget-sprint-radar, robos-widget-voice-dictation, robos-widget-game-theat
 
       // 4. Standby / Waiting for Players Stage
       return `
-        <div class="robos-w-meta" style="margin-bottom:8px;">
-          <span style="font-size:13px;">🎭 <strong style="color:#f0f6fc;">${esc(activeGame ? activeGame.title : 'RobOS AI Multiplayer Game Theater')}</strong></span>
+        <div class="robos-w-meta" style="font-size:var(--gt-meta-size,15px);margin-bottom:10px;">
+          <span>🎭 <strong style="color:#ffffff;">${esc(activeGame ? activeGame.title : 'RobOS AI Multiplayer Game Theater')}</strong></span>
           ${headerRightPill}
         </div>
-        <div style="background:#0d1117;border:1px solid #263248;border-left:4px solid #00bcd4;border-radius:12px;padding:16px 18px;">
-          <div style="font-size:19px;font-weight:850;color:#f8fafc;margin-bottom:6px;">
+        <div style="background:#0a0f1a;border:2px solid #263248;border-left:5px solid #00bcd4;border-radius:16px;padding:var(--gt-stage-pad,18px 22px);">
+          <div style="font-size:var(--gt-prompt-long-size,24px);font-weight:850;color:#ffffff;margin-bottom:10px;">
             ${activeGame ? `🎮 Ready on Stage: ${esc(activeGame.title)}` : '✨ Stage Ready — Generate Any Multiplayer Game Live'}
           </div>
-          <div style="font-size:13px;color:#8b949e;line-height:1.45;margin-bottom:12px;">
+          <div style="font-size:var(--gt-meta-size,15px);color:#cbd5e1;line-height:1.4;margin-bottom:16px;">
             ${esc(
               activeGame?.description ||
                 'Open your personal RobOS Game Theater Google Doc and click Launch to enter the Godot 4 HTTPS Web Client lobby.'
             )}
           </div>
-          <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
+          <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
             ${
               activeGame
-                ? `<span style="background:rgba(0,188,212,0.14);color:#67e8f9;border:1px solid rgba(0,188,212,0.35);padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;">
+                ? `<span style="background:rgba(0,188,212,0.18);color:#67e8f9;border:1.5px solid rgba(0,188,212,0.45);padding:6px 14px;border-radius:999px;font-size:var(--gt-lobby-size,14.5px);font-weight:800;">
                     Players Required: ${esc(activeGame.minPlayers)}–${esc(activeGame.maxPlayers)} (Seated: ${seats.length})
                   </span>`
                 : ''
@@ -1292,7 +1384,7 @@ robos-widget-sprint-radar, robos-widget-voice-dictation, robos-widget-game-theat
             ${seats
               .map(
                 (s) =>
-                  `<span style="background:#161b22;border:1px solid #30363d;padding:4px 10px;border-radius:999px;font-size:12px;color:#f0f6fc;">
+                  `<span style="background:#141d2e;border:1.5px solid #30363d;padding:6px 14px;border-radius:999px;font-size:var(--gt-lobby-size,14.5px);color:#ffffff;">
                     ${esc(s.avatar || '🎮')} <strong>${esc(s.shortName || s.name)}</strong> (Seated)
                   </span>`
               )
