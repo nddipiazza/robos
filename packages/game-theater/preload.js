@@ -4,6 +4,11 @@ const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('robos', {
   getState: () => ipcRenderer.invoke('theater:get-state'),
+  getSpectatorDashboard: () => ipcRenderer.invoke('theater:get-spectator-dashboard'),
+  getTvStatus: () => ipcRenderer.invoke('theater:get-tv-status'),
+  castToTv: (payload) => ipcRenderer.invoke('theater:cast-tv', payload),
+  stopTvCast: (payload) => ipcRenderer.invoke('theater:stop-tv-cast', payload),
+  openRobosDashboards: () => ipcRenderer.invoke('theater:open-robos-dashboards'),
   syncDocs: (opts) => ipcRenderer.invoke('theater:sync-docs', opts),
   addPlayer: (player) => ipcRenderer.invoke('theater:add-player', player),
   invitePlayer: (payload) => ipcRenderer.invoke('theater:invite-player', payload),

@@ -250,12 +250,121 @@ ipcMain.handle('dashboards:getKGraphNodes', async (_e, dashboardId) => {
   };
 });
 
+const STATIC_ROKU_DASHBOARD_IDS = new Set([
+  'daily-engineering-ops',
+  'github-ci-popularity',
+  'robos-voice-dictation',
+]);
+const _rokuDashStreams = new Map(); // tvId -> { win, timer }
+
+function stopRokuDashFrameStream(tvId) {
+  if (tvId) {
+    const s = _rokuDashStreams.get(tvId);
+    if (s) {
+      clearInterval(s.timer);
+      try { if (!s.win.isDestroyed()) s.win.destroy(); } catch {}
+      _rokuDashStreams.delete(tvId);
+    }
+    return;
+  }
+  for (const id of [..._rokuDashStreams.keys()]) stopRokuDashFrameStream(id);
+}
+
+async function startRokuDashFrameStream(tv, targetUrl) {
+  stopRokuDashFrameStream(tv.id);
+  if (!BrowserWindow || typeof BrowserWindow !== 'function') return;
+  let win;
+  try {
+    win = new BrowserWindow({
+      width: 1920,
+      height: 1080,
+      show: false,
+      frame: false,
+      backgroundColor: '#070b12',
+      webPreferences: {
+        offscreen: true,
+        contextIsolation: true,
+        nodeIntegration: false,
+        backgroundThrottling: false,
+        partition: `dashboards-roku-${tv.id}`,
+      },
+    });
+  } catch {
+    return;
+  }
+  if (!win.webContents || typeof win.webContents.on !== 'function') return;
+
+  let latest = null;
+  let fresh = false;
+  let busy = false;
+  let lastPost = 0;
+
+  async function flush() {
+    if (busy || win.isDestroyed() || !latest) return;
+    if (!fresh && Date.now() - lastPost < 4500) return;
+    busy = true;
+    fresh = false;
+    try {
+      const sz = latest.getSize();
+      const img = sz.width > 1920 ? latest.resize({ width: 1920, height: 1080, quality: 'good' }) : latest;
+      const jpg = img.toJPEG(82);
+      if (jpg && jpg.length > 2000) {
+        tvEngine.setAppCastFrame(tv.id, jpg);
+        lastPost = Date.now();
+      }
+    } catch {} finally {
+      busy = false;
+    }
+  }
+
+  win.webContents.on('paint', (_e, _dirty, image) => {
+    latest = image;
+    fresh = true;
+    if (lastPost === 0 && !busy) flush();
+  });
+  win.webContents.setFrameRate?.(2);
+  win.webContents.setAudioMuted?.(true);
+  win.loadURL(targetUrl).catch(() => {});
+  const timer = setInterval(flush, 950);
+  timer.unref?.();
+  _rokuDashStreams.set(tv.id, { win, timer });
+}
+
 ipcMain.handle('dashboards:castToSmartTv', async (_e, payload = {}) => {
+  const tvOv = tvEngine.getOverview();
+  const tv = (tvOv.tvs || []).find((t) => t.id === payload.tvId) || (tvOv.tvs || [])[0];
+  const targetDashId = payload.dashboardId || dashEngine.getOverview().activeDashboardId;
+
+  // Dynamic dashboards (like Game Theater Live Spectator or custom KGraph dashboards)
+  // stream live 1080p offscreen BrowserWindow frames to Roku OS via appCast!
+  if (tv && tv.platformId === 'roku-os' && targetDashId && !STATIC_ROKU_DASHBOARD_IDS.has(targetDashId)) {
+    const resolved = dashEngine.resolveDashboard(targetDashId);
+    const dashTitle = resolved?.dashboard?.title || targetDashId;
+    const localPortalPort = Number(process.env.ROBOS_TV_PORTAL_PORT || tvEngineModule.DEFAULT_PORTAL_PORT || 19210);
+    const localDashUrl = `http://127.0.0.1:${localPortalPort}/dashboard?id=${encodeURIComponent(targetDashId)}`;
+    await startRokuDashFrameStream(tv, localDashUrl);
+    const appRes = await tvEngine.castAppToTv({
+      tvId: tv.id,
+      appId: 'robos-dashboards',
+      title: dashTitle,
+      url: `${tvOv.portalUrl}/dashboard?id=${encodeURIComponent(targetDashId)}`,
+    });
+    return {
+      ...appRes,
+      dashboard: resolved?.dashboard,
+      castUrl: `${tvOv.portalUrl}/dashboard?id=${encodeURIComponent(targetDashId)}`,
+    };
+  }
+
+  stopRokuDashFrameStream(tv?.id);
+  try { tvEngine.stopAppCast({ tvId: tv?.id, appId: 'robos-dashboards' }); } catch {}
   const res = await tvEngine.castDashboard(payload);
   return res;
 });
 
 ipcMain.handle('dashboards:stopSmartTvCast', async (_e, payload = {}) => {
+  stopRokuDashFrameStream(payload?.tvId);
+  try { tvEngine.stopAppCast({ tvId: payload?.tvId, appId: 'robos-dashboards' }); } catch {}
   return tvEngine.stopDashboardCast(payload);
 });
 

@@ -40,6 +40,294 @@ const {
 } = require('./agent-builder');
 
 const SESSION_COOKIE = 'robos_theater_player';
+const ROBOS_DASHBOARD_UI_PATH = path.resolve(__dirname, '..', '..', 'robos-ui', 'robos-dashboard.js');
+
+function requireDashboardEngine() {
+  for (const candidate of [
+    process.env.ROBOS_LIB_PATH && path.join(process.env.ROBOS_LIB_PATH, 'dashboard-engine'),
+    path.resolve(__dirname, '..', '..', 'robos-lib', 'dashboard-engine'),
+    '/usr/local/share/robos/robos-lib/dashboard-engine',
+  ].filter(Boolean)) {
+    try {
+      return require(candidate);
+    } catch {}
+  }
+  return null;
+}
+
+function buildResolvedSpectatorDashboard(runtime, options = {}) {
+  const liveSnap = runtime.getSpectatorSnapshot();
+  const dashMod = requireDashboardEngine();
+  if (dashMod && typeof dashMod.createDashboardEngine === 'function') {
+    try {
+      const eng = dashMod.createDashboardEngine({
+        configDir: options.configDir,
+      });
+      const resolved = eng.resolveDashboard('game-theater-spectator');
+      if (resolved?.dashboard && Array.isArray(resolved.dashboard.cards)) {
+        resolved.dashboard.cards = resolved.dashboard.cards.map((card) =>
+          card.widgetType === 'game-theater'
+            ? { ...card, liveData: { ok: true, ...liveSnap } }
+            : card,
+        );
+        return {
+          ok: true,
+          dashboard: resolved.dashboard,
+          spectator: liveSnap,
+        };
+      }
+    } catch {}
+  }
+
+  // Fallback self-contained KGraph dashboard definition if robos-lib isn't loaded
+  return {
+    ok: true,
+    spectator: liveSnap,
+    dashboard: {
+      id: 'game-theater-spectator',
+      kgraphId: 'urn:robos:dashboard:game-theater-spectator',
+      title: 'Game Theater — Live Spectator Dashboard',
+      layoutId: 'hero-top-split',
+      layout: {
+        id: 'hero-top-split',
+        title: 'Hero Top + 2-Card Split',
+        gridTemplate: 'repeat(2, minmax(0, 1fr))',
+      },
+      cards: [
+        {
+          id: 'game-theater-live-stage',
+          title: 'Live Multiplayer Stage (Secret-Safe Spectator View)',
+          widgetType: 'game-theater',
+          componentTag: 'robos-widget-game-theater',
+          slotId: 'hero-top',
+          colSpan: 2,
+          rowSpan: 1,
+          widgetMeta: { icon: '🎭' },
+          config: { mode: 'stage' },
+          liveData: { ok: true, ...liveSnap },
+        },
+        {
+          id: 'game-theater-leaderboard',
+          title: 'Live Standings & Seated Players',
+          widgetType: 'game-theater',
+          componentTag: 'robos-widget-game-theater',
+          slotId: 'bottom-left',
+          colSpan: 1,
+          rowSpan: 1,
+          widgetMeta: { icon: '🏆' },
+          config: { mode: 'leaderboard' },
+          liveData: { ok: true, ...liveSnap },
+        },
+        {
+          id: 'game-theater-lobby-feed',
+          title: 'Lobby Presence, Chat & AI Game Builder',
+          widgetType: 'game-theater',
+          componentTag: 'robos-widget-game-theater',
+          slotId: 'bottom-right',
+          colSpan: 1,
+          rowSpan: 1,
+          widgetMeta: { icon: '🟢' },
+          config: { mode: 'lobby' },
+          liveData: { ok: true, ...liveSnap },
+        },
+      ],
+    },
+  };
+}
+
+function renderSpectatorTvWallboardHtml({ tvName = '' } = {}) {
+  const safeTv = String(tvName || 'Smart TV Wallboard')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=1920, initial-scale=1" />
+  <title>RobOS AI Multiplayer Game Theater — Live Spectator Dashboard</title>
+  <style>
+    :root {
+      --bg: #070b12;
+      --surface: #0e1626;
+      --border: #1e2d47;
+      --accent: #00bcd4;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 100%;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 12% 0%, rgba(0, 188, 212, 0.16), transparent 42%),
+        radial-gradient(circle at 88% 100%, rgba(168, 85, 247, 0.14), transparent 42%),
+        var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      overflow-x: hidden;
+    }
+    body {
+      padding: 24px 34px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+    .tv-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    .tv-brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .tv-live-pill {
+      background: rgba(16, 185, 129, 0.2);
+      border: 1px solid rgba(16, 185, 129, 0.55);
+      color: #6ee7b7;
+      padding: 6px 13px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+    }
+    .tv-title {
+      font-size: 25px;
+      font-weight: 850;
+      letter-spacing: -0.02em;
+      color: #f8fafc;
+    }
+    .tv-sub {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+    .tv-pills {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .tv-pill {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 7px 14px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 650;
+      color: var(--text);
+    }
+    .tv-pill.cyan {
+      border-color: rgba(0, 188, 212, 0.45);
+      color: #67e8f9;
+      background: rgba(0, 188, 212, 0.11);
+    }
+    .tv-footer {
+      margin-top: auto;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      font-size: 12.5px;
+      color: var(--muted);
+    }
+    /* Scale up embedded RobOS Dashboard slightly for crisp 10-foot 65" TV legibility */
+    robos-dashboard .robos-embed-card {
+      padding: 18px 20px;
+      border-radius: 14px;
+      background: rgba(14, 22, 38, 0.92);
+      border-color: #1e2d47;
+    }
+    robos-dashboard .robos-embed-card-title {
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <header class="tv-header">
+    <div class="tv-brand">
+      <span class="tv-live-pill">● LIVE ROBOS DASHBOARD</span>
+      <div>
+        <div class="tv-title" id="tv-game-headline">RobOS AI Multiplayer Game Theater — Live Spectator</div>
+        <div class="tv-sub" id="tv-game-sub">Secret-safe 10-foot spectator view · Showing on ${safeTv}</div>
+      </div>
+    </div>
+    <div class="tv-pills">
+      <span class="tv-pill cyan" id="tv-clock-pill" style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;">🕒 --:--:--</span>
+      <span class="tv-pill cyan">📺 ${safeTv}</span>
+      <span class="tv-pill">🕸️ urn:robos:dashboard:game-theater-spectator</span>
+    </div>
+  </header>
+
+  <main>
+    <robos-dashboard id="theater-tv-dashboard" layout="hero-top-split"></robos-dashboard>
+  </main>
+
+  <footer class="tv-footer">
+    <div>RobOS Dashboards &amp; AI Multiplayer Game Theater · Secret-Safe Spectator Feed (<code>__spectator__</code>)</div>
+    <div id="tv-footer-meta">Players join on phones or laptops via their personal Google Doc Launch Button</div>
+  </footer>
+
+  <script src="/api/robos-dashboard.js"></script>
+  <script>
+    (function () {
+      const dashEl = document.getElementById('theater-tv-dashboard');
+      const headlineEl = document.getElementById('tv-game-headline');
+      const subEl = document.getElementById('tv-game-sub');
+      const clockEl = document.getElementById('tv-clock-pill');
+      let lastDigest = '';
+
+      function updateClock() {
+        const t = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        if (clockEl) clockEl.textContent = '🕒 ' + t;
+      }
+
+      async function pullSpectatorDashboard() {
+        try {
+          const res = await fetch('/api/spectator-dashboard', { cache: 'no-store' });
+          if (!res.ok) return;
+          const json = await res.json();
+          if (!json || !json.dashboard) return;
+          const sp = json.spectator || {};
+          const digest = JSON.stringify({
+            matchStatus: sp.matchStatus,
+            matchId: sp.matchId,
+            activeGame: sp.activeGame,
+            seats: sp.seats,
+            onlinePlayers: sp.onlinePlayers,
+            spectatorView: sp.spectatorView,
+            chatLog: sp.chatLog,
+            agentStatus: sp.agentStatus,
+          });
+          if (digest === lastDigest) return;
+          lastDigest = digest;
+
+          if (sp.activeGame && sp.activeGame.title) {
+            headlineEl.textContent = '🎭 ' + sp.activeGame.title + ' — Live Spectator Dashboard';
+            subEl.textContent = (sp.activeGame.description || 'Live RobOS AI Multiplayer Game Theater') + ' · Secret-Safe TV Wallboard';
+          }
+          dashEl.dashboard = json.dashboard;
+        } catch {}
+      }
+
+      updateClock();
+      setInterval(updateClock, 1000);
+      pullSpectatorDashboard();
+      setInterval(pullSpectatorDashboard, 900);
+
+      try {
+        const es = new EventSource('/api/spectator-events');
+        es.onmessage = () => pullSpectatorDashboard();
+      } catch {}
+    })();
+  </script>
+</body>
+</html>`;
+}
 
 const MIME_TYPES = {
   '.html': 'text/html; charset=utf-8',
@@ -290,6 +578,65 @@ function createGameTheaterServer(options = {}) {
         });
         if (req.method === 'HEAD') return res.end();
         return fs.createReadStream(fontPath).pipe(res);
+      }
+
+      // ── Public Secret-Safe RobOS Spectator Dashboard & 10-Foot TV Wallboard ─
+      if ((req.method === 'GET' || req.method === 'HEAD') && pathname === '/api/robos-dashboard.js') {
+        if (!fs.existsSync(ROBOS_DASHBOARD_UI_PATH)) {
+          res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+          return res.end('robos-dashboard.js not found');
+        }
+        const stat = fs.statSync(ROBOS_DASHBOARD_UI_PATH);
+        res.writeHead(200, {
+          'Content-Type': 'application/javascript; charset=utf-8',
+          'Content-Length': stat.size,
+          'Cache-Control': 'no-cache',
+          'Access-Control-Allow-Origin': '*',
+        });
+        if (req.method === 'HEAD') return res.end();
+        return fs.createReadStream(ROBOS_DASHBOARD_UI_PATH).pipe(res);
+      }
+
+      if (req.method === 'GET' && pathname === '/api/spectator') {
+        return sendJson(
+          res,
+          200,
+          { ok: true, spectator: runtime.getSpectatorSnapshot() },
+          { 'Access-Control-Allow-Origin': '*' },
+        );
+      }
+
+      if (req.method === 'GET' && pathname === '/api/spectator-dashboard') {
+        return sendJson(
+          res,
+          200,
+          buildResolvedSpectatorDashboard(runtime, options),
+          { 'Access-Control-Allow-Origin': '*' },
+        );
+      }
+
+      if (req.method === 'GET' && pathname === '/api/spectator-events') {
+        res.writeHead(200, {
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+          Connection: 'keep-alive',
+          'Access-Control-Allow-Origin': '*',
+        });
+        res.write(`data: ${JSON.stringify({ type: 'connected', ts: Date.now() })}\n\n`);
+        sseClients.add(res);
+        req.on('close', () => sseClients.delete(res));
+        return;
+      }
+
+      if ((req.method === 'GET' || req.method === 'HEAD') && pathname === '/tv') {
+        const tvName = parsedUrl.searchParams.get('tvName') || '65" Smart TV';
+        const html = renderSpectatorTvWallboardHtml({ tvName });
+        res.writeHead(200, {
+          'Content-Type': 'text/html; charset=utf-8',
+          'Cache-Control': 'no-store',
+        });
+        if (req.method === 'HEAD') return res.end();
+        return res.end(html);
       }
 
       const authRes = resolveReqAuth(req, parsedUrl);

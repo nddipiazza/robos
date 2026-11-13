@@ -30,8 +30,14 @@ function slugifyGameId(input) {
   );
 }
 
+const SPECTATOR_VIEWER_UID = '__spectator__';
+
 function getGamesDir(options = {}) {
   return options.gamesDir || path.join(getTheaterDir(options), 'games');
+}
+
+function getLiveSpectatorFilePath(options = {}) {
+  return options.spectatorStatePath || path.join(getTheaterDir(options), 'live-spectator.json');
 }
 
 function deepCloneJson(value) {
@@ -194,8 +200,14 @@ class GameTheaterRuntime extends EventEmitter {
     this.onlineCounts = new Map(); // uid -> count of open WS tabs
     this.onlineProfiles = new Map(); // uid -> public profile
     this._tickTimer = null;
+    this.spectatorStatePath = getLiveSpectatorFilePath(options);
+
+    this.on('updated', () => {
+      this._persistLiveSpectatorSnapshot();
+    });
 
     this.reloadGamesFromDisk();
+    this._persistLiveSpectatorSnapshot();
   }
 
   _stopTickTimer() {
@@ -617,11 +629,42 @@ class GameTheaterRuntime extends EventEmitter {
       agentStatus: { ...this.agentStatus },
     };
   }
+
+  getSpectatorSnapshot() {
+    const active = this.getActiveGame();
+    return {
+      active: Boolean(active),
+      matchStatus: this.matchStatus,
+      matchId: this.matchId,
+      gamesCount: this.games.size,
+      activeGame: active ? { ...active.manifest } : null,
+      seats: [...this.seats],
+      onlinePlayers: this.getOnlinePlayers(),
+      spectatorView: this.getPlayerViewFor(SPECTATOR_VIEWER_UID),
+      chatLog: this.chatLog.slice(-12),
+      agentStatus: { ...this.agentStatus },
+      updatedAt: new Date().toISOString(),
+    };
+  }
+
+  _persistLiveSpectatorSnapshot() {
+    if (this.options?.persistSpectatorState === false) return;
+    try {
+      const snap = this.getSpectatorSnapshot();
+      const dir = path.dirname(this.spectatorStatePath);
+      fs.mkdirSync(dir, { recursive: true });
+      const tmpPath = `${this.spectatorStatePath}.${process.pid}.tmp`;
+      fs.writeFileSync(tmpPath, JSON.stringify(snap, null, 2), 'utf8');
+      fs.renameSync(tmpPath, this.spectatorStatePath);
+    } catch {}
+  }
 }
 
 module.exports = {
+  SPECTATOR_VIEWER_UID,
   slugifyGameId,
   getGamesDir,
+  getLiveSpectatorFilePath,
   compileGameServerModule,
   GameTheaterRuntime,
 };

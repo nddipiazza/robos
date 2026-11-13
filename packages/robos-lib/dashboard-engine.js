@@ -270,6 +270,20 @@ const DASHBOARD_WIDGET_CATALOG = [
     },
   },
   {
+    type: 'game-theater',
+    kgraphId: 'urn:robos:dashboard-widget:game-theater',
+    title: 'RobOS AI Multiplayer Game Theater (Live Spectator)',
+    componentTag: 'robos-widget-game-theater',
+    category: 'Games & Entertainment',
+    icon: '🎭',
+    description: 'Live secret-safe spectator view of RobOS AI Multiplayer Game Theater matches (Guess That Count, Hangman, and any AI-generated Godot 4 multiplayer game) with real-time countdowns, boards, leaderboards, lobby presence, and AI studio status.',
+    defaultConfig: {
+      mode: 'stage',
+      showLeaderboard: true,
+      showLobbyChat: true,
+    },
+  },
+  {
     type: 'robos-component',
     kgraphId: 'urn:robos:dashboard-widget:robos-component',
     title: 'Any RobOS Custom Component Widget',
@@ -453,6 +467,50 @@ const DEFAULT_DASHBOARDS = [
           showInterimBubble: true,
           showSkillBadges: true,
           fullPage: true,
+        },
+      },
+    ],
+  },
+  {
+    id: 'game-theater-spectator',
+    kgraphId: 'urn:robos:dashboard:game-theater-spectator',
+    title: 'Game Theater — Live Spectator Dashboard',
+    description: '10-foot Smart TV and desktop spectator dashboard for RobOS AI Multiplayer Game Theater: live secret-safe stage view, countdowns, multiple-choice & word boards, ranked player leaderboard, lobby presence, and live RobOS Agent game studio status.',
+    layoutId: 'hero-top-split',
+    tvCompatible: true,
+    isDefault: false,
+    cards: [
+      {
+        id: 'game-theater-live-stage',
+        kgraphId: 'urn:robos:dashboard-card:game-theater-live-stage',
+        title: 'Live Multiplayer Stage (Secret-Safe Spectator View)',
+        widgetType: 'game-theater',
+        componentTag: 'robos-widget-game-theater',
+        slotId: 'hero-top',
+        config: {
+          mode: 'stage',
+        },
+      },
+      {
+        id: 'game-theater-leaderboard',
+        kgraphId: 'urn:robos:dashboard-card:game-theater-leaderboard',
+        title: 'Live Standings & Seated Players',
+        widgetType: 'game-theater',
+        componentTag: 'robos-widget-game-theater',
+        slotId: 'bottom-left',
+        config: {
+          mode: 'leaderboard',
+        },
+      },
+      {
+        id: 'game-theater-lobby-feed',
+        kgraphId: 'urn:robos:dashboard-card:game-theater-lobby-feed',
+        title: 'Lobby Presence, Chat & AI Game Builder',
+        widgetType: 'game-theater',
+        componentTag: 'robos-widget-game-theater',
+        slotId: 'bottom-right',
+        config: {
+          mode: 'lobby',
         },
       },
     ],
@@ -2359,6 +2417,79 @@ function collectVoiceDictationBubbles({ configDir, limit = 10 } = {}) {
 }
 
 /**
+ * Collects live secret-safe spectator state for RobOS AI Multiplayer Game Theater
+ * from `~/.config/robos/game-theater/live-spectator.json` (with manifest fallback if server is stopped).
+ */
+function collectGameTheaterSpectator({ configDir } = {}) {
+  const defaultUserConfigDir = path.join(process.env.HOME || os.homedir(), '.config', 'robos');
+  const resolvedConfigDir = configDir || process.env.ROBOS_CONFIG_DIR || defaultUserConfigDir;
+  const theaterDir = path.join(resolvedConfigDir, 'game-theater');
+  const liveFile = path.join(theaterDir, 'live-spectator.json');
+
+  try {
+    if (fs.existsSync(liveFile)) {
+      const parsed = JSON.parse(fs.readFileSync(liveFile, 'utf8'));
+      if (parsed && typeof parsed === 'object') {
+        return {
+          ok: true,
+          active: Boolean(parsed.active),
+          matchStatus: parsed.matchStatus || 'idle',
+          matchId: parsed.matchId || null,
+          gamesCount: Number(parsed.gamesCount || (parsed.activeGame ? 1 : 0)),
+          activeGame: parsed.activeGame || null,
+          seats: Array.isArray(parsed.seats) ? parsed.seats : [],
+          onlinePlayers: Array.isArray(parsed.onlinePlayers) ? parsed.onlinePlayers : [],
+          spectatorView:
+            parsed.spectatorView && typeof parsed.spectatorView === 'object'
+              ? parsed.spectatorView
+              : null,
+          chatLog: Array.isArray(parsed.chatLog) ? parsed.chatLog : [],
+          agentStatus:
+            parsed.agentStatus && typeof parsed.agentStatus === 'object' ? parsed.agentStatus : {},
+          updatedAt: parsed.updatedAt || new Date().toISOString(),
+        };
+      }
+    }
+  } catch {}
+
+  // Fallback: inspect persisted game manifests on disk so standby view shows installed games
+  let fallbackActiveGame = null;
+  let gamesCount = 0;
+  try {
+    const gamesDir = path.join(theaterDir, 'games');
+    if (fs.existsSync(gamesDir)) {
+      const manifests = [];
+      for (const ent of fs.readdirSync(gamesDir, { withFileTypes: true })) {
+        if (!ent.isDirectory()) continue;
+        const mp = path.join(gamesDir, ent.name, 'manifest.json');
+        if (!fs.existsSync(mp)) continue;
+        try {
+          manifests.push(JSON.parse(fs.readFileSync(mp, 'utf8')));
+        } catch {}
+      }
+      gamesCount = manifests.length;
+      manifests.sort((a, b) => String(b.updatedAt || '').localeCompare(String(a.updatedAt || '')));
+      if (manifests[0]) fallbackActiveGame = manifests[0];
+    }
+  } catch {}
+
+  return {
+    ok: true,
+    active: Boolean(fallbackActiveGame),
+    matchStatus: 'idle',
+    matchId: null,
+    gamesCount,
+    activeGame: fallbackActiveGame,
+    seats: [],
+    onlinePlayers: [],
+    spectatorView: null,
+    chatLog: [],
+    agentStatus: {},
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+/**
  * Creates a stateful Dashboard Engine instance that manages dashboards, layouts, cards,
  * KGraph synchronization, live widget data resolution, and Smart TV casting.
  */
@@ -2437,6 +2568,10 @@ function createDashboardEngine({ configDir, repoDir } = {}) {
     }
     if (!state.dashboards.some((d) => d.id === 'robos-voice-dictation')) {
       state.dashboards.splice(2, 0, JSON.parse(JSON.stringify(DEFAULT_DASHBOARDS[2])));
+    }
+    if (!state.dashboards.some((d) => d.id === 'game-theater-spectator')) {
+      const defTheater = DEFAULT_DASHBOARDS.find((d) => d.id === 'game-theater-spectator');
+      if (defTheater) state.dashboards.push(JSON.parse(JSON.stringify(defTheater)));
     }
     if (!state.dashboards.some((d) => d.id === state.activeDashboardId)) {
       state.activeDashboardId = state.dashboards[0]?.id || 'daily-engineering-ops';
@@ -2545,6 +2680,10 @@ function createDashboardEngine({ configDir, repoDir } = {}) {
           configDir: resolvedConfigDir,
           limit: cfg.limit || 6,
         });
+      case 'game-theater':
+        return collectGameTheaterSpectator({
+          configDir: resolvedConfigDir,
+        });
       case 'smart-tv':
       case 'smart-lights':
       case 'kgraph-summary':
@@ -2646,6 +2785,14 @@ function createDashboardEngine({ configDir, repoDir } = {}) {
         rowSpan: 1,
       };
       const widgetMeta = getWidgetMeta(card.widgetType);
+      const liveData = resolveWidgetData(card);
+      let renderedHtml;
+      if (card.widgetType === 'game-theater') {
+        try {
+          const dashUi = require('../robos-ui/robos-dashboard.js');
+          renderedHtml = dashUi.renderWidgetInnerHtml({ ...card, widgetMeta, liveData });
+        } catch {}
+      }
       return {
         ...card,
         slotId: card.slotId || slot.slotId,
@@ -2653,7 +2800,8 @@ function createDashboardEngine({ configDir, repoDir } = {}) {
         colSpan: slot.colSpan || 1,
         rowSpan: slot.rowSpan || 1,
         widgetMeta,
-        liveData: resolveWidgetData(card),
+        liveData,
+        ...(renderedHtml ? { renderedHtml } : {}),
       };
     });
 
@@ -3754,6 +3902,14 @@ function renderDashboardTvWallboardHtml({
       `;
     }
 
+    if (card.widgetType === 'game-theater') {
+      if (card.renderedHtml) return card.renderedHtml;
+      try {
+        const dashUi = require('../robos-ui/robos-dashboard.js');
+        return dashUi.renderWidgetInnerHtml(card);
+      } catch {}
+    }
+
     return `
       <div class="custom-component-placeholder">
         <code>&lt;${esc(card.componentTag || 'robos-widget-custom')}&gt;</code>
@@ -4408,6 +4564,13 @@ function renderDashboardTvWallboardHtml({
             return;
           }
           const cards = (json && json.dashboard && Array.isArray(json.dashboard.cards)) ? json.dashboard.cards : [];
+          cards.filter(c => c.widgetType === 'game-theater' && c.renderedHtml).forEach(gtCard => {
+            const gtSec = document.querySelector('section[data-card-id="' + gtCard.id + '"]');
+            if (gtSec) {
+              const gtHeader = gtSec.querySelector('.card-header-bar') ? gtSec.querySelector('.card-header-bar').outerHTML : '';
+              gtSec.innerHTML = gtHeader + gtCard.renderedHtml;
+            }
+          });
           const voiceCard = cards.find(c => c.widgetType === 'voice-dictation');
           if (voiceCard && voiceCard.liveData) {
             const vSec = document.querySelector('section[data-widget-type="voice-dictation"]');
@@ -4495,6 +4658,7 @@ module.exports = {
   collectMusicNowPlaying,
   collectNextMeetingCountdown,
   collectVoiceDictationBubbles,
+  collectGameTheaterSpectator,
   collectSupplementalWidgetData,
   createDashboardEngine,
   renderDashboardTvWallboardHtml,

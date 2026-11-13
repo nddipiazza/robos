@@ -4,6 +4,9 @@ let appState = null;
 let aiMode = 'generate';
 let codeTab = 'server'; // 'server' | 'client'
 let loadedGameDetail = null;
+let selectedTvId = '';
+let latestTvWallboardUrl = '';
+let lastSpectatorDigest = '';
 const sendingShareUids = new Set();
 const recentlySentShareUntil = new Map();
 const recentlyCopiedUidUntil = new Map();
@@ -433,5 +436,117 @@ el('btn-save-code').addEventListener('click', async () => {
   }
 });
 
+async function refreshSpectatorAndTv() {
+  try {
+    const [specRes, tvRes] = await Promise.all([
+      window.robos.getSpectatorDashboard?.(),
+      window.robos.getTvStatus?.(),
+    ]);
+
+    if (specRes?.ok && specRes.dashboard) {
+      const dashEl = el('embedded-spectator-dashboard');
+      if (dashEl) {
+        const digest = JSON.stringify(specRes.spectator || {});
+        if (digest !== lastSpectatorDigest) {
+          lastSpectatorDigest = digest;
+          dashEl.dashboard = specRes.dashboard;
+        }
+      }
+    }
+
+    if (tvRes?.ok) {
+      latestTvWallboardUrl = tvRes.wallboardUrl || '';
+      const tvs = Array.isArray(tvRes.tvs) ? tvRes.tvs : [];
+      const tvSelect = el('tv-select');
+      if (tvSelect) {
+        if (tvs.length === 0) {
+          tvSelect.innerHTML = '<option value="">No Paired Smart TVs</option>';
+          tvSelect.disabled = true;
+          if (el('btn-cast-tv')) el('btn-cast-tv').disabled = true;
+        } else {
+          tvSelect.disabled = false;
+          if (el('btn-cast-tv')) el('btn-cast-tv').disabled = false;
+          if (!selectedTvId || !tvs.some((t) => t.id === selectedTvId)) {
+            const preferredRoku = tvs.find((t) => t.platformId === 'roku-os');
+            selectedTvId = (preferredRoku || tvs[0]).id;
+          }
+          tvSelect.innerHTML = tvs
+            .map((t) => {
+              const modeBadge = t.platformId === 'roku-os' ? 'Roku 1080p Live' : t.platformName || 'Smart TV';
+              return `<option value="${esc(t.id)}" ${t.id === selectedTvId ? 'selected' : ''}>📺 ${esc(t.name)} (${esc(modeBadge)})</option>`;
+            })
+            .join('');
+        }
+      }
+
+      const streamingIds = new Set(tvRes.streamingTvIds || []);
+      const activeCast = (tvRes.activeCasts || [])[0] || null;
+      const isCasting = streamingIds.size > 0 || Boolean(activeCast);
+      const pill = el('tv-cast-pill');
+      const stopBtn = el('btn-stop-cast-tv');
+
+      if (pill) {
+        if (isCasting) {
+          const castTv = tvs.find((t) => streamingIds.has(t.id) || t.id === activeCast?.tvId);
+          pill.textContent = `● Casting Live to ${castTv ? castTv.name : activeCast?.tvName || 'Smart TV'}`;
+          pill.classList.add('pill-green');
+        } else {
+          pill.textContent = tvs.length > 0 ? `Ready (${tvs.length} TV${tvs.length === 1 ? '' : 's'} Paired)` : 'No Paired TV';
+          pill.classList.remove('pill-green');
+        }
+      }
+      if (stopBtn) {
+        stopBtn.classList.toggle('hidden', !isCasting);
+      }
+    }
+  } catch {}
+}
+
+el('tv-select')?.addEventListener('change', (ev) => {
+  selectedTvId = ev.target.value || '';
+});
+
+el('btn-cast-tv')?.addEventListener('click', async () => {
+  const btn = el('btn-cast-tv');
+  const tvId = el('tv-select')?.value || selectedTvId;
+  const activeTitle = appState?.lobby?.activeGame?.title || '';
+  if (btn) btn.disabled = true;
+  setBanner('Launching RobOS Spectator Dashboard on your Smart TV...');
+  try {
+    const res = await window.robos.castToTv({ tvId, gameTitle: activeTitle });
+    if (res?.ok) {
+      setBanner(`📺 ${res.message || `Casting Live Spectator Dashboard to ${res.tv?.name || 'Smart TV'}!`}`);
+    } else {
+      setBanner(res?.message || res?.error || 'Could not cast to Smart TV.', true);
+    }
+    await refreshSpectatorAndTv();
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+});
+
+el('btn-stop-cast-tv')?.addEventListener('click', async () => {
+  const tvId = el('tv-select')?.value || selectedTvId;
+  const res = await window.robos.stopTvCast({ tvId });
+  setBanner(res?.message || 'Stopped Smart TV cast.');
+  await refreshSpectatorAndTv();
+});
+
+el('btn-open-tv-wallboard')?.addEventListener('click', () => {
+  const fallback = appState?.endpoints?.localHttpUrl ? `${appState.endpoints.localHttpUrl}/tv` : 'http://127.0.0.1:19228/tv';
+  window.robos.openExternal(latestTvWallboardUrl || fallback);
+});
+
+el('btn-open-dashboards-app')?.addEventListener('click', async () => {
+  const res = await window.robos.openRobosDashboards();
+  if (res?.ok) {
+    setBanner('Opened "Game Theater — Live Spectator Dashboard" in RobOS Dashboards!');
+  } else {
+    setBanner(res?.error || 'Could not launch RobOS Dashboards.', true);
+  }
+});
+
 refreshState();
+refreshSpectatorAndTv();
 setInterval(refreshState, 4000);
+setInterval(refreshSpectatorAndTv, 1000);

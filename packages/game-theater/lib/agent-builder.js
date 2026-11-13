@@ -157,6 +157,11 @@ function validateBundle(bundle, { skipGodotValidation = false } = {}) {
     });
   }
 
+  const spectatorView = compiled.getPlayerView(initialState, '__spectator__');
+  if (!spectatorView || typeof spectatorView !== 'object') {
+    throw new Error('getPlayerView(state, "__spectator__") must return a public spectator Dictionary/object.');
+  }
+
   // Also include empty waiting view sample so client.gd handles pre-match view gracefully
   samples.unshift({
     view: {},
@@ -246,8 +251,8 @@ IMPORTANT: Do NOT invoke any tools, file readers, or shell commands. Reply direc
    - \`onSeatsChanged(state, seats)\` (OPTIONAL — called if a player joins/leaves a seat mid-match when \`seats.length <= maxPlayers\`):
      - Sync \`state.players\` / \`state.scores\` so newly seated players appear on the leaderboard immediately without resetting scores.
    - \`getPlayerView(state, viewerUid)\`:
-     - Return a JSON-serializable Dictionary tailored specifically to \`viewerUid\`.
-     - NEVER leak hidden secrets (such as unguessed secret words/phrases, unrevealed correct multiple-choice index, or hidden hands) to a player who should not see them yet! Reveal the full answer only to its chooser or once the round finishes / reveals.
+     - Return a JSON-serializable Dictionary tailored specifically to \`viewerUid\` (note: \`viewerUid\` may also be \`"__spectator__"\` for the live RobOS Spectator Dashboard & Smart TV Wallboard).
+     - NEVER leak hidden secrets (such as unguessed secret words/phrases, unrevealed correct multiple-choice index, or hidden hands) to \`"__spectator__"\` or any player who should not see them yet! Always include public stage progress, scores/leaderboard, and round status so spectators on the TV can follow the match live.
 2. LARGE CONTENT & TRIVIA PACKING RULE:
    - If the user requests hundreds of items/questions (e.g. 500 trivia counts, large word banks, card decks), keep the JSON compact and fast to emit: encode datasets as compact single-line pipe-delimited strings (e.g. \`"Subject|Correct|Alt1|Alt2|Alt3"\` or \`"Category|Subject|CorrectValue"\` paired with realistic scale-aware distractor generation in JS) with ZERO comments or multi-line formatting per entry so the entire JSON bundle stays concise and complete.
 

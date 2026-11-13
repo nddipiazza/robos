@@ -46,7 +46,7 @@
 robos-dashboard, robos-dashboard-widget,
 robos-widget-git-commits, robos-widget-calendar-today, robos-widget-agent-sessions,
 robos-widget-smart-tv, robos-widget-smart-lights, robos-widget-kgraph,
-robos-widget-sprint-radar, robos-widget-voice-dictation, robos-widget-custom {
+robos-widget-sprint-radar, robos-widget-voice-dictation, robos-widget-game-theater, robos-widget-custom {
   display: block;
   box-sizing: border-box;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -931,6 +931,377 @@ robos-widget-sprint-radar, robos-widget-voice-dictation, robos-widget-custom {
       `;
     }
 
+    if (widgetType === 'game-theater') {
+      const cfg = card.config || {};
+      const mode = cfg.mode || 'stage';
+      const activeGame = data.activeGame || null;
+      const matchStatus = data.matchStatus || 'idle';
+      const isPlaying = matchStatus === 'playing' && Boolean(activeGame);
+      const seats = Array.isArray(data.seats) ? data.seats : [];
+      const onlinePlayers = Array.isArray(data.onlinePlayers) ? data.onlinePlayers : [];
+      const view = data.spectatorView && typeof data.spectatorView === 'object' ? data.spectatorView : null;
+      const chatLog = Array.isArray(data.chatLog) ? data.chatLog : [];
+      const agentStatus = data.agentStatus && typeof data.agentStatus === 'object' ? data.agentStatus : {};
+
+      if (mode === 'leaderboard') {
+        let rows = [];
+        if (view && Array.isArray(view.leaderboard) && view.leaderboard.length > 0) {
+          rows = view.leaderboard.map((r) => ({
+            uid: r.uid,
+            name: r.name || r.shortName || r.uid,
+            color: r.color || '#00bcd4',
+            avatar: r.avatar || '🎮',
+            score: Number(r.score ?? r.points ?? 0),
+            streak: Number(r.streak || 0),
+            correctCount: r.correctCount,
+            badgeText: r.gotPoint
+              ? '+1 PT ✔'
+              : r.hasAnswered
+                ? '✔ Locked In'
+                : isPlaying
+                  ? '⏳ Playing'
+                  : 'Seated',
+            badgeColor: r.gotPoint ? '#10b981' : r.hasAnswered ? '#00bcd4' : '#64748b',
+          }));
+        } else {
+          const scoreMap = (view && view.scores && typeof view.scores === 'object') ? view.scores : {};
+          const sourcePlayers =
+            (view && Array.isArray(view.players) && view.players.length > 0) ? view.players : seats;
+          rows = sourcePlayers
+            .map((p) => {
+              const uid = p.uid || p.id || p.name;
+              const isChooser = view && view.chooserUid && view.chooserUid === uid;
+              const isGuesser = view && view.guesserUid && view.guesserUid === uid;
+              return {
+                uid,
+                name: p.shortName || p.name || uid,
+                color: p.color || '#00bcd4',
+                avatar: p.avatar || '🎮',
+                score: Number(scoreMap[uid] ?? p.score ?? 0),
+                streak: Number(p.streak || 0),
+                badgeText: isChooser
+                  ? '📝 Chooser'
+                  : isGuesser
+                    ? '🎯 Guesser'
+                    : isPlaying
+                      ? 'In Match'
+                      : 'Seated',
+                badgeColor: isChooser ? '#a855f7' : isGuesser ? '#10b981' : '#00bcd4',
+              };
+            })
+            .sort((a, b) => b.score - a.score);
+        }
+
+        const maxSeats = activeGame?.maxPlayers || Math.max(2, seats.length);
+        return `
+          <div class="robos-w-meta">
+            <span>🏆 <strong>${esc(activeGame ? activeGame.title : 'Game Theater')} Standings</strong></span>
+            <span class="robos-w-pill" style="background:rgba(16,185,129,0.16);color:#6ee7b7;border-color:rgba(16,185,129,0.4);">
+              Seats: ${seats.length}/${esc(maxSeats)}
+            </span>
+          </div>
+          ${
+            rows.length > 0
+              ? `<div style="display:flex;flex-direction:column;gap:7px;">
+                  ${rows
+                    .slice(0, 8)
+                    .map(
+                      (r, idx) => `
+                      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;background:#0d1117;border:1px solid #21262d;border-left:4px solid ${esc(r.color || '#00bcd4')};border-radius:8px;padding:8px 11px;">
+                        <div style="display:flex;align-items:center;gap:9px;min-width:0;">
+                          <span style="font-family:ui-monospace,monospace;font-size:12px;font-weight:900;color:${idx === 0 ? '#fcd34d' : '#8b949e'};min-width:22px;">#${idx + 1}</span>
+                          <span style="font-size:15px;">${esc(r.avatar || '🎮')}</span>
+                          <strong style="font-size:13.5px;color:#f0f6fc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(r.name)}</strong>
+                          ${
+                            r.streak > 1
+                              ? `<span style="font-size:10.5px;font-weight:800;padding:1px 6px;border-radius:999px;background:rgba(245,158,11,0.2);color:#fcd34d;">🔥 ${r.streak}x</span>`
+                              : ''
+                          }
+                        </div>
+                        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+                          <span style="font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:5px;background:rgba(255,255,255,0.06);color:${esc(r.badgeColor)};border:1px solid rgba(255,255,255,0.1);">${esc(r.badgeText)}</span>
+                          <span style="font-family:ui-monospace,monospace;font-size:16px;font-weight:900;color:#67e8f9;min-width:54px;text-align:right;">${esc(r.score)} pts</span>
+                        </div>
+                      </div>`
+                    )
+                    .join('')}
+                </div>`
+              : `<div style="background:#0d1117;border:1px dashed #30363d;border-radius:9px;padding:16px;text-align:center;color:#8b949e;font-size:12.5px;">
+                  No players seated yet — open your personal <strong>RobOS Game Theater Google Doc</strong> and click Launch to claim a seat!
+                </div>`
+          }
+        `;
+      }
+
+      if (mode === 'lobby') {
+        const recentChat = chatLog.slice(-4).reverse();
+        const agentBusy = Boolean(agentStatus.busy);
+        return `
+          <div class="robos-w-meta">
+            <span>🟢 <strong>${onlinePlayers.length}</strong> Player${onlinePlayers.length === 1 ? '' : 's'} Connected</span>
+            <span class="robos-w-pill" style="${agentBusy ? 'background:rgba(168,85,247,0.22);color:#e9d5ff;border-color:#a855f7;' : ''}">
+              ${agentBusy ? '🤖 Agent Building Live' : `📚 ${esc(data.gamesCount ?? (activeGame ? 1 : 0))} Games Ready`}
+            </span>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;">
+            ${
+              onlinePlayers.length > 0
+                ? onlinePlayers
+                    .map(
+                      (p) =>
+                        `<span style="display:inline-flex;align-items:center;gap:5px;background:#0d1117;border:1px solid #30363d;border-radius:999px;padding:3px 9px;font-size:11.5px;color:#e6edf3;">
+                          <span style="width:7px;height:7px;border-radius:50%;background:#10b981;display:inline-block;"></span>
+                          ${esc(p.avatar || '🎮')} <strong>${esc(p.shortName || p.name)}</strong>
+                        </span>`
+                    )
+                    .join('')
+                : `<span style="font-size:11.5px;color:#8b949e;">Lobby open — waiting for Godot 4 HTTPS Web Clients to connect.</span>`
+            }
+          </div>
+          <div style="background:#0d1117;border:1px solid ${agentBusy ? '#7c3aed' : '#21262d'};border-left:3px solid ${agentBusy ? '#a855f7' : '#00bcd4'};border-radius:8px;padding:8px 10px;margin-bottom:8px;">
+            <div style="font-size:10.5px;font-weight:800;text-transform:uppercase;color:${agentBusy ? '#d8b4fe' : '#67e8f9'};">
+              🤖 Dynamic RobOS Agent Game Studio
+            </div>
+            <div style="font-size:12px;color:#e6edf3;margin-top:2px;">
+              ${
+                agentBusy
+                  ? esc(`${agentStatus.requestedBy || 'Player'}: ${agentStatus.step || 'Generating server.js + Godot 4 client.gd…'}`)
+                  : agentStatus.step
+                    ? esc(agentStatus.step)
+                    : 'Any connected player can generate a new game or evolve rules live.'
+              }
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:5px;">
+            ${
+              recentChat.length > 0
+                ? recentChat
+                    .map(
+                      (m) => `
+                      <div style="background:#0d1117;border:1px solid #21262d;border-radius:6px;padding:5px 8px;font-size:11.5px;display:flex;gap:6px;align-items:baseline;">
+                        <strong style="color:#67e8f9;flex-shrink:0;">${esc(m.avatar || '💬')} ${esc(m.name)}:</strong>
+                        <span style="color:#e6edf3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(m.text)}</span>
+                      </div>`
+                    )
+                    .join('')
+                : `<div style="font-size:11px;color:#8b949e;">💬 Live lobby chat messages appear here during play.</div>`
+            }
+          </div>
+        `;
+      }
+
+      // Default mode === 'stage' (Hero 10-foot Spectator Stage, secret-safe!)
+      const headerRightPill = isPlaying
+        ? `<span class="robos-w-pill" style="background:rgba(16,185,129,0.2);color:#6ee7b7;border-color:rgba(16,185,129,0.5);font-size:11.5px;padding:3px 10px;">● LIVE MATCH · ${seats.length}/${esc(activeGame.maxPlayers)} SEATED</span>`
+        : `<span class="robos-w-pill" style="background:rgba(245,158,11,0.16);color:#fcd34d;border-color:rgba(245,158,11,0.45);font-size:11.5px;padding:3px 10px;">● STAGE STANDBY${activeGame ? ` · ${seats.length}/${esc(activeGame.maxPlayers)} SEATED` : ''}</span>`;
+
+      // 1. Timed / Multiple-Choice Trivia Stage (e.g. Guess That Count)
+      if (isPlaying && view && Array.isArray(view.options) && view.options.length > 0) {
+        const isReveal = view.phase === 'reveal' || (Number.isInteger(view.correctIndex) && view.correctIndex >= 0);
+        const secsLeft = Number(view.secondsLeft ?? 0);
+        const totalSecs = Math.max(1, Number(view.totalSeconds || (isReveal ? 5 : 30)));
+        const pct = Math.max(3, Math.min(100, Math.round((secsLeft / totalSecs) * 100)));
+        const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
+        const promptText = view.subject || view.question || view.prompt || activeGame.title;
+
+        return `
+          <div class="robos-w-meta" style="margin-bottom:8px;">
+            <span style="font-size:13px;">🎭 <strong style="color:#f0f6fc;">${esc(activeGame.title)}</strong> <code style="color:#67e8f9;">v${esc(activeGame.version || 1)}</code>${view.category ? ` · <span style="color:#d8b4fe;font-weight:700;">📂 ${esc(view.category)}</span>` : ''}</span>
+            ${headerRightPill}
+          </div>
+          <div style="background:#0d1117;border:1px solid #263248;border-radius:12px;padding:14px 16px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;">
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                <span style="background:rgba(0,188,212,0.16);color:#67e8f9;border:1px solid rgba(0,188,212,0.4);border-radius:6px;padding:3px 9px;font-size:12px;font-weight:800;">
+                  ROUND #${esc(view.roundNumber || view.round || 1)}${view.totalBankSize ? ` OF ${esc(view.totalBankSize)}` : ''}
+                </span>
+                <span style="font-size:12px;color:#8b949e;font-weight:600;">
+                  🔒 Spectator Safe View · Locked In: <strong style="color:#f0f6fc;">${esc(view.answeredCount ?? 0)}/${esc(view.playerCount ?? seats.length)}</strong>
+                </span>
+              </div>
+              <div style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:18px;font-weight:900;color:${isReveal ? '#6ee7b7' : secsLeft <= 7 ? '#fca5a5' : '#fcd34d'};">
+                ${isReveal ? '🎉 ANSWER REVEAL' : `⏱ ${esc(secsLeft)}s`}
+              </div>
+            </div>
+            <div style="height:7px;background:#070b14;border-radius:999px;overflow:hidden;margin-bottom:14px;">
+              <div style="height:100%;width:${pct}%;background:${isReveal ? '#10b981' : secsLeft <= 7 ? '#ef4444' : 'linear-gradient(90deg,#00bcd4,#a855f7)'};"></div>
+            </div>
+            <div style="font-size:21px;font-weight:850;color:#f8fafc;line-height:1.3;margin-bottom:14px;letter-spacing:-0.01em;">
+              ${esc(promptText)}
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;">
+              ${view.options
+                .map((opt, idx) => {
+                  const isCorrect = isReveal && Number(view.correctIndex) === idx;
+                  const borderCol = isCorrect ? '#10b981' : isReveal ? '#21262d' : '#30363d';
+                  const bgCol = isCorrect ? 'rgba(16,185,129,0.18)' : '#161b22';
+                  const badgeBg = isCorrect ? '#10b981' : 'rgba(0,188,212,0.18)';
+                  const badgeFg = isCorrect ? '#042f2e' : '#67e8f9';
+                  return `
+                    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;background:${bgCol};border:2px solid ${borderCol};border-radius:10px;padding:11px 14px;opacity:${isReveal && !isCorrect ? '0.62' : '1'};">
+                      <div style="display:flex;align-items:center;gap:10px;min-width:0;">
+                        <span style="width:28px;height:28px;border-radius:7px;background:${badgeBg};color:${badgeFg};font-weight:900;font-size:13.5px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">
+                          ${esc(letters[idx] || idx + 1)}
+                        </span>
+                        <span style="font-size:16px;font-weight:750;color:#f0f6fc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                          ${esc(opt)}
+                        </span>
+                      </div>
+                      ${isCorrect ? `<span style="font-size:11.5px;font-weight:900;color:#6ee7b7;flex-shrink:0;">✔ CORRECT</span>` : ''}
+                    </div>`;
+                })
+                .join('')}
+            </div>
+            ${
+              isReveal && view.lastWinnerSummary
+                ? `<div style="margin-top:12px;padding:8px 12px;border-radius:8px;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.35);color:#6ee7b7;font-size:13px;font-weight:700;">
+                    🏆 ${esc(view.lastWinnerSummary)}
+                  </div>`
+                : ''
+            }
+          </div>
+        `;
+      }
+
+      // 2. Word / Hangman Stage (gallows + masked phrase tiles, secret phrase hidden until round_over!)
+      if (isPlaying && view && (typeof view.maskedPhrase === 'string' || typeof view.wrongCount === 'number')) {
+        const wrong = Math.max(0, Number(view.wrongCount || 0));
+        const maxWrong = Math.max(1, Number(view.maxWrong || 6));
+        const guessed = Array.isArray(view.guessedLetters) ? view.guessedLetters : [];
+        const wrongSet = new Set(Array.isArray(view.wrongLetters) ? view.wrongLetters : []);
+        const displayPhrase =
+          view.phase === 'choosing'
+            ? 'CHOOSING SECRET PHRASE…'
+            : String(view.maskedPhrase || '_ _ _ _ _');
+
+        const gallowsSvg = `
+          <svg viewBox="0 0 140 160" width="132" height="150" style="flex-shrink:0;background:#161b22;border:1px solid #30363d;border-radius:10px;padding:6px;">
+            <line x1="18" y1="146" x2="122" y2="146" stroke="#64748b" stroke-width="4" stroke-linecap="round"/>
+            <line x1="40" y1="146" x2="40" y2="18" stroke="#64748b" stroke-width="4" stroke-linecap="round"/>
+            <line x1="40" y1="18" x2="92" y2="18" stroke="#64748b" stroke-width="4" stroke-linecap="round"/>
+            <line x1="92" y1="18" x2="92" y2="36" stroke="#00bcd4" stroke-width="3" stroke-linecap="round"/>
+            ${wrong >= 1 ? `<circle cx="92" cy="50" r="13" fill="none" stroke="#f8fafc" stroke-width="3.5"/>` : ''}
+            ${wrong >= 2 ? `<line x1="92" y1="63" x2="92" y2="102" stroke="#f8fafc" stroke-width="3.5" stroke-linecap="round"/>` : ''}
+            ${wrong >= 3 ? `<line x1="92" y1="74" x2="72" y2="92" stroke="#f8fafc" stroke-width="3.5" stroke-linecap="round"/>` : ''}
+            ${wrong >= 4 ? `<line x1="92" y1="74" x2="112" y2="92" stroke="#f8fafc" stroke-width="3.5" stroke-linecap="round"/>` : ''}
+            ${wrong >= 5 ? `<line x1="92" y1="102" x2="75" y2="128" stroke="#ef4444" stroke-width="3.5" stroke-linecap="round"/>` : ''}
+            ${wrong >= 6 ? `<line x1="92" y1="102" x2="109" y2="128" stroke="#ef4444" stroke-width="3.5" stroke-linecap="round"/>` : ''}
+          </svg>`;
+
+        return `
+          <div class="robos-w-meta" style="margin-bottom:8px;">
+            <span style="font-size:13px;">🎭 <strong style="color:#f0f6fc;">${esc(activeGame.title)}</strong> · Round #${esc(view.round || 1)}</span>
+            ${headerRightPill}
+          </div>
+          <div style="display:flex;align-items:center;gap:16px;background:#0d1117;border:1px solid #263248;border-radius:12px;padding:14px 16px;">
+            ${gallowsSvg}
+            <div style="flex:1;min-width:0;">
+              <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;font-size:12px;">
+                <span style="background:rgba(168,85,247,0.18);color:#e9d5ff;border:1px solid rgba(168,85,247,0.4);padding:2px 9px;border-radius:6px;font-weight:700;">📝 Chooser: ${esc(view.chooserName || 'Player 1')}</span>
+                <span style="background:rgba(0,188,212,0.16);color:#67e8f9;border:1px solid rgba(0,188,212,0.4);padding:2px 9px;border-radius:6px;font-weight:700;">🎯 Guesser: ${esc(view.guesserName || 'Player 2')}</span>
+                <span style="background:rgba(239,68,68,0.16);color:#fca5a5;border:1px solid rgba(239,68,68,0.4);padding:2px 9px;border-radius:6px;font-weight:700;">✖ Wrong: ${wrong}/${maxWrong}</span>
+              </div>
+              <div style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:24px;font-weight:900;letter-spacing:0.12em;color:${view.phase === 'choosing' ? '#fcd34d' : '#f8fafc'};background:#161b22;border:1px solid #30363d;border-radius:9px;padding:12px 14px;margin-bottom:10px;word-break:break-word;">
+                ${esc(displayPhrase)}
+              </div>
+              <div style="display:flex;flex-wrap:wrap;gap:5px;align-items:center;">
+                <span style="font-size:11px;color:#8b949e;margin-right:4px;">Guessed:</span>
+                ${
+                  guessed.length > 0
+                    ? guessed
+                        .map((ch) => {
+                          const bad = wrongSet.has(ch);
+                          return `<span style="font-family:ui-monospace,monospace;font-size:12px;font-weight:800;padding:2px 7px;border-radius:5px;background:${bad ? 'rgba(239,68,68,0.18)' : 'rgba(16,185,129,0.2)'};color:${bad ? '#fca5a5' : '#6ee7b7'};">${esc(ch)}</span>`;
+                        })
+                        .join('')
+                    : `<span style="font-size:11.5px;color:#64748b;">None yet</span>`
+                }
+              </div>
+              ${
+                view.statusMessage
+                  ? `<div style="font-size:12.5px;color:#67e8f9;margin-top:8px;font-weight:600;">${esc(view.statusMessage)}</div>`
+                  : ''
+              }
+            </div>
+          </div>
+        `;
+      }
+
+      // 3. Generic Dynamic AI Game Stage (for any custom game generated by RobOS Agent!)
+      if (isPlaying && view && Object.keys(view).length > 0) {
+        const headline =
+          view.statusMessage ||
+          view.message ||
+          view.prompt ||
+          view.headline ||
+          `Live Phase: ${view.phase || 'In Progress'}`;
+        const scalarPairs = Object.entries(view)
+          .filter(
+            ([k, v]) =>
+              !['statusMessage', 'message', 'prompt', 'headline', 'leaderboard', 'scores', 'players'].includes(k) &&
+              (typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean')
+          )
+          .slice(0, 6);
+
+        return `
+          <div class="robos-w-meta" style="margin-bottom:8px;">
+            <span style="font-size:13px;">🎭 <strong style="color:#f0f6fc;">${esc(activeGame.title)}</strong> <code style="color:#67e8f9;">v${esc(activeGame.version || 1)}</code></span>
+            ${headerRightPill}
+          </div>
+          <div style="background:#0d1117;border:1px solid #263248;border-radius:12px;padding:14px 16px;">
+            <div style="font-size:18px;font-weight:800;color:#f8fafc;margin-bottom:10px;">${esc(headline)}</div>
+            <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;">
+              ${scalarPairs
+                .map(
+                  ([k, v]) => `
+                  <div style="background:#161b22;border:1px solid #30363d;border-radius:8px;padding:8px 10px;">
+                    <div style="font-size:10px;text-transform:uppercase;color:#8b949e;font-weight:700;">${esc(k)}</div>
+                    <div style="font-size:14px;font-weight:800;color:#67e8f9;margin-top:2px;">${esc(String(v))}</div>
+                  </div>`
+                )
+                .join('')}
+            </div>
+          </div>
+        `;
+      }
+
+      // 4. Standby / Waiting for Players Stage
+      return `
+        <div class="robos-w-meta" style="margin-bottom:8px;">
+          <span style="font-size:13px;">🎭 <strong style="color:#f0f6fc;">${esc(activeGame ? activeGame.title : 'RobOS AI Multiplayer Game Theater')}</strong></span>
+          ${headerRightPill}
+        </div>
+        <div style="background:#0d1117;border:1px solid #263248;border-left:4px solid #00bcd4;border-radius:12px;padding:16px 18px;">
+          <div style="font-size:19px;font-weight:850;color:#f8fafc;margin-bottom:6px;">
+            ${activeGame ? `🎮 Ready on Stage: ${esc(activeGame.title)}` : '✨ Stage Ready — Generate Any Multiplayer Game Live'}
+          </div>
+          <div style="font-size:13px;color:#8b949e;line-height:1.45;margin-bottom:12px;">
+            ${esc(
+              activeGame?.description ||
+                'Open your personal RobOS Game Theater Google Doc and click Launch to enter the Godot 4 HTTPS Web Client lobby.'
+            )}
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
+            ${
+              activeGame
+                ? `<span style="background:rgba(0,188,212,0.14);color:#67e8f9;border:1px solid rgba(0,188,212,0.35);padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;">
+                    Players Required: ${esc(activeGame.minPlayers)}–${esc(activeGame.maxPlayers)} (Seated: ${seats.length})
+                  </span>`
+                : ''
+            }
+            ${seats
+              .map(
+                (s) =>
+                  `<span style="background:#161b22;border:1px solid #30363d;padding:4px 10px;border-radius:999px;font-size:12px;color:#f0f6fc;">
+                    ${esc(s.avatar || '🎮')} <strong>${esc(s.shortName || s.name)}</strong> (Seated)
+                  </span>`
+              )
+              .join('')}
+          </div>
+        </div>
+      `;
+    }
+
     const customTag = data.customElementTag || card.config?.customElementTag || 'robos-ai-textarea';
     const placeholder = data.placeholder || card.config?.placeholder || 'Ask RobOS AI or trigger a workflow…';
     return `
@@ -1057,6 +1428,7 @@ robos-widget-sprint-radar, robos-widget-voice-dictation, robos-widget-custom {
       ['robos-widget-music-player', 'music-now-playing'],
       ['robos-widget-next-meeting', 'next-meeting-countdown'],
       ['robos-widget-voice-dictation', 'voice-dictation'],
+      ['robos-widget-game-theater', 'game-theater'],
       ['robos-widget-smart-tv', 'smart-tv'],
       ['robos-widget-smart-lights', 'smart-lights'],
       ['robos-widget-kgraph', 'kgraph-summary'],
