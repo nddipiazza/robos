@@ -54,7 +54,8 @@
     "jrpg-generate-art",
     "media-watch-status",
     "send-email-thunderbird",
-    "shopping-lists"
+    "shopping-lists",
+    "install-daw-instruments"
   ],
   "commands": [
     "view-task-plan",
@@ -102,7 +103,8 @@
     "jrpg-generate-art",
     "media-watch-status",
     "send-email-thunderbird",
-    "shopping-lists"
+    "shopping-lists",
+    "install-daw-instruments"
   ],
   "compatibility": {
     "claude": ">=1.0.0",

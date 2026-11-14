@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline';" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' data: blob: file:;" />
   <title>RobOS DAW Studio</title>
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -12,37 +12,119 @@
       <div class="brand">
         <span class="rec-dot" id="header-rec-dot"></span>
         <span class="brand-title">RobOS DAW Studio</span>
-        <span class="crumb" id="header-crumb">Preferences › Audio Devices</span>
+        <span class="crumb" id="header-crumb">Workstation › Recording Studio</span>
       </div>
       <div class="topbar-right">
         <span class="hw-pill" id="header-hw-pill">Scanning audio hardware…</span>
-        <button type="button" class="btn" id="btn-rescan">↻ Rescan Devices</button>
+        <button type="button" class="btn btn-sm" id="btn-open-drumkits-modal" title="Manage Open-Source Drum Replacement Kits">🥁 Drum Kits <span id="drumkits-badge" class="pill-count">…</span></button>
+        <button type="button" class="btn btn-sm" id="btn-rescan">↻ Rescan</button>
       </div>
     </header>
 
     <div class="workspace">
       <aside class="nav-rail" aria-label="DAW navigation">
-        <div class="nav-group-title">Preferences</div>
-        <button type="button" class="nav-btn active" id="nav-audio-devices" data-view="audio-devices">
-          <span>🎛️ Audio Devices</span>
-        </button>
         <div class="nav-group-title">Workstation</div>
-        <button type="button" class="nav-btn" id="nav-studio-stage" data-view="studio-stage">
+        <button type="button" class="nav-btn active" id="nav-studio-stage" data-view="studio-stage">
           <span>⏺ Recording Studio</span>
         </button>
+        <button type="button" class="nav-btn" id="nav-open-wizard-rail">
+          <span>🎙️ + Add Mic Wizard</span>
+        </button>
+
+        <div class="nav-group-title">Preferences</div>
+        <button type="button" class="nav-btn" id="nav-audio-devices" data-view="audio-devices">
+          <span>🎛️ Audio Devices</span>
+        </button>
+
+        <div class="rail-session-summary" id="rail-session-summary">
+          <div class="rail-summary-title">Session Summary</div>
+          <div class="rail-stat"><span>Tracks</span><strong id="rail-track-count">0</strong></div>
+          <div class="rail-stat"><span>Armed (● R)</span><strong id="rail-armed-count" class="red-text">0</strong></div>
+          <div class="rail-stat"><span>Takes</span><strong id="rail-clip-count">0</strong></div>
+          <div class="rail-stat"><span>Drum Replace</span><strong id="rail-replace-count" class="accent-text">0</strong></div>
+        </div>
       </aside>
 
       <main class="main-pane">
-        <!-- Preferences -> Audio Devices -->
-        <section id="view-audio-devices" class="view-panel">
+        <div id="status-banner" class="status-banner hidden" role="status" aria-live="polite"></div>
+
+        <!-- ==================== WORKSTATION: RECORDING STUDIO ==================== -->
+        <section id="view-studio-stage" class="view-panel studio-panel">
+          <!-- Session & Transport Toolbar -->
+          <div class="transport-bar">
+            <div class="session-file-controls">
+              <input type="text" id="project-name-input" class="session-title-input" value="Studio Drum &amp; Band Session" aria-label="Project Session Name" />
+              <span class="save-badge" id="project-save-state">Unsaved</span>
+              <button type="button" class="btn btn-sm" id="btn-project-new" title="Create New Session">New</button>
+              <button type="button" class="btn btn-sm" id="btn-project-open" title="Open Saved Session">📂 Open</button>
+              <button type="button" class="btn btn-sm" id="btn-project-save" title="Save Session (Ctrl+S)">💾 Save</button>
+              <button type="button" class="btn btn-sm" id="btn-project-save-as" title="Save Session As Folder">Save As…</button>
+            </div>
+
+            <div class="transport-center">
+              <button type="button" class="transport-btn" id="btn-transport-rewind" title="Rewind to 00:00.00">⏮</button>
+              <button type="button" class="transport-btn play-btn" id="btn-transport-play" title="Play Multi-Track Timeline + Sound Replacement">▶ Play</button>
+              <button type="button" class="transport-btn" id="btn-transport-stop" title="Stop Playback / Recording">⏹ Stop</button>
+              <button type="button" class="transport-btn rec-btn" id="btn-transport-record" title="Record All Armed Mic Tracks">● Record</button>
+              <div class="timecode-box">
+                <span class="timecode-readout mono" id="transport-timecode">00:00.00</span>
+                <span class="timecode-sub mono" id="transport-substate">READY</span>
+              </div>
+              <div class="tempo-box">
+                <label class="tempo-lbl" for="project-bpm-input">BPM</label>
+                <input type="number" id="project-bpm-input" class="bpm-input mono" min="40" max="280" value="120" />
+                <button type="button" class="btn btn-sm click-toggle active" id="btn-metronome-toggle" title="Toggle Metronome Click">🔔 Click</button>
+              </div>
+              <label class="test-groove-toggle" title="When enabled, injects synthesized multi-mic drum &amp; guitar hits on Stop so you can test transient Sound Replacement even without hitting physical drums">
+                <input type="checkbox" id="chk-test-groove" />
+                <span>Synth Test Hits</span>
+              </label>
+            </div>
+
+            <div class="studio-cta-group">
+              <button type="button" class="btn btn-primary btn-wizard-cta" id="btn-open-add-mic-wizard">🎙️ + Add Mic Wizard</button>
+            </div>
+          </div>
+
+          <!-- Empty State Launchpad (shown when 0 tracks) -->
+          <div id="studio-empty-state" class="studio-empty-card">
+            <div class="empty-art-strip">
+              <img src="assets/mics/kick-mic.webp" alt="Kick Mic" />
+              <img src="assets/mics/snare-mic.webp" alt="Snare Mic" />
+              <img src="assets/mics/cymbal-mic.webp" alt="Cymbal Mic" />
+              <img src="assets/mics/guitar-mic.webp" alt="Guitar Mic" />
+            </div>
+            <h2>Arm Your Microphones &amp; Instruments</h2>
+            <p>Open the <strong>Add Mic Wizard</strong> for each microphone in your setup (Kick In, Kick Out, Snare Top, Snare Bottom Ø, Toms 1–3, Floor Toms 1–2, Hi-Hat, Ride, Spot Cymbals, Overheads, Room, Guitar, Bass, Vocals) — strike the instrument or tap the mic to auto-detect its channel, auto-apply open-source LV2/VST EQ, and configure Drum Sound Replacement.</p>
+            <div class="empty-actions">
+              <button type="button" class="btn btn-primary btn-lg" id="btn-empty-open-wizard">🎙️ Open Add Mic Wizard</button>
+            </div>
+          </div>
+
+          <!-- Timeline Ruler + Multi-Track Headers & Lanes -->
+          <div id="tracks-workspace" class="tracks-workspace hidden">
+            <div class="timeline-header-row">
+              <div class="track-header-col-title">Armed Studio Channels (<span id="tracks-header-count">0</span>)</div>
+              <div class="timeline-ruler-wrap" id="timeline-ruler-wrap">
+                <canvas id="timeline-ruler-canvas" height="28"></canvas>
+              </div>
+            </div>
+
+            <div id="tracks-list" class="tracks-list"></div>
+          </div>
+
+          <!-- Selected Track FX / EQ / Sound Replacement Inspector -->
+          <div id="track-inspector-drawer" class="inspector-drawer hidden"></div>
+        </section>
+
+        <!-- ==================== PREFERENCES: AUDIO DEVICES ==================== -->
+        <section id="view-audio-devices" class="view-panel hidden">
           <div class="panel-header">
             <div>
               <h1>Preferences → Audio Devices</h1>
               <p class="subtitle">Native Linux PipeWire Pro-Audio &amp; ALSA <code>snd_usb_audio</code> hardware routing (replaces Windows ASIO with direct kernel + PipeWire quantum scheduling).</p>
             </div>
           </div>
-
-          <div id="status-banner" class="status-banner hidden" role="status" aria-live="polite"></div>
 
           <div id="interface-card-slot"></div>
 
@@ -120,20 +202,229 @@
             </div>
           </div>
         </section>
-
-        <!-- Studio Stage Placeholder (Step 2) -->
-        <section id="view-studio-stage" class="view-panel hidden">
-          <div class="card">
-            <h2 class="card-title">Multi-Track Recording Studio Ready</h2>
-            <p class="subtitle" id="studio-ready-copy">Verify your Focusrite interface routing and preamp settings in Preferences → Audio Devices first.</p>
-            <div class="card-actions">
-              <button type="button" class="btn btn-primary" id="btn-back-to-audio-prefs">← Back to Preferences → Audio Devices</button>
-            </div>
-          </div>
-        </section>
       </main>
     </div>
   </div>
+
+  <!-- ==================== MODAL 1: ADD MIC WIZARD ==================== -->
+  <div id="add-mic-wizard-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="wiz-modal-title">
+    <div class="modal-window wizard-modal">
+      <div class="modal-header">
+        <div>
+          <h2 id="wiz-modal-title">🎙️ Add Mic Wizard</h2>
+          <p class="modal-subtitle" id="wiz-step-subtitle">Step 1 of 3 — Choose a studio microphone or instrument preset</p>
+        </div>
+        <div class="wizard-steps-pills">
+          <span class="wiz-pill active" id="wiz-pill-1">1. Choose Mic</span>
+          <span class="wiz-pill" id="wiz-pill-2">2. Identify Channel</span>
+          <span class="wiz-pill" id="wiz-pill-3">3. VST / EQ &amp; Drum Replace</span>
+        </div>
+        <button type="button" class="modal-close" id="btn-wiz-close" aria-label="Close Add Mic Wizard">✕</button>
+      </div>
+
+      <div class="modal-body" id="wiz-body">
+        <!-- Step 1: Big Menu of AI-Illustrated Mic Cards -->
+        <div id="wiz-step-1">
+          <div class="wiz-filter-bar">
+            <div class="filter-pills">
+              <button type="button" class="filter-pill active" data-cat="all">All Studio Mics (18)</button>
+              <button type="button" class="filter-pill" data-cat="drums">🥁 Drum &amp; Cymbal Mics (14)</button>
+              <button type="button" class="filter-pill" data-cat="guitar-bass">🎸 Guitar &amp; Bass Mics</button>
+              <button type="button" class="filter-pill" data-cat="vocals-room">🎤 Vocal &amp; Acoustic Mics</button>
+            </div>
+            <span class="hint">Double-click any mic card to jump straight to channel detection</span>
+          </div>
+          <div id="wiz-mic-cards-grid" class="mic-cards-grid"></div>
+        </div>
+
+        <!-- Step 2: Identify Channel (Strike Instrument / Tap Mic or Manual Select) -->
+        <div id="wiz-step-2" class="hidden">
+          <div class="wiz-selected-banner" id="wiz-selected-banner"></div>
+
+          <div class="wiz-two-col">
+            <div class="card wiz-subcard">
+              <div class="tap-detect-header">
+                <div>
+                  <h3 class="card-title" style="margin-bottom:3px;">🎯 Strike Instrument or Tap the Mic</h3>
+                  <p class="hint">Listening across your Focusrite Scarlett / PipeWire inputs in real time. Hit the drum, strum, or tap the mic grille to lock onto its channel automatically — or click any channel below.</p>
+                </div>
+                <span class="listen-badge" id="wiz-listen-badge">● Listening…</span>
+              </div>
+
+              <div id="wiz-tap-alert" class="tap-alert hidden"></div>
+              <div id="wiz-channel-list" class="wiz-channel-list"></div>
+            </div>
+
+            <div class="card wiz-subcard">
+              <h3 class="card-title">Channel &amp; Preamp Details</h3>
+              <div class="form-row">
+                <label for="wiz-track-name">Track Label</label>
+                <input type="text" id="wiz-track-name" class="text-input" />
+              </div>
+              <div class="form-row">
+                <label for="wiz-manual-channel">Selected Capture Channel</label>
+                <select id="wiz-manual-channel" class="select"></select>
+              </div>
+              <div class="form-row">
+                <label for="wiz-pan-slider">Stereo Pan (<span id="wiz-pan-val" class="mono">C</span>)</label>
+                <input type="range" id="wiz-pan-slider" min="-1" max="1" step="0.05" value="0" class="range-full" />
+              </div>
+              <label class="checkbox-row">
+                <input type="checkbox" id="wiz-apply-hw-hints" checked />
+                <span>Auto-apply recommended Focusrite Scarlett preamp mode (<span id="wiz-hw-hint-summary" class="mono">Line</span>)</span>
+              </label>
+              <div class="placement-tip-box" id="wiz-placement-tip"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 3: Automatic Open-Source VST/LV2, EQ & Sound Replacement -->
+        <div id="wiz-step-3" class="hidden">
+          <div class="wiz-two-col">
+            <div class="card wiz-subcard">
+              <h3 class="card-title">🎛️ Automatic Open-Source VST / LV2 &amp; EQ Chain</h3>
+              <p class="hint" style="margin-bottom:10px;">Tailored studio DSP chain applied non-destructively to this mic channel:</p>
+              <div id="wiz-plugin-chips" class="plugin-chips"></div>
+
+              <div class="dsp-sliders">
+                <div class="slider-row">
+                  <label>Noise Gate (<span id="wiz-gate-val" class="mono">-36 dB</span>)</label>
+                  <input type="checkbox" id="wiz-gate-enabled" checked />
+                  <input type="range" id="wiz-gate-thresh" min="-65" max="-15" step="1" value="-36" />
+                </div>
+                <div class="slider-row">
+                  <label>High-Pass Cut (<span id="wiz-hpf-val" class="mono">60 Hz</span>)</label>
+                  <input type="checkbox" id="wiz-eq-enabled" checked />
+                  <input type="range" id="wiz-eq-hpf" min="20" max="320" step="5" value="60" />
+                </div>
+                <div class="slider-row">
+                  <label>Low Body Gain (<span id="wiz-low-val" class="mono">+4.0 dB</span>)</label>
+                  <span></span>
+                  <input type="range" id="wiz-eq-low" min="-12" max="12" step="0.5" value="4" />
+                </div>
+                <div class="slider-row">
+                  <label>Boxiness Mid (<span id="wiz-mid-val" class="mono">-3.5 dB</span>)</label>
+                  <span></span>
+                  <input type="range" id="wiz-eq-mid" min="-12" max="12" step="0.5" value="-3.5" />
+                </div>
+                <div class="slider-row">
+                  <label>Attack / Air (<span id="wiz-high-val" class="mono">+4.0 dB</span>)</label>
+                  <span></span>
+                  <input type="range" id="wiz-eq-high" min="-12" max="12" step="0.5" value="4" />
+                </div>
+                <div class="slider-row">
+                  <label>Compressor Ratio (<span id="wiz-comp-val" class="mono">4.0:1</span>)</label>
+                  <input type="checkbox" id="wiz-comp-enabled" checked />
+                  <input type="range" id="wiz-comp-ratio" min="1" max="10" step="0.5" value="4" />
+                </div>
+              </div>
+            </div>
+
+            <div class="card wiz-subcard" id="wiz-sound-replacement-card">
+              <div class="sr-card-header">
+                <div>
+                  <h3 class="card-title" style="margin-bottom:2px;">🥁 Open-Source Drum Sound Replacement</h3>
+                  <span class="hint">Triggers multi-velocity studio drum samples on detected mic transients.</span>
+                </div>
+                <label class="toggle-pill">
+                  <input type="checkbox" id="wiz-sr-enabled" />
+                  <span id="wiz-sr-toggle-lbl">ON</span>
+                </label>
+              </div>
+
+              <div id="wiz-sr-controls">
+                <div class="form-row">
+                  <label for="wiz-sr-kit">Open-Source Drum Kit Archive</label>
+                  <div class="control-inline">
+                    <select id="wiz-sr-kit" class="select"></select>
+                    <button type="button" class="btn btn-sm" id="btn-wiz-download-kit">⬇ Install Kit</button>
+                  </div>
+                </div>
+                <div class="form-row">
+                  <label for="wiz-sr-piece">Replacement Drum Instrument</label>
+                  <div class="control-inline">
+                    <select id="wiz-sr-piece" class="select"></select>
+                    <button type="button" class="btn btn-sm" id="btn-wiz-audition">🔊 Audition</button>
+                  </div>
+                </div>
+                <div class="form-row">
+                  <label for="wiz-sr-thresh">Hit Trigger Threshold (<span id="wiz-sr-thresh-val" class="mono">-28 dBFS</span>)</label>
+                  <input type="range" id="wiz-sr-thresh" min="-48" max="-8" step="1" value="-28" class="range-full" />
+                </div>
+                <div class="form-row">
+                  <label for="wiz-sr-blend">Dry Mic ↔ Replacement Blend (<span id="wiz-sr-blend-val" class="mono">75% Replaced</span>)</label>
+                  <input type="range" id="wiz-sr-blend" min="0" max="100" step="5" value="75" class="range-full" />
+                </div>
+                <div class="skill-callout">
+                  <strong>RobOS Skill <code>/install-daw-instruments</code>:</strong> Open-source kits live in <code>~/.local/share/robos/daw-studio/instruments/</code> (never committed to Git). Run <code>node packages/daw-studio/bin/daw-instruments.js install all</code> anytime.
+                </div>
+              </div>
+
+              <div id="wiz-sr-unsupported-note" class="hint hidden" style="margin-top:12px;">
+                Drum Sound Replacement is designed for percussive drum &amp; cymbal channels, though you can still enable hybrid triggering above if desired!
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn" id="btn-wiz-back">← Back</button>
+        <div class="modal-footer-right">
+          <button type="button" class="btn" id="btn-wiz-cancel">Cancel</button>
+          <button type="button" class="btn btn-primary" id="btn-wiz-next">Next: Identify Channel →</button>
+          <button type="button" class="btn btn-accent-outline hidden" id="btn-wiz-add-another">+ Add &amp; Setup Next Mic</button>
+          <button type="button" class="btn btn-primary hidden" id="btn-wiz-finish">✓ Add Armed Mic Track</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL 2: OPEN PROJECT ==================== -->
+  <div id="open-project-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+    <div class="modal-window modal-md">
+      <div class="modal-header">
+        <div>
+          <h2>📂 Open Saved Studio Session</h2>
+          <p class="modal-subtitle">Reload multi-track Focusrite routing, LV2/EQ chains, Sound Replacement, and recorded WAV takes</p>
+        </div>
+        <button type="button" class="modal-close" id="btn-open-modal-close">✕</button>
+      </div>
+      <div class="modal-body">
+        <div id="saved-projects-list" class="saved-projects-list"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn" id="btn-browse-project-file">Browse project.json on Disk…</button>
+        <button type="button" class="btn" id="btn-open-modal-cancel">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL 3: OPEN-SOURCE DRUM KITS ==================== -->
+  <div id="drumkits-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+    <div class="modal-window modal-md">
+      <div class="modal-header">
+        <div>
+          <h2>🥁 Open-Source Drum Replacement Archives</h2>
+          <p class="modal-subtitle">Downloaded to untracked user storage <code>~/.local/share/robos/daw-studio/instruments/drumkits/</code></p>
+        </div>
+        <button type="button" class="modal-close" id="btn-drumkits-close">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="skill-callout" style="margin-bottom:12px;">
+          <strong>Agent Skill:</strong> Ask your RobOS agent to run <code>/install-daw-instruments</code> or run:<br />
+          <code>node packages/daw-studio/bin/daw-instruments.js install all</code>
+        </div>
+        <div id="drumkits-progress-bar" class="status-banner hidden"></div>
+        <div id="drumkits-catalog-list" class="saved-projects-list"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" id="btn-download-all-kits">⬇ Download / Verify All Open Kits</button>
+        <button type="button" class="btn" id="btn-drumkits-done">Done</button>
+      </div>
+    </div>
+  </div>
+
   <script src="app.js"></script>
 </body>
 </html>

@@ -6,12 +6,23 @@ component_type: app
 permalink: /daw-studio/
 redirect_from:
   - /apps/daw-studio/
-summary: "Multi-track Digital Audio Workstation, Focusrite & PipeWire Pro-Audio low-latency interface studio, mixer, FX rack, and drum/synth workstation"
-description: "Multi-track Digital Audio Workstation, Focusrite & PipeWire Pro-Audio low-latency interface studio, mixer, FX rack, and drum/synth workstation"
+summary: "Multi-track Digital Audio Workstation, Focusrite & PipeWire Pro-Audio low-latency interface studio, Add Mic Wizard, open-source LV2/EQ chains, and drum sound replacement"
+description: "Multi-track Digital Audio Workstation, Focusrite & PipeWire Pro-Audio low-latency interface studio, Add Mic Wizard, open-source LV2/EQ chains, and drum sound replacement"
 icon: daw-studio.svg
 ---
 
-Multi-track Digital Audio Workstation, Focusrite & PipeWire Pro-Audio low-latency interface studio, mixer, FX rack, and drum/synth workstation
+Multi-track Linux Digital Audio Workstation with native **Focusrite Scarlett / Clarett+** USB hardware control (`snd_usb_audio` + PipeWire Pro-Audio quantum scheduling), an interactive **Add Mic Wizard**, automatic open-source LV2/VST EQ & dynamics chains, non-destructive **Drum Sound Replacement**, and full project session Save / Open persistence.
+
+## Key features
+
+- **Preferences → Audio Devices**: Native USB pro-audio discovery (`1235:*` Focusrite Scarlett & Clarett+), PipeWire sample rate & quantum buffer latency tuning, and direct ALSA Scarlett preamp switching (`+48V` Phantom Power, `Air`, `-10dB Pad`, `Inst` Hi-Z).
+- **Add Mic Wizard**: Visual studio microphone menu (Kick Inside, Kick Outside/Subkick, Snare Top, Snare Bottom Ø phase-inverted, Rack Toms 1–3, Floor Toms 1–2, Hi-Hat, Ride Spot, Accent Cymbal Spot, Overheads, Drum Room/Crush, Guitar Cab, Guitar Direct Hi-Z, Bass Cab/DI, Studio Vocal) with **Strike Instrument / Tap the Mic** multi-channel auto-detection across all analog, ADAT, and S/PDIF inputs, plus `+ Add & Setup Next Mic` for miking Kits of any size.
+- **Automatic Open-Source DSP & Drum Sound Replacement**: Applies per-mic Noise Gate, High-Pass + 3-Band Parametric EQ, Compressor, and optional Drum Sound Replacement triggered on detected drum transients.
+- **Open-Source Drum Archives via `/install-daw-instruments`**: Drum samples (`gm-rock-kit` Pearl DX GPL-3.0, `virtuosity-cc0` CC0-1.0, `tr-808-kit` GPL-3.0) download on demand to `~/.local/share/robos/daw-studio/instruments/` so `.wav`/`.flac` sample libraries are never committed to Git:
+
+```bash
+node packages/daw-studio/bin/daw-instruments.js install all
+```
 
 ## Source and integration
 
@@ -21,13 +32,10 @@ Its entry point is [`main.js`](https://github.com/nddipiazza/robos/tree/main/pac
 
 ## Run from source
 
-From `packages/daw-studio`, install the dependencies and run:
-
 ```bash
-npm install
-npm start
+scripts/source-shortcuts/node_modules/.bin/electron --no-sandbox scripts/source-shortcuts/source-host.cjs --app=daw-studio
 ```
 
 ## Validation
 
-Run `npm test` from `packages/daw-studio`. The command is defined in the [package manifest](https://github.com/nddipiazza/robos/tree/main/packages/daw-studio/package.json).
+Run `npm test` from `packages/daw-studio`.

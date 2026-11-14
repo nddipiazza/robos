@@ -291,6 +291,7 @@ RobOS includes a cross-agent plugin marketplace and standard skills under `plugi
 - `send-email-thunderbird` — Send email through Mozilla Thunderbird with the user's Gmail account (RobOS Cloud Accounts) via the RobOS Thunderbird Bridge add-on and Thunderbird's MailExtension compose API (CLI `packages/robos-lib/thunderbird-mail.js`)
 - `media-watch-status` — Where did we leave off? Show/season/episode watch status, movie status, continue watching and play history from Movie Player and Audio Player, the same on every computer (CLI `packages/movie-player/bin/watch-status.js`, MCP server `packages/movie-player/bin/media-mcp.js`)
 - `fix-media-metadata` — Inspect, extract, enrich, and write media metadata and cover art across all known formats using open-source tools (`music-metadata`, `ffmpeg`/`ffprobe`, MusicBrainz CC0, Cover Art Archive, LRCLIB)
+- `install-daw-instruments` — Download and manage open-source studio drum kits (`gm-rock-kit`, `virtuosity-cc0`, `tr-808-kit`, `sfzinstruments/*`) and Linux LV2/VST plugins for RobOS DAW Studio Sound Replacement into `~/.local/share/robos/daw-studio/instruments/` without committing `.wav`/`.flac` samples to Git (CLI `packages/daw-studio/bin/daw-instruments.js`)
 
 See [plugins/README.md](plugins/README.md) for full installation and usage instructions across Claude, Codex, Antigravity, Copilot, and Gemini.
 
