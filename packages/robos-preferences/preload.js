@@ -32,4 +32,9 @@ contextBridge.exposeInMainWorld('api', {
   aiApiStatus:   ()        => ipcRenderer.invoke('ai-api-status'),
   aiApiSaveKey:  (p, v)    => ipcRenderer.invoke('ai-api-save-key', p, v),
   aiApiInstall:  (list)    => ipcRenderer.invoke('ai-api-install', list),
+  audioDevicesSnapshot: () => ipcRenderer.invoke('audio-devices-snapshot'),
+  saveAudioEngine: payload => ipcRenderer.invoke('audio-devices-save-engine', payload),
+  setFocusriteControl: payload => ipcRenderer.invoke('audio-devices-set-hardware-control', payload),
+  testAudioInput: payload => ipcRenderer.invoke('audio-devices-test-input', payload),
+  playAudioTestTone: payload => ipcRenderer.invoke('audio-devices-play-tone', payload),
 });

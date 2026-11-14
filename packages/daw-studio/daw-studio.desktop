@@ -1,0 +1,12 @@
+[Desktop Entry]
+X-RobOS-App=true
+Version=1.0
+Type=Application
+Name=RobOS DAW Studio
+Comment=Multi-track Digital Audio Workstation, Focusrite & PipeWire Pro-Audio low-latency interface studio, mixer, FX rack, and drum/synth workstation
+Exec=/usr/bin/electron /usr/local/share/robos/daw-studio/main.js --no-sandbox --disable-gpu --disable-dev-shm-usage
+Icon=/usr/local/share/robos/daw-studio/icon.svg
+Terminal=false
+Categories=AudioVideo;Audio;Recorder;Sequencer;
+X-RobOS-Category=Tools
+StartupWMClass=robos-daw-studio

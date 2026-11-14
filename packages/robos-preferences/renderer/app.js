@@ -13,7 +13,7 @@ async function init() {
   _settings = await window.api.loadSettings();
   renderSidebar();
   renderSections();
-  await Promise.all([loadConfigSync(), loadCloudAccounts(), loadGithubAccounts(), loadOvpnAccounts(), loadAiApiStatus()]);
+  await Promise.all([loadAudioDevices(), loadConfigSync(), loadCloudAccounts(), loadGithubAccounts(), loadOvpnAccounts(), loadAiApiStatus()]);
 }
 
 function renderSidebar() {
@@ -58,6 +58,7 @@ function renderSidebar() {
 function renderSections() {
   const el = document.getElementById('sections');
   el.innerHTML = _schema.sections.map(section => {
+    if (section.id === 'audio_devices') return audioDevicesSection();
     if (section.id === 'config_sync') return configSyncSection();
     if (section.id === 'cloud_accounts') return cloudAccountSection();
     if (section.id === 'github_accounts') return githubAccountSection();
@@ -733,4 +734,228 @@ async function loadCloudAccounts() {
   if (openCalBtn) {
     openCalBtn.onclick = () => window.api.launchRobosApp('google-calendar');
   }
+}
+
+/* ── Audio Devices (PipeWire + ALSA + Focusrite Pro-Audio) ────────────── */
+function audioDevicesSection() {
+  return `<section class="section" id="section-audio_devices">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:8px;">
+      <h2 class="section-title" style="margin-bottom:0;">Audio Devices</h2>
+      <div style="display:flex;gap:8px;">
+        <button type="button" class="btn" id="btn-audio-rescan">Rescan USB &amp; Audio</button>
+        <button type="button" class="btn btn-primary" id="btn-open-daw-studio">Open RobOS DAW Studio</button>
+      </div>
+    </div>
+    <p class="section-description">Connect USB pro-audio interfaces (Focusrite Scarlett / Clarett+, USB Audio Class 2.0) and configure system-wide PipeWire low-latency routing on Linux — no Windows ASIO driver needed.</p>
+    <div id="audio-devices-body" style="margin-top:14px;">
+      <p class="section-status">Scanning PipeWire &amp; ALSA audio interfaces…</p>
+    </div>
+    <p class="section-status" id="audio-devices-status" role="status" aria-live="polite"></p>
+  </section>`;
+}
+
+function renderAudioDevicesBody(snap) {
+  const body = document.getElementById('audio-devices-body');
+  if (!body) return;
+  if (!snap || !snap.ok) {
+    body.innerHTML = `<p class="section-status">${esc(snap?.error || 'Audio device inspection unavailable.')}</p>`;
+    return;
+  }
+
+  const fr = snap.focusrite || { connected: false };
+  const clk = snap.clock || { effectiveRate: 48000, effectiveQuantum: 1024, latencyMs: 21.33, forceQuantum: 0 };
+  const inputs = snap.inputs || [];
+  const outputs = snap.outputs || [];
+  const selectedInputName = snap.activeInput?.name || '';
+  const selectedOutputName = snap.activeOutput?.name || '';
+
+  const interfaceBanner = fr.connected ? `
+    <div class="ad-card ad-card-connected" id="focusrite-interface-card">
+      <div class="ad-card-head">
+        <div>
+          <span class="ad-badge ad-badge-ok">● CONNECTED</span>
+          <strong class="ad-title">${esc(fr.model)}</strong>
+        </div>
+        <span class="ad-mono">USB ${esc(fr.usbId || '')} · ALSA ${esc(fr.alsaDevice || 'USB')}</span>
+      </div>
+      <div class="ad-meta-grid">
+        <div><span class="ad-k">Driver</span><span class="ad-v">Linux snd_usb_audio + PipeWire</span></div>
+        <div><span class="ad-k">Channels</span><span class="ad-v">${fr.maxCaptureChannels} In / ${fr.maxPlaybackChannels} Out (${fr.bits}-bit ${esc(fr.format || 'S32_LE')})</span></div>
+        <div><span class="ad-k">Transport</span><span class="ad-v">${esc(fr.usbSpeed || 'USB High-Speed')} · ${esc(fr.syncMode || 'Async')}</span></div>
+        <div><span class="ad-k">Clock / FW</span><span class="ad-v">${esc(fr.mixer?.clockSource?.value || 'Internal')} Lock · FW ${esc(fr.mixer?.firmwareVersion || 'OK')}${fr.serial ? ' · SN ' + esc(fr.serial) : ''}</span></div>
+      </div>
+    </div>
+  ` : `
+    <div class="ad-card" id="focusrite-interface-card">
+      <div class="ad-card-head">
+        <div><span class="ad-badge">USB PRO-AUDIO</span> <strong class="ad-title">No Focusrite USB Interface Detected</strong></div>
+      </div>
+      <p class="field-description">${esc(fr.hint || 'Plug in a Focusrite or USB Audio Class 2.0 interface and click Rescan.')}</p>
+    </div>
+  `;
+
+  const inputOpts = inputs.map(n =>
+    `<option value="${esc(n.name)}" data-node-id="${n.id}"${n.name === selectedInputName ? ' selected' : ''}>${n.isDefault ? '★ ' : ''}${esc(n.description)}</option>`
+  ).join('');
+  const outputOpts = outputs.map(n =>
+    `<option value="${esc(n.name)}" data-node-id="${n.id}"${n.name === selectedOutputName ? ' selected' : ''}>${n.isDefault ? '★ ' : ''}${esc(n.description)}</option>`
+  ).join('');
+
+  const rates = [44100, 48000, 88200, 96000, 176400, 192000];
+  const rateOpts = rates.map(r =>
+    `<option value="${r}"${clk.effectiveRate === r ? ' selected' : ''}>${(r / 1000).toFixed(r % 1000 ? 1 : 0)} kHz</option>`
+  ).join('');
+
+  const quantums = [
+    { v: 0, label: `Auto (${clk.quantum} smp)` },
+    { v: 64, label: `64 samples (${((64 / clk.effectiveRate) * 1000).toFixed(2)} ms — Ultra Low)` },
+    { v: 128, label: `128 samples (${((128 / clk.effectiveRate) * 1000).toFixed(2)} ms — Studio Recording)` },
+    { v: 256, label: `256 samples (${((256 / clk.effectiveRate) * 1000).toFixed(2)} ms — Balanced)` },
+    { v: 512, label: `512 samples (${((512 / clk.effectiveRate) * 1000).toFixed(2)} ms — Mixing)` },
+    { v: 1024, label: `1024 samples (${((1024 / clk.effectiveRate) * 1000).toFixed(2)} ms — Relaxed)` },
+  ];
+  const quantumOpts = quantums.map(q =>
+    `<option value="${q.v}"${clk.forceQuantum === q.v ? ' selected' : ''}>${esc(q.label)}</option>`
+  ).join('');
+
+  let preampHtml = '';
+  if (fr.connected && fr.mixer && (fr.mixer.phantomBanks?.length || fr.mixer.preamps?.length)) {
+    const banks = (fr.mixer.phantomBanks || []).map(b =>
+      `<button type="button" class="btn ad-hw-btn ${b.enabled ? 'ad-hw-48v-on' : ''}" data-hw-card="${fr.alsaCardIndex}" data-hw-control="${esc(b.control)}" data-hw-val="${!b.enabled}">${esc(b.label)}: ${b.enabled ? 'ON' : 'OFF'}</button>`
+    ).join('');
+    const strips = (fr.mixer.preamps || []).map(p => `
+      <div class="ad-preamp">
+        <div class="ad-preamp-ch">${esc(p.label)}</div>
+        ${p.level !== null ? `<button type="button" class="btn ad-mini-btn ${p.level === 'Inst' ? 'ad-hw-active' : ''}" data-hw-card="${fr.alsaCardIndex}" data-hw-control="Line In ${p.channel} Level" data-hw-enum="${p.level === 'Inst' ? 'Line' : 'Inst'}">${esc(p.level)}</button>` : ''}
+        ${p.air !== null ? `<button type="button" class="btn ad-mini-btn ${p.air ? 'ad-hw-air' : ''}" data-hw-card="${fr.alsaCardIndex}" data-hw-control="Line In ${p.channel} Air" data-hw-val="${!p.air}">Air</button>` : ''}
+        ${p.pad !== null ? `<button type="button" class="btn ad-mini-btn ${p.pad ? 'ad-hw-active' : ''}" data-hw-card="${fr.alsaCardIndex}" data-hw-control="Line In ${p.channel} Pad" data-hw-val="${!p.pad}">Pad</button>` : ''}
+      </div>
+    `).join('');
+    preampHtml = `
+      <div class="ad-subpanel">
+        <div class="ad-subhead">
+          <strong>Focusrite Hardware Preamp Controls (ALSA snd_usb_audio)</strong>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">${banks}</div>
+        </div>
+        <div class="ad-preamp-grid">${strips}</div>
+      </div>
+    `;
+  }
+
+  body.innerHTML = `
+    ${interfaceBanner}
+    <div class="field-row">
+      <div class="field-copy">
+        <label class="field-label" for="ad-input-select">Input Device (Capture)</label>
+        <p class="field-description">Select microphone, instrument (Hi-Z), line, S/PDIF, or ADAT input channel.</p>
+      </div>
+      <div class="field-input" style="gap:8px;">
+        <select class="select-input" id="ad-input-select">${inputOpts}</select>
+        <button type="button" class="btn" id="btn-ad-test-input" title="Capture 1.5s sample and measure dBFS">Test In</button>
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field-copy">
+        <label class="field-label" for="ad-output-select">Output Device (Playback / Monitor)</label>
+        <p class="field-description">Route studio monitor outs or front-panel headphones.</p>
+      </div>
+      <div class="field-input" style="gap:8px;">
+        <select class="select-input" id="ad-output-select">${outputOpts}</select>
+        <button type="button" class="btn" id="btn-ad-play-tone" title="Play studio A-major chime">Test Out</button>
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field-copy">
+        <label class="field-label" for="ad-rate-select">Sample Rate</label>
+        <p class="field-description">Active PipeWire graph clock: ${clk.effectiveRate} Hz (${clk.latencyMs} ms block latency).</p>
+      </div>
+      <div class="field-input"><select class="select-input" id="ad-rate-select">${rateOpts}</select></div>
+    </div>
+    <div class="field-row">
+      <div class="field-copy">
+        <label class="field-label" for="ad-quantum-select">Buffer Size (PipeWire Quantum)</label>
+        <p class="field-description">Replaces Windows ASIO buffer size. Use 64–128 samples for live guitar/vocal monitoring.</p>
+      </div>
+      <div class="field-input"><select class="select-input" id="ad-quantum-select">${quantumOpts}</select></div>
+    </div>
+    <div class="section-actions">
+      <button type="button" class="btn btn-primary" id="btn-ad-apply">Apply Audio Device Settings</button>
+    </div>
+    ${preampHtml}
+  `;
+
+  const statusEl = document.getElementById('audio-devices-status');
+  document.getElementById('btn-ad-apply')?.addEventListener('click', async () => {
+    const inSel = document.getElementById('ad-input-select');
+    const outSel = document.getElementById('ad-output-select');
+    const inOpt = inSel?.selectedOptions?.[0];
+    const outOpt = outSel?.selectedOptions?.[0];
+    statusEl.textContent = 'Applying PipeWire & device routing…';
+    const res = await window.api.saveAudioEngine({
+      sampleRate: Number(document.getElementById('ad-rate-select').value),
+      quantum: Number(document.getElementById('ad-quantum-select').value),
+      defaultInputId: inOpt ? Number(inOpt.dataset.nodeId) : undefined,
+      defaultOutputId: outOpt ? Number(outOpt.dataset.nodeId) : undefined,
+      preferredInputNodeName: inSel?.value || '',
+      preferredOutputNodeName: outSel?.value || '',
+    });
+    if (res?.ok) {
+      renderAudioDevicesBody(res.snapshot);
+      statusEl.textContent = `✓ Active: ${res.snapshot.clock.effectiveRate} Hz · ${res.snapshot.clock.effectiveQuantum} samples (${res.snapshot.clock.latencyMs} ms latency).`;
+    } else {
+      statusEl.textContent = `Error: ${res?.error || 'Could not apply audio settings'}`;
+    }
+  });
+
+  document.getElementById('btn-ad-test-input')?.addEventListener('click', async (e) => {
+    const btn = e.currentTarget;
+    const target = document.getElementById('ad-input-select')?.value || '';
+    btn.disabled = true;
+    statusEl.textContent = 'Listening on selected input for 1.5s…';
+    const res = await window.api.testAudioInput({ targetNodeName: target, durationMs: 1500 });
+    btn.disabled = false;
+    if (res?.ok) {
+      statusEl.textContent = `✓ Input signal captured (${res.samples} frames @ 48kHz) — Peak: ${res.peakDb} dBFS · RMS: ${res.rmsDb} dBFS`;
+    } else {
+      statusEl.textContent = `Input check failed: ${res?.error || 'Unknown error'}`;
+    }
+  });
+
+  document.getElementById('btn-ad-play-tone')?.addEventListener('click', async (e) => {
+    const btn = e.currentTarget;
+    const target = document.getElementById('ad-output-select')?.value || '';
+    btn.disabled = true;
+    statusEl.textContent = 'Playing studio chime on selected output…';
+    const res = await window.api.playAudioTestTone({ targetNodeName: target });
+    btn.disabled = false;
+    statusEl.textContent = res?.ok ? '✓ Studio test chime played.' : `Playback error: ${res?.error || 'Failed'}`;
+  });
+
+  body.querySelectorAll('[data-hw-control]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const cardIndex = Number(btn.dataset.hwCard);
+      const control = btn.dataset.hwControl;
+      const value = btn.dataset.hwEnum !== undefined ? btn.dataset.hwEnum : (btn.dataset.hwVal === 'true');
+      btn.disabled = true;
+      const res = await window.api.setFocusriteControl({ cardIndex, control, value });
+      if (res?.ok) {
+        renderAudioDevicesBody(res.snapshot);
+        statusEl.textContent = `✓ Updated hardware control "${control}" → ${value}`;
+      } else {
+        btn.disabled = false;
+        statusEl.textContent = `Hardware control error: ${res?.error || 'Failed'}`;
+      }
+    });
+  });
+}
+
+async function loadAudioDevices() {
+  if (!window.api?.audioDevicesSnapshot) return;
+  const refresh = async () => {
+    const snap = await window.api.audioDevicesSnapshot();
+    renderAudioDevicesBody(snap);
+  };
+  document.getElementById('btn-audio-rescan')?.addEventListener('click', refresh);
+  document.getElementById('btn-open-daw-studio')?.addEventListener('click', () => window.api.launchRobosApp('daw-studio'));
+  await refresh();
 }

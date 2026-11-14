@@ -4,6 +4,7 @@
 // capabilities; names, IDs, descriptions and categories are indexed as well.
 const ALIASES = {
   'audio-player': 'music|songs|playlists|listen|listening|albums|artists|mp3|lyrics|dj|cast music',
+  'daw-studio': 'daw|recording studio|audio recording|multitrack|focusrite|scarlett|asio|pipewire|guitar|microphone|preamp|mixer|music production',
   'movie-player': 'movies|films|cinema|videos|watch movies|subtitles|watchlists|cast videos|sftp movies',
   'home-speaker': 'speakers|intercom|broadcast|voice notes|soundboard|google home|music speakers',
   'auto-center': 'car|cars|vehicle|vehicles|garage|mechanic|repairs|obd|automotive|repair shop',

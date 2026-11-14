@@ -80,6 +80,7 @@ function listDesktops() {
 
 const APPS = [
   { id: 'auto-center', label: 'Auto Center', icon: '🚘', desc: 'Vehicle catalog and maintenance', category: 'RobOS Auto' },
+  { id: 'daw-studio', label: 'RobOS DAW Studio', icon: '🎚️', desc: 'Multi-track DAW & Focusrite Pro-Audio recording studio', category: 'RobOS System' },
   { id: 'shopping-lists', label: 'RobOS Shopping Lists', icon: '🛒', desc: 'Household shopping lists for Grocery, Target & Costco with Google Docs sync', category: 'RobOS Household' },
   // System
   { id: 'notifications',           label: 'Notifications',          icon: '🔔', desc: 'System notifications',            category: 'RobOS System' },
@@ -141,6 +142,7 @@ function mkBin(id, opts = {}) {
 
 const APP_BINS = {
   'auto-center': mkBin('auto-center'),
+  'daw-studio': mkBin('daw-studio'),
   'shopping-lists': mkBin('shopping-lists'),
   // System / always-present
   'notifications':           mkBin('notifications', { keepAlive: true }),

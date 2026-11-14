@@ -1,0 +1,13 @@
+{
+  "name": "robos-daw-studio",
+  "version": "0.1.0",
+  "description": "RobOS DAW Studio — Multi-track Digital Audio Workstation, Focusrite Scarlett & Linux PipeWire Pro-Audio low-latency recording studio, mixing console, guitar/vocal FX rack, drum sequencer, and lossless stem/mixdown bounce",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron --no-sandbox --disable-gpu --disable-dev-shm-usage .",
+    "test": "node --test test/*.test.js"
+  },
+  "dependencies": {
+    "electron": "^30.0.0"
+  }
+}

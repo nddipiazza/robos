@@ -139,6 +139,7 @@ function syncSettingsToKGraph(settings) {
 // Settings schema with defaults and sections
 const SETTINGS_SCHEMA = {
   sections: [
+    { id: 'audio_devices', label: 'Audio Devices', fields: [] },
     { id: 'config_sync', label: 'Config Sync & Sharing', fields: [] },
     { id: 'cloud_accounts', label: 'Cloud Suite Accounts', fields: [] },
     { id: 'github_accounts', label: 'GitHub accounts', fields: [] },
@@ -577,6 +578,53 @@ ipcMain.handle('cloud-accounts-configure-thunderbird', async (_, payload) => {
       enableMail,
     });
   } catch (error) { return { ok: false, error: error.message }; }
+});
+
+function audioDevicesLib() {
+  for (const p of [
+    process.env.ROBOS_LIB_PATH && path.join(process.env.ROBOS_LIB_PATH, 'audio-devices'),
+    path.resolve(__dirname, '..', 'robos-lib', 'audio-devices'),
+    '/usr/local/share/robos/robos-lib/audio-devices',
+  ].filter(Boolean)) {
+    try { return require(p); } catch {}
+  }
+  throw new Error('audio-devices library is not available.');
+}
+
+ipcMain.handle('audio-devices-snapshot', async () => {
+  try { return audioDevicesLib().getAudioDevicesSnapshot(); }
+  catch (error) { return { ok: false, error: error.message }; }
+});
+
+ipcMain.handle('audio-devices-save-engine', async (_, payload) => {
+  try {
+    const ad = audioDevicesLib();
+    const { sampleRate, quantum, defaultInputId, defaultOutputId, preferredInputNodeName, preferredOutputNodeName } = payload || {};
+    if (preferredInputNodeName !== undefined || preferredOutputNodeName !== undefined) {
+      ad.saveAudioConfig({
+        ...(preferredInputNodeName !== undefined ? { preferredInputNodeName } : {}),
+        ...(preferredOutputNodeName !== undefined ? { preferredOutputNodeName } : {}),
+      });
+    }
+    return ad.setPipeWireEngineSettings({ sampleRate, quantum, defaultInputId, defaultOutputId });
+  } catch (error) { return { ok: false, error: error.message }; }
+});
+
+ipcMain.handle('audio-devices-set-hardware-control', async (_, payload) => {
+  try {
+    const mixer = audioDevicesLib().setFocusriteHardwareControl(payload || {});
+    return { ok: true, mixer, snapshot: audioDevicesLib().getAudioDevicesSnapshot() };
+  } catch (error) { return { ok: false, error: error.message }; }
+});
+
+ipcMain.handle('audio-devices-test-input', async (_, payload) => {
+  try { return await audioDevicesLib().testInputCapture(payload || {}); }
+  catch (error) { return { ok: false, error: error.message }; }
+});
+
+ipcMain.handle('audio-devices-play-tone', async (_, payload) => {
+  try { return await audioDevicesLib().playTestTone(payload || {}); }
+  catch (error) { return { ok: false, error: error.message }; }
 });
 
 ipcMain.handle('launch-robos-app', async (_, appId) => {

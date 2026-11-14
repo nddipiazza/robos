@@ -173,3 +173,25 @@ input[type='checkbox'] { accent-color: var(--accent); width: 18px; height: 18px;
 .cs-progress-fill { display: block; height: 100%; width: 0; background: var(--accent, #00bcd4); transition: width 0.3s ease; }
 @media (prefers-reduced-motion: reduce) { .cs-spinner { animation-duration: 2.4s; } }
 .cs-status.busy { color: var(--accent, #00bcd4); }
+
+/* ── Audio Devices ─────────────────────────────────────────────────────── */
+.ad-card { padding: 14px 16px; border-radius: 8px; border: 1px solid var(--border); background: #10161f; margin-bottom: 14px; }
+.ad-card-connected { border-color: #266b52; background: linear-gradient(180deg, #10231e 0%, #0f1720 100%); }
+.ad-card-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+.ad-badge { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: #263241; color: var(--muted); margin-right: 8px; letter-spacing: .3px; }
+.ad-badge-ok { background: #144932; color: #7ee787; border: 1px solid #2ea043; }
+.ad-title { font-size: 15px; font-weight: 650; }
+.ad-mono { font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--muted); }
+.ad-meta-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px 16px; }
+.ad-k { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .4px; color: var(--muted); }
+.ad-v { font-size: 12.5px; font-weight: 550; color: var(--text); }
+.ad-subpanel { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border); }
+.ad-subhead { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; font-size: 13.5px; }
+.ad-preamp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 8px; }
+.ad-preamp { padding: 8px; border: 1px solid var(--border); border-radius: 6px; background: #0d1117; display: flex; flex-direction: column; gap: 5px; align-items: stretch; }
+.ad-preamp-ch { font-size: 12px; font-weight: 650; color: #a4eff6; text-align: center; margin-bottom: 2px; }
+.ad-mini-btn { min-height: 28px; padding: 3px 8px; font-size: 11.5px; }
+.ad-hw-active { background: #1c3d49; border-color: var(--accent); color: #a4eff6; }
+.ad-hw-air { background: #463512; border-color: #eab308; color: #fde047; }
+.ad-hw-48v-on { background: #4c191f; border-color: #ef4444; color: #fecaca; }
+

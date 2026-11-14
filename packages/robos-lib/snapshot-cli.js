@@ -140,6 +140,7 @@ const PORT_REGISTRY = {
   'personality':       19222,
   'shopping-lists':    19224,
   'game-theater':      19227,
+  'daw-studio':        19232,
 };
 
 
