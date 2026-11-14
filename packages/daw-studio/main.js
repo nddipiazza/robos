@@ -409,7 +409,7 @@ ipcMain.handle('daw:update-track', async (_e, payload) => {
           };
         } else if (k === 'soundReplacement' && v && typeof v === 'object') {
           track.soundReplacement = { ...(track.soundReplacement || {}), ...v };
-        } else if (k !== 'id' && k !== 'clips') {
+        } else if (k !== 'id') {
           track[k] = v;
         }
       }
@@ -418,6 +418,30 @@ ipcMain.handle('daw:update-track', async (_e, payload) => {
       reanalyzeTrackTransients(track);
     }
     return { ok: true, track, project: proj };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('daw:sync-project', async (_e, payload) => {
+  try {
+    const incoming = payload?.project;
+    if (!incoming || typeof incoming !== 'object') {
+      return { ok: false, error: 'Missing project payload' };
+    }
+    const cur = ensureCurrentProject();
+    currentProject = {
+      ...cur,
+      ...incoming,
+      tracks: Array.isArray(incoming.tracks) ? incoming.tracks : cur.tracks,
+    };
+    if (payload?.reanalyzeTrackIds && Array.isArray(payload.reanalyzeTrackIds)) {
+      for (const tid of payload.reanalyzeTrackIds) {
+        const t = (currentProject.tracks || []).find(x => x.id === tid);
+        if (t) reanalyzeTrackTransients(t);
+      }
+    }
+    return { ok: true, project: currentProject };
   } catch (err) {
     return { ok: false, error: err.message };
   }

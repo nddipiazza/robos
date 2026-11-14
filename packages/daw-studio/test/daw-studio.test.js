@@ -32,6 +32,7 @@ const {
   classifySoundcheckWithAgent,
   applyClassifiedDrumsetToProject,
 } = require('../lib/drumset-ai-classifier');
+const DE = require('../renderer/daw-editing');
 
 describe('audio-devices & Focusrite Linux Pro-Audio parser', () => {
   it('identifies Focusrite Scarlett 18i20 3rd Gen (1235:8215) in lsusb output', () => {
@@ -373,6 +374,190 @@ describe('DrumSet AI All-Mic Soundcheck & Discrete 8-Channel ADAT Expansion', ()
       assert.strictEqual(kickTrk.clips.length, 1);
     } finally {
       fs.rmSync(tmpDir, { recursive: true, force: true });
+    }
+  });
+});
+
+describe('DAW Editing Engine: Multi-Select, Track/Take Gain, Split/Trim, Copy/Paste & Undo/Redo', () => {
+  it('supports Click, Ctrl+Click toggle, Shift+Click range, and Ctrl+A Select All on tracks and takes', () => {
+    const project = createEmptyProject({ name: 'Selection Test' });
+    for (const id of ['kick-in', 'snare-top', 'tom-rack-1', 'cymbal-overhead']) {
+      const tr = buildTrackFromWizard({ profileId: id });
+      tr.clips.push({ id: `clip-${id}-1`, name: `${id} Take 1`, startSec: 0, durationSec: 4.0 });
+      tr.clips.push({ id: `clip-${id}-2`, name: `${id} Take 2`, startSec: 5.0, durationSec: 3.0 });
+      project.tracks.push(tr);
+    }
+
+    // Single click track 0
+    let sel = DE.applyTrackClickSelection(project.tracks, new Set(), null, project.tracks[0].id, {});
+    assert.strictEqual(sel.selectedTrackIds.size, 1);
+
+    // Shift+Click track 2 -> selects tracks 0, 1, 2
+    sel = DE.applyTrackClickSelection(project.tracks, sel.selectedTrackIds, sel.anchorTrackId, project.tracks[2].id, { shiftKey: true });
+    assert.strictEqual(sel.selectedTrackIds.size, 3);
+
+    // Ctrl+Click track 1 -> toggles track 1 off, leaving 0 & 2
+    sel = DE.applyTrackClickSelection(project.tracks, sel.selectedTrackIds, sel.anchorTrackId, project.tracks[1].id, { ctrlKey: true });
+    assert.strictEqual(sel.selectedTrackIds.size, 2);
+    assert.strictEqual(sel.selectedTrackIds.has(project.tracks[1].id), false);
+
+    // 2D Shift+Click across takes (track 0 take 1 -> track 2 take 1) selects all 3 overlapping takes in phase lock
+    let clipSel = DE.applyClipClickSelection(project, new Set(), null, 'clip-kick-in-1', {});
+    clipSel = DE.applyClipClickSelection(project, clipSel.selectedClipIds, clipSel.anchorClipId, 'clip-tom-rack-1-1', { shiftKey: true });
+    assert.strictEqual(clipSel.selectedClipIds.size, 3);
+    assert.ok(clipSel.selectedClipIds.has('clip-snare-top-1'));
+
+    // Ctrl+A selects all 4 tracks and all 8 takes
+    const all = DE.selectAllInProject(project);
+    assert.strictEqual(all.selectedTrackIds.size, 4);
+    assert.strictEqual(all.selectedClipIds.size, 8);
+  });
+
+  it('splits takes non-destructively, slices transients & peaks, trims edges, moves in phase lock, and Undo/Redoes cleanly', () => {
+    const project = createEmptyProject({ name: 'Non-Destructive Edit Test' });
+    const kick = buildTrackFromWizard({ profileId: 'kick-in', name: 'Kick' });
+    const snare = buildTrackFromWizard({ profileId: 'snare-top', name: 'Snare' });
+
+    kick.clips.push({
+      id: 'c-kick',
+      name: 'Kick Take',
+      startSec: 1.0,
+      offsetSec: 0,
+      durationSec: 4.0,
+      sourceDurationSec: 4.0,
+      peakDb: -9.0,
+      peaks: Array.from({ length: 40 }, (_, i) => (i + 1) / 40),
+      transients: [
+        { timeSec: 0.5, peakDb: -9, velocity: 0.8 },
+        { timeSec: 2.5, peakDb: -8, velocity: 0.9 },
+      ],
+    });
+    snare.clips.push({
+      id: 'c-snare',
+      name: 'Snare Take',
+      startSec: 1.5,
+      offsetSec: 0,
+      durationSec: 4.0,
+      sourceDurationSec: 4.0,
+      peakDb: -12.0,
+      peaks: Array.from({ length: 40 }, () => 0.5),
+      transients: [{ timeSec: 1.0, peakDb: -12, velocity: 0.75 }],
+    });
+    project.tracks.push(kick, snare);
+
+    const history = new DE.UndoHistoryStack(20);
+    history.pushSnapshot(project, 'Split Kick at 3.0s');
+
+    // Split Kick at timeline t = 3.0s (2.0s into the clip)
+    const splitRes = DE.splitClipsInProject(project, {
+      selectedClipIds: new Set(['c-kick']),
+      selectedTrackIds: new Set(),
+      splitTimeSec: 3.0,
+    });
+    assert.strictEqual(splitRes.splitCount, 1);
+    assert.strictEqual(project.tracks[0].clips.length, 2);
+
+    const [leftPart, rightPart] = project.tracks[0].clips;
+    assert.strictEqual(leftPart.startSec, 1.0);
+    assert.strictEqual(leftPart.durationSec, 2.0);
+    assert.strictEqual(leftPart.transients.length, 1);
+    assert.strictEqual(leftPart.transients[0].timeSec, 0.5);
+
+    assert.strictEqual(rightPart.startSec, 3.0);
+    assert.strictEqual(rightPart.offsetSec, 2.0);
+    assert.strictEqual(rightPart.durationSec, 2.0);
+    assert.strictEqual(rightPart.transients.length, 1);
+    assert.strictEqual(rightPart.transients[0].timeSec, 0.5); // 2.5s source - 2.0s offset = 0.5s into right clip!
+
+    // Phase-locked move: Kick leftPart is at 1.0s, Snare is at 1.5s (0.5s delta).
+    // Dragging both left by -5.0s clamps at t=0 so Kick hits 0.0s and Snare stays at 0.5s!
+    DE.moveClipsByDelta(project, new Set([leftPart.id, 'c-snare']), -5.0);
+    assert.strictEqual(project.tracks[0].clips[0].startSec, 0);
+    assert.strictEqual(project.tracks[1].clips[0].startSec, 0.5);
+
+    // Trim Snare left edge inward by +0.4s
+    DE.trimClipEdge(project.tracks[1].clips[0], 'left', 0.4);
+    assert.strictEqual(project.tracks[1].clips[0].startSec, 0.9);
+    assert.strictEqual(project.tracks[1].clips[0].offsetSec, 0.4);
+    assert.strictEqual(project.tracks[1].clips[0].durationSec, 3.6);
+
+    // Undo restores original unsplit 1-clip state; Redo re-applies
+    const undone = history.undo(project);
+    assert.ok(undone);
+    assert.strictEqual(undone.project.tracks[0].clips.length, 1);
+    const redone = history.redo(undone.project);
+    assert.ok(redone);
+    assert.strictEqual(redone.project.tracks[0].clips.length, 2);
+  });
+
+  it('persists Track Gain, Take Gain, Fades, Mute & Trimmed Clip Windows across saveProject and loadProject', () => {
+    const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'robos-daw-edit-persist-'));
+    const prevProjDir = process.env.ROBOS_DAW_PROJECTS_DIR;
+    const prevCfgDir = process.env.ROBOS_DAW_CONFIG_DIR;
+    process.env.ROBOS_DAW_PROJECTS_DIR = path.join(tmpRoot, 'projects');
+    process.env.ROBOS_DAW_CONFIG_DIR = path.join(tmpRoot, 'config');
+
+    try {
+      const proj = createEmptyProject({ name: 'Gain & Trim Persistence' });
+      const trk = buildTrackFromWizard({ profileId: 'snare-top', name: 'Snare Top' });
+      const projDir = path.join(process.env.ROBOS_DAW_PROJECTS_DIR, proj.id, 'audio');
+      fs.mkdirSync(projDir, { recursive: true });
+      const wavPath = path.join(projDir, 'snare-take.wav');
+      fs.writeFileSync(wavPath, synthesizeDrumTakeWav({ profileId: 'snare-top', durationSec: 3.0 }));
+
+      trk.clips.push({
+        id: 'clip-persist-1',
+        name: 'Trimmed Snare',
+        fileName: 'snare-take.wav',
+        wavFile: wavPath,
+        startSec: 1.25,
+        offsetSec: 0.5,
+        durationSec: 1.8,
+        sourceDurationSec: 3.0,
+        peakDb: -14.5,
+        gainDb: 4.5,
+        fadeInSec: 0.05,
+        fadeOutSec: 0.25,
+        muted: true,
+        peaks: [0.3, 0.7, 0.4],
+        transients: [],
+      });
+      DE.normalizeTrackGain(trk, -6.0); // -6.0 - (-14.5) = +8.5 dB
+      assert.strictEqual(trk.gainDb, 8.5);
+      proj.tracks.push(trk);
+
+      // Duplicate & reorder track
+      const dupIds = DE.duplicateTracksInProject(proj, new Set([trk.id]), { includeClips: true });
+      assert.strictEqual(dupIds.length, 1);
+      assert.strictEqual(proj.tracks.length, 2);
+      DE.reorderTrackInProject(proj, dupIds[0], -1);
+      assert.strictEqual(proj.tracks[0].id, dupIds[0]);
+
+      // Copy & Paste clip
+      const cb = DE.copyClipsFromProject(proj, new Set(['clip-persist-1']));
+      const pasted = DE.pasteClipsIntoProject(proj, cb, 4.0, proj.tracks[0].id);
+      assert.strictEqual(pasted.length, 1);
+
+      const saved = saveProject(proj);
+      assert.strictEqual(saved.ok, true);
+
+      const loaded = loadProject(proj.id);
+      assert.strictEqual(loaded.ok, true);
+      const reloadedOrig = loaded.project.tracks[1];
+      assert.strictEqual(reloadedOrig.gainDb, 8.5);
+      assert.strictEqual(reloadedOrig.clips[0].startSec, 1.25);
+      assert.strictEqual(reloadedOrig.clips[0].offsetSec, 0.5);
+      assert.strictEqual(reloadedOrig.clips[0].durationSec, 1.8);
+      assert.strictEqual(reloadedOrig.clips[0].gainDb, 4.5);
+      assert.strictEqual(reloadedOrig.clips[0].fadeInSec, 0.05);
+      assert.strictEqual(reloadedOrig.clips[0].fadeOutSec, 0.25);
+      assert.strictEqual(reloadedOrig.clips[0].muted, true);
+    } finally {
+      if (prevProjDir === undefined) delete process.env.ROBOS_DAW_PROJECTS_DIR;
+      else process.env.ROBOS_DAW_PROJECTS_DIR = prevProjDir;
+      if (prevCfgDir === undefined) delete process.env.ROBOS_DAW_CONFIG_DIR;
+      else process.env.ROBOS_DAW_CONFIG_DIR = prevCfgDir;
+      fs.rmSync(tmpRoot, { recursive: true, force: true });
     }
   });
 });

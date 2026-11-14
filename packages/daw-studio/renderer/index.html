@@ -16,6 +16,7 @@
       </div>
       <div class="topbar-right">
         <span class="hw-pill" id="header-hw-pill">Scanning audio hardware…</span>
+        <button type="button" class="btn btn-sm" id="btn-open-shortcuts-modal" title="Keyboard &amp; Mouse DAW Shortcuts (?)">⌨️ Shortcuts</button>
         <button type="button" class="btn btn-sm" id="btn-open-drumkits-modal" title="Manage Open-Source Drum Replacement Kits">🥁 Drum Kits <span id="drumkits-badge" class="pill-count">…</span></button>
         <button type="button" class="btn btn-sm" id="btn-rescan">↻ Rescan</button>
       </div>
@@ -106,10 +107,33 @@
             </div>
           </div>
 
-          <!-- Timeline Ruler + Multi-Track Headers & Lanes -->
+          <!-- Timeline Editing Bar + Ruler + Multi-Track Headers & Lanes -->
           <div id="tracks-workspace" class="tracks-workspace hidden">
+            <div class="edit-toolbar" id="daw-edit-toolbar">
+              <div class="edit-tools-left">
+                <button type="button" class="btn btn-sm" id="btn-edit-undo" title="Undo (Ctrl+Z)" disabled>↩ Undo</button>
+                <button type="button" class="btn btn-sm" id="btn-edit-redo" title="Redo (Ctrl+Y / Ctrl+Shift+Z)" disabled>↪ Redo</button>
+                <span class="toolbar-sep"></span>
+                <button type="button" class="btn btn-sm" id="btn-edit-select-all" title="Select All Tracks &amp; Takes (Ctrl+A)">▣ Select All</button>
+                <button type="button" class="btn btn-sm" id="btn-edit-split" title="Split Take(s) at Playhead (S or Ctrl+B)">✂️ Split</button>
+                <button type="button" class="btn btn-sm" id="btn-edit-duplicate" title="Duplicate Selected Take(s) or Track(s) (Ctrl+D)">📋 Duplicate</button>
+                <button type="button" class="btn btn-sm" id="btn-edit-delete" title="Delete Selected Take(s) or Track(s) (Delete)">🗑️ Delete</button>
+                <span class="selection-status-pill mono" id="selection-status-pill">0 selected</span>
+              </div>
+              <div class="edit-tools-right">
+                <span class="hint">Zoom</span>
+                <button type="button" class="btn btn-sm" id="btn-zoom-out" title="Zoom Out Timeline (-)">−</button>
+                <span class="mono zoom-readout" id="zoom-readout">100%</span>
+                <button type="button" class="btn btn-sm" id="btn-zoom-in" title="Zoom In Timeline (+)">+</button>
+                <button type="button" class="btn btn-sm" id="btn-zoom-fit" title="Reset Zoom (Ctrl+0)">Fit</button>
+              </div>
+            </div>
+
             <div class="timeline-header-row">
-              <div class="track-header-col-title">Armed Studio Channels (<span id="tracks-header-count">0</span>)</div>
+              <div class="track-header-col-title">
+                <span>Studio Channels (<span id="tracks-header-count">0</span>)</span>
+                <span class="hint" style="font-weight:400;text-transform:none;font-size:10.5px;">Ctrl/Shift+Click · Right-Click Menu</span>
+              </div>
               <div class="timeline-ruler-wrap" id="timeline-ruler-wrap">
                 <canvas id="timeline-ruler-canvas" height="28"></canvas>
               </div>
@@ -560,6 +584,78 @@
     </div>
   </div>
 
+  <!-- ==================== FLOATING RIGHT-CLICK CONTEXT MENU (TRACK & TAKE) ==================== -->
+  <div id="daw-context-menu" class="daw-context-menu hidden" role="menu" aria-label="Context Menu"></div>
+
+  <!-- ==================== MODAL 5: RENAME TRACK / TAKE ==================== -->
+  <div id="rename-item-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+    <div class="modal-window" style="width:min(420px, 92vw);">
+      <div class="modal-header">
+        <h2 id="rename-modal-title">✏️ Rename</h2>
+        <button type="button" class="modal-close" id="btn-rename-close">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-row" style="margin-bottom:0;">
+          <label for="rename-modal-input" id="rename-modal-label">New Name</label>
+          <input type="text" id="rename-modal-input" class="text-input" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <span></span>
+        <div class="modal-footer-right">
+          <button type="button" class="btn" id="btn-rename-cancel">Cancel</button>
+          <button type="button" class="btn btn-primary" id="btn-rename-confirm">Save Name</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL 6: KEYBOARD & MOUSE SHORTCUTS ==================== -->
+  <div id="shortcuts-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+    <div class="modal-window modal-md">
+      <div class="modal-header">
+        <div>
+          <h2>⌨️ DAW Keyboard &amp; Mouse Shortcuts</h2>
+          <p class="modal-subtitle">Standard workstation editing, multi-selection, transport, and gain controls</p>
+        </div>
+        <button type="button" class="modal-close" id="btn-shortcuts-close">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="shortcuts-grid">
+          <div class="shortcut-group">
+            <h3>Selection &amp; Mouse Modifiers</h3>
+            <div class="sc-kv"><kbd>Ctrl + A</kbd><span>Select all Takes &amp; Tracks</span></div>
+            <div class="sc-kv"><kbd>Escape</kbd><span>Deselect all / Close menu</span></div>
+            <div class="sc-kv"><kbd>Ctrl + Click</kbd><span>Toggle Track or Take in multi-selection</span></div>
+            <div class="sc-kv"><kbd>Shift + Click</kbd><span>Range-select Tracks or Takes across lanes</span></div>
+            <div class="sc-kv"><kbd>Ctrl + Click</kbd> <em>R/M/S</em><span>Toggle Arm / Mute / Solo on all selected tracks</span></div>
+            <div class="sc-kv"><kbd>Alt + Click</kbd> <em>S/M/R</em><span>Exclusive Solo / Mute / Arm on clicked track</span></div>
+            <div class="sc-kv"><kbd>Double-Click</kbd><span>Rename Track, or reset Gain / Vol / Pan to 0 dB / C</span></div>
+            <div class="sc-kv"><kbd>Right-Click</kbd><span>Context menu on any Track or Take</span></div>
+          </div>
+          <div class="shortcut-group">
+            <h3>Editing, Transport &amp; Gain</h3>
+            <div class="sc-kv"><kbd>Space</kbd><span>Play / Stop (or finish Recording)</span></div>
+            <div class="sc-kv"><kbd>R</kbd><span>Start / Stop Recording</span></div>
+            <div class="sc-kv"><kbd>S</kbd> or <kbd>Ctrl + B</kbd><span>Split Take(s) at Playhead</span></div>
+            <div class="sc-kv"><kbd>Ctrl + C / X / V</kbd><span>Copy / Cut / Paste Take(s) at Playhead</span></div>
+            <div class="sc-kv"><kbd>Ctrl + D</kbd><span>Duplicate selected Take(s) or Track(s)</span></div>
+            <div class="sc-kv"><kbd>Delete / Backspace</kbd><span>Delete selected Take(s) or Track(s)</span></div>
+            <div class="sc-kv"><kbd>Ctrl + Z</kbd> / <kbd>Ctrl + Y</kbd><span>Undo / Redo (50-step history)</span></div>
+            <div class="sc-kv"><kbd>Drag Take / Edges</kbd><span>Move phase-locked Takes or trim Left/Right edges</span></div>
+            <div class="sc-kv"><kbd>M</kbd> / <kbd>F2</kbd><span>Mute selected · Rename selected Track/Take</span></div>
+            <div class="sc-kv"><kbd>Ctrl + Wheel</kbd> or <kbd>+ / -</kbd><span>Zoom timeline in / out</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <span class="hint">Tip: Dragging one selected take moves all selected drum takes in phase lock!</span>
+        <button type="button" class="btn btn-primary" id="btn-shortcuts-done">Got It</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="daw-editing.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

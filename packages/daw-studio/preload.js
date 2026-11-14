@@ -26,6 +26,7 @@ contextBridge.exposeInMainWorld('robos', {
   addMicTrack: (payload) => ipcRenderer.invoke('daw:add-mic-track', payload),
   updateProjectMeta: (payload) => ipcRenderer.invoke('daw:update-project-meta', payload),
   updateTrack: (payload) => ipcRenderer.invoke('daw:update-track', payload),
+  syncProject: (payload) => ipcRenderer.invoke('daw:sync-project', payload),
   deleteTrack: (payload) => ipcRenderer.invoke('daw:delete-track', payload),
   clearTrackClips: (payload) => ipcRenderer.invoke('daw:clear-track-clips', payload),
 

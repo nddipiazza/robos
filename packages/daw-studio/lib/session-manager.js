@@ -88,6 +88,7 @@ function buildTrackFromWizard({
   soundReplacement,
   fxOverride,
   pan = 0,
+  gainDb = 0,
 }) {
   const profile = getMicProfile(profileId);
   const sr = {
@@ -112,6 +113,7 @@ function buildTrackFromWizard({
     monitor: false,
     muted: false,
     soloed: false,
+    gainDb: Number(gainDb) || 0,
     volume: 1.0,
     pan: Number(pan) || 0,
     fx,
@@ -211,18 +213,27 @@ function loadProject(idOrPath) {
 
   // Hydrate absolute clip wav paths and recompute peaks/transients if missing
   for (const track of (raw.tracks || [])) {
+    if (track.gainDb === undefined) track.gainDb = 0;
     for (const clip of (track.clips || [])) {
       const rel = clip.relativeWavPath || (clip.wavFile ? path.join('takes', path.basename(clip.wavFile)) : null);
       const abs = rel ? path.join(projectDir, rel) : clip.wavFile;
       clip.relativeWavPath = rel;
       clip.wavFile = abs;
       clip.fileExists = Boolean(abs && fs.existsSync(abs));
+      if (clip.offsetSec === undefined) clip.offsetSec = 0;
+      if (clip.gainDb === undefined) clip.gainDb = 0;
+      if (clip.fadeInSec === undefined) clip.fadeInSec = 0;
+      if (clip.fadeOutSec === undefined) clip.fadeOutSec = 0;
+      if (clip.muted === undefined) clip.muted = false;
       if (clip.fileExists && (!Array.isArray(clip.peaks) || !clip.peaks.length)) {
         const buf = fs.readFileSync(abs);
         const info = computeWaveformPeaks(buf);
         clip.peaks = info.peaks;
         clip.peakDb = info.peakDb;
-        clip.durationSec = info.durationSec;
+        clip.sourceDurationSec = clip.sourceDurationSec || info.durationSec;
+        if (!clip.durationSec) clip.durationSec = info.durationSec;
+      } else if (clip.durationSec && !clip.sourceDurationSec) {
+        clip.sourceDurationSec = (Number(clip.offsetSec) || 0) + Number(clip.durationSec);
       }
       if (clip.fileExists && !Array.isArray(clip.transients) && track.soundReplacement?.supported) {
         const buf = fs.readFileSync(abs);
@@ -459,6 +470,7 @@ class MultiTrackRecorder {
         })
         : [];
 
+      const fullDur = waveInfo.durationSec || Number(wallDurationSec.toFixed(3));
       const clip = {
         id: entry.clipId,
         name: `${entry.trackName} Take`,
@@ -466,7 +478,13 @@ class MultiTrackRecorder {
         relativeWavPath: entry.relativeWavPath,
         fileExists: true,
         startSec: session.startSec,
-        durationSec: waveInfo.durationSec || Number(wallDurationSec.toFixed(3)),
+        offsetSec: 0,
+        durationSec: fullDur,
+        sourceDurationSec: fullDur,
+        gainDb: 0,
+        fadeInSec: 0,
+        fadeOutSec: 0,
+        muted: false,
         peakDb: waveInfo.peakDb,
         peaks: waveInfo.peaks,
         transients,

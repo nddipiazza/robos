@@ -389,7 +389,7 @@ code, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monosp
 }
 .timeline-header-row {
   display: grid;
-  grid-template-columns: 390px 1fr;
+  grid-template-columns: 425px 1fr;
   background: #0a0e14;
   border-bottom: 1px solid var(--border);
   align-items: center;
@@ -402,20 +402,28 @@ code, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monosp
   letter-spacing: 0.5px;
   color: var(--muted);
   border-right: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
 }
-.timeline-ruler-wrap { width: 100%; height: 28px; cursor: pointer; }
+.timeline-ruler-wrap { width: 100%; height: 28px; cursor: pointer; overflow: hidden; }
 #timeline-ruler-canvas { display: block; width: 100%; height: 28px; }
 
 .tracks-list { display: flex; flex-direction: column; }
 
 .track-row {
   display: grid;
-  grid-template-columns: 390px 1fr;
+  grid-template-columns: 425px 1fr;
   border-bottom: 1px solid #222b38;
-  min-height: 92px;
+  min-height: 102px;
   background: #141a23;
+  user-select: none;
 }
-.track-row.selected { background: #182230; }
+.track-row.selected {
+  background: #172536;
+  box-shadow: inset 3px 0 0 var(--accent);
+}
 .track-row:last-child { border-bottom: none; }
 
 .track-controls-col {
@@ -1284,4 +1292,233 @@ code, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monosp
   border-radius: 8px;
   background: #0c131c;
   border: 1px solid #263447;
+}
+
+/* ── DAW Edit Toolbar, Track Gain, Context Menus & Shortcuts ─────────── */
+.edit-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 7px 12px;
+  background: #0d131c;
+  border-bottom: 1px solid var(--border);
+}
+.edit-tools-left,
+.edit-tools-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.toolbar-sep {
+  width: 1px;
+  height: 18px;
+  background: #2b384a;
+  margin: 0 2px;
+}
+.selection-status-pill {
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  background: rgba(0, 188, 212, 0.14);
+  border: 1px solid rgba(0, 188, 212, 0.4);
+  color: #8ceef9;
+  margin-left: 4px;
+}
+.zoom-readout {
+  min-width: 44px;
+  text-align: center;
+  font-size: 11.5px;
+  color: #cbd5e1;
+}
+
+.trk-mini-btn.phase-on {
+  background: rgba(234, 179, 8, 0.24);
+  border-color: #facc15;
+  color: #fef08a;
+}
+
+.track-gain-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10.5px;
+  color: #94a3b8;
+}
+.track-gain-slider {
+  width: 78px;
+  height: 13px;
+  accent-color: #38bdf8;
+}
+.gain-db-badge {
+  min-width: 48px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: #0c1118;
+  border: 1px solid #283649;
+  font-size: 10.5px;
+  text-align: right;
+  color: #7dd3fc;
+  cursor: pointer;
+}
+.gain-db-badge.boosted {
+  color: #fde047;
+  border-color: rgba(250, 204, 21, 0.45);
+}
+.inline-rename-input {
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 4px;
+  border: 1px solid var(--accent);
+  background: #090e15;
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 700;
+  width: 125px;
+}
+
+/* Floating Right-Click Studio Context Menu */
+.daw-context-menu {
+  position: fixed;
+  z-index: 9999;
+  min-width: 255px;
+  max-width: 310px;
+  background: #121924;
+  border: 1px solid #384961;
+  border-radius: 9px;
+  padding: 6px;
+  box-shadow: 0 14px 38px rgba(0, 0, 0, 0.68), 0 0 0 1px rgba(0, 188, 212, 0.16);
+  user-select: none;
+}
+.ctx-header {
+  padding: 5px 9px 6px;
+  font-size: 11px;
+  font-weight: 750;
+  color: #8ceef9;
+  border-bottom: 1px solid #243142;
+  margin-bottom: 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+.ctx-sep {
+  height: 1px;
+  background: #232f40;
+  margin: 5px 4px;
+}
+.ctx-item {
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: #e2e8f0;
+  padding: 6px 9px;
+  border-radius: 6px;
+  font-size: 12px;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  cursor: pointer;
+}
+.ctx-item:hover:not(:disabled) {
+  background: rgba(0, 188, 212, 0.18);
+  color: #fff;
+}
+.ctx-item:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.ctx-item.danger:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.22);
+  color: #fecaca;
+}
+.ctx-kbd {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10.5px;
+  color: #94a3b8;
+}
+.ctx-inline-row {
+  padding: 5px 9px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.ctx-inline-lbl {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.35px;
+}
+.ctx-pill-strip {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.ctx-mini-pill {
+  padding: 3px 7px;
+  border-radius: 5px;
+  border: 1px solid #334358;
+  background: #1a2433;
+  color: #cbd5e1;
+  font-size: 11px;
+  font-weight: 650;
+  cursor: pointer;
+}
+.ctx-mini-pill:hover {
+  border-color: var(--accent);
+  color: #fff;
+}
+.ctx-color-dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  cursor: pointer;
+}
+.ctx-color-dot.active,
+.ctx-color-dot:hover {
+  border-color: #fff;
+  transform: scale(1.12);
+}
+
+/* Shortcuts Modal */
+.shortcuts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+  gap: 16px;
+}
+.shortcut-group h3 {
+  margin: 0 0 10px;
+  font-size: 13px;
+  color: #8ceef9;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+.sc-kv {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: #0e141d;
+  border: 1px solid #222e3e;
+  margin-bottom: 6px;
+  font-size: 12px;
+}
+kbd {
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: #1e293b;
+  border: 1px solid #475569;
+  color: #f8fafc;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
 }
