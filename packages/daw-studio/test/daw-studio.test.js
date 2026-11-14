@@ -631,4 +631,56 @@ describe('DAW Editing Engine: Multi-Select, Track/Take Gain, Split/Trim, Copy/Pa
     assert.strictEqual(Buffer.from(wavBytes.slice(0, 4)).toString('ascii'), 'RIFF');
     assert.strictEqual(Buffer.from(wavBytes.slice(8, 12)).toString('ascii'), 'WAVE');
   });
+
+  it('enforces zero default emojis across DAW UI files and ships AI studio icon badges + vector DawIcons', () => {
+    const DawIcons = require('../renderer/daw-icons');
+    const pkgRoot = path.resolve(__dirname, '..');
+    const expectedBadges = [
+      'daw-crest',
+      'drumset-ai',
+      'mic-wizard',
+      'drum-replace',
+      'audio-interface',
+      'channel-fx',
+      'metronome',
+      'mixdown-export',
+    ];
+    for (const key of expectedBadges) {
+      assert.ok(DawIcons.AI_BADGES[key], `Missing AI_BADGES[${key}]`);
+      const assetPath = path.join(pkgRoot, 'renderer', DawIcons.AI_BADGES[key]);
+      assert.ok(fs.existsSync(assetPath), `Missing AI badge file: ${assetPath}`);
+      const buf = fs.readFileSync(assetPath);
+      assert.ok(buf.length > 512, `AI badge file unexpectedly small: ${assetPath}`);
+      assert.strictEqual(buf.slice(0, 4).toString('ascii'), 'RIFF', `Expected RIFF WEBP header for ${key}`);
+      assert.strictEqual(buf.slice(8, 12).toString('ascii'), 'WEBP', `Expected WEBP header for ${key}`);
+      assert.ok(DawIcons.badge(key, 20).includes(DawIcons.AI_BADGES[key]));
+      assert.ok(DawIcons.menuIcon(key, 15).includes('daw-ai-badge'));
+    }
+
+    assert.ok(DawIcons.svg('scissors', 14).startsWith('<svg'));
+    assert.ok(DawIcons.menuIcon('sliders', 14).includes('<svg'));
+
+    const emojiOrDingbatRegex = /\p{Extended_Pictographic}|[\u2600-\u27BF\uFE0F\u25CF\u25CB\u25A0\u25B6\u23F8-\u23FA]/gu;
+    function collectSourceFiles(dir) {
+      const out = [];
+      for (const ent of fs.readdirSync(dir, { withFileTypes: true })) {
+        if (ent.name === 'node_modules' || ent.name === 'test') continue;
+        const full = path.join(dir, ent.name);
+        if (ent.isDirectory()) out.push(...collectSourceFiles(full));
+        else if (/\.(js|html|css|cjs)$/.test(ent.name)) out.push(full);
+      }
+      return out;
+    }
+    const filesToCheck = collectSourceFiles(pkgRoot);
+    assert.ok(filesToCheck.length >= 8);
+    for (const filePath of filesToCheck) {
+      const content = fs.readFileSync(filePath, 'utf8');
+      const matches = content.match(emojiOrDingbatRegex);
+      assert.strictEqual(
+        matches,
+        null,
+        `Found forbidden emoji/dingbat in ${path.relative(pkgRoot, filePath)}: ${JSON.stringify(matches)}`
+      );
+    }
+  });
 });

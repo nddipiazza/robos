@@ -1,6 +1,7 @@
 'use strict';
 
 const DE = window.DawEditing;
+const DI = window.DawIcons;
 
 // ─── Studio & Hardware State ────────────────────────────────────────────────
 let currentSnapshot = null;
@@ -101,11 +102,11 @@ function markDirty(dirty = true) {
   const badge = document.getElementById('project-save-state');
   if (!badge) return;
   if (!dirty && currentProject?.savedAt) {
-    badge.textContent = '✓ Saved';
+    badge.textContent = 'SAVED';
     badge.className = 'save-badge saved';
   } else {
-    badge.textContent = dirty ? '● Unsaved Changes' : 'New Session';
-    badge.className = 'save-badge';
+    badge.textContent = dirty ? 'MODIFIED' : 'NEW';
+    badge.className = `save-badge${dirty ? ' dirty' : ''}`;
   }
 }
 
@@ -207,12 +208,12 @@ function updateEditToolbarState() {
 
   const armBtn = document.getElementById('btn-quick-arm-sel');
   if (armBtn) {
-    armBtn.textContent = tCnt > 0 ? `● Arm (${tCnt})` : '● Arm All';
+    armBtn.innerHTML = `${DI.svg('record', 10, 'rec-glyph')}<span>${tCnt > 0 ? `Arm (${tCnt})` : 'Arm All'}</span>`;
   }
   const remBtn = document.getElementById('btn-quick-remove-tracks');
   if (remBtn) {
     remBtn.disabled = tCnt === 0;
-    remBtn.textContent = tCnt > 0 ? `✕ Remove (${tCnt})` : '✕ Remove';
+    remBtn.innerHTML = `${DI.svg('trash', 11.5)}<span>${tCnt > 0 ? `Remove (${tCnt})` : 'Remove'}</span>`;
   }
 
   document.getElementById('btn-snap-grid')?.classList.toggle('active', snapToGrid);
@@ -255,7 +256,7 @@ async function performUndo() {
   pruneSelections();
   markDirty(true);
   renderStudio();
-  showStatus(`↩ Undo: ${res.label}`);
+  showStatus(`Undo: ${res.label}`);
   await syncProjectToMain();
 }
 
@@ -269,7 +270,7 @@ async function performRedo() {
   pruneSelections();
   markDirty(true);
   renderStudio();
-  showStatus(`↪ Redo: ${res.label}`);
+  showStatus(`Redo: ${res.label}`);
   await syncProjectToMain();
 }
 
@@ -323,7 +324,7 @@ function resolveDrumSamplePath(kitId, pieceId, velocity = 0.75) {
 async function auditionDrumPiece(kitId, pieceId) {
   const samplePath = resolveDrumSamplePath(kitId, pieceId, 0.82);
   if (!samplePath) {
-    showStatus(`Drum kit "${kitId}" is not installed yet — click "⬇ Install Kit" first.`, true);
+    showStatus(`Drum kit "${kitId}" is not installed yet — open Drum Kits to install it first.`, true);
     return;
   }
   try {
@@ -336,7 +337,7 @@ async function auditionDrumPiece(kitId, pieceId) {
     gain.gain.value = 0.9;
     src.connect(gain).connect(ctx.destination);
     src.start();
-    showStatus(`🔊 Auditioned ${kitId} → ${pieceId}`);
+    showStatus(`Auditioned ${kitId} / ${pieceId}`);
   } catch (err) {
     showStatus(`Audition failed: ${err.message}`, true);
   }
@@ -630,8 +631,8 @@ async function playRecordCountInClicks(bpm = 120) {
   }
 
   for (let b = 0; b < 4; b++) {
-    if (sub) sub.textContent = `COUNT ${4 - b}…`;
-    showStatus(`🔔 Count-in (${safeBpm} BPM): ${b + 1} / 4…`);
+    if (sub) sub.textContent = `COUNT ${4 - b}...`;
+    showStatus(`Count-in (${safeBpm} BPM): ${b + 1} / 4`);
     await new Promise(resolve => setTimeout(resolve, Math.round(beatSec * 1000)));
   }
 }
@@ -659,7 +660,7 @@ async function toggleRecording() {
       markDirty(true);
       renderStudio();
       const totalHits = (res.recordedClips || []).reduce((n, x) => n + (x.clip?.transients?.length || 0), 0);
-      showStatus(`✓ Recorded ${res.recordedClips.length} armed mic track(s)${totalHits ? ` · ${totalHits} drum transient(s) detected for Sound Replacement` : ''}!`);
+      showStatus(`Recorded ${res.recordedClips.length} armed mic track(s)${totalHits ? ` — ${totalHits} drum transient(s) detected for Sound Replacement` : ''}.`);
     } else {
       showStatus(`Recording stop error: ${res?.error || 'Unknown error'}`, true);
     }
@@ -668,7 +669,7 @@ async function toggleRecording() {
 
   const armed = (currentProject?.tracks || []).filter(t => t.armed);
   if (!armed.length) {
-    showStatus('Arm at least one mic track (● R) or open "+ Add Mic Wizard" before recording.', true);
+    showStatus('Arm at least one mic track [R] or open Add Mic Wizard before recording.', true);
     return;
   }
 
@@ -694,7 +695,7 @@ async function toggleRecording() {
   document.getElementById('btn-transport-record')?.classList.add('recording');
   document.getElementById('header-rec-dot')?.classList.add('recording');
   document.getElementById('transport-substate').textContent = `REC (${res.armedCount} CH)`;
-  showStatus(`● Recording ${res.armedCount} armed channel(s) simultaneously via PipeWire + Focusrite… Click Stop (⏹) when finished.`);
+  showStatus(`Recording ${res.armedCount} armed channel(s) simultaneously via PipeWire + Focusrite — press Stop when finished.`);
 }
 
 // ─── Studio & Timeline Rendering ────────────────────────────────────────────
@@ -740,12 +741,13 @@ function renderStudio() {
 
   const orderedInputs = getOrderedInputs();
   const listEl = document.getElementById('tracks-list');
-  listEl.innerHTML = tracks.map(t => {
+  listEl.innerHTML = tracks.map((t, idx) => {
     const isSel = selectedTrackIds.has(t.id);
     const srOn = Boolean(t.soundReplacement?.enabled);
     const srPiece = t.soundReplacement?.pieceId || 'drum';
     const phaseOn = Boolean(t.fx?.phaseInvert);
     const gainDb = Number(t.gainDb) || 0;
+    const chNumStr = String(idx + 1).padStart(2, '0');
     const inputOptions = orderedInputs.map(inp =>
       `<option value="${esc(inp.name)}"${inp.name === t.inputNodeName ? ' selected' : ''}>${esc(inp.description)}</option>`
     ).join('');
@@ -757,38 +759,42 @@ function renderStudio() {
     return `
       <div class="track-row ${isSel ? 'selected' : ''}" data-track-id="${esc(t.id)}">
         <div class="track-controls-col" data-track-strip="${esc(t.id)}">
-          <div class="track-color-bar" style="background:${esc(t.color || '#00bcd4')}"></div>
-          <input type="checkbox" class="track-sel-chk" data-track-chk="${esc(t.id)}" ${isSel ? 'checked' : ''} title="Select Track for Batch Actions (Shift+Click for range)" aria-label="Select ${esc(t.name)}" />
+          <div class="track-color-bar" style="background:${esc(t.color || '#00d4ff')}"></div>
+          <div class="track-select-stack">
+            <span class="track-index-num mono">${chNumStr}</span>
+            <input type="checkbox" class="track-sel-chk" data-track-chk="${esc(t.id)}" ${isSel ? 'checked' : ''} title="Select Track for Batch Actions (Shift+Click for range)" aria-label="Select ${esc(t.name)}" />
+          </div>
           <img class="track-mic-thumb" src="${esc(t.image || 'assets/mics/snare-mic.webp')}" alt="${esc(t.name)}" />
           <div class="track-meta-stack">
             <div class="track-top-line">
               ${nameHtml}
               <div class="track-btn-strip">
-                <button type="button" class="trk-mini-btn ${t.armed ? 'arm-on' : ''}" data-act="arm" data-id="${esc(t.id)}" title="Arm Track (Ctrl+Click = Selected · Alt+Click = Exclusive)">● R</button>
-                <button type="button" class="trk-mini-btn ${t.muted ? 'mute-on' : ''}" data-act="mute" data-id="${esc(t.id)}" title="Mute Track (M · Ctrl+Click = Selected · Alt+Click = Exclusive)">M</button>
-                <button type="button" class="trk-mini-btn ${t.soloed ? 'solo-on' : ''}" data-act="solo" data-id="${esc(t.id)}" title="Solo Track (Ctrl+Click = Selected · Alt+Click = Exclusive Solo)">S</button>
-                <button type="button" class="trk-mini-btn ${phaseOn ? 'phase-on' : ''}" data-act="phase" data-id="${esc(t.id)}" title="180° Phase Invert Ø (Drum Top/Bottom &amp; Overhead Polarity)">Ø</button>
-                <button type="button" class="trk-mini-btn ${selectedTrackId === t.id ? 'sr-on' : ''}" data-act="inspect" data-id="${esc(t.id)}" title="Open Channel Strip EQ / LV2 / Drum Replace Inspector">🎛️ FX</button>
-                <button type="button" class="trk-mini-btn ${srOn ? 'sr-on' : ''}" data-act="toggle-sr" data-id="${esc(t.id)}" title="Toggle Open-Source Drum Sound Replacement">🥁 ${srOn ? esc(srPiece) : 'Off'}</button>
-                <button type="button" class="trk-mini-btn" data-act="delete" data-id="${esc(t.id)}" title="Remove Track">✕</button>
+                <button type="button" class="trk-mini-btn hw-rec ${t.armed ? 'arm-on' : ''}" data-act="arm" data-id="${esc(t.id)}" title="Record Arm Track (Ctrl+Click = Selected · Alt+Click = Exclusive)">R</button>
+                <button type="button" class="trk-mini-btn hw-mute ${t.muted ? 'mute-on' : ''}" data-act="mute" data-id="${esc(t.id)}" title="Mute Track (M · Ctrl+Click = Selected · Alt+Click = Exclusive)">M</button>
+                <button type="button" class="trk-mini-btn hw-solo ${t.soloed ? 'solo-on' : ''}" data-act="solo" data-id="${esc(t.id)}" title="Solo Track (Ctrl+Click = Selected · Alt+Click = Exclusive Solo)">S</button>
+                <button type="button" class="trk-mini-btn hw-phase ${phaseOn ? 'phase-on' : ''}" data-act="phase" data-id="${esc(t.id)}" title="180° Phase Invert Ø (Drum Top/Bottom &amp; Overhead Polarity)">Ø</button>
+                <button type="button" class="trk-mini-btn hw-fx ${selectedTrackId === t.id ? 'fx-on' : ''}" data-act="inspect" data-id="${esc(t.id)}" title="Open Channel Strip EQ / LV2 / Drum Replace Inspector">${DI.svg('faders', 10.5)}<span>FX</span></button>
+                <button type="button" class="trk-mini-btn hw-trig ${srOn ? 'sr-on' : ''}" data-act="toggle-sr" data-id="${esc(t.id)}" title="Toggle Open-Source Drum Sound Replacement">${DI.badge('drum-replace', 12)}<span>${srOn ? esc(srPiece) : 'TRIG'}</span></button>
+                <button type="button" class="trk-mini-btn hw-del" data-act="delete" data-id="${esc(t.id)}" title="Remove Track">&times;</button>
               </div>
             </div>
             <div class="track-mid-line">
+              <span class="io-micro-tag">IN</span>
               <select class="track-input-select" data-act="input-change" data-id="${esc(t.id)}" aria-label="Track Hardware Input">
                 ${inputOptions || `<option value="${esc(t.inputNodeName)}">${esc(t.inputLabel || 'Default Input')}</option>`}
               </select>
             </div>
             <div class="track-gain-line">
-              <span>Gain</span>
-              <input type="range" class="track-gain-slider" min="-24" max="24" step="0.5" value="${gainDb.toFixed(1)}" data-act="gain" data-id="${esc(t.id)}" title="Pre-FX Input Gain (-24 to +24 dB) · Double-click to reset 0.0 dB · Hold Ctrl to gang selected tracks" />
+              <span class="fader-lbl">TRIM</span>
+              <input type="range" class="track-gain-slider daw-fader" min="-24" max="24" step="0.5" value="${gainDb.toFixed(1)}" data-act="gain" data-id="${esc(t.id)}" title="Pre-FX Input Gain (-24 to +24 dB) · Double-click to reset 0.0 dB · Hold Ctrl to gang selected tracks" />
               <span class="mono gain-db-badge ${Math.abs(gainDb) >= 0.05 ? 'boosted' : ''}" id="gain-badge-${esc(t.id)}" data-act="gain-reset" data-id="${esc(t.id)}" title="Double-click to reset Track Gain to 0.0 dB">${DE.formatDb(gainDb)}</span>
-              <span style="margin-left:auto;color:#64748b;">Vol</span>
-              <input type="range" class="track-vol-slider" style="width:68px;" min="0" max="1.4" step="0.02" value="${Number(t.volume ?? 1).toFixed(2)}" data-act="vol" data-id="${esc(t.id)}" title="Post-FX Fader Volume · Double-click to reset to 100%" />
-              <span class="mono" data-act="pan-reset" data-id="${esc(t.id)}" style="cursor:pointer;min-width:26px;text-align:right;" title="Double-click to center Pan">${formatPan(t.pan)}</span>
+              <span class="fader-lbl" style="margin-left:auto;">FADER</span>
+              <input type="range" class="track-vol-slider daw-fader" style="width:68px;" min="0" max="1.4" step="0.02" value="${Number(t.volume ?? 1).toFixed(2)}" data-act="vol" data-id="${esc(t.id)}" title="Post-FX Fader Volume · Double-click to reset to 100%" />
+              <span class="mono pan-badge" data-act="pan-reset" data-id="${esc(t.id)}" title="Double-click to center Pan">${formatPan(t.pan)}</span>
             </div>
             <div class="track-bot-line">
-              <span class="mono" style="font-size:10px;color:#64748b;">${(t.clips?.length || 0)} take${(t.clips?.length || 0) === 1 ? '' : 's'}</span>
-              <div class="track-live-meter" title="Live Track Input Peak">
+              <span class="mono region-count-lbl">${(t.clips?.length || 0)} RGN</span>
+              <div class="track-live-meter" title="Live Channel Input Peak Meter (dBFS)">
                 <div class="track-live-meter-fill" id="rec-meter-${esc(t.id)}" style="width:${dbToPercent(liveRecLevels[t.id]?.peakDb ?? -96)}%"></div>
               </div>
             </div>
@@ -840,7 +846,7 @@ function bindTrackRowEvents() {
       if (save && track && nextName && nextName !== track.name) {
         await commitEdit('Rename Track', () => {
           track.name = nextName;
-        }, { statusMsg: `✏️ Renamed track to "${nextName}"` });
+        }, { statusMsg: `Renamed track to "${nextName}"` });
       } else {
         renderStudio();
       }
@@ -995,7 +1001,7 @@ function bindTrackRowEvents() {
         if (!track) return;
         await commitEdit('Reset Track Gain', () => {
           track.gainDb = 0;
-        }, { statusMsg: `🎚️ Reset "${track.name}" input gain to 0.0 dB` });
+        }, { statusMsg: `Reset "${track.name}" input trim to 0.0 dB` });
       });
       return;
     }
@@ -1007,7 +1013,7 @@ function bindTrackRowEvents() {
         if (!track) return;
         await commitEdit('Reset Track Gain', () => {
           track.gainDb = 0;
-        }, { statusMsg: `🎚️ Reset "${track.name}" input gain to 0.0 dB` });
+        }, { statusMsg: `Reset "${track.name}" input trim to 0.0 dB` });
       });
       return;
     }
@@ -1344,49 +1350,102 @@ function drawAllTimelineCanvases() {
   const totalSec = getTimelineDurationSec();
   const bpm = Number(currentProject.bpm) || 120;
   const secPerBeat = 60 / bpm;
+  const secPerBar = secPerBeat * 4;
 
-  // 1. Ruler Canvas
+  // 1. Dual-Tier Pro-DAW Arrangement Ruler (Bars|Beats + Timecode Seconds)
   const ruler = document.getElementById('timeline-ruler-canvas');
   if (ruler) {
     const w = ruler.clientWidth || 640;
-    const h = 28;
+    const h = 32;
     if (ruler.width !== w) ruler.width = w;
+    if (ruler.height !== h) ruler.height = h;
     const ctx = ruler.getContext('2d');
     ctx.clearRect(0, 0, w, h);
-    ctx.fillStyle = '#090d13';
-    ctx.fillRect(0, 0, w, h);
 
-    ctx.font = '10.5px ui-monospace, monospace';
-    const stepSec = totalSec <= 8 ? 0.5 : (totalSec <= 24 ? 1 : 2);
-    for (let s = 0; s <= totalSec + 0.001; s += stepSec) {
-      const x = Math.round((s / totalSec) * w);
-      const isMajor = Math.abs(s % (stepSec * 2)) < 0.01;
-      ctx.strokeStyle = isMajor ? '#334155' : '#1e293b';
-      ctx.beginPath();
-      ctx.moveTo(x, isMajor ? 10 : 18);
-      ctx.lineTo(x, h);
-      ctx.stroke();
-      if (isMajor && x < w - 30) {
-        ctx.fillStyle = '#94a3b8';
-        ctx.fillText(`${Number(s.toFixed(1))}s`, x + 3, 12);
+    // Top Bars|Beats lane + bottom Timecode lane
+    ctx.fillStyle = '#0d1016';
+    ctx.fillRect(0, 0, w, 17);
+    ctx.fillStyle = '#080b0f';
+    ctx.fillRect(0, 17, w, 15);
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.06)';
+    ctx.beginPath();
+    ctx.moveTo(0, 16.5);
+    ctx.lineTo(w, 16.5);
+    ctx.stroke();
+
+    // Bars & Beats markers (4/4)
+    const pxPerBeat = (secPerBeat / totalSec) * w;
+    const maxBeats = Math.ceil(totalSec / secPerBeat) + 1;
+    ctx.font = '700 9.5px ui-monospace, SFMono-Regular, Menlo, monospace';
+    for (let beat = 0; beat <= maxBeats; beat++) {
+      const t = beat * secPerBeat;
+      if (t > totalSec + 0.01) break;
+      const x = Math.round((t / totalSec) * w) + 0.5;
+      const isBar = beat % 4 === 0;
+      const barNum = Math.floor(beat / 4) + 1;
+
+      if (isBar) {
+        ctx.strokeStyle = '#334155';
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, 17);
+        ctx.stroke();
+        if (x < w - 26) {
+          ctx.fillStyle = '#cbd5e1';
+          ctx.fillText(barNum === 1 ? 'BAR 1' : String(barNum), x + 4, 12);
+        }
+      } else if (pxPerBeat >= 14) {
+        ctx.strokeStyle = '#1e293b';
+        ctx.beginPath();
+        ctx.moveTo(x, 10);
+        ctx.lineTo(x, 17);
+        ctx.stroke();
       }
     }
 
-    // Playhead triangle
-    const px = Math.round((playheadSec / totalSec) * w);
-    if (px >= -6 && px <= w + 6) {
-      ctx.fillStyle = '#00bcd4';
+    // Seconds sub-lane markers
+    ctx.font = '500 9px ui-monospace, SFMono-Regular, Menlo, monospace';
+    const stepSec = totalSec <= 8 ? 0.5 : (totalSec <= 24 ? 1 : 2);
+    for (let s = 0; s <= totalSec + 0.001; s += stepSec) {
+      const x = Math.round((s / totalSec) * w) + 0.5;
+      const isMajor = Math.abs(s % (stepSec * 2)) < 0.01;
+      ctx.strokeStyle = isMajor ? '#283446' : '#18202c';
       ctx.beginPath();
-      ctx.moveTo(px - 5, 0);
-      ctx.lineTo(px + 5, 0);
-      ctx.lineTo(px, 8);
+      ctx.moveTo(x, isMajor ? 18 : 24);
+      ctx.lineTo(x, h);
+      ctx.stroke();
+      if (isMajor && x < w - 32) {
+        ctx.fillStyle = '#64748b';
+        ctx.fillText(`${Number(s.toFixed(1))}s`, x + 3, 29);
+      }
+    }
+
+    // Playhead cap polygon + stem
+    const px = Math.round((playheadSec / totalSec) * w);
+    if (px >= -8 && px <= w + 8) {
+      ctx.fillStyle = '#00d4ff';
+      ctx.beginPath();
+      ctx.moveTo(px - 5.5, 0);
+      ctx.lineTo(px + 5.5, 0);
+      ctx.lineTo(px + 5.5, 5);
+      ctx.lineTo(px, 11);
+      ctx.lineTo(px - 5.5, 5);
       ctx.closePath();
       ctx.fill();
+
+      ctx.strokeStyle = '#00d4ff';
+      ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      ctx.moveTo(px + 0.5, 10);
+      ctx.lineTo(px + 0.5, h);
+      ctx.stroke();
     }
   }
 
-  // 2. Per-Track Waveform + Transient Canvases
-  for (const track of (currentProject.tracks || [])) {
+  // 2. Per-Track Pro Waveform + Transient Canvases
+  const tracksArr = currentProject.tracks || [];
+  for (let tIdx = 0; tIdx < tracksArr.length; tIdx++) {
+    const track = tracksArr[tIdx];
     const canvas = document.getElementById(`wave-canvas-${track.id}`);
     if (!canvas) continue;
     const w = canvas.clientWidth || 640;
@@ -1396,26 +1455,45 @@ function drawAllTimelineCanvases() {
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, w, h);
 
-    // Subtle beat gridlines
-    ctx.strokeStyle = 'rgba(148, 163, 184, 0.07)';
-    for (let t = 0; t <= totalSec; t += secPerBeat * 2) {
-      const x = Math.round((t / totalSec) * w);
+    // Alternating studio charcoal lane tint
+    ctx.fillStyle = tIdx % 2 === 0 ? '#0b0e14' : '#0d1118';
+    ctx.fillRect(0, 0, w, h);
+
+    // Subtle alternating 1-bar shading + beat gridlines
+    const maxBeats = Math.ceil(totalSec / secPerBeat) + 1;
+    const pxPerBar = (secPerBar / totalSec) * w;
+    if (pxPerBar >= 28) {
+      for (let bar = 0; bar * secPerBar < totalSec; bar += 2) {
+        const bx = (bar * secPerBar / totalSec) * w;
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.012)';
+        ctx.fillRect(bx, 0, pxPerBar, h);
+      }
+    }
+
+    for (let beat = 0; beat <= maxBeats; beat++) {
+      const t = beat * secPerBeat;
+      if (t > totalSec + 0.01) break;
+      const x = Math.round((t / totalSec) * w) + 0.5;
+      const isBar = beat % 4 === 0;
+      if (!isBar && (secPerBeat / totalSec) * w < 14) continue;
+      ctx.strokeStyle = isBar ? 'rgba(148, 163, 184, 0.13)' : 'rgba(148, 163, 184, 0.045)';
       ctx.beginPath();
       ctx.moveTo(x, 0);
       ctx.lineTo(x, h);
       ctx.stroke();
     }
 
-    // Center zero-crossing line
-    ctx.strokeStyle = 'rgba(148, 163, 184, 0.14)';
+    // Center zero-crossing reference line
+    ctx.strokeStyle = 'rgba(148, 163, 184, 0.11)';
     ctx.beginPath();
-    ctx.moveTo(0, h / 2);
-    ctx.lineTo(w, h / 2);
+    ctx.moveTo(0, Math.round(h / 2) + 0.5);
+    ctx.lineTo(w, Math.round(h / 2) + 0.5);
     ctx.stroke();
 
     const trackGainDb = Number(track.gainDb) || 0;
+    const baseColor = track.color || '#00d4ff';
 
-    // Draw recorded clips
+    // Draw recorded audio regions
     for (const clip of (track.clips || [])) {
       const startX = (Number(clip.startSec || 0) / totalSec) * w;
       const clipW = Math.max(8, (Number(clip.durationSec || 1) / totalSec) * w);
@@ -1425,151 +1503,192 @@ function drawAllTimelineCanvases() {
       const isMuted = Boolean(clip.muted);
       const clipGainDb = Number(clip.gainDb) || 0;
       const totalGainLinear = DE.dbToGain(trackGainDb + clipGainDb);
+      const regionTop = 4;
+      const regionH = h - 8;
 
       ctx.save();
-      if (isMuted) ctx.globalAlpha = 0.42;
+      if (isMuted) ctx.globalAlpha = 0.4;
 
-      ctx.fillStyle = isClipSel ? 'rgba(14, 48, 68, 0.95)' : 'rgba(22, 34, 49, 0.92)';
-      ctx.strokeStyle = isClipSel ? '#f8fafc' : (track.color || '#00bcd4');
-      ctx.lineWidth = isClipSel ? 2.0 : 1.2;
-      ctx.fillRect(startX, 5, clipW, h - 10);
-      ctx.strokeRect(startX, 5, clipW, h - 10);
+      // Rounded region container
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(startX, regionTop, clipW, regionH, 4);
+      else ctx.rect(startX, regionTop, clipW, regionH);
+      ctx.clip();
 
-      // Header bar tint
-      ctx.fillStyle = isClipSel ? 'rgba(56, 189, 248, 0.25)' : 'rgba(15, 23, 42, 0.55)';
-      ctx.fillRect(startX + 1, 6, Math.max(2, clipW - 2), 16);
+      ctx.fillStyle = isClipSel ? 'rgba(16, 40, 58, 0.96)' : 'rgba(17, 24, 35, 0.94)';
+      ctx.fillRect(startX, regionTop, clipW, regionH);
 
-      // Peaks envelope scaled live by Track Gain + Take Gain!
+      // Tinted studio region header bar
+      ctx.fillStyle = isClipSel ? 'rgba(0, 212, 255, 0.28)' : 'rgba(30, 41, 59, 0.78)';
+      ctx.fillRect(startX, regionTop, clipW, 17);
+      ctx.fillStyle = baseColor;
+      ctx.globalAlpha = isMuted ? 0.25 : 0.32;
+      ctx.fillRect(startX, regionTop, clipW, 2.5);
+      ctx.globalAlpha = isMuted ? 0.4 : 1.0;
+
+      // Dual-layer Peak + RMS core waveform scaled live by Track Trim + Region Gain
       const peaks = Array.isArray(clip.peaks) ? clip.peaks : [];
       if (peaks.length) {
-        ctx.fillStyle = isMuted ? '#64748b' : (track.color || '#00bcd4');
         const stepX = clipW / peaks.length;
-        const barW = Math.max(1, stepX - 0.35);
-        const midY = h / 2 + 6;
-        const maxAmpH = (h - 32) / 2;
+        const barW = Math.max(1, stepX - (stepX > 2.2 ? 0.45 : 0.15));
+        const midY = regionTop + 17 + (regionH - 19) / 2;
+        const maxAmpH = (regionH - 22) / 2;
+
+        // Outer peak silhouette
+        ctx.fillStyle = isMuted ? '#475569' : baseColor;
+        ctx.globalAlpha = isMuted ? 0.35 : 0.52;
         for (let i = 0; i < peaks.length; i++) {
-          const amp = Math.max(0.025, Math.min(1, peaks[i] * 1.35 * totalGainLinear));
+          const amp = Math.max(0.02, Math.min(1, peaks[i] * 1.35 * totalGainLinear));
           const bh = amp * maxAmpH;
           ctx.fillRect(startX + i * stepX, midY - bh, barW, bh * 2);
         }
+
+        // Brighter inner RMS body core
+        ctx.fillStyle = isMuted ? '#94a3b8' : (isClipSel ? '#e0f2fe' : baseColor);
+        ctx.globalAlpha = isMuted ? 0.4 : 0.92;
+        for (let i = 0; i < peaks.length; i++) {
+          const amp = Math.max(0.015, Math.min(1, peaks[i] * 0.78 * totalGainLinear));
+          const bh = amp * maxAmpH;
+          ctx.fillRect(startX + i * stepX, midY - bh, barW, bh * 2);
+        }
+        ctx.globalAlpha = isMuted ? 0.4 : 1.0;
       }
 
-      // Fade-in & Fade-out visual envelopes
+      // Fade-in & Fade-out envelopes
       const durSec = Math.max(0.05, Number(clip.durationSec) || 1);
       const fadeInPx = Math.min(clipW * 0.5, ((Number(clip.fadeInSec) || 0) / durSec) * clipW);
       const fadeOutPx = Math.min(clipW * 0.5, ((Number(clip.fadeOutSec) || 0) / durSec) * clipW);
       if (fadeInPx > 2) {
-        ctx.fillStyle = 'rgba(9, 13, 19, 0.55)';
+        ctx.fillStyle = 'rgba(7, 10, 15, 0.62)';
         ctx.beginPath();
-        ctx.moveTo(startX, 5);
-        ctx.lineTo(startX + fadeInPx, 5);
-        ctx.lineTo(startX, h - 5);
+        ctx.moveTo(startX, regionTop + 17);
+        ctx.lineTo(startX + fadeInPx, regionTop + 17);
+        ctx.lineTo(startX, regionTop + regionH);
         ctx.closePath();
         ctx.fill();
         ctx.strokeStyle = '#38bdf8';
-        ctx.lineWidth = 1.3;
+        ctx.lineWidth = 1.25;
         ctx.beginPath();
-        ctx.moveTo(startX, h - 5);
-        ctx.lineTo(startX + fadeInPx, 5);
+        ctx.moveTo(startX, regionTop + regionH);
+        ctx.lineTo(startX + fadeInPx, regionTop + 17);
         ctx.stroke();
       }
       if (fadeOutPx > 2) {
         const endX = startX + clipW;
-        ctx.fillStyle = 'rgba(9, 13, 19, 0.55)';
+        ctx.fillStyle = 'rgba(7, 10, 15, 0.62)';
         ctx.beginPath();
-        ctx.moveTo(endX, 5);
-        ctx.lineTo(endX - fadeOutPx, 5);
-        ctx.lineTo(endX, h - 5);
+        ctx.moveTo(endX, regionTop + 17);
+        ctx.lineTo(endX - fadeOutPx, regionTop + 17);
+        ctx.lineTo(endX, regionTop + regionH);
         ctx.closePath();
         ctx.fill();
         ctx.strokeStyle = '#38bdf8';
-        ctx.lineWidth = 1.3;
+        ctx.lineWidth = 1.25;
         ctx.beginPath();
-        ctx.moveTo(endX - fadeOutPx, 5);
-        ctx.lineTo(endX, h - 5);
+        ctx.moveTo(endX - fadeOutPx, regionTop + 17);
+        ctx.lineTo(endX, regionTop + regionH);
         ctx.stroke();
       }
 
-      // Transient Drum Replacement Markers (▼)
+      // Precision Transient Trigger Diamond Markers
       if (track.soundReplacement?.enabled && Array.isArray(clip.transients) && !isMuted) {
         for (const hit of clip.transients) {
           const hx = startX + ((Number(hit.timeSec) || 0) / durSec) * clipW;
-          ctx.strokeStyle = '#fde047';
+          ctx.strokeStyle = 'rgba(245, 158, 11, 0.72)';
           ctx.lineWidth = 1;
           ctx.beginPath();
-          ctx.moveTo(hx, 22);
-          ctx.lineTo(hx, h - 6);
+          ctx.moveTo(hx, regionTop + 19);
+          ctx.lineTo(hx, regionTop + regionH - 2);
           ctx.stroke();
 
-          ctx.fillStyle = '#fde047';
+          ctx.fillStyle = '#fbbf24';
           ctx.beginPath();
-          ctx.moveTo(hx - 4, 22);
-          ctx.lineTo(hx + 4, 22);
-          ctx.lineTo(hx, 28);
+          ctx.moveTo(hx, regionTop + 18);
+          ctx.lineTo(hx + 3.5, regionTop + 21.5);
+          ctx.lineTo(hx, regionTop + 25);
+          ctx.lineTo(hx - 3.5, regionTop + 21.5);
           ctx.closePath();
           ctx.fill();
         }
       }
 
-      // Edge trim handles on selected clips
+      // Edge trim handles on selected regions
       if (isClipSel && clipW > 20) {
-        ctx.fillStyle = '#38bdf8';
-        ctx.fillRect(startX + 1, h / 2 - 10, 3, 20);
-        ctx.fillRect(startX + clipW - 4, h / 2 - 10, 3, 20);
+        ctx.fillStyle = '#00d4ff';
+        ctx.fillRect(startX + 1.5, h / 2 - 9, 2.5, 18);
+        ctx.fillRect(startX + clipW - 4, h / 2 - 9, 2.5, 18);
       }
 
-      // Clip title + gain + stats
-      ctx.fillStyle = isClipSel ? '#ffffff' : '#e2e8f0';
-      ctx.font = '600 10.5px -apple-system, sans-serif';
-      const muteTag = isMuted ? '[MUTED] ' : '';
+      // Region label + metrics (zero emojis)
+      ctx.fillStyle = isClipSel ? '#ffffff' : '#dbeafe';
+      ctx.font = '600 10px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+      const muteTag = isMuted ? '[MUTE] ' : '';
       const gainTag = Math.abs(clipGainDb) >= 0.05 ? ` · ${DE.formatDb(clipGainDb)}` : '';
       const hitNote = track.soundReplacement?.enabled && clip.transients?.length
-        ? ` · 🥁 ${clip.transients.length} hits`
+        ? ` · TRIG ${clip.transients.length}`
         : '';
       ctx.save();
       ctx.beginPath();
-      ctx.rect(startX + 3, 5, Math.max(4, clipW - 6), 18);
+      ctx.rect(startX + 4, regionTop + 1, Math.max(4, clipW - 8), 16);
       ctx.clip();
       ctx.fillText(
-        `${muteTag}${clip.name || 'Take'} (${Number(clip.durationSec || 0).toFixed(1)}s, ${clip.peakDb ?? '—'} dB${gainTag}${hitNote})`,
+        `${muteTag}${clip.name || 'Take'}  ${Number(clip.durationSec || 0).toFixed(1)}s · ${clip.peakDb ?? '—'} dB${gainTag}${hitNote}`,
         startX + 6,
-        17
+        regionTop + 12.5
       );
       ctx.restore();
+      ctx.restore();
+
+      // Region crisp border outline
+      ctx.save();
+      ctx.strokeStyle = isClipSel ? '#e2e8f0' : baseColor;
+      ctx.globalAlpha = isMuted ? 0.35 : (isClipSel ? 0.95 : 0.65);
+      ctx.lineWidth = isClipSel ? 1.6 : 1.0;
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(startX + 0.5, regionTop + 0.5, Math.max(2, clipW - 1), regionH - 1, 4);
+      else ctx.rect(startX + 0.5, regionTop + 0.5, Math.max(2, clipW - 1), regionH - 1);
+      ctx.stroke();
       ctx.restore();
     }
 
     // Live Recording region preview
     if (isRecording && track.armed) {
       const recStart = (playheadSec / totalSec) * w;
-      ctx.fillStyle = 'rgba(239, 68, 68, 0.2)';
-      ctx.fillRect(recStart, 5, Math.max(16, 48), h - 10);
-      ctx.fillStyle = '#fca5a5';
-      ctx.font = '700 11px ui-monospace, monospace';
-      ctx.fillText('● RECORDING LIVE…', recStart + 6, h / 2 + 4);
+      ctx.fillStyle = 'rgba(239, 68, 68, 0.22)';
+      ctx.fillRect(recStart, 5, Math.max(24, 68), h - 10);
+      ctx.strokeStyle = '#ef4444';
+      ctx.strokeRect(recStart + 0.5, 5.5, Math.max(24, 68) - 1, h - 11);
+      ctx.fillStyle = '#fecaca';
+      ctx.font = '700 10.5px ui-monospace, monospace';
+      ctx.fillText('REC LIVE', recStart + 7, h / 2 + 4);
     }
 
-    // Playhead line
+    // Playhead cursor line
     const px = Math.round((playheadSec / totalSec) * w);
     if (px >= 0 && px <= w) {
-      ctx.strokeStyle = '#00bcd4';
-      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = '#00d4ff';
+      ctx.lineWidth = 1.4;
       ctx.beginPath();
-      ctx.moveTo(px, 0);
-      ctx.lineTo(px, h);
+      ctx.moveTo(px + 0.5, 0);
+      ctx.lineTo(px + 0.5, h);
       ctx.stroke();
     }
   }
 }
+
+let lastRenderedInspectorOpen = false;
 
 function renderInspectorDrawer() {
   const drawer = document.getElementById('track-inspector-drawer');
   if (!drawer) return;
   const track = (currentProject?.tracks || []).find(t => t.id === selectedTrackId);
   if (!track) {
+    lastRenderedInspectorOpen = false;
     drawer.classList.add('hidden');
     return;
   }
+  const justOpened = !lastRenderedInspectorOpen;
+  lastRenderedInspectorOpen = true;
   drawer.classList.remove('hidden');
 
   const eq = track.fx?.eq || {};
@@ -1580,7 +1699,7 @@ function renderInspectorDrawer() {
   const piecesObj = activeKit?.pieces || {};
 
   const kitOpts = kits.map(k =>
-    `<option value="${esc(k.id)}"${k.id === sr.kitId ? ' selected' : ''}>${esc(k.name)} ${k.installed ? '✓' : '(Install)'}</option>`
+    `<option value="${esc(k.id)}"${k.id === sr.kitId ? ' selected' : ''}>${esc(k.name)} ${k.installed ? '[Installed]' : '[Install]'}</option>`
   ).join('');
   const pieceOpts = Object.values(piecesObj).map(p =>
     `<option value="${esc(p.id)}"${p.id === sr.pieceId ? ' selected' : ''}>${esc(p.label)}</option>`
@@ -1591,92 +1710,98 @@ function renderInspectorDrawer() {
 
   drawer.innerHTML = `
     <div class="inspector-top">
-      <div>
-        <strong>🎛️ Channel Strip &amp; Sound Replacement Inspector — ${esc(track.name)}</strong>
-        <span class="hint" style="margin-left:10px;">Input: ${esc(track.inputLabel)} · Plugins: ${(track.fx?.openSourcePlugins || []).map(esc).join(' → ')}</span>
+      <div class="inspector-title-row">
+        ${DI.badge('channel-fx', 22)}
+        <div>
+          <strong>CHANNEL INSERT &amp; TRIGGER RACK — ${esc(track.name)}</strong>
+          <span class="hint" style="margin-left:10px;">Input: ${esc(track.inputLabel)} · Chain: ${(track.fx?.openSourcePlugins || []).map(esc).join(' → ')}</span>
+        </div>
       </div>
-      <div style="display:flex;gap:8px;">
-        <button type="button" class="btn btn-sm" id="btn-insp-norm-gain" title="Auto-normalize Track Input Gain so peak hits -6 dBFS">⚡ Auto-Gain (-6 dB)</button>
-        <button type="button" class="btn btn-sm" id="btn-insp-clear-clips">Clear Takes (${track.clips?.length || 0})</button>
-        <button type="button" class="btn btn-sm" id="btn-insp-close">Close</button>
+      <div class="btn-cluster">
+        <button type="button" class="btn btn-sm btn-bevel" id="btn-insp-norm-gain" title="Auto-normalize Track Input Gain so peak hits -6 dBFS">${DI.svg('bolt', 12)}<span>Auto-Gain (-6 dB)</span></button>
+        <button type="button" class="btn btn-sm btn-bevel" id="btn-insp-clear-clips">${DI.svg('trash', 12)}<span>Clear Regions (${track.clips?.length || 0})</span></button>
+        <button type="button" class="btn btn-sm btn-bevel" id="btn-insp-close">${DI.svg('close', 12)}<span>Close</span></button>
       </div>
     </div>
 
     <div class="inspector-grid">
-      <div>
-        <div class="mini-heading">Input Trim, Polarity, Parametric EQ &amp; Dynamics</div>
+      <div class="rack-module">
+        <div class="mini-heading">PREAMP TRIM · POLARITY · PARAMETRIC EQ · DYNAMICS</div>
         <div class="dsp-sliders">
           <div class="slider-row">
-            <label>Input Gain (${DE.formatDb(gainDb)})</label>
+            <label>Input Trim (${DE.formatDb(gainDb)})</label>
             <input type="checkbox" id="insp-phase-on" title="180° Phase Invert (Ø)" ${track.fx?.phaseInvert ? 'checked' : ''} />
-            <input type="range" id="insp-gain-db" min="-24" max="24" step="0.5" value="${gainDb}" />
+            <input type="range" class="daw-fader" id="insp-gain-db" min="-24" max="24" step="0.5" value="${gainDb}" />
           </div>
           <div class="slider-row">
             <label>High-Pass (${eq.hpfHz || 60} Hz)</label>
             <input type="checkbox" id="insp-eq-on" ${eq.enabled !== false ? 'checked' : ''} />
-            <input type="range" id="insp-eq-hpf" min="20" max="320" step="5" value="${eq.hpfHz || 60}" />
+            <input type="range" class="daw-fader" id="insp-eq-hpf" min="20" max="320" step="5" value="${eq.hpfHz || 60}" />
           </div>
           <div class="slider-row">
             <label>Low Shelf (${eq.lowGainDb ?? 0} dB)</label>
             <span></span>
-            <input type="range" id="insp-eq-low" min="-12" max="12" step="0.5" value="${eq.lowGainDb ?? 0}" />
+            <input type="range" class="daw-fader" id="insp-eq-low" min="-12" max="12" step="0.5" value="${eq.lowGainDb ?? 0}" />
           </div>
           <div class="slider-row">
             <label>Mid Peak (${eq.midGainDb ?? 0} dB)</label>
             <span></span>
-            <input type="range" id="insp-eq-mid" min="-12" max="12" step="0.5" value="${eq.midGainDb ?? 0}" />
+            <input type="range" class="daw-fader" id="insp-eq-mid" min="-12" max="12" step="0.5" value="${eq.midGainDb ?? 0}" />
           </div>
           <div class="slider-row">
             <label>High Air (${eq.highGainDb ?? 0} dB)</label>
             <span></span>
-            <input type="range" id="insp-eq-high" min="-12" max="12" step="0.5" value="${eq.highGainDb ?? 0}" />
+            <input type="range" class="daw-fader" id="insp-eq-high" min="-12" max="12" step="0.5" value="${eq.highGainDb ?? 0}" />
           </div>
           <div class="slider-row">
             <label>Compressor (${comp.ratio ?? 3.5}:1)</label>
             <input type="checkbox" id="insp-comp-on" ${comp.enabled !== false ? 'checked' : ''} />
-            <input type="range" id="insp-comp-ratio" min="1" max="10" step="0.5" value="${comp.ratio ?? 3.5}" />
+            <input type="range" class="daw-fader" id="insp-comp-ratio" min="1" max="10" step="0.5" value="${comp.ratio ?? 3.5}" />
           </div>
           <div class="slider-row">
             <label>Stereo Pan (${formatPan(track.pan)})</label>
             <span></span>
-            <input type="range" id="insp-pan" min="-1" max="1" step="0.05" value="${track.pan || 0}" />
+            <input type="range" class="daw-fader" id="insp-pan" min="-1" max="1" step="0.05" value="${track.pan || 0}" />
           </div>
         </div>
       </div>
 
-      <div>
+      <div class="rack-module">
         <div class="sr-card-header" style="margin-bottom:8px;">
-          <div>
-            <div class="mini-heading" style="margin:0;">🥁 Open-Source Drum Sound Replacement</div>
-            <span class="hint">${totalTransients} detected transient hit(s) across recorded clips</span>
+          <div class="inspector-title-row">
+            ${DI.badge('drum-replace', 22)}
+            <div>
+              <div class="mini-heading" style="margin:0;">DRUM TRANSIENT SOUND REPLACEMENT</div>
+              <span class="hint">${totalTransients} detected transient trigger(s) across regions</span>
+            </div>
           </div>
           <label class="toggle-pill">
             <input type="checkbox" id="insp-sr-on" ${sr.enabled ? 'checked' : ''} />
-            <span>${sr.enabled ? 'ENABLED' : 'OFF'}</span>
+            <span>${sr.enabled ? 'ACTIVE' : 'BYPASS'}</span>
           </label>
         </div>
 
         <div class="form-row">
-          <label>Open-Source Drum Kit</label>
+          <label>Open-Source Drum Sample Library</label>
           <select id="insp-sr-kit" class="select">${kitOpts}</select>
         </div>
         <div class="form-row">
-          <label>Replacement Drum Piece</label>
+          <label>Target Drum Piece</label>
           <div class="control-inline">
             <select id="insp-sr-piece" class="select">${pieceOpts}</select>
-            <button type="button" class="btn btn-sm" id="btn-insp-audition">🔊 Audition</button>
+            <button type="button" class="btn btn-sm btn-bevel" id="btn-insp-audition">${DI.svg('speaker', 12)}<span>Audition</span></button>
           </div>
         </div>
         <div class="dsp-sliders">
           <div class="slider-row">
             <label>Trigger Thresh (${sr.thresholdDb ?? -28} dB)</label>
             <span></span>
-            <input type="range" id="insp-sr-thresh" min="-48" max="-8" step="1" value="${sr.thresholdDb ?? -28}" />
+            <input type="range" class="daw-fader" id="insp-sr-thresh" min="-48" max="-8" step="1" value="${sr.thresholdDb ?? -28}" />
           </div>
           <div class="slider-row">
-            <label>Replaced Blend (${Math.round((sr.blend ?? 0.75) * 100)}%)</label>
+            <label>Sample Blend (${Math.round((sr.blend ?? 0.75) * 100)}%)</label>
             <span></span>
-            <input type="range" id="insp-sr-blend" min="0" max="100" step="5" value="${Math.round((sr.blend ?? 0.75) * 100)}" />
+            <input type="range" class="daw-fader" id="insp-sr-blend" min="0" max="100" step="5" value="${Math.round((sr.blend ?? 0.75) * 100)}" />
           </div>
         </div>
       </div>
@@ -1695,7 +1820,7 @@ function renderInspectorDrawer() {
   document.getElementById('btn-insp-norm-gain')?.addEventListener('click', async () => {
     await commitEdit('Auto-Normalize Track Gain', () => {
       DE.normalizeTrackGain(track, -6.0);
-    }, { statusMsg: `⚡ Normalized "${track.name}" gain to ${DE.formatDb(track.gainDb)} (-6 dBFS target)` });
+    }, { statusMsg: `Normalized "${track.name}" gain to ${DE.formatDb(track.gainDb)} (-6 dBFS target)` });
   });
   document.getElementById('btn-insp-clear-clips')?.addEventListener('click', async () => {
     await commitEdit('Clear Track Takes', () => {
@@ -1771,6 +1896,12 @@ function renderInspectorDrawer() {
       track.soundReplacement = { ...(track.soundReplacement || {}), blend: Number(e.target.value) / 100 };
     })
   );
+
+  if (justOpened) {
+    requestAnimationFrame(() => {
+      drawer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
+  }
 }
 
 // ─── DAW Editing Actions, Top Menu Bar & Right-Click Context Menus ──────────
@@ -1811,7 +1942,7 @@ function openRenameModal(title, labelText, initialValue, onConfirm) {
   const lblEl = document.getElementById('rename-modal-label');
   const inpEl = document.getElementById('rename-modal-input');
   if (!modal || !inpEl) return;
-  if (titleEl) titleEl.textContent = `✏️ ${title}`;
+  if (titleEl) titleEl.textContent = title;
   if (lblEl) lblEl.textContent = labelText;
   inpEl.value = initialValue || '';
   modal.classList.remove('hidden');
@@ -1844,7 +1975,7 @@ async function createNewSession() {
     markDirty(false);
     switchView('studio-stage');
     renderStudio();
-    showStatus('📄 Created new studio session.');
+    showStatus('Created new studio session.');
   }
 }
 
@@ -1871,7 +2002,7 @@ async function addBlankAudioTracks(count = 1, { profileId = null, afterTrackId =
   switchView('studio-stage');
   renderStudio();
   const labelSummary = (res.addedTracks || []).map(t => `${t.name} (${t.inputLabel})`).slice(0, 3).join(', ');
-  showStatus(`➕ Added ${addedIds.length} armed audio track(s): ${labelSummary}${addedIds.length > 3 ? '…' : ''}`);
+  showStatus(`Added ${addedIds.length} armed audio track(s): ${labelSummary}${addedIds.length > 3 ? '...' : ''}`);
 }
 
 async function armSelectedTracks() {
@@ -1883,7 +2014,7 @@ async function armSelectedTracks() {
   const cnt = selectedTrackIds.size;
   await commitEdit('Arm Selected Track(s)', () => {
     DE.setTracksPropertyBatch(currentProject, selectedTrackIds, 'armed', true);
-  }, { statusMsg: `● Armed ${cnt} selected track(s)` });
+  }, { statusMsg: `Armed ${cnt} selected track(s)` });
 }
 
 async function disarmSelectedTracks() {
@@ -1891,24 +2022,24 @@ async function disarmSelectedTracks() {
   const cnt = selectedTrackIds.size;
   await commitEdit('Disarm Selected Track(s)', () => {
     DE.setTracksPropertyBatch(currentProject, selectedTrackIds, 'armed', false);
-  }, { statusMsg: `○ Disarmed ${cnt} selected track(s)` });
+  }, { statusMsg: `Disarmed ${cnt} selected track(s)` });
 }
 
 async function armAllTracks() {
   if (!currentProject || !(currentProject.tracks || []).length) {
-    showStatus('No tracks in session yet — press Ctrl+T or "+ Track" first.', true);
+    showStatus('No tracks in session yet — press Ctrl+T or + Track first.', true);
     return;
   }
   await commitEdit('Arm All Tracks', () => {
     DE.setTracksPropertyBatch(currentProject, 'all', 'armed', true);
-  }, { statusMsg: `● Armed all ${currentProject.tracks.length} studio tracks for recording` });
+  }, { statusMsg: `Armed all ${currentProject.tracks.length} studio tracks for recording` });
 }
 
 async function disarmAllTracks() {
   if (!currentProject || !(currentProject.tracks || []).length) return;
   await commitEdit('Disarm All Tracks', () => {
     DE.setTracksPropertyBatch(currentProject, 'all', 'armed', false);
-  }, { statusMsg: `○ Disarmed all ${currentProject.tracks.length} tracks` });
+  }, { statusMsg: `Disarmed all ${currentProject.tracks.length} tracks` });
 }
 
 async function removeSelectedTracks() {
@@ -1919,7 +2050,7 @@ async function removeSelectedTracks() {
   const cnt = selectedTrackIds.size;
   await commitEdit('Remove Selected Track(s)', () => {
     DE.deleteTracksFromProject(currentProject, selectedTrackIds);
-  }, { statusMsg: `🗑️ Removed ${cnt} track(s) (Press Ctrl+Z to Undo)` });
+  }, { statusMsg: `Removed ${cnt} track(s) (Press Ctrl+Z to Undo)` });
 }
 
 async function removeAllTracks() {
@@ -1927,7 +2058,7 @@ async function removeAllTracks() {
   const total = currentProject.tracks.length;
   await commitEdit('Remove All Tracks', () => {
     currentProject.tracks = [];
-  }, { statusMsg: `🗑️ Removed all ${total} tracks from session (Press Ctrl+Z to Undo)` });
+  }, { statusMsg: `Removed all ${total} tracks from session (Press Ctrl+Z to Undo)` });
 }
 
 function editSelectAllTracksOnly() {
@@ -1938,7 +2069,7 @@ function editSelectAllTracksOnly() {
   anchorClipId = null;
   anchorTrackId = currentProject.tracks?.[0]?.id || null;
   renderStudio();
-  showStatus(`☑ Selected all ${selectedTrackIds.size} track(s) (takes deselected — ready for batch track actions)`);
+  showStatus(`Selected all ${selectedTrackIds.size} track(s) (regions deselected — ready for batch actions)`);
 }
 
 function editSelectAllClipsOnly() {
@@ -1948,7 +2079,7 @@ function editSelectAllClipsOnly() {
   selectedClipIds = res.selectedClipIds;
   anchorTrackId = null;
   renderStudio();
-  showStatus(`🎞️ Selected all ${selectedClipIds.size} take(s) across timeline`);
+  showStatus(`Selected all ${selectedClipIds.size} audio region(s) across timeline`);
 }
 
 function editInvertTrackSelection() {
@@ -1957,7 +2088,7 @@ function editInvertTrackSelection() {
   selectedTrackIds = DE.invertTrackSelection(currentProject, selectedTrackIds);
   anchorTrackId = [...selectedTrackIds][0] || null;
   renderStudio();
-  showStatus(`⇄ Inverted track selection (${selectedTrackIds.size} track(s) selected)`);
+  showStatus(`Inverted track selection (${selectedTrackIds.size} track(s) selected)`);
 }
 
 async function editTrimToPlayhead(edge /* 'left' | 'right' */) {
@@ -1967,9 +2098,9 @@ async function editTrimToPlayhead(edge /* 'left' | 'right' */) {
     trimmed = DE.trimClipsToPlayhead(currentProject, selectedClipIds, edge, playheadSec);
   });
   if (trimmed > 0) {
-    showStatus(`✂️ Trimmed ${trimmed} take(s) ${edge === 'left' ? 'start' : 'end'} to playhead (${formatTimecode(playheadSec)})`);
+    showStatus(`Trimmed ${trimmed} region(s) ${edge === 'left' ? 'start' : 'end'} to playhead (${formatTimecode(playheadSec)})`);
   } else {
-    showStatus('Place playhead inside a selected take before trimming ([ or ]).', true);
+    showStatus('Place playhead inside a selected region before trimming ([ or ]).', true);
   }
 }
 
@@ -1992,7 +2123,7 @@ async function importAudioWavFiles({ startSec = playheadSec, targetTrackId = nul
   markDirty(true);
   switchView('studio-stage');
   renderStudio();
-  showStatus(`📥 Imported ${(res.importedClipIds || []).length} WAV file(s) at ${formatTimecode(startSec)}`);
+  showStatus(`Imported ${(res.importedClipIds || []).length} WAV file(s) at ${formatTimecode(startSec)}`);
 }
 
 function uint8ToBase64(bytes) {
@@ -2021,7 +2152,7 @@ async function exportSessionMixdownWav({ targetFile = undefined } = {}) {
     return;
   }
 
-  showStatus('⏳ Rendering full stereo mixdown WAV (EQ + Compressor + Drum Sound Replacement)…');
+  showStatus('Rendering stereo mixdown WAV (EQ + Compressor + Drum Sound Replacement)...');
   try {
     for (const track of playableTracks) {
       for (const clip of (track.clips || [])) {
@@ -2111,7 +2242,7 @@ async function exportSessionMixdownWav({ targetFile = undefined } = {}) {
       return;
     }
     if (res?.ok) {
-      showStatus(`💿 Exported stereo 48kHz 16-bit WAV mixdown (${renderSpanSec.toFixed(1)}s) → ${res.filePath}`);
+      showStatus(`Exported stereo 48kHz 16-bit WAV mixdown (${renderSpanSec.toFixed(1)}s) → ${res.filePath}`);
     } else {
       showStatus(`Export failed: ${res?.error || 'Unknown error'}`, true);
     }
@@ -2133,20 +2264,20 @@ function buildMenubarItems(key) {
 
   if (key === 'file') {
     return [
-      { label: '📄 New Studio Session', kbd: 'Ctrl+N', run: () => createNewSession() },
-      { label: '📂 Open Saved Session…', kbd: 'Ctrl+O', run: () => openProjectModal() },
+      { icon: 'file-new', label: 'New Studio Session', kbd: 'Ctrl+N', run: () => createNewSession() },
+      { icon: 'folder-open', label: 'Open Saved Session...', kbd: 'Ctrl+O', run: () => openProjectModal() },
       { sep: true },
-      { label: '💾 Save Session', kbd: 'Ctrl+S', run: () => saveCurrentSession(false) },
-      { label: '💾 Save Session As…', kbd: 'Ctrl+Shift+S', run: () => saveCurrentSession(true) },
+      { icon: 'save', label: 'Save Session', kbd: 'Ctrl+S', run: () => saveCurrentSession(false) },
+      { icon: 'save', label: 'Save Session As...', kbd: 'Ctrl+Shift+S', run: () => saveCurrentSession(true) },
       { sep: true },
-      { label: '📥 Import Audio WAV File(s)…', kbd: 'Ctrl+Shift+I', run: () => importAudioWavFiles() },
-      { label: '💿 Export Stereo Mixdown (.wav)…', kbd: 'Ctrl+Shift+E', disabled: !hasClips, run: () => exportSessionMixdownWav() },
-      { label: '📁 Reveal Session Audio Folder', kbd: '', run: async () => {
+      { icon: 'import-wav', label: 'Import Audio WAV File(s)...', kbd: 'Ctrl+Shift+I', run: () => importAudioWavFiles() },
+      { icon: 'mixdown-export', label: 'Export Stereo Mixdown (.wav)...', kbd: 'Ctrl+Shift+E', disabled: !hasClips, run: () => exportSessionMixdownWav() },
+      { icon: 'folder', label: 'Reveal Session Audio Folder', kbd: '', run: async () => {
         const res = await window.robos.openSessionFolder();
-        if (res?.ok) showStatus(`📁 Opened ${res.folder}`);
+        if (res?.ok) showStatus(`Opened ${res.folder}`);
       } },
       { sep: true },
-      { label: '🎛️ Audio Device Preferences', kbd: 'Ctrl+,', run: () => switchView('audio-devices') },
+      { icon: 'audio-interface', label: 'Audio Device Preferences', kbd: 'Ctrl+,', run: () => switchView('audio-devices') },
     ];
   }
 
@@ -2154,68 +2285,68 @@ function buildMenubarItems(key) {
     const undoLbl = historyStack.undoStack[historyStack.undoStack.length - 1]?.label;
     const redoLbl = historyStack.redoStack[historyStack.redoStack.length - 1]?.label;
     return [
-      { label: `↩ Undo${undoLbl ? ` (${undoLbl})` : ''}`, kbd: 'Ctrl+Z', disabled: !historyStack.canUndo(), run: () => performUndo() },
-      { label: `↪ Redo${redoLbl ? ` (${redoLbl})` : ''}`, kbd: 'Ctrl+Y', disabled: !historyStack.canRedo(), run: () => performRedo() },
+      { icon: 'undo', label: `Undo${undoLbl ? ` (${undoLbl})` : ''}`, kbd: 'Ctrl+Z', disabled: !historyStack.canUndo(), run: () => performUndo() },
+      { icon: 'redo', label: `Redo${redoLbl ? ` (${redoLbl})` : ''}`, kbd: 'Ctrl+Y', disabled: !historyStack.canRedo(), run: () => performRedo() },
       { sep: true },
-      { label: '✂️ Cut Take(s)', kbd: 'Ctrl+X', disabled: cCnt === 0, run: () => editCutSelected() },
-      { label: '📋 Copy Take(s)', kbd: 'Ctrl+C', disabled: cCnt === 0, run: () => editCopySelected() },
-      { label: '📋 Paste Take(s) at Playhead', kbd: 'Ctrl+V', disabled: !clipClipboard, run: () => editPasteAtPlayhead() },
-      { label: '📑 Duplicate Selected', kbd: 'Ctrl+D', disabled: cCnt === 0 && tCnt === 0, run: () => editDuplicateSelected() },
-      { label: '✂️ Split Take(s) at Playhead', kbd: 'S', disabled: !hasClips, run: () => editSplitSelectedOrPlayhead() },
-      { label: '🗑️ Delete Selected', kbd: 'Del', disabled: cCnt === 0 && tCnt === 0, danger: true, run: () => editDeleteSelected() },
+      { icon: 'scissors', label: 'Cut Region(s)', kbd: 'Ctrl+X', disabled: cCnt === 0, run: () => editCutSelected() },
+      { icon: 'copy', label: 'Copy Region(s)', kbd: 'Ctrl+C', disabled: cCnt === 0, run: () => editCopySelected() },
+      { icon: 'paste', label: 'Paste Region(s) at Playhead', kbd: 'Ctrl+V', disabled: !clipClipboard, run: () => editPasteAtPlayhead() },
+      { icon: 'duplicate', label: 'Duplicate Selected', kbd: 'Ctrl+D', disabled: cCnt === 0 && tCnt === 0, run: () => editDuplicateSelected() },
+      { icon: 'scissors', label: 'Split Region(s) at Playhead', kbd: 'S', disabled: !hasClips, run: () => editSplitSelectedOrPlayhead() },
+      { icon: 'trash', label: 'Delete Selected', kbd: 'Del', disabled: cCnt === 0 && tCnt === 0, danger: true, run: () => editDeleteSelected() },
       { sep: true },
-      { label: '▣ Select All (Tracks & Takes)', kbd: 'Ctrl+A', disabled: !hasTracks, run: () => editSelectAll() },
-      { label: '☑ Select All Tracks Only', kbd: 'Ctrl+Shift+A', disabled: !hasTracks, run: () => editSelectAllTracksOnly() },
-      { label: '🎞️ Select All Takes Only', kbd: '', disabled: !hasClips, run: () => editSelectAllClipsOnly() },
-      { label: '⇄ Invert Track Selection', kbd: '', disabled: !hasTracks, run: () => editInvertTrackSelection() },
-      { label: '⬜ Deselect All', kbd: 'Esc', disabled: cCnt === 0 && tCnt === 0, run: () => {
+      { icon: 'select-all', label: 'Select All (Tracks & Regions)', kbd: 'Ctrl+A', disabled: !hasTracks, run: () => editSelectAll() },
+      { icon: 'check-square', label: 'Select All Tracks Only', kbd: 'Ctrl+Shift+A', disabled: !hasTracks, run: () => editSelectAllTracksOnly() },
+      { icon: 'waveform', label: 'Select All Regions Only', kbd: '', disabled: !hasClips, run: () => editSelectAllClipsOnly() },
+      { icon: 'invert', label: 'Invert Track Selection', kbd: '', disabled: !hasTracks, run: () => editInvertTrackSelection() },
+      { icon: 'square', label: 'Deselect All', kbd: 'Esc', disabled: cCnt === 0 && tCnt === 0, run: () => {
         selectedClipIds.clear();
         selectedTrackIds.clear();
         renderStudio();
       } },
       { sep: true },
-      { label: `${snapToGrid ? '✓ ' : ''}🧲 Snap Edits to Beat Grid`, kbd: 'G', run: () => {
+      { icon: snapToGrid ? 'check' : 'magnet', label: `Snap Edits to Beat Grid (${snapToGrid ? 'ON' : 'OFF'})`, kbd: 'G', run: () => {
         snapToGrid = !snapToGrid;
         updateEditToolbarState();
-        showStatus(`🧲 Snap to Beat Grid: ${snapToGrid ? 'ON' : 'OFF'}`);
+        showStatus(`Snap to Beat Grid: ${snapToGrid ? 'ON' : 'OFF'}`);
       } },
     ];
   }
 
   if (key === 'track') {
     return [
-      { label: '➕ Add Blank Audio Track', kbd: 'Ctrl+T', run: () => addBlankAudioTracks(1) },
-      { label: '➕ Add 4 Audio Tracks (Sequential Inputs)', kbd: 'Ctrl+Shift+T', run: () => addBlankAudioTracks(4) },
-      { label: '➕ Add 8 Audio Tracks (8-Preamp Bank)', kbd: '', run: () => addBlankAudioTracks(8) },
-      { label: '🎙️ Add Mic via Studio Wizard…', kbd: '', run: () => openAddMicWizard() },
-      { label: '🥁 DrumSet AI All-Mic Soundcheck…', kbd: '', run: () => openDrumsetWizard() },
+      { icon: 'plus', label: 'Add Blank Audio Track', kbd: 'Ctrl+T', run: () => addBlankAudioTracks(1) },
+      { icon: 'layers', label: 'Add 4 Audio Tracks (Sequential Inputs)', kbd: 'Ctrl+Shift+T', run: () => addBlankAudioTracks(4) },
+      { icon: 'layers', label: 'Add 8 Audio Tracks (8-Preamp Bank)', kbd: '', run: () => addBlankAudioTracks(8) },
+      { icon: 'mic-wizard', label: 'Add Mic via Studio Wizard...', kbd: '', run: () => openAddMicWizard() },
+      { icon: 'drumset-ai', label: 'DrumSet AI All-Mic Soundcheck...', kbd: '', run: () => openDrumsetWizard() },
       { sep: true },
-      { label: `● Arm Selected Track(s)${tCnt ? ` (${tCnt})` : ''}`, kbd: 'Shift+R', disabled: tCnt === 0, run: () => armSelectedTracks() },
-      { label: `○ Disarm Selected Track(s)${tCnt ? ` (${tCnt})` : ''}`, kbd: '', disabled: tCnt === 0, run: () => disarmSelectedTracks() },
-      { label: `● Arm All Tracks (${tracks.length})`, kbd: 'Ctrl+Alt+R', disabled: !hasTracks, run: () => armAllTracks() },
-      { label: '○ Disarm All Tracks', kbd: '', disabled: !hasTracks, run: () => disarmAllTracks() },
+      { icon: 'record', label: `Arm Selected Track(s)${tCnt ? ` (${tCnt})` : ''}`, kbd: 'Shift+R', disabled: tCnt === 0, run: () => armSelectedTracks() },
+      { icon: 'stop', label: `Disarm Selected Track(s)${tCnt ? ` (${tCnt})` : ''}`, kbd: '', disabled: tCnt === 0, run: () => disarmSelectedTracks() },
+      { icon: 'record', label: `Arm All Tracks (${tracks.length})`, kbd: 'Ctrl+Alt+R', disabled: !hasTracks, run: () => armAllTracks() },
+      { icon: 'stop', label: 'Disarm All Tracks', kbd: '', disabled: !hasTracks, run: () => disarmAllTracks() },
       { sep: true },
-      { label: '🔇 Mute / Unmute Selected Track(s)', kbd: 'M', disabled: tCnt === 0, run: async () => {
+      { icon: 'mute', label: 'Mute / Unmute Selected Track(s)', kbd: 'M', disabled: tCnt === 0, run: async () => {
         const first = tracks.find(t => selectedTrackIds.has(t.id));
         const nextVal = first ? !first.muted : true;
         await commitEdit('Mute/Unmute Selected Tracks', () => {
           DE.setTracksPropertyBatch(currentProject, selectedTrackIds, 'muted', nextVal);
         });
       } },
-      { label: '🔊 Unmute All Tracks', kbd: '', disabled: !hasTracks, run: async () => {
+      { icon: 'speaker', label: 'Unmute All Tracks', kbd: '', disabled: !hasTracks, run: async () => {
         await commitEdit('Unmute All Tracks', () => { DE.setTracksPropertyBatch(currentProject, 'all', 'muted', false); });
       } },
-      { label: '🎧 Solo / Unsolo Selected Track(s)', kbd: 'Shift+S', disabled: tCnt === 0, run: async () => {
+      { icon: 'headphones', label: 'Solo / Unsolo Selected Track(s)', kbd: 'Shift+S', disabled: tCnt === 0, run: async () => {
         const first = tracks.find(t => selectedTrackIds.has(t.id));
         const nextVal = first ? !first.soloed : true;
         await commitEdit('Solo/Unsolo Selected Tracks', () => {
           DE.setTracksPropertyBatch(currentProject, selectedTrackIds, 'soloed', nextVal);
         });
       } },
-      { label: '🎧 Clear All Solos', kbd: 'Ctrl+Alt+S', disabled: !tracks.some(t => t.soloed), run: async () => {
+      { icon: 'headphones', label: 'Clear All Solos', kbd: 'Ctrl+Alt+S', disabled: !tracks.some(t => t.soloed), run: async () => {
         await commitEdit('Clear All Solos', () => { DE.setTracksPropertyBatch(currentProject, 'all', 'soloed', false); });
       } },
-      { label: 'Ø Invert 180° Phase on Selected', kbd: '', disabled: tCnt === 0, run: async () => {
+      { icon: 'phase', label: 'Invert 180° Phase (Ø) on Selected', kbd: '', disabled: tCnt === 0, run: async () => {
         const first = tracks.find(t => selectedTrackIds.has(t.id));
         const nextVal = !first?.fx?.phaseInvert;
         await commitEdit('Toggle Phase Invert', () => {
@@ -2223,39 +2354,39 @@ function buildMenubarItems(key) {
         });
       } },
       { sep: true },
-      { label: '✏️ Rename Selected Track…', kbd: 'F2', disabled: tCnt === 0, run: () => {
+      { icon: 'edit', label: 'Rename Selected Track...', kbd: 'F2', disabled: tCnt === 0, run: () => {
         inlineRenamingTrackId = [...selectedTrackIds][0];
         renderStudio();
       } },
-      { label: '📑 Duplicate Selected Track(s) (with Takes)', kbd: '', disabled: tCnt === 0, run: async () => {
+      { icon: 'duplicate', label: 'Duplicate Selected Track(s) (with Regions)', kbd: '', disabled: tCnt === 0, run: async () => {
         await commitEdit('Duplicate Track(s)', () => {
           selectedTrackIds = new Set(DE.duplicateTracksInProject(currentProject, selectedTrackIds, { includeClips: true }));
         });
       } },
-      { label: '📄 Duplicate Selected Track Setup (Empty)', kbd: '', disabled: tCnt === 0, run: async () => {
+      { icon: 'copy', label: 'Duplicate Selected Track Setup (Empty)', kbd: '', disabled: tCnt === 0, run: async () => {
         await commitEdit('Duplicate Empty Track(s)', () => {
           selectedTrackIds = new Set(DE.duplicateTracksInProject(currentProject, selectedTrackIds, { includeClips: false }));
         });
       } },
-      { label: '↑ Move Selected Track Up', kbd: 'Alt+↑', disabled: !primaryTrack || primaryIdx <= 0, run: async () => {
+      { icon: 'arrow-up', label: 'Move Selected Track Up', kbd: 'Alt+Up', disabled: !primaryTrack || primaryIdx <= 0, run: async () => {
         await commitEdit('Move Track Up', () => { DE.reorderTrackInProject(currentProject, primaryTrack.id, -1); });
       } },
-      { label: '↓ Move Selected Track Down', kbd: 'Alt+↓', disabled: !primaryTrack || primaryIdx >= tracks.length - 1, run: async () => {
+      { icon: 'arrow-down', label: 'Move Selected Track Down', kbd: 'Alt+Down', disabled: !primaryTrack || primaryIdx >= tracks.length - 1, run: async () => {
         await commitEdit('Move Track Down', () => { DE.reorderTrackInProject(currentProject, primaryTrack.id, 1); });
       } },
-      { label: '⚡ Auto-Normalize Selected Track Gain (-6 dBFS)', kbd: '', disabled: tCnt === 0, run: async () => {
+      { icon: 'bolt', label: 'Auto-Normalize Selected Track Gain (-6 dBFS)', kbd: '', disabled: tCnt === 0, run: async () => {
         await commitEdit('Auto-Normalize Track Gain', () => {
           for (const t of tracks) if (selectedTrackIds.has(t.id)) DE.normalizeTrackGain(t, -6.0);
         });
       } },
-      { label: '🧹 Clear Recorded Takes on Selected Track(s)', kbd: '', disabled: tCnt === 0, run: async () => {
+      { icon: 'minus', label: 'Clear Recorded Regions on Selected Track(s)', kbd: '', disabled: tCnt === 0, run: async () => {
         await commitEdit('Clear Track Takes', () => {
           for (const t of tracks) if (selectedTrackIds.has(t.id)) t.clips = [];
         });
       } },
       { sep: true },
-      { label: `🗑️ Remove Selected Track(s)${tCnt ? ` (${tCnt})` : ''}`, kbd: 'Shift+Del', disabled: tCnt === 0, danger: true, run: () => removeSelectedTracks() },
-      { label: `⚠️ Remove All Tracks (${tracks.length})`, kbd: '', disabled: !hasTracks, danger: true, run: () => removeAllTracks() },
+      { icon: 'trash', label: `Remove Selected Track(s)${tCnt ? ` (${tCnt})` : ''}`, kbd: 'Shift+Del', disabled: tCnt === 0, danger: true, run: () => removeSelectedTracks() },
+      { icon: 'warning', label: `Remove All Tracks (${tracks.length})`, kbd: '', disabled: !hasTracks, danger: true, run: () => removeAllTracks() },
     ];
   }
 
@@ -2264,23 +2395,23 @@ function buildMenubarItems(key) {
       for (const tr of tracks) for (const c of (tr.clips || [])) if (selectedClipIds.has(c.id)) fn(c, tr);
     };
     return [
-      { label: '✂️ Split Take(s) at Playhead', kbd: 'S', disabled: !hasClips, run: () => editSplitSelectedOrPlayhead() },
-      { label: '⇥ Trim Start to Playhead', kbd: '[', disabled: !hasClips, run: () => editTrimToPlayhead('left') },
-      { label: '⇤ Trim End to Playhead', kbd: ']', disabled: !hasClips, run: () => editTrimToPlayhead('right') },
+      { icon: 'scissors', label: 'Split Region(s) at Playhead', kbd: 'S', disabled: !hasClips, run: () => editSplitSelectedOrPlayhead() },
+      { icon: 'trim-left', label: 'Trim Start to Playhead', kbd: '[', disabled: !hasClips, run: () => editTrimToPlayhead('left') },
+      { icon: 'trim-right', label: 'Trim End to Playhead', kbd: ']', disabled: !hasClips, run: () => editTrimToPlayhead('right') },
       { sep: true },
-      { label: '🔇 Mute / Unmute Selected Take(s)', kbd: 'M', disabled: cCnt === 0, run: async () => {
+      { icon: 'mute', label: 'Mute / Unmute Selected Region(s)', kbd: 'M', disabled: cCnt === 0, run: async () => {
         let nextM = null;
         await commitEdit('Mute/Unmute Take(s)', () => {
           forSelClips((c) => { if (nextM === null) nextM = !c.muted; c.muted = nextM; });
         });
       } },
-      { label: '⚡ Normalize Take Gain (-3 dBFS)', kbd: '', disabled: cCnt === 0, run: async () => {
-        await commitEdit('Normalize Take Gain', () => { forSelClips(c => DE.normalizeClipGain(c, -3.0)); }, { statusMsg: '⚡ Normalized selected take(s) to -3.0 dBFS' });
+      { icon: 'bolt', label: 'Normalize Region Gain (-3 dBFS)', kbd: '', disabled: cCnt === 0, run: async () => {
+        await commitEdit('Normalize Take Gain', () => { forSelClips(c => DE.normalizeClipGain(c, -3.0)); }, { statusMsg: 'Normalized selected region(s) to -3.0 dBFS' });
       } },
-      { label: '🎚️ Reset Take Gain (0.0 dB)', kbd: '', disabled: cCnt === 0, run: async () => {
+      { icon: 'faders', label: 'Reset Region Gain (0.0 dB)', kbd: '', disabled: cCnt === 0, run: async () => {
         await commitEdit('Reset Take Gain', () => { forSelClips(c => { c.gainDb = 0; }); });
       } },
-      { label: '🌊 Apply 15 ms De-Click Fades', kbd: '', disabled: cCnt === 0, run: async () => {
+      { icon: 'fade', label: 'Apply 15 ms De-Click Fades', kbd: '', disabled: cCnt === 0, run: async () => {
         await commitEdit('Apply 15ms De-Click Fades', () => {
           forSelClips(c => {
             const maxF = Math.max(0.01, (Number(c.durationSec) || 0.1) * 0.45);
@@ -2289,72 +2420,72 @@ function buildMenubarItems(key) {
           });
         });
       } },
-      { label: '🌊 Clear Take Fades (0 ms)', kbd: '', disabled: cCnt === 0, run: async () => {
+      { icon: 'fade', label: 'Clear Region Fades (0 ms)', kbd: '', disabled: cCnt === 0, run: async () => {
         await commitEdit('Clear Take Fades', () => { forSelClips(c => { c.fadeInSec = 0; c.fadeOutSec = 0; }); });
       } },
       { sep: true },
-      { label: '← Nudge Selected Take(s) Left (-50 ms)', kbd: 'Ctrl+←', disabled: cCnt === 0, run: async () => {
+      { icon: 'arrow-left', label: 'Nudge Selected Region(s) Left (-50 ms)', kbd: 'Ctrl+Left', disabled: cCnt === 0, run: async () => {
         await commitEdit('Nudge Take Left', () => { DE.moveClipsByDelta(currentProject, selectedClipIds, -0.05); });
       } },
-      { label: '→ Nudge Selected Take(s) Right (+50 ms)', kbd: 'Ctrl+→', disabled: cCnt === 0, run: async () => {
+      { icon: 'arrow-right', label: 'Nudge Selected Region(s) Right (+50 ms)', kbd: 'Ctrl+Right', disabled: cCnt === 0, run: async () => {
         await commitEdit('Nudge Take Right', () => { DE.moveClipsByDelta(currentProject, selectedClipIds, 0.05); });
       } },
-      { label: '⇥ Move Start to Playhead', kbd: '', disabled: cCnt === 0, run: async () => {
+      { icon: 'trim-right', label: 'Move Start to Playhead', kbd: '', disabled: cCnt === 0, run: async () => {
         let minS = Infinity;
         forSelClips(c => { if ((Number(c.startSec) || 0) < minS) minS = Number(c.startSec) || 0; });
         if (Number.isFinite(minS)) {
           await commitEdit('Move Take(s) to Playhead', () => { DE.moveClipsByDelta(currentProject, selectedClipIds, playheadSec - minS); });
         }
       } },
-      { label: '⏮ Snap Start to 00:00.00', kbd: '', disabled: cCnt === 0, run: async () => {
+      { icon: 'rewind', label: 'Snap Start to 00:00.00', kbd: '', disabled: cCnt === 0, run: async () => {
         let minS = Infinity;
         forSelClips(c => { if ((Number(c.startSec) || 0) < minS) minS = Number(c.startSec) || 0; });
         if (Number.isFinite(minS)) {
           await commitEdit('Snap Take(s) to 00:00.00', () => { DE.moveClipsByDelta(currentProject, selectedClipIds, -minS); });
         }
       } },
-      { label: '🥁 Re-Detect Drum Transients', kbd: '', disabled: cCnt === 0, run: async () => {
+      { icon: 'drum-replace', label: 'Re-Detect Drum Transients', kbd: '', disabled: cCnt === 0, run: async () => {
         const trIds = new Set();
         forSelClips((_c, tr) => trIds.add(tr.id));
         await commitEdit('Re-Detect Drum Transients', () => {}, { reanalyzeTrackIds: [...trIds] });
       } },
-      { label: '✏️ Rename Take…', kbd: 'F2', disabled: cCnt !== 1, run: () => editRenameFocused() },
+      { icon: 'edit', label: 'Rename Region...', kbd: 'F2', disabled: cCnt !== 1, run: () => editRenameFocused() },
       { sep: true },
-      { label: `🗑️ Delete Selected Take(s)${cCnt ? ` (${cCnt})` : ''}`, kbd: 'Del', disabled: cCnt === 0, danger: true, run: () => editDeleteSelected() },
+      { icon: 'trash', label: `Delete Selected Region(s)${cCnt ? ` (${cCnt})` : ''}`, kbd: 'Del', disabled: cCnt === 0, danger: true, run: () => editDeleteSelected() },
     ];
   }
 
   if (key === 'transport') {
     const metroOn = currentProject?.metronome !== false;
     return [
-      { label: isPlaying ? '⏹ Stop Playback' : '▶ Play Timeline', kbd: 'Space', run: () => startPlayback() },
-      { label: isRecording ? '⏹ Stop Recording' : '● Record Armed Tracks', kbd: 'R', run: () => toggleRecording() },
-      { label: '⏮ Rewind to 00:00.00', kbd: 'Home', run: () => {
+      { icon: isPlaying ? 'stop' : 'play', label: isPlaying ? 'Stop Playback' : 'Play Timeline', kbd: 'Space', run: () => startPlayback() },
+      { icon: isRecording ? 'stop' : 'record', label: isRecording ? 'Stop Recording' : 'Record Armed Tracks', kbd: 'R', run: () => toggleRecording() },
+      { icon: 'rewind', label: 'Return to Zero (00:00.00)', kbd: 'Home', run: () => {
         playheadSec = 0;
         document.getElementById('transport-timecode').textContent = formatTimecode(0);
         if (isPlaying) { stopPlayback(); startPlayback(); }
         else drawAllTimelineCanvases();
       } },
       { sep: true },
-      { label: `${metroOn ? '✓ ' : ''}🔔 Metronome Click Track`, kbd: 'C', run: async () => {
+      { icon: 'metronome', label: `Metronome Click (${metroOn ? 'ON' : 'OFF'})`, kbd: 'C', run: async () => {
         const res = await window.robos.updateProjectMeta({ metronome: !metroOn });
         if (res?.ok) { currentProject = res.project; renderStudio(); }
       } },
-      { label: `${countInEnabled ? '✓ ' : ''}⏱️ 1-Bar Record Count-In (4 Clicks)`, kbd: '', run: () => {
+      { icon: 'clock', label: `1-Bar Record Count-In (${countInEnabled ? 'ON' : 'OFF'})`, kbd: '', run: () => {
         countInEnabled = !countInEnabled;
-        showStatus(`⏱️ 1-Bar Record Count-In: ${countInEnabled ? 'ON' : 'OFF'}`);
+        showStatus(`1-Bar Record Count-In: ${countInEnabled ? 'ON' : 'OFF'}`);
       } },
-      { label: `${loopPlayback ? '✓ ' : ''}🔁 Loop Timeline Playback`, kbd: 'L', run: () => {
+      { icon: 'loop', label: `Loop Timeline Playback (${loopPlayback ? 'ON' : 'OFF'})`, kbd: 'L', run: () => {
         loopPlayback = !loopPlayback;
         updateEditToolbarState();
-        showStatus(`🔁 Loop Playback: ${loopPlayback ? 'ON' : 'OFF'}`);
+        showStatus(`Loop Playback: ${loopPlayback ? 'ON' : 'OFF'}`);
       } },
       { sep: true },
-      { label: `🎵 Set Session Tempo / BPM (${currentProject?.bpm || 120} BPM)…`, kbd: '', run: () => {
+      { icon: 'sliders', label: `Set Session Tempo (${currentProject?.bpm || 120} BPM)...`, kbd: '', run: () => {
         openRenameModal('Set Session Tempo', 'Tempo (40 – 280 BPM)', String(currentProject?.bpm || 120), async (val) => {
           const nextBpm = DE.clamp(40, 280, Math.round(Number(val) || 120));
           const res = await window.robos.updateProjectMeta({ bpm: nextBpm });
-          if (res?.ok) { currentProject = res.project; markDirty(true); renderStudio(); showStatus(`🎵 Set session tempo to ${nextBpm} BPM`); }
+          if (res?.ok) { currentProject = res.project; markDirty(true); renderStudio(); showStatus(`Set session tempo to ${nextBpm} BPM`); }
         });
       } },
     ];
@@ -2362,34 +2493,34 @@ function buildMenubarItems(key) {
 
   if (key === 'mix') {
     return [
-      { label: `${selectedTrackId ? '✓ ' : ''}🎛️ Toggle Channel Strip FX / EQ / Drum Inspector`, kbd: 'I', disabled: !hasTracks, run: () => {
+      { icon: 'channel-fx', label: `Toggle Channel Insert & Trigger Rack (${selectedTrackId ? 'OPEN' : 'CLOSED'})`, kbd: 'I', disabled: !hasTracks, run: () => {
         if (selectedTrackId) selectedTrackId = null;
         else selectedTrackId = primaryTrack?.id || null;
         renderStudio();
       } },
       { sep: true },
-      { label: '🎚️ Reset All Track Input Gains (0.0 dB)', kbd: '', disabled: !hasTracks, run: async () => {
-        await commitEdit('Reset All Track Gains', () => { DE.setTracksPropertyBatch(currentProject, 'all', 'gainDb', 0); }, { statusMsg: '🎚️ Reset all track input gains to 0.0 dB' });
+      { icon: 'faders', label: 'Reset All Track Input Trims (0.0 dB)', kbd: '', disabled: !hasTracks, run: async () => {
+        await commitEdit('Reset All Track Gains', () => { DE.setTracksPropertyBatch(currentProject, 'all', 'gainDb', 0); }, { statusMsg: 'Reset all track input trims to 0.0 dB' });
       } },
-      { label: '🔊 Reset All Fader Volumes (100%)', kbd: '', disabled: !hasTracks, run: async () => {
-        await commitEdit('Reset All Volumes', () => { DE.setTracksPropertyBatch(currentProject, 'all', 'volume', 1.0); }, { statusMsg: '🔊 Reset all channel faders to unity (100%)' });
+      { icon: 'speaker', label: 'Reset All Channel Faders (100%)', kbd: '', disabled: !hasTracks, run: async () => {
+        await commitEdit('Reset All Volumes', () => { DE.setTracksPropertyBatch(currentProject, 'all', 'volume', 1.0); }, { statusMsg: 'Reset all channel faders to unity (100%)' });
       } },
-      { label: '⚖️ Center All Stereo Pans (C)', kbd: '', disabled: !hasTracks, run: async () => {
-        await commitEdit('Center All Pans', () => { DE.setTracksPropertyBatch(currentProject, 'all', 'pan', 0); }, { statusMsg: '⚖️ Centered all stereo pans' });
+      { icon: 'balance', label: 'Center All Stereo Pans (C)', kbd: '', disabled: !hasTracks, run: async () => {
+        await commitEdit('Center All Pans', () => { DE.setTracksPropertyBatch(currentProject, 'all', 'pan', 0); }, { statusMsg: 'Centered all stereo pans' });
       } },
       { sep: true },
-      { label: '🥁 Enable Drum Replacement on Selected Track(s)', kbd: '', disabled: tCnt === 0, run: async () => {
+      { icon: 'drum-replace', label: 'Enable Drum Replacement on Selected Track(s)', kbd: '', disabled: tCnt === 0, run: async () => {
         const ids = [...selectedTrackIds];
         await commitEdit('Enable Drum Replacement', () => {
           for (const t of tracks) if (selectedTrackIds.has(t.id)) t.soundReplacement = { ...(t.soundReplacement || {}), enabled: true, supported: true };
         }, { reanalyzeTrackIds: ids });
       } },
-      { label: '🥁 Disable All Drum Sound Replacement', kbd: '', disabled: !hasTracks, run: async () => {
+      { icon: 'minus', label: 'Disable All Drum Sound Replacement', kbd: '', disabled: !hasTracks, run: async () => {
         await commitEdit('Disable All Drum Replacement', () => {
           for (const t of tracks) t.soundReplacement = { ...(t.soundReplacement || {}), enabled: false };
         });
       } },
-      { label: '📦 Manage Open-Source Drum Kits…', kbd: '', run: () => {
+      { icon: 'package', label: 'Manage Open-Source Drum Kits...', kbd: '', run: () => {
         renderDrumkitsModal();
         document.getElementById('drumkits-modal')?.classList.remove('hidden');
       } },
@@ -2399,14 +2530,14 @@ function buildMenubarItems(key) {
   if (key === 'view') {
     const inStudio = !document.getElementById('view-studio-stage')?.classList.contains('hidden');
     return [
-      { label: `${inStudio ? '● ' : ''}⏺ Recording Studio Timeline`, kbd: '1', run: () => switchView('studio-stage') },
-      { label: `${!inStudio ? '● ' : ''}🎛️ Preferences → Audio Devices`, kbd: '2', run: () => switchView('audio-devices') },
+      { icon: 'daw-crest', label: `Workstation Arrangement${inStudio ? ' [Active]' : ''}`, kbd: '1', run: () => switchView('studio-stage') },
+      { icon: 'audio-interface', label: `Hardware I/O — Audio Devices${!inStudio ? ' [Active]' : ''}`, kbd: '2', run: () => switchView('audio-devices') },
       { sep: true },
-      { label: '🔍 Zoom In Timeline', kbd: '+', run: () => setTimelineZoom(timelineZoom * 1.25) },
-      { label: '🔎 Zoom Out Timeline', kbd: '-', run: () => setTimelineZoom(timelineZoom / 1.25) },
-      { label: '📐 Zoom to Fit Session (100%)', kbd: 'Ctrl+0', run: () => setTimelineZoom(1.0) },
+      { icon: 'zoom-in', label: 'Zoom In Arrangement', kbd: '+', run: () => setTimelineZoom(timelineZoom * 1.25) },
+      { icon: 'zoom-out', label: 'Zoom Out Arrangement', kbd: '-', run: () => setTimelineZoom(timelineZoom / 1.25) },
+      { icon: 'maximize', label: 'Zoom to Fit Session (100%)', kbd: 'Ctrl+0', run: () => setTimelineZoom(1.0) },
       { sep: true },
-      { label: `${selectedTrackId ? '✓ ' : ''}🎛️ Show / Hide FX Inspector Drawer`, kbd: 'I', disabled: !hasTracks, run: () => {
+      { icon: 'channel-fx', label: `${selectedTrackId ? 'Hide' : 'Show'} Channel Insert & Trigger Rack`, kbd: 'I', disabled: !hasTracks, run: () => {
         selectedTrackId = selectedTrackId ? null : (primaryTrack?.id || null);
         renderStudio();
       } },
@@ -2415,16 +2546,16 @@ function buildMenubarItems(key) {
 
   if (key === 'help') {
     return [
-      { label: '⌨️ Keyboard & Mouse Shortcuts Reference', kbd: '?', run: () => {
+      { icon: 'keyboard', label: 'Keyboard & Mouse Shortcuts Reference', kbd: '?', run: () => {
         document.getElementById('shortcuts-modal')?.classList.remove('hidden');
       } },
-      { label: '↻ Rescan Focusrite USB & PipeWire Audio Bus', kbd: '', run: async () => {
+      { icon: 'refresh', label: 'Rescan Focusrite USB & PipeWire Audio Bus', kbd: '', run: async () => {
         const snap = await window.robos.getAudioSnapshot();
         renderSnapshot(snap);
         renderStudio();
-        showStatus(snap.focusrite?.connected ? `✓ Connected to ${snap.focusrite.model}` : 'Rescanned PipeWire bus.');
+        showStatus(snap.focusrite?.connected ? `Connected to ${snap.focusrite.model}` : 'Rescanned PipeWire bus.');
       } },
-      { label: '🥁 Verify / Download Open-Source Drum Kits…', kbd: '', run: () => {
+      { icon: 'drum-replace', label: 'Verify / Download Open-Source Drum Kits...', kbd: '', run: () => {
         renderDrumkitsModal();
         document.getElementById('drumkits-modal')?.classList.remove('hidden');
       } },
@@ -2451,14 +2582,14 @@ function openMenubarDropdown(key, triggerEl) {
   popup.innerHTML = items.map((item, idx) => {
     if (item.sep) return '<div class="ctx-sep"></div>';
     return `<button type="button" class="ctx-item ${item.danger ? 'danger' : ''}" data-mb-idx="${idx}" ${item.disabled ? 'disabled' : ''}>
-      <span>${esc(item.label)}</span>
+      <span class="ctx-item-left">${DI.menuIcon(item.icon)}<span>${esc(item.label)}</span></span>
       <span class="ctx-kbd">${esc(item.kbd || '')}</span>
     </button>`;
   }).join('');
 
   const rect = triggerEl.getBoundingClientRect();
   popup.classList.remove('hidden');
-  popup.style.left = `${Math.round(Math.max(8, Math.min(rect.left, window.innerWidth - 280)))}px`;
+  popup.style.left = `${Math.round(Math.max(8, Math.min(rect.left, window.innerWidth - 300)))}px`;
   popup.style.top = `${Math.round(rect.bottom + 2)}px`;
 
   popup.querySelectorAll('[data-mb-idx]').forEach(btn => {
@@ -2475,6 +2606,13 @@ function openMenubarDropdown(key, triggerEl) {
 
 // ─── 4 Contextual Right-Click Menus: Track, Empty Rack, Take, Timeline Space ───
 
+function ctxRow(attr, cmd, icon, label, kbd = '', { disabled = false, danger = false } = {}) {
+  return `<button type="button" class="ctx-item${danger ? ' danger' : ''}" ${attr}="${esc(cmd)}" ${disabled ? 'disabled' : ''}>
+    <span class="ctx-item-left">${DI.menuIcon(icon)}<span>${esc(label)}</span></span>
+    <span class="ctx-kbd">${esc(kbd)}</span>
+  </button>`;
+}
+
 function openEmptyRackContextMenu(ev) {
   const menu = document.getElementById('daw-context-menu');
   if (!menu) return;
@@ -2484,23 +2622,23 @@ function openEmptyRackContextMenu(ev) {
 
   menu.innerHTML = `
     <div class="ctx-header">
-      <span>🎛️ Studio Track Rack (${tracks.length})</span>
-      <span class="mono" style="color:#94a3b8;font-size:10px;">${tCnt} sel</span>
+      <span class="ctx-item-left">${DI.badge('daw-crest', 15)}<span>CHANNEL RACK (${tracks.length})</span></span>
+      <span class="mono" style="color:#94a3b8;font-size:10px;">${tCnt} SEL</span>
     </div>
-    <button type="button" class="ctx-item" data-rack-ctx="add-1"><span>➕ Add Blank Audio Track</span><span class="ctx-kbd">Ctrl+T</span></button>
-    <button type="button" class="ctx-item" data-rack-ctx="add-4"><span>➕ Add 4 Sequential Audio Tracks</span><span class="ctx-kbd">Ctrl+Shift+T</span></button>
-    <button type="button" class="ctx-item" data-rack-ctx="add-8"><span>➕ Add 8 Sequential Audio Tracks</span><span></span></button>
-    <button type="button" class="ctx-item" data-rack-ctx="wiz-mic"><span>🎙️ Add Mic via Studio Wizard…</span><span></span></button>
-    <button type="button" class="ctx-item" data-rack-ctx="wiz-drumset"><span>🥁 DrumSet AI Soundcheck (Gemini)…</span><span></span></button>
-    <button type="button" class="ctx-item" data-rack-ctx="import-wav"><span>📥 Import Audio WAV File(s)…</span><span class="ctx-kbd">Ctrl+Shift+I</span></button>
+    ${ctxRow('data-rack-ctx', 'add-1', 'plus', 'Add Blank Audio Track', 'Ctrl+T')}
+    ${ctxRow('data-rack-ctx', 'add-4', 'layers', 'Add 4 Sequential Audio Tracks', 'Ctrl+Shift+T')}
+    ${ctxRow('data-rack-ctx', 'add-8', 'layers', 'Add 8 Sequential Audio Tracks')}
+    ${ctxRow('data-rack-ctx', 'wiz-mic', 'mic-wizard', 'Add Mic via Studio Wizard...')}
+    ${ctxRow('data-rack-ctx', 'wiz-drumset', 'drumset-ai', 'DrumSet AI Soundcheck (Gemini)...')}
+    ${ctxRow('data-rack-ctx', 'import-wav', 'import-wav', 'Import Audio WAV File(s)...', 'Ctrl+Shift+I')}
     <div class="ctx-sep"></div>
-    <button type="button" class="ctx-item" data-rack-ctx="sel-all-tracks" ${tracks.length ? '' : 'disabled'}><span>☑ Select All Tracks (${tracks.length})</span><span class="ctx-kbd">Ctrl+Shift+A</span></button>
-    <button type="button" class="ctx-item" data-rack-ctx="arm-all" ${tracks.length ? '' : 'disabled'}><span>● Arm All Tracks</span><span class="ctx-kbd">Ctrl+Alt+R</span></button>
-    <button type="button" class="ctx-item" data-rack-ctx="disarm-all" ${tracks.length ? '' : 'disabled'}><span>○ Disarm All Tracks</span><span></span></button>
-    <button type="button" class="ctx-item" data-rack-ctx="unmute-all" ${tracks.length ? '' : 'disabled'}><span>🔊 Unmute All &amp; Clear Solos</span><span></span></button>
+    ${ctxRow('data-rack-ctx', 'sel-all-tracks', 'check-square', `Select All Tracks (${tracks.length})`, 'Ctrl+Shift+A', { disabled: !tracks.length })}
+    ${ctxRow('data-rack-ctx', 'arm-all', 'record', 'Arm All Tracks', 'Ctrl+Alt+R', { disabled: !tracks.length })}
+    ${ctxRow('data-rack-ctx', 'disarm-all', 'stop', 'Disarm All Tracks', '', { disabled: !tracks.length })}
+    ${ctxRow('data-rack-ctx', 'unmute-all', 'speaker', 'Unmute All & Clear Solos', '', { disabled: !tracks.length })}
     <div class="ctx-sep"></div>
-    <button type="button" class="ctx-item danger" data-rack-ctx="rem-sel" ${tCnt ? '' : 'disabled'}><span>🗑️ Remove Selected Track(s) (${tCnt})</span><span class="ctx-kbd">Shift+Del</span></button>
-    <button type="button" class="ctx-item danger" data-rack-ctx="rem-all" ${tracks.length ? '' : 'disabled'}><span>⚠️ Remove All Tracks (${tracks.length})</span><span></span></button>
+    ${ctxRow('data-rack-ctx', 'rem-sel', 'trash', `Remove Selected Track(s) (${tCnt})`, 'Shift+Del', { disabled: !tCnt, danger: true })}
+    ${ctxRow('data-rack-ctx', 'rem-all', 'warning', `Remove All Tracks (${tracks.length})`, '', { disabled: !tracks.length, danger: true })}
   `;
 
   positionContextMenu(menu, ev.clientX, ev.clientY);
@@ -2538,20 +2676,20 @@ function openTimelineSpaceContextMenu(ev, track, clickTimeSec) {
 
   menu.innerHTML = `
     <div class="ctx-header">
-      <span>⏱️ Timeline @ ${formatTimecode(safeTime)}</span>
-      <span class="mono" style="color:#94a3b8;font-size:10px;">${esc(track ? track.name : 'Ruler')}</span>
+      <span class="ctx-item-left">${DI.svg('clock', 13.5)}<span>ARRANGEMENT @ ${formatTimecode(safeTime)}</span></span>
+      <span class="mono" style="color:#94a3b8;font-size:10px;">${esc(track ? track.name : 'RULER')}</span>
     </div>
-    <button type="button" class="ctx-item" data-tl-ctx="move-ph"><span>⇥ Move Playhead Here (${formatTimecode(safeTime)})</span><span>Click</span></button>
-    <button type="button" class="ctx-item" data-tl-ctx="play-here"><span>▶ Play From Here</span><span></span></button>
+    ${ctxRow('data-tl-ctx', 'move-ph', 'trim-right', `Move Playhead Here (${formatTimecode(safeTime)})`, 'Click')}
+    ${ctxRow('data-tl-ctx', 'play-here', 'play', 'Play From Here')}
     <div class="ctx-sep"></div>
-    <button type="button" class="ctx-item" data-tl-ctx="paste-here" ${clipClipboard ? '' : 'disabled'}><span>📋 Paste Take(s) Here</span><span class="ctx-kbd">Ctrl+V</span></button>
-    <button type="button" class="ctx-item" data-tl-ctx="import-here"><span>📥 Import Audio WAV Here…</span><span class="ctx-kbd">Ctrl+Shift+I</span></button>
-    <button type="button" class="ctx-item" data-tl-ctx="split-all-here"><span>✂️ Split All Takes Crossing ${formatTimecode(safeTime)}</span><span></span></button>
+    ${ctxRow('data-tl-ctx', 'paste-here', 'paste', 'Paste Region(s) Here', 'Ctrl+V', { disabled: !clipClipboard })}
+    ${ctxRow('data-tl-ctx', 'import-here', 'import-wav', 'Import Audio WAV Here...', 'Ctrl+Shift+I')}
+    ${ctxRow('data-tl-ctx', 'split-all-here', 'scissors', `Split All Regions Crossing ${formatTimecode(safeTime)}`)}
     <div class="ctx-sep"></div>
-    <button type="button" class="ctx-item" data-tl-ctx="toggle-snap"><span>${snapToGrid ? '✓ ' : ''}🧲 Snap to Beat Grid</span><span class="ctx-kbd">G</span></button>
-    <button type="button" class="ctx-item" data-tl-ctx="toggle-loop"><span>${loopPlayback ? '✓ ' : ''}🔁 Loop Timeline Playback</span><span class="ctx-kbd">L</span></button>
-    <button type="button" class="ctx-item" data-tl-ctx="add-track"><span>➕ Add Blank Audio Track</span><span class="ctx-kbd">Ctrl+T</span></button>
-    ${track ? `<button type="button" class="ctx-item" data-tl-ctx="track-menu"><span>🎙️ Open "${esc(track.name)}" Track Menu…</span><span>→</span></button>` : ''}
+    ${ctxRow('data-tl-ctx', 'toggle-snap', snapToGrid ? 'check' : 'magnet', `Snap to Beat Grid (${snapToGrid ? 'ON' : 'OFF'})`, 'G')}
+    ${ctxRow('data-tl-ctx', 'toggle-loop', 'loop', `Loop Timeline Playback (${loopPlayback ? 'ON' : 'OFF'})`, 'L')}
+    ${ctxRow('data-tl-ctx', 'add-track', 'plus', 'Add Blank Audio Track', 'Ctrl+T')}
+    ${track ? ctxRow('data-tl-ctx', 'track-menu', 'faders', `Open "${track.name}" Channel Menu...`, '→') : ''}
   `;
 
   positionContextMenu(menu, ev.clientX, ev.clientY);
@@ -2575,7 +2713,7 @@ function openTimelineSpaceContextMenu(ev, track, clickTimeSec) {
         await commitEdit('Paste Take(s)', () => {
           const created = DE.pasteClipsIntoProject(currentProject, clipClipboard, safeTime, track?.id || null);
           selectedClipIds = new Set(created);
-        }, { statusMsg: `📋 Pasted take(s) at ${formatTimecode(safeTime)}` });
+        }, { statusMsg: `Pasted region(s) at ${formatTimecode(safeTime)}` });
       } else if (cmd === 'import-here') {
         await importAudioWavFiles({ startSec: safeTime, targetTrackId: track?.id || null });
       } else if (cmd === 'split-all-here') {
@@ -2589,7 +2727,7 @@ function openTimelineSpaceContextMenu(ev, track, clickTimeSec) {
           cnt = out.splitCount;
           if (out.newClipIds.length) selectedClipIds = new Set(out.newClipIds);
         });
-        showStatus(cnt ? `✂️ Split ${cnt} take(s) at ${formatTimecode(safeTime)}` : 'No takes cross that timeline position.');
+        showStatus(cnt ? `Split ${cnt} region(s) at ${formatTimecode(safeTime)}` : 'No regions cross that timeline position.');
       } else if (cmd === 'toggle-snap') {
         snapToGrid = !snapToGrid;
         updateEditToolbarState();
@@ -2623,36 +2761,36 @@ function openTrackContextMenu(ev, track, clickTimeSec = null) {
 
   menu.innerHTML = `
     <div class="ctx-header">
-      <span>🎙️ ${esc(multiLabel)}</span>
+      <span class="ctx-item-left">${DI.badge('mic-wizard', 15)}<span>${esc(multiLabel)}</span></span>
       <span class="mono" style="color:#94a3b8;font-size:10px;">${DE.formatDb(Number(track.gainDb) || 0)}</span>
     </div>
-    <button type="button" class="ctx-item" data-ctx="add-below"><span>➕ Add Blank Audio Track Below</span><span class="ctx-kbd">Ctrl+T</span></button>
-    <button type="button" class="ctx-item" data-ctx="rename-track"><span>✏️ Rename Track…</span><span class="ctx-kbd">F2</span></button>
-    <button type="button" class="ctx-item" data-ctx="reset-gain"><span>🎚️ Reset Input Gain (0.0 dB)</span><span class="ctx-kbd">DblClick</span></button>
-    <button type="button" class="ctx-item" data-ctx="norm-gain"><span>⚡ Auto-Normalize Track Gain (-6 dBFS)</span><span></span></button>
-    <button type="button" class="ctx-item" data-ctx="toggle-phase"><span>Ø ${track.fx?.phaseInvert ? 'Disable' : 'Enable'} 180° Phase Invert</span><span>${track.fx?.phaseInvert ? 'ON' : 'OFF'}</span></button>
+    ${ctxRow('data-ctx', 'add-below', 'plus', 'Add Blank Audio Track Below', 'Ctrl+T')}
+    ${ctxRow('data-ctx', 'rename-track', 'edit', 'Rename Track...', 'F2')}
+    ${ctxRow('data-ctx', 'reset-gain', 'faders', 'Reset Input Trim (0.0 dB)', 'DblClick')}
+    ${ctxRow('data-ctx', 'norm-gain', 'bolt', 'Auto-Normalize Track Gain (-6 dBFS)')}
+    ${ctxRow('data-ctx', 'toggle-phase', 'phase', `${track.fx?.phaseInvert ? 'Disable' : 'Enable'} 180° Phase Invert (Ø)`, track.fx?.phaseInvert ? 'ON' : 'OFF')}
     <div class="ctx-sep"></div>
-    <button type="button" class="ctx-item" data-ctx="toggle-arm"><span>● ${track.armed ? 'Disarm' : 'Arm'} Selected (${targetIds.size})</span><span class="ctx-kbd">Shift+R</span></button>
-    <button type="button" class="ctx-item" data-ctx="arm-all"><span>● Arm All Tracks (${tracks.length})</span><span class="ctx-kbd">Ctrl+Alt+R</span></button>
-    <button type="button" class="ctx-item" data-ctx="disarm-all"><span>○ Disarm All Tracks</span><span></span></button>
-    <button type="button" class="ctx-item" data-ctx="exclusive-solo"><span>🎧 ${track.soloed && tracks.filter(t => t.soloed).length === 1 ? 'Unsolo All' : 'Exclusive Solo This Track'}</span><span class="ctx-kbd">Alt+Click</span></button>
-    <button type="button" class="ctx-item" data-ctx="toggle-mute"><span>🔇 ${track.muted ? 'Unmute' : 'Mute'} Track${targetIds.size > 1 ? `s (${targetIds.size})` : ''}</span><span class="ctx-kbd">M</span></button>
-    <button type="button" class="ctx-item" data-ctx="toggle-sr"><span>🥁 ${track.soundReplacement?.enabled ? 'Disable' : 'Enable'} Drum Replacement</span><span></span></button>
-    <button type="button" class="ctx-item" data-ctx="open-fx"><span>🎛️ Open EQ / LV2 / Drum FX Inspector</span><span class="ctx-kbd">I</span></button>
+    ${ctxRow('data-ctx', 'toggle-arm', 'record', `${track.armed ? 'Disarm' : 'Arm'} Selected (${targetIds.size})`, 'Shift+R')}
+    ${ctxRow('data-ctx', 'arm-all', 'record', `Arm All Tracks (${tracks.length})`, 'Ctrl+Alt+R')}
+    ${ctxRow('data-ctx', 'disarm-all', 'stop', 'Disarm All Tracks')}
+    ${ctxRow('data-ctx', 'exclusive-solo', 'headphones', track.soloed && tracks.filter(t => t.soloed).length === 1 ? 'Unsolo All' : 'Exclusive Solo This Track', 'Alt+Click')}
+    ${ctxRow('data-ctx', 'toggle-mute', 'mute', `${track.muted ? 'Unmute' : 'Mute'} Track${targetIds.size > 1 ? `s (${targetIds.size})` : ''}`, 'M')}
+    ${ctxRow('data-ctx', 'toggle-sr', 'drum-replace', `${track.soundReplacement?.enabled ? 'Disable' : 'Enable'} Drum Replacement`)}
+    ${ctxRow('data-ctx', 'open-fx', 'channel-fx', 'Open Channel Insert & Trigger Rack', 'I')}
     <div class="ctx-inline-row">
-      <span class="ctx-inline-lbl">Track Color</span>
+      <span class="ctx-inline-lbl">Channel Color</span>
       <div class="ctx-pill-strip">${colorDots}</div>
     </div>
     <div class="ctx-sep"></div>
-    <button type="button" class="ctx-item" data-ctx="select-all-tracks"><span>☑ Select All Tracks (${tracks.length})</span><span class="ctx-kbd">Ctrl+Shift+A</span></button>
-    <button type="button" class="ctx-item" data-ctx="paste-here" ${clipClipboard ? '' : 'disabled'}><span>📋 Paste Take(s) ${clickTimeSec !== null ? `at ${formatTimecode(clickTimeSec)}` : 'at Playhead'}</span><span class="ctx-kbd">Ctrl+V</span></button>
-    <button type="button" class="ctx-item" data-ctx="dup-with-takes"><span>📑 Duplicate Track${targetIds.size > 1 ? 's' : ''} (with Takes)</span><span class="ctx-kbd">Ctrl+D</span></button>
-    <button type="button" class="ctx-item" data-ctx="dup-empty"><span>📄 Duplicate Track Setup (Empty)</span><span></span></button>
-    <button type="button" class="ctx-item" data-ctx="move-up" ${trackIdx <= 0 ? 'disabled' : ''}><span>↑ Move Track Up</span><span class="ctx-kbd">Alt+↑</span></button>
-    <button type="button" class="ctx-item" data-ctx="move-down" ${trackIdx >= tracks.length - 1 ? 'disabled' : ''}><span>↓ Move Track Down</span><span class="ctx-kbd">Alt+↓</span></button>
-    <button type="button" class="ctx-item" data-ctx="clear-takes" ${(track.clips?.length || 0) === 0 && targetIds.size === 1 ? 'disabled' : ''}><span>🧹 Clear Recorded Takes</span><span></span></button>
-    <button type="button" class="ctx-item danger" data-ctx="delete-track"><span>🗑️ Remove Track${targetIds.size > 1 ? `s (${targetIds.size})` : ''}</span><span class="ctx-kbd">Shift+Del</span></button>
-    ${tracks.length > 1 ? `<button type="button" class="ctx-item danger" data-ctx="delete-all-tracks"><span>⚠️ Remove All Tracks (${tracks.length})</span><span></span></button>` : ''}
+    ${ctxRow('data-ctx', 'select-all-tracks', 'check-square', `Select All Tracks (${tracks.length})`, 'Ctrl+Shift+A')}
+    ${ctxRow('data-ctx', 'paste-here', 'paste', `Paste Region(s) ${clickTimeSec !== null ? `at ${formatTimecode(clickTimeSec)}` : 'at Playhead'}`, 'Ctrl+V', { disabled: !clipClipboard })}
+    ${ctxRow('data-ctx', 'dup-with-takes', 'duplicate', `Duplicate Track${targetIds.size > 1 ? 's' : ''} (with Regions)`, 'Ctrl+D')}
+    ${ctxRow('data-ctx', 'dup-empty', 'copy', 'Duplicate Track Setup (Empty)')}
+    ${ctxRow('data-ctx', 'move-up', 'arrow-up', 'Move Track Up', 'Alt+Up', { disabled: trackIdx <= 0 })}
+    ${ctxRow('data-ctx', 'move-down', 'arrow-down', 'Move Track Down', 'Alt+Down', { disabled: trackIdx >= tracks.length - 1 })}
+    ${ctxRow('data-ctx', 'clear-takes', 'minus', 'Clear Recorded Regions', '', { disabled: (track.clips?.length || 0) === 0 && targetIds.size === 1 })}
+    ${ctxRow('data-ctx', 'delete-track', 'trash', `Remove Track${targetIds.size > 1 ? `s (${targetIds.size})` : ''}`, 'Shift+Del', { danger: true })}
+    ${tracks.length > 1 ? ctxRow('data-ctx', 'delete-all-tracks', 'warning', `Remove All Tracks (${tracks.length})`, '', { danger: true }) : ''}
   `;
 
   positionContextMenu(menu, ev.clientX, ev.clientY);
@@ -2684,11 +2822,11 @@ function openTrackContextMenu(ev, track, clickTimeSec = null) {
       } else if (cmd === 'reset-gain') {
         await commitEdit('Reset Track Gain', () => {
           for (const t of tracks) if (targetIds.has(t.id)) t.gainDb = 0;
-        }, { statusMsg: '🎚️ Reset track input gain to 0.0 dB' });
+        }, { statusMsg: 'Reset track input trim to 0.0 dB' });
       } else if (cmd === 'norm-gain') {
         await commitEdit('Auto-Normalize Track Gain', () => {
           for (const t of tracks) if (targetIds.has(t.id)) DE.normalizeTrackGain(t, -6.0);
-        }, { statusMsg: '⚡ Normalized selected track input gain to -6.0 dBFS target' });
+        }, { statusMsg: 'Normalized selected track input trim to -6.0 dBFS target' });
       } else if (cmd === 'toggle-phase') {
         const nextVal = !track.fx?.phaseInvert;
         await commitEdit('Toggle Phase Invert', () => {
@@ -2734,13 +2872,13 @@ function openTrackContextMenu(ev, track, clickTimeSec = null) {
         await commitEdit('Paste Take(s)', () => {
           const created = DE.pasteClipsIntoProject(currentProject, clipClipboard, pasteTime, track.id);
           selectedClipIds = new Set(created);
-        }, { statusMsg: `📋 Pasted take(s) at ${formatTimecode(pasteTime)}` });
+        }, { statusMsg: `Pasted region(s) at ${formatTimecode(pasteTime)}` });
       } else if (cmd === 'dup-with-takes' || cmd === 'dup-empty') {
         const includeClips = cmd === 'dup-with-takes';
         await commitEdit('Duplicate Track', () => {
           const newIds = DE.duplicateTracksInProject(currentProject, targetIds, { includeClips });
           selectedTrackIds = new Set(newIds);
-        }, { statusMsg: `📑 Duplicated ${targetIds.size} track(s)` });
+        }, { statusMsg: `Duplicated ${targetIds.size} track(s)` });
       } else if (cmd === 'move-up') {
         await commitEdit('Move Track Up', () => { DE.reorderTrackInProject(currentProject, track.id, -1); });
       } else if (cmd === 'move-down') {
@@ -2752,7 +2890,7 @@ function openTrackContextMenu(ev, track, clickTimeSec = null) {
       } else if (cmd === 'delete-track') {
         await commitEdit('Remove Track(s)', () => {
           DE.deleteTracksFromProject(currentProject, targetIds);
-        }, { statusMsg: `🗑️ Removed ${targetIds.size} track(s) (Ctrl+Z to Undo)` });
+        }, { statusMsg: `Removed ${targetIds.size} track(s) (Ctrl+Z to Undo)` });
       } else if (cmd === 'delete-all-tracks') {
         await removeAllTracks();
       }
@@ -2767,7 +2905,7 @@ function openTakeContextMenu(ev, track, clip, clickTimeSec) {
   const targetClipIds = selectedClipIds.has(clip.id) && selectedClipIds.size > 0
     ? new Set(selectedClipIds)
     : new Set([clip.id]);
-  const multiLabel = targetClipIds.size > 1 ? `${targetClipIds.size} Takes Selected` : (clip.name || 'Take');
+  const multiLabel = targetClipIds.size > 1 ? `${targetClipIds.size} Regions Selected` : (clip.name || 'Take');
   const clipStart = Number(clip.startSec) || 0;
   const clipEnd = clipStart + (Number(clip.durationSec) || 0);
   const canSplitHere = clickTimeSec > clipStart + 0.04 && clickTimeSec < clipEnd - 0.04;
@@ -2775,22 +2913,22 @@ function openTakeContextMenu(ev, track, clip, clickTimeSec) {
 
   menu.innerHTML = `
     <div class="ctx-header">
-      <span>🎞️ ${esc(multiLabel)}</span>
+      <span class="ctx-item-left">${DI.svg('waveform', 14)}<span>${esc(multiLabel)}</span></span>
       <span class="mono" style="color:#94a3b8;font-size:10px;">${DE.formatDb(Number(clip.gainDb) || 0)}</span>
     </div>
-    <button type="button" class="ctx-item" data-take-ctx="play-solo"><span>▶ Play Solo From This Take</span><span></span></button>
-    <button type="button" class="ctx-item" data-take-ctx="split-here" ${canSplitHere ? '' : 'disabled'}><span>✂️ Split Take Here (${formatTimecode(clickTimeSec)})</span><span></span></button>
-    <button type="button" class="ctx-item" data-take-ctx="split-playhead" ${canSplitPlayhead || targetClipIds.size > 1 ? '' : 'disabled'}><span>✂️ Split at Playhead (${formatTimecode(playheadSec)})</span><span class="ctx-kbd">S</span></button>
+    ${ctxRow('data-take-ctx', 'play-solo', 'play', 'Play Solo From This Region')}
+    ${ctxRow('data-take-ctx', 'split-here', 'scissors', `Split Region Here (${formatTimecode(clickTimeSec)})`, '', { disabled: !canSplitHere })}
+    ${ctxRow('data-take-ctx', 'split-playhead', 'scissors', `Split at Playhead (${formatTimecode(playheadSec)})`, 'S', { disabled: !(canSplitPlayhead || targetClipIds.size > 1) })}
     <div class="ctx-sep"></div>
     <div class="ctx-inline-row">
-      <span class="ctx-inline-lbl">Take Clip Gain</span>
+      <span class="ctx-inline-lbl">Region Clip Gain</span>
       <div class="ctx-pill-strip">
         <button type="button" class="ctx-mini-pill" data-take-gain="-6">-6 dB</button>
         <button type="button" class="ctx-mini-pill" data-take-gain="-3">-3 dB</button>
         <button type="button" class="ctx-mini-pill" data-take-gain="0">0 dB</button>
         <button type="button" class="ctx-mini-pill" data-take-gain="3">+3 dB</button>
         <button type="button" class="ctx-mini-pill" data-take-gain="6">+6 dB</button>
-        <button type="button" class="ctx-mini-pill" data-take-gain="norm">⚡ Norm</button>
+        <button type="button" class="ctx-mini-pill" data-take-gain="norm">Norm</button>
       </div>
     </div>
     <div class="ctx-inline-row">
@@ -2802,16 +2940,16 @@ function openTakeContextMenu(ev, track, clip, clickTimeSec) {
         <button type="button" class="ctx-mini-pill" data-take-fade="0.25">250 ms</button>
       </div>
     </div>
-    <button type="button" class="ctx-item" data-take-ctx="toggle-mute"><span>🔇 ${clip.muted ? 'Unmute' : 'Mute'} Take${targetClipIds.size > 1 ? 's' : ''}</span><span class="ctx-kbd">M</span></button>
-    <button type="button" class="ctx-item" data-take-ctx="redetect-transients"><span>🥁 Re-Detect Drum Transients</span><span></span></button>
+    ${ctxRow('data-take-ctx', 'toggle-mute', 'mute', `${clip.muted ? 'Unmute' : 'Mute'} Region${targetClipIds.size > 1 ? 's' : ''}`, 'M')}
+    ${ctxRow('data-take-ctx', 'redetect-transients', 'drum-replace', 'Re-Detect Drum Transients')}
     <div class="ctx-sep"></div>
-    <button type="button" class="ctx-item" data-take-ctx="rename"><span>✏️ Rename Take…</span><span class="ctx-kbd">F2</span></button>
-    <button type="button" class="ctx-item" data-take-ctx="copy"><span>📋 Copy Take${targetClipIds.size > 1 ? 's' : ''}</span><span class="ctx-kbd">Ctrl+C</span></button>
-    <button type="button" class="ctx-item" data-take-ctx="cut"><span>✂️ Cut Take${targetClipIds.size > 1 ? 's' : ''}</span><span class="ctx-kbd">Ctrl+X</span></button>
-    <button type="button" class="ctx-item" data-take-ctx="duplicate"><span>📑 Duplicate Take${targetClipIds.size > 1 ? 's' : ''}</span><span class="ctx-kbd">Ctrl+D</span></button>
-    <button type="button" class="ctx-item" data-take-ctx="snap-zero"><span>⏮ Snap Start to 00:00.00</span><span></span></button>
-    <button type="button" class="ctx-item" data-take-ctx="move-playhead"><span>⇥ Move Start to Playhead (${formatTimecode(playheadSec)})</span><span></span></button>
-    <button type="button" class="ctx-item danger" data-take-ctx="delete"><span>🗑️ Delete Take${targetClipIds.size > 1 ? `s (${targetClipIds.size})` : ''}</span><span class="ctx-kbd">Del</span></button>
+    ${ctxRow('data-take-ctx', 'rename', 'edit', 'Rename Region...', 'F2')}
+    ${ctxRow('data-take-ctx', 'copy', 'copy', `Copy Region${targetClipIds.size > 1 ? 's' : ''}`, 'Ctrl+C')}
+    ${ctxRow('data-take-ctx', 'cut', 'scissors', `Cut Region${targetClipIds.size > 1 ? 's' : ''}`, 'Ctrl+X')}
+    ${ctxRow('data-take-ctx', 'duplicate', 'duplicate', `Duplicate Region${targetClipIds.size > 1 ? 's' : ''}`, 'Ctrl+D')}
+    ${ctxRow('data-take-ctx', 'snap-zero', 'rewind', 'Snap Start to 00:00.00')}
+    ${ctxRow('data-take-ctx', 'move-playhead', 'trim-right', `Move Start to Playhead (${formatTimecode(playheadSec)})`)}
+    ${ctxRow('data-take-ctx', 'delete', 'trash', `Delete Region${targetClipIds.size > 1 ? `s (${targetClipIds.size})` : ''}`, 'Del', { danger: true })}
   `;
 
   positionContextMenu(menu, ev.clientX, ev.clientY);
@@ -2834,7 +2972,7 @@ function openTakeContextMenu(ev, track, clip, clickTimeSec) {
           if (val === 'norm') DE.normalizeClipGain(c, -3.0);
           else c.gainDb = Number(val);
         });
-      }, { statusMsg: val === 'norm' ? '⚡ Normalized selected take(s) to -3.0 dBFS' : `🎚️ Set take gain to ${DE.formatDb(Number(val))}` });
+      }, { statusMsg: val === 'norm' ? 'Normalized selected region(s) to -3.0 dBFS' : `Set region gain to ${DE.formatDb(Number(val))}` });
     });
   });
 
@@ -2849,7 +2987,7 @@ function openTakeContextMenu(ev, track, clip, clickTimeSec) {
           c.fadeInSec = Math.min(maxF, fadeSec);
           c.fadeOutSec = Math.min(maxF, fadeSec);
         });
-      }, { statusMsg: `🌊 Applied ${Math.round(fadeSec * 1000)} ms fade-in/out to selected take(s)` });
+      }, { statusMsg: `Applied ${Math.round(fadeSec * 1000)} ms fade-in/out to selected region(s)` });
     });
   });
 
@@ -2875,7 +3013,7 @@ function openTakeContextMenu(ev, track, clip, clickTimeSec) {
             splitTimeSec: clickTimeSec,
           });
           if (out.newClipIds.length) selectedClipIds = new Set(out.newClipIds);
-        }, { statusMsg: `✂️ Split take(s) at ${formatTimecode(clickTimeSec)}` });
+        }, { statusMsg: `Split region(s) at ${formatTimecode(clickTimeSec)}` });
       } else if (cmd === 'split-playhead') {
         await editSplitSelectedOrPlayhead();
       } else if (cmd === 'toggle-mute') {
@@ -2888,10 +3026,10 @@ function openTakeContextMenu(ev, track, clip, clickTimeSec) {
         forEachSelectedClip((_c, tr) => trIds.add(tr.id));
         await commitEdit('Re-Detect Drum Transients', () => {}, {
           reanalyzeTrackIds: [...trIds],
-          statusMsg: '🥁 Re-detected drum transients on selected take track(s)',
+          statusMsg: 'Re-detected drum transients on selected region track(s)',
         });
       } else if (cmd === 'rename') {
-        openRenameModal('Rename Take', 'Take Label', clip.name || 'Take', async (newName) => {
+        openRenameModal('Rename Region', 'Region Label', clip.name || 'Take', async (newName) => {
           await commitEdit('Rename Take', () => { clip.name = newName; });
         });
       } else if (cmd === 'copy') {
@@ -2910,12 +3048,12 @@ function openTakeContextMenu(ev, track, clip, clickTimeSec) {
         if (Number.isFinite(minStart)) {
           await commitEdit('Move Take(s)', () => {
             DE.moveClipsByDelta(currentProject, targetClipIds, targetTime - minStart);
-          }, { statusMsg: `⇥ Moved take(s) to ${formatTimecode(targetTime)}` });
+          }, { statusMsg: `Moved region(s) to ${formatTimecode(targetTime)}` });
         }
       } else if (cmd === 'delete') {
         await commitEdit('Delete Take(s)', () => {
           DE.deleteClipsFromProject(currentProject, targetClipIds);
-        }, { statusMsg: `🗑️ Deleted ${targetClipIds.size} take(s)` });
+        }, { statusMsg: `Deleted ${targetClipIds.size} region(s)` });
       }
     });
   });
@@ -2930,7 +3068,7 @@ function editSelectAll() {
   selectedClipIds = all.selectedClipIds;
   anchorTrackId = currentProject.tracks?.[0]?.id || null;
   renderStudio();
-  showStatus(`▣ Selected all ${selectedTrackIds.size} track(s) and ${selectedClipIds.size} take(s)`);
+  showStatus(`Selected all ${selectedTrackIds.size} track(s) and ${selectedClipIds.size} region(s)`);
 }
 
 async function editSplitSelectedOrPlayhead() {
@@ -2946,20 +3084,20 @@ async function editSplitSelectedOrPlayhead() {
     if (out.newClipIds.length) selectedClipIds = new Set(out.newClipIds);
   });
   if (splitCount > 0) {
-    showStatus(`✂️ Split ${splitCount} take(s) at playhead (${formatTimecode(playheadSec)})`);
+    showStatus(`Split ${splitCount} region(s) at playhead (${formatTimecode(playheadSec)})`);
   } else {
-    showStatus('Move the playhead inside a take (press Click on timeline) before splitting (S).', true);
+    showStatus('Move the playhead inside a region (Click on timeline) before splitting (S).', true);
   }
 }
 
 function editCopySelected() {
   if (!currentProject || !selectedClipIds.size) {
-    showStatus('Select one or more takes to copy (Click, Ctrl+Click, or Ctrl+A).', true);
+    showStatus('Select one or more regions to copy (Click, Ctrl+Click, or Ctrl+A).', true);
     return;
   }
   clipClipboard = DE.copyClipsFromProject(currentProject, selectedClipIds);
   if (clipClipboard) {
-    showStatus(`📋 Copied ${clipClipboard.entries.length} take(s) to clipboard`);
+    showStatus(`Copied ${clipClipboard.entries.length} region(s) to clipboard`);
   }
 }
 
@@ -2969,19 +3107,19 @@ async function editCutSelected() {
   const cnt = selectedClipIds.size;
   await commitEdit('Cut Take(s)', () => {
     DE.deleteClipsFromProject(currentProject, selectedClipIds);
-  }, { statusMsg: `✂️ Cut ${cnt} take(s) to clipboard` });
+  }, { statusMsg: `Cut ${cnt} region(s) to clipboard` });
 }
 
 async function editPasteAtPlayhead() {
   if (!currentProject || !clipClipboard) {
-    showStatus('Clipboard is empty — Copy (Ctrl+C) or Cut (Ctrl+X) a take first.', true);
+    showStatus('Clipboard is empty — Copy (Ctrl+C) or Cut (Ctrl+X) a region first.', true);
     return;
   }
   const primaryTrackId = [...selectedTrackIds][0] || anchorTrackId || null;
   await commitEdit('Paste Take(s)', () => {
     const created = DE.pasteClipsIntoProject(currentProject, clipClipboard, playheadSec, primaryTrackId);
     selectedClipIds = new Set(created);
-  }, { statusMsg: `📋 Pasted ${clipClipboard.entries.length} take(s) at ${formatTimecode(playheadSec)}` });
+  }, { statusMsg: `Pasted ${clipClipboard.entries.length} region(s) at ${formatTimecode(playheadSec)}` });
 }
 
 async function editDuplicateSelected() {
@@ -2991,7 +3129,7 @@ async function editDuplicateSelected() {
     await commitEdit('Duplicate Take(s)', () => {
       const created = DE.duplicateClipsInProject(currentProject, selectedClipIds);
       selectedClipIds = new Set(created);
-    }, { statusMsg: `📑 Duplicated ${cnt} phase-aligned take(s)` });
+    }, { statusMsg: `Duplicated ${cnt} phase-aligned region(s)` });
     return;
   }
   if (selectedTrackIds.size > 0) {
@@ -2999,10 +3137,10 @@ async function editDuplicateSelected() {
     await commitEdit('Duplicate Track(s)', () => {
       const created = DE.duplicateTracksInProject(currentProject, selectedTrackIds, { includeClips: true });
       selectedTrackIds = new Set(created);
-    }, { statusMsg: `📑 Duplicated ${cnt} track(s)` });
+    }, { statusMsg: `Duplicated ${cnt} track(s)` });
     return;
   }
-  showStatus('Select a take or track first to duplicate (Ctrl+D).', true);
+  showStatus('Select a region or track first to duplicate (Ctrl+D).', true);
 }
 
 async function editDeleteSelected() {
@@ -3011,14 +3149,14 @@ async function editDeleteSelected() {
     const cnt = selectedClipIds.size;
     await commitEdit('Delete Take(s)', () => {
       DE.deleteClipsFromProject(currentProject, selectedClipIds);
-    }, { statusMsg: `🗑️ Deleted ${cnt} take(s)` });
+    }, { statusMsg: `Deleted ${cnt} region(s)` });
     return;
   }
   if (selectedTrackIds.size > 0) {
     const cnt = selectedTrackIds.size;
     await commitEdit('Delete Track(s)', () => {
       DE.deleteTracksFromProject(currentProject, selectedTrackIds);
-    }, { statusMsg: `🗑️ Deleted ${cnt} track(s)` });
+    }, { statusMsg: `Deleted ${cnt} track(s)` });
     return;
   }
 }
@@ -3071,7 +3209,9 @@ function renderWizardMicCards() {
     <button type="button" class="mic-card ${p.id === wizProfileId ? 'selected' : ''}" data-mic-id="${esc(p.id)}">
       <div class="mic-card-img-wrap">
         <img src="${esc(p.image)}" alt="${esc(p.name)}" />
-        ${p.soundReplacement?.supported ? '<span class="mic-card-badge">🥁 Drum Replace Ready</span>' : '<span class="mic-card-badge">🎛️ Studio LV2/EQ</span>'}
+        ${p.soundReplacement?.supported
+          ? `<span class="mic-card-badge">${DI.badge('drum-replace', 12)}<span>Trigger Ready</span></span>`
+          : `<span class="mic-card-badge">${DI.badge('channel-fx', 12)}<span>Studio LV2/EQ</span></span>`}
       </div>
       <div class="mic-card-title">${esc(p.name)}</div>
       <div class="mic-card-desc">${esc(p.description)}</div>
@@ -3115,8 +3255,8 @@ function renderWizardChannelRows() {
     return `
       <div class="wiz-ch-row ${isSel ? 'selected' : ''} ${isSpike ? 'spiking' : ''}" data-ch-name="${esc(inp.name)}">
         <div class="wiz-ch-top">
-          <span>${inp.isFocusrite ? '🔴 ' : ''}${esc(inp.description)}</span>
-          <span class="mono">${peakDb <= -90 ? '-∞' : peakDb.toFixed(1)} dBFS ${isSel ? '✓' : ''}</span>
+          <span>${inp.isFocusrite ? '<span class="fr-led"></span>' : ''}${esc(inp.description)}</span>
+          <span class="mono">${peakDb <= -90 ? '-∞' : peakDb.toFixed(1)} dBFS${isSel ? ' [SEL]' : ''}</span>
         </div>
         <div class="wiz-ch-bar">
           <div class="wiz-ch-bar-fill" style="width:${dbToPercent(peakDb).toFixed(1)}%"></div>
@@ -3181,7 +3321,7 @@ function populateWizardDrumSelectors(preferredKitId, preferredPieceId) {
 
   const kits = drumkitsStatus?.kits || [];
   kitSel.innerHTML = kits.map(k =>
-    `<option value="${esc(k.id)}"${k.id === preferredKitId ? ' selected' : ''}>${esc(k.name)} ${k.installed ? `(${k.sampleCount} samples ✓)` : '(Click Install)'}</option>`
+    `<option value="${esc(k.id)}"${k.id === preferredKitId ? ' selected' : ''}>${esc(k.name)} ${k.installed ? `(${k.sampleCount} samples installed)` : '(Click Install)'}</option>`
   ).join('');
 
   const chosenKit = kits.find(k => k.id === kitSel.value) || kits[0];
@@ -3314,7 +3454,7 @@ async function finishAddMicWizard({ addAnother = false } = {}) {
     wizSelectedChannelName = ''; // auto-advance to next unused input for next mic
     markDirty(true);
     renderStudio();
-    showStatus(`✓ Added armed track "${res.track.name}" on ${res.track.inputLabel}${soundReplacement.enabled ? ` with ${soundReplacement.kitId} (${soundReplacement.pieceId}) Sound Replacement` : ''}!`);
+    showStatus(`Added armed track "${res.track.name}" on ${res.track.inputLabel}${soundReplacement.enabled ? ` with ${soundReplacement.kitId} (${soundReplacement.pieceId}) Sound Replacement` : ''}.`);
     if (addAnother) {
       await goToWizardStep(1);
     } else {
@@ -3452,7 +3592,7 @@ async function startDrumsetSoundcheck() {
   }
   scArmedInputsList = res.inputs || [];
   document.getElementById('sc-live-timer').textContent = '00:00.0';
-  document.getElementById('sc-live-title').textContent = `● RECORDING ALL ${scArmedInputsList.length} ARMED CHANNELS — PLAY YOUR DRUM SET NOW!`;
+  document.getElementById('sc-live-title').textContent = `RECORDING ALL ${scArmedInputsList.length} ARMED CHANNELS — PLAY YOUR DRUM SET NOW`;
 
   const grid = document.getElementById('sc-live-meters-grid');
   if (grid) {
@@ -3514,7 +3654,7 @@ async function playSoundcheckPreviewClip(filePath) {
     src.buffer = buf;
     src.connect(ctx.destination);
     src.start();
-    showStatus(`🔊 Playing recorded soundcheck clip (${buf.duration.toFixed(1)}s)…`);
+    showStatus(`Playing recorded soundcheck clip (${buf.duration.toFixed(1)}s)...`);
   } catch (err) {
     showStatus(`Clip preview error: ${err.message}`, true);
   }
@@ -3531,7 +3671,7 @@ function renderScResults(meta = {}) {
   const activeCount = scClassifications.filter(c => c.includeTrack && c.profileId !== 'unused').length;
   const unusedCount = scClassifications.length - activeCount;
 
-  if (badge) badge.textContent = `✨ Classified via ${scLastProviderLabel}`;
+  if (badge) badge.textContent = `Classified via ${scLastProviderLabel}`;
   if (summaryEl) {
     summaryEl.textContent = `Identified ${activeCount} active mic(s) out of ${scClassifications.length} inputs${meta.durationSec ? ` (${meta.durationSec}s soundcheck)` : ''}`;
   }
@@ -3556,7 +3696,7 @@ function renderScResults(meta = {}) {
     listEl.innerHTML = `
       <div class="card" style="text-align:center;padding:24px;">
         <strong>All ${scClassifications.length} channels were quiet (&lt; -48 dBFS) during this take.</strong>
-        <p class="hint">Check your Focusrite gain knobs or click "↺ Re-Record Soundcheck" and hit the drums firmly!</p>
+        <p class="hint">Check your Focusrite gain knobs or click "Re-Record Soundcheck" and hit the drums firmly.</p>
       </div>
     `;
     return;
@@ -3584,7 +3724,7 @@ function renderScResults(meta = {}) {
         <div>
           <div style="font-weight:700;font-size:12px;">Ch ${item.channelIndex}: ${esc(shortHw)}</div>
           <div class="hint mono">Peak ${esc(peakStr)} · ${item.features?.transientCount || 0} hits</div>
-          ${item.wavFile ? `<button type="button" class="btn btn-sm" style="height:22px;padding:0 7px;margin-top:4px;font-size:10.5px;" data-sc-act="listen" data-idx="${idx}">🔊 Play Clip</button>` : ''}
+          ${item.wavFile ? `<button type="button" class="btn btn-sm btn-bevel" style="height:22px;padding:0 7px;margin-top:4px;font-size:10.5px;" data-sc-act="listen" data-idx="${idx}">${DI.svg('speaker', 11)}<span>Play Clip</span></button>` : ''}
         </div>
         <div>
           <select class="select" style="height:29px;font-size:12px;margin-bottom:4px;" data-sc-act="profile" data-idx="${idx}">${profOptions}</select>
@@ -3597,7 +3737,7 @@ function renderScResults(meta = {}) {
         <div>
           <label class="checkbox-row" style="margin:0 0 4px;font-size:11.5px;">
             <input type="checkbox" data-sc-act="sr-toggle" data-idx="${idx}" ${item.soundReplacementEnabled ? 'checked' : ''} />
-            <span>🥁 Sound Replace</span>
+            <span>Trigger Replace</span>
           </label>
           <select class="select" style="height:27px;font-size:11.5px;" data-sc-act="sr-piece" data-idx="${idx}" ${item.soundReplacementEnabled ? '' : 'disabled'}>${pieceOpts}</select>
         </div>
@@ -3687,7 +3827,7 @@ async function applyDrumsetWizardResults() {
   await closeDrumsetWizard();
   switchView('studio-stage');
   renderStudio();
-  showStatus(`🥁 Configured & armed ${res.addedCount} studio mic track(s) via ${scLastProviderLabel}! Press ▶ Play to hear your soundcheck or ● Record for a new take.`);
+  showStatus(`Configured & armed ${res.addedCount} studio mic track(s) via ${scLastProviderLabel} — press Play to audition or REC for a new take.`);
 }
 
 // ─── Project Save / Open / Drum Kits Modals ─────────────────────────────────
@@ -3702,7 +3842,7 @@ async function saveCurrentSession(saveAsDialog = false) {
     savedProjectsState = res.savedProjects || savedProjectsState;
     markDirty(false);
     renderStudio();
-    showStatus(`💾 Saved session "${currentProject.name}" (${currentProject.tracks.length} tracks) → ${res.manifestFile}`);
+    showStatus(`Saved session "${currentProject.name}" (${currentProject.tracks.length} tracks) → ${res.manifestFile}`);
   } else {
     showStatus(`Save failed: ${res?.error || 'Unknown error'}`, true);
   }
@@ -3759,7 +3899,7 @@ async function loadProjectByIdOrDialog(payload) {
     switchView('studio-stage');
     renderStudio();
     const clipTotal = (currentProject.tracks || []).reduce((n, t) => n + (t.clips?.length || 0), 0);
-    showStatus(`📂 Opened "${currentProject.name}" — reloaded ${currentProject.tracks.length} track(s) and ${clipTotal} recorded WAV stem(s).`);
+    showStatus(`Opened "${currentProject.name}" — reloaded ${currentProject.tracks.length} track(s) and ${clipTotal} recorded WAV stem(s).`);
   } else {
     showStatus(`Open failed: ${res?.error || 'Unknown error'}`, true);
   }
@@ -3783,12 +3923,12 @@ function renderDrumkitsModal() {
           <strong>${esc(k.name)}</strong> <span class="mono" style="color:var(--accent);">[${esc(k.license)}]</span>
           <div class="hint">${esc(k.description)}</div>
           <div class="mono" style="font-size:11px;color:${k.installed ? '#86efac' : '#fde047'};">
-            ${k.installed ? `✓ Installed (${k.sampleCount} lossless/WAV samples)` : 'Not downloaded yet'}
+            ${k.installed ? `INSTALLED (${k.sampleCount} lossless/WAV samples)` : 'Not downloaded yet'}
           </div>
         </div>
         <div style="display:flex;gap:6px;">
-          ${k.installed ? `<button type="button" class="btn btn-sm" data-audition-kit="${esc(k.id)}" data-piece="${esc(firstPiece)}">🔊 Test</button>` : ''}
-          <button type="button" class="btn btn-sm ${k.installed ? '' : 'btn-primary'}" data-dl-kit="${esc(k.id)}">${k.installed ? '↻ Verify' : '⬇ Download'}</button>
+          ${k.installed ? `<button type="button" class="btn btn-sm btn-bevel" data-audition-kit="${esc(k.id)}" data-piece="${esc(firstPiece)}">${DI.svg('speaker', 12)}<span>Test</span></button>` : ''}
+          <button type="button" class="btn btn-sm ${k.installed ? 'btn-bevel' : 'btn-primary'}" data-dl-kit="${esc(k.id)}">${k.installed ? `${DI.svg('refresh', 12)}<span>Verify</span>` : `${DI.svg('download', 12)}<span>Download</span>`}</button>
         </div>
       </div>
     `;
@@ -3834,7 +3974,7 @@ function renderSnapshot(snap) {
   const pill = document.getElementById('header-hw-pill');
   if (pill) {
     if (fr.connected) {
-      pill.textContent = `● ${fr.model} · ${(clk.effectiveRate / 1000).toFixed(clk.effectiveRate % 1000 ? 1 : 0)}kHz / ${fr.bits}-bit`;
+      pill.textContent = `${fr.model} · ${(clk.effectiveRate / 1000).toFixed(clk.effectiveRate % 1000 ? 1 : 0)}kHz / ${fr.bits}-bit`;
       pill.className = 'hw-pill connected';
     } else {
       pill.textContent = `PipeWire ${(clk.effectiveRate / 1000).toFixed(0)}kHz · No USB Interface`;
@@ -3846,13 +3986,13 @@ function renderSnapshot(snap) {
   if (cardSlot) {
     if (fr.connected) {
       const syncBadges = fr.mixer?.syncValid
-        ? `Internal ${fr.mixer.syncValid.internal ? '✓' : '—'} · S/PDIF ${fr.mixer.syncValid.spdif ? '✓' : '—'} · ADAT ${fr.mixer.syncValid.adat ? '✓' : '—'}`
+        ? `Internal ${fr.mixer.syncValid.internal ? 'LOCK' : '—'} · S/PDIF ${fr.mixer.syncValid.spdif ? 'LOCK' : '—'} · ADAT ${fr.mixer.syncValid.adat ? 'LOCK' : '—'}`
         : 'Locked';
       cardSlot.innerHTML = `
         <div class="card card-focusrite" id="focusrite-card">
           <div class="fr-header">
             <div class="fr-title-wrap">
-              <span class="badge-connected">● CONNECTED</span>
+              <span class="badge-connected">CONNECTED</span>
               <span class="badge-Scarlett">FOCUSRITE PRO-AUDIO</span>
               <span class="fr-name">${esc(fr.model)}</span>
             </div>
@@ -3885,12 +4025,12 @@ function renderSnapshot(snap) {
 
   if (inSel) {
     inSel.innerHTML = (snap.inputs || []).map(n =>
-      `<option value="${esc(n.name)}" data-node-id="${n.id}"${n.name === activeInName ? ' selected' : ''}>${n.isDefault ? '★ ' : ''}${esc(n.description)}</option>`
+      `<option value="${esc(n.name)}" data-node-id="${n.id}"${n.name === activeInName ? ' selected' : ''}>${n.isDefault ? '[DEF] ' : ''}${esc(n.description)}</option>`
     ).join('');
   }
   if (outSel) {
     outSel.innerHTML = (snap.outputs || []).map(n =>
-      `<option value="${esc(n.name)}" data-node-id="${n.id}"${n.name === activeOutName ? ' selected' : ''}>${n.isDefault ? '★ ' : ''}${esc(n.description)}</option>`
+      `<option value="${esc(n.name)}" data-node-id="${n.id}"${n.name === activeOutName ? ' selected' : ''}>${n.isDefault ? '[DEF] ' : ''}${esc(n.description)}</option>`
     ).join('');
   }
 
@@ -3930,7 +4070,7 @@ function renderSnapshot(snap) {
       const banksHtml = (fr.mixer.phantomBanks || []).map(b => `
         <button type="button" class="hw-toggle ${b.enabled ? 'on-48v' : 'off-48v'}"
           data-hw-card="${fr.alsaCardIndex}" data-hw-control="${esc(b.control)}" data-hw-val="${!b.enabled}">
-          ⚡ ${esc(b.label)}: ${b.enabled ? 'ON' : 'OFF'}
+          ${DI.svg('bolt', 12)} <span>${esc(b.label)}: ${b.enabled ? 'ON' : 'OFF'}</span>
         </button>
       `).join('');
 
@@ -3950,7 +4090,7 @@ function renderSnapshot(snap) {
             <button type="button" class="hw-toggle ${p.level === 'Inst' ? 'on-inst' : ''}"
               data-hw-card="${fr.alsaCardIndex}" data-hw-control="Line In ${p.channel} Level"
               data-hw-enum="${p.level === 'Inst' ? 'Line' : 'Inst'}">
-              ${p.level === 'Inst' ? '🎸 Inst (Hi-Z)' : 'Line'}
+              ${p.level === 'Inst' ? 'Inst (Hi-Z)' : 'Line'}
             </button>
           ` : `<div style="height:27px;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--muted);">Mic / Line</div>`}
           ${p.air !== null ? `
@@ -3990,7 +4130,7 @@ function renderSnapshot(snap) {
           const res = await window.robos.setFocusriteControl({ cardIndex, control, value });
           if (res?.ok) {
             renderSnapshot(res.snapshot);
-            showStatus(`✓ Updated Focusrite hardware "${control}" → ${value}`);
+            showStatus(`Updated Focusrite hardware "${control}" → ${value}`);
           } else {
             btn.disabled = false;
             showStatus(`Hardware control failed: ${res?.error || 'Unknown error'}`, true);
@@ -4021,7 +4161,7 @@ function renderSnapshot(snap) {
   if (inList) {
     inList.innerHTML = (snap.inputs || []).map(n => `
       <li class="endpoint-item ${n.isFocusrite ? 'is-fr' : ''} ${n.isDefault ? 'is-default' : ''}">
-        <span>${n.isDefault ? '★ ' : ''}${esc(n.description)}</span>
+        <span>${n.isDefault ? '<span class="def-tag">DEF</span> ' : ''}${esc(n.description)}</span>
         <span class="mono" style="color:var(--muted);">PW #${n.id}</span>
       </li>
     `).join('');
@@ -4030,7 +4170,7 @@ function renderSnapshot(snap) {
   if (outList) {
     outList.innerHTML = (snap.outputs || []).map(n => `
       <li class="endpoint-item ${n.isFocusrite ? 'is-fr' : ''} ${n.isDefault ? 'is-default' : ''}">
-        <span>${n.isDefault ? '★ ' : ''}${esc(n.description)}</span>
+        <span>${n.isDefault ? '<span class="def-tag">DEF</span> ' : ''}${esc(n.description)}</span>
         <span class="mono" style="color:var(--muted);">PW #${n.id}</span>
       </li>
     `).join('');
@@ -4150,12 +4290,12 @@ async function init() {
   document.getElementById('btn-snap-grid')?.addEventListener('click', () => {
     snapToGrid = !snapToGrid;
     updateEditToolbarState();
-    showStatus(`🧲 Snap to Beat Grid: ${snapToGrid ? 'ON' : 'OFF'}`);
+    showStatus(`Snap to Beat Grid: ${snapToGrid ? 'ON' : 'OFF'}`);
   });
   document.getElementById('btn-loop-toggle')?.addEventListener('click', () => {
     loopPlayback = !loopPlayback;
     updateEditToolbarState();
-    showStatus(`🔁 Loop Playback: ${loopPlayback ? 'ON' : 'OFF'}`);
+    showStatus(`Loop Playback: ${loopPlayback ? 'ON' : 'OFF'}`);
   });
 
   // DrumSet AI Soundcheck Wizard Controls
@@ -4453,12 +4593,12 @@ async function init() {
       ev.preventDefault();
       snapToGrid = !snapToGrid;
       updateEditToolbarState();
-      showStatus(`🧲 Snap to Beat Grid: ${snapToGrid ? 'ON' : 'OFF'}`);
+      showStatus(`Snap to Beat Grid: ${snapToGrid ? 'ON' : 'OFF'}`);
     } else if (!isMod && !ev.altKey && keyLower === 'l') {
       ev.preventDefault();
       loopPlayback = !loopPlayback;
       updateEditToolbarState();
-      showStatus(`🔁 Loop Playback: ${loopPlayback ? 'ON' : 'OFF'}`);
+      showStatus(`Loop Playback: ${loopPlayback ? 'ON' : 'OFF'}`);
     } else if (!isMod && !ev.altKey && keyLower === 'c') {
       ev.preventDefault();
       const next = !(currentProject?.metronome !== false);
@@ -4587,15 +4727,15 @@ async function init() {
     const btn = e.currentTarget;
     const kitId = document.getElementById('wiz-sr-kit')?.value || 'gm-rock-kit';
     btn.disabled = true;
-    btn.textContent = 'Downloading…';
+    btn.textContent = 'Downloading...';
     const res = await window.robos.downloadDrumkit({ kitId });
     btn.disabled = false;
-    btn.textContent = '⬇ Install Kit';
+    btn.innerHTML = `${DI.svg('download', 12)}<span>Install Kit</span>`;
     if (res?.ok && res.status) {
       drumkitsStatus = res.status;
       updateDrumkitsBadge();
       populateWizardDrumSelectors(kitId, document.getElementById('wiz-sr-piece')?.value);
-      showStatus(`✓ Installed open-source drum kit "${kitId}"!`);
+      showStatus(`Installed open-source drum kit "${kitId}".`);
     }
   });
 
@@ -4615,7 +4755,7 @@ async function init() {
       drumkitsStatus = res.status;
       updateDrumkitsBadge();
       renderDrumkitsModal();
-      showStatus('✓ All open-source studio drum kits verified in ~/.local/share/robos/daw-studio/instruments/!');
+      showStatus('All open-source studio drum kits verified in ~/.local/share/robos/daw-studio/instruments/.');
     }
   });
 
@@ -4625,7 +4765,7 @@ async function init() {
     renderSnapshot(snap);
     renderStudio();
     showStatus(snap.focusrite?.connected
-      ? `✓ Connected to ${snap.focusrite.model} (${snap.inputs.length} inputs, ${snap.outputs.length} outputs)`
+      ? `Connected to ${snap.focusrite.model} (${snap.inputs.length} inputs, ${snap.outputs.length} outputs)`
       : 'Rescanned PipeWire & ALSA audio bus.');
   });
 
@@ -4644,7 +4784,7 @@ async function init() {
     });
     if (res?.ok) {
       renderSnapshot(res.snapshot);
-      showStatus(`✓ Applied: ${res.snapshot.clock.effectiveRate} Hz · ${res.snapshot.clock.effectiveQuantum} samples (${res.snapshot.clock.latencyMs} ms latency)`);
+      showStatus(`Applied: ${res.snapshot.clock.effectiveRate} Hz · ${res.snapshot.clock.effectiveQuantum} samples (${res.snapshot.clock.latencyMs} ms latency)`);
     } else {
       showStatus(`Failed to apply engine settings: ${res?.error || 'Unknown error'}`, true);
     }
@@ -4654,12 +4794,12 @@ async function init() {
     const btn = e.currentTarget;
     const target = document.getElementById('select-input-device')?.value || '';
     btn.disabled = true;
-    showStatus('Capturing 1.5s test sample from selected input…');
+    showStatus('Capturing 1.5s test sample from selected input...');
     const res = await window.robos.testInputCapture({ targetNodeName: target, durationMs: 1500 });
     btn.disabled = false;
     if (res?.ok) {
       setMeter(res.peakDb, 'Last 1.5s Capture Peak');
-      showStatus(`✓ Captured ${res.samples} samples @ 48kHz — Peak: ${res.peakDb} dBFS · RMS: ${res.rmsDb} dBFS`);
+      showStatus(`Captured ${res.samples} samples @ 48kHz — Peak: ${res.peakDb} dBFS · RMS: ${res.rmsDb} dBFS`);
     } else {
       showStatus(`Input test failed: ${res?.error || 'No signal'}`, true);
     }
@@ -4671,7 +4811,7 @@ async function init() {
     btn.disabled = true;
     const res = await window.robos.playTestTone({ targetNodeName: target });
     btn.disabled = false;
-    if (res?.ok) showStatus('✓ Played studio test chime on selected output.');
+    if (res?.ok) showStatus('Played studio test chime on selected output.');
   });
 
   document.getElementById('btn-live-monitor')?.addEventListener('click', toggleLiveMonitor);
@@ -4681,8 +4821,8 @@ async function init() {
     renderSnapshot(snap);
     renderStudio();
     showStatus(snap.focusrite?.connected
-      ? `🔌 USB Hotplug: ${snap.focusrite.model} connected!`
-      : '🔌 USB audio device state changed.');
+      ? `USB Hotplug: ${snap.focusrite.model} connected.`
+      : 'USB audio device state changed.');
   });
 
   window.robos.onTapLevels((data) => {
@@ -4694,7 +4834,7 @@ async function init() {
       wizSelectedChannelName = data.detected.name;
       const alertEl = document.getElementById('wiz-tap-alert');
       if (alertEl) {
-        alertEl.textContent = `🎯 Strike detected on "${data.detected.description}" (${data.detected.peakDb} dBFS)! Channel auto-selected.`;
+        alertEl.textContent = `Strike detected on "${data.detected.description}" (${data.detected.peakDb} dBFS) — channel auto-selected.`;
         alertEl.classList.remove('hidden');
       }
     }

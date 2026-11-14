@@ -383,7 +383,7 @@ class MultiTrackRecorder {
     if (this.active) throw new Error('Recording is already in progress');
     const armedTracks = (project.tracks || []).filter(t => t.armed);
     if (!armedTracks.length) {
-      throw new Error('No tracks are armed for recording. Arm at least one mic track (● R) first.');
+      throw new Error('No tracks are armed for recording. Arm at least one mic track [R] first.');
     }
 
     const { takesDir } = ensureProjectDir(project);
