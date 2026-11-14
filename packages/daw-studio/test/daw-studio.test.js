@@ -560,4 +560,75 @@ describe('DAW Editing Engine: Multi-Select, Track/Take Gain, Split/Trim, Copy/Pa
       fs.rmSync(tmpRoot, { recursive: true, force: true });
     }
   });
+
+  it('supports batch track actions (select all tracks, invert, arm/disarm all, remove selected/all), trim-to-playhead, snap grid & stereo WAV mixdown encoding', () => {
+    const project = createEmptyProject({ name: 'Batch Track & Menu Ops', bpm: 120 });
+    for (let i = 0; i < 4; i++) {
+      const tr = buildTrackFromWizard({ profileId: 'snare-top', name: `Audio ${i + 1}`, armed: false });
+      tr.clips.push({
+        id: `c-${i}`,
+        name: `Take ${i + 1}`,
+        startSec: 0,
+        offsetSec: 0,
+        durationSec: 4.0,
+        sourceDurationSec: 4.0,
+      });
+      project.tracks.push(tr);
+    }
+
+    // Select all tracks only (clears clip selection so Delete / Remove acts on tracks)
+    const tracksOnly = DE.selectAllTracksOnly(project);
+    assert.strictEqual(tracksOnly.selectedTrackIds.size, 4);
+    assert.strictEqual(tracksOnly.selectedClipIds.size, 0);
+
+    // Select all clips only
+    const clipsOnly = DE.selectAllClipsOnly(project);
+    assert.strictEqual(clipsOnly.selectedTrackIds.size, 0);
+    assert.strictEqual(clipsOnly.selectedClipIds.size, 4);
+
+    // Invert track selection
+    const firstTwo = new Set([project.tracks[0].id, project.tracks[1].id]);
+    const inverted = DE.invertTrackSelection(project, firstTwo);
+    assert.strictEqual(inverted.size, 2);
+    assert.ok(inverted.has(project.tracks[2].id) && inverted.has(project.tracks[3].id));
+
+    // Batch Arm All / Disarm All / Arm Selected / Phase Invert
+    assert.strictEqual(DE.setTracksPropertyBatch(project, 'all', 'armed', true), 4);
+    assert.ok(project.tracks.every(t => t.armed === true));
+    assert.strictEqual(DE.setTracksPropertyBatch(project, 'all', 'armed', false), 4);
+    assert.ok(project.tracks.every(t => t.armed === false));
+    assert.strictEqual(DE.setTracksPropertyBatch(project, firstTwo, 'armed', true), 2);
+    assert.strictEqual(project.tracks.filter(t => t.armed).length, 2);
+    DE.setTracksPropertyBatch(project, firstTwo, 'phaseInvert', true);
+    assert.strictEqual(project.tracks[0].fx.phaseInvert, true);
+    assert.strictEqual(project.tracks[2].fx.phaseInvert, false);
+
+    // Trim Start & End to Playhead
+    assert.strictEqual(DE.trimClipsToPlayhead(project, new Set(['c-0']), 'left', 1.0), 1);
+    assert.strictEqual(project.tracks[0].clips[0].startSec, 1.0);
+    assert.strictEqual(project.tracks[0].clips[0].offsetSec, 1.0);
+    assert.strictEqual(project.tracks[0].clips[0].durationSec, 3.0);
+    assert.strictEqual(DE.trimClipsToPlayhead(project, new Set(['c-0']), 'right', 3.0), 1);
+    assert.strictEqual(project.tracks[0].clips[0].durationSec, 2.0);
+
+    // Remove Selected Tracks + Undo recovery
+    const hist = new DE.UndoHistoryStack(10);
+    hist.pushSnapshot(project, 'Remove 2 Tracks');
+    assert.strictEqual(DE.deleteTracksFromProject(project, firstTwo), 2);
+    assert.strictEqual(project.tracks.length, 2);
+    const restored = hist.undo(project).project;
+    assert.strictEqual(restored.tracks.length, 4);
+
+    // Snap to Beat Grid (120 BPM => 0.5s beat, subdivision 2 => 0.25s grid)
+    assert.strictEqual(DE.snapTimeToBeatGrid(1.13, 120, true, 2), 1.25);
+    assert.strictEqual(DE.snapTimeToBeatGrid(1.13, 120, false, 2), 1.13);
+
+    // Stereo 16-bit PCM WAV Mixdown Encoder
+    const left = new Float32Array([0, 0.5, -0.5, 1.0]);
+    const right = new Float32Array([0, -0.5, 0.5, -1.0]);
+    const wavBytes = DE.encodeStereoFloat32ToWavBytes(left, right, 48000);
+    assert.strictEqual(wavBytes.length, 44 + 4 * 4);
+    assert.strictEqual(Buffer.from(wavBytes.slice(0, 4)).toString('ascii'), 'RIFF');
+    assert.strictEqual(Buffer.from(wavBytes.slice(8, 12)).toString('ascii'), 'WAVE');
+  });
 });

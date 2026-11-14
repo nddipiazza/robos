@@ -52,4 +52,9 @@ contextBridge.exposeInMainWorld('robos', {
   projectSave: (payload) => ipcRenderer.invoke('daw:project-save', payload),
   projectOpen: (payload) => ipcRenderer.invoke('daw:project-open', payload),
   projectList: () => ipcRenderer.invoke('daw:project-list'),
+
+  addBlankTracks: (payload) => ipcRenderer.invoke('daw:add-blank-tracks', payload),
+  importAudioFiles: (payload) => ipcRenderer.invoke('daw:import-audio-files', payload),
+  exportMixdownWav: (payload) => ipcRenderer.invoke('daw:export-mixdown-wav', payload),
+  openSessionFolder: () => ipcRenderer.invoke('daw:open-session-folder'),
 });

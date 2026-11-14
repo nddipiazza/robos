@@ -389,7 +389,7 @@ code, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monosp
 }
 .timeline-header-row {
   display: grid;
-  grid-template-columns: 425px 1fr;
+  grid-template-columns: 462px 1fr;
   background: #0a0e14;
   border-bottom: 1px solid var(--border);
   align-items: center;
@@ -414,7 +414,7 @@ code, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monosp
 
 .track-row {
   display: grid;
-  grid-template-columns: 425px 1fr;
+  grid-template-columns: 462px 1fr;
   border-bottom: 1px solid #222b38;
   min-height: 102px;
   background: #141a23;
@@ -1521,4 +1521,57 @@ kbd {
   font-size: 11px;
   font-weight: 700;
   white-space: nowrap;
+}
+
+/* ── Top Application DAW Menu Bar & Multi-Track Checkboxes ─────────────── */
+.daw-menubar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-right: auto;
+  margin-left: 10px;
+}
+.menubar-trigger {
+  border: 1px solid transparent;
+  background: transparent;
+  color: #cbd5e1;
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.menubar-trigger:hover,
+.menubar-trigger.open {
+  background: rgba(0, 188, 212, 0.16);
+  border-color: rgba(0, 188, 212, 0.4);
+  color: #fff;
+}
+.daw-menubar-popup {
+  min-width: 280px;
+  max-width: 340px;
+  max-height: calc(100vh - 56px);
+  overflow-y: auto;
+}
+.select-all-tracks-lbl {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  user-select: none;
+}
+.select-all-tracks-lbl input[type="checkbox"],
+.track-sel-chk {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--accent);
+  cursor: pointer;
+  flex-shrink: 0;
+  align-self: center;
+  margin: 0;
+}
+.btn.active {
+  background: rgba(0, 188, 212, 0.2);
+  border-color: var(--accent);
+  color: #8ceef9;
 }

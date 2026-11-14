@@ -548,6 +548,112 @@
     return true;
   }
 
+  function selectAllTracksOnly(project) {
+    return {
+      selectedTrackIds: new Set((project?.tracks || []).map(t => t.id)),
+      selectedClipIds: new Set(),
+    };
+  }
+
+  function selectAllClipsOnly(project) {
+    const clipIds = new Set();
+    for (const t of (project?.tracks || [])) {
+      for (const c of (t.clips || [])) clipIds.add(c.id);
+    }
+    return {
+      selectedTrackIds: new Set(),
+      selectedClipIds: clipIds,
+    };
+  }
+
+  function invertTrackSelection(project, currentSelectedTrackIds) {
+    const cur = currentSelectedTrackIds instanceof Set ? currentSelectedTrackIds : new Set(currentSelectedTrackIds || []);
+    const next = new Set();
+    for (const t of (project?.tracks || [])) {
+      if (!cur.has(t.id)) next.add(t.id);
+    }
+    return next;
+  }
+
+  function setTracksPropertyBatch(project, targetTrackIds /* Set | 'all' */, prop, value) {
+    let changed = 0;
+    const isAll = targetTrackIds === 'all';
+    const ids = isAll ? null : (targetTrackIds instanceof Set ? targetTrackIds : new Set(targetTrackIds || []));
+    for (const t of (project?.tracks || [])) {
+      if (!isAll && !ids.has(t.id)) continue;
+      if (prop === 'phaseInvert') {
+        t.fx = { ...(t.fx || {}), phaseInvert: Boolean(value) };
+      } else {
+        t[prop] = value;
+      }
+      changed++;
+    }
+    return changed;
+  }
+
+  function trimClipsToPlayhead(project, targetClipIds, edge /* 'left' | 'right' */, playheadSec) {
+    const ids = targetClipIds instanceof Set ? targetClipIds : new Set(targetClipIds || []);
+    let trimmed = 0;
+    for (const tr of (project?.tracks || [])) {
+      for (const clip of (tr.clips || [])) {
+        if (ids.size > 0 && !ids.has(clip.id)) continue;
+        const start = Number(clip.startSec) || 0;
+        const end = start + (Number(clip.durationSec) || 0);
+        if (playheadSec <= start + 0.04 || playheadSec >= end - 0.04) continue;
+        if (edge === 'left') {
+          trimClipEdge(clip, 'left', playheadSec - start);
+        } else {
+          trimClipEdge(clip, 'right', playheadSec - end);
+        }
+        trimmed++;
+      }
+    }
+    return trimmed;
+  }
+
+  function snapTimeToBeatGrid(timeSec, bpm = 120, enabled = false, subdivision = 2) {
+    const t = Math.max(0, Number(timeSec) || 0);
+    if (!enabled) return Number(t.toFixed(4));
+    const safeBpm = clamp(30, 300, Number(bpm) || 120);
+    const gridSec = (60 / safeBpm) / Math.max(1, subdivision);
+    return Number((Math.round(t / gridSec) * gridSec).toFixed(4));
+  }
+
+  function encodeStereoFloat32ToWavBytes(left, right, sampleRate = 48000) {
+    const frames = Math.min(left.length, right.length);
+    const numChannels = 2;
+    const bytesPerSample = 2;
+    const dataBytes = frames * numChannels * bytesPerSample;
+    const buf = new ArrayBuffer(44 + dataBytes);
+    const view = new DataView(buf);
+    const writeAscii = (off, str) => {
+      for (let i = 0; i < str.length; i++) view.setUint8(off + i, str.charCodeAt(i));
+    };
+    writeAscii(0, 'RIFF');
+    view.setUint32(4, 36 + dataBytes, true);
+    writeAscii(8, 'WAVE');
+    writeAscii(12, 'fmt ');
+    view.setUint32(16, 16, true);
+    view.setUint16(20, 1, true); // PCM
+    view.setUint16(22, numChannels, true);
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, sampleRate * numChannels * bytesPerSample, true);
+    view.setUint16(32, numChannels * bytesPerSample, true);
+    view.setUint16(34, 16, true);
+    writeAscii(36, 'data');
+    view.setUint32(40, dataBytes, true);
+
+    let offset = 44;
+    for (let i = 0; i < frames; i++) {
+      const l = Math.max(-1, Math.min(1, left[i] || 0));
+      const r = Math.max(-1, Math.min(1, right[i] || 0));
+      view.setInt16(offset, Math.round(l * 32767), true);
+      view.setInt16(offset + 2, Math.round(r * 32767), true);
+      offset += 4;
+    }
+    return new Uint8Array(buf);
+  }
+
   return {
     STUDIO_COLORS,
     clamp,
@@ -561,12 +667,17 @@
     findClipWithTrack,
     applyClipClickSelection,
     selectAllInProject,
+    selectAllTracksOnly,
+    selectAllClipsOnly,
+    invertTrackSelection,
+    setTracksPropertyBatch,
     ensureClipSourceMetadata,
     recomputeVisibleClipWindow,
     splitClipAtTime,
     splitClipsInProject,
     moveClipsByDelta,
     trimClipEdge,
+    trimClipsToPlayhead,
     duplicateClipsInProject,
     copyClipsFromProject,
     pasteClipsIntoProject,
@@ -576,5 +687,7 @@
     duplicateTracksInProject,
     deleteTracksFromProject,
     reorderTrackInProject,
+    snapTimeToBeatGrid,
+    encodeStereoFloat32ToWavBytes,
   };
 });

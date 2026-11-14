@@ -1,9 +1,10 @@
 'use strict';
 
-const { app, BrowserWindow, ipcMain, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
+const crypto = require('crypto');
 
 const {
   MIC_PROFILES,
@@ -15,6 +16,8 @@ const {
   inspectInstalledKits,
   downloadOpenDrumkit,
   downloadDefaultOpenDrumkits,
+  computeWaveformPeaks,
+  detectDrumTransients,
 } = require('./lib/drum-instruments');
 const { MultiChannelTapDetector } = require('./lib/channel-detector');
 const {
@@ -768,6 +771,207 @@ ipcMain.handle('daw:project-open', async (_e, payload) => {
 ipcMain.handle('daw:project-list', async () => {
   try {
     return { ok: true, ...listProjects() };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('daw:add-blank-tracks', async (_e, payload) => {
+  try {
+    const snap = audioDevices?.getAudioDevicesSnapshot?.() || null;
+    const proj = ensureCurrentProject(snap);
+    const count = Math.max(1, Math.min(32, Number(payload?.count) || 1));
+    const profileId = payload?.profileId || 'acoustic-inst';
+    const isBlank = payload?.blank !== false && !payload?.profileId;
+    const armed = payload?.armed !== false;
+    const afterTrackId = payload?.afterTrackId || null;
+
+    const orderedInputs = getOrderedCaptureInputs(snap);
+    const usedInputs = new Set((proj.tracks || []).map(t => t.inputNodeName).filter(Boolean));
+    const addedTracks = [];
+    const palette = ['#06b6d4', '#3b82f6', '#22c55e', '#eab308', '#f97316', '#ef4444', '#a855f7', '#ec4899'];
+
+    let insertIdx = proj.tracks.length;
+    if (afterTrackId) {
+      const foundIdx = proj.tracks.findIndex(t => t.id === afterTrackId);
+      if (foundIdx !== -1) insertIdx = foundIdx + 1;
+    }
+
+    for (let i = 0; i < count; i++) {
+      let chosenInp = orderedInputs.find(inp => !usedInputs.has(inp.name));
+      if (!chosenInp && orderedInputs.length) {
+        chosenInp = orderedInputs[(proj.tracks.length + i) % orderedInputs.length];
+      }
+      if (chosenInp) usedInputs.add(chosenInp.name);
+
+      const trackNumber = proj.tracks.length + i + 1;
+      const trk = buildTrackFromWizard({
+        profileId,
+        name: isBlank ? `Audio ${trackNumber}` : undefined,
+        inputNodeName: chosenInp?.name || '',
+        inputLabel: chosenInp?.description || 'Default PipeWire Input',
+        armed,
+        pan: 0,
+        fxOverride: isBlank ? {
+          openSourcePlugins: ['LSP Parametric Equalizer x8 Mono (LV2)', 'Calf Compressor (LV2)'],
+          phaseInvert: false,
+          gate: { enabled: false, thresholdDb: -45 },
+          eq: { enabled: false, hpfHz: 40, lowFreqHz: 100, lowGainDb: 0, midFreqHz: 800, midGainDb: 0, midQ: 1.2, highFreqHz: 6000, highGainDb: 0 },
+          compressor: { enabled: false, thresholdDb: -18, ratio: 2.5, attackMs: 12, releaseMs: 120 },
+          drive: { enabled: false, amount: 0 },
+        } : undefined,
+        soundReplacement: isBlank ? {
+          supported: true,
+          enabled: false,
+          kitId: 'gm-rock-kit',
+          pieceId: 'snare',
+          thresholdDb: -28,
+          blend: 0.75,
+          minIntervalMs: 65,
+        } : undefined,
+      });
+      if (isBlank) {
+        trk.color = palette[(trackNumber - 1) % palette.length];
+      }
+      addedTracks.push(trk);
+    }
+
+    proj.tracks.splice(insertIdx, 0, ...addedTracks);
+    return {
+      ok: true,
+      project: proj,
+      addedTracks,
+    };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('daw:import-audio-files', async (_e, payload) => {
+  try {
+    const snap = audioDevices?.getAudioDevicesSnapshot?.() || null;
+    const proj = ensureCurrentProject(snap);
+    let filePaths = Array.isArray(payload?.filePaths) ? payload.filePaths : null;
+
+    if (!filePaths && mainWindow && !mainWindow.isDestroyed()) {
+      const res = await dialog.showOpenDialog(mainWindow, {
+        title: 'Import Audio WAV File(s) into Session',
+        properties: ['openFile', 'multiSelections'],
+        filters: [{ name: 'WAV Audio Stems', extensions: ['wav'] }],
+      });
+      if (res.canceled || !res.filePaths?.length) {
+        return { ok: false, canceled: true };
+      }
+      filePaths = res.filePaths;
+    }
+
+    if (!filePaths?.length) return { ok: false, canceled: true };
+
+    const projDir = proj.projectDir || path.join(getProjectsRoot(), proj.id);
+    const takesDir = path.join(projDir, 'takes');
+    fs.mkdirSync(takesDir, { recursive: true });
+    proj.projectDir = projDir;
+
+    const startSec = Math.max(0, Number(payload?.startSec) || 0);
+    const targetTrackId = payload?.targetTrackId || null;
+    const importedClipIds = [];
+    const createdTrackIds = [];
+
+    for (let i = 0; i < filePaths.length; i++) {
+      const srcPath = filePaths[i];
+      if (!fs.existsSync(srcPath)) continue;
+      const baseTitle = path.basename(srcPath, path.extname(srcPath));
+      const clipId = `clip-${crypto.randomBytes(4).toString('hex')}`;
+      const destFileName = `${clipId}-${path.basename(srcPath).replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+      const destPath = path.join(takesDir, destFileName);
+      fs.copyFileSync(srcPath, destPath);
+
+      const wavBuf = fs.readFileSync(destPath);
+      const peakInfo = computeWaveformPeaks(wavBuf, 160);
+      const transients = detectDrumTransients(wavBuf, { thresholdDb: -28, minIntervalMs: 65 });
+
+      let destTrack = (filePaths.length === 1 && targetTrackId)
+        ? proj.tracks.find(t => t.id === targetTrackId)
+        : null;
+      if (!destTrack) {
+        destTrack = buildTrackFromWizard({
+          profileId: 'acoustic-inst',
+          name: baseTitle.slice(0, 32) || `Imported ${proj.tracks.length + 1}`,
+          armed: false,
+        });
+        proj.tracks.push(destTrack);
+        createdTrackIds.push(destTrack.id);
+      }
+
+      const clip = {
+        id: clipId,
+        name: baseTitle,
+        wavFile: destPath,
+        relativeWavPath: path.join('takes', destFileName),
+        fileExists: true,
+        startSec,
+        offsetSec: 0,
+        durationSec: Number((peakInfo.durationSec || 1).toFixed(3)),
+        sourceDurationSec: Number((peakInfo.durationSec || 1).toFixed(3)),
+        peakDb: peakInfo.peakDb,
+        gainDb: 0,
+        fadeInSec: 0,
+        fadeOutSec: 0,
+        muted: false,
+        peaks: peakInfo.peaks,
+        transients,
+      };
+      destTrack.clips.push(clip);
+      importedClipIds.push(clip.id);
+    }
+
+    return {
+      ok: true,
+      project: proj,
+      importedClipIds,
+      createdTrackIds,
+    };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('daw:export-mixdown-wav', async (_e, payload) => {
+  try {
+    const { wavBase64, defaultName = 'mixdown.wav', targetFile } = payload || {};
+    if (!wavBase64) throw new Error('Missing mixdown WAV buffer');
+
+    let outPath = targetFile || '';
+    if (!outPath && mainWindow && !mainWindow.isDestroyed()) {
+      const home = process.env.HOME || os.homedir();
+      const res = await dialog.showSaveDialog(mainWindow, {
+        title: 'Export Stereo Mixdown (.wav)',
+        defaultPath: path.join(home, defaultName),
+        filters: [{ name: 'WAV Audio', extensions: ['wav'] }],
+      });
+      if (res.canceled || !res.filePath) {
+        return { ok: false, canceled: true };
+      }
+      outPath = res.filePath.endsWith('.wav') ? res.filePath : `${res.filePath}.wav`;
+    }
+    if (!outPath) return { ok: false, canceled: true };
+
+    const bytes = Buffer.from(wavBase64, 'base64');
+    fs.mkdirSync(path.dirname(outPath), { recursive: true });
+    fs.writeFileSync(outPath, bytes);
+    return { ok: true, filePath: outPath, bytes: bytes.length };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('daw:open-session-folder', async () => {
+  try {
+    const proj = ensureCurrentProject();
+    const projDir = proj.projectDir || path.join(getProjectsRoot(), proj.id);
+    fs.mkdirSync(projDir, { recursive: true });
+    await shell.openPath(projDir);
+    return { ok: true, projectDir: projDir };
   } catch (err) {
     return { ok: false, error: err.message };
   }
