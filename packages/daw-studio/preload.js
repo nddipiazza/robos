@@ -34,6 +34,14 @@ contextBridge.exposeInMainWorld('robos', {
   onDrumkitProgress: (cb) => subscribe('daw:drumkit-progress', cb),
   readAudioFile: (payload) => ipcRenderer.invoke('daw:read-audio-file', payload),
 
+  // DrumSet AI All-Mic Soundcheck Wizard (All Mics -> RobOS Agent / Gemini)
+  soundcheckStart: (payload) => ipcRenderer.invoke('daw:soundcheck-start', payload),
+  soundcheckCancel: () => ipcRenderer.invoke('daw:soundcheck-cancel'),
+  soundcheckStopAndClassify: (payload) => ipcRenderer.invoke('daw:soundcheck-stop-and-classify', payload),
+  soundcheckApply: (payload) => ipcRenderer.invoke('daw:soundcheck-apply', payload),
+  onSoundcheckLevels: (cb) => subscribe('daw:soundcheck-levels', cb),
+  onSoundcheckStatus: (cb) => subscribe('daw:soundcheck-status', cb),
+
   // Multi-Track Recording & Project Save / Open
   recordStart: (payload) => ipcRenderer.invoke('daw:record-start', payload),
   recordStop: (payload) => ipcRenderer.invoke('daw:record-stop', payload),

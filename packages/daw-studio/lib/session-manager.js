@@ -15,9 +15,9 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const crypto = require('crypto');
-const { spawn } = require('child_process');
 const { getMicProfile } = require('./mic-profiles');
 const { computeWaveformPeaks, detectDrumTransients } = require('./drum-instruments');
+const { startDiscreteCaptureSession } = require('./pcm-capture');
 
 function getProjectsRoot() {
   if (process.env.ROBOS_DAW_PROJECTS_DIR) return process.env.ROBOS_DAW_PROJECTS_DIR;
@@ -377,76 +377,47 @@ class MultiTrackRecorder {
 
     const { takesDir } = ensureProjectDir(project);
     const sampleRate = Number(project.sampleRate) || 48000;
-    const startedAtMs = Date.now();
-    const entries = [];
 
-    for (const track of armedTracks) {
+    const entries = armedTracks.map(track => {
       const clipId = makeId('take');
       const fileName = `${slugify(track.shortLabel || track.name)}-${clipId}.wav`;
       const wavFile = path.join(takesDir, fileName);
-      const args = ['--rate', String(sampleRate), '--channels', '1', '--format', 's16'];
-      if (track.inputNodeName) {
-        args.push('--target', String(track.inputNodeName));
-      }
-      args.push(wavFile);
-
-      const child = spawn('pw-record', args, { stdio: ['ignore', 'ignore', 'pipe'] });
-      entries.push({
+      return {
+        id: track.id,
         trackId: track.id,
         trackName: track.name,
         profileId: track.profileId,
+        inputNodeName: track.inputNodeName || '',
         soundReplacement: track.soundReplacement,
         clipId,
         fileName,
         wavFile,
         relativeWavPath: path.join('takes', fileName),
-        child,
-        closed: new Promise((resolve) => {
-          child.on('close', () => resolve());
-          child.on('error', () => resolve());
-        }),
-      });
-    }
+      };
+    });
 
-    const pollTimer = setInterval(() => {
-      if (!this.active) return;
-      const elapsedSec = Number(((Date.now() - startedAtMs) / 1000).toFixed(2));
-      const trackProgress = entries.map(e => {
-        let bytes = 0;
-        let peakDb = -96;
-        try {
-          if (fs.existsSync(e.wavFile)) {
-            const st = fs.statSync(e.wavFile);
-            bytes = st.size;
-            if (bytes > 2048) {
-              const tailLen = Math.min(4096, bytes - 44);
-              const fd = fs.openSync(e.wavFile, 'r');
-              const tail = Buffer.alloc(tailLen - (tailLen % 2));
-              fs.readSync(fd, tail, 0, tail.length, bytes - tail.length);
-              fs.closeSync(fd);
-              let max = 0;
-              for (let p = 0; p + 2 <= tail.length; p += 2) {
-                const a = Math.abs(tail.readInt16LE(p)) / 32768;
-                if (a > max) max = a;
-              }
-              peakDb = max <= 0.000015 ? -96 : Number((20 * Math.log10(max)).toFixed(1));
-            }
-          }
-        } catch {}
-        return { trackId: e.trackId, clipId: e.clipId, bytes, peakDb };
-      });
-      if (onMeter) {
+    const capture = startDiscreteCaptureSession(entries, {
+      sampleRate,
+      meterIntervalMs: 150,
+      onMeter: ({ elapsedSec, tracks }) => {
+        if (!onMeter) return;
+        const trackProgress = tracks.map((m, idx) => ({
+          trackId: entries[idx].trackId,
+          clipId: entries[idx].clipId,
+          bytes: m.bytes,
+          peakDb: m.peakDb,
+        }));
         try { onMeter({ elapsedSec, startSec, tracks: trackProgress }); } catch {}
-      }
-    }, 180);
+      },
+    });
 
     this.active = {
       project,
       startSec: Number(startSec) || 0,
       sampleRate,
-      startedAtMs,
+      startedAtMs: capture.startedAtMs,
       entries,
-      pollTimer,
+      capture,
     };
 
     return {
@@ -461,17 +432,9 @@ class MultiTrackRecorder {
     if (!this.active) return { ok: false, error: 'Not currently recording' };
     const session = this.active;
     this.active = null;
-    clearInterval(session.pollTimer);
 
     const wallDurationSec = Math.max(0.4, (Date.now() - session.startedAtMs) / 1000);
-
-    for (const entry of session.entries) {
-      try { entry.child.kill('SIGINT'); } catch {}
-    }
-    await Promise.race([
-      Promise.all(session.entries.map(e => e.closed)),
-      new Promise(r => setTimeout(r, 2000)),
-    ]);
+    await session.capture.stop();
 
     const recordedClips = [];
     for (const entry of session.entries) {

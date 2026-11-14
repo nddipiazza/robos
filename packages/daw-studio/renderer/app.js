@@ -33,6 +33,15 @@ let wizProfileId = 'kick-in';
 let wizSelectedChannelName = '';
 let wizTapLevels = {};
 
+// DrumSet AI Soundcheck Wizard State
+let aiProviders = [];
+let preferredAiProvider = 'antigravity';
+let scStage = 'ready'; // 'ready' | 'recording' | 'analyzing' | 'results'
+let scSelectedInputs = new Set();
+let scArmedInputsList = [];
+let scClassifications = [];
+let scLastProviderLabel = '';
+
 const DEFAULT_TIMELINE_SECONDS = 16;
 
 function esc(str) {
@@ -1255,6 +1264,366 @@ async function finishAddMicWizard({ addAnother = false } = {}) {
   }
 }
 
+// ─── DRUMSET AI ALL-MIC SOUNDCHECK WIZARD ───────────────────────────────────
+
+function populateScAiProviderSelect() {
+  const sel = document.getElementById('sc-ai-provider');
+  if (!sel) return;
+  const list = aiProviders.length ? aiProviders : [
+    { id: 'antigravity', name: 'Gemini CLI / Antigravity' },
+    { id: 'claude-code', name: 'Claude Code' },
+    { id: 'github-copilot', name: 'GitHub Copilot' },
+    { id: 'codex', name: 'Codex' },
+  ];
+  // Put Gemini / Antigravity first
+  const sorted = [...list].sort((a, b) => (a.id === 'antigravity' ? -1 : b.id === 'antigravity' ? 1 : 0));
+  sel.innerHTML = sorted.map(p =>
+    `<option value="${esc(p.id)}"${p.id === preferredAiProvider ? ' selected' : ''}>${esc(p.name)}${p.id === 'antigravity' ? ' (Recommended — Multimodal Audio)' : ''}</option>`
+  ).join('');
+}
+
+function selectScInputPreset(mode = 'focusrite') {
+  const ordered = getOrderedInputs();
+  scSelectedInputs.clear();
+  for (const inp of ordered) {
+    const desc = String(inp.description || '');
+    const isAdat = /adat|direct/i.test(desc);
+    const isSpdif = /s\/pdif|spdif/i.test(desc);
+    if (mode === 'focusrite') {
+      // Enable Analog 1-8 + ADAT 9-16 by default on Focusrite (or all inputs if no Focusrite)
+      if (inp.isFocusrite ? !isSpdif : !ordered.some(x => x.isFocusrite)) {
+        scSelectedInputs.add(inp.name);
+      }
+    } else if (mode === 'analog') {
+      if (inp.isFocusrite && !isAdat && !isSpdif) scSelectedInputs.add(inp.name);
+    } else if (mode === 'adat') {
+      if (inp.isFocusrite && isAdat) scSelectedInputs.add(inp.name);
+    }
+  }
+  if (scSelectedInputs.size === 0 && ordered.length) {
+    ordered.slice(0, 8).forEach(i => scSelectedInputs.add(i.name));
+  }
+  renderScInputsGrid();
+}
+
+function renderScInputsGrid() {
+  const grid = document.getElementById('sc-inputs-grid');
+  const countEl = document.getElementById('sc-selected-count');
+  if (!grid) return;
+  const ordered = getOrderedInputs();
+  if (countEl) countEl.textContent = String(scSelectedInputs.size);
+
+  grid.innerHTML = ordered.map(inp => {
+    const checked = scSelectedInputs.has(inp.name);
+    const desc = String(inp.description || '');
+    const tag = /adat/i.test(desc) ? 'ADAT' : (/spdif|s\/pdif/i.test(desc) ? 'S/PDIF' : (inp.isFocusrite ? 'Analog' : 'Host'));
+    const shortDesc = desc.replace(/^Scarlett\s+\S+\s+(?:3rd\s+Gen\s+)?/i, '');
+    return `
+      <label class="sc-input-chip ${checked ? 'checked' : ''}">
+        <input type="checkbox" data-sc-inp="${esc(inp.name)}" ${checked ? 'checked' : ''} />
+        <span>${esc(shortDesc || desc)}</span>
+        <span class="tag">${esc(tag)}</span>
+      </label>
+    `;
+  }).join('');
+
+  grid.querySelectorAll('[data-sc-inp]').forEach(chk => {
+    chk.addEventListener('change', () => {
+      if (chk.checked) scSelectedInputs.add(chk.dataset.scInp);
+      else scSelectedInputs.delete(chk.dataset.scInp);
+      renderScInputsGrid();
+    });
+  });
+}
+
+function setScStage(stage) {
+  scStage = stage;
+  document.getElementById('sc-stage-ready')?.classList.toggle('hidden', stage !== 'ready');
+  document.getElementById('sc-stage-recording')?.classList.toggle('hidden', stage !== 'recording' && stage !== 'analyzing');
+  document.getElementById('sc-stage-results')?.classList.toggle('hidden', stage !== 'results');
+
+  document.getElementById('sc-pill-1')?.classList.toggle('active', stage === 'ready');
+  document.getElementById('sc-pill-2')?.classList.toggle('active', stage === 'recording' || stage === 'analyzing');
+  document.getElementById('sc-pill-3')?.classList.toggle('active', stage === 'results');
+
+  document.getElementById('sc-live-banner')?.classList.toggle('hidden', stage !== 'recording');
+  document.getElementById('sc-analyzing-box')?.classList.toggle('hidden', stage !== 'analyzing');
+
+  document.getElementById('btn-sc-start')?.classList.toggle('hidden', stage !== 'ready');
+  document.getElementById('btn-sc-stop-analyze')?.classList.toggle('hidden', stage !== 'recording');
+  document.getElementById('btn-sc-apply')?.classList.toggle('hidden', stage !== 'results');
+  document.getElementById('btn-sc-record-again')?.classList.toggle('hidden', stage !== 'results');
+}
+
+function openDrumsetWizard() {
+  stopPlayback();
+  window.robos.wizardStopTapDetect();
+  document.getElementById('add-mic-wizard-modal')?.classList.add('hidden');
+  populateScAiProviderSelect();
+  if (scSelectedInputs.size === 0) {
+    selectScInputPreset('focusrite');
+  } else {
+    renderScInputsGrid();
+  }
+  setScStage('ready');
+  document.getElementById('drumset-wizard-modal')?.classList.remove('hidden');
+}
+
+async function closeDrumsetWizard() {
+  if (scStage === 'recording') {
+    await window.robos.soundcheckCancel();
+  }
+  setScStage('ready');
+  document.getElementById('drumset-wizard-modal')?.classList.add('hidden');
+}
+
+async function startDrumsetSoundcheck() {
+  const inputNodeNames = Array.from(scSelectedInputs);
+  if (!inputNodeNames.length) {
+    showStatus('Select at least one capture input channel first.', true);
+    return;
+  }
+  const res = await window.robos.soundcheckStart({ inputNodeNames });
+  if (!res?.ok) {
+    showStatus(`Could not start soundcheck: ${res?.error || 'Unknown error'}`, true);
+    return;
+  }
+  scArmedInputsList = res.inputs || [];
+  document.getElementById('sc-live-timer').textContent = '00:00.0';
+  document.getElementById('sc-live-title').textContent = `● RECORDING ALL ${scArmedInputsList.length} ARMED CHANNELS — PLAY YOUR DRUM SET NOW!`;
+
+  const grid = document.getElementById('sc-live-meters-grid');
+  if (grid) {
+    grid.innerHTML = scArmedInputsList.map((inp, idx) => {
+      const chNum = idx + 1;
+      const shortDesc = String(inp.description || inp.name).replace(/^Scarlett\s+\S+\s+(?:3rd\s+Gen\s+)?/i, '');
+      return `
+        <div class="sc-meter-card" id="sc-meter-card-${chNum}">
+          <div class="sc-meter-top">
+            <span>Ch ${chNum}: ${esc(shortDesc)}</span>
+            <span class="sc-peak-badge mono" id="sc-peak-badge-${chNum}">Max -∞</span>
+          </div>
+          <div class="wiz-ch-bar">
+            <div class="wiz-ch-bar-fill" id="sc-bar-fill-${chNum}" style="width:0%"></div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+  setScStage('recording');
+}
+
+async function stopAndAnalyzeDrumsetSoundcheck() {
+  const stopBtn = document.getElementById('btn-sc-stop-analyze');
+  if (stopBtn) stopBtn.disabled = true;
+  setScStage('analyzing');
+
+  const preferredProvider = document.getElementById('sc-ai-provider')?.value || 'antigravity';
+  const simulateKitGroove = Boolean(document.getElementById('chk-sc-simulate')?.checked);
+
+  document.getElementById('sc-analyzing-title').textContent = 'Analyzing multi-channel recordings with RobOS Agent (Gemini)…';
+  document.getElementById('sc-analyzing-detail').textContent = 'Measuring fundamental pitch, snare-wire sizzle, cymbal decay & cross-channel bleed dominance…';
+
+  const res = await window.robos.soundcheckStopAndClassify({
+    preferredProvider,
+    simulateKitGroove,
+  });
+  if (stopBtn) stopBtn.disabled = false;
+
+  if (!res?.ok) {
+    setScStage('ready');
+    showStatus(`Soundcheck analysis failed: ${res?.error || 'Unknown error'}`, true);
+    return;
+  }
+
+  scClassifications = res.classifications || [];
+  scLastProviderLabel = res.providerLabel || res.provider || 'Gemini';
+  renderScResults(res);
+  setScStage('results');
+}
+
+async function playSoundcheckPreviewClip(filePath) {
+  if (!filePath) return;
+  try {
+    const ctx = ensureStudioAudioCtx();
+    const buf = await loadDecodedAudio(filePath, true);
+    if (!buf) throw new Error('Could not read soundcheck WAV');
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    src.connect(ctx.destination);
+    src.start();
+    showStatus(`🔊 Playing recorded soundcheck clip (${buf.duration.toFixed(1)}s)…`);
+  } catch (err) {
+    showStatus(`Clip preview error: ${err.message}`, true);
+  }
+}
+
+function renderScResults(meta = {}) {
+  const badge = document.getElementById('sc-provider-badge');
+  const summaryEl = document.getElementById('sc-results-summary');
+  const unusedCountEl = document.getElementById('sc-unused-count');
+  const showUnused = Boolean(document.getElementById('chk-sc-show-unused')?.checked);
+  const listEl = document.getElementById('sc-results-list');
+  if (!listEl) return;
+
+  const activeCount = scClassifications.filter(c => c.includeTrack && c.profileId !== 'unused').length;
+  const unusedCount = scClassifications.length - activeCount;
+
+  if (badge) badge.textContent = `✨ Classified via ${scLastProviderLabel}`;
+  if (summaryEl) {
+    summaryEl.textContent = `Identified ${activeCount} active mic(s) out of ${scClassifications.length} inputs${meta.durationSec ? ` (${meta.durationSec}s soundcheck)` : ''}`;
+  }
+  if (unusedCountEl) unusedCountEl.textContent = String(unusedCount);
+
+  const visibleItems = showUnused
+    ? scClassifications
+    : scClassifications.filter(c => c.includeTrack || !c.features?.isSilent);
+
+  const defaultKit = (drumkitsStatus?.kits || [])[0];
+  const allPieces = Object.values(defaultKit?.pieces || {
+    kick: { id: 'kick', label: 'Bass / Kick Drum' },
+    snare: { id: 'snare', label: 'Acoustic Snare Drum' },
+    'rack-tom': { id: 'rack-tom', label: 'Rack Tom' },
+    'floor-tom': { id: 'floor-tom', label: 'Floor Tom' },
+    hihat: { id: 'hihat', label: 'Closed Hi-Hat' },
+    crash: { id: 'crash', label: 'Crash Cymbal' },
+    ride: { id: 'ride', label: 'Ride Cymbal' },
+  });
+
+  if (!visibleItems.length) {
+    listEl.innerHTML = `
+      <div class="card" style="text-align:center;padding:24px;">
+        <strong>All ${scClassifications.length} channels were quiet (&lt; -48 dBFS) during this take.</strong>
+        <p class="hint">Check your Focusrite gain knobs or click "↺ Re-Record Soundcheck" and hit the drums firmly!</p>
+      </div>
+    `;
+    return;
+  }
+
+  listEl.innerHTML = visibleItems.map((item) => {
+    const idx = scClassifications.indexOf(item);
+    const shortHw = String(item.inputLabel || '').replace(/^Scarlett\s+\S+\s+(?:3rd\s+Gen\s+)?/i, '');
+    const profOptions = [
+      ...micProfiles.map(p => `<option value="${esc(p.id)}"${p.id === item.profileId ? ' selected' : ''}>${esc(p.name)}</option>`),
+      `<option value="unused"${item.profileId === 'unused' ? ' selected' : ''}>— Unused / Unplugged —</option>`,
+    ].join('');
+
+    const pieceOpts = allPieces.map(p =>
+      `<option value="${esc(p.id)}"${p.id === item.replacementPieceId ? ' selected' : ''}>${esc(p.label)}</option>`
+    ).join('');
+
+    const peakStr = item.features?.peakDb <= -90 ? '-∞ dB' : `${item.features?.peakDb} dB`;
+    const confPct = Math.round((Number(item.confidence) || 0.85) * 100);
+
+    return `
+      <div class="sc-result-row ${item.includeTrack ? '' : 'excluded'}" data-sc-idx="${idx}">
+        <input type="checkbox" data-sc-act="include" data-idx="${idx}" ${item.includeTrack ? 'checked' : ''} title="Include &amp; arm this track" />
+        <img class="sc-result-thumb" src="${esc(item.image || 'assets/mics/snare-mic.webp')}" alt="" />
+        <div>
+          <div style="font-weight:700;font-size:12px;">Ch ${item.channelIndex}: ${esc(shortHw)}</div>
+          <div class="hint mono">Peak ${esc(peakStr)} · ${item.features?.transientCount || 0} hits</div>
+          ${item.wavFile ? `<button type="button" class="btn btn-sm" style="height:22px;padding:0 7px;margin-top:4px;font-size:10.5px;" data-sc-act="listen" data-idx="${idx}">🔊 Play Clip</button>` : ''}
+        </div>
+        <div>
+          <select class="select" style="height:29px;font-size:12px;margin-bottom:4px;" data-sc-act="profile" data-idx="${idx}">${profOptions}</select>
+          <input type="text" class="text-input" style="height:27px;font-size:12px;" data-sc-act="name" data-idx="${idx}" value="${esc(item.suggestedTrackName)}" />
+        </div>
+        <div class="sc-reason-text">
+          <span class="sc-conf-pill">${confPct}%</span>${esc(item.reasoning)}
+          ${item.phaseInvert ? '<div style="color:#fde047;font-weight:700;margin-top:2px;">Ø Auto Polarity Inverted</div>' : ''}
+        </div>
+        <div>
+          <label class="checkbox-row" style="margin:0 0 4px;font-size:11.5px;">
+            <input type="checkbox" data-sc-act="sr-toggle" data-idx="${idx}" ${item.soundReplacementEnabled ? 'checked' : ''} />
+            <span>🥁 Sound Replace</span>
+          </label>
+          <select class="select" style="height:27px;font-size:11.5px;" data-sc-act="sr-piece" data-idx="${idx}" ${item.soundReplacementEnabled ? '' : 'disabled'}>${pieceOpts}</select>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  listEl.querySelectorAll('[data-sc-act]').forEach(el => {
+    const idx = Number(el.dataset.idx);
+    const item = scClassifications[idx];
+    if (!item) return;
+    const act = el.dataset.scAct;
+
+    if (act === 'listen') {
+      el.addEventListener('click', () => playSoundcheckPreviewClip(item.previewWavFile || item.wavFile));
+    } else if (act === 'include') {
+      el.addEventListener('change', () => {
+        item.includeTrack = el.checked;
+        if (el.checked && item.profileId === 'unused') {
+          item.profileId = 'drum-room';
+          const prof = micProfiles.find(p => p.id === 'drum-room') || micProfiles[0];
+          item.suggestedTrackName = prof.shortLabel;
+          item.image = prof.image;
+        }
+        renderScResults();
+      });
+    } else if (act === 'profile') {
+      el.addEventListener('change', () => {
+        item.profileId = el.value;
+        if (el.value === 'unused') {
+          item.includeTrack = false;
+          item.soundReplacementEnabled = false;
+        } else {
+          const prof = micProfiles.find(p => p.id === el.value) || micProfiles[0];
+          item.includeTrack = true;
+          item.suggestedTrackName = prof.shortLabel;
+          item.image = prof.image;
+          item.phaseInvert = Boolean(prof.fx?.phaseInvert);
+          item.soundReplacementEnabled = Boolean(prof.soundReplacement?.enabled);
+          item.replacementPieceId = prof.soundReplacement?.pieceId || 'snare';
+        }
+        renderScResults();
+      });
+    } else if (act === 'name') {
+      el.addEventListener('input', () => { item.suggestedTrackName = el.value; });
+    } else if (act === 'sr-toggle') {
+      el.addEventListener('change', () => {
+        item.soundReplacementEnabled = el.checked;
+        renderScResults();
+      });
+    } else if (act === 'sr-piece') {
+      el.addEventListener('change', () => { item.replacementPieceId = el.value; });
+    }
+  });
+}
+
+async function applyDrumsetWizardResults() {
+  const applyBtn = document.getElementById('btn-sc-apply');
+  if (applyBtn) applyBtn.disabled = true;
+
+  const replaceExistingTracks = Boolean(document.getElementById('chk-sc-replace-tracks')?.checked);
+  const importSoundcheckTakes = Boolean(document.getElementById('chk-sc-import-takes')?.checked);
+  const applyHardwareHints = Boolean(document.getElementById('chk-sc-hw-hints')?.checked);
+
+  const res = await window.robos.soundcheckApply({
+    classifications: scClassifications,
+    replaceExistingTracks,
+    importSoundcheckTakes,
+    applyHardwareHints,
+  });
+  if (applyBtn) applyBtn.disabled = false;
+
+  if (!res?.ok) {
+    showStatus(`Failed to apply DrumSet setup: ${res?.error || 'Unknown error'}`, true);
+    return;
+  }
+
+  currentProject = res.project;
+  if (res.audioSnapshot) renderSnapshot(res.audioSnapshot);
+  selectedTrackId = currentProject?.tracks?.[0]?.id || null;
+  decodedBufferCache.clear();
+  markDirty(true);
+  await closeDrumsetWizard();
+  switchView('studio-stage');
+  renderStudio();
+  showStatus(`🥁 Configured & armed ${res.addedCount} studio mic track(s) via ${scLastProviderLabel}! Press ▶ Play to hear your soundcheck or ● Record for a new take.`);
+}
+
 // ─── Project Save / Open / Drum Kits Modals ─────────────────────────────────
 
 async function saveCurrentSession(saveAsDialog = false) {
@@ -1667,11 +2036,27 @@ async function init() {
   document.querySelectorAll('.nav-btn[data-view]').forEach(btn => {
     btn.addEventListener('click', () => switchView(btn.dataset.view));
   });
+  document.getElementById('nav-open-drumset-wizard')?.addEventListener('click', openDrumsetWizard);
   document.getElementById('nav-open-wizard-rail')?.addEventListener('click', openAddMicWizard);
 
   // Studio CTAs
+  document.getElementById('btn-open-drumset-wizard')?.addEventListener('click', openDrumsetWizard);
+  document.getElementById('btn-empty-open-drumset-wizard')?.addEventListener('click', openDrumsetWizard);
+  document.getElementById('btn-switch-to-drumset-wizard')?.addEventListener('click', openDrumsetWizard);
   document.getElementById('btn-open-add-mic-wizard')?.addEventListener('click', openAddMicWizard);
   document.getElementById('btn-empty-open-wizard')?.addEventListener('click', openAddMicWizard);
+
+  // DrumSet AI Soundcheck Wizard Controls
+  document.getElementById('btn-sc-close')?.addEventListener('click', closeDrumsetWizard);
+  document.getElementById('btn-sc-cancel')?.addEventListener('click', closeDrumsetWizard);
+  document.getElementById('btn-sc-sel-focusrite')?.addEventListener('click', () => selectScInputPreset('focusrite'));
+  document.getElementById('btn-sc-sel-analog')?.addEventListener('click', () => selectScInputPreset('analog'));
+  document.getElementById('btn-sc-sel-adat')?.addEventListener('click', () => selectScInputPreset('adat'));
+  document.getElementById('btn-sc-start')?.addEventListener('click', startDrumsetSoundcheck);
+  document.getElementById('btn-sc-stop-analyze')?.addEventListener('click', stopAndAnalyzeDrumsetSoundcheck);
+  document.getElementById('btn-sc-record-again')?.addEventListener('click', () => setScStage('ready'));
+  document.getElementById('btn-sc-apply')?.addEventListener('click', applyDrumsetWizardResults);
+  document.getElementById('chk-sc-show-unused')?.addEventListener('change', () => renderScResults());
 
   // Session File Controls
   document.getElementById('project-name-input')?.addEventListener('change', async (e) => {
@@ -1927,6 +2312,36 @@ async function init() {
     }
   });
 
+  window.robos.onSoundcheckLevels((data) => {
+    if (scStage !== 'recording') return;
+    const sec = Number(data?.elapsedSec || 0);
+    const mins = Math.floor(sec / 60);
+    const rem = (sec - mins * 60).toFixed(1).padStart(4, '0');
+    const timerEl = document.getElementById('sc-live-timer');
+    if (timerEl) timerEl.textContent = `${String(mins).padStart(2, '0')}:${rem}`;
+
+    for (const ch of (data?.channels || [])) {
+      const idx = ch.channelIndex;
+      const fill = document.getElementById(`sc-bar-fill-${idx}`);
+      const badge = document.getElementById(`sc-peak-badge-${idx}`);
+      const card = document.getElementById(`sc-meter-card-${idx}`);
+      if (fill) fill.style.width = `${dbToPercent(ch.peakDb).toFixed(1)}%`;
+      if (badge) {
+        badge.textContent = ch.maxPeakDb <= -90 ? 'Max -∞' : `Max ${ch.maxPeakDb.toFixed(1)} dB`;
+      }
+      if (card && ch.maxPeakDb >= -38) {
+        card.classList.add('hit-active');
+      }
+    }
+  });
+
+  window.robos.onSoundcheckStatus((st) => {
+    if (st?.message) {
+      const detail = document.getElementById('sc-analyzing-detail');
+      if (detail) detail.textContent = st.message;
+    }
+  });
+
   window.robos.onDrumkitProgress((prog) => {
     const pBar = document.getElementById('drumkits-progress-bar');
     if (pBar) {
@@ -1945,6 +2360,8 @@ async function init() {
   if (boot?.ok) {
     micProfiles = boot.micProfiles || [];
     drumkitsStatus = boot.drumkitsStatus || { kits: [] };
+    aiProviders = boot.aiProviders || [];
+    preferredAiProvider = boot.preferredAiProvider || 'antigravity';
     currentProject = boot.currentProject;
     savedProjectsState = boot.savedProjects || { projects: [] };
     selectedTrackId = currentProject?.tracks?.[0]?.id || null;
@@ -1965,7 +2382,11 @@ window.__dawStudioState = () => ({
   isPlaying,
   wizStep,
   wizProfileId,
+  scStage,
+  scSelectedCount: scSelectedInputs.size,
+  scClassificationsCount: scClassifications.length,
   drumkitsInstalled: (drumkitsStatus?.kits || []).filter(k => k.installed).map(k => k.id),
 });
+window.__openDrumsetWizard = openDrumsetWizard;
 
 init();

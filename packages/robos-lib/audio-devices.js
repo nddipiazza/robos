@@ -249,14 +249,25 @@ function parseWpctlDefaults(wpctlText) {
   return defaultIds;
 }
 
+function parseChannelTarget(targetNodeName) {
+  const raw = String(targetNodeName || '');
+  const m = raw.match(/^([^#]+)#ch=(\d+)(?:&total=(\d+))?$/);
+  if (!m) return { baseNodeName: raw, channelIndex: null, totalChannels: 1 };
+  return {
+    baseNodeName: m[1],
+    channelIndex: parseInt(m[2], 10),
+    totalChannels: parseInt(m[3] || '8', 10),
+  };
+}
+
 function endpointPriority(desc) {
   const s = String(desc || '');
+  if (/ADAT/i.test(s)) return 2;
+  if (/S\/PDIF|SPDIF/i.test(s)) return 4;
   if (/Input \d/i.test(s)) return 1;
   if (/Line Output 1\+2/i.test(s)) return 1;
   if (/Headphones/i.test(s)) return 2;
   if (/Line Output/i.test(s)) return 3;
-  if (/S\/PDIF/i.test(s)) return 4;
-  if (/ADAT/i.test(s)) return 5;
   return 6;
 }
 
@@ -286,6 +297,30 @@ function parsePipeWireNodes(pwNodesText, defaultIds = new Set()) {
 
     const isFocusrite = /focusrite|scarlett|clarett|vocaster/i.test(`${nodeName} ${description}`);
     const serialMatch = nodeName.match(/Scarlett_[^_]+_USB_([A-Z0-9]+)-/i);
+    const audioChannels = parseInt(getProp('audio.channels') || '0', 10);
+
+    // Expand multi-channel Focusrite ADAT Optical Input (8 channels) into 8 discrete studio inputs
+    if (mediaClass === 'Audio/Source' && (/ADAT Optical Input/i.test(description) || /HiFi__Direct2__source/i.test(nodeName))) {
+      const totalCh = audioChannels >= 2 ? audioChannels : 8;
+      const prefix = description.replace(/\s*ADAT Optical Input.*$/i, '').trim() || 'Focusrite';
+      for (let ch = 0; ch < totalCh; ch++) {
+        inputs.push({
+          id,
+          name: `${nodeName}#ch=${ch}&total=${totalCh}`,
+          baseNodeName: nodeName,
+          channelIndex: ch,
+          totalChannels: totalCh,
+          description: `${prefix} ADAT Input ${ch + 1} (Ch ${ch + 9})`,
+          mediaClass,
+          isDefault: false,
+          isFocusrite,
+          isAdat: true,
+          serial: serialMatch ? serialMatch[1] : null,
+        });
+      }
+      continue;
+    }
+
     const entry = {
       id,
       name: nodeName,
@@ -501,6 +536,43 @@ function analyzeWavSamples(buffer) {
 
 function testInputCapture({ targetNodeName = '', durationMs = 1500 } = {}) {
   return new Promise((resolve) => {
+    const { baseNodeName, channelIndex, totalChannels } = parseChannelTarget(targetNodeName);
+    if (channelIndex !== null) {
+      const args = ['--record', '--raw', '--rate', '48000', '--channels', String(totalChannels), '--format', 's16'];
+      if (baseNodeName) args.push('--target', baseNodeName);
+      args.push('-');
+      const child = spawn('pw-cat', args, { stdio: ['ignore', 'pipe', 'ignore'] });
+      const chunks = [];
+      child.stdout.on('data', c => chunks.push(c));
+      setTimeout(() => { try { child.kill('SIGINT'); } catch {} }, Math.max(400, Math.min(4000, durationMs)));
+      child.on('close', () => {
+        const raw = Buffer.concat(chunks);
+        const frameBytes = totalChannels * 2;
+        const frames = Math.floor(raw.length / frameBytes);
+        if (frames < 32) return resolve({ ok: false, error: 'No audio frames captured from ADAT channel.' });
+        const wav = Buffer.alloc(44 + frames * 2);
+        wav.write('RIFF', 0);
+        wav.writeUInt32LE(36 + frames * 2, 4);
+        wav.write('WAVE', 8);
+        wav.write('fmt ', 12);
+        wav.writeUInt32LE(16, 16);
+        wav.writeUInt16LE(1, 20);
+        wav.writeUInt16LE(1, 22);
+        wav.writeUInt32LE(48000, 24);
+        wav.writeUInt32LE(96000, 28);
+        wav.writeUInt16LE(2, 32);
+        wav.writeUInt16LE(16, 34);
+        wav.write('data', 36);
+        wav.writeUInt32LE(frames * 2, 40);
+        for (let f = 0; f < frames; f++) {
+          wav.writeInt16LE(raw.readInt16LE(f * frameBytes + channelIndex * 2), 44 + f * 2);
+        }
+        const stats = analyzeWavSamples(wav);
+        resolve({ ok: true, targetNodeName, durationMs, ...stats });
+      });
+      return;
+    }
+
     const tmpFile = path.join(os.tmpdir(), `robos-audio-probe-${ process.pid }-${Date.now()}.wav`);
     const args = ['--rate', '48000', '--channels', '1', '--format', 's16'];
     if (targetNodeName) args.push('--target', String(targetNodeName));

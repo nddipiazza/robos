@@ -27,6 +27,9 @@
         <button type="button" class="nav-btn active" id="nav-studio-stage" data-view="studio-stage">
           <span>⏺ Recording Studio</span>
         </button>
+        <button type="button" class="nav-btn" id="nav-open-drumset-wizard">
+          <span>🥁 DrumSet AI Wizard</span>
+        </button>
         <button type="button" class="nav-btn" id="nav-open-wizard-rail">
           <span>🎙️ + Add Mic Wizard</span>
         </button>
@@ -82,6 +85,7 @@
             </div>
 
             <div class="studio-cta-group">
+              <button type="button" class="btn btn-accent-outline btn-wizard-cta" id="btn-open-drumset-wizard" title="Enable all mics, play your drum set, and let Gemini identify &amp; configure every channel automatically">🥁 DrumSet AI Wizard</button>
               <button type="button" class="btn btn-primary btn-wizard-cta" id="btn-open-add-mic-wizard">🎙️ + Add Mic Wizard</button>
             </div>
           </div>
@@ -95,9 +99,10 @@
               <img src="assets/mics/guitar-mic.webp" alt="Guitar Mic" />
             </div>
             <h2>Arm Your Microphones &amp; Instruments</h2>
-            <p>Open the <strong>Add Mic Wizard</strong> for each microphone in your setup (Kick In, Kick Out, Snare Top, Snare Bottom Ø, Toms 1–3, Floor Toms 1–2, Hi-Hat, Ride, Spot Cymbals, Overheads, Room, Guitar, Bass, Vocals) — strike the instrument or tap the mic to auto-detect its channel, auto-apply open-source LV2/VST EQ, and configure Drum Sound Replacement.</p>
+            <p>Have a full drum kit mic'd up? Launch the <strong>DrumSet AI Soundcheck Wizard</strong> to arm all Focusrite + ADAT channels at once, play your drums, and let Gemini automatically identify Bass Drum, Snare, Toms, Cymbals &amp; Room mics and apply each mic's LV2/VST EQ + Sound Replacement — or add mics one by one in the <strong>Add Mic Wizard</strong>.</p>
             <div class="empty-actions">
-              <button type="button" class="btn btn-primary btn-lg" id="btn-empty-open-wizard">🎙️ Open Add Mic Wizard</button>
+              <button type="button" class="btn btn-primary btn-lg" id="btn-empty-open-drumset-wizard">🥁 DrumSet AI Soundcheck (All Mics → Gemini)</button>
+              <button type="button" class="btn btn-accent-outline btn-lg" id="btn-empty-open-wizard">🎙️ Add Mic Wizard (One by One)</button>
             </div>
           </div>
 
@@ -225,6 +230,13 @@
       <div class="modal-body" id="wiz-body">
         <!-- Step 1: Big Menu of AI-Illustrated Mic Cards -->
         <div id="wiz-step-1">
+          <div class="drumset-switch-callout">
+            <div>
+              <strong>🥁 Setting up a multi-mic drum kit?</strong>
+              <span>Try <strong>DrumSet AI Soundcheck</strong> — arm all inputs at once, play around the kit, and let Gemini identify every mic &amp; dial in EQ + Drum Replacement automatically!</span>
+            </div>
+            <button type="button" class="btn btn-primary btn-sm" id="btn-switch-to-drumset-wizard">Open DrumSet AI Wizard →</button>
+          </div>
           <div class="wiz-filter-bar">
             <div class="filter-pills">
               <button type="button" class="filter-pill active" data-cat="all">All Studio Mics (18)</button>
@@ -421,6 +433,129 @@
       <div class="modal-footer">
         <button type="button" class="btn btn-primary" id="btn-download-all-kits">⬇ Download / Verify All Open Kits</button>
         <button type="button" class="btn" id="btn-drumkits-done">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL 4: DRUMSET AI ALL-MIC SOUNDCHECK WIZARD ==================== -->
+  <div id="drumset-wizard-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="sc-modal-title">
+    <div class="modal-window wizard-modal">
+      <div class="modal-header">
+        <div>
+          <h2 id="sc-modal-title">🥁 DrumSet AI Soundcheck Wizard</h2>
+          <p class="modal-subtitle" id="sc-modal-subtitle">Enable all mics, play your drum set, and let RobOS Agent (Gemini) identify &amp; configure every channel automatically</p>
+        </div>
+        <div class="wizard-steps-pills">
+          <span class="wiz-pill active" id="sc-pill-1">1. Enable All Mics</span>
+          <span class="wiz-pill" id="sc-pill-2">2. Play Drum Set</span>
+          <span class="wiz-pill" id="sc-pill-3">3. Gemini Auto-Setup</span>
+        </div>
+        <button type="button" class="modal-close" id="btn-sc-close" aria-label="Close DrumSet AI Wizard">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Stage 1: Select / Enable All Hardware Inputs & AI Provider -->
+        <div id="sc-stage-ready">
+          <div class="sc-hero-guide">
+            <div class="sc-hero-text">
+              <h3>How to Play Your Soundcheck</h3>
+              <ol class="sc-steps-list">
+                <li>Click <strong>● Start All-Mic Soundcheck</strong> below — all selected Focusrite Analog + ADAT channels arm together.</li>
+                <li>Give <strong>2–3 quick hits per piece</strong> (<strong>Kick → Snare → each Tom → Hi-Hat → Cymbals</strong>) so close-mic peaks stand out cleanly from room bleed, then play a short <strong>full-kit groove</strong>!</li>
+                <li>Click <strong>⏹ Stop &amp; Identify All Mics with Gemini</strong> — RobOS Agent inspects the audio &amp; spectral peaks, finds Bass Drum, Snare, Toms, Cymbals &amp; Other mics, and configures LV2/VST EQ + Sound Replacement per track.</li>
+              </ol>
+            </div>
+            <div class="sc-provider-box">
+              <label for="sc-ai-provider">RobOS AI Agent (Prefers Gemini)</label>
+              <select id="sc-ai-provider" class="select"></select>
+              <label class="checkbox-row" style="margin:10px 0 0;" title="For automated testing only — leave unchecked to record your real physical drum set!">
+                <input type="checkbox" id="chk-sc-simulate" />
+                <span class="hint">Simulate test drum stems (offline demo)</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="sc-inputs-toolbar">
+            <div>
+              <strong>Hardware Inputs to Listen On (<span id="sc-selected-count">0</span> armed)</strong>
+              <span class="hint" style="margin-left:8px;">Includes Focusrite Scarlett Analog Inputs 1–8 + Discrete ADAT Optical Channels 9–16</span>
+            </div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <button type="button" class="btn btn-sm" id="btn-sc-sel-focusrite">All Focusrite + ADAT</button>
+              <button type="button" class="btn btn-sm" id="btn-sc-sel-analog">Analog 1–8 Only</button>
+              <button type="button" class="btn btn-sm" id="btn-sc-sel-adat">ADAT 9–16 Only</button>
+            </div>
+          </div>
+
+          <div id="sc-inputs-grid" class="sc-inputs-grid"></div>
+        </div>
+
+        <!-- Stage 2: Live Multi-Channel Recording & Gemini Analysis Progress -->
+        <div id="sc-stage-recording" class="hidden">
+          <div class="sc-live-banner" id="sc-live-banner">
+            <div class="sc-live-left">
+              <span class="rec-dot recording" style="width:14px;height:14px;"></span>
+              <div>
+                <div class="sc-live-title" id="sc-live-title">● RECORDING ALL ARMED MICS — PLAY YOUR DRUM SET NOW!</div>
+                <div class="hint" id="sc-live-sub">Hit Kick → Snare → Toms → Hi-Hat / Cymbals, then play a groove. Channels turn green as hits register!</div>
+              </div>
+            </div>
+            <div class="sc-live-timer mono" id="sc-live-timer">00:00.0</div>
+          </div>
+
+          <div id="sc-analyzing-box" class="sc-analyzing-box hidden">
+            <div class="sc-spinner"></div>
+            <div>
+              <strong id="sc-analyzing-title">Sending multi-channel soundcheck to Gemini…</strong>
+              <div class="hint" id="sc-analyzing-detail">Extracting fundamental pitch, snare-wire sizzle, cymbal decay &amp; bleed dominance…</div>
+            </div>
+          </div>
+
+          <div id="sc-live-meters-grid" class="sc-live-meters-grid"></div>
+        </div>
+
+        <!-- Stage 3: Gemini Classification Review & 1-Click Auto-Configure -->
+        <div id="sc-stage-results" class="hidden">
+          <div class="sc-results-header">
+            <div>
+              <span class="badge-connected" id="sc-provider-badge">✨ Classified via Gemini</span>
+              <span class="hint" id="sc-results-summary" style="margin-left:8px;"></span>
+            </div>
+            <label class="checkbox-row" style="margin:0;">
+              <input type="checkbox" id="chk-sc-show-unused" />
+              <span>Show silent / unplugged inputs (<span id="sc-unused-count">0</span>)</span>
+            </label>
+          </div>
+
+          <div id="sc-results-list" class="sc-results-list"></div>
+
+          <div class="sc-apply-options">
+            <label class="checkbox-row" style="margin:0;">
+              <input type="checkbox" id="chk-sc-replace-tracks" checked />
+              <span>Replace existing session tracks with this detected setup</span>
+            </label>
+            <label class="checkbox-row" style="margin:0;">
+              <input type="checkbox" id="chk-sc-import-takes" checked />
+              <span>Place recorded soundcheck WAV stems onto the timeline so you can press ▶ Play right away</span>
+            </label>
+            <label class="checkbox-row" style="margin:0;">
+              <input type="checkbox" id="chk-sc-hw-hints" checked />
+              <span>Auto-apply Focusrite Scarlett preamp Air / Line / Inst hints</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <div style="display:flex;gap:8px;">
+          <button type="button" class="btn hidden" id="btn-sc-record-again">↺ Re-Record Soundcheck</button>
+        </div>
+        <div class="modal-footer-right">
+          <button type="button" class="btn" id="btn-sc-cancel">Cancel</button>
+          <button type="button" class="btn btn-rec-giant" id="btn-sc-start">● Start All-Mic Soundcheck</button>
+          <button type="button" class="btn btn-primary btn-lg hidden" id="btn-sc-stop-analyze">⏹ Stop &amp; Identify All Mics with Gemini</button>
+          <button type="button" class="btn btn-primary btn-lg hidden" id="btn-sc-apply">✓ Apply Settings &amp; Arm Detected Drum Set</button>
+        </div>
       </div>
     </div>
   </div>

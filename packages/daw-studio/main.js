@@ -27,6 +27,22 @@ const {
   reanalyzeTrackTransients,
   MultiTrackRecorder,
 } = require('./lib/session-manager');
+const {
+  getSoundchecksRoot,
+  classifySoundcheckWithAgent,
+  applyClassifiedDrumsetToProject,
+  SoundcheckSessionRecorder,
+} = require('./lib/drumset-ai-classifier');
+
+// Ensure user CLI bin directories (where `agy`, `gemini`, `claude`, `copilot` live) are in PATH
+for (const extraBin of [
+  path.join(process.env.HOME || os.homedir(), '.local', 'bin'),
+  path.join(process.env.HOME || os.homedir(), '.npm-global', 'bin'),
+]) {
+  if (fs.existsSync(extraBin) && !(process.env.PATH || '').split(path.delimiter).includes(extraBin)) {
+    process.env.PATH = `${extraBin}${path.delimiter}${process.env.PATH || ''}`;
+  }
+}
 
 app.commandLine.appendSwitch('no-sandbox');
 app.commandLine.appendSwitch('disable-gpu');
@@ -43,6 +59,15 @@ for (const p of [
   '/usr/local/share/robos/robos-lib/audio-devices',
 ].filter(Boolean)) {
   try { audioDevices = require(p); break; } catch {}
+}
+
+let aiAgent = null;
+for (const p of [
+  process.env.ROBOS_LIB_PATH && path.join(process.env.ROBOS_LIB_PATH, 'ai-agent'),
+  path.resolve(__dirname, '..', 'robos-lib', 'ai-agent'),
+  '/usr/local/share/robos/robos-lib/ai-agent',
+].filter(Boolean)) {
+  try { aiAgent = require(p); break; } catch {}
 }
 
 let _debugServer = null;
@@ -69,6 +94,8 @@ let currentProject = null;
 
 const tapDetector = new MultiChannelTapDetector();
 const recorder = new MultiTrackRecorder();
+const soundcheckRecorder = new SoundcheckSessionRecorder();
+let lastSoundcheckSession = null;
 
 function computeSignature(snap) {
   if (!snap || !snap.ok) return 'err';
@@ -186,6 +213,9 @@ function createWindow() {
     if (recorder.isRecording()) {
       recorder.stop().catch(() => {});
     }
+    if (soundcheckRecorder.isRecording()) {
+      soundcheckRecorder.cancel().catch(() => {});
+    }
     mainWindow = null;
   });
 }
@@ -256,12 +286,15 @@ ipcMain.handle('daw:get-studio-init', async () => {
     const audioSnapshot = audioDevices.getAudioDevicesSnapshot();
     lastUsbSignature = computeSignature(audioSnapshot);
     const project = ensureCurrentProject(audioSnapshot);
+    const providers = (aiAgent?.PROVIDERS || []).map(p => ({ id: p.id, name: p.name }));
     return {
       ok: true,
       audioSnapshot,
       micProfiles: MIC_PROFILES,
       drumkitsStatus: inspectInstalledKits(),
       systemPlugins: discoverSystemLinuxPlugins(),
+      aiProviders: providers,
+      preferredAiProvider: 'antigravity',
       currentProject: project,
       savedProjects: listProjects(),
     };
@@ -454,6 +487,7 @@ ipcMain.handle('daw:read-audio-file', async (_e, payload) => {
     const allowedRoots = [
       path.resolve(getInstrumentsRoot()),
       path.resolve(getProjectsRoot()),
+      path.resolve(getSoundchecksRoot()),
       path.resolve(os.tmpdir()),
       currentProject?.projectDir ? path.resolve(currentProject.projectDir) : null,
     ].filter(Boolean);
@@ -470,6 +504,119 @@ ipcMain.handle('daw:read-audio-file', async (_e, payload) => {
       base64: buf.toString('base64'),
       byteLength: buf.length,
       ext,
+    };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+// ─── DrumSet AI All-Mic Soundcheck Wizard IPC ───────────────────────────────
+
+ipcMain.handle('daw:soundcheck-start', async (_e, payload) => {
+  try {
+    tapDetector.stop();
+    if (recorder.isRecording()) await recorder.stop();
+    if (soundcheckRecorder.isRecording()) await soundcheckRecorder.cancel();
+
+    const snap = audioDevices.getAudioDevicesSnapshot();
+    const orderedInputs = getOrderedCaptureInputs(snap);
+    const requestedNames = Array.isArray(payload?.inputNodeNames) && payload.inputNodeNames.length
+      ? new Set(payload.inputNodeNames)
+      : null;
+
+    let selectedInputs = requestedNames
+      ? orderedInputs.filter(n => requestedNames.has(n.name))
+      : orderedInputs.filter(n => n.isFocusrite);
+    if (!selectedInputs.length) selectedInputs = orderedInputs;
+
+    const sampleRate = Number(snap?.clock?.effectiveRate) || 48000;
+    const started = soundcheckRecorder.start(selectedInputs, {
+      sampleRate,
+      onMeter: (m) => sendToRenderer('daw:soundcheck-levels', m),
+    });
+    return {
+      ...started,
+      inputs: selectedInputs,
+    };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('daw:soundcheck-cancel', async () => {
+  try {
+    return await soundcheckRecorder.cancel();
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('daw:soundcheck-stop-and-classify', async (_e, payload) => {
+  try {
+    const simulateKitGroove = Boolean(payload?.simulateKitGroove);
+    const preferredProvider = String(payload?.preferredProvider || 'antigravity');
+
+    sendToRenderer('daw:soundcheck-status', {
+      stage: 'dsp',
+      message: 'Finalizing multi-channel WAV stems & extracting spectral/transient signatures…',
+    });
+
+    const stopped = await soundcheckRecorder.stop({ simulateKitGroove });
+    if (!stopped?.ok) return stopped;
+    lastSoundcheckSession = stopped;
+
+    const classified = await classifySoundcheckWithAgent(stopped, {
+      preferredProvider,
+      aiAgentModule: aiAgent,
+      onProgress: (st) => sendToRenderer('daw:soundcheck-status', st),
+    });
+    if (!classified?.ok) return classified;
+
+    return {
+      ok: true,
+      sessionId: stopped.sessionId,
+      dir: stopped.dir,
+      durationSec: stopped.durationSec,
+      via: classified.via,
+      provider: classified.provider,
+      providerLabel: classified.providerLabel,
+      classifications: classified.classifications,
+    };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('daw:soundcheck-apply', async (_e, payload) => {
+  try {
+    const snap = audioDevices.getAudioDevicesSnapshot();
+    const proj = ensureCurrentProject(snap);
+    const {
+      classifications = [],
+      importSoundcheckTakes = false,
+      replaceExistingTracks = true,
+      applyHardwareHints = false,
+    } = payload || {};
+
+    if (applyHardwareHints) {
+      for (const item of classifications) {
+        if (!item.includeTrack || item.profileId === 'unused') continue;
+        const prof = getMicProfile(item.profileId);
+        maybeApplyFocusriteHints(snap, item.inputLabel, prof);
+      }
+    }
+
+    const applied = applyClassifiedDrumsetToProject(proj, classifications, {
+      importSoundcheckTakes: Boolean(importSoundcheckTakes),
+      replaceExistingTracks: Boolean(replaceExistingTracks),
+    });
+    currentProject = applied.project;
+    const updatedSnap = applyHardwareHints ? audioDevices.getAudioDevicesSnapshot() : snap;
+    return {
+      ok: true,
+      addedCount: applied.addedCount,
+      project: currentProject,
+      audioSnapshot: updatedSnap,
     };
   } catch (err) {
     return { ok: false, error: err.message };

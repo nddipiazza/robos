@@ -23,6 +23,15 @@ const {
   synthesizeDrumTakeWav,
   MultiTrackRecorder,
 } = require('../lib/session-manager');
+const { parseChannelTarget, makeWavHeader } = require('../lib/pcm-capture');
+const {
+  extractChannelAcousticFeatures,
+  computeCrossChannelCorrelations,
+  synthesizeRealisticSoundcheckRoleWav,
+  classifySoundcheckHeuristic,
+  classifySoundcheckWithAgent,
+  applyClassifiedDrumsetToProject,
+} = require('../lib/drumset-ai-classifier');
 
 describe('audio-devices & Focusrite Linux Pro-Audio parser', () => {
   it('identifies Focusrite Scarlett 18i20 3rd Gen (1235:8215) in lsusb output', () => {
@@ -237,6 +246,133 @@ describe('Add Mic Wizard profiles, open-source drum kits & session persistence',
       if (prevCfgDir === undefined) delete process.env.ROBOS_DAW_CONFIG_DIR;
       else process.env.ROBOS_DAW_CONFIG_DIR = prevCfgDir;
       fs.rmSync(tmpRoot, { recursive: true, force: true });
+    }
+  });
+});
+
+describe('DrumSet AI All-Mic Soundcheck & Discrete 8-Channel ADAT Expansion', () => {
+  it('expands Focusrite ADAT Optical source into 8 discrete selectable inputs (Ch 9..Ch 16)', () => {
+    const pwCliOut = [
+      'id 119, type PipeWire:Interface:Node/3',
+      '  media.class = "Audio/Source"',
+      '  node.name = "alsa_input.usb-Focusrite_Scarlett_18i20_USB-00.HiFi__Direct2__source"',
+      '  node.description = "Scarlett 18i20 3rd Gen ADAT Optical Input"',
+    ].join('\n');
+    const parsed = ad.parsePipeWireNodes(pwCliOut);
+    assert.strictEqual(parsed.inputs.length, 8);
+    assert.strictEqual(parsed.inputs[0].description, 'Scarlett 18i20 3rd Gen ADAT Input 1 (Ch 9)');
+    assert.strictEqual(parsed.inputs[7].description, 'Scarlett 18i20 3rd Gen ADAT Input 8 (Ch 16)');
+    const tgt = parseChannelTarget(parsed.inputs[2].name);
+    assert.strictEqual(tgt.channelIndex, 2);
+    assert.strictEqual(tgt.totalChannels, 8);
+    assert.strictEqual(makeWavHeader(96000, 48000).length, 44);
+  });
+
+  it('extracts spectral/transient signatures, prefers Gemini (antigravity) via RobOS Agent, and auto-configures Kick, Snare, Toms, Cymbals & Other mics', async () => {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'robos-sc-test-'));
+    try {
+      const roles = [
+        'kick-in',
+        'snare-top',
+        'snare-bottom',
+        'tom-rack-1',
+        'tom-rack-2',
+        'tom-floor-1',
+        'hihat-mic',
+        'cymbal-overhead',
+        'guitar-cab',
+        'silent',
+      ];
+
+      const channels = roles.map((role, idx) => {
+        const channelIndex = idx + 1;
+        const wavBuf = synthesizeRealisticSoundcheckRoleWav(role, 4.5, 48000);
+        const wavFile = path.join(tmpDir, `ch-${channelIndex}.wav`);
+        fs.writeFileSync(wavFile, wavBuf);
+        const features = extractChannelAcousticFeatures(wavBuf);
+        return {
+          channelIndex,
+          inputNodeName: `alsa_input.scarlett.ch${channelIndex}`,
+          inputLabel: `Scarlett 18i20 Input ${channelIndex}`,
+          wavFile,
+          previewFileName: features.isSilent ? null : `ch-${channelIndex}.wav`,
+          previewWavFile: features.isSilent ? null : wavFile,
+          features,
+        };
+      });
+
+      computeCrossChannelCorrelations(channels);
+
+      // Verify deterministic physics/spectral classifier baseline finds kick, snare, ordered toms, cymbals, guitar, and unused
+      const heur = classifySoundcheckHeuristic(channels);
+      assert.strictEqual(heur[0].profileId, 'kick-in');
+      assert.strictEqual(heur[1].profileId, 'snare-top');
+      assert.strictEqual(heur[2].profileId, 'snare-bottom');
+      assert.strictEqual(heur[3].profileId, 'tom-rack-1');
+      assert.strictEqual(heur[4].profileId, 'tom-rack-2');
+      assert.strictEqual(heur[5].profileId, 'tom-floor-1');
+      assert.strictEqual(heur[6].profileId, 'hihat-mic');
+      assert.strictEqual(heur[7].profileId, 'cymbal-overhead');
+      assert.strictEqual(heur[9].profileId, 'unused');
+
+      // Verify `classifySoundcheckWithAgent` invokes `antigravity` (Gemini) FIRST and hydrates proper settings
+      const calls = [];
+      const mockAiAgent = {
+        PROVIDERS: [
+          { id: 'github-copilot', name: 'GitHub Copilot' },
+          { id: 'antigravity', name: 'Gemini CLI / Antigravity' },
+        ],
+        PROVIDER_MAP: {
+          'github-copilot': { id: 'github-copilot', name: 'GitHub Copilot' },
+          antigravity: { id: 'antigravity', name: 'Gemini CLI / Antigravity' },
+        },
+        getActiveProviderId: () => 'github-copilot',
+        ask: async (prompt, opts) => {
+          calls.push({ prompt, opts });
+          return {
+            ok: true,
+            via: 'cli',
+            provider: opts.providerId,
+            text: JSON.stringify({
+              channels: heur.map(h => ({
+                channelIndex: h.channelIndex,
+                profileId: h.profileId,
+                suggestedTrackName: h.suggestedTrackName,
+                pan: h.pan,
+                confidence: 0.96,
+                reasoning: h.reasoning,
+              })),
+            }),
+          };
+        },
+      };
+
+      const agentRes = await classifySoundcheckWithAgent(
+        { sessionId: 'sc-unit', dir: tmpDir, channels },
+        { aiAgentModule: mockAiAgent }
+      );
+      assert.strictEqual(agentRes.ok, true);
+      assert.strictEqual(calls.length, 1);
+      assert.strictEqual(calls[0].opts.providerId, 'antigravity', 'Must prefer Gemini (antigravity) first');
+      assert.strictEqual(agentRes.provider, 'antigravity');
+      assert.ok(fs.existsSync(path.join(tmpDir, 'soundcheck-features.json')));
+
+      // Apply classified drumset to project and verify LV2/EQ, Phase Invert, Pan, Sound Replacement & Stems
+      const proj = createEmptyProject({ name: 'Gemini Auto-Detected Kit' });
+      const applied = applyClassifiedDrumsetToProject(proj, agentRes.classifications, {
+        importSoundcheckTakes: true,
+        replaceExistingTracks: true,
+      });
+      assert.strictEqual(applied.addedCount, 9); // 9 active mics, 1 silent skipped
+      const snareBot = proj.tracks.find(t => t.profileId === 'snare-bottom');
+      assert.ok(snareBot);
+      assert.strictEqual(snareBot.fx.phaseInvert, true);
+      const kickTrk = proj.tracks.find(t => t.profileId === 'kick-in');
+      assert.strictEqual(kickTrk.soundReplacement.enabled, true);
+      assert.strictEqual(kickTrk.soundReplacement.pieceId, 'kick');
+      assert.strictEqual(kickTrk.clips.length, 1);
+    } finally {
+      fs.rmSync(tmpDir, { recursive: true, force: true });
     }
   });
 });
