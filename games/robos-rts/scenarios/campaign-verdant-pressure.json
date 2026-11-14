@@ -1,0 +1,137 @@
+{
+  "name": "Verdant Pressure",
+  "seed": 920,
+  "fog_of_war": true,
+  "decor": true,
+  "map": {
+    "width": 232,
+    "height": 232,
+    "terrain_grid": "res://assets/terrain/campaign-verdant-pressure-terrain.json"
+  },
+  "players": {
+    "1": {
+      "faction": "humans",
+      "crystal": 400,
+      "aether": 150
+    },
+    "2": {
+      "faction": "aliens",
+      "crystal": 0,
+      "aether": 0
+    }
+  },
+  "mission": {
+    "defend": [
+      183,
+      179
+    ],
+    "raid_origins": [
+      [
+        175,
+        91
+      ],
+      [
+        116,
+        130
+      ],
+      [
+        206,
+        89
+      ]
+    ],
+    "samples": [
+      {
+        "point": [
+          54,
+          111
+        ]
+      },
+      {
+        "point": [
+          103,
+          39
+        ]
+      },
+      {
+        "point": [
+          212,
+          80
+        ]
+      }
+    ],
+    "vents": [
+      "vent_1",
+      "vent_2",
+      "vent_3",
+      "vent_4",
+      "vent_5",
+      "vent_6",
+      "vent_7",
+      "vent_8",
+      "vent_9",
+      "vent_10",
+      "vent_11",
+      "vent_12",
+      "vent_13"
+    ],
+    "seal_origin": [
+      152,
+      110
+    ]
+  },
+  "resources": [
+    {"type":"crystal_field","x":170,"y":192,"amount":1700},
+    {"type":"crystal_field","x":174,"y":195,"amount":1700},
+    {"type":"crystal_field","x":178,"y":197,"amount":1700},
+    {"type":"crystal_field","x":183,"y":198,"amount":1700},
+    {"type":"crystal_field","x":188,"y":197,"amount":1700},
+    {"type":"crystal_field","x":192,"y":195,"amount":1700},
+    {"type":"crystal_field","x":196,"y":192,"amount":1700},
+    {"type":"aether_vent","x":167,"y":182,"amount":2500},
+    {"type":"aether_vent","x":199,"y":182,"amount":2500}
+  ],
+  "units": [
+    {"type":"colony_hub","owner":1,"x":183,"y":179,"id":"operation_hub"},
+    {"type":"muster_hall","owner":1,"x":170,"y":170,"id":"operation_hall"},
+    {"type":"research_module","owner":1,"x":175.5,"y":170,"id":"operation_module"},
+    {"type":"workshop","owner":1,"x":197,"y":169},
+    {"type":"silo","owner":1,"x":172,"y":181},
+    {"type":"silo","owner":1,"x":193,"y":183},
+    {"type":"aether_tap","owner":1,"x":167,"y":182},
+    {"type":"pioneer","owner":1,"x":178,"y":187,"count":8,"auto_harvest":true},
+    {"type":"rifleman","owner":1,"x":178,"y":164,"count":8,"spread":2},
+    {"type":"triage_specialist","owner":1,"x":186,"y":165,"count":2},
+    {"type":"gas_altar","owner":0,"x":144,"y":157,"id":"vent_1"},
+    {"type":"gas_altar","owner":0,"x":176,"y":145,"id":"vent_2"},
+    {"type":"gas_altar","owner":0,"x":207,"y":159,"id":"vent_3"},
+    {"type":"gas_altar","owner":0,"x":138,"y":118,"id":"vent_4"},
+    {"type":"gas_altar","owner":0,"x":174,"y":106,"id":"vent_5"},
+    {"type":"gas_altar","owner":0,"x":210,"y":105,"id":"vent_6"},
+    {"type":"gas_altar","owner":0,"x":109,"y":116,"id":"vent_7"},
+    {"type":"gas_altar","owner":0,"x":88,"y":95,"id":"vent_8"},
+    {"type":"gas_altar","owner":0,"x":57,"y":143,"id":"vent_9"},
+    {"type":"gas_altar","owner":0,"x":106,"y":62,"id":"vent_10"},
+    {"type":"gas_altar","owner":0,"x":46,"y":54,"id":"vent_11"},
+    {"type":"gas_altar","owner":0,"x":148,"y":45,"id":"vent_12"},
+    {"type":"gas_altar","owner":0,"x":202,"y":37,"id":"vent_13"},
+    {"type":"warden_walker","owner":1,"x":179,"y":158},
+    {"type":"warden_walker","owner":1,"x":185,"y":158},
+    {"type":"sunblade","owner":2,"x":134,"y":123},
+    {"type":"sunblade","owner":2,"x":170,"y":103},
+    {"type":"sunblade","owner":2,"x":194,"y":92},
+    {"type":"sunblade","owner":2,"x":108,"y":101},
+    {"type":"sunblade","owner":2,"x":60,"y":138},
+    {"type":"sunblade","owner":2,"x":197,"y":45},
+    {"type":"sunblade","owner":2,"x":107,"y":57},
+    {"type":"sunblade","owner":2,"x":51,"y":108},
+    {"type":"skirmisher","owner":2,"x":168,"y":102},
+    {"type":"skirmisher","owner":2,"x":205,"y":91},
+    {"type":"skirmisher","owner":2,"x":147,"y":43},
+    {"type":"skirmisher","owner":2,"x":99,"y":42},
+    {"type":"prism_ray","owner":2,"x":98,"y":88},
+    {"type":"prism_ray","owner":2,"x":156,"y":92},
+    {"type":"contract_post","owner":1,"x":168,"y":159},
+    {"type":"sunblade","owner":2,"x":211,"y":155},
+    {"type":"skirmisher","owner":2,"x":216,"y":160}
+  ]
+}

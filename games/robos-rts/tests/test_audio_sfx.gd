@@ -30,6 +30,7 @@ func _run() -> void:
 	_test_brood_support_cues()
 	_test_campaign_voices()
 	_test_captain_vale_voice()
+	await _test_combat_sound_burst()
 	print("PASS test_audio_sfx (%d SFX and %d voice streams verified)" % [audio.SOUND_FILES.size(), audio.voice_streams.size()])
 	quit(0)
 
@@ -49,6 +50,22 @@ func _test_all_wav_files_loaded() -> void:
 	assert(audio.has_sfx("gunfire"), "Alias 'gunfire' should resolve")
 	assert(audio.has_sfx("melee_attack"), "Alias 'melee_attack' should resolve")
 	assert(audio.has_sfx("melee_strike"), "Alias 'melee_strike' should resolve")
+
+func _test_combat_sound_burst() -> void:
+	sim.reset_state(101, 64.0, 64.0)
+	audio.reset_stats()
+	var previous_volume: int = audio.volume_percent
+	audio.volume_percent = 100
+	audio.force_headless_playback = true
+	var accepted := 0
+	for _shot in 2000:
+		accepted += int(audio.play_at("rifle_fire", Vector2(32, 32)))
+	assert(accepted > 0 and accepted <= audio.WORLD_SOUND_BURST, "Simultaneous shots fit within the audio mix budget")
+	while Time.get_ticks_msec() < audio._world_sound_window_ms:
+		await process_frame
+	assert(audio.play_at("mortar_fire", Vector2(32, 32)), "New combat sounds play after a burst")
+	audio.force_headless_playback = false
+	audio.volume_percent = previous_volume
 
 func _test_unit_weapon_metadata() -> void:
 	var armed_units := [

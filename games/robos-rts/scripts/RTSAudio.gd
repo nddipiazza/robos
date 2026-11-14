@@ -8,7 +8,10 @@ signal sfx_triggered(sfx_key: String, world_pos: Vector2, is_ui: bool)
 signal dialogue_spoken(unit_type: String, category: String, line_id: String, text: String)
 
 const DEFAULT_SAMPLE_RATE: int = 22050
-const WORLD_PLAYER_POOL_SIZE: int = 16
+const WORLD_VOICE_LIMIT := 6
+const WORLD_SOUND_WINDOW_MS := 100
+const WORLD_SOUND_BURST := 3
+const WORLD_MIX_HEADROOM_DB := -7.0
 const UI_PLAYER_POOL_SIZE: int = 4
 const MAX_RECENT_SFX: int = 32
 
@@ -255,6 +258,8 @@ var _voice_player: AudioStreamPlayer = null
 var _recording: AudioEffectRecord
 var _recording_gain: AudioEffectAmplify
 var _world_player_cursor: int = 0
+var _world_sound_window_ms := 0
+var _world_sounds_in_window := 0
 var _ui_player_cursor: int = 0
 
 var world_3d: Node = null
@@ -342,7 +347,7 @@ func _init_player_pools() -> void:
 	_world_players.clear()
 	_ui_players.clear()
 
-	for i in range(WORLD_PLAYER_POOL_SIZE):
+	for i in range(WORLD_VOICE_LIMIT):
 		var player := AudioStreamPlayer.new()
 		player.name = "WorldSFXPlayer_%d" % i
 		player.bus = "SFX"
@@ -545,6 +550,8 @@ func reset_stats() -> void:
 	last_spoken_text = ""
 	recent_dialogues.clear()
 	_last_play_time_sec.clear()
+	_world_sound_window_ms = 0
+	_world_sounds_in_window = 0
 	_last_voice_time_sec = -999.0
 	_last_auto_attack_voice_sec = -999.0
 	_last_weapon_attack_tick = -1
@@ -650,22 +657,31 @@ func play_at(sfx_key: String, world_pos: Vector2, volume_offset_db: float = 0.0,
 	if not _check_and_stamp_cooldown(resolved):
 		return false
 
-	_record_sfx_trigger(resolved, world_pos, false)
-
 	if not _should_output_audio():
+		_record_sfx_trigger(resolved, world_pos, false)
 		return true
 
 	var stream: AudioStreamWAV = sound_streams[resolved]
 	if stream == null or _world_players.is_empty():
 		return false
+	var now := Time.get_ticks_msec()
+	if now >= _world_sound_window_ms:
+		_world_sound_window_ms = now + WORLD_SOUND_WINDOW_MS
+		_world_sounds_in_window = 0
+	if _world_sounds_in_window >= WORLD_SOUND_BURST:
+		return false
+	var player := _acquire_world_player()
+	if player == null:
+		return false
+	_world_sounds_in_window += 1
+	_record_sfx_trigger(resolved, world_pos, false)
 
 	var base_db: float = float(SOUND_VOLUME_OFFSET_DB.get(resolved, 0.0))
-	var final_db: float = clampf(base_db + volume_offset_db + spatial_db, -60.0, 6.0)
+	var final_db: float = clampf(base_db + volume_offset_db + spatial_db + WORLD_MIX_HEADROOM_DB, -60.0, 0.0)
 	var pitch: float = 1.0
 	if pitch_jitter > 0.0:
 		pitch = _pitch_rng.randf_range(1.0 - pitch_jitter, 1.0 + pitch_jitter)
 
-	var player := _acquire_world_player()
 	player.stream = stream
 	player.volume_db = final_db
 	player.pitch_scale = clampf(pitch, 0.5, 2.0)
@@ -730,9 +746,7 @@ func _acquire_world_player() -> AudioStreamPlayer:
 		if not p.playing:
 			_world_player_cursor = (idx + 1) % _world_players.size()
 			return p
-	var fallback: AudioStreamPlayer = _world_players[_world_player_cursor]
-	_world_player_cursor = (_world_player_cursor + 1) % _world_players.size()
-	return fallback
+	return null
 
 func _acquire_ui_player() -> AudioStreamPlayer:
 	for i in range(_ui_players.size()):
@@ -812,8 +826,10 @@ func _on_weapon_attack(attacker: Dictionary, target: Dictionary, weapon: Diction
 func _on_projectile_fired(from_pos: Vector2, to_pos: Vector2, weapon_name: String, is_splash: bool, _owner_id: int) -> void:
 	if SimEngine != null and _last_weapon_attack_tick == SimEngine.tick and _last_weapon_attack_pos.distance_squared_to(from_pos) < 0.05:
 		return
-	var sfx_key: String = str(WEAPON_NAME_TO_SFX.get(weapon_name, "rifle_fire"))
-	play_at(sfx_key, from_pos, 0.0, 0.055)
+	# Ability projectiles can have their own cue without a matching weapon report.
+	var sfx_key: String = str(WEAPON_NAME_TO_SFX.get(weapon_name, ""))
+	if not sfx_key.is_empty():
+		play_at(sfx_key, from_pos, 0.0, 0.055)
 	if MELEE_WEAPONS.has(weapon_name):
 		play_at("melee_hit", to_pos, -2.5, 0.06)
 	if is_splash:
@@ -823,6 +839,13 @@ func _on_ability_triggered(unit: Dictionary, ability_id: String, pos: Vector2) -
 	var ab_id: String = ability_id.to_lower()
 	if ab_id == "sentry_missile_impact":
 		play_at("sentry_impact", pos, -6.5, 0.04)
+		return
+	if ab_id == "sanctuary_purification":
+		play_at("crown_lance", pos, -2.0)
+		return
+	if ab_id == "vault_drill_beam":
+		if SimEngine.can_see_position(local_player_id, pos):
+			play_at("prism_beam", pos, -11.0, 0.025)
 		return
 	if ab_id == "mutation_nuclear_warning":
 		play_at("shade_strike_warning", pos)
@@ -962,6 +985,10 @@ func _on_sim_notice(owner_id: int, text: String, kind: String) -> void:
 			play_ui("ui_error")
 
 func _on_scenario_loaded(_scenario_name: String) -> void:
+	for player in _world_players:
+		player.stop()
+	_world_sound_window_ms = 0
+	_world_sounds_in_window = 0
 	_last_weapon_attack_tick = -1
 	_last_weapon_attack_pos = Vector2.INF
 	_last_match_outcome_tick = -1

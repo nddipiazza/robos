@@ -761,6 +761,8 @@ func _order_label(u: Dictionary) -> String:
 		"attack_target": return "Attacking"
 		"force_attack": return "Force-firing"
 		"harvest": return "Gathering"
+		"extract_canister": return "Extracting gas canister"
+		"deliver_canister": return "Returning gas canister"
 		"return_cargo": return "Returning cargo"
 		"build": return "Constructing"
 		"repair": return "Repairing"
@@ -881,6 +883,8 @@ func _draw_single(u: Dictionary) -> void:
 		if SimEngine.ladder_rules:
 			label = "Garrison  %d troops  ·  %d / %d slots" % [passengers.size(), SimEngine.transport_slots_used(u), capacity]
 		_text(Vector2(rx, ry + 12), label, 17, C_TEXT)
+		if not passengers.is_empty():
+			_text(Vector2(rx + 260.0, ry + 12), "Click a portrait to unload", 15, C_MUTED)
 		for i in range(capacity):
 			var slot := _production_rect(i)
 			_vgrad(slot, Color("#252c37"), Color("#12161c"))
@@ -947,11 +951,11 @@ func _draw_single(u: Dictionary) -> void:
 		elif exit_blocked:
 			_text(Vector2(rx + 100.0, ry + 12), "Exit blocked", 15, C_GOLD)
 		elif active_slots > 1:
-			_text(Vector2(rx + 100.0, ry + 12), "Two lines active  ·  Right-click to cancel", 15, C_GOLD)
+			_text(Vector2(rx + 100.0, ry + 12), "Two lines active  ·  Click a slot to cancel", 15, C_GOLD)
 		elif queue.size() > 1 and queue[1].progress > 0.0:
 			_text(Vector2(rx + 100.0, ry + 12), "Second job paused", 15, C_GOLD)
 		elif not queue.is_empty():
-			_text(Vector2(rx + 100.0, ry + 12), "Right-click a slot to cancel and refund", 15, C_MUTED)
+			_text(Vector2(rx + 100.0, ry + 12), "Click a slot to cancel and refund", 15, C_MUTED)
 		for i in range(5):
 			var qr := _production_rect(i)
 			_vgrad(qr, Color("#252c37"), Color("#12161c"))

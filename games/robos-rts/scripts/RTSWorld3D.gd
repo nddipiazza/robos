@@ -8,6 +8,7 @@ extends Node3D
 
 const Models = preload("res://scripts/RTSModels.gd")
 const LadderRules = preload("res://scripts/engine/RTSLadderRules.gd")
+const TerrainGrid = preload("res://scripts/engine/RTSTerrainGrid.gd")
 
 const CAM_PITCH_DEG := 56.0
 const CAM_MIN_H := 28.0
@@ -22,6 +23,7 @@ const AttackMotion = preload("res://scripts/RTSAttackMotion.gd")
 const SunbladeMotion = preload("res://scripts/RTSSunbladeMotion.gd")
 const SIEGE_RECOIL_KICK := 0.048
 const SIEGE_RECOIL_END := 0.22
+var _campaign_lava: MeshInstance3D
 
 var camera_3d: Camera3D
 var dir_light: DirectionalLight3D
@@ -295,6 +297,12 @@ func _noise_mat(key: String, c_dark: Color, c_light: Color, freq: float, tile: f
 # Static terrain
 # ---------------------------------------------------------------------------
 func _on_scenario_loaded(_name: String) -> void:
+	if is_instance_valid(_campaign_lava):
+		_campaign_lava.queue_free()
+		_campaign_lava = null
+	dir_light.light_energy = 0.6
+	dir_light.light_color = Color("#fff0d8")
+	world_env.environment.ambient_light_energy = 0.30
 	_fog_revision = -1
 	_living_ground_revision = -1
 	_living_ground_sight_revision = -1
@@ -487,6 +495,8 @@ func _rebuild_static_3d_map() -> void:
 			_terrain_polygon(region, 0.012, low)
 	if SimEngine.terrain_grid:
 		var road := _noise_mat("bracken_road", Color("#534937"), Color("#84765a"), 0.06, 16.0, 4)
+		if SimEngine.campaign != null and SimEngine.campaign.mission_index == SimEngine.Campaign.GAS:
+			ground_material = _noise_mat("verdant_ground", Color("#293b2b"), Color("#546449"), 0.045, 28.0)
 		_build_terrain_grid(ground_material, rock, road, water)
 	else:
 		_terrain_box(Vector3(mw, 1.0, mh), Vector3(mw * 0.5, -0.5, mh * 0.5), ground_material)
@@ -715,8 +725,23 @@ func _campaign_landmark(assault: bool) -> void:
 		]), Color("#6f6250"))
 	elif mission.mission_index == mission.EVACUATION:
 		_bracken_landmarks(steel, lights)
-	else:
-		var pad: Vector2 = mission.LANDING_ZONE
+	elif mission.mission_index == mission.RAIL:
+		for track in mission.operation.tracks:
+			_build_freight_track(track, steel)
+	elif mission.mission_index == mission.REDSTONE:
+		var bounds := SimEngine.terrain_grid.bounds
+		var plane := PlaneMesh.new()
+		plane.size = bounds.size
+		var magma := ShaderMaterial.new()
+		magma.shader = preload("res://scripts/rts_campaign_lava.gdshader")
+		_campaign_lava = MeshInstance3D.new()
+		_campaign_lava.mesh = plane
+		_campaign_lava.material_override = magma
+		_campaign_lava.position = Vector3(bounds.get_center().x, mission.frontier.lava_level, bounds.get_center().y)
+		_campaign_lava.hide()
+		add_child(_campaign_lava)
+	elif mission.mission_index in [mission.DEFENSE, mission.QUARANTINE]:
+		var pad: Vector2 = mission.Quarantine.LANDING if mission.quarantine != null else mission.LANDING_ZONE
 		var height := SimEngine.get_elevation_at(pad)
 		_terrain_box(Vector3(8.0, 0.14, 8.0), Vector3(pad.x, height + 0.07, pad.y), steel)
 		for offset in [-3.7, 3.7]:
@@ -737,7 +762,10 @@ func _build_terrain_grid(grass: Material, rock: Material, road: Material, water:
 					var c := Vector3(x, grid.vertex_height(x, y + 1), y + 1)
 					var d := Vector3(x + 1, grid.vertex_height(x + 1, y + 1), y + 1)
 					var surface := 2 if grid.road_at(x, y) else 0
-					if grid.cell_at(x, y) == grid.WATER:
+					var kind := grid.cell_at(x, y)
+					if kind == grid.CLIFF:
+						surface = 1
+					if kind == grid.WATER:
 						var level := grid.WATER_SURFACE
 						_grid_face(surfaces, 3, Vector3(a.x, level, a.z) - chunk, Vector3(b.x, level, b.z) - chunk, Vector3(c.x, level, c.z) - chunk)
 						_grid_face(surfaces, 3, Vector3(d.x, level, d.z) - chunk, Vector3(c.x, level, c.z) - chunk, Vector3(b.x, level, b.z) - chunk)
@@ -752,7 +780,7 @@ func _build_terrain_grid(grass: Material, rock: Material, road: Material, water:
 
 func _grid_face(surfaces: Dictionary, material_index: int, a: Vector3, b: Vector3, c: Vector3) -> void:
 	var normal := (c - a).cross(b - a).normalized()
-	if normal.y < 0.76:
+	if normal.y < TerrainGrid.CLIFF_FACE_NORMAL_Y:
 		material_index = 1
 	if not surfaces.has(material_index):
 		var surface := SurfaceTool.new()
@@ -764,19 +792,19 @@ func _grid_face(surfaces: Dictionary, material_index: int, a: Vector3, b: Vector
 		tool.add_vertex(vertex)
 
 func _bracken_landmarks(steel: Material, lights: Material) -> void:
-	var dock := Vector2(105, 35)
+	var dock := Vector2(157.5, 52.5)
 	var dock_height := SimEngine.get_elevation_at(dock)
-	_terrain_box(Vector3(17.0, 0.16, 13.0), Vector3(dock.x, dock_height + 0.1, dock.y), steel)
-	for offset in [-9.0, 9.0]:
-		_terrain_box(Vector3(0.20, 0.1, 12.0), Vector3(dock.x + offset, dock_height + 0.22, dock.y), lights)
-	for center in [Vector2(109, 38), Vector2(103, 31)]:
+	_terrain_box(Vector3(25.5, 0.16, 19.5), Vector3(dock.x, dock_height + 0.1, dock.y), steel)
+	for offset in [-13.5, 13.5]:
+		_terrain_box(Vector3(0.20, 0.1, 18.0), Vector3(dock.x + offset, dock_height + 0.22, dock.y), lights)
+	for center in [Vector2(163.5, 57), Vector2(154.5, 46.5)]:
 		var ship := Models.build("rampart_transport", 1)
 		ship.position = Vector3(center.x, dock_height + 1.1, center.y)
 		ship.rotation.y = PI
 		terrain_root.add_child(ship)
 	var soil := _noise_mat("bracken_field", Color("#4f4530"), Color("#7e6b41"), 0.08, 17.0)
 	var crops := _get_mat("bracken_crops", Color("#72834f"))
-	for field in [Rect2(44, 161, 16, 10), Rect2(51, 131, 10, 11), Rect2(84, 122, 10, 10)]:
+	for field in [Rect2(66, 241.5, 24, 15), Rect2(126, 183, 15, 15)]:
 		for row in range(1, int(field.size.y), 2):
 			for col in range(1, int(field.size.x), 2):
 				var point: Vector2 = field.position + Vector2(col, row)
@@ -785,6 +813,38 @@ func _bracken_landmarks(steel: Material, lights: Material) -> void:
 				var height := SimEngine.get_elevation_at(point)
 				_terrain_box(Vector3(1.8, 0.025, 1.8), Vector3(point.x, height + 0.035, point.y), soil)
 				_terrain_box(Vector3(1.5, 0.15, 0.36), Vector3(point.x, height + 0.12, point.y), crops)
+
+func _build_freight_track(points: PackedVector2Array, steel: Material) -> void:
+	var parts := BoxMesh.new()
+	parts.material = steel
+	var ties := BoxMesh.new()
+	ties.material = Models.mat("freight_ties", Color("#45372c"))
+	var rail_transforms: Array[Transform3D] = []
+	var tie_transforms: Array[Transform3D] = []
+	for index in range(1, points.size()):
+		var start := points[index - 1]
+		var end := points[index]
+		var angle := (end - start).angle()
+		var distance := start.distance_to(end)
+		var basis := Basis(Vector3.UP, -angle)
+		var rail_basis := basis * Basis.from_scale(Vector3(distance + 0.04, 0.13, 0.13))
+		var tie_basis := basis * Basis.from_scale(Vector3(0.27, 0.08, 2.45))
+		for offset in [-0.78, 0.78]:
+			var center: Vector2 = (start + end) * 0.5 + (end - start).normalized().orthogonal() * offset
+			rail_transforms.append(Transform3D(rail_basis, Vector3(center.x, 0.15, center.y)))
+		for step in range(1, floori(distance / 2.1) + 1):
+			var point := start.lerp(end, step * 2.1 / distance)
+			tie_transforms.append(Transform3D(tie_basis, Vector3(point.x, 0.05, point.y)))
+	for batch in [[parts, rail_transforms], [ties, tie_transforms]]:
+		var mesh := MultiMesh.new()
+		mesh.transform_format = MultiMesh.TRANSFORM_3D
+		mesh.mesh = batch[0]
+		mesh.instance_count = batch[1].size()
+		for index in mesh.instance_count:
+			mesh.set_instance_transform(index, batch[1][index])
+		var instance := MultiMeshInstance3D.new()
+		instance.multimesh = mesh
+		terrain_root.add_child(instance)
 
 func _campaign_road(points: PackedVector2Array, color: Color) -> void:
 	var road := _noise_mat("campaign_road_%s" % color.to_html(false), color.darkened(0.22), color.lightened(0.10), 0.065, 16.0, 4, 0.62)
@@ -977,7 +1037,14 @@ func sync_campaign_pickups(markers: Array) -> void:
 			_campaign_pickups.erase(key)
 
 func sync_3d_entities(selected_tags: Array[int], delta: float, local_player: int = 1) -> void:
+	if is_instance_valid(_campaign_lava):
+		_campaign_lava.visible = SimEngine.campaign != null and SimEngine.campaign.mission_index == SimEngine.Campaign.REDSTONE and SimEngine.campaign.frontier.lava_active
 	var sync_started = Time.get_ticks_usec()
+	if SimEngine.campaign != null and SimEngine.campaign.quarantine != null:
+		var daylight := SimEngine.campaign.quarantine.daylight(SimEngine)
+		dir_light.light_energy = lerpf(0.24, 0.6, daylight)
+		dir_light.light_color = Color("#8099d9").lerp(Color("#fff0d8"), daylight)
+		world_env.environment.ambient_light_energy = lerpf(0.22, 0.30, daylight)
 	_sync_fog(local_player)
 	fog_sync_ms = (Time.get_ticks_usec() - sync_started) / 1000.0
 	_sync_living_ground(local_player)
@@ -1154,6 +1221,10 @@ func sync_3d_entities(selected_tags: Array[int], delta: float, local_player: int
 				var pulse := 1.0 + 0.08 * sin(anim_time * 7.0)
 				transit_ring.scale = Vector3(pulse, 0.4, pulse)
 		var model := u_node.get_node_or_null("AttackModel") as Node3D
+		if ut == "gas_altar":
+			var plume := (model if model else u_node).find_child("VentPlume", true, false) as Node3D
+			if plume:
+				plume.visible = not u.get("campaign_vent_sealed", false)
 		var hover := (model if model else u_node).get_node_or_null("Hover")
 		if hover:
 			hover.position.y = 1.1 + sin(anim_time * 2.4 + float(u_tag)) * 0.12
@@ -1164,9 +1235,9 @@ func sync_3d_entities(selected_tags: Array[int], delta: float, local_player: int
 				hover.position.y = 0.92
 		if u.is_worker:
 			var cargo := u_node.get_node("ResourceCargo") as MeshInstance3D
-			cargo.visible = u.cargo_amount > 0
+			cargo.visible = u.cargo_amount > 0 or u.has("campaign_canister")
 			if cargo.visible:
-				cargo.material_override = cargo.get_meta(u.cargo_type)
+				cargo.material_override = Models.mat("verdant_canister", Color("#ac82ed"), Color("#b98bf6"), 0.7) if u.has("campaign_canister") else cargo.get_meta(u.cargo_type)
 
 		var sel_ring: MeshInstance3D = u_node.get_node_or_null("SelectionRing")
 		if sel_ring:
@@ -2205,6 +2276,19 @@ func _render_meridian_capital_ability(unit: Dictionary, ability: String, point: 
 			_spawn_burst(to, Color("#ffbc59"), 1.8, 0.48, 2.6, Vector3.UP, true)
 
 func _on_visual_ability(unit: Dictionary, ability: String, p: Vector2) -> void:
+	if ability == "vault_drill_beam":
+		if not _skip_transient_fx() and _effect_near_view(p) and SimEngine.can_see_position(_viewing_player, p):
+			var origin := Vector3(unit.pos.x, SimEngine.get_elevation_at(unit.pos) + 2.7, unit.pos.y)
+			var impact := Vector3(p.x, SimEngine.get_elevation_at(p) + 1.0, p.y)
+			_spawn_weapon_streak(origin, impact, Color("#6af1fc"), 0.66, 0.57)
+		return
+	if ability == "sanctuary_purification":
+		if not _skip_transient_fx() and _effect_near_view(p) and SimEngine.can_see_position(_viewing_player, p):
+			var origin := Vector3(unit.pos.x, unit.flight_height, unit.pos.y)
+			var impact := Vector3(p.x, SimEngine.get_elevation_at(p) + 0.4, p.y)
+			_spawn_weapon_streak(origin, impact, Color("#ffe1a2"), 2.0, 0.85)
+			_spawn_burst(impact, Color("#ffb553"), 4.0, 0.65, 3.0, Vector3.UP, true)
+		return
 	if ability == "sentry_missile_impact":
 		if not _skip_transient_fx() and _effect_near_view(p) and SimEngine.can_see_position(_viewing_player, p):
 			_spawn_burst(_sentry_impact_point(unit), Color("#ffdbaa"), 0.52, 0.15, 2.15)
@@ -2559,4 +2643,7 @@ func screen_to_world(spos: Vector2) -> Vector2:
 
 func _terrain_pick_height(point: Vector2) -> float:
 	var height := SimEngine.get_elevation_at(point)
-	return maxf(height, SimEngine.terrain_grid.WATER_SURFACE) if SimEngine.is_water_at(point) else height
+	return maxf(height, TerrainGrid.WATER_SURFACE) if SimEngine.is_water_at(point) else height
+
+func clicked_surface_offset(point: Vector2) -> float:
+	return _terrain_pick_height(point) - SimEngine.get_elevation_at(point) if SimEngine.terrain_grid else 0.0

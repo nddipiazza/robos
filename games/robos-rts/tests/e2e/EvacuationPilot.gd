@@ -2,12 +2,12 @@ extends RefCounted
 
 const Mission = preload("res://scripts/engine/RTSEvacuation.gd")
 const BUNKERS := ["road_bunker_west", "road_bunker_north"]
-const SILOS := [Vector2(30, 147), Vector2(25, 135), Vector2(32, 137),
-	Vector2(27, 133), Vector2(25, 128), Vector2(28, 128), Vector2(30, 129),
-	Vector2(34, 127), Vector2(35, 123), Vector2(39, 124), Vector2(44, 131),
-	Vector2(47, 136), Vector2(47, 146), Vector2(54, 142), Vector2(57, 139)]
-const HALLS := [Vector2(60, 160), Vector2(31, 133), Vector2(35, 131), Vector2(28, 128), Vector2(32, 127)]
-const ARMORIES := [Vector2(59, 132), Vector2(25, 135), Vector2(29, 136), Vector2(32, 128), Vector2(34, 129)]
+const SILOS := [Vector2(45, 220.5), Vector2(37.5, 202.5), Vector2(48, 205.5),
+	Vector2(40.5, 199.5), Vector2(37.5, 192), Vector2(42, 192), Vector2(45, 193.5),
+	Vector2(51, 190.5), Vector2(52.5, 184.5), Vector2(58.5, 186), Vector2(66, 196.5),
+	Vector2(70.5, 204), Vector2(70.5, 219), Vector2(81, 213), Vector2(85.5, 208.5)]
+const HALLS := [Vector2(90, 240), Vector2(46.5, 199.5), Vector2(52.5, 196.5), Vector2(42, 192), Vector2(48, 190.5)]
+const ARMORIES := [Vector2(88.5, 198), Vector2(37.5, 202.5), Vector2(43.5, 204), Vector2(48, 192), Vector2(51, 193.5)]
 const INFANTRY := ["rifleman", "torchguard", "triage_specialist"]
 const MAX_SUPPLY := 200
 const SUPPLY_BUFFER := 24
@@ -150,8 +150,8 @@ func _build(engine, workers: Array, type: String, sites: Array) -> void:
 	if candidates.is_empty():
 		return
 	var positions := sites.duplicate()
-	for y in range(125, 164, 2):
-		for x in range(23, 68, 2):
+	for y in range(188, 246, 2):
+		for x in range(35, 102, 2):
 			positions.append(Vector2(x, y))
 	for point in positions:
 		if _rejected_sites.has(point) or not engine.can_see_position(1, point) or not engine.can_place_structure(type, point):

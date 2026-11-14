@@ -1,6 +1,6 @@
 extends RefCounted
 
-const VERSION := 12
+const VERSION := 13
 const LadderRules = preload("res://scripts/engine/RTSLadderRules.gd")
 const PORT := 18110
 const FRAME_TICKS := 2

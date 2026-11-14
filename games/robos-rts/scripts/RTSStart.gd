@@ -282,6 +282,15 @@ func _build_campaign_page() -> void:
 	var selected := SimEngine.campaign.difficulty if SimEngine.campaign != null else "normal"
 	_campaign_difficulty.select(Campaign.DIFFICULTIES.find(selected))
 	difficulty_row.add_child(_campaign_difficulty)
+	var mission_scroll := ScrollContainer.new()
+	mission_scroll.custom_minimum_size = Vector2(800, 544)
+	mission_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	mission_scroll.follow_focus = true
+	buttons.add_child(mission_scroll)
+	var missions := VBoxContainer.new()
+	missions.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	missions.add_theme_constant_override("separation", 8)
+	mission_scroll.add_child(missions)
 	var completed := Campaign.completed_missions()
 	for index in Campaign.MISSIONS.size():
 		var mission: Dictionary = Campaign.MISSIONS[index]
@@ -290,8 +299,10 @@ func _build_campaign_page() -> void:
 			detail = "Locked  /  Complete mission %d first" % index
 		elif mission.id in completed:
 			detail = "Completed  /  Replay mission"
-		var button := _menu_button(buttons, "%02d   %s" % [index + 1, mission.title], detail, _play_mission.bind(index))
-		button.disabled = not Campaign.mission_available(index, completed)
+		var button := _mission_button(missions, "%02d   %s" % [index + 1, mission.title], detail, index)
+		if not Campaign.mission_available(index, completed):
+			button.disabled = true
+			button.modulate = Color("#a4b5c6")
 		_mission_buttons.append(button)
 	_menu_button(buttons, "Back", "", _show_home)
 	_campaign_error = _label(buttons, "", 18, Color("#ff948c"))
@@ -448,6 +459,25 @@ func _button_style(fill: Color, edge: Color, accent_width: int) -> StyleBoxFlat:
 func _add_menu_button(parent: VBoxContainer, id: String, title: String, detail: String, callback: Callable) -> Button:
 	var button := _menu_button(parent, title, detail, callback)
 	_menu_buttons[id] = button
+	return button
+
+func _mission_button(parent: VBoxContainer, title: String, detail: String, index: int) -> Button:
+	var button := _menu_button(parent, "", "", _play_mission.bind(index))
+	button.tooltip_text = "%s\n%s" % [title, detail]
+	button.clip_contents = true
+	var text := VBoxContainer.new()
+	text.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	text.alignment = BoxContainer.ALIGNMENT_CENTER
+	text.add_theme_constant_override("separation", 1)
+	button.add_child(text)
+	text.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	text.offset_left = 22.0
+	text.offset_right = -22.0
+	var heading := _label(text, title, 24, Color("#e8f3fc"))
+	var caption := _label(text, detail, 16, Color("#a4c4d4"))
+	for label in [heading, caption]:
+		label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	return button
 
 func _menu_button(parent: VBoxContainer, title: String, detail: String, callback: Callable) -> Button:

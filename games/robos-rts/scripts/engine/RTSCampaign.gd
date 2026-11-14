@@ -1,6 +1,6 @@
 extends RefCounted
 
-enum { ASSAULT, RECOVERY, DEFENSE, EVACUATION }
+enum { ASSAULT, RECOVERY, DEFENSE, EVACUATION, QUARANTINE, REDSTONE, SHRINE, SANCTUARY, RAIL, GAS, DRILL }
 
 const DIFFICULTIES := ["casual", "normal", "hard", "brutal"]
 const CASUAL_DISABLED_STRUCTURES := ["field_armory", "sentry_turret"]
@@ -12,12 +12,26 @@ const MISSIONS := [
 	{"id": "campaign-white-ridge", "title": "The White Ridge Job", "brief": "Build an army and seize the artifact at White Ridge."},
 	{"id": "campaign-hold-for-dawn", "title": "Hold for Dawn", "brief": "Defend the bridges until the rescue ship arrives."},
 	{"id": "campaign-last-road", "title": "The Last Road", "brief": "Escort Bracken's colonists to the colony ships."},
+	{"id": "campaign-ashfall", "title": "Ashfall Quarantine", "brief": "Clear the infected settlement by day and defend your base after dark."},
+	{"id": "campaign-redstone-claim", "title": "Redstone Claim", "brief": "Stockpile crystal between lava surges and find the missing miners."},
+	{"id": "campaign-shattered-shrine", "title": "The Shattered Shrine", "brief": "Reach the relic before the Brood and defeat its guardians."},
+	{"id": "campaign-sanctuary-skies", "title": "Sanctuary Skies", "brief": "Break three shield links and bring down the ship threatening the colonies."},
+	{"id": "campaign-iron-intercept", "title": "Iron Intercept", "brief": "Recover abandoned armor and stop eight Directorate trains across three rail lines."},
+	{"id": "campaign-verdant-pressure", "title": "Verdant Pressure", "brief": "Escort Pioneers to the jungle vents and bring seven canisters back to base."},
+	{"id": "campaign-vaultbreaker", "title": "Vaultbreaker", "brief": "Reclaim the laser drill and defend it while it cuts into the Concord vault."},
 ]
 const ROSTER_UNLOCKS := [
 	{"units": ["rifleman"], "structures": [], "research": []},
 	{"units": ["pioneer", "triage_specialist"], "structures": ["colony_hub", "silo", "aether_tap", "muster_hall", "research_module"], "research": []},
 	{"units": [], "structures": ["field_bunker", "field_armory", "sentry_turret"], "research": ["weapons", "armor"]},
 	{"units": ["torchguard"], "structures": ["fabrication_module"], "research": []},
+	{"units": ["cinder_runner"], "structures": ["quarantine_relay", "workshop"], "research": []},
+	{"units": ["ridge_scout"], "structures": [], "research": []},
+	{"units": ["breacher"], "structures": [], "research": []},
+	{"units": ["kestrel_interceptor"], "structures": ["airframe_hangar"], "research": []},
+	{"units": ["rail_skimmer"], "structures": [], "research": []},
+	{"units": ["warden_walker"], "structures": [], "research": []},
+	{"units": ["howitzer"], "structures": [], "research": []},
 ]
 const DEFERRED_ABILITIES := ["surge", "upgrade_hub", "recon_sweep", "reinforce_supply", "deploy_prospector"]
 const DEFENSE_BUNKERS := ["north_bunker", "west_bunker"]
@@ -126,6 +140,11 @@ const CUES := {
 	"camp_siege": ["Corporal Rook", "White Ridge militia calling. Directorate infantry are closing on our outpost. Anyone on this channel, we could use a hand.", 8.0, Vector2.INF],
 	"camp_rescued": ["Corporal Rook", "We owe you one. Our troops and muster hall are yours. Let's take that ridge.", 6.0, Vector2.INF],
 	"dig_exposed": ["Captain Vale", "Their production line is down. Send a soldier to the excavation and secure the artifact.", 6.0, Vector2.INF],
+	"quarantine_start": ["Captain Vale", "Clear the settlement while there’s light. Fall back to the perimeter when it gets dark.", 6.0, Vector2.INF],
+	"quarantine_night": ["Captain Vale", "Nightfall. Get behind the barricades.", 4.0, Vector2.INF],
+	"quarantine_day": ["Captain Vale", "Sun’s up. Clear the next block.", 4.0, Vector2.INF],
+	"quarantine_vehicles": ["Captain Vale", "Cinder Runners incoming. Keep them moving through the streets.", 5.0, Vector2.INF],
+	"quarantine_complete": ["Captain Vale", "The last building is clear. It’s safe to bring the settlers home.", 5.0, Vector2.INF],
 	"dig_secured": ["Captain Vale", "Artifact secured. Get it to the evacuation outpost. The Brood are already on the move.", 6.0, Vector2.INF],
 	"siege": ["Pilot Sable", "I'm coming for you, but I need time to reach the outpost. Keep that Colony Hub standing and hold the line.", 7.5, Vector2(120, 120)],
 	"distress_north": ["Corporal Rook", "Militia pinned down beyond the north bridge. If you've got a squad to spare, we can still get them out.", 7.0, Vector2.INF],
@@ -135,19 +154,36 @@ const CUES := {
 	"last_wave": ["Pilot Sable", "One last push. My ship's on final approach. Keep the pad clear.", 5.0, Vector2.INF],
 	"inbound": ["Pilot Sable", "Rampart inbound from the southeast. I have the landing lights.", 5.0, Vector2.INF],
 	"rescued": ["Pilot Sable", "We're on the pad. Get everyone aboard. We're going home.", 4.5, Vector2.INF],
-	"evac_arrival": ["Pilot Sable", "You're down. Follow the road west to Bracken. The settlers are waiting for an escort.", 6.0, Vector2(113.3, 150)],
+	"evac_arrival": ["Pilot Sable", "You're down. Follow the road west to Bracken. The settlers are waiting for an escort.", 6.0, Vector2(169.95, 225)],
 	"evac_settlement": ["Dr. Aster", "You made it. The trucks will head north as soon as we're loaded. Keep the road open.", 7.0, Vector2.INF],
 	"evac_departure": ["Dr. Aster", "First truck is rolling. The bunkers cover the bends. Keep an escort with the truck between them.", 7.0, Vector2.INF],
 	"evac_truck_lost": ["Dr. Aster", "The truck is down. Some people got out. Cover them while they make for the ships.", 6.0, Vector2.INF],
 	"evac_complete": ["Pilot Sable", "Fifty aboard and climbing. Bracken is clear. Good work down there.", 7.0, Vector2.INF],
+	"redstone_start": ["Captain Vale", "Build up a crystal stockpile. When the siren goes, pull your crews onto high ground.", 7.0, Vector2.INF],
+	"redstone_warning": ["Pilot Sable", "Lava rising. Get to high ground.", 5.0, Vector2.INF],
+	"redstone_clear": ["Pilot Sable", "The low ground is clear. Mining crews can go back in.", 5.0, Vector2.INF],
+	"shrine_start": ["Captain Vale", "The Brood are converging on the shrine. We need to get there before they do.", 6.0, Vector2.INF],
+	"shrine_guardians": ["Captain Vale", "Those statues are moving. Clear them before you touch the relic.", 6.0, Vector2.INF],
+	"sanctuary_start": ["Dr. Aster", "The Concord ship is moving from colony to colony. Take out its three shield links.", 7.0, Vector2.INF],
+	"sanctuary_exposed": ["Pilot Sable", "All three links are down. Interceptors, you have a clear shot.", 5.0, Vector2.INF],
+	"sanctuary_targeted": ["Dr. Aster", "The ship is charging above another colony. Stop it before it fires.", 6.0, Vector2.INF],
+	"iron_intercept_start": ["Captain Vale", "Three rail lines run through this depot. Recover the Skimmers and get ahead of the freight.", 7.0, Vector2.INF],
+	"verdant_pressure_start": ["Dr. Aster", "Send a Pioneer to each vent. Cover the crew until they get their canisters back to the Hub.", 7.0, Vector2.INF],
+	"vaultbreaker_start": ["Captain Vale", "Get to the Helix Drill and cover both approaches. We need it intact until the vault opens.", 7.0, Vector2.INF],
 }
 
 var mission_index: int
 var difficulty: String
 const Mutators = preload("res://scripts/engine/RTSCampaignMutators.gd")
 const Evacuation = preload("res://scripts/engine/RTSEvacuation.gd")
+const Quarantine = preload("res://scripts/engine/RTSQuarantine.gd")
+const FrontierMissions = preload("res://scripts/engine/RTSFrontierMissions.gd")
 var mutators: Mutators
 var evacuation: Evacuation
+var quarantine: Quarantine
+var frontier: FrontierMissions
+const Operations = preload("res://scripts/engine/RTSCampaignOperations.gd")
+var operation: Operations
 var status := "playing"
 var reason := ""
 var stage := 0
@@ -209,28 +245,34 @@ static func completed_missions() -> Array[String]:
 static func mission_available(index: int, completed: Array[String]) -> bool:
 	return index == 0 or MISSIONS[index].id in completed or MISSIONS[index - 1].id in completed
 
-static func save_completion(index: int, brood_research: int = 0) -> Error:
+static func save_completion(index: int, brood_research: int = 0, concord_research: int = 0) -> Error:
 	var completed := completed_missions()
 	var id: String = MISSIONS[index].id
 	var config := ConfigFile.new()
 	config.load(_progress_path())
 	var prior := int(config.get_value("brood_research", id, 0))
-	if id in completed and brood_research <= prior:
+	var prior_concord := int(config.get_value("concord_research", id, 0))
+	if id in completed and brood_research <= prior and concord_research <= prior_concord:
 		return OK
 	if id not in completed:
 		completed.append(id)
 	config.set_value("ashfall_signal", "completed_ids", completed)
 	if brood_research > prior:
 		config.set_value("brood_research", id, brood_research)
+	if concord_research > prior_concord:
+		config.set_value("concord_research", id, concord_research)
 	return config.save(_progress_path())
 
-func _init(engine, index: int, selected_difficulty: String = "normal") -> void:
+func _init(engine, index: int, selected_difficulty: String = "normal", mission_data: Dictionary = {}) -> void:
 	mission_index = index
 	difficulty = selected_difficulty
 	_tick_rate = engine.TICK_RATE
 	for unlocked_index in range(index + 1):
 		for category in roster:
 			roster[category].append_array(ROSTER_UNLOCKS[unlocked_index][category])
+	if mission_index == QUARANTINE:
+		roster.units.erase("cinder_runner")
+		roster.structures.erase("workshop")
 	if mission_index == DEFENSE:
 		defense_turret_definition = engine.get_node("/root/RTSData").get_unit_def("sentry_turret").duplicate(true)
 		defense_turret_definition["requires"] = ["field_armory"]
@@ -279,6 +321,13 @@ func _init(engine, index: int, selected_difficulty: String = "normal") -> void:
 		EVACUATION:
 			evacuation = Evacuation.new()
 			evacuation.begin(engine, self)
+		QUARANTINE:
+			quarantine = Quarantine.new()
+			quarantine.begin(engine, self)
+		REDSTONE, SHRINE, SANCTUARY:
+			frontier = FrontierMissions.new(engine, self, mission_data)
+		RAIL, GAS, DRILL:
+			operation = Operations.new(engine, self, mission_data)
 
 func _tune_enemy(unit: Dictionary) -> void:
 	if unit.owner != 2:
@@ -318,7 +367,9 @@ func allows_ability(id: String, ability: Dictionary) -> bool:
 	if id in DEFERRED_ABILITIES:
 		return false
 	if id == "call_roadwardens":
-		return mission_index == EVACUATION
+		return mission_index >= EVACUATION
+	if mission_index >= QUARANTINE and id == "cinder_guard_mode":
+		return false
 	if id in ["lift", "land"]:
 		return "muster_hall" in roster.structures
 	if ability.has("unit"):
@@ -343,6 +394,8 @@ func step(engine) -> void:
 		return
 	if evacuation != null:
 		evacuation.move_truck(engine)
+	if mission_index == RAIL:
+		operation.move_trains(engine)
 	if engine.tick % 8 != 0:
 		return
 	match mission_index:
@@ -350,9 +403,21 @@ func step(engine) -> void:
 		RECOVERY: _step_recovery(engine)
 		DEFENSE: _step_defense(engine)
 		EVACUATION: evacuation.step(engine, self)
+		QUARANTINE: quarantine.step(engine, self)
+		REDSTONE, SHRINE, SANCTUARY: frontier.step(engine, self)
+		RAIL, GAS, DRILL: operation.step(engine, self)
 
 func selected_mutators() -> Array:
 	return [] if mutators == null else mutators.ids.duplicate()
+
+func roadwarden_contract() -> Evacuation:
+	if operation != null:
+		return operation.roadwarden_contract
+	if frontier != null:
+		return frontier.roadwarden_contract
+	if quarantine != null:
+		return quarantine.roadwarden_contract
+	return evacuation
 
 func _step_assault(engine) -> void:
 	if _named(engine, "captain_vale").is_empty():
@@ -843,6 +908,36 @@ func snapshot(engine, viewer: int = 0) -> Dictionary:
 		for id in Evacuation.BROOD_BASES:
 			if _named(engine, id).is_empty():
 				extra_done += 1
+	elif mission_index == QUARANTINE:
+		primary = "Clear the infestation  %d/%d" % [quarantine.cleared, Quarantine.TARGETS]
+		mission_note = "Defend the settlement" if quarantine.night else "Clear the streets before nightfall"
+		if quarantine.carriers_active or quarantine.night_number > 2 or (quarantine.night_number == 2 and not quarantine.night) or quarantine.carriers_killed > 0:
+			bonus = "Destroy the Mireweavers"
+			bonus_done = quarantine.carriers_killed
+			bonus_total = Quarantine.CARRIERS.size()
+			for id in Quarantine.CARRIERS:
+				var carrier := _named(engine, id)
+				if not carrier.is_empty() and (viewer == 0 or engine.can_see_unit(viewer, carrier)):
+					markers.append(_marker(carrier.pos, "Mireweaver", true))
+	elif frontier != null:
+		var objective := frontier.objectives(engine, self)
+		primary = objective.primary
+		mission_note = objective.note
+		bonus = objective.bonus
+		bonus_done = objective.bonus_done
+		bonus_total = objective.bonus_total
+		markers.append_array(objective.markers)
+	elif operation != null:
+		var objective := operation.objectives(engine, self)
+		primary = objective.primary
+		mission_note = objective.note
+		bonus = objective.bonus
+		bonus_done = objective.bonus_done
+		bonus_total = objective.bonus_total
+		extra = objective.extra
+		extra_done = objective.extra_done
+		extra_total = objective.extra_total
+		markers.append_array(objective.markers)
 	var supply_caches := CACHE_SITES if mission_index == RECOVERY else DEFENSE_CACHE_SITES if mission_index == DEFENSE else []
 	for index in supply_caches.size():
 		if not cache_claimed.has(index):
@@ -876,6 +971,10 @@ func snapshot(engine, viewer: int = 0) -> Dictionary:
 	}
 	if viewer == 0:
 		result["next_wave_in"] = next_wave_in
+	if frontier != null:
+		result.merge(frontier.telemetry(engine, self))
+	if operation != null:
+		result.merge(operation.research_rewards(self))
 	if evacuation != null:
 		result["colonists_safe"] = evacuation.safe
 		result["colonists_lost"] = evacuation.lost
@@ -884,4 +983,10 @@ func snapshot(engine, viewer: int = 0) -> Dictionary:
 		result["brood_research"] = evacuation.samples_collected.size()
 		if viewer == 0:
 			result["convoy_attacks_sent"] = evacuation.attacks_sent
+	if quarantine != null:
+		result["quarantine_night"] = quarantine.night
+		result["quarantine_cycle"] = quarantine.night_number if quarantine.night else quarantine.night_number + 1
+		result["quarantine_phase_in"] = quarantine.seconds_left(engine)
+		result["infestation_cleared"] = quarantine.cleared
+		result["brood_research"] = quarantine.carriers_killed
 	return result

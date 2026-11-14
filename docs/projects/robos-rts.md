@@ -54,6 +54,15 @@ In **Skirmish**, pick a map, both factions, and a difficulty. AI profiles includ
 2. **The White Ridge Job.** Gather resources, train an army and attack the Directorate excavation. A Muster Hall with a completed Research Module can train Triage Specialists. Resource caches and the besieged militia outpost offer help along the way. Destroy the dig site's Hub, Hall and Workshop to expose the artifact, then send a soldier to collect it.
 3. **Hold for Dawn.** Defend two bridges and cover the river against airborne Gnarl Brood. The rescue transport enters when the 20:00 evacuation clock reaches zero and must reach the landing pad. As optional objectives, rescue three militia squads and bring both field artifacts back to the Colony Hub. The HUD shows the evacuation clock and objectives over the battlefield. Watch your approaches to spot incoming waves.
 4. **The Last Road.** Take two Torchguards and two Triage Specialists west to Bracken. Claim the settlement, then escort its trucks north to the colony ships until at least 50 colonists reach safety. Garrison the roadside bunkers and keep infantry with each convoy. If a truck is destroyed, protect the survivors on foot. Hard and Brutal fail at 20 colonist losses. Three guarded Brood samples lie off the convoy route.
+5. **Ashfall Quarantine.** Clear 144 infested structures and hold the settlement at night. Surviving buildings spawn infected after dark, and daylight burns exposed infected. Two optional Mireweavers burrow by day and award one Brood research point each. The map uses a 240×288 terrain grid with a 192×240 playable area, based on the original Outbreak map.
+6. **Redstone Claim.** Stockpile 8,000 Crystal (7,000 on Casual). Move miners to high ground before each lava surge, recover stranded scouts and miners, and hunt the lava behemoth for Brood research.
+7. **The Shattered Shrine.** Reach the artifact before the Brood. Defeat the awakened shrine guardians and recover up to four optional Concord relics.
+8. **Sanctuary Skies.** Destroy three shield links, then bring down the Concord Purifier before it can destroy the settlement. Interceptors can reach the outlying colony ships and engage the Purifier in the air.
+9. **Iron Intercept.** Intercept eight freight trains on three rail lines before a third train escapes. Recover abandoned Rail Skimmers with infantry. Skimmers can fire on the move. Three optional samples grant Brood research.
+10. **Verdant Pressure.** Select a Pioneer and right-click a visible vent. Escort the worker while it extracts a canister and returns it to a Colony Hub. Deliver seven canisters before the Concord seals seven vents. Warden Walkers cover ground and air threats.
+11. **Vaultbreaker.** Move infantry to the Helix Drill and defend it as it cuts open the vault. With the drill selected, right-click a visible enemy to redirect the beam or press **S** to resume cutting. Howitzers can cover both approaches. Seek three guarded Concord relics for bonus research.
+
+The Last Road and Ashfall Quarantine use terrain enlarged by 50% horizontally. At each starting base, the seven crystal patches and two aether vents retain the original center-to-center distances relative to the width of the Colony Hub.
 
 The three battlefields measure 132×153, 140×152 and 168×161 Starfall world units. The first two maps use walkable terrain outlines to keep squads on the roads, plazas and paths between them. The defense map puts the outpost on the southeast plateau with two diagonal river crossings.
 
@@ -63,6 +72,7 @@ The three battlefields measure 132×153, 140×152 and 168×161 Starfall world un
 | The White Ridge Job | Pioneers, Riflemen and Triage Specialists. Build Colony Hubs, Provision Silos, Aether Taps and Muster Halls. Attach a Research Module to train Triage Specialists. |
 | Hold for Dawn | Adds Field Bunkers, Sentry Turrets and the Field Armory. Bunkers shelter up to four infantry. The Field Armory researches level-one infantry weapons and armor. |
 | The Last Road | Adds Torchguards at Muster Halls with a Research Module, and Fabrication Modules for parallel Rifleman production. The settlement's Contract Post can call up to three squads of four Roadwardens for 250 Crystal per squad. |
+| Ashfall Quarantine | Adds Survey Relays. Cinder Runners and a Workshop arrive late in the first night. Casual and Normal receive four vehicles and Hard and Brutal receive three. |
 
 Player research unlocks in **Hold for Dawn** on Normal, Hard and Brutal. The Research Module in **The White Ridge Job** unlocks Triage Specialist training. The prebuilt Field Armory offers **+1 Infantry Weapons** and **+1 Infantry Armor** for 100 Crystal and 100 Aether each. Each takes **2:40 on the mission clock**. Both take **5:20** in one Armory queue. Ground troops can pick up Crystal and Aether caches just beyond either bridge to fund early research.
 
@@ -301,7 +311,7 @@ Producers have a five-slot queue. Active jobs show progress in the queue and abo
 
 Tap a training hotkey to queue one unit. Hold it to keep queuing one at a time after a short delay. Hold **Shift** when clicking a training button or pressing its hotkey to order up to five units at once. Orders fill the shortest queues across eligible selected buildings as resources, supply and queue space allow.
 
-Training orders pay crystal and aether when queued. Each unit claims supply when its production starts. A job at the front waits for free capacity and plays a “Supply required” alert. Right-click a unit in the production panel to cancel its slot and refund its costs. Canceling a job that has started also releases its supply.
+Training orders pay crystal and aether when queued. Each unit claims supply when its production starts. A job at the front waits for free capacity and plays a “Supply required” alert. With one producer selected, press **Esc** to cancel the last unit or click a queue slot to cancel that specific job, even if it has already started. Canceled units refund their costs and release any supply they were using.
 
 With a worker-producing building selected, right-click a visible crystal field or your completed Aether Tap to rally new workers straight to gathering. The teal rally flag marks a resource target. Rally to open ground to move new workers there instead.
 
@@ -320,6 +330,8 @@ When you cannot afford something, or you are at your supply cap, the game says s
 Select a worker and press **B** for Basic or **V** for Advanced when available (**Z** and **X** in Grid). Choose a structure and left-click a valid footprint. The preview turns green where you can build and red where you cannot. Extractors snap to a free aether vent. Press **Esc** or right-click to cancel placement. Press **Esc** again or click Back to return to worker orders.
 
 Hold **Shift** while placing to queue more copies, then release it to exit placement. With a group selected, each unqueued placement assigns the nearest available worker. **Shift + right-click** a deposit to queue harvesting after construction.
+
+When a builder reaches an occupied site, friendly units step aside and then resume their orders. Construction starts once the footprint is clear. If it stays blocked for four game seconds, that build order is canceled without spending resources, and the builder continues its queue.
 
 | Worker | How construction works |
 | --- | --- |
@@ -410,7 +422,7 @@ Meridian builds around infantry, artillery and separate air production. The open
 - **L** lifts a completed Muster Hall or Workshop. While airborne, production pauses and the attachment stays behind. Use **L** again and target a clear landing site. A Hall can reconnect to a compatible detached module.
 - **B** queues the per-Hub Operations upgrade once a Muster Hall is complete. It costs 150 crystal and 50 aether. On the upgraded Hub, **M** spends 50 energy to send a Prospector to a visible crystal patch. It brings back double crystal for 45 seconds and uses zero supply.
 - A Rampart boards up to six nearby eligible ground troops with **L**. **U** sends it to unload at a clear site. Passengers retain their supply and control groups. A shot-down transport loses its passengers.
-- Select Riflemen, Breachers or Triage Specialists and right-click a friendly Field Bunker to send them inside. A badge above the bunker shows how many slots are occupied. Select the bunker to see the garrison portraits, press **L** to load nearby infantry or **U** to unload. Riflemen and Breachers fire their own weapons from cover.
+- Select Riflemen, Breachers or Triage Specialists and right-click a friendly Field Bunker to send them inside. A badge above the bunker shows how many slots are occupied. Select the bunker and click a garrison portrait to unload that unit. Press **L** to load nearby infantry or **U** to unload everyone. Riflemen and Breachers fire their own weapons from cover.
 - A Howitzer can emplace for range 31 and splash damage. Mobilize it to move again.
 
 ![Rampart Transport with two passengers aboard](/assets/blog/starfall-command-100-point-roadmap/rampart-transport.webp){: .robos-zoomable-img }

@@ -50,7 +50,12 @@ Keep network reads/writes nonblocking in the frame loop. Real-time catch-up yiel
 
 # Run headless deterministic mechanics, skirmish and authoring tests
 ./run_cucumber_tests.py --backend
+
+# Run the peaceful placement and choke checks on every campaign map
+godot --headless --path . --script res://tests/e2e/test_campaign_placement.gd
 ```
+
+The placement suite uses the campaign's real terrain, starting resources and workers, with enemy attacks disabled. Omit `--headless` to exercise the gameplay camera's screen-to-world build targeting. Append mission numbers after `--` (for example, `-- 4 5`) to check specific maps.
 
 ## View layer and tooling
 
@@ -59,3 +64,4 @@ Keep network reads/writes nonblocking in the frame loop. Real-time catch-up yiel
 - Control server extras: `/ui`, `/input`, `/pause`, `/camera` focus mode, `/scenario` slug `default`. Scenarios may set `paused` and `decor`.
 - `./capture_screenshots.py` regenerates `docs/assets/images/robos-rts` from the running game.
 - Naming: keep all names original; do not reintroduce names or terms from commercial RTS games.
+- For each new campaign map, check the starting base at gameplay zoom and test it with Starfall's actual footprints. Leave open worker routes to crystals and aether, space to build after reinforcements arrive, and clear paths from production buildings to the map's main exits.

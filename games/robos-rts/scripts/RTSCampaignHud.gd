@@ -194,8 +194,14 @@ func _process(_delta: float) -> void:
 	_extra.text = "%s  %d/%d" % [state.extra, state.extra_done, state.extra_total]
 	_note.visible = not state.mission_note.is_empty()
 	_note.text = state.mission_note
-	_timing.visible = state.rescue_in >= 0
-	if _timing.visible:
+	_timing.visible = state.rescue_in >= 0 or state.has("quarantine_phase_in") or state.has("lava_in") or state.get("purifier_charge_in", -1) >= 0
+	if state.has("quarantine_phase_in"):
+		_timing.text = "%s %d  •  %s" % ["Night" if state.quarantine_night else "Day", state.quarantine_cycle, _clock(state.quarantine_phase_in)]
+	elif state.has("lava_in"):
+		_timing.text = "%s %s" % ["Lava recedes in" if state.lava_active else "Lava rises in", _clock(state.lava_in)]
+	elif state.get("purifier_charge_in", -1) >= 0:
+		_timing.text = "Purifier fires in %s" % _clock(state.purifier_charge_in)
+	elif _timing.visible:
 		_timing.text = "Rescue in %s" % _clock(state.rescue_in) if state.rescue_tag == 0 else "Rescue inbound"
 	if finished and not _reported_result:
 		_show_result()
@@ -307,7 +313,7 @@ func _show_result() -> void:
 	_result_extra.text = "%s  •  %d/%d" % [state.extra, state.extra_done, state.extra_total]
 	_next.visible = won and state.mission < Campaign.MISSIONS.size()
 	_retry.text = "Replay mission" if won else "Retry mission"
-	if won and Campaign.save_completion(state.mission - 1, state.get("brood_research", 0)) != OK:
+	if won and Campaign.save_completion(state.mission - 1, state.get("brood_research", 0), state.get("concord_research", 0)) != OK:
 		_result_reason.text += "\nCampaign progress could not be saved."
 	RTSAudio.play_ui("match_victory" if won else "match_defeat")
 	_result.show()

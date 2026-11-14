@@ -50,6 +50,7 @@ var _retry_mission: Button
 var _resume_button: Button
 var _leave_confirmation: LeaveConfirmation
 var _heading: Label
+var _difficulty_summary: Label
 var _mutator_summary: Label
 
 func _ready() -> void:
@@ -61,9 +62,15 @@ func _ready() -> void:
 		box.add_theme_constant_override("separation", 12)
 	_heading = _label(box, "SETTINGS" if layout == Layout.SETTINGS else "SKIRMISH", 32)
 	if in_battle:
-		_mutator_summary = _label(box, "", 16)
+		var details := HBoxContainer.new()
+		details.add_theme_constant_override("separation", 24)
+		box.add_child(details)
+		_difficulty_summary = _label(details, "", 16)
+		_difficulty_summary.hide()
+		_mutator_summary = _label(details, "", 16)
 		_mutator_summary.modulate = Color("#ffcd77")
 		_mutator_summary.hide()
+		details.hide()
 	if layout != Layout.SETTINGS:
 		map_preview = SkirmishPreview.new()
 		map_preview.position = panel.position + Vector2(panel.custom_minimum_size.x + 18, 0)
@@ -354,12 +361,19 @@ func reset_views() -> void:
 	var online := RTSNetwork.match_active
 	_heading.text = "ONLINE MATCH" if online else "SKIRMISH"
 	var mutator_count := 0
+	var active_difficulty := ""
 	if in_campaign:
 		var index: int = SimEngine.campaign.mission_index
 		_heading.text = "MISSION %02d  /  %s" % [index + 1, Campaign.MISSIONS[index].title.to_upper()]
+		active_difficulty = "Difficulty  ·  %s" % SimEngine.campaign.difficulty.capitalize()
 		mutator_count = SimEngine.campaign.selected_mutators().size()
+	elif SimEngine.match_state.get("mode") in ["1p_vs_ai", "online_ai_1v1"]:
+		active_difficulty = "Current AI difficulty  ·  %s" % str(SimEngine.match_state.difficulty).capitalize()
+	_difficulty_summary.text = active_difficulty
+	_difficulty_summary.visible = not active_difficulty.is_empty()
 	_mutator_summary.visible = mutator_count > 0
 	_mutator_summary.text = "Mutators  ·  %d active" % mutator_count
+	_difficulty_summary.get_parent().visible = _difficulty_summary.visible or _mutator_summary.visible
 	_skirmish_options.visible = not in_campaign and not online
 	_start_button.visible = not in_campaign and not online
 	_surrender_button.visible = not in_campaign and not RTSNetwork.watching_ai

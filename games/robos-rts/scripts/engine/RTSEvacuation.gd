@@ -3,20 +3,20 @@ extends RefCounted
 const Waves = preload("res://scripts/engine/RTSEvacuationWaves.gd")
 
 # Converted from the settlement and convoy coordinates in THanson01.
-const SETTLEMENT := Vector2(33.5, 158.3)
-const INSERTION_ROAD := [Vector2(113.3, 150), Vector2(105.3, 150), Vector2(90, 151),
-	Vector2(74, 154), Vector2(61, 155), Vector2(48, 154), SETTLEMENT]
-const ROUTE := [Vector2(43.1, 153.1), Vector2(39.2, 149.5), Vector2(35.7, 145.6),
-	Vector2(36.3, 139.6), Vector2(41.1, 134), Vector2(46.4, 126.7), Vector2(50.6, 120.1),
-	Vector2(57.7, 114.6), Vector2(62.5, 110), Vector2(65.8, 106.4), Vector2(70.8, 101.2),
-	Vector2(74.4, 96.2), Vector2(77.2, 91.3), Vector2(78.6, 85.1), Vector2(77.9, 79.8),
-	Vector2(75.2, 73.4), Vector2(74.4, 67.2), Vector2(78.2, 61.9), Vector2(82.9, 57.3),
-	Vector2(87.2, 53.3), Vector2(98.5, 41.3), Vector2(100, 40.1)]
+const SETTLEMENT := Vector2(55, 229)
+const INSERTION_ROAD := [Vector2(169.95, 225), Vector2(157.95, 225), Vector2(135, 226.5),
+	Vector2(111, 231), Vector2(91.5, 232.5), Vector2(72, 231), SETTLEMENT]
+const ROUTE := [Vector2(64.65, 229.65), Vector2(58.8, 224.25), Vector2(53.55, 218.4),
+	Vector2(54.45, 209.4), Vector2(61.65, 201), Vector2(69.6, 190.05), Vector2(75.9, 180.15),
+	Vector2(86.55, 171.9), Vector2(93.75, 165), Vector2(98.7, 159.6), Vector2(106.2, 151.8),
+	Vector2(111.6, 144.3), Vector2(115.8, 136.95), Vector2(117.9, 127.65), Vector2(116.85, 119.7),
+	Vector2(112.8, 110.1), Vector2(111.6, 100.8), Vector2(117.3, 92.85), Vector2(124.35, 85.95),
+	Vector2(130.8, 79.95), Vector2(147.75, 61.95), Vector2(150, 60.15)]
 # Interior points keep the truck centered through narrow bends and ramp mouths.
-const ROAD_BENDS := {17: Vector2(75, 67), 20: Vector2(90, 50)}
-const SPACEPORT := Vector2(100, 40.1)
-const DOCK_ENTRANCE := Rect2(93, 36, 11, 11)
-const SAMPLES := [Vector2(26.3, 100.3), Vector2(88.5, 112), Vector2(91.6, 57.3)]
+const ROAD_BENDS := {17: Vector2(112.5, 100.5), 20: Vector2(135, 75)}
+const SPACEPORT := Vector2(150, 60.15)
+const DOCK_ENTRANCE := Rect2(139.5, 54, 16.5, 16.5)
+const SAMPLES := [Vector2(39.45, 150.45), Vector2(132.75, 168), Vector2(137.4, 85.95)]
 const SAFE_QUOTA := 50
 const LOSS_LIMIT := 20
 const ROADWARDEN_COST := 250
@@ -75,13 +75,15 @@ func step(engine, campaign) -> void:
 	_step_retreat(engine)
 	_step_tunnels(engine, campaign)
 	if campaign.stage == 0:
-		if campaign._squad_near(engine, SETTLEMENT, 7.5):
+		if campaign._squad_near(engine, SETTLEMENT, 11.25):
 			campaign.stage = 1
 			for tag in _settlement_tags:
 				if engine.units.has(tag):
 					engine.units[tag].owner = 1
 			campaign._release_reserves(engine, _settlement_tags)
 			engine.nav_dirty = true
+			engine._refresh_vision()
+			engine.set_starting_mineral_rally(hub)
 			for tag in _settlement_tags:
 				if engine.units.get(tag, {}).get("is_worker", false):
 					engine.issue_SmartHarvest(tag)

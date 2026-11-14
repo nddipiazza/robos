@@ -193,6 +193,45 @@ static func build(unit_type: String, owner_id: int, is_vale: bool = false) -> No
 		"resistance_gate": _resistance_gate(root)
 		"torchguard": _torchguard(root, team)
 		"settlement_truck": _settlement_truck(root)
+		"rail_freight":
+			var steel := mat("freight_steel", Color("#292c33"))
+			for car in range(3):
+				var offset := -float(car) * 3.6
+				box(root, Vector3(3.38, 1.1, 2.1), steel, Vector3(offset, 0.7, 0.0))
+				box(root, Vector3(2.7, 0.96, 1.8), team, Vector3(offset - 0.1, 1.53, 0.0))
+				box(root, Vector3(1.8, 0.12, 1.2), steel, Vector3(offset - 0.15, 2.06, 0.0))
+		"rail_skimmer":
+			var armor := mat("skimmer_armor", Color("#424e60"))
+			box(root, Vector3(2.8, 0.55, 1.9), armor, Vector3(0, 0.68, 0))
+			box(root, Vector3(1.5, 0.48, 1.1), team, Vector3(-0.28, 1.10, 0))
+			box(root, Vector3(1.8, 0.15, 0.20), armor, Vector3(0.7, 1.32, 0))
+			for side in [-1.0, 1.0]:
+				box(root, Vector3(2.4, 0.14, 0.33), glow, Vector3(-0.1, 0.39, side * 0.8))
+		"warden_walker":
+			var armor := mat("warden_armor", Color("#424e60"))
+			box(root, Vector3(1.35, 0.96, 1.5), team, Vector3(0, 1.61, 0))
+			box(root, Vector3(0.35, 0.35, 0.8), glow, Vector3(0.67, 1.67, 0))
+			for side in [-1.0, 1.0]:
+				box(root, Vector3(0.45, 1.35, 0.35), armor, Vector3(-0.28, 0.74, side * 0.63))
+				box(root, Vector3(0.85, 0.29, 0.52), armor, Vector3(0, 0.18, side * 0.63))
+				box(root, Vector3(1.58, 0.35, 0.35), armor, Vector3(0.40, 1.65, side * 0.86))
+		"gas_altar":
+			var stone := mat("verdant_stone", Color("#536047"))
+			var emission := mat("verdant_gas", Color("#a795da"), Color("#b294ff"), 1.25)
+			cyl(root, 1.5, 1.7, 0.44, stone, Vector3(0, 0.22, 0), Vector3.ZERO, 8)
+			cyl(root, 0.55, 0.97, 0.72, stone, Vector3(0, 0.70, 0), Vector3.ZERO, 8)
+			var plume := sph(root, 0.5, emission, Vector3(0, 1.1, 0), Vector3(0.8, 1.5, 0.8))
+			plume.name = "VentPlume"
+		"vault_drill":
+			_field_armory(root, team, glow)
+			box(root, Vector3(3.5, 0.9, 1.1), team, Vector3(0.55, 2.7, 0))
+			box(root, Vector3(1.45, 0.4, 0.55), glow, Vector3(2.2, 2.7, 0))
+		"vault_gate":
+			var stone := mat("vault_stone", Color("#726956"))
+			box(root, Vector3(1.9, 5.1, 6.6), stone, Vector3(0, 2.55, 0))
+			box(root, Vector3(2.05, 3.1, 0.18), glow, Vector3(0, 1.55, 0))
+			for side in [-1.0, 1.0]:
+				box(root, Vector3(2.9, 5.75, 0.9), stone, Vector3(0, 2.85, side * 2.95))
 		"contract_post":
 			_field_armory(root, team, glow)
 			box(root, Vector3(0.22, 1.76, 1.35), mat("contract_post_sign", Color("#ad7f42")), Vector3(1.9, 1.5, 0))
@@ -353,12 +392,35 @@ static func build(unit_type: String, owner_id: int, is_vale: bool = false) -> No
 		"heartstone": _heartstone(root, r, team)
 		"resonator": _resonator(root, team)
 		"aegis_relay": _aegis_relay(root, r, glow)
+		"shrine_cannon": _aegis_relay(root, r, glow)
 		"waystone": _waystone(root, r, team)
 		"canticle_archive": _waystone(root, r, team)
 		"veil_sanctum": _waystone(root, r, team)
 		"aether_prism": _aether_prism(root, r, glow)
 		"propaganda_statue": _propaganda_statue(root, team)
 		"shale_barrier": _shale_barrier(root)
+		"quarantine_barricade":
+			_shale_barrier(root)
+			for child in root.get_children():
+				child.transform = child.transform.scaled(Vector3(0.26, 0.35, 0.26))
+		"quarantine_relay":
+			cyl(root, 0.20, 0.48, 4.2, mat("relay_steel", STEEL), Vector3(0, 2.1, 0))
+			box(root, Vector3(2.7, 0.22, 0.48), team, Vector3(0, 4.25, 0))
+			sph(root, 0.25, glow, Vector3(0, 4.65, 0))
+		"blighted_home", "blighted_complex":
+			var siding := mat("blighted_siding", Color("#5b4a43"))
+			var blight := mat("blighted_growth", Color("#56314b"), Color("#b17462"), 0.22)
+			box(root, Vector3(r * 1.55, r, r * 1.35), siding, Vector3(0, r * 0.5, 0))
+			box(root, Vector3(r * 1.78, r * 0.23, r * 1.55), mat("blighted_roof", Color("#312d36")), Vector3(0, r, 0))
+			for patch in [Vector3(-0.63, 0.96, 0.31), Vector3(0.42, 1.12, -0.53), Vector3(0.71, 0.53, 0.44)]:
+				sph(root, r * 0.42, blight, patch * r, Vector3(1.3, 0.62, 0.80), 7)
+		"blighted_colonist", "blighted_rifleman":
+			var blight := mat("blighted_uniform", Color("#716548"))
+			if unit_type == "blighted_rifleman":
+				_rifleman(root, blight, false)
+			else:
+				_triage_specialist(root, blight)
+			sph(root, 0.36, mat("blighted_growth", Color("#56314b"), Color("#b17462"), 0.22), Vector3(-0.28, 1.56, 0.28))
 		"mineral_shield":
 			var shell := mat("mineral_shield_shell", Color("#ffd372"), Color("#ffac43"), 1.0, 0.0, 0.25, 0.30)
 			var rim := mat("mineral_shield_rim", Color("#ffe7a3"), Color("#ffb951"), 1.2)

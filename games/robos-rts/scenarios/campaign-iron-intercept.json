@@ -1,0 +1,191 @@
+{
+  "name": "Iron Intercept",
+  "seed": 919,
+  "fog_of_war": true,
+  "decor": false,
+  "map": {
+    "width": 232,
+    "height": 232,
+    "terrain_grid": "res://assets/terrain/campaign-iron-intercept-terrain.json"
+  },
+  "players": {
+    "1": {
+      "faction": "humans",
+      "crystal": 500,
+      "aether": 150
+    },
+    "2": {
+      "faction": "humans",
+      "crystal": 0,
+      "aether": 0
+    }
+  },
+  "mission": {
+    "defend": [
+      108,
+      111
+    ],
+    "raid_origins": [
+      [
+        185,
+        67
+      ],
+      [
+        191,
+        126
+      ],
+      [
+        102,
+        46
+      ]
+    ],
+    "samples": [
+      {
+        "point": [
+          29,
+          64
+        ]
+      },
+      {
+        "point": [
+          191,
+          111
+        ]
+      },
+      {
+        "point": [
+          120,
+          190
+        ]
+      }
+    ],
+    "tracks": [
+      [
+        [
+          5,
+          34
+        ],
+        [
+          52,
+          34
+        ],
+        [
+          80,
+          48
+        ],
+        [
+          132,
+          48
+        ],
+        [
+          163,
+          60
+        ],
+        [
+          226,
+          60
+        ]
+      ],
+      [
+        [
+          5,
+          90
+        ],
+        [
+          61,
+          90
+        ],
+        [
+          90,
+          81
+        ],
+        [
+          138,
+          81
+        ],
+        [
+          171,
+          87
+        ],
+        [
+          226,
+          87
+        ]
+      ],
+      [
+        [
+          5,
+          169
+        ],
+        [
+          48,
+          169
+        ],
+        [
+          72,
+          151
+        ],
+        [
+          132,
+          151
+        ],
+        [
+          176,
+          134
+        ],
+        [
+          226,
+          134
+        ]
+      ]
+    ],
+    "skimmers": [
+      "abandoned_1",
+      "abandoned_2",
+      "abandoned_3",
+      "abandoned_4",
+      "abandoned_5",
+      "abandoned_6"
+    ]
+  },
+  "resources": [
+    {"type":"crystal_field","x":95,"y":124,"amount":1700},
+    {"type":"crystal_field","x":99,"y":127,"amount":1700},
+    {"type":"crystal_field","x":103,"y":129,"amount":1700},
+    {"type":"crystal_field","x":108,"y":130,"amount":1700},
+    {"type":"crystal_field","x":113,"y":129,"amount":1700},
+    {"type":"crystal_field","x":117,"y":127,"amount":1700},
+    {"type":"crystal_field","x":121,"y":124,"amount":1700},
+    {"type":"aether_vent","x":92,"y":114,"amount":2500},
+    {"type":"aether_vent","x":124,"y":114,"amount":2500}
+  ],
+  "units": [
+    {"type":"colony_hub","owner":1,"x":108,"y":111,"id":"operation_hub"},
+    {"type":"muster_hall","owner":1,"x":95,"y":102,"id":"operation_hall"},
+    {"type":"research_module","owner":1,"x":100.5,"y":102,"id":"operation_module"},
+    {"type":"workshop","owner":1,"x":122,"y":101},
+    {"type":"field_bunker","owner":1,"x":133,"y":95},
+    {"type":"silo","owner":1,"x":97,"y":113},
+    {"type":"silo","owner":1,"x":118,"y":115},
+    {"type":"aether_tap","owner":1,"x":92,"y":114},
+    {"type":"pioneer","owner":1,"x":103,"y":119,"count":8,"auto_harvest":true},
+    {"type":"rifleman","owner":1,"x":103,"y":96,"count":8,"spread":2},
+    {"type":"triage_specialist","owner":1,"x":111,"y":97,"count":2},
+    {"type":"rail_skimmer","owner":0,"x":70,"y":109,"id":"abandoned_1"},
+    {"type":"rail_skimmer","owner":0,"x":137,"y":108,"id":"abandoned_2"},
+    {"type":"rail_skimmer","owner":0,"x":91,"y":74,"id":"abandoned_3"},
+    {"type":"rail_skimmer","owner":0,"x":51,"y":130,"id":"abandoned_4"},
+    {"type":"rail_skimmer","owner":0,"x":152,"y":119,"id":"abandoned_5"},
+    {"type":"rail_skimmer","owner":0,"x":185,"y":159,"id":"abandoned_6"},
+    {"type":"rifleman","owner":2,"x":71,"y":74},
+    {"type":"rifleman","owner":2,"x":92,"y":72},
+    {"type":"rifleman","owner":2,"x":56,"y":127},
+    {"type":"rifleman","owner":2,"x":188,"y":153},
+    {"type":"rifleman","owner":2,"x":198,"y":108},
+    {"type":"rifleman","owner":2,"x":119,"y":194},
+    {"type":"breacher","owner":2,"x":186,"y":156},
+    {"type":"breacher","owner":2,"x":198,"y":105},
+    {"type":"breacher","owner":2,"x":124,"y":193},
+    {"type":"contract_post","owner":1,"x":93,"y":91}
+  ]
+}

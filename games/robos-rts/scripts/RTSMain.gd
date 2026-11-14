@@ -37,7 +37,7 @@ const WORKER_BUILD_PAGES := {
 		"basic": {0: "build_colony_hub", 1: "build_aether_tap", 2: "build_silo",
 			5: "build_muster_hall", 6: "build_field_armory", 10: "build_field_bunker", 11: "build_sentry_turret", 12: "build_radar_beacon"},
 		"advanced": {5: "build_workshop", 6: "build_specter_academy", 7: "build_vehicle_armory",
-			10: "build_airframe_hangar", 11: "build_ignition_core"},
+			10: "build_airframe_hangar", 11: "build_ignition_core", 12: "build_quarantine_relay"},
 	},
 	"forager": {
 		"verb": "Grow", "tech": "brood_nest",
@@ -823,9 +823,15 @@ func _hud_hit(mb: InputEventMouseButton, mpos: Vector2) -> bool:
 		_select_idle_production(mb.ctrl_pressed or mb.meta_pressed)
 		return true
 
-	if right and hud and selected_tags.size() == 1:
+	if (left or right) and hud and not hud_hidden and observer_player < 0 and selected_tags.size() == 1:
 		var unit := primary_unit()
 		if not unit.is_empty() and unit.owner == local_player and unit.is_structure:
+			if left and unit.unit_type == "field_bunker" and unit.build_progress >= 1.0:
+				var passengers: Array = unit.get("passengers", [])
+				var garrison_slot: int = hud.production_slot_at(mpos, passengers.size())
+				if garrison_slot >= 0:
+					_issue_player_command([unit.tag], "unload_bunker", Vector2.ZERO, passengers[garrison_slot].tag)
+					return true
 			var slot: int = hud.production_slot_at(mpos, unit.production_queue.size())
 			if slot >= 0:
 				_issue_player_command([unit.tag], "cancel_training", Vector2.ZERO, 0, str(slot))
@@ -1053,10 +1059,16 @@ func _issue_smart_right_click(wpos: Vector2, queue: bool, screen: Vector2 = Vect
 		tags.append(u["tag"])
 
 	var target := _order_target_at(wpos, screen)
+	if target.get("unit_type") == "gas_altar" and SimEngine.campaign != null and SimEngine.campaign.operation != null:
+		var pioneers := own.filter(func(unit): return SimEngine.campaign.operation.can_collect(unit, target))
+		if not pioneers.is_empty() and _issue_player_command([pioneers[0].tag], "extract_canister", target.pos, target.tag, "", queue).ok:
+			_spawn_marker(target.pos, "gather")
+			_issue_context_escorts(own, target.pos, queue, pioneers[0].tag)
+			return
 	var all_struct := own.all(func(u): return u["is_structure"])
 	if all_struct:
-		if not target.is_empty() and target.owner != local_player and own.any(func(unit): return unit.armed_structure):
-			var turrets := tags.filter(func(tag): return SimEngine.units[tag].armed_structure)
+		if not target.is_empty() and target.owner != local_player and own.any(func(unit): return unit.armed_structure or unit.unit_type == "vault_drill"):
+			var turrets := own.filter(func(unit): return unit.armed_structure or unit.unit_type == "vault_drill").map(func(unit): return unit.tag)
 			if _issue_player_command(turrets, "attack_target", target.pos, target.tag, "", queue).ok:
 				_spawn_attack_marker(target)
 		else:
@@ -1144,7 +1156,11 @@ func _issue_smart_right_click(wpos: Vector2, queue: bool, screen: Vector2 = Vect
 
 	var mobile := own.filter(func(unit): return not unit.is_structure and not unit.is_immobile).map(func(unit): return unit.tag)
 	if not mobile.is_empty() and _issue_player_command(mobile, "move", wpos, 0, "", queue).ok:
-		_spawn_marker(wpos, "move")
+		_spawn_ground_order_marker(wpos, "move")
+
+func _spawn_ground_order_marker(point: Vector2, kind: String) -> void:
+	var surface_offset: float = world_3d.clicked_surface_offset(point) if world_3d else 0.0
+	_spawn_marker(point, kind, surface_offset + 0.1)
 
 func _execute_pending_ability_at(wpos: Vector2, queue: bool, minimap: bool = false, force: bool = false, screen: Vector2 = Vector2.INF) -> void:
 	if pending_ability == "ping":
@@ -1175,7 +1191,7 @@ func _execute_pending_ability_at(wpos: Vector2, queue: bool, minimap: bool = fal
 				_spawn_attack_marker(tgt)
 		else:
 			_issue_player_command(tags, "attack_move", wpos, 0, "", queue)
-			_spawn_marker(wpos, "attack")
+			_spawn_ground_order_marker(wpos, "attack")
 	elif abil in ["move", "phase_step", "shadow_stride", "patrol"]:
 		pending_ability = abil if _repeating_target else ""
 		var ability_tags: Array = []
@@ -1185,7 +1201,7 @@ func _execute_pending_ability_at(wpos: Vector2, queue: bool, minimap: bool = fal
 					or (abil == "move" and u.is_structure and (u.flight_height > 0.0 or u.get("crawler_uprooted", false))):
 				ability_tags.append(u["tag"])
 		_issue_player_command(ability_tags, abil, wpos, 0, "", queue)
-		_spawn_marker(wpos, "patrol" if abil == "patrol" else "move")
+		_spawn_ground_order_marker(wpos, "patrol" if abil == "patrol" else "move")
 	elif abil == "land":
 		var producer := primary_unit()
 		if not producer.is_empty() and _issue_player_command([producer.tag], "land", wpos, 0, "", queue).ok:
@@ -1909,7 +1925,7 @@ func get_card_buttons() -> Array[Dictionary]:
 		var back := {"id": "hallucination_back", "name": "Back", "desc": "Return to Warden orders."}
 		buttons.append(_card_button(back, 14, "Esc", CARD_BTN, ""))
 		return buttons
-	var abils: Array = RTSData.get_unit_def(pu["unit_type"]).get("abilities", [])
+	var abils: Array = SimEngine.unit_definition_for(pu.unit_type, pu.owner).get("abilities", [])
 	if SimEngine.ladder_rules:
 		if pu.unit_type == "research_module":
 			abils = SimEngine.research_module_abilities(pu)
@@ -2059,7 +2075,7 @@ func _train_on_best(abil_id: String, count: int, skip_full_queues: bool = false)
 	var unit_type := str(ability.get("unit", ""))
 	for u in selected_owned():
 		var abilities: Array = SimEngine.research_module_abilities(u) if SimEngine.ladder_rules and u.unit_type == "research_module" \
-			else RTSData.get_unit_def(u.unit_type).get("abilities", [])
+			else SimEngine.unit_definition_for(u.unit_type, u.owner).get("abilities", [])
 		if not abilities.has(abil_id):
 			continue
 		if float(u["build_progress"]) < 1.0 or u.flight_height > 0.0:
@@ -2318,6 +2334,12 @@ func _handle_hotkey(ke: InputEventKey) -> void:
 					_issue_player_command([site.tag], "cancel_construction")
 				elif site.has("brood_morph") and site.owner == local_player and observer_player < 0:
 					_issue_player_command([site.tag], SimEngine.brood_morph_cancel_command(site))
+				elif selected_tags.size() == 1 and observer_player < 0 and site.get("owner") == local_player and site.is_structure:
+					var queue: Array = site.production_queue
+					for slot in range(queue.size() - 1, -1, -1):
+						if queue[slot].has("unit_type") and not queue[slot].get("structure_evolution", false):
+							_issue_player_command([site.tag], "cancel_training", Vector2.ZERO, 0, str(slot))
+							break
 			return
 		KEY_F1, KEY_QUESTION:
 			show_help = not show_help

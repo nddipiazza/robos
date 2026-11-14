@@ -58,7 +58,7 @@ var units: Dictionary = {
 			"backswing": 0.25,
 			"splash_radius": 0.0
 		},
-		"abilities": ["move", "stop", "hold_position", "attack", "harvest", "build_colony_hub", "build_silo", "build_aether_tap", "build_muster_hall", "build_workshop", "build_sentry_turret", "build_airframe_hangar", "build_field_bunker", "build_field_armory"],
+		"abilities": ["move", "stop", "hold_position", "attack", "harvest", "build_colony_hub", "build_silo", "build_aether_tap", "build_muster_hall", "build_workshop", "build_sentry_turret", "build_airframe_hangar", "build_field_bunker", "build_field_armory", "build_quarantine_relay"],
 		"dialogues": {
 			"select": [
 				{"id": "pioneer_select_1", "text": "What's up, Commander?"},
@@ -204,6 +204,48 @@ var units: Dictionary = {
 			"damage_point": 0.12, "backswing": 0.3, "targets_ground": true, "targets_air": false,
 			"line_splash_width": 1.15, "line_splash_length": 8.0},
 		"abilities": ["move", "stop", "hold_position", "attack"],
+	},
+	"rail_freight": {
+		"id": "rail_freight", "name": "Directorate Freight Train", "faction": FACTION_HUMANS, "campaign_only": true,
+		"attributes": ["Armored", "Mechanical", "Massive"], "supply_cost": 0, "max_hp": 840.0, "armor": 1.0,
+		"radius": 2.2, "sight_range": 3.0, "is_immobile": true, "abilities": [],
+	},
+	"rail_skimmer": {
+		"id": "rail_skimmer", "name": "Rail Skimmer", "faction": FACTION_HUMANS, "campaign_only": true,
+		"blurb": "A fast hover tank that fires its railgun while moving.",
+		"crystal_cost": 150, "aether_cost": 100, "supply_cost": 4, "build_time": 45.0,
+		"max_hp": 200.0, "armor": 1.0, "radius": 1.35, "speed": 9.6, "sight_range": 23.0,
+		"attributes": ["Armored", "Mechanical"], "abilities": ["move", "stop", "hold_position", "attack", "patrol"],
+		"weapon": {"name": "Skimmer Railgun", "sfx": "bastion_railgun", "attack_type": "ranged", "damage": 25.0,
+			"bonus": {"Armored": 15.0}, "range": 15.0, "period": 1.15, "damage_point": 0.0, "backswing": 0.0,
+			"targets_ground": true, "targets_air": false},
+	},
+	"warden_walker": {
+		"id": "warden_walker", "name": "Warden Walker", "faction": FACTION_HUMANS, "campaign_only": true,
+		"blurb": "An escort walker armed against both ground and air targets.",
+		"crystal_cost": 150, "aether_cost": 50, "supply_cost": 2, "build_time": 40.0,
+		"max_hp": 145.0, "armor": 1.0, "radius": 1.15, "speed": 6.5, "sight_range": 22.0,
+		"attributes": ["Armored", "Mechanical"], "abilities": ["move", "stop", "hold_position", "attack", "patrol"],
+		"weapon": {"name": "Twin Autocannons", "sfx": "rifle_burst", "attack_type": "ranged", "damage": 18.0,
+			"range": 15.0, "period": 1.05, "targets_ground": true, "targets_air": false},
+		"air_weapon": {"name": "Escort Missiles", "sfx": "sentry_missile", "attack_type": "ranged", "damage": 26.0,
+			"range": 20.0, "period": 1.35, "targets_ground": false, "targets_air": true},
+	},
+	"gas_altar": {
+		"id": "gas_altar", "name": "Verdant Vent", "faction": "neutral", "campaign_only": true,
+		"is_immobile": true, "is_structure": true, "radius": 1.7, "max_hp": 300.0, "sight_range": 0.0,
+		"abilities": [],
+	},
+	"vault_drill": {
+		"id": "vault_drill", "name": "Helix Laser Drill", "faction": FACTION_HUMANS, "campaign_only": true,
+		"blurb": "Cuts the vault by default. Target a visible enemy to redirect the beam. Stop resumes cutting.",
+		"is_immobile": true, "is_structure": true, "radius": 3.2, "max_hp": 1600.0, "armor": 1.0, "sight_range": 24.0,
+		"attributes": ["Armored", "Mechanical", "Structure"], "abilities": ["attack", "stop"],
+	},
+	"vault_gate": {
+		"id": "vault_gate", "name": "Concord Vault Seal", "faction": FACTION_ALIENS, "campaign_only": true,
+		"is_immobile": true, "is_structure": true, "radius": 4.1, "max_hp": 15000.0, "sight_range": 0.0,
+		"attributes": ["Armored", "Structure"], "abilities": [],
 	},
 	"settlement_truck": {
 		"id": "settlement_truck", "name": "Settlement Truck", "faction": FACTION_HUMANS, "campaign_only": true,
@@ -2606,6 +2648,15 @@ var units: Dictionary = {
 		"support": {"stat": "shields", "range": 7.0, "rate": 22.0, "max_energy": 100.0, "starting_energy": 50.0, "regen": 1.0, "ability": "restore_aegis"},
 		"abilities": []
 	},
+	"shrine_cannon": {
+		"id": "shrine_cannon", "name": "Shrine Cannon", "faction": FACTION_ALIENS,
+		"is_structure": true, "is_immobile": true, "campaign_only": true,
+		"attributes": ["Armored", "Structure"], "max_hp": 150.0, "max_shields": 150.0,
+		"armor": 1.0, "radius": 1.8, "sight_range": 16.0,
+		"weapon": {"name": "Prism Bolt", "damage": 20.0, "range": 10.0, "period": 1.25,
+			"targets_ground": true, "targets_air": true, "attack_type": "ranged", "sfx": "prism_beam"},
+		"abilities": [],
+	},
 	"aether_prism": {
 		"id": "aether_prism", "name": "Aether Prism", "faction": FACTION_ALIENS,
 		"blurb": "Summoned on an aether vent. Three Motes can harvest there efficiently.",
@@ -2647,6 +2698,40 @@ var units: Dictionary = {
 		"blurb": "Attack the barrier to open a route.",
 		"is_structure": true, "is_immobile": true, "attributes": ["Armored", "Structure"],
 		"max_hp": 300.0, "armor": 2.0, "radius": 5.0, "sight_range": 0.0
+	},
+	"quarantine_relay": {
+		"id": "quarantine_relay", "name": "Survey Relay", "faction": FACTION_HUMANS,
+		"blurb": "Marks enemy movement beyond visual range. Radar contacts need vision before they can be targeted.",
+		"is_structure": true, "campaign_only": true, "requires": ["field_armory"],
+		"crystal_cost": 125, "aether_cost": 100, "build_time": 25.0,
+		"max_hp": 200.0, "radius": 1.0, "footprint": Vector2i(1, 1), "sight_range": 33.0,
+	},
+	"quarantine_barricade": {
+		"id": "quarantine_barricade", "name": "Road Barricade", "faction": "neutral",
+		"is_structure": true, "is_immobile": true, "attributes": ["Armored", "Structure"],
+		"max_hp": 100.0, "radius": 1.35, "sight_range": 0.0,
+	},
+	"blighted_home": {
+		"id": "blighted_home", "name": "Blighted Building", "faction": FACTION_MONSTERS,
+		"is_structure": true, "attributes": ["Armored", "Structure"],
+		"max_hp": 250.0, "armor": 1.0, "radius": 1.15, "sight_range": 0.0,
+	},
+	"blighted_complex": {
+		"id": "blighted_complex", "name": "Blighted Complex", "faction": FACTION_MONSTERS,
+		"is_structure": true, "attributes": ["Armored", "Structure"],
+		"max_hp": 500.0, "armor": 1.0, "radius": 2.15, "sight_range": 0.0,
+	},
+	"blighted_colonist": {
+		"id": "blighted_colonist", "name": "Blighted Colonist", "faction": FACTION_MONSTERS,
+		"attributes": ["Light", "Biological"], "max_hp": 35.0, "radius": 0.5, "speed": 6.0, "sight_range": 15.0,
+		"weapon": {"name": "Claws", "sfx": "mandible_bite", "attack_type": "melee",
+			"damage": 5.0, "range": 1.4, "period": 1.5},
+	},
+	"blighted_rifleman": {
+		"id": "blighted_rifleman", "name": "Blighted Rifleman", "faction": FACTION_MONSTERS,
+		"attributes": ["Light", "Biological"], "max_hp": 50.0, "radius": 0.65, "speed": 5.2, "sight_range": 17.0,
+		"weapon": {"name": "Rifle", "sfx": "rifle_fire", "attack_type": "ranged",
+			"damage": 6.0, "range": 10.0, "period": 1.2},
 	}
 }
 
@@ -2717,6 +2802,8 @@ var abilities: Dictionary = {
 	"fighter_intercept": {"id": "fighter_intercept", "name": "Interceptor Mode", "hotkey": "E", "target": "none", "sfx": "siege_transform", "desc": "Take off in 1.5 seconds and arm the air-only missiles."},
 	"train_triage_specialist": {"id": "train_triage_specialist", "name": "Train Triage Specialist", "hotkey": "E", "target": "none", "unit": "triage_specialist"},
 	"train_howitzer": {"id": "train_howitzer", "name": "Train Howitzer", "hotkey": "S", "target": "none", "unit": "howitzer"},
+	"train_rail_skimmer": {"id": "train_rail_skimmer", "name": "Build Rail Skimmer", "hotkey": "N", "target": "none", "unit": "rail_skimmer"},
+	"train_warden_walker": {"id": "train_warden_walker", "name": "Build Warden Walker", "hotkey": "G", "target": "none", "unit": "warden_walker"},
 	"train_kestrel_interceptor": {"id": "train_kestrel_interceptor", "name": "Train Kestrel Interceptor", "hotkey": "A", "target": "none", "unit": "kestrel_interceptor"},
 	"train_rampart_transport": {"id": "train_rampart_transport", "name": "Train Rampart Transport", "hotkey": "D", "target": "none", "unit": "rampart_transport"},
 	"rampart_boost": {"id": "rampart_boost", "name": "Ignite Afterburners", "hotkey": "B", "target": "none",
@@ -2894,6 +2981,7 @@ var abilities: Dictionary = {
 	"build_sentry_turret": {"id": "build_sentry_turret", "name": "Build Sentry Turret", "hotkey": "T", "target": "point", "structure": "sentry_turret"},
 	"build_field_bunker": {"id": "build_field_bunker", "name": "Build Field Bunker", "hotkey": "U", "target": "point", "structure": "field_bunker"},
 	"build_field_armory": {"id": "build_field_armory", "name": "Build Field Armory", "hotkey": "E", "target": "point", "structure": "field_armory"},
+	"build_quarantine_relay": {"id": "build_quarantine_relay", "name": "Build Survey Relay", "hotkey": "N", "target": "point", "structure": "quarantine_relay"},
 	"unload_bunker": {"id": "unload_bunker", "name": "Unload Bunker", "hotkey": "U", "target": "none", "desc": "Deploy the garrison onto clear ground around the bunker."},
 	"build_colony_hub": {"id": "build_colony_hub", "name": "Build Colony Hub", "hotkey": "C", "target": "point", "structure": "colony_hub"},
 	"build_heartstone": {"id": "build_heartstone", "name": "Summon Heartstone", "hotkey": "N", "target": "point", "structure": "heartstone"},

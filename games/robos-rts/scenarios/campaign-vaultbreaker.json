@@ -1,0 +1,108 @@
+{
+  "name": "Vaultbreaker",
+  "seed": 921,
+  "fog_of_war": true,
+  "decor": false,
+  "map": {
+    "width": 232,
+    "height": 232,
+    "terrain_grid": "res://assets/terrain/campaign-vaultbreaker-terrain.json"
+  },
+  "players": {
+    "1": {
+      "faction": "humans",
+      "crystal": 400,
+      "aether": 150
+    },
+    "2": {
+      "faction": "aliens",
+      "crystal": 0,
+      "aether": 0
+    }
+  },
+  "mission": {
+    "defend": [
+      58,
+      169
+    ],
+    "raid_origins": [
+      [
+        73,
+        104
+      ],
+      [
+        137,
+        172
+      ]
+    ],
+    "samples": [
+      {
+        "point": [
+          27,
+          66
+        ],
+        "guard": "relic_guard_1"
+      },
+      {
+        "point": [
+          150,
+          106
+        ],
+        "guard": "relic_guard_2"
+      },
+      {
+        "point": [
+          188,
+          191
+        ],
+        "guard": "relic_guard_3"
+      }
+    ]
+  },
+  "resources": [
+    {"type":"crystal_field","x":45,"y":182,"amount":1700},
+    {"type":"crystal_field","x":49,"y":185,"amount":1700},
+    {"type":"crystal_field","x":53,"y":187,"amount":1700},
+    {"type":"crystal_field","x":58,"y":188,"amount":1700},
+    {"type":"crystal_field","x":63,"y":187,"amount":1700},
+    {"type":"crystal_field","x":67,"y":185,"amount":1700},
+    {"type":"crystal_field","x":71,"y":182,"amount":1700},
+    {"type":"aether_vent","x":42,"y":172,"amount":2500},
+    {"type":"aether_vent","x":74,"y":172,"amount":2500}
+  ],
+  "units": [
+    {"type":"colony_hub","owner":1,"x":58,"y":169,"id":"operation_hub"},
+    {"type":"muster_hall","owner":1,"x":45,"y":160,"id":"operation_hall"},
+    {"type":"research_module","owner":1,"x":50.5,"y":160,"id":"operation_module"},
+    {"type":"workshop","owner":1,"x":72,"y":159},
+    {"type":"silo","owner":1,"x":47,"y":171},
+    {"type":"silo","owner":1,"x":68,"y":173},
+    {"type":"aether_tap","owner":1,"x":42,"y":172},
+    {"type":"pioneer","owner":1,"x":53,"y":177,"count":8,"auto_harvest":true},
+    {"type":"rifleman","owner":1,"x":53,"y":154,"count":8,"spread":2},
+    {"type":"triage_specialist","owner":1,"x":61,"y":155,"count":2},
+    {"type":"vault_drill","owner":0,"x":90,"y":149,"id":"helix_drill"},
+    {"type":"vault_gate","owner":2,"x":130,"y":120,"id":"vault_seal"},
+    {"type":"howitzer","owner":1,"x":68,"y":152},
+    {"type":"howitzer","owner":1,"x":74,"y":163},
+    {"type":"field_bunker","owner":1,"x":72,"y":141},
+    {"type":"field_bunker","owner":1,"x":92,"y":159},
+    {"type":"sunblade","owner":2,"x":75,"y":116},
+    {"type":"sunblade","owner":2,"x":108,"y":128},
+    {"type":"sunblade","owner":2,"x":127,"y":112},
+    {"type":"sunblade","owner":2,"x":136,"y":124},
+    {"type":"sunblade","owner":2,"x":154,"y":105},
+    {"type":"sunblade","owner":2,"x":180,"y":184},
+    {"type":"sunblade","owner":2,"x":26,"y":70},
+    {"type":"skirmisher","owner":2,"x":76,"y":112},
+    {"type":"skirmisher","owner":2,"x":138,"y":112},
+    {"type":"skirmisher","owner":2,"x":149,"y":103},
+    {"type":"skirmisher","owner":2,"x":185,"y":190},
+    {"type":"resonator","owner":2,"x":30,"y":65,"id":"relic_guard_1"},
+    {"type":"resonator","owner":2,"x":153,"y":106,"id":"relic_guard_2"},
+    {"type":"resonator","owner":2,"x":190,"y":188,"id":"relic_guard_3"},
+    {"type":"contract_post","owner":1,"x":43,"y":149},
+    {"type":"sunblade","owner":2,"x":97,"y":146},
+    {"type":"skirmisher","owner":2,"x":100,"y":149}
+  ]
+}

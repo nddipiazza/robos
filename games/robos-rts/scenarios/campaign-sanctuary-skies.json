@@ -1,0 +1,263 @@
+{
+  "name": "Sanctuary Skies",
+  "seed": 918,
+  "decor": false,
+  "fog_of_war": true,
+  "map": {
+    "width": 192,
+    "height": 276,
+    "terrain_grid": "res://assets/terrain/campaign-sanctuary-skies-terrain.json"
+  },
+  "players": {
+    "1": {
+      "faction": "humans",
+      "crystal": 500,
+      "aether": 150
+    },
+    "2": {
+      "faction": "aliens",
+      "crystal": 0,
+      "aether": 0
+    }
+  },
+  "resources": [
+    {"type": "aether_vent", "x": 107.01, "y": 68.97, "amount": 2348},
+    {"type": "aether_vent", "x": 59.25, "y": 243.75, "amount": 2500},
+    {"type": "aether_vent", "x": 101.97, "y": 74.01, "amount": 1985},
+    {"type": "aether_vent", "x": 88.53, "y": 50.49, "amount": 2468},
+    {"type": "crystal_field", "x": 96.09, "y": 52.17, "amount": 1625},
+    {"type": "crystal_field", "x": 106.17, "y": 58.89, "amount": 1750},
+    {"type": "crystal_field", "x": 98.158, "y": 49.041, "amount": 1800},
+    {"type": "crystal_field", "x": 104.49, "y": 53.85, "amount": 1625},
+    {"type": "crystal_field", "x": 101.361, "y": 51.782, "amount": 1725},
+    {"type": "crystal_field", "x": 107.85, "y": 62.25, "amount": 1725},
+    {"type": "crystal_field", "x": 108.238, "y": 55.761, "amount": 1675},
+    {"type": "crystal_field", "x": 166.5, "y": 168.75, "amount": 1300},
+    {"type": "crystal_field", "x": 170, "y": 170.25, "amount": 1300},
+    {"type": "crystal_field", "x": 166.5, "y": 173.25, "amount": 1300},
+    {"type": "crystal_field", "x": 167.207, "y": 176.957, "amount": 1300},
+    {"type": "crystal_field", "x": 169.061, "y": 180.311, "amount": 1300},
+    {"type": "crystal_field", "x": 165.75, "y": 182.049, "amount": 1300},
+    {"type": "crystal_field", "x": 48, "y": 230.25, "amount": 1300},
+    {"type": "crystal_field", "x": 46.629, "y": 233.733, "amount": 1300},
+    {"type": "crystal_field", "x": 48, "y": 237.75, "amount": 1300},
+    {"type": "crystal_field", "x": 48.707, "y": 241.457, "amount": 1300},
+    {"type": "crystal_field", "x": 52.5, "y": 242.25, "amount": 1300},
+    {"type": "crystal_field", "x": 54.268, "y": 245.518, "amount": 1300}
+  ],
+  "units": [
+    {"type": "muster_hall", "owner": 1, "x": 92.25, "y": 74.25, "id": "map_63"},
+    {"type": "colony_hub", "owner": 1, "x": 95.25, "y": 62.25, "id": "map_14"},
+    {"type": "aether_tap", "owner": 1, "x": 88.53, "y": 50.49, "id": "map_58"},
+    {"type": "heartstone", "owner": 2, "x": 57.75, "y": 233.25, "id": "map_2466"},
+    {"type": "heartstone", "owner": 2, "x": 144.75, "y": 81.75, "id": "map_2819"},
+    {"type": "heartstone", "owner": 2, "x": 153.75, "y": 174.75, "id": "map_2915"},
+    {"type": "field_armory", "owner": 1, "x": 87.75, "y": 65.25, "id": "map_2"},
+    {"type": "workshop", "owner": 1, "x": 72.75, "y": 65.25, "id": "map_144"},
+    {"type": "contract_post", "owner": 1, "x": 81, "y": 57, "id": "map_3266"},
+    {"type": "airframe_hangar", "owner": 1, "x": 81.75, "y": 72.75, "id": "map_482"},
+    {"type": "silo", "owner": 1, "x": 107, "y": 51, "id": "map_3"},
+    {"type": "silo", "owner": 1, "x": 111.5, "y": 54, "id": "map_4"},
+    {"type": "silo", "owner": 1, "x": 103.5, "y": 48, "id": "map_5"},
+    {"type": "rifleman", "owner": 1, "x": 73.22, "y": 78.976, "id": "map_40"},
+    {"type": "rifleman", "owner": 1, "x": 87.157, "y": 81.151, "id": "map_44"},
+    {"type": "rifleman", "owner": 1, "x": 88.664, "y": 78.849, "id": "map_45"},
+    {"type": "rifleman", "owner": 1, "x": 71.074, "y": 76.583, "id": "map_117"},
+    {"type": "triage_specialist", "owner": 1, "x": 73.652, "y": 76.48, "id": "map_3002"},
+    {"type": "triage_specialist", "owner": 1, "x": 86.782, "y": 78.723, "id": "map_3003"},
+    {"type": "pioneer", "owner": 1, "x": 101.381, "y": 61.87, "id": "map_73", "auto_harvest": true},
+    {"type": "pioneer", "owner": 1, "x": 95.618, "y": 56.14, "id": "map_150", "auto_harvest": true},
+    {"type": "pioneer", "owner": 1, "x": 100.132, "y": 59.934, "id": "map_188", "auto_harvest": true},
+    {"type": "pioneer", "owner": 1, "x": 97.739, "y": 57.017, "id": "map_189", "auto_harvest": true},
+    {"type": "pioneer", "owner": 1, "x": 99.325, "y": 55.566, "id": "map_235", "auto_harvest": true},
+    {"type": "pioneer", "owner": 1, "x": 101.096, "y": 58.153, "id": "map_284", "auto_harvest": true},
+    {"type": "kestrel_interceptor", "owner": 1, "x": 80.843, "y": 80.135, "id": "map_2351"},
+    {"type": "kestrel_interceptor", "owner": 1, "x": 77.002, "y": 77.277, "id": "map_2352"},
+    {"type": "kestrel_interceptor", "owner": 1, "x": 85.019, "y": 76.771, "id": "map_3312"},
+    {"type": "shrine_cannon", "owner": 2, "x": 57.518, "y": 223.932, "id": "map_18"},
+    {"type": "shrine_cannon", "owner": 2, "x": 73.5, "y": 225, "id": "map_77"},
+    {"type": "shrine_cannon", "owner": 2, "x": 157.5, "y": 189, "id": "map_327"},
+    {"type": "shrine_cannon", "owner": 2, "x": 160.5, "y": 160.5, "id": "map_472"},
+    {"type": "shrine_cannon", "owner": 2, "x": 149, "y": 165, "id": "map_538"},
+    {"type": "shrine_cannon", "owner": 2, "x": 146, "y": 178.5, "id": "map_646"},
+    {"type": "shrine_cannon", "owner": 2, "x": 66, "y": 241.5, "id": "map_1022"},
+    {"type": "shrine_cannon", "owner": 2, "x": 143, "y": 73.5, "id": "map_2837"},
+    {"type": "shrine_cannon", "owner": 2, "x": 132, "y": 85.5, "id": "map_2838"},
+    {"type": "shrine_cannon", "owner": 2, "x": 139.5, "y": 93, "id": "map_2839"},
+    {"type": "skirmisher", "owner": 2, "x": 64.513, "y": 234.398, "id": "map_60"},
+    {"type": "skirmisher", "owner": 2, "x": 52.25, "y": 232.468, "id": "map_217"},
+    {"type": "crownspire", "owner": 2, "x": 65.786, "y": 229.342, "id": "map_47"},
+    {"type": "crownspire", "owner": 2, "x": 46.72, "y": 230.532, "id": "map_99"},
+    {"type": "rampart_transport", "owner": 0, "x": 77.25, "y": 42.75, "id": "map_159"},
+    {"type": "rampart_transport", "owner": 0, "x": 42.75, "y": 107.25, "id": "map_1594"},
+    {"type": "rampart_transport", "owner": 0, "x": 40.526, "y": 175.572, "id": "map_1678"},
+    {"type": "rampart_transport", "owner": 0, "x": 108.75, "y": 147.75, "id": "map_2722"},
+    {"type": "skirmisher", "owner": 2, "x": 161.817, "y": 174.513, "id": "map_1193"},
+    {"type": "skirmisher", "owner": 2, "x": 135.133, "y": 85.504, "id": "map_2830"},
+    {"type": "skirmisher", "owner": 2, "x": 146.06, "y": 94.717, "id": "map_2831"},
+    {"type": "skirmisher", "owner": 2, "x": 133.842, "y": 74.083, "id": "map_2832"},
+    {"type": "crownspire", "owner": 2, "x": 164.394, "y": 197.799, "id": "map_765"},
+    {"type": "skirmisher", "owner": 2, "x": 148.594, "y": 170.13, "id": "map_1190"},
+    {"type": "skirmisher", "owner": 2, "x": 153.785, "y": 181.271, "id": "map_1191"},
+    {"type": "skirmisher", "owner": 2, "x": 159.372, "y": 166.803, "id": "map_1194"},
+    {"type": "skirmisher", "owner": 2, "x": 162.162, "y": 179.606, "id": "map_2329"},
+    {"type": "sunblade", "owner": 2, "x": 68.706, "y": 238.699, "id": "map_236"},
+    {"type": "sunblade", "owner": 2, "x": 70.768, "y": 228.662, "id": "map_237"},
+    {"type": "sunblade", "owner": 2, "x": 62.153, "y": 223.647, "id": "map_238"},
+    {"type": "sunblade", "owner": 2, "x": 145.275, "y": 70.98, "id": "map_1046"},
+    {"type": "sunblade", "owner": 2, "x": 136.728, "y": 91.252, "id": "map_2833"},
+    {"type": "sunblade", "owner": 2, "x": 147.608, "y": 92.305, "id": "map_2835"},
+    {"type": "sunblade", "owner": 2, "x": 149.507, "y": 84.966, "id": "map_2836"}
+  ],
+  "mission": {
+    "caches": [
+      [
+        [
+          39.75,
+          177.75
+        ],
+        true
+      ],
+      [
+        [
+          38.369,
+          174.183
+        ],
+        true
+      ],
+      [
+        [
+          42.276,
+          173.802
+        ],
+        true
+      ],
+      [
+        [
+          110.25,
+          144.75
+        ],
+        true
+      ],
+      [
+        [
+          104.855,
+          147.693
+        ],
+        true
+      ],
+      [
+        [
+          109.448,
+          150.842
+        ],
+        true
+      ],
+      [
+        [
+          42.75,
+          110.25
+        ],
+        true
+      ],
+      [
+        [
+          42.75,
+          104.25
+        ],
+        true
+      ],
+      [
+        [
+          43.395,
+          107.682
+        ],
+        true
+      ],
+      [
+        [
+          108.564,
+          149.342
+        ],
+        false
+      ],
+      [
+        [
+          41.987,
+          178.967
+        ],
+        false
+      ],
+      [
+        [
+          44.856,
+          106.245
+        ],
+        false
+      ],
+      [
+        [
+          44.808,
+          109.444
+        ],
+        false
+      ],
+      [
+        [
+          43.833,
+          174.863
+        ],
+        false
+      ],
+      [
+        [
+          111.301,
+          146.556
+        ],
+        false
+      ],
+      [
+        [
+          39.791,
+          175.028
+        ],
+        false
+      ],
+      [
+        [
+          42.398,
+          176.847
+        ],
+        false
+      ],
+      [
+        [
+          107.998,
+          147.532
+        ],
+        false
+      ],
+      [
+        [
+          110.928,
+          148.44
+        ],
+        false
+      ],
+      [
+        [
+          39.75,
+          108.75
+        ],
+        false
+      ],
+      [
+        [
+          47.25,
+          107.25
+        ],
+        false
+      ]
+    ]
+  }
+}

@@ -36,6 +36,8 @@ signal structure_construction_finished(structure: Dictionary)
 signal match_finished
 
 const TICK_RATE: int = 64
+const BUILD_CLEAR_TIMEOUT_TICKS := 4 * TICK_RATE
+const BUILD_CLEAR_RETRY_TICKS := 16
 const TICK_DT: float = 1.0 / float(TICK_RATE)
 const SUPPLY_REQUIRED_NOTICE := "Supply required."
 const SILO_RAISE_TICKS := TICK_RATE
@@ -543,7 +545,7 @@ func load_scenario_dict(data: Dictionary, campaign_index: int = -1, difficulty: 
 	RTSCommanderAI.configure_from_scenario(data.get("directives", []))
 	_start_vision(bool(data.get("fog_of_war", false)))
 	if campaign_index >= 0:
-		campaign = Campaign.new(self, campaign_index, difficulty)
+		campaign = Campaign.new(self, campaign_index, difficulty, data.get("mission", {}))
 		if not mutations.is_empty():
 			var enabled := []
 			for id in Mutators.ACTIVE:
@@ -553,6 +555,9 @@ func load_scenario_dict(data: Dictionary, campaign_index: int = -1, difficulty: 
 		sim_speed = campaign.playback_speed()
 		if campaign.mutators != null or difficulty in ["hard", "brutal"]:
 			_refresh_vision()
+		for structure in _town_halls:
+			if structure.owner == 1 and structure.unit_type == "colony_hub":
+				set_starting_mineral_rally(structure)
 	emit_signal("scenario_loaded", scenario_name)
 	return {"ok": true, "scenario": scenario_name, "unit_count": units.size()}
 
@@ -898,11 +903,13 @@ func stalemate_seconds_remaining() -> int:
 
 func radar_contacts(owner: int) -> PackedVector2Array:
 	var positions := PackedVector2Array()
-	if not ladder_rules or vision == null or owner == 0:
+	var quarantine := campaign != null and campaign.quarantine != null
+	if (not ladder_rules and not quarantine) or vision == null or owner == 0:
 		return positions
+	var beacon_type := "quarantine_relay" if quarantine else "radar_beacon"
 	var tracked := {}
 	for beacon in units.values():
-		if beacon.owner != owner or beacon.unit_type != "radar_beacon" or beacon.build_progress < 1.0:
+		if beacon.owner != owner or beacon.unit_type != beacon_type or beacon.build_progress < 1.0:
 			continue
 		for contact in query_units_in_radius(beacon.pos, LadderRules.RADAR_RADIUS, owner):
 			if (contact.is_structure or contact.get("nonblocking", false) or contact.get("cloaked", false)
@@ -946,8 +953,16 @@ func _finish_match(winner: int, reason: String) -> void:
 	emit_signal("match_finished")
 
 func unit_definition_for(unit_type: String, owner_id: int) -> Dictionary:
+	if unit_type == "muster_hall" and owner_id == 1 and campaign != null and campaign.frontier != null:
+		return campaign.frontier.hall_definition
 	if unit_type == "sentry_turret" and owner_id == 1 and campaign != null and campaign.mission_index == Campaign.DEFENSE:
 		return campaign.defense_turret_definition
+	if unit_type == "workshop" and owner_id == 1 and campaign != null and campaign.mission_index == Campaign.QUARANTINE:
+		return campaign.quarantine.workshop_definition
+	if unit_type == "workshop" and owner_id == 1 and campaign != null and campaign.frontier != null:
+		return campaign.frontier.workshop_definition
+	if unit_type == "workshop" and owner_id == 1 and campaign != null and campaign.operation != null:
+		return campaign.operation.workshop_definition
 	return RTSData.get_unit_def(unit_type)
 
 func _can_build(worker: Dictionary, structure_type: String, pos: Vector2) -> bool:
@@ -1948,6 +1963,8 @@ func _step_single_tick() -> void:
 			continue
 		if u.has("recall_channel"):
 			continue
+		if _step_build_site_yield(u, TICK_DT):
+			continue
 		if u.has("support") and _step_support(u, TICK_DT):
 			continue
 		if u.is_structure and u.flight_height <= 0.0 and (not u.armed_structure or u.build_progress < 1.0):
@@ -1956,6 +1973,10 @@ func _step_single_tick() -> void:
 			u.attack_state = "idle"
 			continue
 		_update_unit_orders(u, TICK_DT)
+		if u.unit_type == "rail_skimmer" and not u.vel.is_zero_approx() and u.attack_state == "idle" and u.weapon_cooldown <= 0.0:
+			var contact := _find_best_attack_target(u, true)
+			if not contact.is_empty() and _edge_distance(u, contact) <= weapon_range_against(u, contact) and _execute_weapon_hit(u, contact):
+				u.weapon_cooldown = _weapon_period(u, _active_weapon(u, contact))
 		if u.is_worker and not u.orders.is_empty() and u.orders[0].type in ["harvest", "return_cargo"]:
 			var target_tag: int = u.orders[0].target_tag
 			var deposit: Dictionary = resources.get(target_tag, {})
@@ -3473,6 +3494,22 @@ func _update_unit_orders(u: Dictionary, dt: float) -> void:
 		"build":
 			_process_worker_build_order(u, order, dt)
 
+		"extract_canister":
+			var altar: Dictionary = units.get(order.target_tag, {})
+			if campaign == null or campaign.operation == null or not campaign.operation.can_collect(u, altar):
+				u.orders.pop_front()
+				u.path.clear()
+			elif u.pos.distance_to(altar.pos) > 3.6:
+				_follow_order_path(u, altar.pos, dt, 3.6)
+
+		"deliver_canister":
+			var hub := _find_nearest_town_hall(u.owner, u.pos)
+			if not hub.is_empty() and u.get("campaign_canister", false):
+				_follow_order_path(u, hub.pos, dt, hub.radius + u.radius + 1.4)
+			else:
+				u.orders.pop_front()
+				u.path.clear()
+
 		"repair":
 			_process_repair_order(u, order, dt)
 
@@ -3803,7 +3840,11 @@ func _process_worker_build_order(u: Dictionary, order: Dictionary, dt: float) ->
 			u.orders.pop_front()
 			return
 		var build_rad = float(s_def.get("radius", 2.0))
-		if u["pos"].distance_to(build_pos) <= build_rad + u["radius"] + 1.5:
+		var in_reach: bool = u["pos"].distance_to(build_pos) <= build_rad + u["radius"] + 1.5
+		if in_reach or order.has("clear_deadline"):
+			if not _clear_build_footprint(u, order, build_pos, build_rad):
+				return
+		if in_reach:
 			var m_cost = int(s_def.get("crystal_cost", 100))
 			var v_cost = int(s_def.get("aether_cost", 0))
 			var p = players[u["owner"]]
@@ -3811,6 +3852,9 @@ func _process_worker_build_order(u: Dictionary, order: Dictionary, dt: float) ->
 				p["crystal"] -= m_cost
 				p["aether"] -= v_cost
 				var s_unit = spawn_unit(struct_type, u["owner"], build_pos, "", 0.0)
+				if not s_unit.is_walkable_structure:
+					# Prevent moves later in this tick from entering the new foundation.
+					_index_footprint(s_unit)
 				order["structure_tag"] = s_unit["tag"]
 				s_unit["builder_tag"] = u.tag
 				s_unit["construction_cost"] = Vector2i(m_cost, v_cost)
@@ -3853,6 +3897,86 @@ func _process_worker_build_order(u: Dictionary, order: Dictionary, dt: float) ->
 					issue_command([u.tag], "harvest", s_unit.pos, s_unit.tag)
 		else:
 			_approach_target(u, s_unit["pos"], dt)
+
+func _clear_build_footprint(builder: Dictionary, order: Dictionary, point: Vector2, radius: float) -> bool:
+	var occupants := query_units_in_radius(point, radius).filter(func(unit):
+		return (not unit.is_structure and unit.hp > 0.0
+			and unit.flight_height <= 0.0 and not unit.get("burrowed", false) and not unit.get("nonblocking", false)
+			and unit.pos.distance_squared_to(point) < (radius + unit.radius) ** 2))
+	if occupants.is_empty():
+		return true
+	builder.vel = Vector2.ZERO
+	if not order.has("clear_deadline"):
+		order["clear_deadline"] = tick + BUILD_CLEAR_TIMEOUT_TICKS
+	if tick >= int(order.clear_deadline):
+		builder.orders.pop_front()
+		builder.path.clear()
+		notice.emit(builder.owner, "Build canceled: the footprint did not clear.", "warn")
+		return false
+	if tick < int(order.get("clear_retry", 0)):
+		return false
+	order["clear_retry"] = tick + BUILD_CLEAR_RETRY_TICKS
+	var reserved: Dictionary = order.get_or_add("clear_berths", {})
+	# Reserve a different berth for each unit so a group can clear together.
+	occupants.sort_custom(func(a, b): return a.tag < b.tag)
+	for unit in occupants:
+		if (unit.owner != builder.owner or unit.is_immobile or unit.speed <= 0.0 or unit.get("campaign_scripted", false)
+				or unit.get("campaign_road_vehicle", false) or unit.has("build_site_yield")):
+			continue
+		var berth := _build_site_berth(unit, point, radius, reserved)
+		if not berth.is_finite():
+			continue
+		reserved[unit.tag] = {"pos": berth, "radius": unit.radius}
+		unit.erase("choke_yield")
+		unit.path.clear()
+		if unit.is_worker:
+			_release_mining_slot(unit)
+		unit["build_site_yield"] = {"builder": builder.tag, "order": order, "point": berth, "center": point, "radius": radius}
+	return false
+
+func _build_site_berth(unit: Dictionary, center: Vector2, radius: float, reserved: Dictionary) -> Vector2:
+	var outward: Vector2 = unit.pos - center
+	var angle := outward.angle() if outward.length_squared() > 0.01 else float(unit.tag % 12) * TAU / 12.0
+	var cliff_walk: bool = unit.get("cliff_walk", false)
+	for offset in [0.75, 2.5, 4.5]:
+		for spoke in [0, 1, -1, 2, -2, 3, -3, 4, -4, 5, -5, 6]:
+			var point: Vector2 = center + Vector2.from_angle(angle + float(spoke) * TAU / 12.0) * (radius + unit.radius + offset)
+			if not _has_clear_line_of_walk(unit.pos, point, unit.radius, cliff_walk):
+				continue
+			if reserved.values().any(func(berth): return point.distance_to(berth.pos) < unit.radius + berth.radius + 0.25):
+				continue
+			if query_units_in_radius(point, unit.radius).any(func(other):
+					return (other.tag != unit.tag and other.flight_height <= 0.0 and not other.is_structure
+						and not other.get("nonblocking", false) and not other.get("burrowed", false))):
+				continue
+			return point
+	return Vector2.INF
+
+func _step_build_site_yield(unit: Dictionary, dt: float) -> bool:
+	if not unit.has("build_site_yield"):
+		return false
+	var task: Dictionary = unit.build_site_yield
+	var builder: Dictionary = units.get(task.builder, {})
+	var order: Dictionary = task.order
+	var active: bool = (not builder.is_empty() and not builder.orders.is_empty() and is_same(builder.orders.front(), order)
+		and order.structure_tag == 0 and tick < int(order.clear_deadline))
+	var point: Vector2 = task.point
+	var clear: bool = unit.pos.distance_squared_to(task.center) >= (task.radius + unit.radius) ** 2
+	unit.vel = Vector2.ZERO
+	if not active or (not clear and not _has_clear_line_of_walk(unit.pos, point, unit.radius, unit.get("cliff_walk", false))):
+		unit.erase("build_site_yield")
+		order.clear_berths.erase(unit.tag)
+		unit.path.clear()
+		if unit.orders.is_empty() or unit.orders.front().type == "hold_position":
+			unit.home_pos = unit.pos
+		return false
+	if unit.tag == task.builder and clear:
+		unit.erase("build_site_yield")
+		order.clear_berths.erase(unit.tag)
+		return false
+	if not clear or unit.pos.distance_squared_to(point) > 0.16:
+		_move_toward_point(unit, point, dt)
+	return true
 
 func _advance_construction(site: Dictionary, dt: float) -> bool:
 	var rate := dt / maxf(1.0, float(site.build_total_time))
@@ -4787,7 +4911,7 @@ func _apply_steering_and_push_resolution(all_tags: Array, dt: float, mineral_wal
 			_move_on_terrain(u, u.pos + u.vel * dt)
 			continue
 		if u.has("choke_yield"):
-			if mineral_walkers.has(tag):
+			if mineral_walkers.has(tag) or u.has("build_site_yield"):
 				u.erase("choke_yield")
 			else:
 				_follow_choke_yield(u, dt, mineral_walkers)
@@ -4826,7 +4950,7 @@ func _apply_steering_and_push_resolution(all_tags: Array, dt: float, mineral_wal
 			var normal = delta_p / dist
 
 			if is_moving and (not n.is_structure or flying):
-				if not flying and n.owner == owner_id and n.attack_state == "idle" and not n.is_immobile and not u.has("choke_yield") and not n.has("choke_yield") and tick % 4 == int(tag) % 4 and dist < min_sep * 2.0:
+				if not flying and n.owner == owner_id and n.attack_state == "idle" and not n.is_immobile and not u.has("choke_yield") and not n.has("choke_yield") and not u.has("build_site_yield") and not n.has("build_site_yield") and tick % 4 == int(tag) % 4 and dist < min_sep * 2.0:
 					_start_choke_yield(u, n, desired_vel.normalized(), mineral_walkers)
 				if dist < min_sep * 1.55:
 					var overlap_ratio = (min_sep * 1.55 - dist) / (min_sep * 1.55)
@@ -5488,7 +5612,7 @@ func apply_uprising_blast(source: Dictionary, target: Dictionary, center: Vector
 	_apply_weapon_splash(source, direct_tag, center, mortar, float(mortar.damage), wave)
 
 func _apply_damage_to_target(attacker: Dictionary, target: Dictionary, base_dmg: float, bonus_dict: Dictionary, mult: float, bypass_armor: bool = false, weapon: Dictionary = {}) -> void:
-	if int(target.get("stasis_until", 0)) > tick or target.get("dread_in_transit", false) or target.get("gas_extracting", false):
+	if int(target.get("stasis_until", 0)) > tick or target.get("dread_in_transit", false) or target.get("gas_extracting", false) or target.get("campaign_shielded", false):
 		return
 	# Stranded militia trade harmless fire while they wait for help.
 	if attacker.get("hallucinated", false) or attacker.get("campaign_stranded", false) or int(target.get("rescue_cover_until", 0)) > tick:
@@ -5497,6 +5621,8 @@ func _apply_damage_to_target(attacker: Dictionary, target: Dictionary, base_dmg:
 		return
 	if campaign != null and attacker.owner == 1 and target.owner == 2 and not attacker.get("campaign_scripted", false):
 		campaign.on_player_hit_enemy(self, target.tag)
+		if campaign.quarantine != null:
+			campaign.quarantine.on_building_hit(self, campaign, target, attacker)
 	if target.has("agent_snipe"):
 		_end_agent_snipe(target)
 	var dmg = base_dmg
@@ -5578,7 +5704,7 @@ func _apply_damage_to_target(attacker: Dictionary, target: Dictionary, base_dmg:
 
 func _apply_mutation_damage(target: Dictionary, amount: float, bypass_shields: bool = false) -> void:
 	if int(target.get("stasis_until", 0)) > tick or int(target.get("rescue_cover_until", 0)) > tick \
-			or int(target.get("recall_protection_until", 0)) > tick or target.get("dread_in_transit", false):
+			or int(target.get("recall_protection_until", 0)) > tick or target.get("dread_in_transit", false) or target.get("campaign_shielded", false):
 		return
 	target.out_of_combat_timer = 0.0
 	if not bypass_shields:
@@ -5760,8 +5886,11 @@ func _remove_destroyed_unit(unit: Dictionary) -> void:
 	if unit.is_structure:
 		nav_dirty = true
 	_recompute_supplies()
-	if campaign != null and campaign.mutators != null:
-		campaign.mutators.on_death(dead)
+	if campaign != null:
+		if campaign.mutators != null:
+			campaign.mutators.on_death(dead)
+		if campaign.quarantine != null:
+			campaign.quarantine.on_death(self, campaign, dead)
 	unit_destroyed.emit(dead)
 
 func _detonate_sporeburst(unit: Dictionary, contact_tag: int = 0) -> void:
@@ -5837,6 +5966,22 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 
 	for u in valid_units:
 		var ctype = cmd_type.to_lower()
+		if campaign != null and campaign.operation != null:
+			if ctype == "extract_canister":
+				var altar: Dictionary = units.get(target_tag, {})
+				if campaign.operation.can_collect(u, altar) and can_see_unit(1, altar):
+					if not queue:
+						_release_mining_slot(u)
+						u.orders.clear()
+						u.path.clear()
+					u.orders.append({"type": "extract_canister", "target_tag": altar.tag, "target_pos": altar.pos})
+					accepted += 1
+				continue
+			if u.unit_type == "vault_drill":
+				if ctype in ["stop", "attack", "attack_target"] and campaign.operation.drill_order(self, u, ctype, units.get(target_tag, {})):
+					accepted += 1
+					continue
+				continue
 		if ctype == "cancel_queued_build":
 			if accepted == 0 and _cancel_queued_build(u, target_pos, extra):
 				accepted += 1
@@ -6267,7 +6412,7 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 		if u.get("burrowed", false) and not underground_move and not underground_attack:
 			continue
 		if u.unit_type == "field_bunker" and ctype == "unload_bunker":
-			if not u.get("passengers", []).is_empty() and _drop_ground_squad(u.passengers, u.pos):
+			if _unload_bunker(u, target_tag):
 				accepted += 1
 			continue
 		var boarding_bunker: bool = u.unit_type == "field_bunker" and ctype == "load_transport"
@@ -6626,7 +6771,10 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 				accepted += 1
 			continue
 		elif ctype == "call_roadwardens":
-			if campaign != null and campaign.evacuation != null and campaign.evacuation.call_roadwardens(self, u):
+			var contract: Variant = null
+			if campaign != null:
+				contract = campaign.roadwarden_contract()
+			if contract != null and contract.call_roadwardens(self, u):
 				accepted += 1
 			continue
 
@@ -8178,6 +8326,22 @@ func _step_rampart_unload(transport: Dictionary, order: Dictionary) -> bool:
 	transport["rampart_drop_ready"] = tick + ceili(TICK_RATE / 1.4)
 	return transport.passengers.is_empty()
 
+func _unload_bunker(bunker: Dictionary, passenger_tag: int) -> bool:
+	var passengers: Array = bunker.get("passengers", [])
+	if passengers.is_empty() or bunker.build_progress < 1.0:
+		return false
+	if passenger_tag == 0:
+		return _drop_ground_squad(passengers, bunker.pos)
+	for index in passengers.size():
+		if passengers[index].tag != passenger_tag:
+			continue
+		if not _drop_ground_squad([passengers[index]], bunker.pos):
+			notice.emit(bunker.owner, "No clear ground to unload this unit.", "warn")
+			return false
+		passengers.remove_at(index)
+		return true
+	return false
+
 func _drop_ground_squad(passengers: Array, center: Vector2, mouth: Dictionary = {}, vacated_tag: int = 0) -> bool:
 	var tunnel_exit := _is_brood_tunnel_endpoint(mouth)
 	var search_radius := 16.0 if tunnel_exit else 10.0
@@ -8394,6 +8558,29 @@ func _set_rally(structure: Dictionary, position: Vector2, target_tag: int, appen
 		route[-1] = {"kind": "move", "target_tag": 0, "pos": rally_waypoint_position(route.back())}
 	route.append({"kind": kind, "target_tag": target_tag, "pos": position})
 	return true
+
+func set_starting_mineral_rally(hub: Dictionary) -> void:
+	if not is_dropoff(hub, 1) or not hub.rally_route.is_empty():
+		return
+	var worker_radius: float = RTSData.get_unit_def("pioneer").radius
+	var nearest: Dictionary = {}
+	var best_distance := INF
+	for patch in resources.values():
+		if patch.resource_type != "crystal_field" or not deposit_present(patch) or not can_see_position(1, patch.pos):
+			continue
+		var distance: float = hub.pos.distance_squared_to(patch.pos)
+		if distance >= best_distance:
+			continue
+		var exit := _rally_spawn_position(hub, patch.pos, "pioneer")
+		if not exit.is_finite():
+			continue
+		var reach: float = worker_radius + patch.radius + HARVEST_REACH
+		var path := compute_smooth_path(exit, patch.pos, worker_radius, false, reach)
+		if not path.is_empty() and path.back().distance_squared_to(patch.pos) <= reach * reach:
+			nearest = patch
+			best_distance = distance
+	if not nearest.is_empty():
+		_set_rally(hub, nearest.pos, nearest.tag, false)
 
 func _apply_rally_route(unit: Dictionary, route: Array) -> void:
 	for waypoint in route:
@@ -9059,7 +9246,7 @@ func _enqueue_unit_production(structure: Dictionary, unit_type: String, larva_ta
 	var u_def = RTSData.get_unit_def(unit_type)
 	if u_def.is_empty():
 		return false
-	if not RTSData.get_unit_def(structure["unit_type"]).get("trains", []).has(unit_type):
+	if not unit_definition_for(structure.unit_type, structure.owner).get("trains", []).has(unit_type):
 		return false
 	if unit_type == "crownspire" and ladder_rules and not flagship_production_block_reason(structure.owner).is_empty():
 		return false

@@ -22,6 +22,7 @@ func _run() -> void:
 	_test_recovery()
 	_test_defense()
 	_test_evacuation()
+	_test_quarantine()
 	_test_stranded_rescue()
 	_test_stranded_timeout()
 	_test_terminal_states()
@@ -52,6 +53,83 @@ func _order(tags: Array, kind: String, point: Vector2) -> void:
 func _advance(seconds: int) -> void:
 	sim.step_ticks(seconds * sim.TICK_RATE)
 
+func _test_quarantine() -> void:
+	var mission_index := Campaign.QUARANTINE
+	_check(Campaign.mission_available(mission_index, [Campaign.MISSIONS[Campaign.EVACUATION].id]),
+		"Quarantine unlocks after The Last Road")
+	for index in Campaign.DIFFICULTIES.size():
+		var result: Dictionary = sim.start_campaign(mission_index, Campaign.DIFFICULTIES[index])
+		_check(result.ok, "Quarantine starts on " + Campaign.DIFFICULTIES[index])
+		if not result.ok:
+			return
+		_check(sim.terrain_grid.bounds == Rect2(24, 36, 192, 240), "Quarantine playable bounds")
+		_check(sim.campaign.quarantine._sites.size() == 144, "Quarantine tracks all 144 structures")
+		_check(_view().quarantine_phase_in == [120, 120, 90, 90][index], "Short opening day by difficulty")
+		_check(not sim.campaign.allows_training("cinder_runner"), "Vehicle unavailable before reinforcement")
+
+	sim.start_campaign(mission_index, "normal")
+	var campaign = sim.campaign
+	var mission = campaign.quarantine
+	var hub := _unit_named(mission.HUB)
+	_check_starting_resource_spacing(hub, Vector2(2.078, 2.387), Vector2(1.414, 1.523))
+	for unit in sim.units.values():
+		if unit.owner != 1:
+			continue
+		_check(not sim.terrain_grid.overlaps(unit.pos, unit.radius, false, unit.is_structure),
+			"Quarantine starter fits the terrain: " + unit.id)
+		for other in sim.units.values():
+			if other.owner == 1 and other.tag > unit.tag:
+				_check(unit.pos.distance_to(other.pos) >= unit.radius + other.radius,
+					"Quarantine starters have separate footprints: %s / %s" % [unit.id, other.id])
+	var start_crystal: int = sim.players[1].crystal
+	_advance(30)
+	_check(sim.players[1].crystal > start_crystal, "Quarantine opening Pioneers return crystal to the Hub")
+	var carrier := _unit_named("carrier_1110")
+	_check(carrier.get("burrowed", false), "Bonus Mireweaver starts burrowed")
+	_check(not sim.can_see_unit(1, carrier), "Bonus Mireweaver stays hidden in fog")
+	sim.tick = mission._phase_end
+	campaign.step(sim)
+	_check(_view().quarantine_night and _view().quarantine_phase_in == 300, "Normal first night lasts five minutes")
+	_check(carrier.get("burrowed", false), "Mireweaver remains hidden through the first night")
+	sim.tick = mission._phase_end - 77 * sim.TICK_RATE
+	campaign.step(sim)
+	_check(sim.units.values().filter(func(unit): return unit.unit_type == "cinder_runner").size() == 4,
+		"Normal receives four Cinder Runners during the first night")
+	var workshops: Array = sim.units.values().filter(func(unit): return unit.unit_type == "workshop")
+	_check(workshops.size() == 1, "Delivered Workshop finds an open landing pad")
+	if not workshops.is_empty():
+		_check(sim.can_place_structure("field_bunker", Vector2(122, 141)), "Quarantine has room for a Bunker after Workshop delivery")
+		sim._rebuild_astar_grid()
+		var runners: Array = sim.units.values().filter(func(unit): return unit.unit_type == "cinder_runner")
+		for runner in runners:
+			_check(not sim._is_point_blocked_by_static(runner.pos, runner.radius), "Cinder Runner lands on clear ground")
+			for other in runners:
+				if other.tag > runner.tag:
+					_check(runner.pos.distance_to(other.pos) >= runner.radius + other.radius,
+						"Cinder Runners land with space between vehicles")
+		for approach in mission.APPROACHES.slice(0, 2):
+			var route: Array = sim.compute_smooth_path(hub.pos + Vector2(0, -6), approach, 0.85)
+			_check(not route.is_empty() and route.back().distance_to(approach) <= 1.5,
+				"Quarantine starting base stays connected to its main approaches")
+		sim.players[1].crystal = 200
+		_check(sim.issue_command([workshops[0].tag], "train_cinder_runner").ok, "Workshop trains Cinder Runners")
+		_check(not sim.issue_command([workshops[0].tag], "train_howitzer").ok, "Workshop respects campaign roster")
+	sim.tick = mission._phase_end
+	campaign.step(sim)
+	_check(not _view().quarantine_night and _view().quarantine_phase_in == 360, "Normal second day lasts six minutes")
+	_check(carrier.get("burrowed", false), "Mireweaver burrows at dawn")
+	sim.tick = mission._phase_end
+	campaign.step(sim)
+	sim.tick += 15 * sim.TICK_RATE
+	campaign.step(sim)
+	_check(not carrier.get("burrowed", true), "Mireweaver surfaces 15 seconds into the second night")
+	sim._remove_destroyed_unit(carrier)
+	_check(_view().brood_research == 1, "Mireweavers award one research point each")
+	for tag in mission._sites.keys():
+		sim._remove_destroyed_unit(sim.units[tag])
+	campaign.step(sim)
+	_check(_view().infestation_cleared == 144 and campaign.status == "victory", "Clearing all sites wins")
+
 func _test_evacuation() -> void:
 	var evac := Campaign.Evacuation
 	_check(not Campaign.mission_available(Campaign.EVACUATION, [Campaign.MISSIONS[Campaign.RECOVERY].id]),
@@ -59,18 +137,18 @@ func _test_evacuation() -> void:
 	_check(Campaign.mission_available(Campaign.EVACUATION, [Campaign.MISSIONS[Campaign.DEFENSE].id]),
 		"Hold for Dawn unlocks Mission 04")
 	_check(sim.start_campaign(Campaign.EVACUATION, "hard").ok, "The Last Road loads")
-	_check(sim.map_width == 152 and sim.map_height == 200, "The evacuation uses the original terrain dimensions")
-	_check(sim.terrain_grid != null and sim.terrain_grid.bounds == Rect2(17, 24, 113, 160),
-		"The original playable bounds are inset from the terrain edges")
-	_check(sim._is_point_blocked_by_static(Vector2(12, 145), 0.6)
-		and not sim.can_place_structure("silo", Vector2(12, 145)), "Movement and construction respect the playable boundary")
+	_check(sim.map_width == 228 and sim.map_height == 300, "The evacuation uses the enlarged terrain dimensions")
+	_check(sim.terrain_grid != null and sim.terrain_grid.bounds == Rect2(25.5, 36, 169.5, 240),
+		"The scaled playable bounds are inset from the terrain edges")
+	_check(sim._is_point_blocked_by_static(Vector2(18, 217.5), 0.6)
+		and not sim.can_place_structure("silo", Vector2(18, 217.5)), "Movement and construction respect the playable boundary")
 	var insertion_height: float = sim.get_elevation_at(evac.INSERTION_ROAD.front())
 	var settlement_height: float = sim.get_elevation_at(evac.SETTLEMENT)
 	var spaceport_height: float = sim.get_elevation_at(evac.SPACEPORT)
 	_check(settlement_height > insertion_height + 1.5 and spaceport_height > settlement_height + 1.5,
 		"The settlement and spaceport use distinct elevation tiers")
-	_check(sim._has_clear_line_of_walk(Vector2(90, 50), Vector2(95, 45), 0.85)
-		and not sim._has_clear_line_of_walk(Vector2(90, 54), Vector2(100, 46), 0.85),
+	_check(sim._has_clear_line_of_walk(Vector2(135, 75), Vector2(142.5, 67.5), 0.85)
+		and not sim._has_clear_line_of_walk(Vector2(135, 81), Vector2(150, 69), 0.85),
 		"Infantry can follow the dock ramps and are blocked by the adjacent cliff")
 	_check(_army().size() == 4 and _unit_named("settlement_hub").owner == 0, "Opening escort has four troops and a neutral settlement")
 	_check(not sim.can_see_position(1, evac.SPACEPORT), "The spaceport starts in fog")
@@ -96,12 +174,19 @@ func _test_evacuation() -> void:
 	var squad := _army()
 	for index in range(1, evac.INSERTION_ROAD.size()):
 		sim.issue_command(squad, "attack_move", evac.INSERTION_ROAD[index], 0, "", index > 1)
-	_advance(38)
+	_advance(58)
 	_check(sim.campaign.stage == 1 and _unit_named("settlement_hub").owner == 1, "Arrival transfers the settlement")
 	if sim.campaign.stage != 1:
 		return
 	var hall := _unit_named("evac_muster")
+	_check_starting_resource_spacing(_unit_named("settlement_hub"), Vector2(1.300, 1.825), Vector2(1.400, 1.697))
 	_check(sim.production_attachment(hall).get("unit_type") == "research_module", "Starting Research Module is docked")
+	_check(sim.can_place_structure("muster_hall", Vector2(81, 213))
+		and sim.can_place_structure("field_armory", Vector2(91.5, 213))
+		and sim.can_place_structure("silo", Vector2(97.5, 219.75)),
+		"The east construction pad has room for production, research, and supply")
+	_check(not sim.can_place_structure("silo", Vector2(85.5, 229.5)),
+		"The convoy's insertion road stays clear of construction")
 	_check(sim.issue_command([hall.tag], "train_torchguard").ok, "Torchguards can train with an attached Research Module")
 	_check(sim.campaign_allows_ability(1, "attach_fabrication_module"), "Mission 04 unlocks the Fabrication Module")
 	_advance(26)
@@ -129,6 +214,24 @@ func _test_evacuation() -> void:
 	sim.campaign.evacuation.lost = evac.LOSS_LIMIT
 	_advance(1)
 	_check(_view().status == "defeat", "Hard fails when the colonist loss limit is reached")
+
+func _check_starting_resource_spacing(hub: Dictionary, crystal_range: Vector2, aether_range: Vector2) -> void:
+	# Mineral and aether distances are measured center to center in Hub widths.
+	var width: float = 2.0 * hub.radius
+	var crystal: Array[float] = []
+	var aether: Array[float] = []
+	for deposit in sim.resources.values():
+		var distance: float = hub.pos.distance_to(deposit.pos) / width
+		if distance > 3.0:
+			continue
+		var group := crystal if deposit.resource_type == "crystal_field" else aether
+		group.append(distance)
+		_check(not sim.terrain_grid.overlaps(deposit.pos, deposit.radius, false),
+			"Starting resource fits on walkable ground")
+	_check(crystal.size() == 7 and absf(crystal.min() - crystal_range.x) < 0.002
+		and absf(crystal.max() - crystal_range.y) < 0.002, "Starting crystal line matches the expected distances")
+	_check(aether.size() == 2 and absf(aether.min() - aether_range.x) < 0.002
+		and absf(aether.max() - aether_range.y) < 0.002, "Starting aether vents match the reference distances")
 
 func _test_difficulty() -> void:
 	sim.start_campaign(Campaign.ASSAULT)

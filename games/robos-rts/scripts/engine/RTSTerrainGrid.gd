@@ -7,6 +7,8 @@ const WATER := 2
 const NO_BUILD := 3
 const ROAD := 4
 const WATER_SURFACE := -3.0
+const CLIFF_FACE_NORMAL_Y := 0.76
+const CLIFF_SLOPE_SQUARED := 1.0 / (CLIFF_FACE_NORMAL_Y * CLIFF_FACE_NORMAL_Y) - 1.0
 
 var size: Vector2i
 var bounds: Rect2
@@ -31,6 +33,10 @@ func load_grid(path: String, dimensions: Vector2i) -> bool:
 	cells = _decode_rows(data.get("pathing_rows", []), size)
 	if heights.is_empty() or cells.is_empty():
 		return false
+	# A horizontal resize can move steep triangles into adjacent open cells.
+	# Explicitly painted roads and ramps keep their authored permissions.
+	if data.get("align_cliff_edges", false):
+		_align_cliff_edges()
 	for y in size.y:
 		var runs: Array = []
 		var x := 0
@@ -44,6 +50,29 @@ func load_grid(path: String, dimensions: Vector2i) -> bool:
 			x = end
 		blocked_rows.append(runs)
 	return true
+
+func _align_cliff_edges() -> void:
+	var painted := cells.duplicate()
+	for y in range(1, size.y - 1):
+		for x in range(1, size.x - 1):
+			var index := y * size.x + x
+			var flags := painted[index]
+			if (flags & ROAD) != 0 or (flags & 3) in [CLIFF, WATER]:
+				continue
+			var touches_edge := false
+			for offset in [-size.x, -1, 1, size.x]:
+				if (painted[index + offset] & 3) in [CLIFF, WATER]:
+					touches_edge = true
+					break
+			if not touches_edge:
+				continue
+			var a := vertex_height(x, y)
+			var b := vertex_height(x + 1, y)
+			var c := vertex_height(x, y + 1)
+			var d := vertex_height(x + 1, y + 1)
+			if Vector2(b - a, c - a).length_squared() > CLIFF_SLOPE_SQUARED \
+					or Vector2(d - c, d - b).length_squared() > CLIFF_SLOPE_SQUARED:
+				cells[index] = CLIFF
 
 func _decode_rows(rows: Array, dimensions: Vector2i) -> PackedByteArray:
 	var bytes := PackedByteArray()

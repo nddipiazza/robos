@@ -1,0 +1,807 @@
+{
+  "name": "Redstone Claim",
+  "seed": 916,
+  "decor": false,
+  "fog_of_war": true,
+  "map": {
+    "width": 240,
+    "height": 252,
+    "terrain_grid": "res://assets/terrain/campaign-redstone-claim-terrain.json"
+  },
+  "players": {
+    "1": {
+      "faction": "humans",
+      "crystal": 400,
+      "aether": 50
+    },
+    "2": {
+      "faction": "monsters",
+      "crystal": 0,
+      "aether": 0
+    }
+  },
+  "resources": [
+    {"type": "aether_vent", "x": 68.991, "y": 108.396, "amount": 2500},
+    {"type": "aether_vent", "x": 53.99, "y": 125.97, "amount": 2500},
+    {"type": "crystal_field", "x": 43.93, "y": 114.21, "amount": 255, "rich": true},
+    {"type": "crystal_field", "x": 57.37, "y": 100.822, "amount": 375, "rich": true},
+    {"type": "crystal_field", "x": 53.528, "y": 101.022, "amount": 200, "rich": true},
+    {"type": "crystal_field", "x": 50.556, "y": 104.151, "amount": 350, "rich": true},
+    {"type": "crystal_field", "x": 44.148, "y": 110.074, "amount": 260, "rich": true},
+    {"type": "crystal_field", "x": 46.93, "y": 107.49, "amount": 210, "rich": true},
+    {"type": "crystal_field", "x": 44.866, "y": 97.137, "amount": 295, "rich": true},
+    {"type": "crystal_field", "x": 39.78, "y": 102.836, "amount": 355, "rich": true},
+    {"type": "crystal_field", "x": 36.75, "y": 105.81, "amount": 250, "rich": true},
+    {"type": "crystal_field", "x": 95, "y": 137.25, "amount": 225, "rich": true},
+    {"type": "crystal_field", "x": 91.5, "y": 140.25, "amount": 200, "rich": true},
+    {"type": "crystal_field", "x": 96.966, "y": 133.991, "amount": 275, "rich": true},
+    {"type": "crystal_field", "x": 99, "y": 125.25, "amount": 250, "rich": true},
+    {"type": "crystal_field", "x": 98, "y": 130.384, "amount": 225, "rich": true},
+    {"type": "crystal_field", "x": 102, "y": 129.75, "amount": 250, "rich": true},
+    {"type": "crystal_field", "x": 49.5, "y": 156.75, "amount": 280, "rich": true},
+    {"type": "crystal_field", "x": 53, "y": 158.25, "amount": 250, "rich": true},
+    {"type": "crystal_field", "x": 94.5, "y": 143.25, "amount": 150, "rich": true},
+    {"type": "crystal_field", "x": 46.888, "y": 159.699, "amount": 225, "rich": true},
+    {"type": "crystal_field", "x": 103.5, "y": 84.75, "amount": 225, "rich": true},
+    {"type": "crystal_field", "x": 57, "y": 176.25, "amount": 275, "rich": true},
+    {"type": "crystal_field", "x": 109.146, "y": 86.604, "amount": 290, "rich": true},
+    {"type": "crystal_field", "x": 105.25, "y": 88.013, "amount": 250, "rich": true},
+    {"type": "crystal_field", "x": 49.888, "y": 174.801, "amount": 250, "rich": true},
+    {"type": "crystal_field", "x": 59.847, "y": 178.915, "amount": 250, "rich": true},
+    {"type": "crystal_field", "x": 115.061, "y": 91.811, "amount": 225, "rich": true},
+    {"type": "crystal_field", "x": 112.112, "y": 89.199, "amount": 250, "rich": true},
+    {"type": "crystal_field", "x": 53.5, "y": 173.42, "amount": 225, "rich": true},
+    {"type": "crystal_field", "x": 117.866, "y": 94.25, "amount": 200, "rich": true},
+    {"type": "crystal_field", "x": 113.904, "y": 95.346, "amount": 250, "rich": true},
+    {"type": "crystal_field", "x": 121.5, "y": 63.75, "amount": 300, "rich": true},
+    {"type": "crystal_field", "x": 77.561, "y": 202.811, "amount": 265, "rich": true},
+    {"type": "crystal_field", "x": 122.871, "y": 60.267, "amount": 325, "rich": true},
+    {"type": "crystal_field", "x": 87, "y": 200.25, "amount": 300, "rich": true},
+    {"type": "crystal_field", "x": 89.914, "y": 203.164, "amount": 335, "rich": true},
+    {"type": "crystal_field", "x": 136.5, "y": 165.75, "amount": 350, "rich": true},
+    {"type": "crystal_field", "x": 126, "y": 57.75, "amount": 330, "rich": true},
+    {"type": "crystal_field", "x": 140, "y": 167.25, "amount": 400, "rich": true},
+    {"type": "crystal_field", "x": 90.853, "y": 207.165, "amount": 290, "rich": true},
+    {"type": "crystal_field", "x": 130.061, "y": 55.811, "amount": 250, "rich": true},
+    {"type": "crystal_field", "x": 132.975, "y": 58.725, "amount": 300, "rich": true},
+    {"type": "crystal_field", "x": 136.964, "y": 59.75, "amount": 290, "rich": true},
+    {"type": "crystal_field", "x": 144, "y": 166.152, "amount": 325, "rich": true},
+    {"type": "crystal_field", "x": 148, "y": 165.75, "amount": 280, "rich": true},
+    {"type": "crystal_field", "x": 148.146, "y": 161.604, "amount": 250, "rich": true},
+    {"type": "crystal_field", "x": 143.536, "y": 162.25, "amount": 350, "rich": true},
+    {"type": "crystal_field", "x": 133.318, "y": 62.529, "amount": 300, "rich": true},
+    {"type": "crystal_field", "x": 140.466, "y": 61.009, "amount": 275, "rich": true},
+    {"type": "crystal_field", "x": 73.888, "y": 216.801, "amount": 265, "rich": true},
+    {"type": "crystal_field", "x": 77, "y": 219.75, "amount": 290, "rich": true},
+    {"type": "crystal_field", "x": 80.224, "y": 216.852, "amount": 240, "rich": true},
+    {"type": "crystal_field", "x": 176, "y": 111.75, "amount": 225, "rich": true},
+    {"type": "crystal_field", "x": 172.5, "y": 93.75, "amount": 225, "rich": true},
+    {"type": "crystal_field", "x": 142.5, "y": 200.25, "amount": 250, "rich": true},
+    {"type": "crystal_field", "x": 179, "y": 119.25, "amount": 320, "rich": true},
+    {"type": "crystal_field", "x": 177.966, "y": 115.009, "amount": 325, "rich": true},
+    {"type": "crystal_field", "x": 182, "y": 123.75, "amount": 350, "rich": true},
+    {"type": "crystal_field", "x": 177, "y": 92.25, "amount": 350, "rich": true},
+    {"type": "crystal_field", "x": 182.799, "y": 120, "amount": 375, "rich": true},
+    {"type": "crystal_field", "x": 148.146, "y": 202.104, "amount": 350, "rich": true},
+    {"type": "crystal_field", "x": 180.5, "y": 90.75, "amount": 300, "rich": true},
+    {"type": "crystal_field", "x": 152, "y": 203.25, "amount": 250, "rich": true},
+    {"type": "crystal_field", "x": 184, "y": 92.25, "amount": 325, "rich": true},
+    {"type": "crystal_field", "x": 155.665, "y": 206.097, "amount": 280, "rich": true},
+    {"type": "crystal_field", "x": 137, "y": 222.75, "amount": 180, "rich": true},
+    {"type": "crystal_field", "x": 141.5, "y": 221.018, "amount": 180, "rich": true},
+    {"type": "crystal_field", "x": 137.688, "y": 218.989, "amount": 150, "rich": true},
+    {"type": "crystal_field", "x": 159, "y": 213.75, "amount": 240, "rich": true},
+    {"type": "crystal_field", "x": 162.5, "y": 212.25, "amount": 250, "rich": true},
+    {"type": "crystal_field", "x": 157.119, "y": 217.656, "amount": 210, "rich": true},
+    {"type": "crystal_field", "x": 155.111, "y": 214.361, "amount": 100, "rich": true},
+    {"type": "crystal_field", "x": 202.061, "y": 106.811, "amount": 280, "rich": true},
+    {"type": "crystal_field", "x": 203, "y": 122.25, "amount": 280, "rich": true},
+    {"type": "crystal_field", "x": 203.914, "y": 110.164, "amount": 275, "rich": true},
+    {"type": "crystal_field", "x": 204.982, "y": 118.818, "amount": 235, "rich": true},
+    {"type": "crystal_field", "x": 204.75, "y": 114.951, "amount": 320, "rich": true},
+    {"type": "crystal_field", "x": 211.83, "y": 116.044, "amount": 350, "rich": true},
+    {"type": "crystal_field", "x": 207.5, "y": 108.75, "amount": 250, "rich": true}
+  ],
+  "units": [
+    {"type": "muster_hall", "owner": 1, "x": 69.75, "y": 122.25, "id": "map_19"},
+    {"type": "colony_hub", "owner": 1, "x": 63, "y": 121, "id": "map_312"},
+    {"type": "contract_post", "owner": 1, "x": 72, "y": 114, "id": "map_1302"},
+    {"type": "silo", "owner": 1, "x": 60, "y": 132, "id": "map_318"},
+    {"type": "silo", "owner": 1, "x": 58.5, "y": 127.5, "id": "map_319"},
+    {"type": "silo", "owner": 1, "x": 62.5, "y": 127.5, "id": "map_1070"},
+    {"type": "rifleman", "owner": 1, "x": 66.973, "y": 126.157, "id": "map_16"},
+    {"type": "rifleman", "owner": 1, "x": 65.467, "y": 127.548, "id": "map_37"},
+    {"type": "pioneer", "owner": 1, "x": 57.707, "y": 113.178, "id": "map_11", "auto_harvest": true},
+    {"type": "pioneer", "owner": 1, "x": 56.244, "y": 114.747, "id": "map_14", "auto_harvest": true},
+    {"type": "pioneer", "owner": 1, "x": 58.81, "y": 115.019, "id": "map_28", "auto_harvest": true},
+    {"type": "pioneer", "owner": 1, "x": 64.011, "y": 113.737, "id": "map_29", "auto_harvest": true},
+    {"type": "pioneer", "owner": 1, "x": 55.175, "y": 120.739, "id": "map_269", "auto_harvest": true},
+    {"type": "pioneer", "owner": 1, "x": 56.26, "y": 120.768, "id": "map_270", "auto_harvest": true},
+    {"type": "pioneer", "owner": 1, "x": 57.282, "y": 116.286, "id": "map_271", "auto_harvest": true},
+    {"type": "pioneer", "owner": 1, "x": 56.776, "y": 120.958, "id": "map_272", "auto_harvest": true},
+    {"type": "pioneer", "owner": 1, "x": 63.732, "y": 113.239, "id": "map_321", "auto_harvest": true},
+    {"type": "pioneer", "owner": 1, "x": 63.741, "y": 111.742, "id": "map_322", "auto_harvest": true},
+    {"type": "colony_hub", "owner": 0, "x": 56.477, "y": 63.022, "id": "map_1"},
+    {"type": "brood_nest", "owner": 2, "x": 191.25, "y": 72.75, "id": "map_60"},
+    {"type": "brood_nest", "owner": 2, "x": 152.379, "y": 88.233, "id": "map_83"},
+    {"type": "brood_hive", "owner": 2, "x": 176.25, "y": 59.25, "id": "map_57"},
+    {"type": "brood_lair", "owner": 2, "x": 173.25, "y": 162.75, "id": "map_61"},
+    {"type": "brood_lair", "owner": 2, "x": 185.25, "y": 183.75, "id": "map_74"},
+    {"type": "brood_lair", "owner": 2, "x": 117.75, "y": 204.75, "id": "map_102"},
+    {"type": "brood_lair", "owner": 2, "x": 198.75, "y": 149.25, "id": "map_113"},
+    {"type": "thorn_watch", "owner": 2, "x": 180, "y": 66, "id": "map_62"},
+    {"type": "thorn_watch", "owner": 2, "x": 205.371, "y": 141.483, "id": "map_82"},
+    {"type": "thorn_watch", "owner": 2, "x": 193.5, "y": 66, "id": "map_96"},
+    {"type": "thorn_watch", "owner": 2, "x": 202.268, "y": 91, "id": "map_182"},
+    {"type": "thorn_watch", "owner": 2, "x": 109.5, "y": 195, "id": "map_193"},
+    {"type": "thorn_watch", "owner": 2, "x": 150.5, "y": 100.268, "id": "map_201"},
+    {"type": "thorn_watch", "owner": 2, "x": 167, "y": 60, "id": "map_205"},
+    {"type": "thorn_watch", "owner": 2, "x": 191, "y": 81, "id": "map_215"},
+    {"type": "thorn_watch", "owner": 2, "x": 177, "y": 172.5, "id": "map_252"},
+    {"type": "thorn_watch", "owner": 2, "x": 165, "y": 151.5, "id": "map_721"},
+    {"type": "spore_watch", "owner": 2, "x": 143, "y": 90, "id": "map_12"},
+    {"type": "spore_watch", "owner": 2, "x": 167, "y": 66, "id": "map_135"},
+    {"type": "spore_watch", "owner": 2, "x": 178.983, "y": 46.629, "id": "map_144"},
+    {"type": "spore_watch", "owner": 2, "x": 181.682, "y": 79.318, "id": "map_175"},
+    {"type": "spore_watch", "owner": 2, "x": 103.5, "y": 207, "id": "map_197"},
+    {"type": "spore_watch", "owner": 2, "x": 172.5, "y": 186, "id": "map_210"},
+    {"type": "spore_watch", "owner": 2, "x": 130.371, "y": 204.483, "id": "map_520"},
+    {"type": "spore_watch", "owner": 2, "x": 142.5, "y": 97.5, "id": "map_698"},
+    {"type": "spore_watch", "owner": 2, "x": 199.371, "y": 189.483, "id": "map_850"},
+    {"type": "spore_watch", "owner": 2, "x": 193.5, "y": 174, "id": "map_864"},
+    {"type": "spore_watch", "owner": 2, "x": 160.732, "y": 156.5, "id": "map_872"},
+    {"type": "spore_watch", "owner": 2, "x": 154.371, "y": 81.483, "id": "map_911"},
+    {"type": "spore_watch", "owner": 2, "x": 183.483, "y": 136.629, "id": "map_917"},
+    {"type": "sporeburst", "owner": 2, "x": 198.117, "y": 79.668, "id": "map_230"},
+    {"type": "sporeburst", "owner": 2, "x": 177.147, "y": 49.273, "id": "map_236"},
+    {"type": "sporeburst", "owner": 2, "x": 169.477, "y": 64.349, "id": "map_298"},
+    {"type": "sporeburst", "owner": 2, "x": 190.572, "y": 67.591, "id": "map_324"},
+    {"type": "sporeburst", "owner": 2, "x": 182.418, "y": 55.835, "id": "map_517"},
+    {"type": "sporeburst", "owner": 2, "x": 186.045, "y": 55.764, "id": "map_554"},
+    {"type": "carapace_bulwark", "owner": 2, "x": 49.815, "y": 221.475, "id": "map_407"},
+    {"type": "blight_hurler", "owner": 2, "x": 178.662, "y": 155.229, "id": "map_52"},
+    {"type": "blight_hurler", "owner": 2, "x": 195.93, "y": 141.615, "id": "map_72"},
+    {"type": "blight_hurler", "owner": 2, "x": 194.82, "y": 85.815, "id": "map_93"},
+    {"type": "blight_hurler", "owner": 2, "x": 199.395, "y": 91.155, "id": "map_98"},
+    {"type": "blight_hurler", "owner": 2, "x": 167.714, "y": 147.938, "id": "map_100"},
+    {"type": "blight_hurler", "owner": 2, "x": 192.495, "y": 181.08, "id": "map_190"},
+    {"type": "blight_hurler", "owner": 2, "x": 116.19, "y": 192.975, "id": "map_516"},
+    {"type": "blight_hurler", "owner": 2, "x": 106.53, "y": 201.84, "id": "map_518"},
+    {"type": "blight_hurler", "owner": 2, "x": 158.196, "y": 89.171, "id": "map_829"},
+    {"type": "blight_hurler", "owner": 2, "x": 148.665, "y": 96.045, "id": "map_871"},
+    {"type": "blight_hurler", "owner": 2, "x": 164.745, "y": 162.135, "id": "map_1012"},
+    {"type": "needlewing", "owner": 2, "x": 181.061, "y": 68.486, "id": "map_78"},
+    {"type": "needlewing", "owner": 2, "x": 180.759, "y": 55.454, "id": "map_81"},
+    {"type": "needlewing", "owner": 2, "x": 191.111, "y": 59.685, "id": "map_108"},
+    {"type": "needlewing", "owner": 2, "x": 169.321, "y": 64.537, "id": "map_159"},
+    {"type": "needlewing", "owner": 2, "x": 206.214, "y": 152.113, "id": "map_1928"},
+    {"type": "needlewing", "owner": 2, "x": 185.248, "y": 134.714, "id": "map_1929"},
+    {"type": "ridge_scout", "owner": 0, "x": 184.006, "y": 196.477, "id": "map_803"},
+    {"type": "ridge_scout", "owner": 0, "x": 185.426, "y": 199.403, "id": "map_929"},
+    {"type": "ridge_scout", "owner": 0, "x": 74.269, "y": 191.935, "id": "map_1154"},
+    {"type": "ridge_scout", "owner": 0, "x": 126.828, "y": 158.225, "id": "map_1155"},
+    {"type": "ridge_scout", "owner": 0, "x": 124.77, "y": 157.647, "id": "map_1159"},
+    {"type": "ridge_scout", "owner": 0, "x": 100.137, "y": 60.9, "id": "map_1163"},
+    {"type": "ridge_scout", "owner": 0, "x": 182.408, "y": 199.138, "id": "map_1370"},
+    {"type": "ridge_scout", "owner": 0, "x": 212.05, "y": 136.033, "id": "map_1380"},
+    {"type": "ridge_scout", "owner": 0, "x": 214.142, "y": 137.631, "id": "map_1381"},
+    {"type": "ridge_scout", "owner": 0, "x": 210.86, "y": 137.077, "id": "map_1392"},
+    {"type": "ridge_scout", "owner": 0, "x": 157.054, "y": 126.758, "id": "map_1398"},
+    {"type": "ridge_scout", "owner": 0, "x": 157.349, "y": 127.813, "id": "map_1403"},
+    {"type": "ridge_scout", "owner": 0, "x": 156.707, "y": 127.614, "id": "map_1405"},
+    {"type": "ridge_scout", "owner": 0, "x": 101.487, "y": 60.714, "id": "map_1913"},
+    {"type": "ridge_scout", "owner": 0, "x": 99.986, "y": 62.246, "id": "map_1914"},
+    {"type": "ridge_scout", "owner": 0, "x": 88.11, "y": 50.228, "id": "map_1915"},
+    {"type": "ridge_scout", "owner": 0, "x": 85.481, "y": 50.298, "id": "map_1916"},
+    {"type": "ridge_scout", "owner": 0, "x": 104.241, "y": 214.091, "id": "map_1922"},
+    {"type": "ridge_scout", "owner": 0, "x": 106.436, "y": 216.747, "id": "map_1923"},
+    {"type": "ridge_scout", "owner": 0, "x": 102.814, "y": 215.187, "id": "map_1924"},
+    {"type": "bile_crawler", "owner": 2, "x": 146.63, "y": 91.285, "id": "map_21"},
+    {"type": "bile_crawler", "owner": 2, "x": 198.988, "y": 85.132, "id": "map_161"},
+    {"type": "bile_crawler", "owner": 2, "x": 176.943, "y": 73.956, "id": "map_178"},
+    {"type": "bile_crawler", "owner": 2, "x": 190.851, "y": 64.386, "id": "map_185"},
+    {"type": "bile_crawler", "owner": 2, "x": 170.642, "y": 56.44, "id": "map_199"},
+    {"type": "bile_crawler", "owner": 2, "x": 114.971, "y": 197.238, "id": "map_206"},
+    {"type": "bile_crawler", "owner": 2, "x": 194.1, "y": 52.747, "id": "map_208"},
+    {"type": "bile_crawler", "owner": 2, "x": 201.225, "y": 137.91, "id": "map_224"},
+    {"type": "pioneer", "owner": 0, "x": 52.141, "y": 65.936, "id": "map_311"},
+    {"type": "pioneer", "owner": 0, "x": 61.803, "y": 62.612, "id": "map_323"},
+    {"type": "pioneer", "owner": 0, "x": 57.292, "y": 68.223, "id": "map_438"},
+    {"type": "pioneer", "owner": 0, "x": 52.145, "y": 59.935, "id": "map_439"},
+    {"type": "pioneer", "owner": 0, "x": 60.276, "y": 57.849, "id": "map_449"},
+    {"type": "skitterling", "owner": 2, "x": 151.047, "y": 81.181, "id": "map_23"},
+    {"type": "skitterling", "owner": 2, "x": 113.895, "y": 200.535, "id": "map_24"},
+    {"type": "skitterling", "owner": 2, "x": 111.81, "y": 202.815, "id": "map_25"},
+    {"type": "skitterling", "owner": 2, "x": 143.771, "y": 87.044, "id": "map_31"},
+    {"type": "skitterling", "owner": 2, "x": 160.35, "y": 91.53, "id": "map_33"},
+    {"type": "skitterling", "owner": 2, "x": 167.709, "y": 173.668, "id": "map_44"},
+    {"type": "skitterling", "owner": 2, "x": 123.121, "y": 210.497, "id": "map_79"},
+    {"type": "skitterling", "owner": 2, "x": 109.023, "y": 211.83, "id": "map_84"},
+    {"type": "skitterling", "owner": 2, "x": 158.385, "y": 93.825, "id": "map_88"},
+    {"type": "skitterling", "owner": 2, "x": 171.897, "y": 180.719, "id": "map_89"},
+    {"type": "skitterling", "owner": 2, "x": 146.19, "y": 83.94, "id": "map_91"},
+    {"type": "skitterling", "owner": 2, "x": 196.727, "y": 88.845, "id": "map_99"},
+    {"type": "skitterling", "owner": 2, "x": 153.118, "y": 95.272, "id": "map_101"},
+    {"type": "skitterling", "owner": 2, "x": 113.745, "y": 214.125, "id": "map_127"},
+    {"type": "skitterling", "owner": 2, "x": 118.557, "y": 195.377, "id": "map_129"},
+    {"type": "skitterling", "owner": 2, "x": 146.895, "y": 86.385, "id": "map_138"},
+    {"type": "skitterling", "owner": 2, "x": 169.848, "y": 185.527, "id": "map_150"},
+    {"type": "skitterling", "owner": 2, "x": 176.007, "y": 183.748, "id": "map_157"},
+    {"type": "skitterling", "owner": 2, "x": 197.2, "y": 91.168, "id": "map_200"},
+    {"type": "skitterling", "owner": 2, "x": 196.123, "y": 186.367, "id": "map_214"},
+    {"type": "skitterling", "owner": 2, "x": 165.063, "y": 148.059, "id": "map_219"},
+    {"type": "skitterling", "owner": 2, "x": 161.49, "y": 149.731, "id": "map_220"},
+    {"type": "skitterling", "owner": 2, "x": 148.05, "y": 82.83, "id": "map_241"},
+    {"type": "skitterling", "owner": 2, "x": 144.75, "y": 99, "id": "map_246"},
+    {"type": "skitterling", "owner": 2, "x": 147.866, "y": 99.298, "id": "map_247"},
+    {"type": "skitterling", "owner": 2, "x": 145.65, "y": 95.055, "id": "map_248"},
+    {"type": "skitterling", "owner": 2, "x": 148.088, "y": 101.353, "id": "map_249"},
+    {"type": "skitterling", "owner": 2, "x": 140.222, "y": 96.234, "id": "map_250"},
+    {"type": "skitterling", "owner": 2, "x": 179.84, "y": 163.184, "id": "map_253"},
+    {"type": "skitterling", "owner": 2, "x": 194.338, "y": 190.513, "id": "map_254"},
+    {"type": "skitterling", "owner": 2, "x": 200.298, "y": 181.094, "id": "map_273"},
+    {"type": "skitterling", "owner": 2, "x": 190.547, "y": 182.668, "id": "map_275"},
+    {"type": "skitterling", "owner": 2, "x": 116.775, "y": 188.76, "id": "map_296"},
+    {"type": "skitterling", "owner": 2, "x": 186.283, "y": 148.873, "id": "map_314"},
+    {"type": "skitterling", "owner": 2, "x": 191.121, "y": 147.435, "id": "map_316"},
+    {"type": "skitterling", "owner": 2, "x": 188.406, "y": 147.903, "id": "map_320"},
+    {"type": "skitterling", "owner": 2, "x": 124.712, "y": 207.466, "id": "map_331"},
+    {"type": "skitterling", "owner": 2, "x": 181.185, "y": 165.359, "id": "map_333"},
+    {"type": "skitterling", "owner": 2, "x": 199.439, "y": 139.312, "id": "map_335"},
+    {"type": "skitterling", "owner": 2, "x": 198, "y": 138.75, "id": "map_336"},
+    {"type": "skitterling", "owner": 2, "x": 196.755, "y": 139.275, "id": "map_337"},
+    {"type": "skitterling", "owner": 2, "x": 198.29, "y": 140.691, "id": "map_338"},
+    {"type": "skitterling", "owner": 2, "x": 181.489, "y": 143.979, "id": "map_339"},
+    {"type": "skitterling", "owner": 2, "x": 186.908, "y": 144.496, "id": "map_341"},
+    {"type": "skitterling", "owner": 2, "x": 123.057, "y": 204.14, "id": "map_350"},
+    {"type": "skitterling", "owner": 2, "x": 118.841, "y": 191.809, "id": "map_359"},
+    {"type": "skitterling", "owner": 2, "x": 113.86, "y": 190.637, "id": "map_421"},
+    {"type": "skitterling", "owner": 2, "x": 103.359, "y": 201.271, "id": "map_461"},
+    {"type": "skitterling", "owner": 2, "x": 194.84, "y": 90.33, "id": "map_462"},
+    {"type": "skitterling", "owner": 2, "x": 104.803, "y": 203.193, "id": "map_487"},
+    {"type": "skitterling", "owner": 2, "x": 105.705, "y": 199.5, "id": "map_514"},
+    {"type": "skitterling", "owner": 2, "x": 166.713, "y": 169.432, "id": "map_719"},
+    {"type": "skitterling", "owner": 2, "x": 167.849, "y": 166.697, "id": "map_720"},
+    {"type": "skitterling", "owner": 2, "x": 110.37, "y": 210.315, "id": "map_782"},
+    {"type": "skitterling", "owner": 2, "x": 195.035, "y": 88.369, "id": "map_861"},
+    {"type": "skitterling", "owner": 2, "x": 193.144, "y": 88.646, "id": "map_868"},
+    {"type": "skitterling", "owner": 2, "x": 198.582, "y": 88.348, "id": "map_869"},
+    {"type": "skitterling", "owner": 2, "x": 198.234, "y": 93.013, "id": "map_870"}
+  ],
+  "mission": {
+    "caches": [
+      [
+        [
+          115.074,
+          211.211
+        ],
+        true
+      ],
+      [
+        [
+          148.004,
+          117.22
+        ],
+        true
+      ],
+      [
+        [
+          174.593,
+          160.128
+        ],
+        true
+      ],
+      [
+        [
+          171.016,
+          162.272
+        ],
+        true
+      ],
+      [
+        [
+          199.93,
+          150.99
+        ],
+        true
+      ],
+      [
+        [
+          108.595,
+          210.378
+        ],
+        true
+      ],
+      [
+        [
+          60.616,
+          161.463
+        ],
+        true
+      ],
+      [
+        [
+          126.411,
+          158.467
+        ],
+        true
+      ],
+      [
+        [
+          67.076,
+          62.309
+        ],
+        true
+      ],
+      [
+        [
+          107.162,
+          208.058
+        ],
+        true
+      ],
+      [
+        [
+          183.833,
+          184.587
+        ],
+        true
+      ],
+      [
+        [
+          158.008,
+          126.541
+        ],
+        true
+      ],
+      [
+        [
+          60.754,
+          216.842
+        ],
+        true
+      ],
+      [
+        [
+          44.07,
+          216.546
+        ],
+        true
+      ],
+      [
+        [
+          62.44,
+          163.482
+        ],
+        true
+      ],
+      [
+        [
+          105.72,
+          217.092
+        ],
+        true
+      ],
+      [
+        [
+          153.88,
+          125.461
+        ],
+        true
+      ],
+      [
+        [
+          96.463,
+          194.187
+        ],
+        true
+      ],
+      [
+        [
+          76.68,
+          128.373
+        ],
+        true
+      ],
+      [
+        [
+          117.802,
+          206.1
+        ],
+        true
+      ],
+      [
+        [
+          101.742,
+          61.896
+        ],
+        true
+      ],
+      [
+        [
+          87.829,
+          48.779
+        ],
+        true
+      ],
+      [
+        [
+          64.377,
+          59.429
+        ],
+        true
+      ],
+      [
+        [
+          152.297,
+          88.99
+        ],
+        true
+      ],
+      [
+        [
+          76.527,
+          191.41
+        ],
+        true
+      ],
+      [
+        [
+          189.615,
+          71.862
+        ],
+        true
+      ],
+      [
+        [
+          177.318,
+          57.916
+        ],
+        true
+      ],
+      [
+        [
+          150.761,
+          87.204
+        ],
+        false
+      ],
+      [
+        [
+          171.977,
+          160.401
+        ],
+        false
+      ],
+      [
+        [
+          175.43,
+          162.509
+        ],
+        false
+      ],
+      [
+        [
+          173.517,
+          164.746
+        ],
+        false
+      ],
+      [
+        [
+          109.675,
+          208.538
+        ],
+        false
+      ],
+      [
+        [
+          133.858,
+          104.455
+        ],
+        false
+      ],
+      [
+        [
+          191.239,
+          75.093
+        ],
+        false
+      ],
+      [
+        [
+          192.644,
+          71.949
+        ],
+        false
+      ],
+      [
+        [
+          174.087,
+          59.539
+        ],
+        false
+      ],
+      [
+        [
+          177.231,
+          60.945
+        ],
+        false
+      ],
+      [
+        [
+          85.458,
+          128.477
+        ],
+        false
+      ],
+      [
+        [
+          118.5,
+          204.475
+        ],
+        false
+      ],
+      [
+        [
+          117.111,
+          203.776
+        ],
+        false
+      ],
+      [
+        [
+          153.334,
+          87.177
+        ],
+        false
+      ],
+      [
+        [
+          57.913,
+          215.209
+        ],
+        false
+      ],
+      [
+        [
+          48.75,
+          211.035
+        ],
+        false
+      ],
+      [
+        [
+          84.853,
+          49.093
+        ],
+        false
+      ],
+      [
+        [
+          105.917,
+          60.677
+        ],
+        false
+      ],
+      [
+        [
+          123.812,
+          156.829
+        ],
+        false
+      ],
+      [
+        [
+          62.808,
+          160.826
+        ],
+        false
+      ],
+      [
+        [
+          187.064,
+          182.962
+        ],
+        false
+      ],
+      [
+        [
+          183.92,
+          181.557
+        ],
+        false
+      ],
+      [
+        [
+          197.15,
+          149.312
+        ],
+        false
+      ],
+      [
+        [
+          199.931,
+          147.551
+        ],
+        false
+      ],
+      [
+        [
+          155.462,
+          124.675
+        ],
+        false
+      ],
+      [
+        [
+          156.79,
+          128.343
+        ],
+        false
+      ],
+      [
+        [
+          75.746,
+          188.641
+        ],
+        false
+      ],
+      [
+        [
+          97.361,
+          189.749
+        ],
+        false
+      ],
+      [
+        [
+          61.245,
+          163.996
+        ],
+        false
+      ],
+      [
+        [
+          103.271,
+          58.602
+        ],
+        false
+      ],
+      [
+        [
+          89.084,
+          50.333
+        ],
+        false
+      ],
+      [
+        [
+          153.922,
+          124.373
+        ],
+        false
+      ],
+      [
+        [
+          126.486,
+          157.105
+        ],
+        false
+      ],
+      [
+        [
+          72.657,
+          194.536
+        ],
+        false
+      ],
+      [
+        [
+          100.905,
+          191.49
+        ],
+        false
+      ],
+      [
+        [
+          100.364,
+          194.933
+        ],
+        false
+      ],
+      [
+        [
+          117.531,
+          213.888
+        ],
+        false
+      ],
+      [
+        [
+          120.195,
+          211.365
+        ],
+        false
+      ],
+      [
+        [
+          122.486,
+          215.238
+        ],
+        false
+      ],
+      [
+        [
+          135.228,
+          105.987
+        ],
+        false
+      ],
+      [
+        [
+          132.905,
+          107.149
+        ],
+        false
+      ],
+      [
+        [
+          149.25,
+          114.645
+        ],
+        false
+      ],
+      [
+        [
+          150.508,
+          118.202
+        ],
+        false
+      ],
+      [
+        [
+          49.971,
+          64.17
+        ],
+        false
+      ],
+      [
+        [
+          53.725,
+          69.319
+        ],
+        false
+      ],
+      [
+        [
+          119.34,
+          164.19
+        ],
+        false
+      ],
+      [
+        [
+          53.913,
+          224.081
+        ],
+        false
+      ],
+      [
+        [
+          40.55,
+          218.423
+        ],
+        false
+      ],
+      [
+        [
+          106.5,
+          218.015
+        ],
+        false
+      ]
+    ]
+  }
+}
