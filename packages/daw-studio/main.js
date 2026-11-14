@@ -36,6 +36,12 @@ const {
   applyClassifiedDrumsetToProject,
   SoundcheckSessionRecorder,
 } = require('./lib/drumset-ai-classifier');
+const {
+  getConfiguredVstDirectoryPaths,
+  addVstDirectory,
+  removeVstDirectory,
+  getVstDirectoriesSnapshot,
+} = require('./lib/vst-directories');
 
 // Ensure user CLI bin directories (where `agy`, `gemini`, `claude`, `copilot` live) are in PATH
 for (const extraBin of [
@@ -295,6 +301,7 @@ ipcMain.handle('daw:get-studio-init', async () => {
       audioSnapshot,
       micProfiles: MIC_PROFILES,
       drumkitsStatus: inspectInstalledKits(),
+      vstDirsStatus: getVstDirectoriesSnapshot(),
       systemPlugins: discoverSystemLinuxPlugins(),
       aiProviders: providers,
       preferredAiProvider: 'antigravity',
@@ -517,6 +524,7 @@ ipcMain.handle('daw:read-audio-file', async (_e, payload) => {
       path.resolve(getSoundchecksRoot()),
       path.resolve(os.tmpdir()),
       currentProject?.projectDir ? path.resolve(currentProject.projectDir) : null,
+      ...getConfiguredVstDirectoryPaths().map(d => path.resolve(d)),
     ].filter(Boolean);
 
     if (!allowedRoots.some(r => resolved.startsWith(r + path.sep) || resolved === r)) {
@@ -532,6 +540,98 @@ ipcMain.handle('daw:read-audio-file', async (_e, payload) => {
       byteLength: buf.length,
       ext,
     };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+// ─── Custom VST / LV2 / CLAP & Sample Library Directory Manager IPC ─────────
+
+ipcMain.handle('daw:vst-dirs-get', async () => {
+  try {
+    return {
+      ok: true,
+      vstDirsStatus: getVstDirectoriesSnapshot(),
+      drumkitsStatus: inspectInstalledKits(),
+      systemPlugins: discoverSystemLinuxPlugins(),
+    };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('daw:vst-dirs-add', async (_e, payload) => {
+  try {
+    const requestedPaths = [];
+    if (Array.isArray(payload?.dirPaths)) {
+      for (const p of payload.dirPaths) {
+        if (String(p || '').trim()) requestedPaths.push(String(p).trim());
+      }
+    }
+    if (payload?.dirPath && String(payload.dirPath).trim()) {
+      requestedPaths.push(String(payload.dirPath).trim());
+    }
+
+    if ((payload?.browseDialog || requestedPaths.length === 0) && mainWindow && !mainWindow.isDestroyed()) {
+      const home = process.env.HOME || os.homedir();
+      const res = await dialog.showOpenDialog(mainWindow, {
+        title: 'Add VST / LV2 / CLAP Plugin or Sample Library Directory',
+        defaultPath: home,
+        buttonLabel: 'Add Directory',
+        properties: ['openDirectory', 'multiSelections'],
+      });
+      if (res.canceled || !res.filePaths?.length) {
+        return { ok: false, canceled: true };
+      }
+      requestedPaths.push(...res.filePaths);
+    }
+
+    if (!requestedPaths.length) {
+      return { ok: false, error: 'No directory path provided.' };
+    }
+
+    const addedEntries = [];
+    for (const rawPath of requestedPaths) {
+      addedEntries.push(addVstDirectory(rawPath, { label: payload?.label }));
+    }
+
+    return {
+      ok: true,
+      addedEntries,
+      vstDirsStatus: getVstDirectoriesSnapshot(),
+      drumkitsStatus: inspectInstalledKits(),
+      systemPlugins: discoverSystemLinuxPlugins(),
+    };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('daw:vst-dirs-remove', async (_e, payload) => {
+  try {
+    const dirPath = String(payload?.dirPath || '').trim();
+    if (!dirPath) return { ok: false, error: 'Missing dirPath' };
+    const removed = removeVstDirectory(dirPath);
+    return {
+      ok: true,
+      removed: removed.removed,
+      vstDirsStatus: getVstDirectoriesSnapshot(),
+      drumkitsStatus: inspectInstalledKits(),
+      systemPlugins: discoverSystemLinuxPlugins(),
+    };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('daw:open-folder-path', async (_e, payload) => {
+  try {
+    const dirPath = String(payload?.dirPath || '').trim();
+    if (!dirPath) return { ok: false, error: 'Missing dirPath' };
+    const resolved = path.resolve(dirPath);
+    if (!fs.existsSync(resolved)) return { ok: false, error: `Directory does not exist: ${resolved}` };
+    await shell.openPath(resolved);
+    return { ok: true, dirPath: resolved };
   } catch (err) {
     return { ok: false, error: err.message };
   }

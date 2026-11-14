@@ -7,6 +7,8 @@ const DI = window.DawIcons;
 let currentSnapshot = null;
 let micProfiles = [];
 let drumkitsStatus = { kits: [], anyInstalled: false };
+let vstDirsStatus = { customDirectories: [], systemPaths: [], discoveredPlugins: [], totalCustomDirs: 0, totalPlugins: 0, totalCustomSamples: 0 };
+let systemPlugins = [];
 let currentProject = null;
 let savedProjectsState = { projects: [], lastProjectId: null };
 let selectedTrackId = null; // Active FX Inspector track (null = drawer closed)
@@ -1840,11 +1842,28 @@ function renderInspectorDrawer() {
   const activeKit = kits.find(k => k.id === sr.kitId) || kits[0];
   const piecesObj = activeKit?.pieces || {};
 
-  const kitOpts = kits.map(k =>
-    `<option value="${esc(k.id)}"${k.id === sr.kitId ? ' selected' : ''}>${esc(k.name)} ${k.installed ? '[Installed]' : '[Install]'}</option>`
-  ).join('');
+  const kitOpts = kits.map(k => {
+    const tag = k.isCustomDirectory ? `[Custom · ${k.sampleCount} samples]` : (k.installed ? '[Installed]' : '[Install]');
+    return `<option value="${esc(k.id)}"${k.id === sr.kitId ? ' selected' : ''}>${esc(k.name)} ${esc(tag)}</option>`;
+  }).join('');
   const pieceOpts = Object.values(piecesObj).map(p =>
     `<option value="${esc(p.id)}"${p.id === sr.pieceId ? ' selected' : ''}>${esc(p.label)}</option>`
+  ).join('');
+
+  const curPlugins = Array.isArray(track.fx?.openSourcePlugins) ? track.fx.openSourcePlugins : [];
+  const availablePluginLabels = Array.from(new Set([
+    ...(vstDirsStatus?.discoveredPlugins || []).map(p => `${p.name} (${p.format})`),
+    'x42 Parametric EQ4 (LV2)',
+    'LSP Gate Mono (LV2)',
+    'LSP Compressor Mono (LV2)',
+    'Calf Vintage Compressor (LV2)',
+    'Dragonfly Room Reverb (LV2)',
+    'Guitarix Tube Amp (LV2)',
+  ])).filter(lbl => !curPlugins.includes(lbl));
+  const insertPluginOpts = `<option value="">+ Add VST / LV2 / CLAP Insert...</option>` +
+    availablePluginLabels.slice(0, 120).map(lbl => `<option value="${esc(lbl)}">${esc(lbl)}</option>`).join('');
+  const pluginChipsHtml = curPlugins.map((lbl, idx) =>
+    `<span class="plugin-chip"><span>${esc(lbl)}</span><button type="button" data-rm-plugin-idx="${idx}" title="Remove plugin from chain">×</button></span>`
   ).join('');
 
   const totalTransients = (track.clips || []).reduce((n, c) => n + (c.transients?.length || 0), 0);
@@ -1912,6 +1931,13 @@ function renderInspectorDrawer() {
             <input type="range" class="daw-fader" id="insp-pan" min="-1" max="1" step="0.05" value="${track.pan || 0}" />
           </div>
         </div>
+        <div style="margin-top:9px;padding-top:8px;border-top:1px solid #1d2838;">
+          <div class="control-inline" style="justify-content:space-between;">
+            <span class="mini-heading" style="margin:0;">PLUGIN INSERT CHAIN</span>
+            <select id="insp-add-plugin-sel" class="select" style="max-width:230px;height:26px;font-size:11px;padding:2px 6px;">${insertPluginOpts}</select>
+          </div>
+          <div class="plugin-chip-row">${pluginChipsHtml || '<span class="hint">No external inserts assigned</span>'}</div>
+        </div>
       </div>
 
       <div class="rack-module">
@@ -1930,7 +1956,10 @@ function renderInspectorDrawer() {
         </div>
 
         <div class="form-row">
-          <label>Open-Source Drum Sample Library</label>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+            <label style="margin:0;">Drum / Sample Library</label>
+            <button type="button" class="btn btn-sm btn-bevel" id="btn-insp-manage-vst" style="height:22px;padding:0 7px;font-size:10.5px;">${DI.svg('folder', 11)}<span>+ Add VST / Sample Dir</span></button>
+          </div>
           <select id="insp-sr-kit" class="select">${kitOpts}</select>
         </div>
         <div class="form-row">
@@ -1984,6 +2013,29 @@ function renderInspectorDrawer() {
       document.getElementById('insp-sr-kit')?.value || sr.kitId,
       document.getElementById('insp-sr-piece')?.value || sr.pieceId
     );
+  });
+  document.getElementById('btn-insp-manage-vst')?.addEventListener('click', () => {
+    openVstDirectoriesModal();
+  });
+  document.getElementById('insp-add-plugin-sel')?.addEventListener('change', e => {
+    const pluginLabel = e.target.value;
+    if (!pluginLabel) return;
+    saveInspectorPatch('Add Insert Plugin', t => {
+      const existing = Array.isArray(t.fx?.openSourcePlugins) ? t.fx.openSourcePlugins : [];
+      if (!existing.includes(pluginLabel)) {
+        t.fx = { ...(t.fx || {}), openSourcePlugins: [...existing, pluginLabel] };
+      }
+    });
+  });
+  drawer.querySelectorAll('[data-rm-plugin-idx]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const rmIdx = Number(btn.dataset.rmPluginIdx);
+      const rmName = curPlugins[rmIdx];
+      saveInspectorPatch('Remove Insert Plugin', t => {
+        const existing = Array.isArray(t.fx?.openSourcePlugins) ? t.fx.openSourcePlugins : [];
+        t.fx = { ...(t.fx || {}), openSourcePlugins: existing.filter(p => p !== rmName) };
+      });
+    });
   });
 
   document.getElementById('insp-gain-db')?.addEventListener('change', e =>
@@ -2429,9 +2481,10 @@ function buildMenubarItems(key) {
       { icon: 'mixdown-export', label: 'Export Stereo Mixdown (.wav)...', kbd: 'Ctrl+Shift+E', disabled: !hasClips, run: () => exportSessionMixdownWav() },
       { icon: 'folder', label: 'Reveal Session Audio Folder', kbd: '', run: async () => {
         const res = await window.robos.openSessionFolder();
-        if (res?.ok) showStatus(`Opened ${res.folder}`);
+        if (res?.ok) showStatus(`Opened ${res.folder || res.projectDir}`);
       } },
       { sep: true },
+      { icon: 'channel-fx', label: 'VST & Sample Directories...', kbd: 'Ctrl+Shift+P', run: () => openVstDirectoriesModal() },
       { icon: 'audio-interface', label: 'Audio Device Preferences', kbd: 'Ctrl+,', run: () => switchView('audio-devices') },
     ];
   }
@@ -2675,10 +2728,7 @@ function buildMenubarItems(key) {
           for (const t of tracks) t.soundReplacement = { ...(t.soundReplacement || {}), enabled: false };
         });
       } },
-      { icon: 'package', label: 'Manage Open-Source Drum Kits...', kbd: '', run: () => {
-        renderDrumkitsModal();
-        document.getElementById('drumkits-modal')?.classList.remove('hidden');
-      } },
+      { icon: 'package', label: 'VST & Sample Directories / Drum Kits...', kbd: 'Ctrl+Shift+P', run: () => openVstDirectoriesModal() },
     ];
   }
 
@@ -2710,10 +2760,7 @@ function buildMenubarItems(key) {
         renderStudio();
         showStatus(snap.focusrite?.connected ? `Connected to ${snap.focusrite.model}` : 'Rescanned PipeWire bus.');
       } },
-      { icon: 'drum-replace', label: 'Verify / Download Open-Source Drum Kits...', kbd: '', run: () => {
-        renderDrumkitsModal();
-        document.getElementById('drumkits-modal')?.classList.remove('hidden');
-      } },
+      { icon: 'drum-replace', label: 'VST & Sample Directories / Open Drum Kits...', kbd: 'Ctrl+Shift+P', run: () => openVstDirectoriesModal() },
     ];
   }
 
@@ -4073,16 +4120,147 @@ async function loadProjectByIdOrDialog(payload) {
 
 function updateDrumkitsBadge() {
   const installedCount = (drumkitsStatus?.kits || []).filter(k => k.installed).length;
+  const customDirCount = vstDirsStatus?.customDirectories?.length || 0;
   const badge = document.getElementById('drumkits-badge');
-  if (badge) badge.textContent = `${installedCount}/${(drumkitsStatus?.kits || []).length}`;
+  if (badge) {
+    badge.textContent = customDirCount > 0
+      ? `${installedCount} kits · ${customDirCount} dir`
+      : `${installedCount}/${(drumkitsStatus?.kits || []).length}`;
+  }
+}
+
+function applyVstDirsResponse(res) {
+  if (!res?.ok) return;
+  if (res.vstDirsStatus) vstDirsStatus = res.vstDirsStatus;
+  if (res.drumkitsStatus) drumkitsStatus = res.drumkitsStatus;
+  if (res.systemPlugins) systemPlugins = res.systemPlugins;
+  updateDrumkitsBadge();
+  renderDrumkitsModal();
+  if (selectedTrackId) renderInspectorDrawer();
+}
+
+async function openVstDirectoriesModal() {
+  const res = await window.robos.vstDirsGet?.();
+  if (res?.ok) applyVstDirsResponse(res);
+  else renderDrumkitsModal();
+  document.getElementById('drumkits-modal')?.classList.remove('hidden');
+}
+
+async function addCustomVstDirectoryPath(rawPath) {
+  const trimmed = String(rawPath || '').trim();
+  if (!trimmed) {
+    showStatus('Enter a folder path or click Browse Folder to select a directory.', true);
+    return;
+  }
+  const res = await window.robos.vstDirsAdd({ dirPath: trimmed });
+  if (res?.ok) {
+    const inp = document.getElementById('vst-dir-path-input');
+    if (inp) inp.value = '';
+    applyVstDirsResponse(res);
+    const added = (res.vstDirsStatus?.customDirectories || []).find(d => d.path === res.addedEntries?.[0]?.path) || res.addedEntries?.[0];
+    showStatus(`Indexed directory "${added?.label || trimmed}" (${added?.pluginCount ?? 0} plugins, ${added?.sampleCount ?? 0} audio samples).`);
+  } else if (!res?.canceled) {
+    showStatus(`Could not add directory: ${res?.error || 'Unknown error'}`, true);
+  }
+}
+
+async function browseAndAddCustomVstDirectory() {
+  const res = await window.robos.vstDirsAdd({ browseDialog: true });
+  if (res?.ok) {
+    applyVstDirsResponse(res);
+    const count = res.addedEntries?.length || 1;
+    showStatus(`Added ${count} VST / Sample director${count === 1 ? 'y' : 'ies'}.`);
+  } else if (res && !res.canceled) {
+    showStatus(`Could not add directory: ${res.error || 'Unknown error'}`, true);
+  }
 }
 
 function renderDrumkitsModal() {
+  const customListEl = document.getElementById('vst-custom-dirs-list');
+  const sysSummaryEl = document.getElementById('vst-system-paths-summary');
   const listEl = document.getElementById('drumkits-catalog-list');
+
+  if (customListEl) {
+    const customDirs = vstDirsStatus?.customDirectories || [];
+    if (!customDirs.length) {
+      customListEl.innerHTML = `
+        <div class="hint" style="padding:8px 2px;">
+          No custom directories configured yet. Click <strong>Browse Folder...</strong> or paste a VST / Sample folder path above.
+        </div>
+      `;
+    } else {
+      customListEl.innerHTML = customDirs.map(d => {
+        const badges = [];
+        if (!d.exists) badges.push(`<span class="vst-fmt-badge missing">MISSING ON DISK</span>`);
+        for (const fmt of (d.formats || [])) {
+          if (fmt === 'SAMPLES') {
+            badges.push(`<span class="vst-fmt-badge samples">SAMPLES · ${d.sampleCount} WAV/AUDIO</span>`);
+          } else {
+            badges.push(`<span class="vst-fmt-badge">${esc(fmt)}</span>`);
+          }
+        }
+        if (d.pluginCount > 0) {
+          badges.push(`<span class="vst-fmt-badge">${d.pluginCount} PLUGIN${d.pluginCount === 1 ? '' : 'S'}</span>`);
+        }
+        if (d.exists && d.pluginCount === 0 && d.sampleCount === 0) {
+          badges.push(`<span class="vst-fmt-badge">EMPTY / NO PLUGINS</span>`);
+        }
+        return `
+          <div class="vst-dir-row">
+            <div class="vst-dir-info">
+              <div class="vst-dir-title-line">
+                <strong>${esc(d.label)}</strong>
+                ${badges.join('')}
+              </div>
+              <div class="vst-dir-path mono" title="${esc(d.path)}">${esc(d.path)}</div>
+            </div>
+            <div class="btn-cluster">
+              ${d.kitId ? `<button type="button" class="btn btn-sm btn-bevel" data-audition-kit="${esc(d.kitId)}" data-piece="snare" title="Audition sample from this pack">${DI.svg('speaker', 12)}<span>Test</span></button>` : ''}
+              <button type="button" class="btn btn-sm btn-bevel" data-open-vst-dir="${esc(d.path)}" title="Reveal folder in file manager">${DI.svg('folder', 12)}<span>Open</span></button>
+              <button type="button" class="btn btn-sm btn-bevel" data-remove-vst-dir="${esc(d.path)}" title="Remove directory from RobOS DAW Studio">${DI.svg('trash', 12)}<span>Remove</span></button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      customListEl.querySelectorAll('[data-audition-kit]').forEach(btn => {
+        btn.addEventListener('click', () => auditionDrumPiece(btn.dataset.auditionKit, btn.dataset.piece));
+      });
+      customListEl.querySelectorAll('[data-open-vst-dir]').forEach(btn => {
+        btn.addEventListener('click', () => window.robos.openFolderPath({ dirPath: btn.dataset.openVstDir }));
+      });
+      customListEl.querySelectorAll('[data-remove-vst-dir]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const targetPath = btn.dataset.removeVstDir;
+          const res = await window.robos.vstDirsRemove({ dirPath: targetPath });
+          if (res?.ok) {
+            applyVstDirsResponse(res);
+            showStatus(`Removed directory: ${targetPath}`);
+          }
+        });
+      });
+    }
+  }
+
+  if (sysSummaryEl) {
+    const activeSys = (vstDirsStatus?.systemPaths || []).filter(s => s.exists);
+    const sysPluginCount = activeSys.reduce((acc, s) => acc + (s.pluginCount || 0), 0);
+    const pills = activeSys.slice(0, 6).map(s =>
+      `<span class="vst-sys-pill mono" title="${esc(s.path)}">${esc(s.path)} (${s.pluginCount})</span>`
+    ).join('');
+    sysSummaryEl.innerHTML = `
+      <span>Standard Linux Paths (${sysPluginCount} system plugins detected):</span>
+      <div class="vst-sys-pills">${pills || '<span class="hint">None mounted</span>'}</div>
+    `;
+  }
+
   if (!listEl) return;
   const kits = drumkitsStatus?.kits || [];
   listEl.innerHTML = kits.map(k => {
-    const firstPiece = Object.keys(k.pieces || {})[0] || 'snare';
+    const firstPiece = k.pieces?.snare ? 'snare' : (Object.keys(k.pieces || {})[0] || 'snare');
+    const actionBtn = k.isCustomDirectory
+      ? `<button type="button" class="btn btn-sm btn-bevel" data-open-kit-dir="${esc(k.kitDir)}">${DI.svg('folder', 12)}<span>Open Folder</span></button>`
+      : `<button type="button" class="btn btn-sm ${k.installed ? 'btn-bevel' : 'btn-primary'}" data-dl-kit="${esc(k.id)}">${k.installed ? `${DI.svg('refresh', 12)}<span>Verify</span>` : `${DI.svg('download', 12)}<span>Download</span>`}</button>`;
     return `
       <div class="saved-proj-row">
         <div>
@@ -4094,7 +4272,7 @@ function renderDrumkitsModal() {
         </div>
         <div style="display:flex;gap:6px;">
           ${k.installed ? `<button type="button" class="btn btn-sm btn-bevel" data-audition-kit="${esc(k.id)}" data-piece="${esc(firstPiece)}">${DI.svg('speaker', 12)}<span>Test</span></button>` : ''}
-          <button type="button" class="btn btn-sm ${k.installed ? 'btn-bevel' : 'btn-primary'}" data-dl-kit="${esc(k.id)}">${k.installed ? `${DI.svg('refresh', 12)}<span>Verify</span>` : `${DI.svg('download', 12)}<span>Download</span>`}</button>
+          ${actionBtn}
         </div>
       </div>
     `;
@@ -4102,6 +4280,9 @@ function renderDrumkitsModal() {
 
   listEl.querySelectorAll('[data-audition-kit]').forEach(btn => {
     btn.addEventListener('click', () => auditionDrumPiece(btn.dataset.auditionKit, btn.dataset.piece));
+  });
+  listEl.querySelectorAll('[data-open-kit-dir]').forEach(btn => {
+    btn.addEventListener('click', () => window.robos.openFolderPath({ dirPath: btn.dataset.openKitDir }));
   });
   listEl.querySelectorAll('[data-dl-kit]').forEach(btn => {
     btn.addEventListener('click', async () => {
@@ -4674,6 +4855,9 @@ async function init() {
     } else if (isMod && ev.shiftKey && keyLower === 'e') {
       ev.preventDefault();
       await exportSessionMixdownWav();
+    } else if (isMod && ev.shiftKey && keyLower === 'p') {
+      ev.preventDefault();
+      await openVstDirectoriesModal();
     } else if (isMod && ev.key === ',') {
       ev.preventDefault();
       switchView('audio-devices');
@@ -4905,10 +5089,31 @@ async function init() {
     }
   });
 
-  // Drumkits Modal
+  // VST & Sample Directories + Drumkits Modal
   document.getElementById('btn-open-drumkits-modal')?.addEventListener('click', () => {
-    renderDrumkitsModal();
-    document.getElementById('drumkits-modal')?.classList.remove('hidden');
+    openVstDirectoriesModal();
+  });
+  document.getElementById('nav-open-vst-dirs')?.addEventListener('click', () => {
+    openVstDirectoriesModal();
+  });
+  document.getElementById('btn-vst-browse-dir')?.addEventListener('click', () => {
+    browseAndAddCustomVstDirectory();
+  });
+  document.getElementById('btn-vst-add-path')?.addEventListener('click', () => {
+    addCustomVstDirectoryPath(document.getElementById('vst-dir-path-input')?.value);
+  });
+  document.getElementById('vst-dir-path-input')?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addCustomVstDirectoryPath(e.currentTarget.value);
+    }
+  });
+  document.getElementById('btn-vst-rescan-dirs')?.addEventListener('click', async () => {
+    const res = await window.robos.vstDirsGet();
+    if (res?.ok) {
+      applyVstDirsResponse(res);
+      showStatus(`Rescanned ${res.vstDirsStatus?.totalCustomDirs || 0} custom dir(s) — ${res.vstDirsStatus?.totalPlugins || 0} plugins, ${res.vstDirsStatus?.totalCustomSamples || 0} custom samples.`);
+    }
   });
   document.getElementById('btn-drumkits-close')?.addEventListener('click', () => document.getElementById('drumkits-modal')?.classList.add('hidden'));
   document.getElementById('btn-drumkits-done')?.addEventListener('click', () => document.getElementById('drumkits-modal')?.classList.add('hidden'));
@@ -5066,6 +5271,8 @@ async function init() {
   if (boot?.ok) {
     micProfiles = boot.micProfiles || [];
     drumkitsStatus = boot.drumkitsStatus || { kits: [] };
+    vstDirsStatus = boot.vstDirsStatus || vstDirsStatus;
+    systemPlugins = boot.systemPlugins || [];
     aiProviders = boot.aiProviders || [];
     preferredAiProvider = boot.preferredAiProvider || 'antigravity';
     currentProject = boot.currentProject;
@@ -5106,8 +5313,17 @@ window.__dawStudioState = () => ({
   scSelectedCount: scSelectedInputs.size,
   scClassificationsCount: scClassifications.length,
   drumkitsInstalled: (drumkitsStatus?.kits || []).filter(k => k.installed).map(k => k.id),
+  vstCustomDirectories: (vstDirsStatus?.customDirectories || []).map(d => ({
+    path: d.path,
+    label: d.label,
+    pluginCount: d.pluginCount,
+    sampleCount: d.sampleCount,
+    kitId: d.kitId,
+  })),
+  totalDiscoveredPlugins: vstDirsStatus?.totalPlugins || 0,
 });
 window.__openDrumsetWizard = openDrumsetWizard;
+window.__openVstDirectoriesModal = openVstDirectoriesModal;
 window.__dawTestOpenMenubar = (key = 'track') => {
   const btn = document.querySelector(`.menubar-trigger[data-menubar="${key}"]`);
   if (btn) openMenubarDropdown(key, btn);

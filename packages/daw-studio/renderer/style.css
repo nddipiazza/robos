@@ -2099,3 +2099,149 @@ kbd {
   font-weight: 750;
   white-space: nowrap;
 }
+
+/* ── Custom VST & Sample Directory Manager Modal ─────────────────────── */
+.modal-window.modal-lg.vst-dirs-modal {
+  width: min(860px, 95vw);
+  max-height: 88vh;
+}
+.vst-section-card {
+  background: linear-gradient(180deg, #101620 0%, #0b1017 100%);
+  border: 1px solid #253346;
+  border-radius: 6px;
+  padding: 12px 13px;
+}
+.vst-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.vst-add-path-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+.vst-add-path-row .text-input {
+  flex: 1;
+  font-size: 12px;
+  height: 32px;
+}
+.vst-dirs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-top: 10px;
+}
+.vst-dir-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 5px;
+  background: #090d14;
+  border: 1px solid #1f2c3d;
+}
+.vst-dir-row:hover {
+  border-color: #314763;
+}
+.vst-dir-info {
+  min-width: 0;
+  flex: 1;
+}
+.vst-dir-title-line {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+.vst-dir-path {
+  font-size: 11px;
+  color: #94a3b8;
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.vst-fmt-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.45px;
+  text-transform: uppercase;
+  background: #142234;
+  border: 1px solid #2b476b;
+  color: #7dd3fc;
+}
+.vst-fmt-badge.samples {
+  background: rgba(16, 185, 129, 0.14);
+  border-color: rgba(16, 185, 129, 0.42);
+  color: #6ee7b7;
+}
+.vst-fmt-badge.missing {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.45);
+  color: #fca5a5;
+}
+.vst-system-summary {
+  margin-top: 9px;
+  padding-top: 8px;
+  border-top: 1px solid #1c2736;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 11px;
+  color: var(--muted);
+}
+.vst-sys-pills {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+.vst-sys-pill {
+  padding: 1.5px 6px;
+  border-radius: 3px;
+  background: #111824;
+  border: 1px solid #233042;
+  font-size: 10px;
+  color: #cbd5e1;
+}
+.plugin-chip-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+.plugin-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  border-radius: 3.5px;
+  background: #121b28;
+  border: 1px solid #2a3b52;
+  font-size: 10.5px;
+  color: #e2e8f0;
+}
+.plugin-chip button {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 0 1px;
+  font-size: 11px;
+  line-height: 1;
+}
+.plugin-chip button:hover {
+  color: #f87171;
+}

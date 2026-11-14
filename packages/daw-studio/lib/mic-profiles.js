@@ -374,25 +374,19 @@ const MIC_PROFILES = [
 ];
 
 function discoverSystemLinuxPlugins() {
-  const dirs = [
-    '/usr/lib/lv2',
-    '/usr/local/lib/lv2',
-    '/usr/lib/x86_64-linux-gnu/lv2',
-    '/usr/lib/vst3',
-    '/usr/lib/vst',
-    '/usr/lib/ladspa',
-    '/usr/lib/x86_64-linux-gnu/ladspa',
-  ];
-  const found = [];
-  for (const dir of dirs) {
-    try {
-      if (!fs.existsSync(dir)) continue;
-      for (const entry of fs.readdirSync(dir)) {
-        found.push({ name: entry, format: dir.includes('lv2') ? 'LV2' : dir.includes('vst') ? 'VST' : 'LADSPA', dir });
-      }
-    } catch {}
+  try {
+    const { getVstDirectoriesSnapshot } = require('./vst-directories');
+    return getVstDirectoriesSnapshot().discoveredPlugins.map(p => ({
+      name: p.name,
+      fileName: p.fileName,
+      format: p.format,
+      dir: p.rootDir,
+      path: p.path,
+      source: p.source,
+    }));
+  } catch {
+    return [];
   }
-  return found;
 }
 
 function getMicProfile(profileId) {

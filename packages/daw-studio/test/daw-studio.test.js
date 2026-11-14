@@ -790,4 +790,107 @@ describe('DAW Editing Engine: Multi-Select, Track/Take Gain, Split/Trim, Copy/Pa
     assert.strictEqual(project.tracks[1].name, 'Rack Tom 1');
     assert.strictEqual(project.tracks[2].name, 'Rack Tom 2');
   });
+
+  it('persists custom VST & sample directories, scans nested Samples/*.wav + VST3/LV2/CLAP bundles, and maps canonical + individual drum pieces', () => {
+    const {
+      addVstDirectory,
+      removeVstDirectory,
+      getConfiguredVstDirectoryPaths,
+      getVstDirectoriesSnapshot,
+    } = require('../lib/vst-directories');
+    const { inspectInstalledKits } = require('../lib/drum-instruments');
+
+    const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'robos-daw-vst-dirs-'));
+    const prevCfgDir = process.env.ROBOS_DAW_CONFIG_DIR;
+    process.env.ROBOS_DAW_CONFIG_DIR = path.join(tmpRoot, 'config');
+
+    try {
+      // 1. Create a realistic nested sample pack folder (like "[99Sounds] 99 Drum Samples/Samples/*.wav")
+      const samplePackDir = path.join(tmpRoot, '[99Sounds] Test Drum Samples');
+      const nestedSamplesDir = path.join(samplePackDir, 'Samples');
+      fs.mkdirSync(nestedSamplesDir, { recursive: true });
+      const wavBuf = synthesizeDrumTakeWav({ profileId: 'snare-top', durationSec: 0.25 });
+      for (const fileName of [
+        'kick-acoustic01.wav',
+        'kick-808.wav',
+        'snare-acoustic01.wav',
+        'snare-punch.wav',
+        'tom-acoustic01.wav',
+        'tom-acoustic02.wav',
+        'hihat-acoustic01.wav',
+        'openhat-acoustic01.wav',
+        'crash-acoustic.wav',
+        'ride-acoustic01.wav',
+        'cowbell-808.wav',
+      ]) {
+        fs.writeFileSync(path.join(nestedSamplesDir, fileName), wavBuf);
+      }
+
+      // 2. Create a custom plugin folder containing .vst3 bundle, .lv2 bundle, .clap, .so, and .sfz
+      const customVstDir = path.join(tmpRoot, 'CustomPlugins');
+      const vst3BundleInternal = path.join(customVstDir, 'FabProQ.vst3', 'Contents', 'x86_64-linux');
+      const lv2BundleInternal = path.join(customVstDir, 'x42-eq.lv2');
+      fs.mkdirSync(vst3BundleInternal, { recursive: true });
+      fs.mkdirSync(lv2BundleInternal, { recursive: true });
+      // Internal .so inside .vst3 / .lv2 bundles must NOT be double-counted as separate VST2 plugins
+      fs.writeFileSync(path.join(vst3BundleInternal, 'FabProQ.so'), 'stub');
+      fs.writeFileSync(path.join(lv2BundleInternal, 'x42-eq.so'), 'stub');
+      fs.writeFileSync(path.join(customVstDir, 'SurgeXT.clap'), 'stub');
+      fs.writeFileSync(path.join(customVstDir, 'AnalogComp.so'), 'stub');
+      fs.writeFileSync(path.join(customVstDir, 'StudioKit.sfz'), 'stub');
+
+      // Add both directories (plus duplicate add check)
+      addVstDirectory(samplePackDir);
+      addVstDirectory(samplePackDir); // deduplicated
+      addVstDirectory(customVstDir);
+
+      const configuredPaths = getConfiguredVstDirectoryPaths();
+      assert.strictEqual(configuredPaths.length, 2);
+
+      const snap = getVstDirectoriesSnapshot();
+      assert.strictEqual(snap.totalCustomDirs, 2);
+      assert.strictEqual(snap.totalCustomSamples, 11);
+
+      const packSnap = snap.customDirectories.find(d => d.path === samplePackDir);
+      assert.ok(packSnap);
+      assert.strictEqual(packSnap.sampleCount, 11);
+      assert.ok(packSnap.kitId.startsWith('custom-dir-'));
+
+      const plugSnap = snap.customDirectories.find(d => d.path === customVstDir);
+      assert.ok(plugSnap);
+      assert.strictEqual(plugSnap.pluginCount, 5); // FabProQ (VST3), x42-eq (LV2), SurgeXT (CLAP), AnalogComp (VST2), StudioKit (SFZ)
+      const formats = new Set(plugSnap.plugins.map(p => p.format));
+      for (const fmt of ['VST3', 'LV2', 'CLAP', 'VST2', 'SFZ']) {
+        assert.ok(formats.has(fmt), `Expected format ${fmt} to be discovered`);
+      }
+
+      // Verify inspectInstalledKits exposes the custom sample pack with canonical + individual pieces
+      const kitsInfo = inspectInstalledKits();
+      const customKit = kitsInfo.kits.find(k => k.id === packSnap.kitId);
+      assert.ok(customKit, 'Expected custom sample directory to be indexed as an installed drum kit');
+      assert.strictEqual(customKit.installed, true);
+      assert.strictEqual(customKit.sampleCount, 11);
+      // Canonical pieces prefer acoustic samples over 808
+      assert.ok(customKit.pieces.kick.layers[0].localPath.endsWith('kick-acoustic01.wav'));
+      assert.ok(customKit.pieces.snare.layers[0].localPath.endsWith('snare-acoustic01.wav'));
+      assert.ok(customKit.pieces['tom-rack']);
+      assert.ok(customKit.pieces.hihat);
+      assert.ok(customKit.pieces['hihat-open']);
+      assert.ok(customKit.pieces.cymbal);
+      assert.ok(customKit.pieces.ride);
+      // Every individual sample is also exposed for direct selection
+      assert.ok(customKit.pieces['sample-kick-808']);
+      assert.ok(customKit.pieces['sample-snare-punch']);
+      assert.ok(customKit.pieces['sample-cowbell-808']);
+
+      // Removing directory prunes it cleanly
+      const rm = removeVstDirectory(samplePackDir);
+      assert.strictEqual(rm.removed, true);
+      assert.strictEqual(getConfiguredVstDirectoryPaths().length, 1);
+    } finally {
+      if (prevCfgDir === undefined) delete process.env.ROBOS_DAW_CONFIG_DIR;
+      else process.env.ROBOS_DAW_CONFIG_DIR = prevCfgDir;
+      fs.rmSync(tmpRoot, { recursive: true, force: true });
+    }
+  });
 });

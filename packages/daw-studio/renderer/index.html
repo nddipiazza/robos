@@ -34,9 +34,9 @@
           <svg class="daw-svg-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="6" y1="9" x2="6.01" y2="9"/><line x1="10" y1="9" x2="10.01" y2="9"/><line x1="14" y1="9" x2="14.01" y2="9"/><line x1="18" y1="9" x2="18.01" y2="9"/><line x1="8" y1="15" x2="16" y2="15"/></svg>
           <span>Keymap</span>
         </button>
-        <button type="button" class="btn btn-sm btn-bevel" id="btn-open-drumkits-modal" title="Manage Open-Source Drum Replacement Sample Libraries">
+        <button type="button" class="btn btn-sm btn-bevel" id="btn-open-drumkits-modal" title="Manage Custom VST / LV2 / CLAP Directories and Sample Libraries (Ctrl+Shift+P)">
           <img src="assets/icons/drum-replace.webp" class="daw-ai-badge" width="15" height="15" alt="" />
-          <span>Drum Kits</span>
+          <span>VST &amp; Samples</span>
           <span id="drumkits-badge" class="pill-count">...</span>
         </button>
         <button type="button" class="btn btn-sm btn-bevel" id="btn-rescan" title="Rescan PipeWire and Focusrite USB Hardware">
@@ -63,10 +63,14 @@
           <span>Add Mic Setup</span>
         </button>
 
-        <div class="nav-group-title">HARDWARE I/O</div>
+        <div class="nav-group-title">HARDWARE &amp; PLUGINS</div>
         <button type="button" class="nav-btn" id="nav-audio-devices" data-view="audio-devices">
           <img src="assets/icons/audio-interface.webp" class="daw-ai-badge" width="18" height="18" alt="" />
           <span>Audio Devices</span>
+        </button>
+        <button type="button" class="nav-btn" id="nav-open-vst-dirs">
+          <img src="assets/icons/channel-fx.webp" class="daw-ai-badge" width="18" height="18" alt="" />
+          <span>VST &amp; Samples</span>
         </button>
 
         <div class="rail-session-summary" id="rail-session-summary">
@@ -597,30 +601,60 @@
     </div>
   </div>
 
-  <!-- ==================== MODAL 3: OPEN-SOURCE DRUM KITS ==================== -->
+  <!-- ==================== MODAL 3: VST PLUGINS, SAMPLE DIRECTORIES & DRUM LIBRARIES ==================== -->
   <div id="drumkits-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true">
-    <div class="modal-window modal-md">
+    <div class="modal-window modal-lg vst-dirs-modal">
       <div class="modal-header">
         <div class="modal-title-row">
-          <img src="assets/icons/drum-replace.webp" class="daw-ai-badge" width="28" height="28" alt="" />
+          <img src="assets/icons/channel-fx.webp" class="daw-ai-badge" width="28" height="28" alt="" />
           <div>
-            <h2>Open-Source Drum Sample Libraries</h2>
-            <p class="modal-subtitle">Stored in local user library <code>~/.local/share/robos/daw-studio/instruments/drumkits/</code></p>
+            <h2>VST / LV2 / CLAP Directories &amp; Sample Libraries</h2>
+            <p class="modal-subtitle">Add custom plugin or WAV/FLAC sample directories from anywhere on disk — indexed live without copying binaries</p>
           </div>
         </div>
         <button type="button" class="modal-close" id="btn-drumkits-close">×</button>
       </div>
       <div class="modal-body">
-        <div class="skill-callout" style="margin-bottom:12px;">
-          <strong>Agent Skill:</strong> Run <code>/install-daw-instruments</code> or execute:<br />
-          <code>node packages/daw-studio/bin/daw-instruments.js install all</code>
+        <div class="vst-section-card">
+          <div class="vst-section-header">
+            <div>
+              <div class="mini-heading" style="margin:0;">CUSTOM VST PLUGIN &amp; SAMPLE LIBRARY DIRECTORIES</div>
+              <span class="hint">Supports <code>.vst3</code>, <code>.lv2</code>, <code>.clap</code>, <code>.so</code>, <code>.sfz</code>, and nested <code>.wav</code> / <code>.flac</code> sample packs</span>
+            </div>
+            <div class="btn-cluster">
+              <button type="button" class="btn btn-sm btn-primary" id="btn-vst-browse-dir" title="Browse and select one or more folders on disk">
+                <svg class="daw-svg-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg>
+                <span>Browse Folder...</span>
+              </button>
+              <button type="button" class="btn btn-sm btn-bevel" id="btn-vst-rescan-dirs" title="Rescan all custom and system plugin/sample directories">
+                <svg class="daw-svg-icon" width="12.5" height="12.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                <span>Rescan</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="vst-add-path-row">
+            <input type="text" id="vst-dir-path-input" class="text-input mono" placeholder="/path/to/vst3-plugins or /home/user/Downloads/Sample Pack" aria-label="Custom VST or Sample Directory Path" />
+            <button type="button" class="btn btn-bevel" id="btn-vst-add-path">Add Directory</button>
+          </div>
+
+          <div id="vst-custom-dirs-list" class="vst-dirs-list"></div>
+          <div id="vst-system-paths-summary" class="vst-system-summary"></div>
+        </div>
+
+        <div class="vst-section-header" style="margin:14px 0 8px;">
+          <div>
+            <div class="mini-heading" style="margin:0;">INDEXED DRUM &amp; SAMPLE LIBRARIES (SOUND REPLACEMENT READY)</div>
+            <span class="hint">Custom sample folders and open-source studio kits available on every channel's Trigger Rack</span>
+          </div>
+          <code class="mono" style="font-size:10.5px;color:#7dd3fc;">daw-instruments.js add-dir "&lt;path&gt;"</code>
         </div>
         <div id="drumkits-progress-bar" class="status-banner hidden"></div>
         <div id="drumkits-catalog-list" class="saved-projects-list"></div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-primary" id="btn-download-all-kits">Download / Verify All Open Kits</button>
-        <button type="button" class="btn btn-bevel" id="btn-drumkits-done">Done</button>
+        <button type="button" class="btn btn-bevel" id="btn-download-all-kits">Download / Verify Open-Source Kits</button>
+        <button type="button" class="btn btn-primary" id="btn-drumkits-done">Done</button>
       </div>
     </div>
   </div>

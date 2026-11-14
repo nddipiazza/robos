@@ -19,6 +19,11 @@ const path = require('path');
 const os = require('os');
 const https = require('https');
 const crypto = require('crypto');
+const {
+  scanDirectoryForPluginsAndSamples,
+  buildCustomSampleKitFromDirectory,
+  getCustomDirectorySampleKits,
+} = require('./vst-directories');
 
 const HYDROGEN_RAW_BASE = 'https://raw.githubusercontent.com/hydrogen-music/hydrogen/main/data/drumkits';
 const VIRTUOSITY_RAW_BASE = 'https://raw.githubusercontent.com/sfzinstruments/virtuosity_drums/master/Samples';
@@ -271,36 +276,33 @@ function inspectInstalledKits() {
     for (const entry of fs.readdirSync(root, { withFileTypes: true })) {
       if (!entry.isDirectory() || catalogIds.has(entry.name)) continue;
       const kitDir = path.join(root, entry.name);
-      const audioFiles = fs.readdirSync(kitDir).filter(f => /\.(wav|flac|ogg|mp3)$/i.test(f));
-      if (!audioFiles.length) continue;
+      const scan = scanDirectoryForPluginsAndSamples(kitDir, { maxDepth: 4 });
+      if (!scan.sampleFiles.length) continue;
       let meta = { name: entry.name, author: 'Custom Open Archive', license: 'User Installed', description: 'Custom local drumkit' };
       const manifestPath = path.join(kitDir, 'kit.json');
       if (fs.existsSync(manifestPath)) {
         try { meta = { ...meta, ...JSON.parse(fs.readFileSync(manifestPath, 'utf8')) }; } catch {}
       }
-      const pieces = {};
-      for (const f of audioFiles) {
-        const slug = path.basename(f, path.extname(f)).toLowerCase().replace(/[^a-z0-9]+/g, '-');
-        pieces[slug] = {
-          id: slug,
-          label: path.basename(f, path.extname(f)),
-          ready: true,
-          layers: [{ min: 0, max: 1, file: f, localPath: path.join(kitDir, f), exists: true }],
-        };
-      }
+      const built = buildCustomSampleKitFromDirectory({ path: kitDir, label: meta.name }, scan.sampleFiles);
       results.push({
+        ...built,
         id: entry.name,
         name: meta.name,
         author: meta.author,
         license: meta.license,
         sourceUrl: meta.sourceUrl || kitDir,
         description: meta.description,
-        installed: true,
-        sampleCount: audioFiles.length,
-        kitDir,
-        pieces,
+        isCustomDirectory: false,
       });
     }
+  }
+
+  // Include all user-configured custom VST / Sample directories containing audio samples
+  const seenIds = new Set(results.map(r => r.id));
+  for (const customKit of getCustomDirectorySampleKits()) {
+    if (seenIds.has(customKit.id)) continue;
+    seenIds.add(customKit.id);
+    results.push(customKit);
   }
 
   return {

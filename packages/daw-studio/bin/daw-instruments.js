@@ -6,6 +6,9 @@
  *
  * Usage:
  *   node packages/daw-studio/bin/daw-instruments.js list
+ *   node packages/daw-studio/bin/daw-instruments.js dirs
+ *   node packages/daw-studio/bin/daw-instruments.js add-dir "/path/to/vst-or-samples"
+ *   node packages/daw-studio/bin/daw-instruments.js remove-dir "/path/to/vst-or-samples"
  *   node packages/daw-studio/bin/daw-instruments.js install-defaults
  *   node packages/daw-studio/bin/daw-instruments.js install <kit-id>
  */
@@ -16,9 +19,43 @@ const {
   downloadOpenDrumkit,
   downloadDefaultOpenDrumkits,
 } = require('../lib/drum-instruments');
+const {
+  addVstDirectory,
+  removeVstDirectory,
+  getVstDirectoriesSnapshot,
+} = require('../lib/vst-directories');
 
 async function main() {
   const [cmd = 'list', arg] = process.argv.slice(2);
+
+  if (cmd === 'dirs') {
+    const snap = getVstDirectoriesSnapshot();
+    console.log(`Config: ${snap.configPath}`);
+    console.log(`Custom VST & Sample Directories (${snap.customDirectories.length}):`);
+    for (const d of snap.customDirectories) {
+      console.log(`  - ${d.label} -> ${d.path} (${d.pluginCount} plugins, ${d.sampleCount} samples)`);
+    }
+    return;
+  }
+
+  if (cmd === 'add-dir') {
+    if (!arg) throw new Error('Missing directory path. Usage: daw-instruments.js add-dir "<dir>"');
+    const added = addVstDirectory(arg);
+    const snap = getVstDirectoriesSnapshot();
+    const match = snap.customDirectories.find(d => d.path === added.path);
+    console.log(`Added directory: ${added.path}`);
+    if (match) {
+      console.log(`Indexed: ${match.pluginCount} plugin(s), ${match.sampleCount} audio sample(s)`);
+    }
+    return;
+  }
+
+  if (cmd === 'remove-dir') {
+    if (!arg) throw new Error('Missing directory path. Usage: daw-instruments.js remove-dir "<dir>"');
+    const res = removeVstDirectory(arg);
+    console.log(res.removed ? `Removed directory: ${arg}` : `Directory was not registered: ${arg}`);
+    return;
+  }
 
   if (cmd === 'list' || cmd === 'status') {
     const info = inspectInstalledKits();
@@ -68,7 +105,7 @@ async function main() {
     return;
   }
 
-  console.error(`Unknown command "${cmd}". Use: list | install-defaults | install <gm-rock-kit|virtuosity-cc0|tr-808-kit|all>`);
+  console.error(`Unknown command "${cmd}". Use: list | dirs | add-dir <path> | remove-dir <path> | install-defaults | install <gm-rock-kit|virtuosity-cc0|tr-808-kit|all>`);
   process.exit(1);
 }
 

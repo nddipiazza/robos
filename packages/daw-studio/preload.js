@@ -35,6 +35,12 @@ contextBridge.exposeInMainWorld('robos', {
   onDrumkitProgress: (cb) => subscribe('daw:drumkit-progress', cb),
   readAudioFile: (payload) => ipcRenderer.invoke('daw:read-audio-file', payload),
 
+  // Custom VST / LV2 / CLAP & Sample Library Directories
+  vstDirsGet: () => ipcRenderer.invoke('daw:vst-dirs-get'),
+  vstDirsAdd: (payload) => ipcRenderer.invoke('daw:vst-dirs-add', payload),
+  vstDirsRemove: (payload) => ipcRenderer.invoke('daw:vst-dirs-remove', payload),
+  openFolderPath: (payload) => ipcRenderer.invoke('daw:open-folder-path', payload),
+
   // DrumSet AI All-Mic Soundcheck Wizard (All Mics -> RobOS Agent / Gemini)
   soundcheckStart: (payload) => ipcRenderer.invoke('daw:soundcheck-start', payload),
   soundcheckCancel: () => ipcRenderer.invoke('daw:soundcheck-cancel'),
