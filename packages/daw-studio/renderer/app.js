@@ -22,6 +22,7 @@ let clipClipboard = null;
 let timelineZoom = 1.0;
 let inlineRenamingTrackId = null;
 let timelineDragState = null;
+let hoverLinkedPreview = null; // { key: string, zone: string, clipIds: Set<string> }
 let renameModalCallback = null;
 let snapToGrid = false;
 let loopPlayback = false;
@@ -821,7 +822,11 @@ function renderStudio() {
 }
 
 function getTargetTrackIdsForAction(clickedTrackId, ev) {
-  if ((ev?.ctrlKey || ev?.metaKey) && selectedTrackIds.size > 0) {
+  if (ev?.altKey) {
+    return new Set([clickedTrackId]);
+  }
+  const inMultiTrackSelection = selectedTrackIds.has(clickedTrackId) && selectedTrackIds.size > 1;
+  if (inMultiTrackSelection || ((ev?.ctrlKey || ev?.metaKey) && selectedTrackIds.size > 0)) {
     const combined = new Set(selectedTrackIds);
     combined.add(clickedTrackId);
     return combined;
@@ -949,11 +954,13 @@ function bindTrackRowEvents() {
     if (act === 'gain') {
       let dragSnapshotSaved = false;
       let startGainMap = null;
+      let gangedIds = null;
       el.addEventListener('click', ev => ev.stopPropagation());
       el.addEventListener('pointerdown', (ev) => {
         ev.stopPropagation();
         dragSnapshotSaved = false;
         startGainMap = new Map((currentProject?.tracks || []).map(t => [t.id, Number(t.gainDb) || 0]));
+        gangedIds = getTargetTrackIdsForAction(trackId, ev);
       });
       el.addEventListener('input', (ev) => {
         const track = (currentProject?.tracks || []).find(t => t.id === trackId);
@@ -966,25 +973,22 @@ function bindTrackRowEvents() {
         const newVal = DE.clamp(-24, 24, Number(el.value) || 0);
         const origSelf = startGainMap ? (startGainMap.get(trackId) ?? 0) : (Number(track.gainDb) || 0);
         const delta = newVal - origSelf;
-        track.gainDb = newVal;
-        const badge = document.getElementById(`gain-badge-${trackId}`);
-        if (badge) {
-          badge.textContent = DE.formatDb(newVal);
-          badge.classList.toggle('boosted', Math.abs(newVal) >= 0.05);
-        }
+        const targetIds = gangedIds || getTargetTrackIdsForAction(trackId, ev);
 
-        // Hold Ctrl while dragging Gain to gang all selected tracks by the same dB delta!
-        if ((ev.ctrlKey || ev.metaKey) && selectedTrackIds.has(trackId) && selectedTrackIds.size > 1) {
-          for (const other of (currentProject?.tracks || [])) {
-            if (other.id === trackId || !selectedTrackIds.has(other.id)) continue;
-            const base = startGainMap ? (startGainMap.get(other.id) ?? 0) : (Number(other.gainDb) || 0);
-            const gVal = DE.clamp(-24, 24, Number((base + delta).toFixed(1)));
-            other.gainDb = gVal;
-            const ob = document.getElementById(`gain-badge-${other.id}`);
-            if (ob) {
-              ob.textContent = DE.formatDb(gVal);
-              ob.classList.toggle('boosted', Math.abs(gVal) >= 0.05);
-            }
+        DE.adjustTracksNumericBatch(currentProject, startGainMap, targetIds, 'gainDb', delta, -24, 24, 1);
+        track.gainDb = newVal;
+
+        for (const t of (currentProject?.tracks || [])) {
+          if (!targetIds.has(t.id)) continue;
+          const gVal = Number(t.gainDb) || 0;
+          const ob = document.getElementById(`gain-badge-${t.id}`);
+          if (ob) {
+            ob.textContent = DE.formatDb(gVal);
+            ob.classList.toggle('boosted', Math.abs(gVal) >= 0.05);
+          }
+          if (t.id !== trackId) {
+            const otherSlider = listEl.querySelector(`input[data-act="gain"][data-id="${t.id}"]`);
+            if (otherSlider) otherSlider.value = gVal.toFixed(1);
           }
         }
         markDirty(true);
@@ -992,16 +996,16 @@ function bindTrackRowEvents() {
       });
       el.addEventListener('change', async () => {
         dragSnapshotSaved = false;
+        gangedIds = null;
         renderInspectorDrawer();
         await syncProjectToMain();
       });
       el.addEventListener('dblclick', async (ev) => {
         ev.stopPropagation();
-        const track = (currentProject?.tracks || []).find(t => t.id === trackId);
-        if (!track) return;
+        const targetIds = getTargetTrackIdsForAction(trackId, ev);
         await commitEdit('Reset Track Gain', () => {
-          track.gainDb = 0;
-        }, { statusMsg: `Reset "${track.name}" input trim to 0.0 dB` });
+          DE.setTracksPropertyBatch(currentProject, targetIds, 'gainDb', 0);
+        }, { statusMsg: `Reset input trim to 0.0 dB on ${targetIds.size} track(s)` });
       });
       return;
     }
@@ -1009,20 +1013,26 @@ function bindTrackRowEvents() {
     if (act === 'gain-reset') {
       el.addEventListener('dblclick', async (ev) => {
         ev.stopPropagation();
-        const track = (currentProject?.tracks || []).find(t => t.id === trackId);
-        if (!track) return;
+        const targetIds = getTargetTrackIdsForAction(trackId, ev);
         await commitEdit('Reset Track Gain', () => {
-          track.gainDb = 0;
-        }, { statusMsg: `Reset "${track.name}" input trim to 0.0 dB` });
+          DE.setTracksPropertyBatch(currentProject, targetIds, 'gainDb', 0);
+        }, { statusMsg: `Reset input trim to 0.0 dB on ${targetIds.size} track(s)` });
       });
       return;
     }
 
     if (act === 'vol') {
       let volSnapSaved = false;
+      let startVolMap = null;
+      let gangedIds = null;
       el.addEventListener('click', ev => ev.stopPropagation());
-      el.addEventListener('pointerdown', ev => { ev.stopPropagation(); volSnapSaved = false; });
-      el.addEventListener('input', () => {
+      el.addEventListener('pointerdown', (ev) => {
+        ev.stopPropagation();
+        volSnapSaved = false;
+        startVolMap = new Map((currentProject?.tracks || []).map(t => [t.id, Number(t.volume ?? 1)]));
+        gangedIds = getTargetTrackIdsForAction(trackId, ev);
+      });
+      el.addEventListener('input', (ev) => {
         const track = (currentProject?.tracks || []).find(t => t.id === trackId);
         if (!track) return;
         if (!volSnapSaved) {
@@ -1030,18 +1040,32 @@ function bindTrackRowEvents() {
           volSnapSaved = true;
           updateEditToolbarState();
         }
-        track.volume = Number(el.value);
+        const newVal = DE.clamp(0, 1.4, Number(el.value));
+        const origSelf = startVolMap ? (startVolMap.get(trackId) ?? 1) : Number(track.volume ?? 1);
+        const delta = newVal - origSelf;
+        const targetIds = gangedIds || getTargetTrackIdsForAction(trackId, ev);
+
+        DE.adjustTracksNumericBatch(currentProject, startVolMap, targetIds, 'volume', delta, 0, 1.4, 2);
+        track.volume = newVal;
+
+        for (const t of (currentProject?.tracks || [])) {
+          if (!targetIds.has(t.id) || t.id === trackId) continue;
+          const otherSlider = listEl.querySelector(`input[data-act="vol"][data-id="${t.id}"]`);
+          if (otherSlider) otherSlider.value = Number(t.volume ?? 1).toFixed(2);
+        }
         markDirty(true);
       });
       el.addEventListener('change', async () => {
         volSnapSaved = false;
+        gangedIds = null;
         await syncProjectToMain();
       });
       el.addEventListener('dblclick', async (ev) => {
         ev.stopPropagation();
-        const track = (currentProject?.tracks || []).find(t => t.id === trackId);
-        if (!track) return;
-        await commitEdit('Reset Track Volume', () => { track.volume = 1.0; });
+        const targetIds = getTargetTrackIdsForAction(trackId, ev);
+        await commitEdit('Reset Track Volume', () => {
+          DE.setTracksPropertyBatch(currentProject, targetIds, 'volume', 1.0);
+        });
       });
       return;
     }
@@ -1049,9 +1073,10 @@ function bindTrackRowEvents() {
     if (act === 'pan-reset') {
       el.addEventListener('dblclick', async (ev) => {
         ev.stopPropagation();
-        const track = (currentProject?.tracks || []).find(t => t.id === trackId);
-        if (!track) return;
-        await commitEdit('Center Pan', () => { track.pan = 0; });
+        const targetIds = getTargetTrackIdsForAction(trackId, ev);
+        await commitEdit('Center Pan', () => {
+          DE.setTracksPropertyBatch(currentProject, targetIds, 'pan', 0);
+        });
       });
       return;
     }
@@ -1126,7 +1151,7 @@ function bindTrackRowEvents() {
     });
   });
 
-  // Timeline Lane Mouse Selection, Dragging, Edge Trimming & Take Context Menu
+  // Timeline Lane Mouse Selection, Multi-Track Linked Trimming, Dragging & Take Context Menu
   listEl.querySelectorAll('[data-lane-track]').forEach(lane => {
     const trackId = lane.dataset.laneTrack;
 
@@ -1135,9 +1160,40 @@ function bindTrackRowEvents() {
       const track = (currentProject?.tracks || []).find(t => t.id === trackId);
       if (!track) return;
       const hit = hitTestLaneClip(track, lane, ev.clientX);
-      if (!hit) lane.style.cursor = 'crosshair';
-      else if (hit.zone === 'left-edge' || hit.zone === 'right-edge') lane.style.cursor = 'ew-resize';
-      else lane.style.cursor = 'grab';
+      if (!hit) {
+        lane.style.cursor = 'crosshair';
+        if (hoverLinkedPreview) {
+          hoverLinkedPreview = null;
+          drawAllTimelineCanvases();
+        }
+        return;
+      }
+
+      if (hit.zone === 'left-edge' || hit.zone === 'right-edge') {
+        lane.style.cursor = 'ew-resize';
+      } else {
+        lane.style.cursor = 'grab';
+      }
+
+      const opMode = hit.zone === 'left-edge' ? 'left' : hit.zone === 'right-edge' ? 'right' : 'move';
+      const linkedIds = DE.resolveLinkedClipsForOperation(currentProject, {
+        selectedTrackIds,
+        selectedClipIds,
+        anchorClipId: hit.clip.id,
+        mode: opMode,
+      });
+      const nextKey = linkedIds.size > 1 ? `${hit.zone}:${hit.clip.id}:${linkedIds.size}` : '';
+      if ((hoverLinkedPreview?.key || '') !== nextKey) {
+        hoverLinkedPreview = nextKey ? { key: nextKey, zone: hit.zone, clipIds: linkedIds } : null;
+        drawAllTimelineCanvases();
+      }
+    });
+
+    lane.addEventListener('mouseleave', () => {
+      if (!timelineDragState && hoverLinkedPreview) {
+        hoverLinkedPreview = null;
+        drawAllTimelineCanvases();
+      }
     });
 
     lane.addEventListener('mousedown', (ev) => {
@@ -1153,27 +1209,41 @@ function bindTrackRowEvents() {
 
       if (hit) {
         ev.preventDefault();
+        hoverLinkedPreview = null;
         const isModifier = ev.ctrlKey || ev.metaKey || ev.shiftKey;
-        if (!isModifier && selectedClipIds.has(hit.clip.id) && hit.zone === 'body') {
-          anchorClipId = hit.clip.id;
-        } else {
+        const opMode = hit.zone === 'left-edge' ? 'left' : hit.zone === 'right-edge' ? 'right' : 'move';
+        const inSelectedTrackGroup = selectedTrackIds.has(track.id) && selectedTrackIds.size > 1;
+        const inSelectedClipGroup = selectedClipIds.has(hit.clip.id) && selectedClipIds.size > 1;
+
+        if (isModifier) {
           const next = DE.applyClipClickSelection(currentProject, selectedClipIds, anchorClipId, hit.clip.id, ev);
           selectedClipIds = next.selectedClipIds;
           anchorClipId = next.anchorClipId;
-          if (!isModifier) {
-            selectedTrackIds = new Set([track.id]);
-            anchorTrackId = track.id;
-          } else {
-            selectedTrackIds.add(track.id);
-          }
+          selectedTrackIds.add(track.id);
+        } else if (inSelectedTrackGroup || inSelectedClipGroup) {
+          // Preserve multi-track / multi-clip selection and resolve all linked regions across selected tracks!
+          selectedClipIds = DE.resolveLinkedClipsForOperation(currentProject, {
+            selectedTrackIds,
+            selectedClipIds,
+            anchorClipId: hit.clip.id,
+            mode: opMode,
+          });
+          anchorClipId = hit.clip.id;
+        } else {
+          selectedClipIds = new Set([hit.clip.id]);
+          anchorClipId = hit.clip.id;
+          selectedTrackIds = new Set([track.id]);
+          anchorTrackId = track.id;
         }
+
         if (selectedTrackId !== null) selectedTrackId = track.id;
 
         if (hit.zone === 'body') {
+          const targetClipIds = new Set(selectedClipIds);
           const initialStarts = new Map();
           for (const tr of tracks) {
             for (const c of (tr.clips || [])) {
-              if (selectedClipIds.has(c.id)) initialStarts.set(c.id, Number(c.startSec) || 0);
+              if (targetClipIds.has(c.id)) initialStarts.set(c.id, Number(c.startSec) || 0);
             }
           }
           timelineDragState = {
@@ -1184,18 +1254,33 @@ function bindTrackRowEvents() {
             laneWidth: Math.max(1, rect.width),
             totalSec,
             pushedUndo: false,
+            targetClipIds,
             initialStarts,
           };
         } else {
+          const targetClipIds = DE.resolveLinkedClipsForOperation(currentProject, {
+            selectedTrackIds,
+            selectedClipIds,
+            anchorClipId: hit.clip.id,
+            mode: opMode,
+          });
+          selectedClipIds = new Set(targetClipIds);
+          const initialClips = new Map();
+          for (const tr of tracks) {
+            for (const c of (tr.clips || [])) {
+              if (targetClipIds.has(c.id)) initialClips.set(c.id, DE.cloneDeep(c));
+            }
+          }
           timelineDragState = {
-            mode: hit.zone === 'left-edge' ? 'left' : 'right',
+            mode: opMode,
             trackId: track.id,
             clipId: hit.clip.id,
             startX: ev.clientX,
             laneWidth: Math.max(1, rect.width),
             totalSec,
             pushedUndo: false,
-            initialClip: DE.cloneDeep(hit.clip),
+            targetClipIds,
+            initialClips,
           };
         }
         updateEditToolbarState();
@@ -1252,7 +1337,19 @@ function bindTrackRowEvents() {
       const hit = hitTestLaneClip(track, lane, ev.clientX);
 
       if (hit) {
-        if (!selectedClipIds.has(hit.clip.id)) {
+        const inSelectedTrackGroup = selectedTrackIds.has(track.id) && selectedTrackIds.size > 1;
+        const inSelectedClipGroup = selectedClipIds.has(hit.clip.id) && selectedClipIds.size > 1;
+        if (inSelectedTrackGroup || inSelectedClipGroup) {
+          selectedClipIds = DE.resolveLinkedClipsForOperation(currentProject, {
+            selectedTrackIds,
+            selectedClipIds,
+            anchorClipId: hit.clip.id,
+            mode: 'edit',
+          });
+          anchorClipId = hit.clip.id;
+          updateEditToolbarState();
+          drawAllTimelineCanvases();
+        } else if (!selectedClipIds.has(hit.clip.id)) {
           selectedClipIds = new Set([hit.clip.id]);
           anchorClipId = hit.clip.id;
           selectedTrackIds = new Set([track.id]);
@@ -1285,7 +1382,7 @@ function hitTestLaneClip(track, laneEl, clientX) {
     const clipW = Math.max(8, (Number(clip.durationSec || 1) / totalSec) * w);
     const endX = startX + clipW;
     if (x >= startX - 2 && x <= endX + 2) {
-      const edgeZonePx = Math.min(8, Math.max(4, clipW * 0.18));
+      const edgeZonePx = Math.min(10, Math.max(5, clipW * 0.18));
       let zone = 'body';
       if (x <= startX + edgeZonePx) zone = 'left-edge';
       else if (x >= endX - edgeZonePx) zone = 'right-edge';
@@ -1301,9 +1398,12 @@ function handleGlobalTimelineMouseMove(ev) {
   if (!timelineDragState.pushedUndo && Math.abs(dx) < 3) return;
 
   if (!timelineDragState.pushedUndo) {
+    const cnt = timelineDragState.targetClipIds?.size || 1;
     historyStack.pushSnapshot(
       currentProject,
-      timelineDragState.mode === 'move' ? 'Move Take(s)' : 'Trim Take Edge'
+      timelineDragState.mode === 'move'
+        ? `Move ${cnt} Region(s)`
+        : `Trim ${cnt} Region(s)`
     );
     timelineDragState.pushedUndo = true;
     updateEditToolbarState();
@@ -1323,13 +1423,20 @@ function handleGlobalTimelineMouseMove(ev) {
       const snappedPrimary = DE.snapTimeToBeatGrid(origPrimary + deltaSec, currentProject.bpm || 120, true);
       deltaSec = snappedPrimary - origPrimary;
     }
-    DE.moveClipsByDelta(currentProject, selectedClipIds, deltaSec);
+    DE.moveClipsByDelta(currentProject, timelineDragState.targetClipIds || selectedClipIds, deltaSec);
   } else {
-    const found = DE.findClipWithTrack(currentProject, timelineDragState.clipId);
-    if (found) {
-      Object.assign(found.clip, DE.cloneDeep(timelineDragState.initialClip));
-      DE.trimClipEdge(found.clip, timelineDragState.mode, deltaSec);
-    }
+    DE.trimClipsBatch(
+      currentProject,
+      timelineDragState.initialClips,
+      timelineDragState.targetClipIds,
+      timelineDragState.mode,
+      deltaSec,
+      {
+        anchorClipId: timelineDragState.clipId,
+        snapBpm: currentProject.bpm || 120,
+        snapEnabled: snapToGrid && !ev.altKey,
+      }
+    );
   }
   markDirty(true);
   drawAllTimelineCanvases();
@@ -1337,9 +1444,22 @@ function handleGlobalTimelineMouseMove(ev) {
 
 async function handleGlobalTimelineMouseUp() {
   if (!timelineDragState) return;
-  const didEdit = timelineDragState.pushedUndo;
+  const dragSnap = timelineDragState;
+  const didEdit = dragSnap.pushedUndo;
   timelineDragState = null;
   if (didEdit) {
+    const cnt = dragSnap.targetClipIds?.size || 1;
+    const anchor = DE.findClipWithTrack(currentProject, dragSnap.clipId)?.clip;
+    if (anchor) {
+      if (dragSnap.mode === 'right') {
+        const endT = (Number(anchor.startSec) || 0) + (Number(anchor.durationSec) || 0);
+        showStatus(`Trimmed ${cnt} region${cnt > 1 ? 's across selected tracks' : ''} (end -> ${formatTimecode(endT)})`);
+      } else if (dragSnap.mode === 'left') {
+        showStatus(`Trimmed ${cnt} region${cnt > 1 ? 's across selected tracks' : ''} (start -> ${formatTimecode(anchor.startSec || 0)})`);
+      } else {
+        showStatus(`Moved ${cnt} region${cnt > 1 ? 's across selected tracks' : ''} (start -> ${formatTimecode(anchor.startSec || 0)})`);
+      }
+    }
     renderStudio();
     await syncProjectToMain();
   }
@@ -1500,6 +1620,10 @@ function drawAllTimelineCanvases() {
       if (startX > w + 4 || startX + clipW < -4) continue;
 
       const isClipSel = selectedClipIds.has(clip.id);
+      const isTrackSel = selectedTrackIds.has(track.id);
+      const isHoverLinked = Boolean(hoverLinkedPreview?.clipIds?.has(clip.id));
+      const isDragLinked = Boolean(timelineDragState?.targetClipIds?.has(clip.id));
+      const isHighlighted = isClipSel || isHoverLinked || isDragLinked;
       const isMuted = Boolean(clip.muted);
       const clipGainDb = Number(clip.gainDb) || 0;
       const totalGainLinear = DE.dbToGain(trackGainDb + clipGainDb);
@@ -1515,11 +1639,15 @@ function drawAllTimelineCanvases() {
       else ctx.rect(startX, regionTop, clipW, regionH);
       ctx.clip();
 
-      ctx.fillStyle = isClipSel ? 'rgba(16, 40, 58, 0.96)' : 'rgba(17, 24, 35, 0.94)';
+      ctx.fillStyle = isHighlighted ? 'rgba(16, 40, 58, 0.96)' : 'rgba(17, 24, 35, 0.94)';
       ctx.fillRect(startX, regionTop, clipW, regionH);
 
       // Tinted studio region header bar
-      ctx.fillStyle = isClipSel ? 'rgba(0, 212, 255, 0.28)' : 'rgba(30, 41, 59, 0.78)';
+      ctx.fillStyle = isHighlighted
+        ? 'rgba(0, 212, 255, 0.28)'
+        : isTrackSel
+          ? 'rgba(0, 212, 255, 0.14)'
+          : 'rgba(30, 41, 59, 0.78)';
       ctx.fillRect(startX, regionTop, clipW, 17);
       ctx.fillStyle = baseColor;
       ctx.globalAlpha = isMuted ? 0.25 : 0.32;
@@ -1612,15 +1740,29 @@ function drawAllTimelineCanvases() {
         }
       }
 
-      // Edge trim handles on selected regions
-      if (isClipSel && clipW > 20) {
-        ctx.fillStyle = '#00d4ff';
-        ctx.fillRect(startX + 1.5, h / 2 - 9, 2.5, 18);
-        ctx.fillRect(startX + clipW - 4, h / 2 - 9, 2.5, 18);
+      // Edge trim handles on selected tracks/regions + active ganged trim brackets
+      if ((isHighlighted || isTrackSel) && clipW > 20) {
+        const activeEdge = isDragLinked
+          ? timelineDragState.mode
+          : (isHoverLinked ? (hoverLinkedPreview.zone === 'left-edge' ? 'left' : hoverLinkedPreview.zone === 'right-edge' ? 'right' : null) : null);
+        ctx.fillStyle = activeEdge === 'left' ? '#38bdf8' : 'rgba(0, 212, 255, 0.75)';
+        ctx.fillRect(
+          startX + 1.5,
+          activeEdge === 'left' ? regionTop + 2 : h / 2 - 10,
+          activeEdge === 'left' ? 3.5 : 2.5,
+          activeEdge === 'left' ? regionH - 4 : 20
+        );
+        ctx.fillStyle = activeEdge === 'right' ? '#38bdf8' : 'rgba(0, 212, 255, 0.75)';
+        ctx.fillRect(
+          startX + clipW - (activeEdge === 'right' ? 5 : 4),
+          activeEdge === 'right' ? regionTop + 2 : h / 2 - 10,
+          activeEdge === 'right' ? 3.5 : 2.5,
+          activeEdge === 'right' ? regionH - 4 : 20
+        );
       }
 
       // Region label + metrics (zero emojis)
-      ctx.fillStyle = isClipSel ? '#ffffff' : '#dbeafe';
+      ctx.fillStyle = isHighlighted ? '#ffffff' : '#dbeafe';
       ctx.font = '600 10px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
       const muteTag = isMuted ? '[MUTE] ' : '';
       const gainTag = Math.abs(clipGainDb) >= 0.05 ? ` · ${DE.formatDb(clipGainDb)}` : '';
@@ -1641,9 +1783,9 @@ function drawAllTimelineCanvases() {
 
       // Region crisp border outline
       ctx.save();
-      ctx.strokeStyle = isClipSel ? '#e2e8f0' : baseColor;
-      ctx.globalAlpha = isMuted ? 0.35 : (isClipSel ? 0.95 : 0.65);
-      ctx.lineWidth = isClipSel ? 1.6 : 1.0;
+      ctx.strokeStyle = isHighlighted ? '#38bdf8' : (isTrackSel ? 'rgba(56, 189, 248, 0.85)' : baseColor);
+      ctx.globalAlpha = isMuted ? 0.35 : (isHighlighted ? 0.96 : (isTrackSel ? 0.82 : 0.65));
+      ctx.lineWidth = isHighlighted ? 1.7 : (isTrackSel ? 1.3 : 1.0);
       ctx.beginPath();
       if (ctx.roundRect) ctx.roundRect(startX + 0.5, regionTop + 0.5, Math.max(2, clipW - 1), regionH - 1, 4);
       else ctx.rect(startX + 0.5, regionTop + 0.5, Math.max(2, clipW - 1), regionH - 1);
@@ -1707,13 +1849,19 @@ function renderInspectorDrawer() {
 
   const totalTransients = (track.clips || []).reduce((n, c) => n + (c.transients?.length || 0), 0);
   const gainDb = Number(track.gainDb) || 0;
+  const gangedTargets = selectedTrackIds.has(track.id) && selectedTrackIds.size > 1
+    ? (currentProject?.tracks || []).filter(t => selectedTrackIds.has(t.id))
+    : [track];
+  const gangedBadge = gangedTargets.length > 1
+    ? `<span class="selection-status-pill mono" style="margin-left:8px;">GANGED: ${gangedTargets.length} CHANNELS</span>`
+    : '';
 
   drawer.innerHTML = `
     <div class="inspector-top">
       <div class="inspector-title-row">
         ${DI.badge('channel-fx', 22)}
         <div>
-          <strong>CHANNEL INSERT &amp; TRIGGER RACK — ${esc(track.name)}</strong>
+          <strong>CHANNEL INSERT &amp; TRIGGER RACK — ${esc(track.name)}</strong>${gangedBadge}
           <span class="hint" style="margin-left:10px;">Input: ${esc(track.inputLabel)} · Chain: ${(track.fx?.openSourcePlugins || []).map(esc).join(' → ')}</span>
         </div>
       </div>
@@ -1809,7 +1957,11 @@ function renderInspectorDrawer() {
   `;
 
   const saveInspectorPatch = async (label, mutator, reanalyze = false) => {
-    await commitEdit(label, mutator, { reanalyzeTrackIds: reanalyze ? [track.id] : [] });
+    await commitEdit(
+      label,
+      () => { for (const t of gangedTargets) mutator(t); },
+      { reanalyzeTrackIds: reanalyze ? gangedTargets.map(t => t.id) : [] }
+    );
   };
 
   document.getElementById('btn-insp-close')?.addEventListener('click', () => {
@@ -1819,12 +1971,12 @@ function renderInspectorDrawer() {
   });
   document.getElementById('btn-insp-norm-gain')?.addEventListener('click', async () => {
     await commitEdit('Auto-Normalize Track Gain', () => {
-      DE.normalizeTrackGain(track, -6.0);
-    }, { statusMsg: `Normalized "${track.name}" gain to ${DE.formatDb(track.gainDb)} (-6 dBFS target)` });
+      for (const t of gangedTargets) DE.normalizeTrackGain(t, -6.0);
+    }, { statusMsg: `Normalized ${gangedTargets.length} channel(s) to -6.0 dBFS target` });
   });
   document.getElementById('btn-insp-clear-clips')?.addEventListener('click', async () => {
     await commitEdit('Clear Track Takes', () => {
-      track.clips = [];
+      for (const t of gangedTargets) t.clips = [];
     });
   });
   document.getElementById('btn-insp-audition')?.addEventListener('click', () => {
@@ -1835,65 +1987,66 @@ function renderInspectorDrawer() {
   });
 
   document.getElementById('insp-gain-db')?.addEventListener('change', e =>
-    saveInspectorPatch('Adjust Input Gain', () => { track.gainDb = DE.clamp(-24, 24, Number(e.target.value) || 0); })
+    saveInspectorPatch('Adjust Input Gain', t => { t.gainDb = DE.clamp(-24, 24, Number(e.target.value) || 0); })
   );
   document.getElementById('insp-phase-on')?.addEventListener('change', e =>
-    saveInspectorPatch('Toggle Phase Invert', () => { track.fx = { ...(track.fx || {}), phaseInvert: e.target.checked }; })
+    saveInspectorPatch('Toggle Phase Invert', t => { t.fx = { ...(t.fx || {}), phaseInvert: e.target.checked }; })
   );
   document.getElementById('insp-eq-on')?.addEventListener('change', e =>
-    saveInspectorPatch('Toggle EQ', () => { track.fx.eq = { ...(track.fx?.eq || {}), enabled: e.target.checked }; })
+    saveInspectorPatch('Toggle EQ', t => { t.fx = { ...(t.fx || {}), eq: { ...(t.fx?.eq || {}), enabled: e.target.checked } }; })
   );
   document.getElementById('insp-eq-hpf')?.addEventListener('change', e =>
-    saveInspectorPatch('Adjust HPF', () => { track.fx.eq = { ...(track.fx?.eq || {}), hpfHz: Number(e.target.value) }; })
+    saveInspectorPatch('Adjust HPF', t => { t.fx = { ...(t.fx || {}), eq: { ...(t.fx?.eq || {}), hpfHz: Number(e.target.value) } }; })
   );
   document.getElementById('insp-eq-low')?.addEventListener('change', e =>
-    saveInspectorPatch('Adjust Low Shelf', () => { track.fx.eq = { ...(track.fx?.eq || {}), lowGainDb: Number(e.target.value) }; })
+    saveInspectorPatch('Adjust Low Shelf', t => { t.fx = { ...(t.fx || {}), eq: { ...(t.fx?.eq || {}), lowGainDb: Number(e.target.value) } }; })
   );
   document.getElementById('insp-eq-mid')?.addEventListener('change', e =>
-    saveInspectorPatch('Adjust Mid EQ', () => { track.fx.eq = { ...(track.fx?.eq || {}), midGainDb: Number(e.target.value) }; })
+    saveInspectorPatch('Adjust Mid EQ', t => { t.fx = { ...(t.fx || {}), eq: { ...(t.fx?.eq || {}), midGainDb: Number(e.target.value) } }; })
   );
   document.getElementById('insp-eq-high')?.addEventListener('change', e =>
-    saveInspectorPatch('Adjust High EQ', () => { track.fx.eq = { ...(track.fx?.eq || {}), highGainDb: Number(e.target.value) }; })
+    saveInspectorPatch('Adjust High EQ', t => { t.fx = { ...(t.fx || {}), eq: { ...(t.fx?.eq || {}), highGainDb: Number(e.target.value) } }; })
   );
   document.getElementById('insp-comp-on')?.addEventListener('change', e =>
-    saveInspectorPatch('Toggle Compressor', () => { track.fx.compressor = { ...(track.fx?.compressor || {}), enabled: e.target.checked }; })
+    saveInspectorPatch('Toggle Compressor', t => { t.fx = { ...(t.fx || {}), compressor: { ...(t.fx?.compressor || {}), enabled: e.target.checked } }; })
   );
   document.getElementById('insp-comp-ratio')?.addEventListener('change', e =>
-    saveInspectorPatch('Adjust Compressor Ratio', () => { track.fx.compressor = { ...(track.fx?.compressor || {}), ratio: Number(e.target.value) }; })
+    saveInspectorPatch('Adjust Compressor Ratio', t => { t.fx = { ...(t.fx || {}), compressor: { ...(t.fx?.compressor || {}), ratio: Number(e.target.value) } }; })
   );
   document.getElementById('insp-pan')?.addEventListener('change', e =>
-    saveInspectorPatch('Adjust Pan', () => { track.pan = Number(e.target.value); })
+    saveInspectorPatch('Adjust Pan', t => { t.pan = Number(e.target.value); })
   );
 
   document.getElementById('insp-sr-on')?.addEventListener('change', e =>
-    saveInspectorPatch('Toggle Sound Replacement', () => {
-      track.soundReplacement = { ...(track.soundReplacement || {}), enabled: e.target.checked, supported: true };
+    saveInspectorPatch('Toggle Sound Replacement', t => {
+      t.soundReplacement = { ...(t.soundReplacement || {}), enabled: e.target.checked, supported: true };
     }, true)
   );
   document.getElementById('insp-sr-kit')?.addEventListener('change', e => {
     const chosenKit = (drumkitsStatus.kits || []).find(k => k.id === e.target.value);
     const firstPiece = chosenKit ? Object.keys(chosenKit.pieces || {})[0] : 'snare';
-    saveInspectorPatch('Select Drum Kit', () => {
-      track.soundReplacement = {
-        ...(track.soundReplacement || {}),
+    saveInspectorPatch('Select Drum Kit', t => {
+      const curPiece = t.soundReplacement?.pieceId || sr.pieceId;
+      t.soundReplacement = {
+        ...(t.soundReplacement || {}),
         kitId: e.target.value,
-        pieceId: chosenKit?.pieces?.[sr.pieceId] ? sr.pieceId : firstPiece,
+        pieceId: chosenKit?.pieces?.[curPiece] ? curPiece : firstPiece,
       };
     });
   });
   document.getElementById('insp-sr-piece')?.addEventListener('change', e =>
-    saveInspectorPatch('Select Drum Piece', () => {
-      track.soundReplacement = { ...(track.soundReplacement || {}), pieceId: e.target.value };
+    saveInspectorPatch('Select Drum Piece', t => {
+      t.soundReplacement = { ...(t.soundReplacement || {}), pieceId: e.target.value };
     })
   );
   document.getElementById('insp-sr-thresh')?.addEventListener('change', e =>
-    saveInspectorPatch('Adjust Trigger Threshold', () => {
-      track.soundReplacement = { ...(track.soundReplacement || {}), thresholdDb: Number(e.target.value) };
+    saveInspectorPatch('Adjust Trigger Threshold', t => {
+      t.soundReplacement = { ...(t.soundReplacement || {}), thresholdDb: Number(e.target.value) };
     }, true)
   );
   document.getElementById('insp-sr-blend')?.addEventListener('change', e =>
-    saveInspectorPatch('Adjust Replacement Blend', () => {
-      track.soundReplacement = { ...(track.soundReplacement || {}), blend: Number(e.target.value) / 100 };
+    saveInspectorPatch('Adjust Replacement Blend', t => {
+      t.soundReplacement = { ...(t.soundReplacement || {}), blend: Number(e.target.value) / 100 };
     })
   );
 
@@ -2095,12 +2248,12 @@ async function editTrimToPlayhead(edge /* 'left' | 'right' */) {
   if (!currentProject) return;
   let trimmed = 0;
   await commitEdit(edge === 'left' ? 'Trim Start to Playhead' : 'Trim End to Playhead', () => {
-    trimmed = DE.trimClipsToPlayhead(currentProject, selectedClipIds, edge, playheadSec);
+    trimmed = DE.trimClipsToPlayhead(currentProject, selectedClipIds, edge, playheadSec, selectedTrackIds);
   });
   if (trimmed > 0) {
     showStatus(`Trimmed ${trimmed} region(s) ${edge === 'left' ? 'start' : 'end'} to playhead (${formatTimecode(playheadSec)})`);
   } else {
-    showStatus('Place playhead inside a selected region before trimming ([ or ]).', true);
+    showStatus('Place playhead inside a selected region or track before trimming ([ or ]).', true);
   }
 }
 
@@ -2257,6 +2410,8 @@ function buildMenubarItems(key) {
   const tracks = currentProject?.tracks || [];
   const tCnt = selectedTrackIds.size;
   const cCnt = selectedClipIds.size;
+  const effectiveClipIds = DE.getEffectiveSelectedClipIds(currentProject, selectedClipIds, selectedTrackIds);
+  const effCnt = effectiveClipIds.size;
   const hasTracks = tracks.length > 0;
   const hasClips = tracks.some(t => (t.clips || []).length > 0);
   const primaryTrack = tracks.find(t => selectedTrackIds.has(t.id)) || tracks[0] || null;
@@ -2288,8 +2443,8 @@ function buildMenubarItems(key) {
       { icon: 'undo', label: `Undo${undoLbl ? ` (${undoLbl})` : ''}`, kbd: 'Ctrl+Z', disabled: !historyStack.canUndo(), run: () => performUndo() },
       { icon: 'redo', label: `Redo${redoLbl ? ` (${redoLbl})` : ''}`, kbd: 'Ctrl+Y', disabled: !historyStack.canRedo(), run: () => performRedo() },
       { sep: true },
-      { icon: 'scissors', label: 'Cut Region(s)', kbd: 'Ctrl+X', disabled: cCnt === 0, run: () => editCutSelected() },
-      { icon: 'copy', label: 'Copy Region(s)', kbd: 'Ctrl+C', disabled: cCnt === 0, run: () => editCopySelected() },
+      { icon: 'scissors', label: 'Cut Region(s)', kbd: 'Ctrl+X', disabled: effCnt === 0, run: () => editCutSelected() },
+      { icon: 'copy', label: 'Copy Region(s)', kbd: 'Ctrl+C', disabled: effCnt === 0, run: () => editCopySelected() },
       { icon: 'paste', label: 'Paste Region(s) at Playhead', kbd: 'Ctrl+V', disabled: !clipClipboard, run: () => editPasteAtPlayhead() },
       { icon: 'duplicate', label: 'Duplicate Selected', kbd: 'Ctrl+D', disabled: cCnt === 0 && tCnt === 0, run: () => editDuplicateSelected() },
       { icon: 'scissors', label: 'Split Region(s) at Playhead', kbd: 'S', disabled: !hasClips, run: () => editSplitSelectedOrPlayhead() },
@@ -2368,11 +2523,11 @@ function buildMenubarItems(key) {
           selectedTrackIds = new Set(DE.duplicateTracksInProject(currentProject, selectedTrackIds, { includeClips: false }));
         });
       } },
-      { icon: 'arrow-up', label: 'Move Selected Track Up', kbd: 'Alt+Up', disabled: !primaryTrack || primaryIdx <= 0, run: async () => {
-        await commitEdit('Move Track Up', () => { DE.reorderTrackInProject(currentProject, primaryTrack.id, -1); });
+      { icon: 'arrow-up', label: 'Move Selected Track(s) Up', kbd: 'Alt+Up', disabled: !primaryTrack || primaryIdx <= 0, run: async () => {
+        await commitEdit('Move Track(s) Up', () => { DE.reorderTracksBatch(currentProject, selectedTrackIds.size ? selectedTrackIds : new Set([primaryTrack.id]), -1); });
       } },
-      { icon: 'arrow-down', label: 'Move Selected Track Down', kbd: 'Alt+Down', disabled: !primaryTrack || primaryIdx >= tracks.length - 1, run: async () => {
-        await commitEdit('Move Track Down', () => { DE.reorderTrackInProject(currentProject, primaryTrack.id, 1); });
+      { icon: 'arrow-down', label: 'Move Selected Track(s) Down', kbd: 'Alt+Down', disabled: !primaryTrack || primaryIdx >= tracks.length - 1, run: async () => {
+        await commitEdit('Move Track(s) Down', () => { DE.reorderTracksBatch(currentProject, selectedTrackIds.size ? selectedTrackIds : new Set([primaryTrack.id]), 1); });
       } },
       { icon: 'bolt', label: 'Auto-Normalize Selected Track Gain (-6 dBFS)', kbd: '', disabled: tCnt === 0, run: async () => {
         await commitEdit('Auto-Normalize Track Gain', () => {
@@ -2392,26 +2547,26 @@ function buildMenubarItems(key) {
 
   if (key === 'clip') {
     const forSelClips = (fn) => {
-      for (const tr of tracks) for (const c of (tr.clips || [])) if (selectedClipIds.has(c.id)) fn(c, tr);
+      for (const tr of tracks) for (const c of (tr.clips || [])) if (effectiveClipIds.has(c.id)) fn(c, tr);
     };
     return [
       { icon: 'scissors', label: 'Split Region(s) at Playhead', kbd: 'S', disabled: !hasClips, run: () => editSplitSelectedOrPlayhead() },
       { icon: 'trim-left', label: 'Trim Start to Playhead', kbd: '[', disabled: !hasClips, run: () => editTrimToPlayhead('left') },
       { icon: 'trim-right', label: 'Trim End to Playhead', kbd: ']', disabled: !hasClips, run: () => editTrimToPlayhead('right') },
       { sep: true },
-      { icon: 'mute', label: 'Mute / Unmute Selected Region(s)', kbd: 'M', disabled: cCnt === 0, run: async () => {
+      { icon: 'mute', label: 'Mute / Unmute Selected Region(s)', kbd: 'M', disabled: effCnt === 0, run: async () => {
         let nextM = null;
         await commitEdit('Mute/Unmute Take(s)', () => {
           forSelClips((c) => { if (nextM === null) nextM = !c.muted; c.muted = nextM; });
         });
       } },
-      { icon: 'bolt', label: 'Normalize Region Gain (-3 dBFS)', kbd: '', disabled: cCnt === 0, run: async () => {
+      { icon: 'bolt', label: 'Normalize Region Gain (-3 dBFS)', kbd: '', disabled: effCnt === 0, run: async () => {
         await commitEdit('Normalize Take Gain', () => { forSelClips(c => DE.normalizeClipGain(c, -3.0)); }, { statusMsg: 'Normalized selected region(s) to -3.0 dBFS' });
       } },
-      { icon: 'faders', label: 'Reset Region Gain (0.0 dB)', kbd: '', disabled: cCnt === 0, run: async () => {
+      { icon: 'faders', label: 'Reset Region Gain (0.0 dB)', kbd: '', disabled: effCnt === 0, run: async () => {
         await commitEdit('Reset Take Gain', () => { forSelClips(c => { c.gainDb = 0; }); });
       } },
-      { icon: 'fade', label: 'Apply 15 ms De-Click Fades', kbd: '', disabled: cCnt === 0, run: async () => {
+      { icon: 'fade', label: 'Apply 15 ms De-Click Fades', kbd: '', disabled: effCnt === 0, run: async () => {
         await commitEdit('Apply 15ms De-Click Fades', () => {
           forSelClips(c => {
             const maxF = Math.max(0.01, (Number(c.durationSec) || 0.1) * 0.45);
@@ -2420,36 +2575,36 @@ function buildMenubarItems(key) {
           });
         });
       } },
-      { icon: 'fade', label: 'Clear Region Fades (0 ms)', kbd: '', disabled: cCnt === 0, run: async () => {
+      { icon: 'fade', label: 'Clear Region Fades (0 ms)', kbd: '', disabled: effCnt === 0, run: async () => {
         await commitEdit('Clear Take Fades', () => { forSelClips(c => { c.fadeInSec = 0; c.fadeOutSec = 0; }); });
       } },
       { sep: true },
-      { icon: 'arrow-left', label: 'Nudge Selected Region(s) Left (-50 ms)', kbd: 'Ctrl+Left', disabled: cCnt === 0, run: async () => {
-        await commitEdit('Nudge Take Left', () => { DE.moveClipsByDelta(currentProject, selectedClipIds, -0.05); });
+      { icon: 'arrow-left', label: 'Nudge Selected Region(s) Left (-50 ms)', kbd: 'Ctrl+Left', disabled: effCnt === 0, run: async () => {
+        await commitEdit('Nudge Take Left', () => { DE.moveClipsByDelta(currentProject, effectiveClipIds, -0.05); });
       } },
-      { icon: 'arrow-right', label: 'Nudge Selected Region(s) Right (+50 ms)', kbd: 'Ctrl+Right', disabled: cCnt === 0, run: async () => {
-        await commitEdit('Nudge Take Right', () => { DE.moveClipsByDelta(currentProject, selectedClipIds, 0.05); });
+      { icon: 'arrow-right', label: 'Nudge Selected Region(s) Right (+50 ms)', kbd: 'Ctrl+Right', disabled: effCnt === 0, run: async () => {
+        await commitEdit('Nudge Take Right', () => { DE.moveClipsByDelta(currentProject, effectiveClipIds, 0.05); });
       } },
-      { icon: 'trim-right', label: 'Move Start to Playhead', kbd: '', disabled: cCnt === 0, run: async () => {
+      { icon: 'trim-right', label: 'Move Start to Playhead', kbd: '', disabled: effCnt === 0, run: async () => {
         let minS = Infinity;
         forSelClips(c => { if ((Number(c.startSec) || 0) < minS) minS = Number(c.startSec) || 0; });
         if (Number.isFinite(minS)) {
-          await commitEdit('Move Take(s) to Playhead', () => { DE.moveClipsByDelta(currentProject, selectedClipIds, playheadSec - minS); });
+          await commitEdit('Move Take(s) to Playhead', () => { DE.moveClipsByDelta(currentProject, effectiveClipIds, playheadSec - minS); });
         }
       } },
-      { icon: 'rewind', label: 'Snap Start to 00:00.00', kbd: '', disabled: cCnt === 0, run: async () => {
+      { icon: 'rewind', label: 'Snap Start to 00:00.00', kbd: '', disabled: effCnt === 0, run: async () => {
         let minS = Infinity;
         forSelClips(c => { if ((Number(c.startSec) || 0) < minS) minS = Number(c.startSec) || 0; });
         if (Number.isFinite(minS)) {
-          await commitEdit('Snap Take(s) to 00:00.00', () => { DE.moveClipsByDelta(currentProject, selectedClipIds, -minS); });
+          await commitEdit('Snap Take(s) to 00:00.00', () => { DE.moveClipsByDelta(currentProject, effectiveClipIds, -minS); });
         }
       } },
-      { icon: 'drum-replace', label: 'Re-Detect Drum Transients', kbd: '', disabled: cCnt === 0, run: async () => {
+      { icon: 'drum-replace', label: 'Re-Detect Drum Transients', kbd: '', disabled: effCnt === 0, run: async () => {
         const trIds = new Set();
         forSelClips((_c, tr) => trIds.add(tr.id));
         await commitEdit('Re-Detect Drum Transients', () => {}, { reanalyzeTrackIds: [...trIds] });
       } },
-      { icon: 'edit', label: 'Rename Region...', kbd: 'F2', disabled: cCnt !== 1, run: () => editRenameFocused() },
+      { icon: 'edit', label: 'Rename Region...', kbd: 'F2', disabled: cCnt !== 1 && tCnt !== 1, run: () => editRenameFocused() },
       { sep: true },
       { icon: 'trash', label: `Delete Selected Region(s)${cCnt ? ` (${cCnt})` : ''}`, kbd: 'Del', disabled: cCnt === 0, danger: true, run: () => editDeleteSelected() },
     ];
@@ -2880,9 +3035,9 @@ function openTrackContextMenu(ev, track, clickTimeSec = null) {
           selectedTrackIds = new Set(newIds);
         }, { statusMsg: `Duplicated ${targetIds.size} track(s)` });
       } else if (cmd === 'move-up') {
-        await commitEdit('Move Track Up', () => { DE.reorderTrackInProject(currentProject, track.id, -1); });
+        await commitEdit('Move Track(s) Up', () => { DE.reorderTracksBatch(currentProject, targetIds, -1); });
       } else if (cmd === 'move-down') {
-        await commitEdit('Move Track Down', () => { DE.reorderTrackInProject(currentProject, track.id, 1); });
+        await commitEdit('Move Track(s) Down', () => { DE.reorderTracksBatch(currentProject, targetIds, 1); });
       } else if (cmd === 'clear-takes') {
         await commitEdit('Clear Track Takes', () => {
           for (const t of tracks) if (targetIds.has(t.id)) t.clips = [];
@@ -2917,7 +3072,9 @@ function openTakeContextMenu(ev, track, clip, clickTimeSec) {
       <span class="mono" style="color:#94a3b8;font-size:10px;">${DE.formatDb(Number(clip.gainDb) || 0)}</span>
     </div>
     ${ctxRow('data-take-ctx', 'play-solo', 'play', 'Play Solo From This Region')}
-    ${ctxRow('data-take-ctx', 'split-here', 'scissors', `Split Region Here (${formatTimecode(clickTimeSec)})`, '', { disabled: !canSplitHere })}
+    ${ctxRow('data-take-ctx', 'split-here', 'scissors', `Split Region${targetClipIds.size > 1 ? 's' : ''} Here (${formatTimecode(clickTimeSec)})`, '', { disabled: !canSplitHere })}
+    ${ctxRow('data-take-ctx', 'trim-start-here', 'trim-left', `Trim Start${targetClipIds.size > 1 ? 's' : ''} Here (${formatTimecode(clickTimeSec)})`, '[', { disabled: !canSplitHere })}
+    ${ctxRow('data-take-ctx', 'trim-end-here', 'trim-right', `Trim End${targetClipIds.size > 1 ? 's' : ''} Here (${formatTimecode(clickTimeSec)})`, ']', { disabled: !canSplitHere })}
     ${ctxRow('data-take-ctx', 'split-playhead', 'scissors', `Split at Playhead (${formatTimecode(playheadSec)})`, 'S', { disabled: !(canSplitPlayhead || targetClipIds.size > 1) })}
     <div class="ctx-sep"></div>
     <div class="ctx-inline-row">
@@ -3014,6 +3171,13 @@ function openTakeContextMenu(ev, track, clip, clickTimeSec) {
           });
           if (out.newClipIds.length) selectedClipIds = new Set(out.newClipIds);
         }, { statusMsg: `Split region(s) at ${formatTimecode(clickTimeSec)}` });
+      } else if (cmd === 'trim-start-here' || cmd === 'trim-end-here') {
+        const edge = cmd === 'trim-start-here' ? 'left' : 'right';
+        let trimmed = 0;
+        await commitEdit(edge === 'left' ? 'Trim Start Here' : 'Trim End Here', () => {
+          trimmed = DE.trimClipsToPlayhead(currentProject, targetClipIds, edge, clickTimeSec, selectedTrackIds);
+        });
+        showStatus(`Trimmed ${trimmed} region(s) ${edge === 'left' ? 'start' : 'end'} to ${formatTimecode(clickTimeSec)}`);
       } else if (cmd === 'split-playhead') {
         await editSplitSelectedOrPlayhead();
       } else if (cmd === 'toggle-mute') {
@@ -3091,22 +3255,24 @@ async function editSplitSelectedOrPlayhead() {
 }
 
 function editCopySelected() {
-  if (!currentProject || !selectedClipIds.size) {
-    showStatus('Select one or more regions to copy (Click, Ctrl+Click, or Ctrl+A).', true);
+  const effectiveClipIds = DE.getEffectiveSelectedClipIds(currentProject, selectedClipIds, selectedTrackIds);
+  if (!currentProject || !effectiveClipIds.size) {
+    showStatus('Select one or more regions or tracks to copy (Click, Ctrl+Click, or Ctrl+A).', true);
     return;
   }
-  clipClipboard = DE.copyClipsFromProject(currentProject, selectedClipIds);
+  clipClipboard = DE.copyClipsFromProject(currentProject, effectiveClipIds);
   if (clipClipboard) {
     showStatus(`Copied ${clipClipboard.entries.length} region(s) to clipboard`);
   }
 }
 
 async function editCutSelected() {
-  if (!currentProject || !selectedClipIds.size) return;
-  clipClipboard = DE.copyClipsFromProject(currentProject, selectedClipIds);
-  const cnt = selectedClipIds.size;
+  const effectiveClipIds = DE.getEffectiveSelectedClipIds(currentProject, selectedClipIds, selectedTrackIds);
+  if (!currentProject || !effectiveClipIds.size) return;
+  clipClipboard = DE.copyClipsFromProject(currentProject, effectiveClipIds);
+  const cnt = effectiveClipIds.size;
   await commitEdit('Cut Take(s)', () => {
-    DE.deleteClipsFromProject(currentProject, selectedClipIds);
+    DE.deleteClipsFromProject(currentProject, effectiveClipIds);
   }, { statusMsg: `Cut ${cnt} region(s) to clipboard` });
 }
 
@@ -4565,11 +4731,10 @@ async function init() {
       else await editDeleteSelected();
     } else if (ev.altKey && (ev.key === 'ArrowUp' || ev.key === 'ArrowDown')) {
       ev.preventDefault();
-      const primaryId = [...selectedTrackIds][0];
-      if (primaryId) {
+      if (selectedTrackIds.size > 0) {
         const dir = ev.key === 'ArrowUp' ? -1 : 1;
-        await commitEdit(dir < 0 ? 'Move Track Up' : 'Move Track Down', () => {
-          DE.reorderTrackInProject(currentProject, primaryId, dir);
+        await commitEdit(dir < 0 ? 'Move Track(s) Up' : 'Move Track(s) Down', () => {
+          DE.reorderTracksBatch(currentProject, selectedTrackIds, dir);
         });
       }
     } else if (ev.key === '[' || ev.key === ']') {
@@ -4645,10 +4810,11 @@ async function init() {
     } else if (ev.key === 'ArrowLeft' || ev.key === 'ArrowRight') {
       ev.preventDefault();
       const dir = ev.key === 'ArrowLeft' ? -1 : 1;
-      if (isMod && selectedClipIds.size > 0) {
+      const effectiveClipIds = DE.getEffectiveSelectedClipIds(currentProject, selectedClipIds, selectedTrackIds);
+      if (isMod && effectiveClipIds.size > 0) {
         const nudge = dir * (ev.shiftKey ? 0.25 : 0.05);
         await commitEdit('Nudge Take(s)', () => {
-          DE.moveClipsByDelta(currentProject, selectedClipIds, nudge);
+          DE.moveClipsByDelta(currentProject, effectiveClipIds, nudge);
         });
       } else {
         const step = dir * (ev.shiftKey ? 2.0 : 0.5);

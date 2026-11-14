@@ -683,4 +683,111 @@ describe('DAW Editing Engine: Multi-Select, Track/Take Gain, Split/Trim, Copy/Pa
       );
     }
   });
+
+  it('links multi-track identical-end-time trimming, phase-locked left trimming, ganged mixer sliders, and batch track reorder across selected tracks', () => {
+    const project = createEmptyProject({ name: 'Multi-Track Linked Trim & Gang', bpm: 120 });
+
+    // 2 Overheads ending around 24.0s (with 107ms PipeWire stop jitter) + 4 ADAT Drum Mics ending identically at 18.795s
+    const specs = [
+      { name: 'Overhead L', dur: 24.107, gainDb: 0 },
+      { name: 'Overhead R', dur: 24.0, gainDb: 1.5 },
+      { name: 'Rack Tom 1', dur: 18.795, gainDb: -2.0 },
+      { name: 'Rack Tom 2', dur: 18.795, gainDb: 0 },
+      { name: 'Kick Drum', dur: 18.795, gainDb: 3.0 },
+      { name: 'Floor Tom 1', dur: 18.795, gainDb: -1.0 },
+    ];
+    specs.forEach((sp, i) => {
+      const tr = buildTrackFromWizard({ profileId: 'snare-top', name: sp.name });
+      tr.gainDb = sp.gainDb;
+      tr.clips.push({
+        id: `clip-mt-${i}`,
+        name: `${sp.name} Take`,
+        startSec: 0,
+        offsetSec: 0,
+        durationSec: sp.dur,
+        sourceDurationSec: sp.dur,
+        peaks: [0.2, 0.6, 0.8, 0.5, 0.3],
+        transients: [{ timeSec: 5.0, peakDb: -9.0, velocity: 0.8 }],
+      });
+      project.tracks.push(tr);
+    });
+
+    // Select ALL 6 tracks and drag right edge of Kick Drum (18.795s) by -3.795s -> should link ONLY the 4 identical-end-time 18.795s tracks!
+    const allTrackIds = new Set(project.tracks.map(t => t.id));
+    const linkedRight = DE.resolveLinkedClipsForOperation(project, {
+      selectedTrackIds: allTrackIds,
+      selectedClipIds: new Set(),
+      anchorClipId: 'clip-mt-4', // Kick Drum (18.795s)
+      mode: 'right',
+    });
+    assert.strictEqual(linkedRight.size, 4);
+    assert.ok(!linkedRight.has('clip-mt-0') && !linkedRight.has('clip-mt-1'));
+    assert.ok(linkedRight.has('clip-mt-2') && linkedRight.has('clip-mt-3') && linkedRight.has('clip-mt-4') && linkedRight.has('clip-mt-5'));
+
+    const initRightMap = new Map();
+    for (const tr of project.tracks) {
+      for (const c of tr.clips) if (linkedRight.has(c.id)) initRightMap.set(c.id, DE.cloneDeep(c));
+    }
+    assert.strictEqual(
+      DE.trimClipsBatch(project, initRightMap, linkedRight, 'right', -3.795, { anchorClipId: 'clip-mt-4' }),
+      4
+    );
+    // All 4 trimmed tracks now end at exact 15.0000s; Overheads remain untouched at 24.107s / 24.0s
+    assert.strictEqual(project.tracks[2].clips[0].durationSec, 15.0);
+    assert.strictEqual(project.tracks[3].clips[0].durationSec, 15.0);
+    assert.strictEqual(project.tracks[4].clips[0].durationSec, 15.0);
+    assert.strictEqual(project.tracks[5].clips[0].durationSec, 15.0);
+    assert.strictEqual(project.tracks[0].clips[0].durationSec, 24.107);
+    assert.strictEqual(project.tracks[1].clips[0].durationSec, 24.0);
+
+    // Dragging Overhead L (24.107s) right edge to 20.0s aligns both Overheads (within 150ms stop jitter) to exact 20.0s
+    const linkedOverheads = DE.resolveLinkedClipsForOperation(project, {
+      selectedTrackIds: new Set([project.tracks[0].id, project.tracks[1].id]),
+      selectedClipIds: new Set(),
+      anchorClipId: 'clip-mt-0',
+      mode: 'right',
+    });
+    assert.strictEqual(linkedOverheads.size, 2);
+    const initOhMap = new Map([
+      ['clip-mt-0', DE.cloneDeep(project.tracks[0].clips[0])],
+      ['clip-mt-1', DE.cloneDeep(project.tracks[1].clips[0])],
+    ]);
+    DE.trimClipsBatch(project, initOhMap, linkedOverheads, 'right', -4.107, { anchorClipId: 'clip-mt-0' });
+    assert.strictEqual(project.tracks[0].clips[0].durationSec, 20.0);
+    assert.strictEqual(project.tracks[1].clips[0].durationSec, 20.0);
+
+    // Left-edge trim across all 6 tracks (all start at 0.0s) preserves sample-accurate phase lock (startSec === offsetSec === 2.0s)
+    const linkedLeft = DE.resolveLinkedClipsForOperation(project, {
+      selectedTrackIds: allTrackIds,
+      selectedClipIds: new Set(),
+      anchorClipId: 'clip-mt-4',
+      mode: 'left',
+    });
+    assert.strictEqual(linkedLeft.size, 6);
+    const initLeftMap = new Map(project.tracks.map(t => [t.clips[0].id, DE.cloneDeep(t.clips[0])]));
+    DE.trimClipsBatch(project, initLeftMap, linkedLeft, 'left', 2.0, { anchorClipId: 'clip-mt-4' });
+    for (const tr of project.tracks) {
+      assert.strictEqual(tr.clips[0].startSec, 2.0);
+      assert.strictEqual(tr.clips[0].offsetSec, 2.0);
+    }
+
+    // Trim End to Playhead ([ / ]) with ONLY selectedTrackIds (empty selectedClipIds) affects only selected tracks
+    const twoTomTracks = new Set([project.tracks[2].id, project.tracks[3].id]);
+    assert.strictEqual(DE.trimClipsToPlayhead(project, new Set(), 'right', 10.0, twoTomTracks), 2);
+    assert.strictEqual(project.tracks[2].clips[0].durationSec, 8.0); // 2.0 -> 10.0
+    assert.strictEqual(project.tracks[3].clips[0].durationSec, 8.0);
+    assert.strictEqual(project.tracks[4].clips[0].durationSec, 13.0); // Kick untouched (2.0 -> 15.0)
+
+    // Ganged numeric slider adjustment across selected tracks
+    const startGains = new Map(project.tracks.map(t => [t.id, t.gainDb]));
+    DE.adjustTracksNumericBatch(project, startGains, twoTomTracks, 'gainDb', 3.5, -24, 24, 1);
+    assert.strictEqual(project.tracks[2].gainDb, 1.5); // -2.0 + 3.5
+    assert.strictEqual(project.tracks[3].gainDb, 3.5); //  0.0 + 3.5
+    assert.strictEqual(project.tracks[4].gainDb, 3.0); // untouched
+
+    // Batch reorder selected tracks up together preserving relative order
+    assert.strictEqual(DE.reorderTracksBatch(project, twoTomTracks, -1), true);
+    assert.strictEqual(project.tracks[1].name, 'Rack Tom 1');
+    assert.strictEqual(project.tracks[2].name, 'Rack Tom 2');
+  });
 });

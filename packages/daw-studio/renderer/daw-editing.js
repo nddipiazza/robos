@@ -360,6 +360,120 @@
     return matched.length;
   }
 
+  const END_TIME_MATCH_TOLERANCE_SEC = 0.15;
+
+  function clipEndSec(clip) {
+    return (Number(clip?.startSec) || 0) + (Number(clip?.durationSec) || 0);
+  }
+
+  function clipOverlapRatio(a, b) {
+    const a0 = Number(a?.startSec) || 0;
+    const a1 = clipEndSec(a);
+    const b0 = Number(b?.startSec) || 0;
+    const b1 = clipEndSec(b);
+    const overlap = Math.max(0, Math.min(a1, b1) - Math.max(a0, b0));
+    const minDur = Math.max(0.01, Math.min(a1 - a0, b1 - b0));
+    return overlap / minDur;
+  }
+
+  /**
+   * Returns selectedClipIds if non-empty; otherwise collects all clips belonging
+   * to selectedTrackIds so keyboard/menu clip actions operate on selected tracks seamlessly.
+   */
+  function getEffectiveSelectedClipIds(project, selectedClipIds, selectedTrackIds) {
+    const explicitClips = selectedClipIds instanceof Set ? selectedClipIds : new Set(selectedClipIds || []);
+    if (explicitClips.size > 0) return new Set(explicitClips);
+    const selTracks = selectedTrackIds instanceof Set ? selectedTrackIds : new Set(selectedTrackIds || []);
+    const derived = new Set();
+    if (selTracks.size > 0) {
+      for (const tr of (project?.tracks || [])) {
+        if (!selTracks.has(tr.id)) continue;
+        for (const c of (tr.clips || [])) derived.add(c.id);
+      }
+    }
+    return derived;
+  }
+
+  /**
+   * Resolves all linked clips across selected tracks / selected clips when the user
+   * clicks, drags, trims, or right-clicks `anchorClipId` on one of the selected tracks.
+   *
+   * - mode === 'right': matches clips on selected tracks with identical ending times (±toleranceSec)
+   * - mode === 'left':  matches clips on selected tracks with identical start times (±toleranceSec)
+   * - mode === 'move' | 'edit': matches co-timed / overlapping takes across selected tracks
+   */
+  function resolveLinkedClipsForOperation(
+    project,
+    {
+      selectedTrackIds,
+      selectedClipIds,
+      anchorClipId,
+      mode = 'edit',
+      toleranceSec = END_TIME_MATCH_TOLERANCE_SEC,
+    } = {}
+  ) {
+    if (!anchorClipId) {
+      return getEffectiveSelectedClipIds(project, selectedClipIds, selectedTrackIds);
+    }
+    const found = findClipWithTrack(project, anchorClipId);
+    if (!found) {
+      return getEffectiveSelectedClipIds(project, selectedClipIds, selectedTrackIds);
+    }
+
+    const anchorClip = found.clip;
+    const anchorTrack = found.track;
+    const anchorStart = Number(anchorClip.startSec) || 0;
+    const anchorEnd = clipEndSec(anchorClip);
+
+    const selTracks = selectedTrackIds instanceof Set ? selectedTrackIds : new Set(selectedTrackIds || []);
+    const selClips = selectedClipIds instanceof Set ? selectedClipIds : new Set(selectedClipIds || []);
+    const inSelectedTrackGroup = selTracks.has(anchorTrack.id) && selTracks.size > 1;
+    const inSelectedClipGroup = selClips.has(anchorClip.id) && selClips.size > 1;
+
+    if (!inSelectedTrackGroup && !inSelectedClipGroup) {
+      return new Set([anchorClip.id]);
+    }
+
+    // Gather candidate clips from selected tracks and/or explicitly selected clips
+    const candidates = [];
+    for (const tr of (project?.tracks || [])) {
+      const trackEligible = inSelectedTrackGroup && selTracks.has(tr.id);
+      for (const c of (tr.clips || [])) {
+        if (c.id === anchorClip.id) continue;
+        if (trackEligible || (inSelectedClipGroup && selClips.has(c.id))) {
+          candidates.push(c);
+        }
+      }
+    }
+
+    const linked = new Set([anchorClip.id]);
+    for (const c of candidates) {
+      const cs = Number(c.startSec) || 0;
+      const ce = clipEndSec(c);
+      if (mode === 'right') {
+        if (Math.abs(ce - anchorEnd) <= toleranceSec) linked.add(c.id);
+      } else if (mode === 'left') {
+        if (Math.abs(cs - anchorStart) <= toleranceSec) linked.add(c.id);
+      } else {
+        if (
+          Math.abs(cs - anchorStart) <= toleranceSec ||
+          Math.abs(ce - anchorEnd) <= toleranceSec ||
+          clipOverlapRatio(c, anchorClip) >= 0.5
+        ) {
+          linked.add(c.id);
+        }
+      }
+    }
+
+    // Fallback: if user explicitly Ctrl+Clicked distinct clips (not via multi-track selection)
+    // with non-matching edges, still trim/edit all explicitly selected clips relatively.
+    if (linked.size === 1 && inSelectedClipGroup && !inSelectedTrackGroup) {
+      for (const id of selClips) linked.add(id);
+    }
+
+    return linked;
+  }
+
   function trimClipEdge(clip, edge, deltaSec) {
     ensureClipSourceMetadata(clip);
     const srcDur = Number(clip.sourceDurationSec) || Number(clip.durationSec) || 1;
@@ -380,6 +494,110 @@
     }
     recomputeVisibleClipWindow(clip);
     return clip;
+  }
+
+  /**
+   * Trims all clips in `targetClipIds` non-destructively from `initialClipsMap` snapshots,
+   * preserving exact shared end times on right-edge trims and sample-accurate multi-mic
+   * phase lock on left-edge trims.
+   */
+  function trimClipsBatch(
+    project,
+    initialClipsMap,
+    targetClipIds,
+    edge,
+    deltaSec,
+    {
+      anchorClipId = null,
+      snapBpm = 120,
+      snapEnabled = false,
+      toleranceSec = END_TIME_MATCH_TOLERANCE_SEC,
+    } = {}
+  ) {
+    const ids = targetClipIds instanceof Set ? targetClipIds : new Set(targetClipIds || []);
+    if (!ids.size) return 0;
+
+    const entries = [];
+    for (const tr of (project?.tracks || [])) {
+      for (const clip of (tr.clips || [])) {
+        if (!ids.has(clip.id)) continue;
+        const initSnap = initialClipsMap instanceof Map ? initialClipsMap.get(clip.id) : initialClipsMap?.[clip.id];
+        if (initSnap) {
+          Object.assign(clip, cloneDeep(initSnap));
+        }
+        ensureClipSourceMetadata(clip);
+        entries.push({
+          clip,
+          initStart: Number(clip.startSec) || 0,
+          initOff: Number(clip.offsetSec) || 0,
+          initDur: Number(clip.durationSec) || 0.1,
+          initEnd: clipEndSec(clip),
+          initSrcDur: Math.max(0.05, Number(clip.sourceDurationSec) || Number(clip.durationSec) || 1),
+        });
+      }
+    }
+    if (!entries.length) return 0;
+
+    const anchorEntry = entries.find(e => e.clip.id === anchorClipId) || entries[0];
+
+    if (edge === 'right') {
+      let desiredEnd = anchorEntry.initEnd + (Number(deltaSec) || 0);
+      if (snapEnabled) {
+        desiredEnd = snapTimeToBeatGrid(desiredEnd, snapBpm, true);
+      }
+      const rawDelta = desiredEnd - anchorEntry.initEnd;
+
+      const alignedGroup = entries.filter(e => Math.abs(e.initEnd - anchorEntry.initEnd) <= toleranceSec);
+      const relativeGroup = entries.filter(e => Math.abs(e.initEnd - anchorEntry.initEnd) > toleranceSec);
+
+      if (alignedGroup.length > 0) {
+        let minAllowedEnd = 0.05;
+        let maxAllowedEnd = Infinity;
+        for (const e of alignedGroup) {
+          minAllowedEnd = Math.max(minAllowedEnd, e.initStart + 0.05);
+          maxAllowedEnd = Math.min(maxAllowedEnd, e.initStart + (e.initSrcDur - e.initOff));
+        }
+        const sharedEnd = minAllowedEnd <= maxAllowedEnd
+          ? clamp(minAllowedEnd, maxAllowedEnd, desiredEnd)
+          : desiredEnd;
+        for (const e of alignedGroup) {
+          const targetDur = sharedEnd - e.initStart;
+          trimClipEdge(e.clip, 'right', targetDur - e.initDur);
+        }
+      }
+
+      for (const e of relativeGroup) {
+        trimClipEdge(e.clip, 'right', rawDelta);
+      }
+    } else if (edge === 'left') {
+      let desiredStart = anchorEntry.initStart + (Number(deltaSec) || 0);
+      if (snapEnabled) {
+        desiredStart = snapTimeToBeatGrid(desiredStart, snapBpm, true);
+      }
+      const rawDelta = desiredStart - anchorEntry.initStart;
+
+      const alignedGroup = entries.filter(e => Math.abs(e.initStart - anchorEntry.initStart) <= toleranceSec);
+      const relativeGroup = entries.filter(e => Math.abs(e.initStart - anchorEntry.initStart) > toleranceSec);
+
+      if (alignedGroup.length > 0) {
+        let minDelta = -Infinity;
+        let maxDelta = Infinity;
+        for (const e of alignedGroup) {
+          minDelta = Math.max(minDelta, Math.max(-e.initStart, -e.initOff));
+          maxDelta = Math.min(maxDelta, e.initDur - 0.05);
+        }
+        const uniformDelta = minDelta <= maxDelta ? clamp(minDelta, maxDelta, rawDelta) : rawDelta;
+        for (const e of alignedGroup) {
+          trimClipEdge(e.clip, 'left', uniformDelta);
+        }
+      }
+
+      for (const e of relativeGroup) {
+        trimClipEdge(e.clip, 'left', rawDelta);
+      }
+    }
+
+    return entries.length;
   }
 
   function duplicateClipsInProject(project, targetClipIds) {
@@ -548,6 +766,56 @@
     return true;
   }
 
+  /**
+   * Moves one or more selected tracks up (-1) or down (+1) together while preserving
+   * relative track order across all selected tracks.
+   */
+  function reorderTracksBatch(project, trackIds, direction = -1) {
+    const tracks = project?.tracks || [];
+    const ids = trackIds instanceof Set ? trackIds : new Set(trackIds || []);
+    if (!ids.size || tracks.length <= 1) return false;
+    let movedAny = false;
+    if (direction < 0) {
+      for (let i = 1; i < tracks.length; i++) {
+        if (ids.has(tracks[i].id) && !ids.has(tracks[i - 1].id)) {
+          const tmp = tracks[i - 1];
+          tracks[i - 1] = tracks[i];
+          tracks[i] = tmp;
+          movedAny = true;
+        }
+      }
+    } else if (direction > 0) {
+      for (let i = tracks.length - 2; i >= 0; i--) {
+        if (ids.has(tracks[i].id) && !ids.has(tracks[i + 1].id)) {
+          const tmp = tracks[i + 1];
+          tracks[i + 1] = tracks[i];
+          tracks[i] = tmp;
+          movedAny = true;
+        }
+      }
+    }
+    return movedAny;
+  }
+
+  /**
+   * Gangs continuous numeric mixer parameters (gainDb, volume, pan) across all selected tracks
+   * relative to `startValuesMap` so dragging any selected track slider adjusts all selected tracks.
+   */
+  function adjustTracksNumericBatch(project, startValuesMap, targetTrackIds, prop, delta, min, max, precision = 2) {
+    const ids = targetTrackIds instanceof Set ? targetTrackIds : new Set(targetTrackIds || []);
+    let changed = 0;
+    for (const tr of (project?.tracks || [])) {
+      if (!ids.has(tr.id)) continue;
+      const base = startValuesMap instanceof Map
+        ? (startValuesMap.get(tr.id) ?? (Number(tr[prop]) || 0))
+        : (Number(tr[prop]) || 0);
+      const val = clamp(min, max, base + (Number(delta) || 0));
+      tr[prop] = Number(val.toFixed(precision));
+      changed++;
+    }
+    return changed;
+  }
+
   function selectAllTracksOnly(project) {
     return {
       selectedTrackIds: new Set((project?.tracks || []).map(t => t.id)),
@@ -591,10 +859,12 @@
     return changed;
   }
 
-  function trimClipsToPlayhead(project, targetClipIds, edge /* 'left' | 'right' */, playheadSec) {
+  function trimClipsToPlayhead(project, targetClipIds, edge /* 'left' | 'right' */, playheadSec, selectedTrackIds = null) {
     const ids = targetClipIds instanceof Set ? targetClipIds : new Set(targetClipIds || []);
+    const selTracks = selectedTrackIds instanceof Set ? selectedTrackIds : new Set(selectedTrackIds || []);
     let trimmed = 0;
     for (const tr of (project?.tracks || [])) {
+      if (ids.size === 0 && selTracks.size > 0 && !selTracks.has(tr.id)) continue;
       for (const clip of (tr.clips || [])) {
         if (ids.size > 0 && !ids.has(clip.id)) continue;
         const start = Number(clip.startSec) || 0;
@@ -656,27 +926,33 @@
 
   return {
     STUDIO_COLORS,
+    END_TIME_MATCH_TOLERANCE_SEC,
     clamp,
     cloneDeep,
     uid,
     dbToGain,
     gainToDb,
     formatDb,
+    clipEndSec,
     UndoHistoryStack,
     applyTrackClickSelection,
     findClipWithTrack,
     applyClipClickSelection,
+    getEffectiveSelectedClipIds,
+    resolveLinkedClipsForOperation,
     selectAllInProject,
     selectAllTracksOnly,
     selectAllClipsOnly,
     invertTrackSelection,
     setTracksPropertyBatch,
+    adjustTracksNumericBatch,
     ensureClipSourceMetadata,
     recomputeVisibleClipWindow,
     splitClipAtTime,
     splitClipsInProject,
     moveClipsByDelta,
     trimClipEdge,
+    trimClipsBatch,
     trimClipsToPlayhead,
     duplicateClipsInProject,
     copyClipsFromProject,
@@ -687,6 +963,7 @@
     duplicateTracksInProject,
     deleteTracksFromProject,
     reorderTrackInProject,
+    reorderTracksBatch,
     snapTimeToBeatGrid,
     encodeStereoFloat32ToWavBytes,
   };
