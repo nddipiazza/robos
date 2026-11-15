@@ -171,6 +171,23 @@ function getDefaultLinuxPluginSearchPaths() {
   ];
 }
 
+function isProprietaryRiffTtpw(filePath) {
+  let fd = null;
+  try {
+    fd = fs.openSync(filePath, 'r');
+    const hdr = Buffer.alloc(12);
+    const bytesRead = fs.readSync(fd, hdr, 0, 12, 0);
+    if (bytesRead === 12 && hdr.toString('ascii', 0, 4) === 'RIFF' && hdr.toString('ascii', 8, 12) === 'ttpw') {
+      return true;
+    }
+  } catch {} finally {
+    if (fd !== null) {
+      try { fs.closeSync(fd); } catch {}
+    }
+  }
+  return false;
+}
+
 /**
  * Recursively scan a directory up to maxDepth for VST3/VST2/LV2/CLAP/LADSPA/SFZ plugins,
  * lossless/WAV audio samples (.wav, .flac, .ogg, .mp3), and unextracted installer archives (.iso, .zip, etc.).
@@ -179,8 +196,9 @@ function scanDirectoryForPluginsAndSamples(rootDir, { maxDepth = 4, formatHint =
   const plugins = [];
   const sampleFiles = [];
   const archiveFiles = [];
+  const proprietarySoundbanks = [];
   if (!rootDir || !fs.existsSync(rootDir)) {
-    return { exists: false, plugins, sampleFiles, archiveFiles };
+    return { exists: false, plugins, sampleFiles, archiveFiles, proprietarySoundbanks };
   }
 
   const IGNORED_DIRS = new Set(['node_modules', '.git', '__MACOSX', '.Trash']);
@@ -240,8 +258,14 @@ function scanDirectoryForPluginsAndSamples(rootDir, { maxDepth = 4, formatHint =
           plugins.push({ name: path.basename(name, path.extname(name)), fileName: name, format: fmt, path: fullPath, rootDir });
         } else if (ext === '.dll') {
           plugins.push({ name: path.basename(name, path.extname(name)), fileName: name, format: 'VST2-WIN', path: fullPath, rootDir });
+        } else if (ext === '.obw') {
+          proprietarySoundbanks.push(fullPath);
         } else if (AUDIO_SAMPLE_EXTS.has(ext)) {
-          sampleFiles.push(fullPath);
+          if (ext === '.wav' && isProprietaryRiffTtpw(fullPath)) {
+            proprietarySoundbanks.push(fullPath);
+          } else {
+            sampleFiles.push(fullPath);
+          }
         } else if (ARCHIVE_INSTALLER_EXTS.has(ext)) {
           archiveFiles.push(fullPath);
         }
@@ -257,8 +281,9 @@ function scanDirectoryForPluginsAndSamples(rootDir, { maxDepth = 4, formatHint =
   walk(rootDir, 0);
   sampleFiles.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
   archiveFiles.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+  proprietarySoundbanks.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
   plugins.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
-  return { exists: true, plugins, sampleFiles, archiveFiles };
+  return { exists: true, plugins, sampleFiles, archiveFiles, proprietarySoundbanks };
 }
 
 function classifyDrumSampleCategory(filePath) {
@@ -478,7 +503,7 @@ function getVstDirectoriesSnapshot() {
   const cfg = loadVstDirectoriesConfig();
   const customDirectories = cfg.directories.map(dirEntry => {
     const scan = dirEntry.enabled === false
-      ? { exists: fs.existsSync(dirEntry.path), plugins: [], sampleFiles: [], archiveFiles: [] }
+      ? { exists: fs.existsSync(dirEntry.path), plugins: [], sampleFiles: [], archiveFiles: [], proprietarySoundbanks: [] }
       : scanDirectoryForPluginsAndSamples(dirEntry.path);
     const formats = Array.from(new Set([
       ...scan.plugins.map(p => p.format),
@@ -491,6 +516,7 @@ function getVstDirectoriesSnapshot() {
       sampleCount: scan.sampleFiles.length,
       archiveCount: scan.archiveFiles.length,
       archiveNames: scan.archiveFiles.slice(0, 8).map(f => path.basename(f)),
+      proprietarySoundbankCount: scan.proprietarySoundbanks.length,
       formats,
       kitId: scan.sampleFiles.length > 0 ? makeCustomKitId(dirEntry.path) : null,
       plugins: scan.plugins,

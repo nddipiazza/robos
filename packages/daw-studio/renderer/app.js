@@ -4205,7 +4205,10 @@ function renderDrumkitsModal() {
         if (d.archiveCount > 0) {
           badges.push(`<span class="vst-fmt-badge archive" title="Contains ${esc((d.archiveNames || []).join(', '))} — mount/extract or install VST binaries to load">${d.archiveCount} .ISO / ARCHIVE${d.archiveCount === 1 ? '' : 'S'} (UNEXTRACTED)</span>`);
         }
-        if (d.exists && d.pluginCount === 0 && d.sampleCount === 0 && !d.archiveCount) {
+        if (d.proprietarySoundbankCount > 0) {
+          badges.push(`<span class="vst-fmt-badge archive" title="Proprietary Toontrack OBW / RIFF-ttpw encoded soundbanks cannot be decoded as raw PCM WAV — requires host VST engine">${d.proprietarySoundbankCount} LOCKED OBW/TTPW SOUNDBANK${d.proprietarySoundbankCount === 1 ? '' : 'S'}</span>`);
+        }
+        if (d.exists && d.pluginCount === 0 && d.sampleCount === 0 && !d.archiveCount && !d.proprietarySoundbankCount) {
           badges.push(`<span class="vst-fmt-badge">EMPTY / NO PLUGINS</span>`);
         }
         return `

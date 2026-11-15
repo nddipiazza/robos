@@ -840,6 +840,8 @@ describe('DAW Editing Engine: Multi-Select, Track/Take Gain, Split/Trim, Copy/Pa
       fs.writeFileSync(path.join(customVstDir, 'WinDrummer.dll'), 'stub');
       fs.writeFileSync(path.join(customVstDir, 'StudioKit.sfz'), 'stub');
       fs.writeFileSync(path.join(customVstDir, 'ExpansionPack.iso'), 'stub');
+      fs.writeFileSync(path.join(customVstDir, 'soundb0.obw'), 'stub');
+      fs.writeFileSync(path.join(customVstDir, 'KD01_locked.wav'), Buffer.from('RIFF\x24\x00\x00\x00ttpwfmt ', 'binary'));
 
       // Add both directories (plus duplicate add check)
       addVstDirectory(samplePackDir);
@@ -862,6 +864,8 @@ describe('DAW Editing Engine: Multi-Select, Track/Take Gain, Split/Trim, Copy/Pa
       assert.ok(plugSnap);
       assert.strictEqual(plugSnap.pluginCount, 6); // FabProQ (VST3), x42-eq (LV2), SurgeXT (CLAP), AnalogComp (VST2), WinDrummer (VST2-WIN), StudioKit (SFZ)
       assert.strictEqual(plugSnap.archiveCount, 1); // ExpansionPack.iso flagged as unextracted archive
+      assert.strictEqual(plugSnap.proprietarySoundbankCount, 2); // soundb0.obw + RIFF-ttpw wav excluded from raw sampleFiles
+      assert.strictEqual(plugSnap.sampleCount, 0);
       const formats = new Set(plugSnap.plugins.map(p => p.format));
       for (const fmt of ['VST3', 'LV2', 'CLAP', 'VST2', 'VST2-WIN', 'SFZ']) {
         assert.ok(formats.has(fmt), `Expected format ${fmt} to be discovered`);
