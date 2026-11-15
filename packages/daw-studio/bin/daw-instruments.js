@@ -73,7 +73,7 @@ async function main() {
   }
 
   if (cmd === 'install-defaults') {
-    console.log('Downloading default open-source drum kits (gm-rock-kit + tr-808-kit)...');
+    console.log('Downloading default open-source metal drum kits...');
     const res = await downloadDefaultOpenDrumkits({
       onProgress: ({ kitId, completed, total, file }) => {
         process.stdout.write(`  [${kitId}] (${completed}/${total}) ${file}\n`);
@@ -84,7 +84,7 @@ async function main() {
   }
 
   if (cmd === 'install') {
-    const kitId = arg || 'gm-rock-kit';
+    const kitId = arg || 'muldjord-death-metal';
     if (kitId === 'all') {
       for (const k of OPEN_DRUMKIT_CATALOG) {
         console.log(`Downloading ${k.id} (${k.name})...`);
@@ -94,7 +94,7 @@ async function main() {
           },
         });
       }
-      console.log('\nAll catalog kits installed.');
+      console.log(`\nAll ${OPEN_DRUMKIT_CATALOG.length} metal catalog kits installed.`);
       return;
     }
     console.log(`Downloading ${kitId}...`);
@@ -107,7 +107,7 @@ async function main() {
     return;
   }
 
-  console.error(`Unknown command "${cmd}". Use: list | dirs | add-dir <path> | remove-dir <path> | install-defaults | install <gm-rock-kit|virtuosity-cc0|tr-808-kit|all>`);
+  console.error(`Unknown command "${cmd}". Use: list | dirs | add-dir <path> | remove-dir <path> | install-defaults | install <kit-id|all>`);
   process.exit(1);
 }
 

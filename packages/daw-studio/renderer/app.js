@@ -1843,8 +1843,9 @@ function renderInspectorDrawer() {
   const piecesObj = activeKit?.pieces || {};
 
   const kitOpts = kits.map(k => {
-    const tag = k.isCustomDirectory ? `[Custom · ${k.sampleCount} samples]` : (k.installed ? '[Installed]' : '[Install]');
-    return `<option value="${esc(k.id)}"${k.id === sr.kitId ? ' selected' : ''}>${esc(k.name)} ${esc(tag)}</option>`;
+    const genre = k.genreTag ? `[${k.genreTag}] ` : '';
+    const tag = k.isCustomDirectory ? `[Custom · ${k.sampleCount} samples]` : (k.installed ? '[Ready]' : '[Install]');
+    return `<option value="${esc(k.id)}"${k.id === sr.kitId ? ' selected' : ''}>${esc(genre)}${esc(k.name)} ${esc(tag)}</option>`;
   }).join('');
   const pieceOpts = Object.values(piecesObj).map(p =>
     `<option value="${esc(p.id)}"${p.id === sr.pieceId ? ' selected' : ''}>${esc(p.label)}</option>`
@@ -3533,9 +3534,10 @@ function populateWizardDrumSelectors(preferredKitId, preferredPieceId) {
   if (!kitSel || !pieceSel) return;
 
   const kits = drumkitsStatus?.kits || [];
-  kitSel.innerHTML = kits.map(k =>
-    `<option value="${esc(k.id)}"${k.id === preferredKitId ? ' selected' : ''}>${esc(k.name)} ${k.installed ? `(${k.sampleCount} samples installed)` : '(Click Install)'}</option>`
-  ).join('');
+  kitSel.innerHTML = kits.map(k => {
+    const genre = k.genreTag ? `[${k.genreTag}] ` : '';
+    return `<option value="${esc(k.id)}"${k.id === preferredKitId ? ' selected' : ''}>${esc(genre)}${esc(k.name)} ${k.installed ? `(${k.sampleCount} samples)` : '(Click Install)'}</option>`;
+  }).join('');
 
   const chosenKit = kits.find(k => k.id === kitSel.value) || kits[0];
   const pieces = Object.values(chosenKit?.pieces || {});
@@ -4263,21 +4265,27 @@ function renderDrumkitsModal() {
   if (!listEl) return;
   const kits = drumkitsStatus?.kits || [];
   listEl.innerHTML = kits.map(k => {
-    const firstPiece = k.pieces?.snare ? 'snare' : (Object.keys(k.pieces || {})[0] || 'snare');
+    const hasKick = Boolean(k.pieces?.kick);
+    const snarePiece = k.pieces?.snare ? 'snare' : (Object.keys(k.pieces || {})[0] || 'snare');
+    const genreBadge = k.genreTag
+      ? `<span class="mono" style="display:inline-block;padding:1px 6px;border-radius:3px;background:rgba(0,212,255,0.12);border:1px solid rgba(0,212,255,0.28);color:#7dd3fc;font-size:10px;margin-right:6px;">${esc(k.genreTag)}</span>`
+      : '';
+    const pieceCount = Object.keys(k.pieces || {}).length;
     const actionBtn = k.isCustomDirectory
       ? `<button type="button" class="btn btn-sm btn-bevel" data-open-kit-dir="${esc(k.kitDir)}">${DI.svg('folder', 12)}<span>Open Folder</span></button>`
       : `<button type="button" class="btn btn-sm ${k.installed ? 'btn-bevel' : 'btn-primary'}" data-dl-kit="${esc(k.id)}">${k.installed ? `${DI.svg('refresh', 12)}<span>Verify</span>` : `${DI.svg('download', 12)}<span>Download</span>`}</button>`;
     return `
       <div class="saved-proj-row">
         <div>
-          <strong>${esc(k.name)}</strong> <span class="mono" style="color:var(--accent);">[${esc(k.license)}]</span>
+          <div style="margin-bottom:2px;">${genreBadge}<strong>${esc(k.name)}</strong> <span class="mono" style="color:var(--accent);font-size:11px;">[${esc(k.license)}]</span></div>
           <div class="hint">${esc(k.description)}</div>
           <div class="mono" style="font-size:11px;color:${k.installed ? '#86efac' : '#fde047'};">
-            ${k.installed ? `INSTALLED (${k.sampleCount} lossless/WAV samples)` : 'Not downloaded yet'}
+            ${k.installed ? `INSTALLED (${pieceCount} drum pieces · ${k.sampleCount} lossless/WAV layers)` : 'Not downloaded yet'}
           </div>
         </div>
-        <div style="display:flex;gap:6px;">
-          ${k.installed ? `<button type="button" class="btn btn-sm btn-bevel" data-audition-kit="${esc(k.id)}" data-piece="${esc(firstPiece)}">${DI.svg('speaker', 12)}<span>Test</span></button>` : ''}
+        <div style="display:flex;gap:6px;align-items:center;flex-shrink:0;">
+          ${k.installed && hasKick ? `<button type="button" class="btn btn-sm btn-bevel" data-audition-kit="${esc(k.id)}" data-piece="kick" title="Audition Kick">${DI.svg('speaker', 12)}<span>Kick</span></button>` : ''}
+          ${k.installed ? `<button type="button" class="btn btn-sm btn-bevel" data-audition-kit="${esc(k.id)}" data-piece="${esc(snarePiece)}" title="Audition Snare">${DI.svg('speaker', 12)}<span>Snare</span></button>` : ''}
           ${actionBtn}
         </div>
       </div>

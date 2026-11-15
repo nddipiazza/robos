@@ -15,6 +15,7 @@ const {
   getInstrumentsRoot,
   inspectInstalledKits,
   downloadOpenDrumkit,
+  downloadAllOpenDrumkits,
   downloadDefaultOpenDrumkits,
   computeWaveformPeaks,
   detectDrumTransients,
@@ -497,10 +498,8 @@ ipcMain.handle('daw:download-drumkit', async (_e, payload) => {
       return { ok: true, ...res };
     }
     if (kitId === 'all') {
-      for (const id of ['gm-rock-kit', 'virtuosity-cc0', 'tr-808-kit']) {
-        await downloadOpenDrumkit(id, { onProgress });
-      }
-      return { ok: true, status: inspectInstalledKits() };
+      const res = await downloadAllOpenDrumkits({ onProgress });
+      return { ok: true, ...res };
     }
     const res = await downloadOpenDrumkit(kitId, { onProgress });
     return { ok: true, ...res };

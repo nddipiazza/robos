@@ -49,7 +49,7 @@ const MIC_PROFILES = [
       compressor: { enabled: true, thresholdDb: -18, ratio: 4.0, attackMs: 16, releaseMs: 110, makeupDb: 2.5 },
       drive: { enabled: false, amount: 0 },
     },
-    soundReplacement: { supported: true, enabled: false, kitId: 'tr-808-kit', pieceId: 'kick', blend: 0.55, thresholdDb: -28, minIntervalMs: 85 },
+    soundReplacement: { supported: true, enabled: false, kitId: 'wilkinson-modern-metal', pieceId: 'kick-sub', blend: 0.55, thresholdDb: -28, minIntervalMs: 85 },
   },
   {
     id: 'snare-top',

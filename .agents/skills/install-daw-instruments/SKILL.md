@@ -23,12 +23,24 @@ Download verified open-source drum kits and studio plugins for **RobOS DAW Studi
 
 ## Reliable Open-Source Instrument Archives
 
-### 1. Built-In Verified Catalog (`packages/daw-studio/bin/daw-instruments.js`)
-| Kit ID | Kit Name | License | Upstream Archive |
-|--------|----------|---------|------------------|
-| `gm-rock-kit` | Pearl DX 5pc Acoustic Studio Kit (26 multi-velocity `.wav` layers: Kick, Snare, Rimshot, Toms 1/2/Floor, Closed/Open Hats, Crash, Ride) | `GPL-3.0` | `https://github.com/hydrogen-music/hydrogen/tree/main/data/drumkits/GMRockKit` (Glen MacArthur / AVL) |
-| `virtuosity-cc0` | Virtuosity Close-Miked Studio Drums (`.flac` close-mic kick, snare, high tom, overhead crash) | `CC0-1.0` | `https://github.com/sfzinstruments/virtuosity_drums` |
-| `tr-808-kit` | Roland TR-808 Studio Emulation Kit (`.flac` sub kick, tight kick, snappy snare, toms, hats, cymbal) | `GPL-3.0` | `https://github.com/hydrogen-music/hydrogen/tree/main/data/drumkits/TR808EmulationKit` |
+### 1. Built-In Verified Metal Drum Kit Catalog (`packages/daw-studio/bin/daw-instruments.js`)
+| Kit ID | Metal Style | Kit Name | License |
+|--------|-------------|----------|---------|
+| `muldjord-death-metal` | `DEATH / THRASH METAL` | Muldjord Tama Superstar Death / Thrash Metal Kit (Double-Bass R/L, 4 Toms, China, Bell Ride) | `CC-BY-4.0` |
+| `muldjord-triggered-metal` | `TECH-DEATH / DEATHCORE TRIGGERED` | Muldjord Extreme Metal Piezo-Triggered Double-Bass Kit | `CC-BY-4.0` |
+| `wilkinson-modern-metal` | `MODERN METAL / PROG` | Wilkinson Modern Metal Close-Mic + Sub-Kick Studio Kit (5 Toms, Dual Chinas) | `CC0-1.0` |
+| `smdrums-heavy-metal` | `HEAVY / GROOVE METAL` | SMDrums Heavy Studio Metal Kit (6.5" Deep Snare & 4 Toms) | `CC0-1.0` |
+| `smdrums-hybrid-metalcore` | `METALCORE / HYBRID` | SMDrums Hybrid Sample-Reinforced Metalcore Kit (`HyB2`/`HyB3` + `HyB1` Rimshot) | `CC0-1.0` |
+| `salamander-prog-metal` | `PROG / HEAVY METAL` | Salamander Progressive & Heavy Metal Kit I | `CC-BY-SA-3.0` |
+| `salamander-thrash-metal` | `THRASH / CROSSOVER METAL` | Salamander Thrash & Crossover Metal Kit II (Tight Kick 2 & High Snare 2) | `CC-BY-SA-3.0` |
+| `avl-black-pearl-metal` | `HEAVY METAL / 5PC` | AVL Black Pearl 5pc Heavy Metal Kit (Sabian AAX & Paiste 2002) | `CC-BY-SA-4.0` |
+| `avl-red-zeppelin-metal` | `STONER / DOOM 26"` | AVL Red Zeppelin 26" Stoner / Doom Metal Kit (Pork Pie Brass Snare) | `CC-BY-SA-4.0` |
+| `big-rusty-doom-sludge` | `DOOM / SLUDGE METAL` | Big Rusty 24" Undamped Doom & Sludge Metal Kit (14"-22" Monster Toms) | `CC0-1.0` |
+| `big-rusty-djent-stack` | `DJENT / GROOVE METAL` | Big Rusty Damped 24" Djent & Groove Metal Kit (3-Layer Trash Stack) | `CC0-1.0` |
+| `drs-contact-metal` | `HARD-BEATER METAL` | DRSKit Hard-Beater Contact Heavy Metal Kit | `CC-BY-4.0` |
+| `sonor-power-metal` | `POWER / SPEED METAL` | Sonor Force 3001 Power & Speed Metal Kit | `CC0-1.0` |
+| `frankensnare-brass-thrash` | `BRASS THRASH / HARDCORE` | Frankensnare 13" Brass & 14" Metal Rimshot Thrash / Hardcore Kit | `CC0-1.0` |
+| `gm-rock-kit` | `CLASSIC HEAVY METAL` | Pearl DX 5pc Classic Heavy Metal / Hard Rock Kit | `GPL-3.0` |
 
 ### 2. Extended Open-Source SFZ & Multi-Mic Drum Archives (GitHub `sfzinstruments`)
 When the user asks for heavier multi-gigabyte studio kits (e.g. Metal, Jazz, Brush, Vintage), pull from the `sfzinstruments` organization into `~/.local/share/robos/daw-studio/instruments/drumkits/<kit-slug>/` and drop a `kit.json` manifest:

@@ -122,12 +122,37 @@ describe('Add Mic Wizard profiles, open-source drum kits & session persistence',
     assert.strictEqual(getMicProfile('snare-bottom').fx.phaseInvert, true);
   });
 
-  it('defines open-source drum replacement archives without embedding WAV/FLAC binaries in git', () => {
-    assert.ok(OPEN_DRUMKIT_CATALOG.length >= 3);
-    const gm = OPEN_DRUMKIT_CATALOG.find(k => k.id === 'gm-rock-kit');
-    assert.ok(gm);
-    assert.ok(gm.pieces.kick.layers.length >= 3);
-    assert.ok(gm.pieces.snare.layers.length >= 3);
+  it('defines 15 metal-viable open-source drum replacement archives without embedding WAV/FLAC binaries in git', () => {
+    assert.strictEqual(OPEN_DRUMKIT_CATALOG.length, 15);
+    const expectedIds = [
+      'muldjord-death-metal',
+      'muldjord-triggered-metal',
+      'wilkinson-modern-metal',
+      'smdrums-heavy-metal',
+      'smdrums-hybrid-metalcore',
+      'salamander-prog-metal',
+      'salamander-thrash-metal',
+      'avl-black-pearl-metal',
+      'avl-red-zeppelin-metal',
+      'big-rusty-doom-sludge',
+      'big-rusty-djent-stack',
+      'drs-contact-metal',
+      'sonor-power-metal',
+      'frankensnare-brass-thrash',
+      'gm-rock-kit',
+    ];
+    assert.deepStrictEqual(OPEN_DRUMKIT_CATALOG.map(k => k.id), expectedIds);
+    for (const kit of OPEN_DRUMKIT_CATALOG) {
+      assert.ok(kit.genreTag && kit.genreTag.length >= 5, `Missing genreTag on ${kit.id}`);
+      assert.ok(kit.pieces.kick && kit.pieces.kick.layers.length >= 2, `Missing multi-layer kick on ${kit.id}`);
+      assert.ok(kit.pieces.snare && kit.pieces.snare.layers.length >= 2, `Missing multi-layer snare on ${kit.id}`);
+      for (const piece of Object.values(kit.pieces)) {
+        for (const layer of piece.layers) {
+          assert.ok(layer.url.startsWith('https://'), `Invalid URL on ${kit.id}: ${layer.url}`);
+          assert.ok(/\.(flac|wav)$/.test(layer.file), `Invalid sample extension on ${kit.id}: ${layer.file}`);
+        }
+      }
+    }
   });
 
   it('detects drum strike transients and computes waveform peaks accurately', () => {
