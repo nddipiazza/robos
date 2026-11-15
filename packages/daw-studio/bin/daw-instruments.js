@@ -33,7 +33,8 @@ async function main() {
     console.log(`Config: ${snap.configPath}`);
     console.log(`Custom VST & Sample Directories (${snap.customDirectories.length}):`);
     for (const d of snap.customDirectories) {
-      console.log(`  - ${d.label} -> ${d.path} (${d.pluginCount} plugins, ${d.sampleCount} samples)`);
+      const archNote = d.archiveCount > 0 ? `, ${d.archiveCount} unextracted .iso/archive(s)` : '';
+      console.log(`  - ${d.label} -> ${d.path} (${d.pluginCount} plugins, ${d.sampleCount} samples${archNote})`);
     }
     return;
   }
@@ -45,7 +46,8 @@ async function main() {
     const match = snap.customDirectories.find(d => d.path === added.path);
     console.log(`Added directory: ${added.path}`);
     if (match) {
-      console.log(`Indexed: ${match.pluginCount} plugin(s), ${match.sampleCount} audio sample(s)`);
+      const archNote = match.archiveCount > 0 ? `, ${match.archiveCount} unextracted .iso/installer archive(s)` : '';
+      console.log(`Indexed: ${match.pluginCount} plugin(s), ${match.sampleCount} audio sample(s)${archNote}`);
     }
     return;
   }

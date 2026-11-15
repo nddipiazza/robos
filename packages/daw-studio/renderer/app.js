@@ -4202,7 +4202,10 @@ function renderDrumkitsModal() {
         if (d.pluginCount > 0) {
           badges.push(`<span class="vst-fmt-badge">${d.pluginCount} PLUGIN${d.pluginCount === 1 ? '' : 'S'}</span>`);
         }
-        if (d.exists && d.pluginCount === 0 && d.sampleCount === 0) {
+        if (d.archiveCount > 0) {
+          badges.push(`<span class="vst-fmt-badge archive" title="Contains ${esc((d.archiveNames || []).join(', '))} — mount/extract or install VST binaries to load">${d.archiveCount} .ISO / ARCHIVE${d.archiveCount === 1 ? '' : 'S'} (UNEXTRACTED)</span>`);
+        }
+        if (d.exists && d.pluginCount === 0 && d.sampleCount === 0 && !d.archiveCount) {
           badges.push(`<span class="vst-fmt-badge">EMPTY / NO PLUGINS</span>`);
         }
         return `

@@ -17,6 +17,7 @@ const os = require('os');
 const crypto = require('crypto');
 
 const AUDIO_SAMPLE_EXTS = new Set(['.wav', '.flac', '.ogg', '.mp3']);
+const ARCHIVE_INSTALLER_EXTS = new Set(['.iso', '.zip', '.7z', '.rar', '.msi', '.dmg', '.pkg']);
 
 function getDawConfigRoot() {
   if (process.env.ROBOS_DAW_CONFIG_DIR) return process.env.ROBOS_DAW_CONFIG_DIR;
@@ -164,18 +165,22 @@ function getDefaultLinuxPluginSearchPaths() {
     { path: '/usr/local/lib/clap', formatHint: 'CLAP', scope: 'system' },
     { path: '/usr/lib/ladspa', formatHint: 'LADSPA', scope: 'system' },
     { path: '/usr/lib/x86_64-linux-gnu/ladspa', formatHint: 'LADSPA', scope: 'system' },
+    { path: path.join(home, '.wine', 'drive_c', 'Program Files', 'Common Files', 'VST3'), formatHint: 'VST3', scope: 'wine' },
+    { path: path.join(home, '.wine', 'drive_c', 'Program Files', 'VstPlugins'), formatHint: 'VST2-WIN', scope: 'wine' },
+    { path: path.join(home, '.wine', 'drive_c', 'Program Files', 'Steinberg', 'VstPlugins'), formatHint: 'VST2-WIN', scope: 'wine' },
   ];
 }
 
 /**
- * Recursively scan a directory up to maxDepth for VST3/VST2/LV2/CLAP/LADSPA/SFZ plugins
- * and lossless/WAV audio samples (.wav, .flac, .ogg, .mp3).
+ * Recursively scan a directory up to maxDepth for VST3/VST2/LV2/CLAP/LADSPA/SFZ plugins,
+ * lossless/WAV audio samples (.wav, .flac, .ogg, .mp3), and unextracted installer archives (.iso, .zip, etc.).
  */
 function scanDirectoryForPluginsAndSamples(rootDir, { maxDepth = 4, formatHint = '' } = {}) {
   const plugins = [];
   const sampleFiles = [];
+  const archiveFiles = [];
   if (!rootDir || !fs.existsSync(rootDir)) {
-    return { exists: false, plugins, sampleFiles };
+    return { exists: false, plugins, sampleFiles, archiveFiles };
   }
 
   const IGNORED_DIRS = new Set(['node_modules', '.git', '__MACOSX', '.Trash']);
@@ -233,8 +238,12 @@ function scanDirectoryForPluginsAndSamples(rootDir, { maxDepth = 4, formatHint =
         } else if (ext === '.so') {
           const fmt = formatHint === 'LADSPA' || curDir.toLowerCase().includes('ladspa') ? 'LADSPA' : 'VST2';
           plugins.push({ name: path.basename(name, path.extname(name)), fileName: name, format: fmt, path: fullPath, rootDir });
+        } else if (ext === '.dll') {
+          plugins.push({ name: path.basename(name, path.extname(name)), fileName: name, format: 'VST2-WIN', path: fullPath, rootDir });
         } else if (AUDIO_SAMPLE_EXTS.has(ext)) {
           sampleFiles.push(fullPath);
+        } else if (ARCHIVE_INSTALLER_EXTS.has(ext)) {
+          archiveFiles.push(fullPath);
         }
         continue;
       }
@@ -247,8 +256,9 @@ function scanDirectoryForPluginsAndSamples(rootDir, { maxDepth = 4, formatHint =
 
   walk(rootDir, 0);
   sampleFiles.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+  archiveFiles.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
   plugins.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
-  return { exists: true, plugins, sampleFiles };
+  return { exists: true, plugins, sampleFiles, archiveFiles };
 }
 
 function classifyDrumSampleCategory(filePath) {
@@ -468,7 +478,7 @@ function getVstDirectoriesSnapshot() {
   const cfg = loadVstDirectoriesConfig();
   const customDirectories = cfg.directories.map(dirEntry => {
     const scan = dirEntry.enabled === false
-      ? { exists: fs.existsSync(dirEntry.path), plugins: [], sampleFiles: [] }
+      ? { exists: fs.existsSync(dirEntry.path), plugins: [], sampleFiles: [], archiveFiles: [] }
       : scanDirectoryForPluginsAndSamples(dirEntry.path);
     const formats = Array.from(new Set([
       ...scan.plugins.map(p => p.format),
@@ -479,6 +489,8 @@ function getVstDirectoriesSnapshot() {
       exists: scan.exists,
       pluginCount: scan.plugins.length,
       sampleCount: scan.sampleFiles.length,
+      archiveCount: scan.archiveFiles.length,
+      archiveNames: scan.archiveFiles.slice(0, 8).map(f => path.basename(f)),
       formats,
       kitId: scan.sampleFiles.length > 0 ? makeCustomKitId(dirEntry.path) : null,
       plugins: scan.plugins,
