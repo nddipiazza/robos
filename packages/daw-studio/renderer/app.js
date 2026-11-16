@@ -47,6 +47,9 @@ let playStartOffsetSec = 0;
 let activeScheduledNodes = [];
 let transportRafId = null;
 let liveRecLevels = {}; // trackId -> { peakDb, bytes }
+let liveRecSession = null;
+let liveRecRafId = null;
+let lastLiveWavePaintMs = 0;
 
 // Add Mic Wizard State
 let wizStep = 1;
@@ -136,12 +139,49 @@ function getOrderedInputs() {
   return inputs;
 }
 
+function getLiveRecordingElapsedSec() {
+  if (!isRecording || !liveRecSession) return 0;
+  const wallElapsed = Math.max(0, (performance.now() - liveRecSession.startedPerfMs) / 1000);
+  return Math.max(liveRecSession.ipcElapsedSec || 0, wallElapsed);
+}
+
+function stopRecordingRafLoop() {
+  if (liveRecRafId) {
+    cancelAnimationFrame(liveRecRafId);
+    liveRecRafId = null;
+  }
+}
+
+function startRecordingRafLoop() {
+  stopRecordingRafLoop();
+  const step = () => {
+    if (!isRecording || !liveRecSession) {
+      liveRecRafId = null;
+      return;
+    }
+    const elapsed = getLiveRecordingElapsedSec();
+    playheadSec = liveRecSession.startSec + elapsed;
+    const tcEl = document.getElementById('transport-timecode');
+    if (tcEl) tcEl.textContent = formatTimecode(playheadSec);
+    lastLiveWavePaintMs = performance.now();
+    drawAllTimelineCanvases();
+    liveRecRafId = requestAnimationFrame(step);
+  };
+  liveRecRafId = requestAnimationFrame(step);
+}
+
 function getBaseProjectSpanSec() {
   let maxEnd = DEFAULT_TIMELINE_SECONDS;
   for (const t of (currentProject?.tracks || [])) {
     for (const c of (t.clips || [])) {
       const end = (Number(c.startSec) || 0) + (Number(c.durationSec) || 0) + 2;
       if (end > maxEnd) maxEnd = end;
+    }
+  }
+  if (isRecording && liveRecSession) {
+    const recHead = liveRecSession.startSec + getLiveRecordingElapsedSec() + 3;
+    if (recHead > maxEnd) {
+      maxEnd = Math.ceil(recHead / 4) * 4;
     }
   }
   return Math.ceil(maxEnd);
@@ -644,10 +684,16 @@ async function toggleRecording() {
   if (isPlaying) stopPlayback();
 
   if (isRecording) {
+    const punchInStartSec = liveRecSession ? liveRecSession.startSec : 0;
     const injectTestSignal = Boolean(document.getElementById('chk-test-groove')?.checked);
+    stopRecordingRafLoop();
     const res = await window.robos.recordStop({ injectTestSignal });
     isRecording = false;
+    liveRecSession = null;
     liveRecLevels = {};
+    playheadSec = punchInStartSec;
+    const tcEl = document.getElementById('transport-timecode');
+    if (tcEl) tcEl.textContent = formatTimecode(playheadSec);
     document.getElementById('btn-transport-record')?.classList.remove('recording');
     document.getElementById('header-rec-dot')?.classList.remove('recording');
     document.getElementById('transport-substate').textContent = 'READY';
@@ -665,6 +711,7 @@ async function toggleRecording() {
       const totalHits = (res.recordedClips || []).reduce((n, x) => n + (x.clip?.transients?.length || 0), 0);
       showStatus(`Recorded ${res.recordedClips.length} armed mic track(s)${totalHits ? ` — ${totalHits} drum transient(s) detected for Sound Replacement` : ''}.`);
     } else {
+      drawAllTimelineCanvases();
       showStatus(`Recording stop error: ${res?.error || 'Unknown error'}`, true);
     }
     return;
@@ -681,8 +728,10 @@ async function toggleRecording() {
     await playRecordCountInClicks(bpm);
   }
 
+  const injectTestSignal = Boolean(document.getElementById('chk-test-groove')?.checked);
   const res = await window.robos.recordStart({
     startSec: playheadSec,
+    injectTestSignal,
     projectMeta: {
       name: document.getElementById('project-name-input')?.value,
       bpm,
@@ -694,11 +743,37 @@ async function toggleRecording() {
     return;
   }
 
+  const punchStartSec = Number(res.startSec) || 0;
+  const trackStatesMap = new Map();
+  for (const tr of (res.tracks || [])) {
+    trackStatesMap.set(tr.trackId, {
+      trackId: tr.trackId,
+      clipId: tr.clipId,
+      name: `${tr.trackName || 'Track'} Take`,
+      peaks: [],
+      currentPeak: 0,
+      peakDb: -96,
+      maxPeakDb: -96,
+      hitTimesSec: [],
+      lastHitSec: -1,
+      prevSlicePeak: 0,
+    });
+  }
+
+  liveRecSession = {
+    startSec: punchStartSec,
+    startedPerfMs: performance.now(),
+    ipcElapsedSec: 0,
+    sliceDurationSec: Number(res.sliceDurationSec) || 0.02,
+    tracks: trackStatesMap,
+  };
   isRecording = true;
   document.getElementById('btn-transport-record')?.classList.add('recording');
   document.getElementById('header-rec-dot')?.classList.add('recording');
   document.getElementById('transport-substate').textContent = `REC (${res.armedCount} CH)`;
-  showStatus(`Recording ${res.armedCount} armed channel(s) simultaneously via PipeWire + Focusrite — press Stop when finished.`);
+  drawAllTimelineCanvases();
+  startRecordingRafLoop();
+  showStatus(`Recording ${res.armedCount} armed channel(s) live via PipeWire (10ms low-latency waveform stream) — press Stop when finished.`);
 }
 
 // ─── Studio & Timeline Rendering ────────────────────────────────────────────
@@ -1795,16 +1870,159 @@ function drawAllTimelineCanvases() {
       ctx.restore();
     }
 
-    // Live Recording region preview
+    // Live Low-Latency Growing Waveform Region on Armed Tracks
     if (isRecording && track.armed) {
-      const recStart = (playheadSec / totalSec) * w;
-      ctx.fillStyle = 'rgba(239, 68, 68, 0.22)';
-      ctx.fillRect(recStart, 5, Math.max(24, 68), h - 10);
+      const recStartSec = liveRecSession ? liveRecSession.startSec : playheadSec;
+      const recElapsedSec = Math.max(0.02, playheadSec - recStartSec);
+      const startX = (recStartSec / totalSec) * w;
+      const endX = (playheadSec / totalSec) * w;
+      const clipW = Math.max(4, endX - startX);
+      const regionTop = 4;
+      const regionH = h - 8;
+      const recState = liveRecSession?.tracks?.get(track.id) || null;
+      const sliceDur = liveRecSession?.sliceDurationSec || 0.02;
+      const totalGainLinear = DE.dbToGain(trackGainDb);
+
+      ctx.save();
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(startX, regionTop, clipW, regionH, 4);
+      else ctx.rect(startX, regionTop, clipW, regionH);
+      ctx.clip();
+
+      // Deep ruby-obsidian live take container
+      ctx.fillStyle = 'rgba(34, 10, 16, 0.92)';
+      ctx.fillRect(startX, regionTop, clipW, regionH);
+
+      // Crimson studio header bar
+      ctx.fillStyle = 'rgba(239, 68, 68, 0.28)';
+      ctx.fillRect(startX, regionTop, clipW, 17);
+      ctx.fillStyle = '#ef4444';
+      ctx.fillRect(startX, regionTop, clipW, 2.5);
+
+      // Time-anchored live streaming Dual-Layer Peak + Core Waveform
+      const peaks = recState?.peaks || [];
+      const curTipPeak = Number(recState?.currentPeak) || 0;
+      const totalSlices = peaks.length + (curTipPeak > 0.002 ? 1 : 0);
+      if (totalSlices > 0) {
+        const pxPerSlice = (sliceDur / totalSec) * w;
+        const midY = regionTop + 17 + (regionH - 19) / 2;
+        const maxAmpH = (regionH - 22) / 2;
+
+        if (pxPerSlice >= 1.15) {
+          const barW = Math.max(1.1, pxPerSlice - (pxPerSlice > 2.4 ? 0.35 : 0.1));
+          ctx.fillStyle = '#f87171';
+          ctx.globalAlpha = 0.58;
+          for (let i = 0; i < totalSlices; i++) {
+            const sx = startX + i * pxPerSlice;
+            if (sx > endX + 1) break;
+            if (sx + barW < 0) continue;
+            const rawP = i < peaks.length ? peaks[i] : curTipPeak;
+            const amp = Math.max(0.02, Math.min(1, rawP * 1.35 * totalGainLinear));
+            const bh = amp * maxAmpH;
+            ctx.fillRect(sx, midY - bh, Math.min(barW, Math.max(1, endX - sx)), bh * 2);
+          }
+
+          ctx.fillStyle = '#fecaca';
+          ctx.globalAlpha = 0.94;
+          for (let i = 0; i < totalSlices; i++) {
+            const sx = startX + i * pxPerSlice;
+            if (sx > endX + 1) break;
+            if (sx + barW < 0) continue;
+            const rawP = i < peaks.length ? peaks[i] : curTipPeak;
+            const amp = Math.max(0.015, Math.min(1, rawP * 0.80 * totalGainLinear));
+            const bh = amp * maxAmpH;
+            ctx.fillRect(sx, midY - bh, Math.min(barW, Math.max(1, endX - sx)), bh * 2);
+          }
+          ctx.globalAlpha = 1.0;
+        } else {
+          // Pixel-bucketed fast path for zoomed-out / long takes (1px crisp transient preservation)
+          const px0 = Math.max(0, Math.floor(startX));
+          const px1 = Math.min(w, Math.ceil(endX));
+          for (let pass = 0; pass < 2; pass++) {
+            ctx.fillStyle = pass === 0 ? '#f87171' : '#fecaca';
+            ctx.globalAlpha = pass === 0 ? 0.58 : 0.94;
+            const scale = (pass === 0 ? 1.35 : 0.80) * totalGainLinear;
+            const floorAmp = pass === 0 ? 0.02 : 0.015;
+            for (let col = px0; col < px1; col++) {
+              const tCol0 = ((col / w) * totalSec) - recStartSec;
+              const tCol1 = (((col + 1) / w) * totalSec) - recStartSec;
+              const s0 = Math.max(0, Math.floor(tCol0 / sliceDur));
+              const s1 = Math.min(totalSlices - 1, Math.ceil(tCol1 / sliceDur));
+              if (s0 > s1) continue;
+              let maxP = 0;
+              for (let s = s0; s <= s1; s++) {
+                const v = s < peaks.length ? peaks[s] : curTipPeak;
+                if (v > maxP) maxP = v;
+              }
+              const amp = Math.max(floorAmp, Math.min(1, maxP * scale));
+              const bh = amp * maxAmpH;
+              ctx.fillRect(col, midY - bh, 1, bh * 2);
+            }
+          }
+          ctx.globalAlpha = 1.0;
+        }
+      }
+
+      // Live Drum Replacement Transient Diamonds as hits cross threshold
+      if (track.soundReplacement?.enabled && Array.isArray(recState?.hitTimesSec)) {
+        for (const hitRelSec of recState.hitTimesSec) {
+          const hx = startX + (hitRelSec / totalSec) * w;
+          if (hx < 0 || hx > endX) continue;
+          ctx.strokeStyle = 'rgba(245, 158, 11, 0.72)';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(hx, regionTop + 19);
+          ctx.lineTo(hx, regionTop + regionH - 2);
+          ctx.stroke();
+
+          ctx.fillStyle = '#fbbf24';
+          ctx.beginPath();
+          ctx.moveTo(hx, regionTop + 18);
+          ctx.lineTo(hx + 3.2, regionTop + 21.2);
+          ctx.lineTo(hx, regionTop + 24.4);
+          ctx.lineTo(hx - 3.2, regionTop + 21.2);
+          ctx.closePath();
+          ctx.fill();
+        }
+      }
+
+      // Live Region Header Label & Peak Readout (zero emojis)
+      if (clipW > 26) {
+        ctx.fillStyle = '#ffe4e6';
+        ctx.font = '700 10px ui-monospace, SFMono-Regular, Menlo, monospace';
+        const peakTxt = recState && recState.maxPeakDb > -90 ? `${recState.maxPeakDb.toFixed(1)} dB` : 'LIVE';
+        const trigTxt = track.soundReplacement?.enabled && recState?.hitTimesSec?.length
+          ? ` · TRIG ${recState.hitTimesSec.length}`
+          : '';
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(startX + 4, regionTop + 1, Math.max(4, clipW - 8), 16);
+        ctx.clip();
+        ctx.fillText(
+          `REC · ${track.name || 'Track'}  ${recElapsedSec.toFixed(1)}s · ${peakTxt}${trigTxt}`,
+          startX + 6,
+          regionTop + 12.5
+        );
+        ctx.restore();
+      }
+      ctx.restore();
+
+      // Crisp Crimson Region Border + Write-Head Edge
+      ctx.save();
       ctx.strokeStyle = '#ef4444';
-      ctx.strokeRect(recStart + 0.5, 5.5, Math.max(24, 68) - 1, h - 11);
-      ctx.fillStyle = '#fecaca';
-      ctx.font = '700 10.5px ui-monospace, monospace';
-      ctx.fillText('REC LIVE', recStart + 7, h / 2 + 4);
+      ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(startX + 0.5, regionTop + 0.5, Math.max(2, clipW - 1), regionH - 1, 4);
+      else ctx.rect(startX + 0.5, regionTop + 0.5, Math.max(2, clipW - 1), regionH - 1);
+      ctx.stroke();
+
+      ctx.strokeStyle = '#fca5a5';
+      ctx.lineWidth = 1.6;
+      ctx.beginPath();
+      ctx.moveTo(Math.round(endX) + 0.5, regionTop);
+      ctx.lineTo(Math.round(endX) + 0.5, regionTop + regionH);
+      ctx.stroke();
+      ctx.restore();
     }
 
     // Playhead cursor line
@@ -4777,6 +4995,7 @@ async function init() {
 
   // Transport Controls
   document.getElementById('btn-transport-rewind')?.addEventListener('click', () => {
+    if (isRecording) return;
     playheadSec = 0;
     document.getElementById('transport-timecode').textContent = formatTimecode(0);
     if (isPlaying) { stopPlayback(); startPlayback(); }
@@ -4790,6 +5009,7 @@ async function init() {
   document.getElementById('btn-transport-record')?.addEventListener('click', toggleRecording);
 
   document.getElementById('timeline-ruler-wrap')?.addEventListener('click', (ev) => {
+    if (isRecording) return;
     const rect = ev.currentTarget.getBoundingClientRect();
     const ratio = Math.max(0, Math.min(1, (ev.clientX - rect.left) / Math.max(1, rect.width)));
     playheadSec = DE.snapTimeToBeatGrid(ratio * getTimelineDurationSec(), currentProject?.bpm || 120, snapToGrid && !ev.altKey);
@@ -5228,12 +5448,61 @@ async function init() {
 
   window.robos.onRecordProgress((prog) => {
     if (!isRecording) return;
-    const recTime = (Number(prog.startSec) || 0) + (Number(prog.elapsedSec) || 0);
-    document.getElementById('transport-timecode').textContent = formatTimecode(recTime);
+    const ipcElapsed = Number(prog.elapsedSec) || 0;
+    const sliceDur = Number(prog.sliceDurationSec) || 0.02;
+    if (liveRecSession) {
+      liveRecSession.ipcElapsedSec = Math.max(liveRecSession.ipcElapsedSec || 0, ipcElapsed);
+      liveRecSession.sliceDurationSec = sliceDur;
+      // Keep RAF wall clock phase-locked within 40ms of PipeWire hardware clock
+      const nowPerf = performance.now();
+      const wallElapsed = (nowPerf - liveRecSession.startedPerfMs) / 1000;
+      if (Math.abs(wallElapsed - ipcElapsed) > 0.045) {
+        liveRecSession.startedPerfMs = nowPerf - ipcElapsed * 1000;
+      }
+    }
+
+    const tracksById = new Map((currentProject?.tracks || []).map(t => [t.id, t]));
     for (const tr of (prog.tracks || [])) {
       liveRecLevels[tr.trackId] = tr;
       const bar = document.getElementById(`rec-meter-${tr.trackId}`);
       if (bar) bar.style.width = `${dbToPercent(tr.peakDb).toFixed(1)}%`;
+
+      const recState = liveRecSession?.tracks?.get(tr.trackId);
+      if (recState) {
+        const trackObj = tracksById.get(tr.trackId);
+        const threshDb = trackObj?.soundReplacement?.thresholdDb ?? -28;
+        const threshLin = Math.pow(10, threshDb / 20);
+        const minGapSec = (trackObj?.soundReplacement?.minIntervalMs ?? 65) / 1000;
+
+        if (Array.isArray(tr.newPeaks) && tr.newPeaks.length) {
+          for (let i = 0; i < tr.newPeaks.length; i++) {
+            const p = Number(tr.newPeaks[i]) || 0;
+            const sliceIdx = recState.peaks.length;
+            const sliceSec = sliceIdx * sliceDur;
+            if (p >= threshLin && p > recState.prevSlicePeak * 1.22 && (sliceSec - recState.lastHitSec) >= minGapSec) {
+              recState.hitTimesSec.push(Number(sliceSec.toFixed(3)));
+              recState.lastHitSec = sliceSec;
+            }
+            recState.prevSlicePeak = p * 0.7 + recState.prevSlicePeak * 0.3;
+            recState.peaks.push(p);
+          }
+        }
+        recState.currentPeak = Number(tr.currentPeak) || 0;
+        recState.peakDb = Number.isFinite(tr.peakDb) ? tr.peakDb : -96;
+        if (Number.isFinite(tr.maxPeakDb) && tr.maxPeakDb > recState.maxPeakDb) {
+          recState.maxPeakDb = tr.maxPeakDb;
+        }
+      }
+    }
+
+    // Immediate sub-frame repaint when new PCM peaks arrive if RAF hasn't painted in >9ms
+    const nowMs = performance.now();
+    if (liveRecSession && (nowMs - lastLiveWavePaintMs) >= 9) {
+      playheadSec = liveRecSession.startSec + getLiveRecordingElapsedSec();
+      const tcEl = document.getElementById('transport-timecode');
+      if (tcEl) tcEl.textContent = formatTimecode(playheadSec);
+      lastLiveWavePaintMs = nowMs;
+      drawAllTimelineCanvases();
     }
   });
 
@@ -5335,6 +5604,18 @@ window.__dawStudioState = () => ({
     kitId: d.kitId,
   })),
   totalDiscoveredPlugins: vstDirsStatus?.totalPlugins || 0,
+  liveRecording: liveRecSession ? {
+    startSec: liveRecSession.startSec,
+    elapsedSec: Number(getLiveRecordingElapsedSec().toFixed(3)),
+    sliceDurationSec: liveRecSession.sliceDurationSec,
+    tracks: Array.from(liveRecSession.tracks.values()).map(t => ({
+      trackId: t.trackId,
+      peakSliceCount: t.peaks.length,
+      currentPeak: t.currentPeak,
+      maxPeakDb: t.maxPeakDb,
+      liveHitCount: t.hitTimesSec.length,
+    })),
+  } : null,
 });
 window.__openDrumsetWizard = openDrumsetWizard;
 window.__openVstDirectoriesModal = openVstDirectoriesModal;

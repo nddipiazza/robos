@@ -762,6 +762,7 @@ ipcMain.handle('daw:record-start', async (_e, payload) => {
     const startSec = Number(payload?.startSec || 0);
     const started = recorder.start(proj, {
       startSec,
+      injectTestSignal: Boolean(payload?.injectTestSignal),
       onMeter: (m) => sendToRenderer('daw:record-progress', m),
     });
     return started;

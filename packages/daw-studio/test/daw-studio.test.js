@@ -23,7 +23,7 @@ const {
   synthesizeDrumTakeWav,
   MultiTrackRecorder,
 } = require('../lib/session-manager');
-const { parseChannelTarget, makeWavHeader } = require('../lib/pcm-capture');
+const { parseChannelTarget, makeWavHeader, ingestMonoPcmBuffer } = require('../lib/pcm-capture');
 const {
   extractChannelAcousticFeatures,
   computeCrossChannelCorrelations,
@@ -922,6 +922,83 @@ describe('DAW Editing Engine: Multi-Select, Track/Take Gain, Split/Trim, Copy/Pa
     } finally {
       if (prevCfgDir === undefined) delete process.env.ROBOS_DAW_CONFIG_DIR;
       else process.env.ROBOS_DAW_CONFIG_DIR = prevCfgDir;
+      fs.rmSync(tmpRoot, { recursive: true, force: true });
+    }
+  });
+
+  it('streams low-latency 20ms waveform slice peaks in real time across armed tracks while recording', async () => {
+    // 1. Verify exact chunk-boundary PCM waveform slice accumulator (960 samples = 20ms @ 48kHz)
+    const state = {
+      slicePos: 0,
+      slicePeak: 0,
+      windowPeakLin: 0,
+      maxPeakLin: 0,
+      pendingPeaks: [],
+    };
+    const chunkA = Buffer.alloc(600 * 2); // 600 samples (partial slice)
+    chunkA.writeInt16LE(16384, 200 * 2);  // 0.5000 peak
+    ingestMonoPcmBuffer(state, chunkA, 960);
+    assert.strictEqual(state.pendingPeaks.length, 0);
+    assert.ok(Math.abs(state.slicePeak - 0.5) < 0.001, 'Partial tip peak should be immediately available');
+
+    const chunkB = Buffer.alloc(1400 * 2); // +1400 samples -> 2000 total (completes 2 slices of 960 + 80 remainder)
+    chunkB.writeInt16LE(-26214, 100 * 2);  // ~0.8000 peak inside slice 0
+    chunkB.writeInt16LE(9830, 800 * 2);    // ~0.3000 peak inside slice 1
+    chunkB.writeInt16LE(22938, 1380 * 2);  // ~0.7000 peak inside trailing partial slice 2
+    ingestMonoPcmBuffer(state, chunkB, 960);
+    assert.strictEqual(state.pendingPeaks.length, 2);
+    assert.ok(Math.abs(state.pendingPeaks[0] - 0.8) < 0.002);
+    assert.ok(Math.abs(state.pendingPeaks[1] - 0.3) < 0.002);
+    assert.strictEqual(state.slicePos, 80);
+    assert.ok(Math.abs(state.slicePeak - 0.7) < 0.002);
+
+    // 2. Verify MultiTrackRecorder emits live streaming newPeaks deltas while recording BEFORE stop()
+    const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'robos-daw-live-wave-'));
+    const prevProjDir = process.env.ROBOS_DAW_PROJECTS_DIR;
+    process.env.ROBOS_DAW_PROJECTS_DIR = tmpRoot;
+    const recorder = new MultiTrackRecorder();
+    try {
+      const proj = createEmptyProject({ name: 'Live Waveform Test', sampleRate: 48000 });
+      proj.tracks.push(
+        buildTrackFromWizard({ profileId: 'kick-in', name: 'Kick In', armed: true }),
+        buildTrackFromWizard({ profileId: 'snare-top', name: 'Snare Top', armed: true }),
+        buildTrackFromWizard({ profileId: 'guitar-cab', name: 'Disarmed Gtr', armed: false })
+      );
+
+      const streamedEvents = [];
+      const accumulatedByTrack = new Map();
+      const started = recorder.start(proj, {
+        startSec: 1.5,
+        injectTestSignal: true,
+        onMeter: (evt) => {
+          streamedEvents.push(evt);
+          for (const tr of evt.tracks) {
+            const arr = accumulatedByTrack.get(tr.trackId) || [];
+            arr.push(...(tr.newPeaks || []));
+            accumulatedByTrack.set(tr.trackId, arr);
+          }
+        },
+      });
+      assert.strictEqual(started.ok, true);
+      assert.strictEqual(started.armedCount, 2);
+      assert.strictEqual(started.sliceDurationSec, 0.02);
+
+      // Record ~720ms so both Kick (0.15s) and Snare backbeat (0.65s) stream live before stop()
+      await new Promise(r => setTimeout(r, 720));
+      assert.ok(streamedEvents.length >= 8, `Expected >=8 live progress flushes within 720ms, got ${streamedEvents.length}`);
+      for (const t of started.tracks) {
+        const livePeaks = accumulatedByTrack.get(t.trackId) || [];
+        assert.ok(livePeaks.length >= 25, `Expected >=25 live 20ms waveform slices for ${t.trackName}, got ${livePeaks.length}`);
+        assert.ok(livePeaks.some(p => p > 0.25), `Expected visible drum transient peak in live stream for ${t.trackName}`);
+      }
+
+      const stopped = await recorder.stop({ injectTestSignal: true });
+      assert.strictEqual(stopped.ok, true);
+      assert.strictEqual(stopped.recordedClips.length, 2);
+    } finally {
+      if (recorder.isRecording()) await recorder.stop();
+      if (prevProjDir === undefined) delete process.env.ROBOS_DAW_PROJECTS_DIR;
+      else process.env.ROBOS_DAW_PROJECTS_DIR = prevProjDir;
       fs.rmSync(tmpRoot, { recursive: true, force: true });
     }
   });

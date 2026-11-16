@@ -1,11 +1,12 @@
 'use strict';
 
 /**
- * RobOS DAW Studio — Discrete Multi-Channel PipeWire Raw PCM Capture Engine
+ * RobOS DAW Studio — Ultra-Low-Latency Discrete Multi-Channel PipeWire Raw PCM Capture Engine
  *
  * Captures any combination of 1-channel PipeWire targets (`Input 1..8`, `S/PDIF 1..2`)
  * AND multi-channel de-interleaved ADAT targets (`...HiFi__Direct2__source#ch=0..7&total=8`)
- * into discrete mono 16-bit PCM `.wav` files with real-time in-memory dBFS metering.
+ * into discrete mono 16-bit PCM `.wav` files with sub-25ms streaming waveform slices
+ * and real-time dBFS metering.
  */
 
 const fs = require('fs');
@@ -41,11 +42,50 @@ function makeWavHeader(dataBytes, sampleRate = 48000) {
 }
 
 /**
+ * Feed mono 16-bit PCM samples into a trackState's 20ms waveform slice accumulator.
+ */
+function ingestMonoPcmBuffer(st, monoSlice, sliceSamples) {
+  let localMax = 0;
+  let slicePos = st.slicePos;
+  let slicePeak = st.slicePeak;
+
+  for (let i = 0; i + 2 <= monoSlice.length; i += 2) {
+    const a = Math.abs(monoSlice.readInt16LE(i)) / 32768;
+    if (a > localMax) localMax = a;
+    if (a > slicePeak) slicePeak = a;
+    slicePos++;
+    if (slicePos >= sliceSamples) {
+      st.pendingPeaks.push(Number(slicePeak.toFixed(4)));
+      slicePos = 0;
+      slicePeak = 0;
+    }
+  }
+
+  st.slicePos = slicePos;
+  st.slicePeak = slicePeak;
+  if (localMax > st.windowPeakLin) st.windowPeakLin = localMax;
+  if (localMax > st.maxPeakLin) st.maxPeakLin = localMax;
+}
+
+/**
  * Start parallel discrete capture for an array of items:
  *   `[{ id, inputNodeName, wavFile, ...meta }]`
  */
-function startDiscreteCaptureSession(items, { sampleRate = 48000, onMeter = null, meterIntervalMs = 150 } = {}) {
+function startDiscreteCaptureSession(
+  items,
+  {
+    sampleRate = 48000,
+    onMeter = null,
+    meterIntervalMs = 36,
+    minFlushIntervalMs = 22,
+    sliceDurationSec = 0.02,
+    pwLatency = '10ms',
+  } = {}
+) {
   const startedAtMs = Date.now();
+  const sliceSamples = Math.max(64, Math.round(sampleRate * sliceDurationSec));
+  const actualSliceDurationSec = sliceSamples / sampleRate;
+
   const trackStates = items.map(item => {
     const parsed = parseChannelTarget(item.inputNodeName);
     const fd = fs.openSync(item.wavFile, 'w');
@@ -59,8 +99,72 @@ function startDiscreteCaptureSession(items, { sampleRate = 48000, onMeter = null
       windowPeakLin: 0,
       maxPeakLin: 0,
       lastPeakDb: -96,
+      slicePos: 0,
+      slicePeak: 0,
+      pendingPeaks: [],
     };
   });
+
+  let stopped = false;
+  let lastFlushAtMs = 0;
+  let pendingFlushTimer = null;
+
+  function flushProgress() {
+    if (stopped) return;
+    if (pendingFlushTimer) {
+      clearTimeout(pendingFlushTimer);
+      pendingFlushTimer = null;
+    }
+    lastFlushAtMs = Date.now();
+    if (!onMeter) {
+      for (const st of trackStates) st.pendingPeaks.length = 0;
+      return;
+    }
+
+    const elapsedSec = Number(((lastFlushAtMs - startedAtMs) / 1000).toFixed(3));
+    const meters = trackStates.map(st => {
+      const lin = st.windowPeakLin;
+      st.windowPeakLin = lin * 0.55; // Responsive meter ballistics decay at ~40fps
+      const peakDb = lin <= 0.000015 ? -96 : Number((20 * Math.log10(lin)).toFixed(1));
+      st.lastPeakDb = peakDb;
+      const maxPeakDb = st.maxPeakLin <= 0.000015 ? -96 : Number((20 * Math.log10(st.maxPeakLin)).toFixed(1));
+      const framesRecorded = Math.floor(st.dataBytes / 2);
+      const newPeaks = st.pendingPeaks.length ? st.pendingPeaks.splice(0) : [];
+      return {
+        id: st.id,
+        channelIndex: st.channelIndex,
+        inputNodeName: st.inputNodeName,
+        bytes: 44 + st.dataBytes,
+        framesRecorded,
+        durationSec: Number((framesRecorded / sampleRate).toFixed(3)),
+        peakDb,
+        maxPeakDb,
+        currentPeak: Number(st.slicePeak.toFixed(4)),
+        newPeaks,
+      };
+    });
+
+    try {
+      onMeter({
+        elapsedSec,
+        sampleRate,
+        sliceDurationSec: actualSliceDurationSec,
+        tracks: meters,
+      });
+    } catch {}
+  }
+
+  function scheduleLiveFlush() {
+    if (stopped || !onMeter) return;
+    const now = Date.now();
+    const sinceLast = now - lastFlushAtMs;
+    if (sinceLast >= minFlushIntervalMs) {
+      flushProgress();
+    } else if (!pendingFlushTimer) {
+      pendingFlushTimer = setTimeout(flushProgress, Math.max(4, minFlushIntervalMs - sinceLast));
+      if (pendingFlushTimer.unref) pendingFlushTimer.unref();
+    }
+  }
 
   // Group channels that share the same multi-channel PipeWire node (e.g. 8-channel ADAT Direct2)
   const muxGroups = new Map();
@@ -79,9 +183,20 @@ function startDiscreteCaptureSession(items, { sampleRate = 48000, onMeter = null
 
   const procs = [];
 
-  // 1. Spawn 1-channel raw streams
+  // 1. Spawn low-latency 1-channel raw streams (`--latency 10ms`)
   for (const st of monoStates) {
-    const args = ['--record', '--raw', '--rate', String(sampleRate), '--channels', '1', '--format', 's16'];
+    const args = [
+      '--record',
+      '--raw',
+      '--latency',
+      String(pwLatency),
+      '--rate',
+      String(sampleRate),
+      '--channels',
+      '1',
+      '--format',
+      's16',
+    ];
     if (st.baseNodeName) args.push('--target', st.baseNodeName);
     args.push('-');
 
@@ -99,13 +214,8 @@ function startDiscreteCaptureSession(items, { sampleRate = 48000, onMeter = null
         st.dataBytes += slice.length;
       } catch {}
 
-      let localMax = 0;
-      for (let i = 0; i + 2 <= slice.length; i += 2) {
-        const a = Math.abs(slice.readInt16LE(i)) / 32768;
-        if (a > localMax) localMax = a;
-      }
-      if (localMax > st.windowPeakLin) st.windowPeakLin = localMax;
-      if (localMax > st.maxPeakLin) st.maxPeakLin = localMax;
+      ingestMonoPcmBuffer(st, slice, sliceSamples);
+      scheduleLiveFlush();
     });
 
     procs.push({
@@ -117,10 +227,21 @@ function startDiscreteCaptureSession(items, { sampleRate = 48000, onMeter = null
     });
   }
 
-  // 2. Spawn shared N-channel raw streams (e.g. 8-channel ADAT Optical Input) and de-interleave!
+  // 2. Spawn low-latency shared N-channel raw streams (e.g. 8-channel ADAT Optical Input) and de-interleave!
   for (const group of muxGroups.values()) {
     const frameBytes = group.totalChannels * 2;
-    const args = ['--record', '--raw', '--rate', String(sampleRate), '--channels', String(group.totalChannels), '--format', 's16'];
+    const args = [
+      '--record',
+      '--raw',
+      '--latency',
+      String(pwLatency),
+      '--rate',
+      String(sampleRate),
+      '--channels',
+      String(group.totalChannels),
+      '--format',
+      's16',
+    ];
     if (group.baseNodeName) args.push('--target', group.baseNodeName);
     args.push('-');
 
@@ -137,13 +258,24 @@ function startDiscreteCaptureSession(items, { sampleRate = 48000, onMeter = null
         if (st.fd === null || st.channelIndex >= group.totalChannels) continue;
         const monoBuf = Buffer.allocUnsafe(frames * 2);
         let localMax = 0;
+        let slicePos = st.slicePos;
+        let slicePeak = st.slicePeak;
         const chByteOffset = st.channelIndex * 2;
         for (let f = 0; f < frames; f++) {
           const sample = buf.readInt16LE(f * frameBytes + chByteOffset);
           monoBuf.writeInt16LE(sample, f * 2);
           const a = Math.abs(sample) / 32768;
           if (a > localMax) localMax = a;
+          if (a > slicePeak) slicePeak = a;
+          slicePos++;
+          if (slicePos >= sliceSamples) {
+            st.pendingPeaks.push(Number(slicePeak.toFixed(4)));
+            slicePos = 0;
+            slicePeak = 0;
+          }
         }
+        st.slicePos = slicePos;
+        st.slicePeak = slicePeak;
         try {
           fs.writeSync(st.fd, monoBuf, 0, monoBuf.length, 44 + st.dataBytes);
           st.dataBytes += monoBuf.length;
@@ -151,6 +283,7 @@ function startDiscreteCaptureSession(items, { sampleRate = 48000, onMeter = null
         if (localMax > st.windowPeakLin) st.windowPeakLin = localMax;
         if (localMax > st.maxPeakLin) st.maxPeakLin = localMax;
       }
+      scheduleLiveFlush();
     });
 
     procs.push({
@@ -162,34 +295,23 @@ function startDiscreteCaptureSession(items, { sampleRate = 48000, onMeter = null
     });
   }
 
-  let stopped = false;
+  // Fallback heartbeat timer (in case PipeWire hasn't delivered chunks yet or running in headless container)
   const meterTimer = setInterval(() => {
     if (stopped) return;
-    const elapsedSec = Number(((Date.now() - startedAtMs) / 1000).toFixed(2));
-    const meters = trackStates.map(st => {
-      const lin = st.windowPeakLin;
-      st.windowPeakLin = lin * 0.35; // Smooth meter ballistics decay
-      const peakDb = lin <= 0.000015 ? -96 : Number((20 * Math.log10(lin)).toFixed(1));
-      st.lastPeakDb = peakDb;
-      const maxPeakDb = st.maxPeakLin <= 0.000015 ? -96 : Number((20 * Math.log10(st.maxPeakLin)).toFixed(1));
-      return {
-        id: st.id,
-        channelIndex: st.channelIndex,
-        inputNodeName: st.inputNodeName,
-        bytes: 44 + st.dataBytes,
-        peakDb,
-        maxPeakDb,
-      };
-    });
-    if (onMeter) {
-      try { onMeter({ elapsedSec, tracks: meters }); } catch {}
+    if (Date.now() - lastFlushAtMs >= meterIntervalMs) {
+      flushProgress();
     }
   }, meterIntervalMs);
+  if (meterTimer.unref) meterTimer.unref();
 
   async function stop() {
     if (stopped) return trackStates;
     stopped = true;
     clearInterval(meterTimer);
+    if (pendingFlushTimer) {
+      clearTimeout(pendingFlushTimer);
+      pendingFlushTimer = null;
+    }
 
     for (const p of procs) {
       try { p.child.kill('SIGINT'); } catch {}
@@ -214,6 +336,7 @@ function startDiscreteCaptureSession(items, { sampleRate = 48000, onMeter = null
 
   return {
     startedAtMs,
+    sliceDurationSec: actualSliceDurationSec,
     trackStates,
     stop,
   };
@@ -222,5 +345,6 @@ function startDiscreteCaptureSession(items, { sampleRate = 48000, onMeter = null
 module.exports = {
   parseChannelTarget,
   makeWavHeader,
+  ingestMonoPcmBuffer,
   startDiscreteCaptureSession,
 };

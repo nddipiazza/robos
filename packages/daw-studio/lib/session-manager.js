@@ -367,6 +367,28 @@ function synthesizeDrumTakeWav({ profileId = 'snare-top', durationSec = 2.4, sam
   return buf;
 }
 
+function computeSyntheticSlicePeak(profileId, sliceStartSec, sliceDurSec = 0.02) {
+  const loopDur = 4.0;
+  const localT = sliceStartSec % loopDur;
+  const hits = defaultHitsForProfile(profileId, loopDur);
+  const isCym = /cymbal|hihat/i.test(profileId);
+  const isKick = /kick/i.test(profileId);
+  const isGuitar = /guitar|bass/i.test(profileId);
+  const decay = isGuitar ? 3.5 : (isCym ? 7.5 : (isKick ? 9.5 : 13.5));
+  const maxTail = isCym || isGuitar ? 0.45 : 0.28;
+
+  let bestAmp = 0.008;
+  for (let h = 0; h < hits.length; h++) {
+    const dt = (localT + sliceDurSec * 0.5) - hits[h];
+    if (dt >= 0 && dt <= maxTail) {
+      const vel = 0.65 + (h % 3) * 0.14;
+      const env = vel * Math.exp(-decay * dt);
+      if (env > bestAmp) bestAmp = env;
+    }
+  }
+  return Number(Math.min(0.98, bestAmp).toFixed(4));
+}
+
 /**
  * Active Multi-Track Hardware Recording Session Controller
  */
@@ -379,7 +401,7 @@ class MultiTrackRecorder {
     return Boolean(this.active);
   }
 
-  start(project, { startSec = 0, onMeter } = {}) {
+  start(project, { startSec = 0, injectTestSignal = false, onMeter } = {}) {
     if (this.active) throw new Error('Recording is already in progress');
     const armedTracks = (project.tracks || []).filter(t => t.armed);
     if (!armedTracks.length) {
@@ -404,21 +426,64 @@ class MultiTrackRecorder {
         fileName,
         wavFile,
         relativeWavPath: path.join('takes', fileName),
+        synthSlicesEmitted: 0,
+        synthMaxPeakLin: 0,
       };
     });
 
     const capture = startDiscreteCaptureSession(entries, {
       sampleRate,
-      meterIntervalMs: 150,
-      onMeter: ({ elapsedSec, tracks }) => {
+      meterIntervalMs: 36,
+      minFlushIntervalMs: 22,
+      sliceDurationSec: 0.02,
+      pwLatency: '10ms',
+      onMeter: ({ elapsedSec, sliceDurationSec = 0.02, tracks }) => {
         if (!onMeter) return;
-        const trackProgress = tracks.map((m, idx) => ({
-          trackId: entries[idx].trackId,
-          clipId: entries[idx].clipId,
-          bytes: m.bytes,
-          peakDb: m.peakDb,
-        }));
-        try { onMeter({ elapsedSec, startSec, tracks: trackProgress }); } catch {}
+        const targetSliceCount = Math.floor(elapsedSec / sliceDurationSec);
+        const trackProgress = tracks.map((m, idx) => {
+          const entry = entries[idx];
+          let newPeaks = m.newPeaks || [];
+          let currentPeak = m.currentPeak || 0;
+          let peakDb = m.peakDb;
+          let maxPeakDb = m.maxPeakDb;
+
+          // If Test Groove preview mode is active, stream live synthetic drum-hit peaks
+          if (injectTestSignal) {
+            const synthPeaks = [];
+            while (entry.synthSlicesEmitted < targetSliceCount) {
+              const p = computeSyntheticSlicePeak(entry.profileId, entry.synthSlicesEmitted * sliceDurationSec, sliceDurationSec);
+              synthPeaks.push(p);
+              if (p > entry.synthMaxPeakLin) entry.synthMaxPeakLin = p;
+              entry.synthSlicesEmitted++;
+            }
+            newPeaks = synthPeaks;
+            currentPeak = synthPeaks.length
+              ? synthPeaks[synthPeaks.length - 1]
+              : computeSyntheticSlicePeak(entry.profileId, elapsedSec, sliceDurationSec);
+            peakDb = currentPeak <= 0.000015 ? -96 : Number((20 * Math.log10(currentPeak)).toFixed(1));
+            maxPeakDb = entry.synthMaxPeakLin <= 0.000015 ? -96 : Number((20 * Math.log10(entry.synthMaxPeakLin)).toFixed(1));
+          }
+
+          return {
+            trackId: entry.trackId,
+            clipId: entry.clipId,
+            bytes: m.bytes,
+            framesRecorded: m.framesRecorded,
+            durationSec: m.durationSec,
+            peakDb,
+            maxPeakDb,
+            currentPeak,
+            newPeaks,
+          };
+        });
+        try {
+          onMeter({
+            elapsedSec,
+            startSec,
+            sliceDurationSec,
+            tracks: trackProgress,
+          });
+        } catch {}
       },
     });
 
@@ -427,6 +492,8 @@ class MultiTrackRecorder {
       startSec: Number(startSec) || 0,
       sampleRate,
       startedAtMs: capture.startedAtMs,
+      sliceDurationSec: capture.sliceDurationSec,
+      injectTestSignal: Boolean(injectTestSignal),
       entries,
       capture,
     };
@@ -435,7 +502,13 @@ class MultiTrackRecorder {
       ok: true,
       armedCount: entries.length,
       startSec: this.active.startSec,
-      tracks: entries.map(e => ({ trackId: e.trackId, clipId: e.clipId, wavFile: e.wavFile })),
+      sliceDurationSec: capture.sliceDurationSec,
+      tracks: entries.map(e => ({
+        trackId: e.trackId,
+        trackName: e.trackName,
+        clipId: e.clipId,
+        wavFile: e.wavFile,
+      })),
     };
   }
 
