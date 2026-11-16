@@ -785,6 +785,15 @@ ipcMain.handle('daw:record-stop', async (_e, payload) => {
   }
 });
 
+ipcMain.handle('daw:record-cancel', async () => {
+  try {
+    const res = await recorder.cancel();
+    return res;
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
 ipcMain.handle('daw:project-new', async (_e, payload) => {
   try {
     tapDetector.stop();

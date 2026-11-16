@@ -889,6 +889,171 @@
     return Number((Math.round(t / gridSec) * gridSec).toFixed(4));
   }
 
+  // ─── REAPER Tracking, Take Comping, Markers & Fade-to-Cursor Primitives ───
+
+  function addProjectMarker(project, timeSec, name = '') {
+    if (!project) return null;
+    if (!Array.isArray(project.markers)) project.markers = [];
+    const usedNums = new Set(project.markers.map(m => Number(m.num)).filter(n => Number.isFinite(n) && n >= 1));
+    let num = 1;
+    while (usedNums.has(num)) num++;
+    const cleanSec = Number(Math.max(0, Number(timeSec) || 0).toFixed(4));
+    const marker = {
+      id: uid('mkr'),
+      num,
+      name: String(name || '').trim() || `M${num}`,
+      timeSec: cleanSec,
+    };
+    project.markers.push(marker);
+    project.markers.sort((a, b) => (Number(a.timeSec) || 0) - (Number(b.timeSec) || 0));
+    return marker;
+  }
+
+  function jumpToProjectMarkerByNumber(project, num) {
+    const markers = Array.isArray(project?.markers) ? project.markers : [];
+    const target = markers.find(m => Number(m.num) === Number(num)) || markers[Number(num) - 1];
+    return target ? Number(target.timeSec) || 0 : null;
+  }
+
+  function getProjectEndSec(project) {
+    let maxEnd = 0;
+    for (const tr of (project?.tracks || [])) {
+      for (const c of (tr.clips || [])) {
+        const end = clipEndSec(c);
+        if (end > maxEnd) maxEnd = end;
+      }
+    }
+    return Number(maxEnd.toFixed(4));
+  }
+
+  function findAdjacentTimelinePoint(project, currentSec, direction = 1) {
+    const cur = Number(currentSec) || 0;
+    const rawPoints = [0];
+    for (const m of (project?.markers || [])) {
+      rawPoints.push(Number(m.timeSec) || 0);
+    }
+    for (const tr of (project?.tracks || [])) {
+      for (const c of (tr.clips || [])) {
+        rawPoints.push(Number(c.startSec) || 0);
+        rawPoints.push(clipEndSec(c));
+      }
+    }
+    rawPoints.sort((a, b) => a - b);
+    const points = [];
+    for (const p of rawPoints) {
+      if (!points.length || Math.abs(p - points[points.length - 1]) > 0.004) {
+        points.push(Number(p.toFixed(4)));
+      }
+    }
+    if (direction > 0) {
+      for (const p of points) {
+        if (p > cur + 0.005) return p;
+      }
+      return points.length ? points[points.length - 1] : cur;
+    } else {
+      for (let i = points.length - 1; i >= 0; i--) {
+        if (points[i] < cur - 0.005) return points[i];
+      }
+      return 0;
+    }
+  }
+
+  function findOverlappingTakeClusterOnTrack(track, playheadSec = 0) {
+    const clips = Array.isArray(track?.clips) ? track.clips : [];
+    if (clips.length < 2) return [];
+    const sorted = [...clips].sort((a, b) => (Number(a.startSec) || 0) - (Number(b.startSec) || 0));
+
+    // 1. Prefer clips overlapping playheadSec
+    const atCursor = sorted.filter(c => {
+      const s = Number(c.startSec) || 0;
+      const e = clipEndSec(c);
+      return playheadSec >= s - 0.02 && playheadSec <= e + 0.02;
+    });
+    if (atCursor.length >= 2) return atCursor;
+
+    // 2. Otherwise find the first cluster of mutually overlapping passes (>= 40% overlap)
+    for (let i = 0; i < sorted.length; i++) {
+      const cluster = [sorted[i]];
+      for (let j = i + 1; j < sorted.length; j++) {
+        if (clipOverlapRatio(sorted[i], sorted[j]) >= 0.4) {
+          cluster.push(sorted[j]);
+        }
+      }
+      if (cluster.length >= 2) return cluster;
+    }
+    return [];
+  }
+
+  function cycleOverlappingTake(project, targetTrackIds, playheadSec = 0, direction = 1) {
+    const selTracks = targetTrackIds instanceof Set ? targetTrackIds : new Set(targetTrackIds || []);
+    const tracks = (project?.tracks || []).filter(t => selTracks.size === 0 || selTracks.has(t.id));
+    let switchedTracks = 0;
+    const activeClipIds = [];
+    let takeNumber = 0;
+    let totalTakes = 0;
+
+    for (const tr of tracks) {
+      const cluster = findOverlappingTakeClusterOnTrack(tr, playheadSec);
+      if (cluster.length < 2) continue;
+      const curIdx = cluster.findIndex(c => !c.muted);
+      const nextIdx = curIdx === -1
+        ? 0
+        : (curIdx + (direction >= 0 ? 1 : -1) + cluster.length) % cluster.length;
+      cluster.forEach((c, idx) => {
+        c.muted = idx !== nextIdx;
+      });
+      activeClipIds.push(cluster[nextIdx].id);
+      takeNumber = nextIdx + 1;
+      totalTakes = cluster.length;
+      switchedTracks++;
+    }
+
+    return { switchedTracks, activeClipIds, takeNumber, totalTakes };
+  }
+
+  function cropToActiveTake(project, targetTrackIds, playheadSec = 0) {
+    const selTracks = targetTrackIds instanceof Set ? targetTrackIds : new Set(targetTrackIds || []);
+    const tracks = (project?.tracks || []).filter(t => selTracks.size === 0 || selTracks.has(t.id));
+    let removedCount = 0;
+
+    for (const tr of tracks) {
+      const cluster = findOverlappingTakeClusterOnTrack(tr, playheadSec);
+      if (cluster.length < 2) continue;
+      const activeInCluster = cluster.filter(c => !c.muted);
+      if (!activeInCluster.length) continue;
+      const removeIds = new Set(cluster.filter(c => c.muted).map(c => c.id));
+      if (!removeIds.size) continue;
+      const before = tr.clips.length;
+      tr.clips = tr.clips.filter(c => !removeIds.has(c.id));
+      removedCount += before - tr.clips.length;
+    }
+    return removedCount;
+  }
+
+  function fadeClipsToPlayhead(project, targetClipIds, selectedTrackIds, side /* 'in' | 'out' */, playheadSec) {
+    const ids = targetClipIds instanceof Set ? targetClipIds : new Set(targetClipIds || []);
+    const selTracks = selectedTrackIds instanceof Set ? selectedTrackIds : new Set(selectedTrackIds || []);
+    let updated = 0;
+    for (const tr of (project?.tracks || [])) {
+      if (ids.size === 0 && selTracks.size > 0 && !selTracks.has(tr.id)) continue;
+      for (const clip of (tr.clips || [])) {
+        if (ids.size > 0 && !ids.has(clip.id)) continue;
+        ensureClipSourceMetadata(clip);
+        const start = Number(clip.startSec) || 0;
+        const dur = Math.max(0.05, Number(clip.durationSec) || 0.05);
+        const end = start + dur;
+        if (playheadSec <= start + 0.005 || playheadSec >= end - 0.005) continue;
+        if (side === 'in') {
+          clip.fadeInSec = Number(clamp(0, dur * 0.95, playheadSec - start).toFixed(4));
+        } else {
+          clip.fadeOutSec = Number(clamp(0, dur * 0.95, end - playheadSec).toFixed(4));
+        }
+        updated++;
+      }
+    }
+    return updated;
+  }
+
   function encodeStereoFloat32ToWavBytes(left, right, sampleRate = 48000) {
     const frames = Math.min(left.length, right.length);
     const numChannels = 2;
@@ -965,6 +1130,14 @@
     reorderTrackInProject,
     reorderTracksBatch,
     snapTimeToBeatGrid,
+    addProjectMarker,
+    jumpToProjectMarkerByNumber,
+    getProjectEndSec,
+    findAdjacentTimelinePoint,
+    findOverlappingTakeClusterOnTrack,
+    cycleOverlappingTake,
+    cropToActiveTake,
+    fadeClipsToPlayhead,
     encodeStereoFloat32ToWavBytes,
   };
 });

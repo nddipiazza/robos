@@ -812,15 +812,15 @@
     </div>
   </div>
 
-  <!-- ==================== MODAL 6: KEYBOARD & MOUSE SHORTCUTS ==================== -->
+  <!-- ==================== MODAL 6: REAPER TRACKING, RECORDING & EDITING KEYMAP ==================== -->
   <div id="shortcuts-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true">
-    <div class="modal-window modal-md">
+    <div class="modal-window modal-lg">
       <div class="modal-header">
         <div class="modal-title-row">
           <img src="assets/icons/daw-crest.webp" class="daw-ai-badge" width="24" height="24" alt="" />
           <div>
-            <h2>DAW Keymap &amp; Mouse Modifiers</h2>
-            <p class="modal-subtitle">Workstation editing, multi-selection, console batch controls, and transport</p>
+            <h2>REAPER Tracking, Recording &amp; Editing Keymap</h2>
+            <p class="modal-subtitle">Full REAPER-compatible tracking transport, quick retake, markers, take comping, and console shortcuts</p>
           </div>
         </div>
         <button type="button" class="modal-close" id="btn-shortcuts-close">×</button>
@@ -828,33 +828,35 @@
       <div class="modal-body">
         <div class="shortcuts-grid">
           <div class="shortcut-group">
-            <h3>Tracks, Selection &amp; Modifiers</h3>
-            <div class="sc-kv"><kbd>Ctrl + T</kbd> / <kbd>Ctrl + Shift + T</kbd><span>Add 1 / Add 4 Blank Audio Tracks</span></div>
-            <div class="sc-kv"><kbd>Ctrl + A</kbd> / <kbd>Ctrl + Shift + A</kbd><span>Select All / Select All Tracks Only</span></div>
-            <div class="sc-kv"><kbd>Ctrl + Alt + R</kbd> / <kbd>Shift + R</kbd><span>Arm All Tracks / Arm Selected Tracks</span></div>
-            <div class="sc-kv"><kbd>Shift + Delete</kbd><span>Remove Selected Track(s)</span></div>
-            <div class="sc-kv"><kbd>Track Checkbox</kbd><span>Multi-select tracks (Shift+Click for range)</span></div>
-            <div class="sc-kv"><kbd>Ctrl + Click</kbd> / <kbd>Shift + Click</kbd><span>Toggle or range-select Tracks / Takes</span></div>
-            <div class="sc-kv"><kbd>Ctrl + Click</kbd> <em>R/M/S</em><span>Gang Arm / Mute / Solo on selected tracks</span></div>
-            <div class="sc-kv"><kbd>Alt + Click</kbd> <em>S/M/R</em><span>Exclusive Solo / Mute / Arm on clicked track</span></div>
-            <div class="sc-kv"><kbd>Right-Click</kbd><span>Track, Rack, Take, or Timeline context menu</span></div>
+            <h3>REAPER Recording &amp; Transport</h3>
+            <div class="sc-kv"><kbd>Ctrl + R</kbd> / <kbd>R</kbd> / <kbd>Num *</kbd><span>Start Recording / Stop &amp; Save Media</span></div>
+            <div class="sc-kv"><kbd>Alt + Backspace</kbd> / <kbd>Ctrl + .</kbd><span>Abort Recording &amp; Delete Incomplete Pass</span></div>
+            <div class="sc-kv"><kbd>Ctrl + Shift + R</kbd> / <kbd>F4</kbd><span>Quick Retake (Discard Pass &amp; Re-Punch Record)</span></div>
+            <div class="sc-kv"><kbd>Space</kbd> / <kbd>Enter</kbd><span>Play/Stop (Return Start) · Play/Pause (At Cursor)</span></div>
+            <div class="sc-kv"><kbd>W</kbd> / <kbd>Home</kbd> · <kbd>End</kbd><span>Go to Start (00:00.000) · Go to End of Project</span></div>
+            <div class="sc-kv"><kbd>,</kbd> / <kbd>.</kbd> · <kbd>PgUp</kbd> / <kbd>PgDn</kbd><span>Nudge Cursor -/+ 1 Beat · Move -/+ 1 Measure</span></div>
+            <div class="sc-kv"><kbd>;</kbd> / <kbd>'</kbd><span>Jump Cursor to Prev / Next Item Edge or Marker</span></div>
+            <div class="sc-kv"><kbd>Shift + M</kbd> / <kbd>Insert</kbd><span>Drop Marker at Cursor / Live Recording Position</span></div>
+            <div class="sc-kv"><kbd>Alt + 1..9</kbd><span>Jump Cursor Directly to Marker 1..9</span></div>
+            <div class="sc-kv"><kbd>C</kbd> / <kbd>Shift + C</kbd> · <kbd>Alt + R</kbd><span>Metronome Click · 1-Bar Count-In · Repeat Loop</span></div>
           </div>
           <div class="shortcut-group">
-            <h3>Editing, Transport, File &amp; Gain</h3>
-            <div class="sc-kv"><kbd>Space</kbd> / <kbd>R</kbd><span>Play / Stop · Start / Stop Recording</span></div>
-            <div class="sc-kv"><kbd>S</kbd> · <kbd>[</kbd> · <kbd>]</kbd><span>Split · Trim Start / End to Playhead</span></div>
-            <div class="sc-kv"><kbd>Ctrl + C / X / V / D</kbd><span>Copy / Cut / Paste / Duplicate Take(s)</span></div>
-            <div class="sc-kv"><kbd>Delete / Backspace</kbd><span>Delete selected Take(s) or Track(s)</span></div>
-            <div class="sc-kv"><kbd>Ctrl + Z</kbd> / <kbd>Ctrl + Y</kbd><span>Undo / Redo (50-step history)</span></div>
-            <div class="sc-kv"><kbd>Ctrl + Shift + I / E</kbd><span>Import WAV · Export Stereo Mixdown WAV</span></div>
-            <div class="sc-kv"><kbd>G</kbd> · <kbd>L</kbd> · <kbd>C</kbd> · <kbd>I</kbd><span>Snap Grid · Loop · Click · FX Inspector</span></div>
-            <div class="sc-kv"><kbd>M</kbd> / <kbd>F2</kbd><span>Mute selected · Rename Track/Take</span></div>
-            <div class="sc-kv"><kbd>Ctrl + Wheel</kbd> or <kbd>+ / -</kbd><span>Zoom timeline in / out</span></div>
+            <h3>Track Arming, Monitoring, Comping &amp; Editing</h3>
+            <div class="sc-kv"><kbd>F7</kbd> / <kbd>Shift + R</kbd><span>Toggle Record Arm on Selected Track(s)</span></div>
+            <div class="sc-kv"><kbd>Ctrl + Alt + R</kbd> / <kbd>Alt + Shift + D</kbd><span>Arm All Tracks · Disarm All Tracks</span></div>
+            <div class="sc-kv"><kbd>F8</kbd> / <kbd>Alt + I</kbd><span>Toggle Input Monitoring (IN) on Selected Track(s)</span></div>
+            <div class="sc-kv"><kbd>F5</kbd> / <kbd>M</kbd> · <kbd>F6</kbd> / <kbd>Shift + S</kbd><span>Toggle Mute · Toggle Solo (Ctrl+Alt+M/S Clears All)</span></div>
+            <div class="sc-kv"><kbd>Alt + P</kbd> · <kbd>I</kbd><span>Invert Polarity (Ø) · Toggle FX &amp; Trigger Rack</span></div>
+            <div class="sc-kv"><kbd>T</kbd> / <kbd>Shift + T</kbd> · <kbd>Alt + Shift + T</kbd><span>Next / Prev Overlapping Take · Crop to Active Take</span></div>
+            <div class="sc-kv"><kbd>S</kbd> · <kbd>[</kbd> / <kbd>]</kbd> · <kbd>Alt + F / G</kbd><span>Split · Trim Start/End · Fade In/Out to Cursor</span></div>
+            <div class="sc-kv"><kbd>Shift + Up / Down</kbd> · <kbd>Ctrl+Shift+N</kbd><span>Nudge Gain +/-1 dB · Normalize to -6.0 dBFS</span></div>
+            <div class="sc-kv"><kbd>Ctrl + Up / Down</kbd> · <kbd>Alt + Up / Down</kbd><span>Select Prev/Next Track · Reorder Track(s)</span></div>
+            <div class="sc-kv"><kbd>Alt + S</kbd> / <kbd>G</kbd> · <kbd>Up / Down</kbd><span>Toggle Snap Grid · Zoom Timeline In / Out</span></div>
           </div>
         </div>
       </div>
       <div class="modal-footer">
-        <span class="hint">Dragging any selected drum region moves all selected regions in sample-accurate phase lock.</span>
+        <span class="hint">Press Ctrl+R (or R) to record, Alt+Backspace to discard a botched pass, or Ctrl+Shift+R / F4 for instant hands-free Retake.</span>
         <button type="button" class="btn btn-primary" id="btn-shortcuts-done">Close</button>
       </div>
     </div>

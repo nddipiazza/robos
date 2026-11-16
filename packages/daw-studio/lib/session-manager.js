@@ -75,6 +75,7 @@ function createEmptyProject({ name = 'Untitled Drum & Studio Session', bpm = 120
     createdAt: new Date().toISOString(),
     savedAt: null,
     projectDir,
+    markers: [],
     tracks: [],
   };
 }
@@ -183,6 +184,7 @@ function saveProject(project, { targetDir } = {}) {
     createdAt: project.createdAt || new Date().toISOString(),
     savedAt: new Date().toISOString(),
     projectDir,
+    markers: Array.isArray(project.markers) ? project.markers : [],
     tracks: normalizedTracks,
   };
 
@@ -211,6 +213,7 @@ function loadProject(idOrPath) {
   const projectDir = path.dirname(manifestFile);
   raw.projectDir = projectDir;
   raw.metronome = Boolean(raw.metronome);
+  if (!Array.isArray(raw.markers)) raw.markers = [];
 
   // Hydrate absolute clip wav paths and recompute peaks/transients if missing
   for (const track of (raw.tracks || [])) {
@@ -510,6 +513,35 @@ class MultiTrackRecorder {
         clipId: e.clipId,
         wavFile: e.wavFile,
       })),
+    };
+  }
+
+  /**
+   * REAPER "Stop recording and delete all recorded media" (abort current pass cleanly).
+   */
+  async cancel() {
+    if (!this.active) return { ok: false, error: 'Not currently recording' };
+    const session = this.active;
+    this.active = null;
+
+    await session.capture.stop();
+
+    let deletedFiles = 0;
+    for (const entry of session.entries) {
+      try {
+        if (entry.wavFile && fs.existsSync(entry.wavFile)) {
+          fs.unlinkSync(entry.wavFile);
+          deletedFiles++;
+        }
+      } catch {}
+    }
+
+    return {
+      ok: true,
+      canceled: true,
+      deletedFiles,
+      startSec: session.startSec,
+      project: session.project,
     };
   }
 

@@ -499,7 +499,8 @@ function buildTrackWebAudioChain(ctx, track) {
   return { inputGain, trackMixBus, srActive, blend };
 }
 
-function stopPlayback() {
+function stopPlayback({ returnToStart = true } = {}) {
+  const wasPlaying = isPlaying;
   isPlaying = false;
   if (transportRafId) {
     cancelAnimationFrame(transportRafId);
@@ -510,10 +511,15 @@ function stopPlayback() {
     try { node.disconnect(); } catch {}
   }
   activeScheduledNodes = [];
+  if (wasPlaying && returnToStart) {
+    playheadSec = playStartOffsetSec;
+    const tcEl = document.getElementById('transport-timecode');
+    if (tcEl) tcEl.textContent = formatTimecode(playheadSec);
+  }
   document.getElementById('btn-transport-play')?.classList.remove('playing');
   if (!isRecording) {
     const sub = document.getElementById('transport-substate');
-    if (sub) sub.textContent = 'READY';
+    if (sub) sub.textContent = returnToStart ? 'READY' : 'PAUSED';
   }
   drawAllTimelineCanvases();
 }
@@ -711,18 +717,72 @@ async function playRecordCountInClicks(bpm = 120) {
   }
 }
 
-async function toggleRecording() {
-  if (isPlaying) stopPlayback();
+async function abortCurrentRecording() {
+  if (!isRecording) return false;
+  const punchInStartSec = liveRecSession ? liveRecSession.startSec : 0;
+  stopRecordingRafLoop();
+  const res = await window.robos.recordCancel();
+  isRecording = false;
+  liveRecSession = null;
+  liveRecLevels = {};
+  playheadSec = punchInStartSec;
+  const tcEl = document.getElementById('transport-timecode');
+  if (tcEl) tcEl.textContent = formatTimecode(playheadSec);
+  document.getElementById('btn-transport-record')?.classList.remove('recording');
+  document.getElementById('header-rec-dot')?.classList.remove('recording');
+  const sub = document.getElementById('transport-substate');
+  if (sub) sub.textContent = 'ABORTED';
+  drawAllTimelineCanvases();
+  showStatus(`Aborted recording and discarded ${res?.deletedFiles ?? 0} incomplete WAV file(s) — cursor returned to ${formatTimecode(punchInStartSec)}.`);
+  return true;
+}
+
+async function quickRetakeRecording() {
+  if (isRecording) {
+    const punchInStartSec = liveRecSession ? liveRecSession.startSec : 0;
+    await abortCurrentRecording();
+    playheadSec = punchInStartSec;
+    await toggleRecording();
+    showStatus(`Quick Retake: discarded incomplete pass and re-punched recording at ${formatTimecode(punchInStartSec)}.`);
+    return;
+  }
+  // If stopped with newly recorded/selected clips, delete them (undoable) and punch back in at their start
+  if (selectedClipIds.size > 0 && currentProject) {
+    let minStart = Infinity;
+    for (const tr of (currentProject.tracks || [])) {
+      for (const c of (tr.clips || [])) {
+        if (selectedClipIds.has(c.id)) {
+          const s = Number(c.startSec) || 0;
+          if (s < minStart) minStart = s;
+        }
+      }
+    }
+    await commitEdit('Retake Delete Previous Pass', () => {
+      DE.deleteClipsFromProject(currentProject, selectedClipIds);
+      selectedClipIds.clear();
+    });
+    if (Number.isFinite(minStart)) {
+      playheadSec = minStart;
+      const tcEl = document.getElementById('transport-timecode');
+      if (tcEl) tcEl.textContent = formatTimecode(playheadSec);
+    }
+  }
+  await toggleRecording();
+}
+
+async function toggleRecording({ keepCursorAtStop = false } = {}) {
+  if (isPlaying) stopPlayback({ returnToStart: false });
 
   if (isRecording) {
     const punchInStartSec = liveRecSession ? liveRecSession.startSec : 0;
+    const stopEdgeSec = playheadSec;
     const injectTestSignal = Boolean(document.getElementById('chk-test-groove')?.checked);
     stopRecordingRafLoop();
     const res = await window.robos.recordStop({ injectTestSignal });
     isRecording = false;
     liveRecSession = null;
     liveRecLevels = {};
-    playheadSec = punchInStartSec;
+    playheadSec = keepCursorAtStop ? stopEdgeSec : punchInStartSec;
     const tcEl = document.getElementById('transport-timecode');
     if (tcEl) tcEl.textContent = formatTimecode(playheadSec);
     document.getElementById('btn-transport-record')?.classList.remove('recording');
@@ -879,10 +939,11 @@ function renderStudio() {
             <div class="track-top-line">
               ${nameHtml}
               <div class="track-btn-strip">
-                <button type="button" class="trk-mini-btn hw-rec ${t.armed ? 'arm-on' : ''}" data-act="arm" data-id="${esc(t.id)}" title="Record Arm Track (Ctrl+Click = Selected · Alt+Click = Exclusive)">R</button>
-                <button type="button" class="trk-mini-btn hw-mute ${t.muted ? 'mute-on' : ''}" data-act="mute" data-id="${esc(t.id)}" title="Mute Track (M · Ctrl+Click = Selected · Alt+Click = Exclusive)">M</button>
-                <button type="button" class="trk-mini-btn hw-solo ${t.soloed ? 'solo-on' : ''}" data-act="solo" data-id="${esc(t.id)}" title="Solo Track (Ctrl+Click = Selected · Alt+Click = Exclusive Solo)">S</button>
-                <button type="button" class="trk-mini-btn hw-phase ${phaseOn ? 'phase-on' : ''}" data-act="phase" data-id="${esc(t.id)}" title="180° Phase Invert Ø (Drum Top/Bottom &amp; Overhead Polarity)">Ø</button>
+                <button type="button" class="trk-mini-btn hw-rec ${t.armed ? 'arm-on' : ''}" data-act="arm" data-id="${esc(t.id)}" title="Record Arm Track (F7 / Shift+R · Ctrl+Click = Selected · Alt+Click = Exclusive)">R</button>
+                <button type="button" class="trk-mini-btn hw-mon ${t.monitor ? 'mon-on' : ''}" data-act="mon" data-id="${esc(t.id)}" title="Toggle Input Monitoring (F8 / Alt+I · Ctrl+Click = Selected)">IN</button>
+                <button type="button" class="trk-mini-btn hw-mute ${t.muted ? 'mute-on' : ''}" data-act="mute" data-id="${esc(t.id)}" title="Mute Track (F5 / M · Ctrl+Click = Selected · Alt+Click = Exclusive)">M</button>
+                <button type="button" class="trk-mini-btn hw-solo ${t.soloed ? 'solo-on' : ''}" data-act="solo" data-id="${esc(t.id)}" title="Solo Track (F6 / Shift+S · Ctrl+Click = Selected · Alt+Click = Exclusive Solo)">S</button>
+                <button type="button" class="trk-mini-btn hw-phase ${phaseOn ? 'phase-on' : ''}" data-act="phase" data-id="${esc(t.id)}" title="180° Phase Invert Ø (Alt+P · Drum Top/Bottom &amp; Overhead Polarity)">Ø</button>
                 <button type="button" class="trk-mini-btn hw-fx ${selectedTrackId === t.id ? 'fx-on' : ''}" data-act="inspect" data-id="${esc(t.id)}" title="Open Channel Strip EQ / LV2 / Drum Replace Inspector">${DI.svg('faders', 10.5)}<span>FX</span></button>
                 <button type="button" class="trk-mini-btn hw-trig ${srOn ? 'sr-on' : ''}" data-act="toggle-sr" data-id="${esc(t.id)}" title="Toggle Open-Source Drum Sound Replacement">${DI.badge('drum-replace', 12)}<span>${srOn ? esc(srPiece) : 'TRIG'}</span></button>
                 <button type="button" class="trk-mini-btn hw-del" data-act="delete" data-id="${esc(t.id)}" title="Remove Track">&times;</button>
@@ -1206,6 +1267,16 @@ function bindTrackRowEvents() {
           } else {
             const nextVal = !track.armed;
             for (const t of tracks) if (batchIds.has(t.id)) t.armed = nextVal;
+          }
+        });
+      } else if (act === 'mon') {
+        await commitEdit('Toggle Input Monitoring', () => {
+          if (ev.altKey) {
+            const onlyThisMon = track.monitor && tracks.filter(t => t.monitor).length === 1;
+            for (const t of tracks) t.monitor = onlyThisMon ? false : (t.id === trackId);
+          } else {
+            const nextVal = !track.monitor;
+            for (const t of tracks) if (batchIds.has(t.id)) t.monitor = nextVal;
           }
         });
       } else if (act === 'mute') {
@@ -1575,7 +1646,9 @@ async function handleGlobalTimelineMouseUp() {
 }
 
 function renderStaticRulerLayer(w, h, totalSec, secPerBeat) {
-  const key = `${w}x${h}:${totalSec}:${secPerBeat.toFixed(5)}`;
+  const markersArr = Array.isArray(currentProject?.markers) ? currentProject.markers : [];
+  const markersSig = markersArr.map(m => `${m.num}:${m.timeSec}:${m.name}`).join('|');
+  const key = `${w}x${h}:${totalSec}:${secPerBeat.toFixed(5)}:${markersSig}`;
   if (rulerStaticCache.key === key && rulerStaticCache.canvas) {
     return rulerStaticCache.canvas;
   }
@@ -1640,6 +1713,28 @@ function renderStaticRulerLayer(w, h, totalSec, secPerBeat) {
     if (isMajor && x < w - 32) {
       ctx.fillStyle = '#64748b';
       ctx.fillText(`${Number(s.toFixed(1))}s`, x + 3, 29);
+    }
+  }
+
+  // REAPER Project Markers (M1, M2, ...)
+  if (markersArr.length) {
+    ctx.font = '700 9px ui-monospace, SFMono-Regular, Menlo, monospace';
+    for (const m of markersArr) {
+      const mx = ((Number(m.timeSec) || 0) / totalSec) * w;
+      if (mx < -2 || mx > w + 2) continue;
+      const tag = `${m.num}:${m.name || `M${m.num}`}`;
+      const tw = Math.min(82, ctx.measureText(tag).width + 8);
+      ctx.strokeStyle = '#f59e0b';
+      ctx.lineWidth = 1.25;
+      ctx.beginPath();
+      ctx.moveTo(mx, 0);
+      ctx.lineTo(mx, h);
+      ctx.stroke();
+
+      ctx.fillStyle = 'rgba(180, 83, 9, 0.94)';
+      ctx.fillRect(mx, 1, tw, 13);
+      ctx.fillStyle = '#fef3c7';
+      ctx.fillText(tag, mx + 3.5, 10.5);
     }
   }
 
@@ -2970,24 +3065,42 @@ function buildMenubarItems(key) {
   if (key === 'transport') {
     const metroOn = Boolean(currentProject?.metronome);
     return [
-      { icon: isPlaying ? 'stop' : 'play', label: isPlaying ? 'Stop Playback' : 'Play Timeline', kbd: 'Space', run: () => startPlayback() },
-      { icon: isRecording ? 'stop' : 'record', label: isRecording ? 'Stop Recording' : 'Record Armed Tracks', kbd: 'R', run: () => toggleRecording() },
-      { icon: 'rewind', label: 'Return to Zero (00:00.00)', kbd: 'Home', run: () => {
+      { icon: isPlaying ? 'stop' : 'play', label: isPlaying ? 'Stop Playback (Return Start)' : 'Play Timeline', kbd: 'Space', run: () => startPlayback() },
+      { icon: isPlaying ? 'stop' : 'play', label: 'Play / Pause at Cursor', kbd: 'Enter', run: () => {
+        if (isRecording) toggleRecording({ keepCursorAtStop: true });
+        else if (isPlaying) stopPlayback({ returnToStart: false });
+        else startPlayback();
+      } },
+      { icon: isRecording ? 'stop' : 'record', label: isRecording ? 'Stop & Save Recorded Media' : 'Record Armed Tracks', kbd: 'Ctrl+R', run: () => toggleRecording() },
+      { icon: 'trash', label: 'Abort Recording & Delete Incomplete Pass', kbd: 'Alt+Bksp', disabled: !isRecording, danger: true, run: () => abortCurrentRecording() },
+      { icon: 'refresh', label: 'Quick Retake Pass (Discard & Re-Punch)', kbd: 'Ctrl+Shift+R', run: () => quickRetakeRecording() },
+      { sep: true },
+      { icon: 'rewind', label: 'Go to Start of Project (00:00.000)', kbd: 'W / Home', run: () => {
+        if (isRecording) return;
         playheadSec = 0;
         document.getElementById('transport-timecode').textContent = formatTimecode(0);
-        if (isPlaying) { stopPlayback(); startPlayback(); }
+        if (isPlaying) { stopPlayback({ returnToStart: false }); startPlayback(); }
         else drawAllTimelineCanvases();
+      } },
+      { icon: 'plus', label: 'Insert Marker at Cursor / Recording Pos', kbd: 'Shift+M', run: async () => {
+        if (!currentProject) return;
+        const m = DE.addProjectMarker(currentProject, playheadSec);
+        invalidateStaticTimelineCaches();
+        markDirty(true);
+        drawAllTimelineCanvases();
+        if (!isRecording) await syncProjectToMain();
+        showStatus(`Dropped Marker ${m.num} (${m.name}) at ${formatTimecode(m.timeSec)}`);
       } },
       { sep: true },
       { icon: 'metronome', label: `Metronome Click (${metroOn ? 'ON' : 'OFF'})`, kbd: 'C', run: async () => {
         const res = await window.robos.updateProjectMeta({ metronome: !metroOn });
         if (res?.ok) { currentProject = res.project; renderStudio(); }
       } },
-      { icon: 'clock', label: `1-Bar Record Count-In (${countInEnabled ? 'ON' : 'OFF'})`, kbd: '', run: () => {
+      { icon: 'clock', label: `1-Bar Record Count-In (${countInEnabled ? 'ON' : 'OFF'})`, kbd: 'Shift+C', run: () => {
         countInEnabled = !countInEnabled;
         showStatus(`1-Bar Record Count-In: ${countInEnabled ? 'ON' : 'OFF'}`);
       } },
-      { icon: 'loop', label: `Loop Timeline Playback (${loopPlayback ? 'ON' : 'OFF'})`, kbd: 'L', run: () => {
+      { icon: 'loop', label: `Repeat / Loop Playback (${loopPlayback ? 'ON' : 'OFF'})`, kbd: 'Alt+R', run: () => {
         loopPlayback = !loopPlayback;
         updateEditToolbarState();
         showStatus(`Loop Playback: ${loopPlayback ? 'ON' : 'OFF'}`);
@@ -5159,7 +5272,225 @@ async function init() {
       });
     if (anyModalOpen) return;
 
-    if (isMod && keyLower === 'n') {
+    // ─── REAPER Tracking, Recording, Comping, Marker & Workstation Shortcuts ───
+
+    const setCursorSec = (nextSec) => {
+      if (isRecording) return;
+      playheadSec = Math.max(0, Number((Number(nextSec) || 0).toFixed(4)));
+      const tcEl = document.getElementById('transport-timecode');
+      if (tcEl) tcEl.textContent = formatTimecode(playheadSec);
+      if (isPlaying) {
+        stopPlayback({ returnToStart: false });
+        startPlayback();
+      } else {
+        drawAllTimelineCanvases();
+      }
+    };
+
+    // 1. REAPER Abort Recording & Delete Incomplete Pass: Alt+Backspace or Ctrl+.
+    if ((ev.altKey && !isMod && ev.key === 'Backspace') || (isMod && !ev.altKey && ev.key === '.')) {
+      ev.preventDefault();
+      if (isRecording) await abortCurrentRecording();
+      else showStatus('No active recording pass to abort.');
+      return;
+    }
+
+    // 2. REAPER Quick Retake (Discard Current/Last Pass & Re-Punch Record): Ctrl+Shift+R or F4
+    if ((isMod && !ev.altKey && ev.shiftKey && keyLower === 'r') || (!isMod && !ev.altKey && ev.key === 'F4')) {
+      ev.preventDefault();
+      await quickRetakeRecording();
+      return;
+    }
+
+    // 3. REAPER Record Transport: Ctrl+R (preventing Chromium reload!) or Numpad *
+    if ((isMod && !ev.altKey && !ev.shiftKey && keyLower === 'r') || ev.code === 'NumpadMultiply') {
+      ev.preventDefault();
+      await toggleRecording();
+      return;
+    }
+
+    // 4. REAPER Drop Marker Live at Playhead / Recording Position: Insert or Shift+M
+    if (ev.key === 'Insert' || (!isMod && !ev.altKey && ev.shiftKey && keyLower === 'm')) {
+      ev.preventDefault();
+      if (currentProject) {
+        if (!isRecording) historyStack.pushSnapshot(currentProject, 'Insert Project Marker');
+        const m = DE.addProjectMarker(currentProject, playheadSec);
+        invalidateStaticTimelineCaches();
+        markDirty(true);
+        drawAllTimelineCanvases();
+        if (!isRecording) await syncProjectToMain();
+        updateEditToolbarState();
+        showStatus(`Dropped Marker ${m.num} (${m.name}) at ${formatTimecode(m.timeSec)}`);
+      }
+      return;
+    }
+
+    // 5. REAPER Clear All Markers: Alt+Shift+M
+    if (!isMod && ev.altKey && ev.shiftKey && keyLower === 'm') {
+      ev.preventDefault();
+      if (currentProject && Array.isArray(currentProject.markers) && currentProject.markers.length) {
+        await commitEdit('Clear Project Markers', () => { currentProject.markers = []; }, { statusMsg: 'Cleared all timeline markers.' });
+      }
+      return;
+    }
+
+    // 6. REAPER Jump to Marker 1..9: Alt+1 .. Alt+9 (or plain 1..9 when >=1 marker exists)
+    if (/^[1-9]$/.test(ev.key) && ((ev.altKey && !isMod) || (!isMod && !ev.altKey && (currentProject?.markers?.length || 0) >= Number(ev.key)))) {
+      const targetSec = DE.jumpToProjectMarkerByNumber(currentProject, Number(ev.key));
+      if (targetSec !== null) {
+        ev.preventDefault();
+        setCursorSec(targetSec);
+        showStatus(`Jumped to Marker ${ev.key} (${formatTimecode(targetSec)})`);
+        return;
+      }
+    }
+
+    // 7. REAPER Function-Key Console Row: F5 Mute, F6 Solo, F7 Record Arm, F8 Input Monitor, F1/? Keymap
+    if (!isMod && !ev.altKey && ev.key === 'F1') {
+      ev.preventDefault();
+      document.getElementById('shortcuts-modal')?.classList.remove('hidden');
+      return;
+    }
+    if (!isMod && !ev.altKey && ev.key === 'F5') {
+      ev.preventDefault();
+      if (selectedTrackIds.size > 0) {
+        await commitEdit('Toggle Track Mute', () => {
+          const tracks = currentProject?.tracks || [];
+          const first = tracks.find(t => selectedTrackIds.has(t.id));
+          DE.setTracksPropertyBatch(currentProject, selectedTrackIds, 'muted', first ? !first.muted : true);
+        });
+      }
+      return;
+    }
+    if (!isMod && !ev.altKey && ev.key === 'F6') {
+      ev.preventDefault();
+      if (selectedTrackIds.size > 0) {
+        await commitEdit('Toggle Track Solo', () => {
+          const tracks = currentProject?.tracks || [];
+          const first = tracks.find(t => selectedTrackIds.has(t.id));
+          DE.setTracksPropertyBatch(currentProject, selectedTrackIds, 'soloed', first ? !first.soloed : true);
+        });
+      }
+      return;
+    }
+    if (!isMod && !ev.altKey && ev.key === 'F7') {
+      ev.preventDefault();
+      await armSelectedTracks();
+      return;
+    }
+    if ((!isMod && !ev.altKey && ev.key === 'F8') || (!isMod && ev.altKey && !ev.shiftKey && keyLower === 'i')) {
+      ev.preventDefault();
+      if (selectedTrackIds.size > 0) {
+        await commitEdit('Toggle Input Monitoring', () => {
+          const tracks = currentProject?.tracks || [];
+          const first = tracks.find(t => selectedTrackIds.has(t.id));
+          const nextMon = first ? !first.monitor : true;
+          DE.setTracksPropertyBatch(currentProject, selectedTrackIds, 'monitor', nextMon);
+        }, { statusMsg: `Toggled Input Monitoring on ${selectedTrackIds.size} track(s)` });
+      }
+      return;
+    }
+
+    // 8. REAPER Polarity/Phase Invert (Alt+P), Disarm All (Alt+Shift+D), Unmute All (Ctrl+Alt+M), Add Mic Wizard (Alt+T)
+    if (!isMod && ev.altKey && !ev.shiftKey && keyLower === 'p') {
+      ev.preventDefault();
+      if (selectedTrackIds.size > 0) {
+        await commitEdit('Toggle Phase Polarity', () => {
+          const tracks = currentProject?.tracks || [];
+          const first = tracks.find(t => selectedTrackIds.has(t.id));
+          DE.setTracksPropertyBatch(currentProject, selectedTrackIds, 'phaseInvert', !(first?.fx?.phaseInvert));
+        }, { statusMsg: 'Toggled 180° polarity (Ø) on selected track(s).' });
+      }
+      return;
+    }
+    if (!isMod && ev.altKey && ev.shiftKey && keyLower === 'd') {
+      ev.preventDefault();
+      await disarmAllTracks();
+      return;
+    }
+    if (isMod && ev.altKey && keyLower === 'm') {
+      ev.preventDefault();
+      await commitEdit('Unmute All Tracks', () => { DE.setTracksPropertyBatch(currentProject, 'all', 'muted', false); }, { statusMsg: 'Unmuted all tracks.' });
+      return;
+    }
+    if (!isMod && ev.altKey && !ev.shiftKey && keyLower === 't') {
+      ev.preventDefault();
+      await openAddMicWizard();
+      return;
+    }
+
+    // 9. REAPER Snap (Alt+S) & Repeat Loop (Alt+R) & Fade In/Out to Cursor (Alt+F / Alt+G)
+    if (!isMod && ev.altKey && !ev.shiftKey && keyLower === 's') {
+      ev.preventDefault();
+      snapToGrid = !snapToGrid;
+      updateEditToolbarState();
+      showStatus(`Snap to Beat Grid: ${snapToGrid ? 'ON' : 'OFF'}`);
+      return;
+    }
+    if (!isMod && ev.altKey && !ev.shiftKey && keyLower === 'r') {
+      ev.preventDefault();
+      loopPlayback = !loopPlayback;
+      updateEditToolbarState();
+      showStatus(`Repeat / Loop Playback: ${loopPlayback ? 'ON' : 'OFF'}`);
+      return;
+    }
+    if (!isMod && ev.altKey && !ev.shiftKey && (keyLower === 'f' || keyLower === 'g')) {
+      ev.preventDefault();
+      const side = keyLower === 'f' ? 'in' : 'out';
+      await commitEdit(side === 'in' ? 'Fade In to Cursor' : 'Fade Out from Cursor', () => {
+        const cnt = DE.fadeClipsToPlayhead(currentProject, selectedClipIds, selectedTrackIds, side, playheadSec);
+        showStatus(cnt ? `Applied Fade-${side === 'in' ? 'In' : 'Out'} to cursor (${formatTimecode(playheadSec)}) on ${cnt} item(s).` : 'Place cursor inside a selected item to fade to cursor.');
+      });
+      return;
+    }
+
+    // 10. REAPER Overlapping Take Comping: T (Next Take), Shift+T (Prev Take), Alt+Shift+T (Crop to Active Take)
+    if (!isMod && ev.altKey && ev.shiftKey && keyLower === 't') {
+      ev.preventDefault();
+      await commitEdit('Crop to Active Take', () => {
+        const removed = DE.cropToActiveTake(currentProject, selectedTrackIds, playheadSec);
+        showStatus(removed ? `Cropped to active take (removed ${removed} muted pass${removed > 1 ? 'es' : ''}).` : 'No muted overlapping passes to crop on selected track(s).');
+      });
+      return;
+    }
+    if (!isMod && !ev.altKey && keyLower === 't') {
+      ev.preventDefault();
+      const dir = ev.shiftKey ? -1 : 1;
+      await commitEdit(dir > 0 ? 'Switch to Next Take' : 'Switch to Previous Take', () => {
+        const res = DE.cycleOverlappingTake(currentProject, selectedTrackIds, playheadSec, dir);
+        if (res.switchedTracks > 0) {
+          selectedClipIds = new Set(res.activeClipIds);
+          showStatus(`Comping: Activated Take ${res.takeNumber} / ${res.totalTakes} on ${res.switchedTracks} track(s).`);
+        } else {
+          showStatus('Record 2+ overlapping passes on a track to cycle takes with T / Shift+T.');
+        }
+      });
+      return;
+    }
+
+    // 11. REAPER Normalize Items/Tracks: Ctrl+Shift+N
+    if (isMod && !ev.altKey && ev.shiftKey && keyLower === 'n') {
+      ev.preventDefault();
+      await commitEdit('Normalize Selected (-6.0 dBFS)', () => {
+        const effClips = DE.getEffectiveSelectedClipIds(currentProject, selectedClipIds, selectedTrackIds);
+        if (selectedClipIds.size > 0) {
+          for (const tr of (currentProject?.tracks || [])) {
+            for (const c of (tr.clips || [])) {
+              if (effClips.has(c.id)) DE.normalizeClipGain(c, -6.0);
+            }
+          }
+          showStatus(`Normalized ${selectedClipIds.size} selected item(s) to -6.0 dBFS.`);
+        } else if (selectedTrackIds.size > 0) {
+          for (const tr of (currentProject?.tracks || [])) {
+            if (selectedTrackIds.has(tr.id)) DE.normalizeTrackGain(tr, -6.0);
+          }
+          showStatus(`Normalized ${selectedTrackIds.size} selected track(s) to -6.0 dBFS.`);
+        }
+      });
+      return;
+    }
+
+    if (isMod && !ev.shiftKey && keyLower === 'n') {
       ev.preventDefault();
       await createNewSession();
     } else if (isMod && keyLower === 'o') {
@@ -5225,7 +5556,7 @@ async function init() {
     } else if (!isMod && !ev.altKey && keyLower === 's') {
       ev.preventDefault();
       await editSplitSelectedOrPlayhead();
-    } else if (isMod && ev.key === '0') {
+    } else if ((isMod && ev.key === '0') || (!isMod && !ev.altKey && ev.key === '\\')) {
       ev.preventDefault();
       setTimelineZoom(1.0);
     } else if (ev.key === 'Delete' || ev.key === 'Backspace') {
@@ -5240,16 +5571,77 @@ async function init() {
           DE.reorderTracksBatch(currentProject, selectedTrackIds, dir);
         });
       }
+    } else if (isMod && !ev.altKey && !ev.shiftKey && (ev.key === 'ArrowUp' || ev.key === 'ArrowDown')) {
+      // REAPER Console Track Navigation: Ctrl+Up / Ctrl+Down selects prev/next track
+      ev.preventDefault();
+      const tracks = currentProject?.tracks || [];
+      if (tracks.length) {
+        const primary = anchorTrackId || [...selectedTrackIds][0] || tracks[0].id;
+        const curIdx = Math.max(0, tracks.findIndex(t => t.id === primary));
+        const nextIdx = DE.clamp(0, tracks.length - 1, curIdx + (ev.key === 'ArrowUp' ? -1 : 1));
+        selectedTrackIds = new Set([tracks[nextIdx].id]);
+        anchorTrackId = tracks[nextIdx].id;
+        if (selectedTrackId) selectedTrackId = tracks[nextIdx].id;
+        renderStudio();
+      }
+    } else if (!isMod && !ev.altKey && ev.shiftKey && (ev.key === 'ArrowUp' || ev.key === 'ArrowDown')) {
+      // Gain Nudge +/-1.0 dB on selected takes or tracks
+      ev.preventDefault();
+      const deltaDb = ev.key === 'ArrowUp' ? 1.0 : -1.0;
+      if (selectedClipIds.size > 0) {
+        await commitEdit('Nudge Item Gain', () => {
+          for (const tr of (currentProject?.tracks || [])) {
+            for (const c of (tr.clips || [])) {
+              if (selectedClipIds.has(c.id)) {
+                c.gainDb = Number(DE.clamp(-24, 24, (Number(c.gainDb) || 0) + deltaDb).toFixed(1));
+              }
+            }
+          }
+        });
+      } else if (selectedTrackIds.size > 0) {
+        await commitEdit('Nudge Track Trim', () => {
+          for (const tr of (currentProject?.tracks || [])) {
+            if (selectedTrackIds.has(tr.id)) {
+              tr.gainDb = Number(DE.clamp(-24, 24, (Number(tr.gainDb) || 0) + deltaDb).toFixed(1));
+            }
+          }
+        });
+      }
+    } else if (!isMod && !ev.altKey && !ev.shiftKey && (ev.key === 'ArrowUp' || ev.key === 'ArrowDown')) {
+      // REAPER Default ArrowUp / ArrowDown: Horizontal Zoom In / Out
+      ev.preventDefault();
+      setTimelineZoom(ev.key === 'ArrowUp' ? timelineZoom * 1.25 : timelineZoom / 1.25);
     } else if (ev.key === '[' || ev.key === ']') {
       ev.preventDefault();
       await editTrimToPlayhead(ev.key === '[' ? 'left' : 'right');
+    } else if (!isMod && !ev.altKey && (ev.key === ';' || ev.key === '\'')) {
+      // REAPER Jump Cursor to Prev / Next Item Edge or Marker
+      ev.preventDefault();
+      const nextPt = DE.findAdjacentTimelinePoint(currentProject, playheadSec, ev.key === ';' ? -1 : 1);
+      setCursorSec(nextPt);
+    } else if (!isMod && !ev.altKey && (ev.key === ',' || ev.key === '.')) {
+      // REAPER Beat Scrub/Nudge (-1 Beat / +1 Beat)
+      ev.preventDefault();
+      const beatSec = 60 / (Number(currentProject?.bpm) || 120);
+      setCursorSec(playheadSec + (ev.key === ',' ? -beatSec : beatSec));
+    } else if (ev.key === 'PageUp' || ev.key === 'PageDown') {
+      // REAPER Measure Jump (-1 Bar / +1 Bar)
+      ev.preventDefault();
+      const barSec = (60 / (Number(currentProject?.bpm) || 120)) * 4;
+      setCursorSec(playheadSec + (ev.key === 'PageUp' ? -barSec : barSec));
     } else if (ev.key === 'F2') {
       ev.preventDefault();
       editRenameFocused();
     } else if (ev.code === 'Space') {
       ev.preventDefault();
-      if (isRecording) await toggleRecording();
-      else if (isPlaying) stopPlayback();
+      if (isRecording) await toggleRecording({ keepCursorAtStop: false });
+      else if (isPlaying) stopPlayback({ returnToStart: true });
+      else await startPlayback();
+    } else if (ev.key === 'Enter') {
+      // REAPER Enter: Play/Pause (stops at current playhead cursor without rewinding)
+      ev.preventDefault();
+      if (isRecording) await toggleRecording({ keepCursorAtStop: true });
+      else if (isPlaying) stopPlayback({ returnToStart: false });
       else await startPlayback();
     } else if (!isMod && !ev.altKey && ev.shiftKey && keyLower === 'r') {
       ev.preventDefault();
@@ -5267,6 +5659,10 @@ async function init() {
       loopPlayback = !loopPlayback;
       updateEditToolbarState();
       showStatus(`Loop Playback: ${loopPlayback ? 'ON' : 'OFF'}`);
+    } else if (!isMod && !ev.altKey && ev.shiftKey && keyLower === 'c') {
+      ev.preventDefault();
+      countInEnabled = !countInEnabled;
+      showStatus(`1-Bar Record Count-In: ${countInEnabled ? 'ON' : 'OFF'}`);
     } else if (!isMod && !ev.altKey && keyLower === 'c') {
       ev.preventDefault();
       const next = !Boolean(currentProject?.metronome);
@@ -5305,11 +5701,14 @@ async function init() {
           for (const t of tracks) if (selectedTrackIds.has(t.id)) t.muted = nextMuted;
         });
       }
-    } else if (ev.key === 'Home' || (!isMod && ev.key === '0')) {
+    } else if (ev.key === 'Home' || (!isMod && ev.key === '0') || (!isMod && !ev.altKey && !ev.shiftKey && keyLower === 'w')) {
+      // REAPER W / Home: Go to start of project (00:00.000)
       ev.preventDefault();
-      playheadSec = 0;
-      document.getElementById('transport-timecode').textContent = formatTimecode(0);
-      drawAllTimelineCanvases();
+      setCursorSec(0);
+    } else if (ev.key === 'End') {
+      // REAPER End: Go to end of project
+      ev.preventDefault();
+      setCursorSec(DE.getProjectEndSec(currentProject));
     } else if (ev.key === 'ArrowLeft' || ev.key === 'ArrowRight') {
       ev.preventDefault();
       const dir = ev.key === 'ArrowLeft' ? -1 : 1;
@@ -5321,9 +5720,7 @@ async function init() {
         });
       } else {
         const step = dir * (ev.shiftKey ? 2.0 : 0.5);
-        playheadSec = Math.max(0, Number((playheadSec + step).toFixed(3)));
-        document.getElementById('transport-timecode').textContent = formatTimecode(playheadSec);
-        drawAllTimelineCanvases();
+        setCursorSec(playheadSec + step);
       }
     } else if (ev.key === '+' || ev.key === '=') {
       ev.preventDefault();

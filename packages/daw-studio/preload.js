@@ -52,6 +52,7 @@ contextBridge.exposeInMainWorld('robos', {
   // Multi-Track Recording & Project Save / Open
   recordStart: (payload) => ipcRenderer.invoke('daw:record-start', payload),
   recordStop: (payload) => ipcRenderer.invoke('daw:record-stop', payload),
+  recordCancel: () => ipcRenderer.invoke('daw:record-cancel'),
   onRecordProgress: (cb) => subscribe('daw:record-progress', cb),
 
   projectNew: (payload) => ipcRenderer.invoke('daw:project-new', payload),

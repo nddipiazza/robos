@@ -1003,4 +1003,78 @@ describe('DAW Editing Engine: Multi-Select, Track/Take Gain, Split/Trim, Copy/Pa
       fs.rmSync(tmpRoot, { recursive: true, force: true });
     }
   });
+
+  it('supports REAPER tracking operations: abort & discard pass, live markers, overlapping take comping (T / Shift+T / Alt+Shift+T), and fade-to-cursor', async () => {
+    const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'robos-daw-reaper-'));
+    const prevProjDir = process.env.ROBOS_DAW_PROJECTS_DIR;
+    process.env.ROBOS_DAW_PROJECTS_DIR = tmpRoot;
+    const recorder = new MultiTrackRecorder();
+    try {
+      const proj = createEmptyProject({ name: 'REAPER Tracking Test', bpm: 120 });
+      const tr = buildTrackFromWizard({ profileId: 'snare-top', name: 'Snare Top', armed: true });
+      proj.tracks.push(tr);
+
+      // 1. Abort Recording (Alt+Backspace / Ctrl+.): deletes incomplete WAV and adds zero clips
+      const started = recorder.start(proj, { startSec: 2.0, injectTestSignal: true });
+      assert.strictEqual(started.ok, true);
+      const pendingWav = started.tracks[0].wavFile;
+      assert.ok(fs.existsSync(pendingWav));
+      await new Promise(r => setTimeout(r, 120));
+      const canceled = await recorder.cancel();
+      assert.strictEqual(canceled.ok, true);
+      assert.strictEqual(canceled.canceled, true);
+      assert.strictEqual(canceled.deletedFiles, 1);
+      assert.strictEqual(fs.existsSync(pendingWav), false);
+      assert.strictEqual(tr.clips.length, 0);
+
+      // 2. Overlapping Take Comping (T / Shift+T) + Crop to Active Take (Alt+Shift+T)
+      tr.clips.push(
+        { id: 'pass-1', name: 'Pass 1', startSec: 1.0, offsetSec: 0, durationSec: 4.0, sourceDurationSec: 4.0, muted: false },
+        { id: 'pass-2', name: 'Pass 2', startSec: 1.0, offsetSec: 0, durationSec: 4.0, sourceDurationSec: 4.0, muted: true },
+        { id: 'pass-3', name: 'Pass 3', startSec: 1.0, offsetSec: 0, durationSec: 4.0, sourceDurationSec: 4.0, muted: true }
+      );
+      let comp = DE.cycleOverlappingTake(proj, new Set([tr.id]), 2.5, 1); // T -> Pass 2
+      assert.strictEqual(comp.takeNumber, 2);
+      assert.strictEqual(comp.totalTakes, 3);
+      assert.deepStrictEqual(tr.clips.map(c => c.muted), [true, false, true]);
+
+      comp = DE.cycleOverlappingTake(proj, new Set([tr.id]), 2.5, -1); // Shift+T -> back to Pass 1
+      assert.strictEqual(comp.takeNumber, 1);
+      assert.deepStrictEqual(tr.clips.map(c => c.muted), [false, true, true]);
+
+      comp = DE.cycleOverlappingTake(proj, new Set([tr.id]), 2.5, 1); // T -> Pass 2 wins!
+      assert.strictEqual(DE.cropToActiveTake(proj, new Set([tr.id]), 2.5), 2);
+      assert.strictEqual(tr.clips.length, 1);
+      assert.strictEqual(tr.clips[0].id, 'pass-2');
+
+      // 3. Fade-In / Fade-Out to Playhead (Alt+F / Alt+G)
+      assert.strictEqual(DE.fadeClipsToPlayhead(proj, new Set(['pass-2']), new Set([tr.id]), 'in', 1.75), 1);
+      assert.strictEqual(tr.clips[0].fadeInSec, 0.75);
+      assert.strictEqual(DE.fadeClipsToPlayhead(proj, new Set(['pass-2']), new Set([tr.id]), 'out', 4.5), 1);
+      assert.strictEqual(tr.clips[0].fadeOutSec, 0.5);
+
+      // 4. Project Markers (Shift+M / Insert), Marker Jump (Alt+1..9), Item/Marker Edge Jump (; / '), End (5.0s)
+      const m1 = DE.addProjectMarker(proj, 2.0, 'Verse');
+      const m2 = DE.addProjectMarker(proj, 4.0, 'Fill');
+      assert.strictEqual(m1.num, 1);
+      assert.strictEqual(m2.num, 2);
+      assert.strictEqual(DE.jumpToProjectMarkerByNumber(proj, 2), 4.0);
+      assert.strictEqual(DE.getProjectEndSec(proj), 5.0);
+      // Points are [0, 1.0, 2.0, 4.0, 5.0]
+      assert.strictEqual(DE.findAdjacentTimelinePoint(proj, 1.0, 1), 2.0);
+      assert.strictEqual(DE.findAdjacentTimelinePoint(proj, 4.0, -1), 2.0);
+
+      // Verify markers persist across saveProject / loadProject
+      const saved = saveProject(proj);
+      const reloaded = loadProject(saved.project.id);
+      assert.strictEqual(reloaded.project.markers.length, 2);
+      assert.strictEqual(reloaded.project.markers[0].name, 'Verse');
+      assert.strictEqual(reloaded.project.markers[1].timeSec, 4.0);
+    } finally {
+      if (recorder.isRecording()) await recorder.cancel();
+      if (prevProjDir === undefined) delete process.env.ROBOS_DAW_PROJECTS_DIR;
+      else process.env.ROBOS_DAW_PROJECTS_DIR = prevProjDir;
+      fs.rmSync(tmpRoot, { recursive: true, force: true });
+    }
+  });
 });
