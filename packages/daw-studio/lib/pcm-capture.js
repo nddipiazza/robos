@@ -10,7 +10,59 @@
  */
 
 const fs = require('fs');
-const { spawn } = require('child_process');
+const { spawn, execFile, execFileSync } = require('child_process');
+
+let cachedSplitParentMap = null;
+
+function parsePwDumpSplitMap(jsonText) {
+  const map = new Map();
+  try {
+    const arr = JSON.parse(jsonText);
+    for (const obj of arr) {
+      const p = obj?.info?.props;
+      if (!p || !p['node.name'] || !p['api.alsa.split.name'] || p['api.alsa.split.parent']) continue;
+      if (p['media.class'] !== 'Audio/Source') continue;
+      const hwPos = String(p['api.alsa.split.hw-position'] || '').replace(/[\[\]\s]/g, '').split(',').filter(Boolean);
+      const pos = String(p['api.alsa.split.position'] || '').replace(/[\[\]\s]/g, '').split(',').filter(Boolean);
+      const indices = pos.map(ch => hwPos.indexOf(ch)).filter(i => i >= 0);
+      if (indices.length && hwPos.length > 1) {
+        map.set(p['node.name'], {
+          parentNodeName: p['api.alsa.split.name'],
+          totalChannels: hwPos.length,
+          indices,
+        });
+      }
+    }
+  } catch {}
+  return map;
+}
+
+function warmSplitParentCache() {
+  return new Promise((resolve) => {
+    execFile('pw-dump', ['PipeWire:Interface:Node'], { maxBuffer: 16 * 1024 * 1024, timeout: 2500 }, (err, stdout) => {
+      if (!err && stdout) {
+        cachedSplitParentMap = parsePwDumpSplitMap(stdout);
+      }
+      resolve(cachedSplitParentMap);
+    });
+  });
+}
+
+function getSplitParentMapSync() {
+  if (cachedSplitParentMap) return cachedSplitParentMap;
+  try {
+    const out = execFileSync('pw-dump', ['PipeWire:Interface:Node'], {
+      encoding: 'utf8',
+      maxBuffer: 16 * 1024 * 1024,
+      timeout: 1500,
+      stdio: ['ignore', 'pipe', 'ignore'],
+    });
+    cachedSplitParentMap = parsePwDumpSplitMap(out);
+  } catch {
+    cachedSplitParentMap = new Map();
+  }
+  return cachedSplitParentMap;
+}
 
 function parseChannelTarget(targetNodeName) {
   const raw = String(targetNodeName || '');
@@ -21,6 +73,41 @@ function parseChannelTarget(targetNodeName) {
     channelIndex: parseInt(m[2], 10),
     totalChannels: parseInt(m[3] || '8', 10),
   };
+}
+
+/**
+ * When 2+ armed tracks belong to the same multi-channel USB interface (e.g. Focusrite Scarlett 18i20
+ * Analog Inputs `Mic1/Line9` + `ADAT Direct2`), unify them onto their single ALSA hardware split parent
+ * (`alsa_input.hw_USB_0`, 20 channels) so ONE `pw-cat` process captures all channels with 0.000ms skew.
+ */
+function unifyHardwareSplitTargets(parsedList) {
+  const namedCount = parsedList.filter(p => Boolean(p.baseNodeName)).length;
+  if (namedCount < 2) return parsedList;
+
+  const splitMap = getSplitParentMapSync();
+  if (!splitMap || splitMap.size === 0) return parsedList;
+
+  // Count how many armed tracks share each parent hardware node
+  const parentCounts = new Map();
+  for (const p of parsedList) {
+    const info = splitMap.get(p.baseNodeName);
+    if (info) {
+      parentCounts.set(info.parentNodeName, (parentCounts.get(info.parentNodeName) || 0) + 1);
+    }
+  }
+
+  return parsedList.map(p => {
+    const info = splitMap.get(p.baseNodeName);
+    if (!info || (parentCounts.get(info.parentNodeName) || 0) < 2) return p;
+    const subIdx = p.channelIndex !== null ? p.channelIndex : 0;
+    const hwChan = info.indices[subIdx];
+    if (hwChan === undefined || hwChan < 0) return p;
+    return {
+      baseNodeName: info.parentNodeName,
+      channelIndex: hwChan,
+      totalChannels: info.totalChannels,
+    };
+  });
 }
 
 function makeWavHeader(dataBytes, sampleRate = 48000) {
@@ -86,8 +173,11 @@ function startDiscreteCaptureSession(
   const sliceSamples = Math.max(64, Math.round(sampleRate * sliceDurationSec));
   const actualSliceDurationSec = sliceSamples / sampleRate;
 
-  const trackStates = items.map(item => {
-    const parsed = parseChannelTarget(item.inputNodeName);
+  const rawParsed = items.map(item => parseChannelTarget(item.inputNodeName));
+  const unifiedTargets = unifyHardwareSplitTargets(rawParsed);
+
+  const trackStates = items.map((item, idx) => {
+    const parsed = unifiedTargets[idx];
     const fd = fs.openSync(item.wavFile, 'w');
     // Reserve 44-byte WAV header upfront
     fs.writeSync(fd, makeWavHeader(0, sampleRate), 0, 44, 0);
@@ -195,9 +285,31 @@ function startDiscreteCaptureSession(
   }
 
   const procs = [];
+  const totalStreamCount = monoStates.length + muxGroups.size;
+  const startedStreams = new Set();
+  let allStreamsArmed = totalStreamCount <= 1;
+  let barrierFallbackTimer = null;
+  if (!allStreamsArmed) {
+    barrierFallbackTimer = setTimeout(() => { allStreamsArmed = true; }, 120);
+    if (barrierFallbackTimer.unref) barrierFallbackTimer.unref();
+  }
+  const markStreamLive = (streamId) => {
+    if (allStreamsArmed) return true;
+    startedStreams.add(streamId);
+    if (startedStreams.size >= totalStreamCount) {
+      allStreamsArmed = true;
+      if (barrierFallbackTimer) {
+        clearTimeout(barrierFallbackTimer);
+        barrierFallbackTimer = null;
+      }
+      return true;
+    }
+    return false;
+  };
 
   // 1. Spawn low-latency 1-channel raw streams (`--latency 10ms`)
-  for (const st of monoStates) {
+  monoStates.forEach((st, mIdx) => {
+    const streamId = `mono:${mIdx}`;
     const args = [
       '--record',
       '--raw',
@@ -220,6 +332,7 @@ function startDiscreteCaptureSession(
       const buf = remainder.length ? Buffer.concat([remainder, chunk]) : chunk;
       const usableLen = buf.length - (buf.length % 2);
       remainder = usableLen < buf.length ? buf.subarray(usableLen) : Buffer.alloc(0);
+      if (!markStreamLive(streamId)) return; // Discard early pre-roll until all devices start!
       if (usableLen <= 0 || st.fd === null) return;
 
       const slice = buf.subarray(0, usableLen);
@@ -236,10 +349,12 @@ function startDiscreteCaptureSession(
         child.on('error', resolve);
       }),
     });
-  }
+  });
 
-  // 2. Spawn low-latency shared N-channel raw streams (e.g. 8-channel ADAT Optical Input) and de-interleave!
+  // 2. Spawn low-latency shared N-channel raw streams (e.g. 20-channel USB parent or 8-channel ADAT) and de-interleave!
+  let muxIdx = 0;
   for (const group of muxGroups.values()) {
+    const streamId = `mux:${muxIdx++}`;
     const frameBytes = group.totalChannels * 2;
     const args = [
       '--record',
@@ -264,6 +379,7 @@ function startDiscreteCaptureSession(
       const frames = Math.floor(buf.length / frameBytes);
       const usableLen = frames * frameBytes;
       remainder = usableLen < buf.length ? buf.subarray(usableLen) : Buffer.alloc(0);
+      if (!markStreamLive(streamId)) return; // Discard early pre-roll until all devices start!
       if (frames <= 0) return;
 
       for (const st of group.members) {
@@ -368,6 +484,9 @@ function startDiscreteCaptureSession(
 
 module.exports = {
   parseChannelTarget,
+  parsePwDumpSplitMap,
+  unifyHardwareSplitTargets,
+  warmSplitParentCache,
   makeWavHeader,
   ingestMonoPcmBuffer,
   startDiscreteCaptureSession,

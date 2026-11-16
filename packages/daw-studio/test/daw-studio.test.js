@@ -1133,4 +1133,43 @@ describe('DAW Editing Engine: Multi-Select, Track/Take Gain, Split/Trim, Copy/Pa
     const roomOnlyWav = Buffer.concat([makeWavHeader(Buffer.alloc(48000 * 2), 48000), Buffer.alloc(48000 * 2)]);
     assert.strictEqual(computeSmartAutoGainDb(roomOnlyWav), 0);
   });
+
+  it('unifies Focusrite Analog UCM split sources and ADAT Direct2 onto a single 20ch hw_USB_0 clock with zero inter-track delay', () => {
+    const { parsePwDumpSplitMap } = require('../lib/pcm-capture');
+    const mockDump = JSON.stringify([
+      {
+        info: {
+          props: {
+            'media.class': 'Audio/Source',
+            'node.name': 'alsa_input.usb-Focusrite_Scarlett_18i20.HiFi__Line9__source',
+            'api.alsa.split.name': 'alsa_input.hw_USB_0',
+            'api.alsa.split.hw-position': '[AUX0,AUX1,AUX2,AUX3,AUX4,AUX5,AUX6,AUX7,AUX8,AUX9,AUX10,AUX11,AUX12,AUX13,AUX14,AUX15,AUX16,AUX17,AUX18,AUX19]',
+            'api.alsa.split.position': '[AUX3]',
+          },
+        },
+      },
+      {
+        info: {
+          props: {
+            'media.class': 'Audio/Source',
+            'node.name': 'alsa_input.usb-Focusrite_Scarlett_18i20.HiFi__Direct2__source',
+            'api.alsa.split.name': 'alsa_input.hw_USB_0',
+            'api.alsa.split.hw-position': '[AUX0,AUX1,AUX2,AUX3,AUX4,AUX5,AUX6,AUX7,AUX8,AUX9,AUX10,AUX11,AUX12,AUX13,AUX14,AUX15,AUX16,AUX17,AUX18,AUX19]',
+            'api.alsa.split.position': '[AUX12,AUX13,AUX14,AUX15,AUX16,AUX17,AUX18,AUX19]',
+          },
+        },
+      },
+    ]);
+    const map = parsePwDumpSplitMap(mockDump);
+    assert.deepStrictEqual(map.get('alsa_input.usb-Focusrite_Scarlett_18i20.HiFi__Line9__source'), {
+      parentNodeName: 'alsa_input.hw_USB_0',
+      totalChannels: 20,
+      indices: [3],
+    });
+    assert.deepStrictEqual(map.get('alsa_input.usb-Focusrite_Scarlett_18i20.HiFi__Direct2__source'), {
+      parentNodeName: 'alsa_input.hw_USB_0',
+      totalChannels: 20,
+      indices: [12, 13, 14, 15, 16, 17, 18, 19],
+    });
+  });
 });

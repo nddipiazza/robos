@@ -529,7 +529,7 @@ function buildTrackWebAudioChain(ctx, track) {
   const eq = track.fx?.eq || {};
   if (eq.enabled !== false) {
     const hpfFreq = Number(eq.hpfHz) || 40;
-    const steep24dB = Number(eq.hpfSlope) === 24 || hpfFreq >= 220;
+    const steep24dB = Number(eq.hpfSlope) === 24;
 
     const hpf = ctx.createBiquadFilter();
     hpf.type = 'highpass';
@@ -2455,7 +2455,7 @@ function renderInspectorDrawer() {
             <input type="range" class="daw-fader" id="insp-gain-db" min="-24" max="36" step="0.5" value="${gainDb}" />
           </div>
           <div class="slider-row">
-            <label>High-Pass (${eq.hpfHz || 60} Hz${(Number(eq.hpfSlope) === 24 || (eq.hpfHz || 60) >= 220) ? ' · 24dB' : ''})</label>
+            <label>High-Pass (${eq.hpfHz || 60} Hz${Number(eq.hpfSlope) === 24 ? ' · 24dB' : ''})</label>
             <input type="checkbox" id="insp-eq-on" ${eq.enabled !== false ? 'checked' : ''} />
             <input type="range" class="daw-fader" id="insp-eq-hpf" min="20" max="800" step="5" value="${eq.hpfHz || 60}" />
           </div>

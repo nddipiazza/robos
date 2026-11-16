@@ -21,6 +21,7 @@ const {
   detectDrumTransients,
 } = require('./lib/drum-instruments');
 const { MultiChannelTapDetector } = require('./lib/channel-detector');
+const { warmSplitParentCache } = require('./lib/pcm-capture');
 const {
   getProjectsRoot,
   createEmptyProject,
@@ -1097,6 +1098,7 @@ ipcMain.handle('daw:open-session-folder', async () => {
 
 app.whenReady().then(() => {
   createWindow();
+  warmSplitParentCache().catch(() => {});
 
   // Watch USB ALSA card hotplug via 0.02ms /proc/asound/cards kernel read (never block main thread during recording!)
   lastProcCardsSignature = readProcCardsSignature();
