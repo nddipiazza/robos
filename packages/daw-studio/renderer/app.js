@@ -22,6 +22,8 @@ let selectedClipIds = new Set();
 let anchorClipId = null;
 let clipClipboard = null;
 let timelineZoom = 1.0;
+let timelineOffsetSec = 0.0;
+let middlePanDragState = null;
 let inlineRenamingTrackId = null;
 let timelineDragState = null;
 let hoverLinkedPreview = null; // { key: string, zone: string, clipIds: Set<string> }
@@ -202,6 +204,7 @@ function startRecordingRafLoop() {
     const elapsed = getLiveRecordingElapsedSec(nowPerf);
     playheadSec = liveRecSession.startSec + elapsed;
     if (tcEl) tcEl.textContent = formatTimecode(playheadSec);
+    if (!middlePanDragState) ensurePlayheadInViewport(playheadSec);
 
     // Flush composited GPU channel meter clip-paths strictly on VSync (zero layout reflow)
     for (const [trkId, recState] of liveRecSession.tracks.entries()) {
@@ -243,8 +246,44 @@ function getTimelineDurationSec() {
   return Math.max(2, Number((base / Math.max(0.25, timelineZoom)).toFixed(2)));
 }
 
-function setTimelineZoom(nextZoom) {
-  timelineZoom = DE.clamp(0.25, 8.0, Number(nextZoom) || 1.0);
+function setTimelineOffsetSec(nextOffsetSec) {
+  const maxOffset = Math.max(getBaseProjectSpanSec() * 3, timelineOffsetSec + 120);
+  timelineOffsetSec = Number(DE.clamp(0, maxOffset, Number(nextOffsetSec) || 0).toFixed(4));
+  drawAllTimelineCanvases();
+}
+
+function ensurePlayheadInViewport(headSec = playheadSec) {
+  const span = getTimelineDurationSec();
+  if (headSec > timelineOffsetSec + span * 0.94) {
+    timelineOffsetSec = Number(Math.max(0, headSec - span * 0.15).toFixed(4));
+  } else if (headSec < timelineOffsetSec) {
+    timelineOffsetSec = Number(Math.max(0, headSec - span * 0.05).toFixed(4));
+  }
+}
+
+function endMiddlePanDrag() {
+  if (!middlePanDragState) return;
+  middlePanDragState = null;
+  document.body.classList.remove('panning-timeline');
+}
+
+function setTimelineZoom(nextZoom, { anchorRatio = null, resetOffset = false } = {}) {
+  const prevSpan = getTimelineDurationSec();
+  const clampedZoom = DE.clamp(0.25, 8.0, Number(nextZoom) || 1.0);
+  if (resetOffset) {
+    timelineZoom = clampedZoom;
+    timelineOffsetSec = 0;
+  } else {
+    const ratio = (typeof anchorRatio === 'number' && anchorRatio >= 0 && anchorRatio <= 1)
+      ? anchorRatio
+      : ((playheadSec >= timelineOffsetSec && playheadSec <= timelineOffsetSec + prevSpan)
+        ? (playheadSec - timelineOffsetSec) / prevSpan
+        : 0);
+    const anchorTimeSec = timelineOffsetSec + ratio * prevSpan;
+    timelineZoom = clampedZoom;
+    const nextSpan = getTimelineDurationSec();
+    timelineOffsetSec = Number(Math.max(0, anchorTimeSec - ratio * nextSpan).toFixed(4));
+  }
   const zEl = document.getElementById('zoom-readout');
   if (zEl) zEl.textContent = `${Math.round(timelineZoom * 100)}%`;
   drawAllTimelineCanvases();
@@ -808,6 +847,7 @@ async function startPlayback() {
     if (!isPlaying) return;
     playheadSec = playStartOffsetSec + Math.max(0, ctx.currentTime - playStartWallSec);
     if (tcEl) tcEl.textContent = formatTimecode(playheadSec);
+    if (!middlePanDragState) ensurePlayheadInViewport(playheadSec);
     drawAllTimelineCanvases();
     if (playheadSec >= maxDuration) {
       if (loopPlayback) {
@@ -1635,7 +1675,7 @@ function bindTrackRowEvents() {
       if (selectedTrackId !== null) selectedTrackId = track.id;
 
       const ratio = Math.max(0, Math.min(1, (ev.clientX - rect.left) / Math.max(1, rect.width)));
-      const rawSec = ratio * totalSec;
+      const rawSec = timelineOffsetSec + ratio * totalSec;
       playheadSec = DE.snapTimeToBeatGrid(rawSec, currentProject?.bpm || 120, snapToGrid && !ev.altKey);
       document.getElementById('transport-timecode').textContent = formatTimecode(playheadSec);
       if (isPlaying) {
@@ -1665,7 +1705,7 @@ function bindTrackRowEvents() {
       const track = (currentProject?.tracks || []).find(t => t.id === trackId);
       if (!track) return;
       const rect = lane.getBoundingClientRect();
-      const clickTimeSec = Math.max(0, Math.min(1, (ev.clientX - rect.left) / Math.max(1, rect.width))) * getTimelineDurationSec();
+      const clickTimeSec = timelineOffsetSec + Math.max(0, Math.min(1, (ev.clientX - rect.left) / Math.max(1, rect.width))) * getTimelineDurationSec();
       const hit = hitTestLaneClip(track, lane, ev.clientX);
 
       if (hit) {
@@ -1707,10 +1747,11 @@ function hitTestLaneClip(track, laneEl, clientX) {
   const w = Math.max(1, rect.width);
   const x = clientX - rect.left;
   const totalSec = getTimelineDurationSec();
+  const viewStart = timelineOffsetSec;
   const clips = track?.clips || [];
   for (let i = clips.length - 1; i >= 0; i--) {
     const clip = clips[i];
-    const startX = (Number(clip.startSec || 0) / totalSec) * w;
+    const startX = (((Number(clip.startSec || 0)) - viewStart) / totalSec) * w;
     const clipW = Math.max(8, (Number(clip.durationSec || 1) / totalSec) * w);
     const endX = startX + clipW;
     if (x >= startX - 2 && x <= endX + 2) {
@@ -1725,6 +1766,16 @@ function hitTestLaneClip(track, laneEl, clientX) {
 }
 
 function handleGlobalTimelineMouseMove(ev) {
+  if (middlePanDragState) {
+    if (typeof ev.buttons === 'number' && ev.buttons > 0 && (ev.buttons & 4) === 0) {
+      endMiddlePanDrag();
+      return;
+    }
+    const dx = ev.clientX - middlePanDragState.startX;
+    const deltaSec = (dx / middlePanDragState.laneWidth) * middlePanDragState.viewSpanSec;
+    setTimelineOffsetSec(middlePanDragState.startOffsetSec - deltaSec);
+    return;
+  }
   if (!timelineDragState || !currentProject) return;
   const dx = ev.clientX - timelineDragState.startX;
   if (!timelineDragState.pushedUndo && Math.abs(dx) < 3) return;
@@ -1774,7 +1825,10 @@ function handleGlobalTimelineMouseMove(ev) {
   drawAllTimelineCanvases();
 }
 
-async function handleGlobalTimelineMouseUp() {
+async function handleGlobalTimelineMouseUp(ev) {
+  if (middlePanDragState && (!ev || ev.button === 1 || (typeof ev.buttons === 'number' && (ev.buttons & 4) === 0))) {
+    endMiddlePanDrag();
+  }
   if (!timelineDragState) return;
   const dragSnap = timelineDragState;
   const didEdit = dragSnap.pushedUndo;
@@ -1797,10 +1851,11 @@ async function handleGlobalTimelineMouseUp() {
   }
 }
 
-function renderStaticRulerLayer(w, h, totalSec, secPerBeat) {
+function renderStaticRulerLayer(w, h, totalSec, secPerBeat, viewStart = 0) {
+  const viewEnd = viewStart + totalSec;
   const markersArr = Array.isArray(currentProject?.markers) ? currentProject.markers : [];
   const markersSig = markersArr.map(m => `${m.num}:${m.timeSec}:${m.name}`).join('|');
-  const key = `${w}x${h}:${totalSec}:${secPerBeat.toFixed(5)}:${markersSig}`;
+  const key = `${w}x${h}:${viewStart.toFixed(4)}:${totalSec}:${secPerBeat.toFixed(5)}:${markersSig}`;
   if (rulerStaticCache.key === key && rulerStaticCache.canvas) {
     return rulerStaticCache.canvas;
   }
@@ -1823,12 +1878,13 @@ function renderStaticRulerLayer(w, h, totalSec, secPerBeat) {
 
   // Bars & Beats markers (4/4)
   const pxPerBeat = (secPerBeat / totalSec) * w;
-  const maxBeats = Math.ceil(totalSec / secPerBeat) + 1;
+  const firstBeat = Math.max(0, Math.floor(viewStart / secPerBeat));
+  const maxBeats = Math.ceil(viewEnd / secPerBeat) + 1;
   ctx.font = '700 9.5px ui-monospace, SFMono-Regular, Menlo, monospace';
-  for (let beat = 0; beat <= maxBeats; beat++) {
+  for (let beat = firstBeat; beat <= maxBeats; beat++) {
     const t = beat * secPerBeat;
-    if (t > totalSec + 0.01) break;
-    const x = Math.round((t / totalSec) * w) + 0.5;
+    if (t > viewEnd + 0.01) break;
+    const x = Math.round(((t - viewStart) / totalSec) * w) + 0.5;
     const isBar = beat % 4 === 0;
     const barNum = Math.floor(beat / 4) + 1;
 
@@ -1838,7 +1894,7 @@ function renderStaticRulerLayer(w, h, totalSec, secPerBeat) {
       ctx.moveTo(x, 0);
       ctx.lineTo(x, 17);
       ctx.stroke();
-      if (x < w - 26) {
+      if (x >= -2 && x < w - 26) {
         ctx.fillStyle = '#cbd5e1';
         ctx.fillText(barNum === 1 ? 'BAR 1' : String(barNum), x + 4, 12);
       }
@@ -1854,15 +1910,16 @@ function renderStaticRulerLayer(w, h, totalSec, secPerBeat) {
   // Seconds sub-lane markers
   ctx.font = '500 9px ui-monospace, SFMono-Regular, Menlo, monospace';
   const stepSec = totalSec <= 8 ? 0.5 : (totalSec <= 24 ? 1 : 2);
-  for (let s = 0; s <= totalSec + 0.001; s += stepSec) {
-    const x = Math.round((s / totalSec) * w) + 0.5;
+  const firstSecTick = Math.max(0, Math.floor(viewStart / stepSec) * stepSec);
+  for (let s = firstSecTick; s <= viewEnd + 0.001; s += stepSec) {
+    const x = Math.round(((s - viewStart) / totalSec) * w) + 0.5;
     const isMajor = Math.abs(s % (stepSec * 2)) < 0.01;
     ctx.strokeStyle = isMajor ? '#283446' : '#18202c';
     ctx.beginPath();
     ctx.moveTo(x, isMajor ? 18 : 24);
     ctx.lineTo(x, h);
     ctx.stroke();
-    if (isMajor && x < w - 32) {
+    if (isMajor && x >= -2 && x < w - 32) {
       ctx.fillStyle = '#64748b';
       ctx.fillText(`${Number(s.toFixed(1))}s`, x + 3, 29);
     }
@@ -1872,7 +1929,7 @@ function renderStaticRulerLayer(w, h, totalSec, secPerBeat) {
   if (markersArr.length) {
     ctx.font = '700 9px ui-monospace, SFMono-Regular, Menlo, monospace';
     for (const m of markersArr) {
-      const mx = ((Number(m.timeSec) || 0) / totalSec) * w;
+      const mx = (((Number(m.timeSec) || 0) - viewStart) / totalSec) * w;
       if (mx < -2 || mx > w + 2) continue;
       const tag = `${m.num}:${m.name || `M${m.num}`}`;
       const tw = Math.min(82, ctx.measureText(tag).width + 8);
@@ -1894,7 +1951,7 @@ function renderStaticRulerLayer(w, h, totalSec, secPerBeat) {
   return off;
 }
 
-function computeTrackStaticCacheKey(track, tIdx, w, h, totalSec, secPerBeat) {
+function computeTrackStaticCacheKey(track, tIdx, w, h, totalSec, secPerBeat, viewStart = 0) {
   const isTrackSel = selectedTrackIds.has(track.id) ? 1 : 0;
   const srOn = track.soundReplacement?.enabled ? 1 : 0;
   let clipsSig = '';
@@ -1904,12 +1961,14 @@ function computeTrackStaticCacheKey(track, tIdx, w, h, totalSec, secPerBeat) {
     const drg = timelineDragState?.targetClipIds?.has(c.id) ? timelineDragState.mode : '';
     clipsSig += `|${c.id}:${c.startSec}:${c.durationSec}:${c.gainDb || 0}:${c.fadeInSec || 0}:${c.fadeOutSec || 0}:${c.muted ? 1 : 0}:${c.peaks?.length || 0}:${c.transients?.length || 0}:${sel}:${hov}:${drg}`;
   }
-  return `${w}x${h}:${tIdx}:${totalSec}:${secPerBeat.toFixed(4)}:${track.gainDb || 0}:${waveformZoomDb}:${track.color || ''}:${isTrackSel}:${srOn}${clipsSig}`;
+  return `${w}x${h}:${tIdx}:${viewStart.toFixed(4)}:${totalSec}:${secPerBeat.toFixed(4)}:${track.gainDb || 0}:${waveformZoomDb}:${track.color || ''}:${isTrackSel}:${srOn}${clipsSig}`;
 }
 
 function drawAllTimelineCanvases() {
   if (!currentProject || !(currentProject.tracks || []).length) return;
   const totalSec = getTimelineDurationSec();
+  const viewStart = timelineOffsetSec;
+  const viewEnd = viewStart + totalSec;
   const bpm = Number(currentProject.bpm) || 120;
   const secPerBeat = 60 / bpm;
   const secPerBar = secPerBeat * 4;
@@ -1922,12 +1981,12 @@ function drawAllTimelineCanvases() {
     if (ruler.width !== w) ruler.width = w;
     if (ruler.height !== h) ruler.height = h;
     const ctx = ruler.getContext('2d');
-    const staticRuler = renderStaticRulerLayer(w, h, totalSec, secPerBeat);
+    const staticRuler = renderStaticRulerLayer(w, h, totalSec, secPerBeat, viewStart);
     ctx.clearRect(0, 0, w, h);
     ctx.drawImage(staticRuler, 0, 0);
 
     // Sub-pixel anti-aliased Playhead cap polygon + stem (no Math.round staircase judder)
-    const px = (playheadSec / totalSec) * w;
+    const px = ((playheadSec - viewStart) / totalSec) * w;
     if (px >= -8 && px <= w + 8) {
       ctx.fillStyle = '#00d4ff';
       ctx.beginPath();
@@ -1962,7 +2021,7 @@ function drawAllTimelineCanvases() {
 
     const trackGainDb = Number(track.gainDb) || 0;
     const baseColor = track.color || '#00d4ff';
-    const cacheKey = computeTrackStaticCacheKey(track, tIdx, w, h, totalSec, secPerBeat);
+    const cacheKey = computeTrackStaticCacheKey(track, tIdx, w, h, totalSec, secPerBeat, viewStart);
     let cachedEntry = trackStaticCache.get(track.id);
 
     if (!cachedEntry || cachedEntry.key !== cacheKey) {
@@ -1977,20 +2036,23 @@ function drawAllTimelineCanvases() {
       ctx.fillRect(0, 0, w, h);
 
       // Subtle alternating 1-bar shading + beat gridlines
-      const maxBeats = Math.ceil(totalSec / secPerBeat) + 1;
+      const firstBeat = Math.max(0, Math.floor(viewStart / secPerBeat));
+      const maxBeats = Math.ceil(viewEnd / secPerBeat) + 1;
       const pxPerBar = (secPerBar / totalSec) * w;
       if (pxPerBar >= 28) {
-        for (let bar = 0; bar * secPerBar < totalSec; bar += 2) {
-          const bx = (bar * secPerBar / totalSec) * w;
+        let firstBar = Math.max(0, Math.floor(viewStart / secPerBar));
+        if (firstBar % 2 !== 0) firstBar--;
+        for (let bar = firstBar; bar * secPerBar < viewEnd; bar += 2) {
+          const bx = (((bar * secPerBar) - viewStart) / totalSec) * w;
           ctx.fillStyle = 'rgba(255, 255, 255, 0.012)';
           ctx.fillRect(bx, 0, pxPerBar, h);
         }
       }
 
-      for (let beat = 0; beat <= maxBeats; beat++) {
+      for (let beat = firstBeat; beat <= maxBeats; beat++) {
         const t = beat * secPerBeat;
-        if (t > totalSec + 0.01) break;
-        const x = Math.round((t / totalSec) * w) + 0.5;
+        if (t > viewEnd + 0.01) break;
+        const x = Math.round(((t - viewStart) / totalSec) * w) + 0.5;
         const isBar = beat % 4 === 0;
         if (!isBar && (secPerBeat / totalSec) * w < 14) continue;
         ctx.strokeStyle = isBar ? 'rgba(148, 163, 184, 0.13)' : 'rgba(148, 163, 184, 0.045)';
@@ -2009,7 +2071,7 @@ function drawAllTimelineCanvases() {
 
       // Draw recorded audio regions onto cached static layer
       for (const clip of (track.clips || [])) {
-        const startX = (Number(clip.startSec || 0) / totalSec) * w;
+        const startX = (((Number(clip.startSec || 0)) - viewStart) / totalSec) * w;
         const clipW = Math.max(8, (Number(clip.durationSec || 1) / totalSec) * w);
         if (startX > w + 4 || startX + clipW < -4) continue;
 
@@ -2193,8 +2255,8 @@ function drawAllTimelineCanvases() {
         ? liveRecSession.stoppedEndSec
         : playheadSec;
       const recElapsedSec = Math.max(0, writeEdgeSec - recStartSec);
-      const startX = (recStartSec / totalSec) * w;
-      const endX = (writeEdgeSec / totalSec) * w;
+      const startX = ((recStartSec - viewStart) / totalSec) * w;
+      const endX = ((writeEdgeSec - viewStart) / totalSec) * w;
       const clipW = Math.max(2, endX - startX);
       const regionTop = 4;
       const regionH = h - 8;
@@ -2262,8 +2324,8 @@ function drawAllTimelineCanvases() {
             ctx.globalAlpha = pass === 0 ? 0.58 : 0.94;
             const floorAmp = pass === 0 ? 0.012 : 0.010;
             for (let col = px0; col < px1; col++) {
-              const tCol0 = ((col / w) * totalSec) - recStartSec;
-              const tCol1 = (((col + 1) / w) * totalSec) - recStartSec;
+              const tCol0 = (viewStart + (col / w) * totalSec) - recStartSec;
+              const tCol1 = (viewStart + ((col + 1) / w) * totalSec) - recStartSec;
               const s0 = Math.max(0, Math.floor(tCol0 / sliceDur));
               const s1 = Math.min(totalSlices - 1, Math.ceil(tCol1 / sliceDur));
               if (s0 > s1) continue;
@@ -2361,7 +2423,7 @@ function drawAllTimelineCanvases() {
     }
 
     // Sub-pixel anti-aliased Playhead cursor line (no Math.round staircase judder)
-    const px = (playheadSec / totalSec) * w;
+    const px = ((playheadSec - viewStart) / totalSec) * w;
     if (px >= -1 && px <= w + 1) {
       ctx.strokeStyle = '#00d4ff';
       ctx.lineWidth = 1.4;
@@ -2730,6 +2792,7 @@ async function createNewSession() {
     selectedClipIds.clear();
     anchorClipId = null;
     playheadSec = 0;
+    timelineOffsetSec = 0;
     document.getElementById('transport-timecode').textContent = formatTimecode(0);
     markDirty(false);
     switchView('studio-stage');
@@ -3312,7 +3375,7 @@ function buildMenubarItems(key) {
       { sep: true },
       { icon: 'zoom-in', label: 'Zoom In Arrangement', kbd: '+', run: () => setTimelineZoom(timelineZoom * 1.25) },
       { icon: 'zoom-out', label: 'Zoom Out Arrangement', kbd: '-', run: () => setTimelineZoom(timelineZoom / 1.25) },
-      { icon: 'maximize', label: 'Zoom to Fit Session (100%)', kbd: 'Ctrl+0', run: () => setTimelineZoom(1.0) },
+      { icon: 'maximize', label: 'Zoom to Fit Session (100%)', kbd: 'Ctrl+0', run: () => setTimelineZoom(1.0, { resetOffset: true }) },
       { sep: true },
       { icon: 'channel-fx', label: `${selectedTrackId ? 'Hide' : 'Show'} Channel Insert & Trigger Rack`, kbd: 'I', disabled: !hasTracks, run: () => {
         selectedTrackId = selectedTrackId ? null : (primaryTrack?.id || null);
@@ -4702,6 +4765,7 @@ async function loadProjectByIdOrDialog(payload) {
     anchorClipId = null;
     decodedBufferCache.clear();
     playheadSec = 0;
+    timelineOffsetSec = 0;
     document.getElementById('transport-timecode').textContent = formatTimecode(0);
     markDirty(false);
     document.getElementById('open-project-modal')?.classList.add('hidden');
@@ -5297,7 +5361,7 @@ async function init() {
   document.getElementById('btn-edit-delete')?.addEventListener('click', editDeleteSelected);
   document.getElementById('btn-zoom-in')?.addEventListener('click', () => setTimelineZoom(timelineZoom * 1.25));
   document.getElementById('btn-zoom-out')?.addEventListener('click', () => setTimelineZoom(timelineZoom / 1.25));
-  document.getElementById('btn-zoom-fit')?.addEventListener('click', () => setTimelineZoom(1.0));
+  document.getElementById('btn-zoom-fit')?.addEventListener('click', () => setTimelineZoom(1.0, { resetOffset: true }));
 
   // Shortcuts Modal & Rename Modal Controls
   document.getElementById('btn-open-shortcuts-modal')?.addEventListener('click', () => {
@@ -5328,10 +5392,34 @@ async function init() {
     }
   });
 
-  // Global Mouse Drag, Context Menu / Menubar Dismissal & Ctrl+Wheel Zoom
+  // Global Mouse Drag, Middle-Mouse Hand Pan, Context Menu / Menubar Dismissal & Wheel Zoom/Scroll
   window.addEventListener('mousemove', handleGlobalTimelineMouseMove);
   window.addEventListener('mouseup', handleGlobalTimelineMouseUp);
+  window.addEventListener('blur', endMiddlePanDrag);
+  window.addEventListener('auxclick', (ev) => {
+    if (ev.button === 1 && ev.target?.closest?.('#tracks-workspace')) {
+      ev.preventDefault();
+    }
+  }, { capture: true });
   window.addEventListener('mousedown', (ev) => {
+    if (ev.button === 1 && ev.target?.closest?.('#tracks-workspace')) {
+      ev.preventDefault();
+      ev.stopPropagation();
+      closeContextMenu();
+      closeMenubarDropdown();
+      const refLane = ev.target.closest?.('[data-lane-track]')
+        || document.getElementById('timeline-ruler-wrap')
+        || document.querySelector('[data-lane-track]');
+      const rect = refLane ? refLane.getBoundingClientRect() : null;
+      middlePanDragState = {
+        startX: ev.clientX,
+        startOffsetSec: timelineOffsetSec,
+        laneWidth: Math.max(64, rect ? rect.width : 640),
+        viewSpanSec: getTimelineDurationSec(),
+      };
+      document.body.classList.add('panning-timeline');
+      return;
+    }
     const menu = document.getElementById('daw-context-menu');
     if (menu && !menu.classList.contains('hidden') && !menu.contains(ev.target)) {
       closeContextMenu();
@@ -5341,7 +5429,7 @@ async function init() {
     if (mbPopup && !mbPopup.classList.contains('hidden') && !mbPopup.contains(ev.target) && !(mbNav && mbNav.contains(ev.target))) {
       closeMenubarDropdown();
     }
-  });
+  }, { capture: true });
   document.getElementById('tracks-list')?.addEventListener('scroll', () => {
     closeContextMenu();
     closeMenubarDropdown();
@@ -5349,7 +5437,16 @@ async function init() {
   document.getElementById('tracks-workspace')?.addEventListener('wheel', (ev) => {
     if (ev.ctrlKey || ev.metaKey) {
       ev.preventDefault();
-      setTimelineZoom(ev.deltaY < 0 ? timelineZoom * 1.18 : timelineZoom / 1.18);
+      const rulerEl = document.getElementById('timeline-ruler-wrap');
+      const rRect = rulerEl ? rulerEl.getBoundingClientRect() : null;
+      const anchorRatio = rRect && rRect.width > 20
+        ? Math.max(0, Math.min(1, (ev.clientX - rRect.left) / rRect.width))
+        : null;
+      setTimelineZoom(ev.deltaY < 0 ? timelineZoom * 1.18 : timelineZoom / 1.18, { anchorRatio });
+    } else if (ev.shiftKey || Math.abs(ev.deltaX) > Math.abs(ev.deltaY)) {
+      ev.preventDefault();
+      const delta = Math.abs(ev.deltaX) > Math.abs(ev.deltaY) ? ev.deltaX : ev.deltaY;
+      setTimelineOffsetSec(timelineOffsetSec + (delta / 480) * getTimelineDurationSec());
     }
   }, { passive: false });
 
@@ -5373,6 +5470,7 @@ async function init() {
   document.getElementById('btn-transport-rewind')?.addEventListener('click', () => {
     if (isRecording) return;
     playheadSec = 0;
+    timelineOffsetSec = 0;
     document.getElementById('transport-timecode').textContent = formatTimecode(0);
     if (isPlaying) { stopPlayback(); startPlayback(); }
     else drawAllTimelineCanvases();
@@ -5395,7 +5493,7 @@ async function init() {
     if (isRecording) return;
     const rect = ev.currentTarget.getBoundingClientRect();
     const ratio = Math.max(0, Math.min(1, (ev.clientX - rect.left) / Math.max(1, rect.width)));
-    playheadSec = DE.snapTimeToBeatGrid(ratio * getTimelineDurationSec(), currentProject?.bpm || 120, snapToGrid && !ev.altKey);
+    playheadSec = DE.snapTimeToBeatGrid(timelineOffsetSec + ratio * getTimelineDurationSec(), currentProject?.bpm || 120, snapToGrid && !ev.altKey);
     document.getElementById('transport-timecode').textContent = formatTimecode(playheadSec);
     if (isPlaying) { stopPlayback(); startPlayback(); }
     else drawAllTimelineCanvases();
@@ -5404,7 +5502,7 @@ async function init() {
     ev.preventDefault();
     const rect = ev.currentTarget.getBoundingClientRect();
     const ratio = Math.max(0, Math.min(1, (ev.clientX - rect.left) / Math.max(1, rect.width)));
-    openTimelineSpaceContextMenu(ev, null, ratio * getTimelineDurationSec());
+    openTimelineSpaceContextMenu(ev, null, timelineOffsetSec + ratio * getTimelineDurationSec());
   });
 
   // Full Workstation Keyboard Shortcuts (capture phase so focused buttons/sliders never delay Spacebar!)
@@ -5485,6 +5583,8 @@ async function init() {
     const setCursorSec = (nextSec) => {
       if (isRecording) return;
       playheadSec = Math.max(0, Number((Number(nextSec) || 0).toFixed(4)));
+      if (playheadSec === 0) timelineOffsetSec = 0;
+      else ensurePlayheadInViewport(playheadSec);
       const tcEl = document.getElementById('transport-timecode');
       if (tcEl) tcEl.textContent = formatTimecode(playheadSec);
       if (isPlaying) {
@@ -5777,7 +5877,7 @@ async function init() {
       showStatus('Waveform Peak Display Zoom: Reset (0 dB)');
     } else if ((isMod && ev.key === '0') || (!isMod && !ev.altKey && ev.key === '\\')) {
       ev.preventDefault();
-      setTimelineZoom(1.0);
+      setTimelineZoom(1.0, { resetOffset: true });
     } else if (ev.key === 'Delete' || ev.key === 'Backspace') {
       ev.preventDefault();
       if (ev.shiftKey && selectedTrackIds.size > 0) await removeSelectedTracks();
@@ -6295,6 +6395,7 @@ window.__dawStudioState = () => ({
   isPlaying,
   playheadSec,
   timelineZoom,
+  timelineOffsetSec,
   waveformZoomDb,
   snapToGrid,
   loopPlayback,

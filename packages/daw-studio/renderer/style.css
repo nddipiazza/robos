@@ -259,6 +259,11 @@ code, .mono {
 
 .red-text { color: #f87171 !important; }
 .accent-text { color: var(--accent) !important; }
+body.panning-timeline,
+body.panning-timeline * {
+  cursor: grabbing !important;
+  user-select: none !important;
+}
 
 /* ── Main Workstation Pane ───────────────────────────────────────────── */
 .main-pane {
