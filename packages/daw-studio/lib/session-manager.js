@@ -61,7 +61,7 @@ function saveRecentState(projectId) {
   } catch {}
 }
 
-function createEmptyProject({ name = 'Untitled Drum & Studio Session', bpm = 120, timeSignature = '4/4', sampleRate = 48000 } = {}) {
+function createEmptyProject({ name = 'Untitled Drum & Studio Session', bpm = 120, timeSignature = '4/4', sampleRate = 48000, metronome = false } = {}) {
   const id = `${slugify(name)}-${crypto.randomBytes(3).toString('hex')}`;
   const projectDir = path.join(getProjectsRoot(), id);
   return {
@@ -71,7 +71,7 @@ function createEmptyProject({ name = 'Untitled Drum & Studio Session', bpm = 120
     bpm,
     timeSignature,
     sampleRate,
-    metronome: true,
+    metronome: Boolean(metronome),
     createdAt: new Date().toISOString(),
     savedAt: null,
     projectDir,
@@ -179,7 +179,7 @@ function saveProject(project, { targetDir } = {}) {
     bpm: Number(project.bpm) || 120,
     timeSignature: project.timeSignature || '4/4',
     sampleRate: Number(project.sampleRate) || 48000,
-    metronome: project.metronome !== false,
+    metronome: Boolean(project.metronome),
     createdAt: project.createdAt || new Date().toISOString(),
     savedAt: new Date().toISOString(),
     projectDir,
@@ -210,6 +210,7 @@ function loadProject(idOrPath) {
   const raw = JSON.parse(fs.readFileSync(manifestFile, 'utf8'));
   const projectDir = path.dirname(manifestFile);
   raw.projectDir = projectDir;
+  raw.metronome = Boolean(raw.metronome);
 
   // Hydrate absolute clip wav paths and recompute peaks/transients if missing
   for (const track of (raw.tracks || [])) {

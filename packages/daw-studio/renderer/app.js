@@ -821,7 +821,7 @@ function renderStudio() {
   if (bpmInput && document.activeElement !== bpmInput) {
     bpmInput.value = currentProject.bpm || 120;
   }
-  document.getElementById('btn-metronome-toggle')?.classList.toggle('active', currentProject.metronome !== false);
+  document.getElementById('btn-metronome-toggle')?.classList.toggle('active', Boolean(currentProject.metronome));
   markDirty(isDirty);
   pruneSelections();
   updateEditToolbarState();
@@ -2968,7 +2968,7 @@ function buildMenubarItems(key) {
   }
 
   if (key === 'transport') {
-    const metroOn = currentProject?.metronome !== false;
+    const metroOn = Boolean(currentProject?.metronome);
     return [
       { icon: isPlaying ? 'stop' : 'play', label: isPlaying ? 'Stop Playback' : 'Play Timeline', kbd: 'Space', run: () => startPlayback() },
       { icon: isRecording ? 'stop' : 'record', label: isRecording ? 'Stop Recording' : 'Record Armed Tracks', kbd: 'R', run: () => toggleRecording() },
@@ -4984,7 +4984,7 @@ async function init() {
     if (res?.ok) { currentProject = res.project; markDirty(true); drawAllTimelineCanvases(); }
   });
   document.getElementById('btn-metronome-toggle')?.addEventListener('click', async () => {
-    const next = !(currentProject?.metronome !== false);
+    const next = !Boolean(currentProject?.metronome);
     const res = await window.robos.updateProjectMeta({ metronome: next });
     if (res?.ok) { currentProject = res.project; renderStudio(); }
   });
@@ -5269,7 +5269,7 @@ async function init() {
       showStatus(`Loop Playback: ${loopPlayback ? 'ON' : 'OFF'}`);
     } else if (!isMod && !ev.altKey && keyLower === 'c') {
       ev.preventDefault();
-      const next = !(currentProject?.metronome !== false);
+      const next = !Boolean(currentProject?.metronome);
       const res = await window.robos.updateProjectMeta({ metronome: next });
       if (res?.ok) { currentProject = res.project; renderStudio(); }
     } else if (!isMod && !ev.altKey && keyLower === 'i') {

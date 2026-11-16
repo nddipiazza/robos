@@ -194,6 +194,7 @@ describe('Add Mic Wizard profiles, open-source drum kits & session persistence',
       }));
 
       const project = createEmptyProject({ name: 'E2E Drum & Guitar Tracking Proof', bpm: 128 });
+      assert.strictEqual(project.metronome, false, 'Metronome must default to off');
       const micChoices = [
         { profileId: 'kick-in', name: 'Kick Inside' },
         { profileId: 'kick-out', name: 'Kick Outside Sub' },
