@@ -1172,4 +1172,59 @@ describe('DAW Editing Engine: Multi-Select, Track/Take Gain, Split/Trim, Copy/Pa
       indices: [12, 13, 14, 15, 16, 17, 18, 19],
     });
   });
+
+  it('imports MP3, FLAC, OGG, and MP4/WebM video files into 24-bit session WAVs and parses dropped file URIs', async () => {
+    const { execFileSync } = require('child_process');
+    const {
+      ALL_MEDIA_EXTENSIONS,
+      classifyMediaExtension,
+      parseDroppedUriList,
+      importMediaFileToWav,
+    } = require('../lib/media-importer');
+
+    assert.ok(ALL_MEDIA_EXTENSIONS.includes('mp3'));
+    assert.ok(ALL_MEDIA_EXTENSIONS.includes('mp4'));
+    assert.ok(ALL_MEDIA_EXTENSIONS.includes('mkv'));
+    assert.ok(ALL_MEDIA_EXTENSIONS.includes('webm'));
+    assert.ok(ALL_MEDIA_EXTENSIONS.includes('flac'));
+    assert.strictEqual(classifyMediaExtension('/tmp/backing track.MP3'), 'audio');
+    assert.strictEqual(classifyMediaExtension('/tmp/drum_playthrough.mp4'), 'video');
+    assert.deepStrictEqual(
+      parseDroppedUriList('file:///home/user/My%20Song.mp3\r\n# comment\r\nfile:///home/user/video.mp4\r\n'),
+      ['/home/user/My Song.mp3', '/home/user/video.mp4']
+    );
+
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'daw-media-import-'));
+    try {
+      execFileSync('ffmpeg', ['-y', '-v', 'error', '-f', 'lavfi', '-i', 'sine=frequency=440:duration=0.45', path.join(tmpDir, 'backing.mp3')]);
+      execFileSync('ffmpeg', ['-y', '-v', 'error', '-f', 'lavfi', '-i', 'sine=frequency=330:duration=0.45', path.join(tmpDir, 'stem.flac')]);
+      execFileSync('ffmpeg', [
+        '-y', '-v', 'error',
+        '-f', 'lavfi', '-i', 'testsrc=size=128x96:rate=15:duration=0.5',
+        '-f', 'lavfi', '-i', 'sine=frequency=220:duration=0.5',
+        '-shortest',
+        path.join(tmpDir, 'playthrough.mp4'),
+      ]);
+      execFileSync('ffmpeg', ['-y', '-v', 'error', '-f', 'lavfi', '-i', 'testsrc=size=128x96:rate=15:duration=0.35', '-an', path.join(tmpDir, 'silent.mp4')]);
+
+      const mp3Res = await importMediaFileToWav(path.join(tmpDir, 'backing.mp3'), path.join(tmpDir, 'out-mp3.wav'));
+      assert.strictEqual(mp3Res.ok, true);
+      assert.strictEqual(mp3Res.mediaKind, 'audio');
+      const mp3Peaks = computeWaveformPeaks(fs.readFileSync(mp3Res.destWavPath), 48);
+      assert.ok(mp3Peaks.durationSec >= 0.4 && mp3Peaks.peakDb > -30);
+
+      const mp4Res = await importMediaFileToWav(path.join(tmpDir, 'playthrough.mp4'), path.join(tmpDir, 'out-mp4.wav'));
+      assert.strictEqual(mp4Res.ok, true);
+      assert.strictEqual(mp4Res.mediaKind, 'video');
+      const mp4Peaks = computeWaveformPeaks(fs.readFileSync(mp4Res.destWavPath), 48);
+      assert.ok(mp4Peaks.durationSec >= 0.45 && mp4Peaks.peakDb > -30);
+
+      await assert.rejects(
+        () => importMediaFileToWav(path.join(tmpDir, 'silent.mp4'), path.join(tmpDir, 'out-silent.wav')),
+        /no audio track/i
+      );
+    } finally {
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+    }
+  });
 });

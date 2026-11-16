@@ -1,6 +1,6 @@
 'use strict';
 
-const { contextBridge, ipcRenderer } = require('electron');
+const { contextBridge, ipcRenderer, webUtils } = require('electron');
 
 function subscribe(channel, cb) {
   const listener = (_e, payload) => cb(payload);
@@ -62,6 +62,16 @@ contextBridge.exposeInMainWorld('robos', {
 
   addBlankTracks: (payload) => ipcRenderer.invoke('daw:add-blank-tracks', payload),
   importAudioFiles: (payload) => ipcRenderer.invoke('daw:import-audio-files', payload),
+  getPathForFile: (file) => {
+    try {
+      if (webUtils && typeof webUtils.getPathForFile === 'function') {
+        return webUtils.getPathForFile(file) || file?.path || '';
+      }
+      return file?.path || '';
+    } catch {
+      return file?.path || '';
+    }
+  },
   exportMixdownWav: (payload) => ipcRenderer.invoke('daw:export-mixdown-wav', payload),
   openSessionFolder: () => ipcRenderer.invoke('daw:open-session-folder'),
 });

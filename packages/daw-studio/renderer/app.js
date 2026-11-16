@@ -3147,7 +3147,24 @@ async function editTrimToPlayhead(edge /* 'left' | 'right' */) {
 
 async function importAudioWavFiles({ startSec = playheadSec, targetTrackId = null, filePaths = undefined } = {}) {
   const prevSnap = currentProject ? DE.cloneDeep(currentProject) : null;
-  const chosenTrackId = targetTrackId || (selectedTrackIds.size === 1 ? [...selectedTrackIds][0] : null);
+  let chosenTrackId = targetTrackId;
+  if (!chosenTrackId && selectedTrackIds.size === 1) {
+    const selId = [...selectedTrackIds][0];
+    const selTrack = (currentProject?.tracks || []).find(t => t.id === selId);
+    const hasOverlap = (selTrack?.clips || []).some(c => {
+      const s = Number(c.startSec) || 0;
+      const e = s + (Number(c.durationSec) || 0);
+      return startSec >= s - 0.01 && startSec < e;
+    });
+    if (selTrack && !selTrack.armed && !hasOverlap) {
+      chosenTrackId = selId;
+    }
+  }
+
+  if (Array.isArray(filePaths) && filePaths.length > 0) {
+    showStatus(`Importing & decoding ${filePaths.length} media file(s) at ${formatTimecode(startSec)}...`);
+  }
+
   const res = await window.robos.importAudioFiles({
     startSec,
     targetTrackId: chosenTrackId,
@@ -3155,16 +3172,184 @@ async function importAudioWavFiles({ startSec = playheadSec, targetTrackId = nul
   });
   if (res?.canceled) return;
   if (!res?.ok || !res.project) {
-    showStatus(`Import WAV failed: ${res?.error || 'Unknown error'}`, true);
+    showStatus(`Media import failed: ${res?.error || 'Unknown error'}`, true);
     return;
   }
-  if (prevSnap) historyStack.pushSnapshot(prevSnap, 'Import Audio WAV');
+  if (prevSnap) historyStack.pushSnapshot(prevSnap, 'Import Audio / Video Media');
   currentProject = res.project;
+  for (const t of (currentProject.tracks || [])) {
+    for (const c of (t.clips || [])) {
+      if ((res.importedClipIds || []).includes(c.id) && c.wavFile) {
+        decodedBufferCache.delete(c.wavFile);
+      }
+    }
+  }
   selectedClipIds = new Set(res.importedClipIds || []);
+  if (res.createdTrackIds?.length) {
+    selectedTrackIds = new Set(res.createdTrackIds);
+    anchorTrackId = res.createdTrackIds[0];
+  }
   markDirty(true);
   switchView('studio-stage');
   renderStudio();
-  showStatus(`Imported ${(res.importedClipIds || []).length} WAV file(s) at ${formatTimecode(startSec)}`);
+
+  const items = res.importedItems || [];
+  const videoCount = items.filter(x => x.mediaKind === 'video').length;
+  const audioCount = Math.max(0, items.length - videoCount);
+  const kindSummary = videoCount && audioCount
+    ? `${audioCount} audio + ${videoCount} video`
+    : (videoCount ? `${videoCount} video audio stem(s)` : `${(res.importedClipIds || []).length} audio file(s)`);
+  const warnSuffix = res.skippedErrors?.length ? ` (${res.skippedErrors.length} skipped: ${res.skippedErrors[0]})` : '';
+  showStatus(`Imported ${kindSummary} at ${formatTimecode(startSec)}${warnSuffix}`);
+}
+
+function extractDroppedFilePaths(dataTransfer) {
+  if (!dataTransfer) return [];
+  const seen = new Set();
+  const out = [];
+  const addPath = (p) => {
+    const clean = String(p || '').trim();
+    if (clean && clean.startsWith('/') && !seen.has(clean)) {
+      seen.add(clean);
+      out.push(clean);
+    }
+  };
+
+  if (dataTransfer.files && dataTransfer.files.length > 0) {
+    for (const file of Array.from(dataTransfer.files)) {
+      const resolved = typeof window.robos?.getPathForFile === 'function'
+        ? window.robos.getPathForFile(file)
+        : (file?.path || '');
+      addPath(resolved);
+    }
+  }
+
+  try {
+    const uriList = dataTransfer.getData('text/uri-list') || '';
+    for (const rawLine of uriList.split(/\r?\n/)) {
+      const line = rawLine.trim();
+      if (!line || line.startsWith('#')) continue;
+      if (line.startsWith('file://')) {
+        try {
+          addPath(decodeURIComponent(line.replace(/^file:\/\/(localhost)?/, '')));
+        } catch {}
+      } else if (line.startsWith('/')) {
+        addPath(line);
+      }
+    }
+  } catch {}
+
+  return out;
+}
+
+function resolveMediaDropContext(ev) {
+  const rowEl = ev.target?.closest?.('.track-row');
+  const laneEl = ev.target?.closest?.('[data-lane-track]') || rowEl?.querySelector?.('[data-lane-track]');
+  const hoveredTrackId = laneEl?.dataset?.laneTrack || rowEl?.dataset?.trackRow || null;
+  const hoveredTrack = hoveredTrackId
+    ? (currentProject?.tracks || []).find(t => t.id === hoveredTrackId) || null
+    : null;
+
+  let dropStartSec = playheadSec;
+  if (laneEl) {
+    const rect = laneEl.getBoundingClientRect();
+    if (rect.width > 10) {
+      const ratio = DE.clamp(0, 1, (ev.clientX - rect.left) / rect.width);
+      const rawSec = timelineOffsetSec + ratio * getTimelineTotalSec();
+      dropStartSec = DE.snapTimeToBeatGrid(rawSec, currentProject?.bpm || 120, snapToGrid);
+    }
+  }
+
+  let eligibleTrack = null;
+  if (hoveredTrack && !hoveredTrack.armed) {
+    const overlapsExisting = (hoveredTrack.clips || []).some(c => {
+      const s = Number(c.startSec) || 0;
+      const e = s + (Number(c.durationSec) || 0);
+      return dropStartSec >= s - 0.01 && dropStartSec < e;
+    });
+    if (!overlapsExisting) eligibleTrack = hoveredTrack;
+  }
+
+  return { rowEl, hoveredTrack, eligibleTrack, dropStartSec: Number(dropStartSec.toFixed(3)) };
+}
+
+function setupMediaDragAndDrop() {
+  const overlay = document.getElementById('media-drop-overlay');
+  const titleEl = document.getElementById('media-drop-title');
+  let dragDepth = 0;
+  let lastHoverRow = null;
+
+  const clearHoverState = () => {
+    dragDepth = 0;
+    overlay?.classList.add('hidden');
+    if (lastHoverRow) {
+      lastHoverRow.classList.remove('drop-target-hover');
+      lastHoverRow = null;
+    }
+  };
+
+  const hasExternalFiles = (dt) => {
+    if (!dt || !dt.types) return false;
+    const types = Array.from(dt.types);
+    return types.includes('Files') || types.includes('text/uri-list');
+  };
+
+  window.addEventListener('dragenter', (ev) => {
+    if (!hasExternalFiles(ev.dataTransfer)) return;
+    ev.preventDefault();
+    dragDepth++;
+    overlay?.classList.remove('hidden');
+  });
+
+  window.addEventListener('dragover', (ev) => {
+    if (!hasExternalFiles(ev.dataTransfer)) return;
+    ev.preventDefault();
+    if (ev.dataTransfer) ev.dataTransfer.dropEffect = 'copy';
+    overlay?.classList.remove('hidden');
+
+    const { rowEl, eligibleTrack, dropStartSec } = resolveMediaDropContext(ev);
+    if (lastHoverRow && lastHoverRow !== rowEl) {
+      lastHoverRow.classList.remove('drop-target-hover');
+    }
+    if (rowEl && eligibleTrack) {
+      rowEl.classList.add('drop-target-hover');
+      lastHoverRow = rowEl;
+    } else {
+      lastHoverRow = null;
+    }
+
+    if (titleEl) {
+      titleEl.textContent = eligibleTrack
+        ? `Drop to Import onto "${eligibleTrack.name}" @ ${formatTimecode(dropStartSec)}`
+        : `Drop Audio or Video to Create Media Track @ ${formatTimecode(dropStartSec)}`;
+    }
+  });
+
+  window.addEventListener('dragleave', (ev) => {
+    if (!hasExternalFiles(ev.dataTransfer)) return;
+    dragDepth = Math.max(0, dragDepth - 1);
+    if (dragDepth === 0 || (ev.clientX <= 0 && ev.clientY <= 0)) {
+      clearHoverState();
+    }
+  });
+
+  window.addEventListener('drop', async (ev) => {
+    if (!hasExternalFiles(ev.dataTransfer)) return;
+    ev.preventDefault();
+    ev.stopPropagation();
+    const { eligibleTrack, dropStartSec } = resolveMediaDropContext(ev);
+    const paths = extractDroppedFilePaths(ev.dataTransfer);
+    clearHoverState();
+    if (!paths.length) {
+      showStatus('Could not read file path(s) from drop — use Import (Ctrl+Shift+I) to browse.', true);
+      return;
+    }
+    await importAudioWavFiles({
+      startSec: dropStartSec,
+      targetTrackId: paths.length === 1 && eligibleTrack ? eligibleTrack.id : null,
+      filePaths: paths,
+    });
+  });
 }
 
 function uint8ToBase64(bytes) {
@@ -3314,7 +3499,7 @@ function buildMenubarItems(key) {
       { icon: 'save', label: 'Save Session', kbd: 'Ctrl+S', run: () => saveCurrentSession(false) },
       { icon: 'save', label: 'Save Session As...', kbd: 'Ctrl+Shift+S', run: () => saveCurrentSession(true) },
       { sep: true },
-      { icon: 'import-wav', label: 'Import Audio WAV File(s)...', kbd: 'Ctrl+Shift+I', run: () => importAudioWavFiles() },
+      { icon: 'import-wav', label: 'Import Audio / Video File(s)...', kbd: 'Ctrl+Shift+I', run: () => importAudioWavFiles() },
       { icon: 'mixdown-export', label: 'Export Stereo Mixdown (.wav)...', kbd: 'Ctrl+Shift+E', disabled: !hasClips, run: () => exportSessionMixdownWav() },
       { icon: 'folder', label: 'Reveal Session Audio Folder', kbd: '', run: async () => {
         const res = await window.robos.openSessionFolder();
@@ -3687,7 +3872,7 @@ function openEmptyRackContextMenu(ev) {
     ${ctxRow('data-rack-ctx', 'add-8', 'layers', 'Add 8 Sequential Audio Tracks')}
     ${ctxRow('data-rack-ctx', 'wiz-mic', 'mic-wizard', 'Add Mic via Studio Wizard...')}
     ${ctxRow('data-rack-ctx', 'wiz-drumset', 'drumset-ai', 'DrumSet AI Soundcheck (Gemini)...')}
-    ${ctxRow('data-rack-ctx', 'import-wav', 'import-wav', 'Import Audio WAV File(s)...', 'Ctrl+Shift+I')}
+    ${ctxRow('data-rack-ctx', 'import-wav', 'import-wav', 'Import Audio / Video File(s)...', 'Ctrl+Shift+I')}
     <div class="ctx-sep"></div>
     ${ctxRow('data-rack-ctx', 'sel-all-tracks', 'check-square', `Select All Tracks (${tracks.length})`, 'Ctrl+Shift+A', { disabled: !tracks.length })}
     ${ctxRow('data-rack-ctx', 'arm-all', 'record', 'Arm All Tracks', 'Ctrl+Alt+R', { disabled: !tracks.length })}
@@ -3740,7 +3925,7 @@ function openTimelineSpaceContextMenu(ev, track, clickTimeSec) {
     ${ctxRow('data-tl-ctx', 'play-here', 'play', 'Play From Here')}
     <div class="ctx-sep"></div>
     ${ctxRow('data-tl-ctx', 'paste-here', 'paste', 'Paste Region(s) Here', 'Ctrl+V', { disabled: !clipClipboard })}
-    ${ctxRow('data-tl-ctx', 'import-here', 'import-wav', 'Import Audio WAV Here...', 'Ctrl+Shift+I')}
+    ${ctxRow('data-tl-ctx', 'import-here', 'import-wav', 'Import Audio / Video Here...', 'Ctrl+Shift+I')}
     ${ctxRow('data-tl-ctx', 'split-all-here', 'scissors', `Split All Regions Crossing ${formatTimecode(safeTime)}`)}
     <div class="ctx-sep"></div>
     ${ctxRow('data-tl-ctx', 'toggle-snap', snapToGrid ? 'check' : 'magnet', `Snap to Beat Grid (${snapToGrid ? 'ON' : 'OFF'})`, 'G')}
@@ -5510,7 +5695,10 @@ async function init() {
   document.getElementById('btn-open-add-mic-wizard')?.addEventListener('click', openAddMicWizard);
   document.getElementById('btn-empty-open-wizard')?.addEventListener('click', openAddMicWizard);
   document.getElementById('btn-empty-add-blank-track')?.addEventListener('click', () => addBlankAudioTracks(1));
+  document.getElementById('btn-empty-import-media')?.addEventListener('click', () => importAudioWavFiles());
   document.getElementById('btn-quick-add-track')?.addEventListener('click', () => addBlankAudioTracks(1));
+  document.getElementById('btn-quick-import-media')?.addEventListener('click', () => importAudioWavFiles());
+  setupMediaDragAndDrop();
   document.getElementById('btn-quick-arm-sel')?.addEventListener('click', () => armSelectedTracks());
   document.getElementById('btn-quick-disarm-all')?.addEventListener('click', () => disarmAllTracks());
   document.getElementById('btn-quick-remove-tracks')?.addEventListener('click', () => removeSelectedTracks());

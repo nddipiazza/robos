@@ -2252,3 +2252,47 @@ kbd {
 .plugin-chip button:hover {
   color: #f87171;
 }
+
+/* ─── Universal Audio & Video Drag-and-Drop Overlay ─────────────────────── */
+.media-drop-overlay {
+  position: fixed;
+  inset: 10px;
+  z-index: 9500;
+  pointer-events: none;
+  border: 2px dashed rgba(0, 212, 255, 0.72);
+  border-radius: 8px;
+  background: rgba(10, 16, 26, 0.56);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 64px;
+}
+.media-drop-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 14px 24px;
+  border-radius: 8px;
+  background: rgba(15, 22, 34, 0.96);
+  border: 1px solid rgba(0, 212, 255, 0.45);
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.65);
+  color: #38bdf8;
+  text-align: center;
+}
+.media-drop-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #f1f5f9;
+  letter-spacing: 0.02em;
+}
+.media-drop-sub {
+  font-size: 11px;
+  color: #94a3b8;
+  font-family: var(--mono);
+}
+.track-row.drop-target-hover {
+  outline: 1.5px solid #00d4ff;
+  outline-offset: -1.5px;
+  background: rgba(0, 212, 255, 0.08) !important;
+}

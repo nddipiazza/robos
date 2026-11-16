@@ -44,6 +44,10 @@ const {
   removeVstDirectory,
   getVstDirectoriesSnapshot,
 } = require('./lib/vst-directories');
+const {
+  MEDIA_DIALOG_FILTERS,
+  importMediaFileToWav,
+} = require('./lib/media-importer');
 
 // Ensure user CLI bin directories (where `agy`, `gemini`, `claude`, `copilot` live) are in PATH
 for (const extraBin of [
@@ -974,9 +978,9 @@ ipcMain.handle('daw:import-audio-files', async (_e, payload) => {
 
     if (!filePaths && mainWindow && !mainWindow.isDestroyed()) {
       const res = await dialog.showOpenDialog(mainWindow, {
-        title: 'Import Audio WAV File(s) into Session',
+        title: 'Import Audio or Video File(s) into Session',
         properties: ['openFile', 'multiSelections'],
-        filters: [{ name: 'WAV Audio Stems', extensions: ['wav'] }],
+        filters: MEDIA_DIALOG_FILTERS,
       });
       if (res.canceled || !res.filePaths?.length) {
         return { ok: false, canceled: true };
@@ -995,18 +999,43 @@ ipcMain.handle('daw:import-audio-files', async (_e, payload) => {
     const targetTrackId = payload?.targetTrackId || null;
     const importedClipIds = [];
     const createdTrackIds = [];
+    const importedItems = [];
+    const skippedErrors = [];
 
     for (let i = 0; i < filePaths.length; i++) {
       const srcPath = filePaths[i];
-      if (!fs.existsSync(srcPath)) continue;
-      const baseTitle = path.basename(srcPath, path.extname(srcPath));
+      if (!srcPath || !fs.existsSync(srcPath)) {
+        skippedErrors.push(`File not found: ${srcPath}`);
+        continue;
+      }
+      try {
+        if (fs.statSync(srcPath).isDirectory()) continue;
+      } catch {
+        continue;
+      }
+
+      const rawExt = path.extname(srcPath);
+      const baseTitle = path.basename(srcPath, rawExt) || path.basename(srcPath);
+      const safeStem = baseTitle.replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 48) || 'media';
       const clipId = `clip-${crypto.randomBytes(4).toString('hex')}`;
-      const destFileName = `${clipId}-${path.basename(srcPath).replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+      const destFileName = `${clipId}-${safeStem}.wav`;
       const destPath = path.join(takesDir, destFileName);
-      fs.copyFileSync(srcPath, destPath);
+
+      let importRes = null;
+      try {
+        importRes = await importMediaFileToWav(srcPath, destPath, {
+          sampleRate: Number(proj.sampleRate) || 48000,
+        });
+      } catch (convErr) {
+        skippedErrors.push(convErr.message);
+        continue;
+      }
 
       const wavBuf = fs.readFileSync(destPath);
-      const peakInfo = computeWaveformPeaks(wavBuf, 160);
+      // High-density peak buckets for full-length songs & video audio stems
+      const estSeconds = Math.max(1, wavBuf.length / ((importRes.sampleRate || 48000) * (importRes.channels || 2) * 3));
+      const numBuckets = Math.min(1200, Math.max(240, Math.round(estSeconds * 8)));
+      const peakInfo = computeWaveformPeaks(wavBuf, numBuckets);
       const transients = detectDrumTransients(wavBuf, { thresholdDb: -28, minIntervalMs: 65 });
 
       let destTrack = (filePaths.length === 1 && targetTrackId)
@@ -1016,15 +1045,39 @@ ipcMain.handle('daw:import-audio-files', async (_e, payload) => {
         destTrack = buildTrackFromWizard({
           profileId: 'acoustic-inst',
           name: baseTitle.slice(0, 32) || `Imported ${proj.tracks.length + 1}`,
+          inputNodeName: '',
+          inputLabel: importRes.mediaKind === 'video'
+            ? `Video Audio (${(importRes.audioCodec || 'PCM').toUpperCase()})`
+            : `Audio File (${(importRes.audioCodec || rawExt.replace('.', '') || 'PCM').toUpperCase()})`,
           armed: false,
         });
+        // Flat full-range 20 Hz–20 kHz strip so imported backing MP3/MP4 songs retain full sub-bass & dynamics
+        destTrack.color = importRes.mediaKind === 'video' ? '#8b5cf6' : '#06b6d4';
+        destTrack.volume = 0.88;
+        destTrack.fx = {
+          ...(destTrack.fx || {}),
+          openSourcePlugins: ['x42 Parametric EQ4 (LV2)', 'Calf Bus Glue (LV2)'],
+          phaseInvert: false,
+          gate: { enabled: false, thresholdDb: -60 },
+          eq: { enabled: false, hpfHz: 25, lowFreqHz: 80, lowGainDb: 0, midFreqHz: 800, midGainDb: 0, midQ: 1.2, highFreqHz: 8000, highGainDb: 0 },
+          compressor: { enabled: false, thresholdDb: -18, ratio: 2.5, attackMs: 12, releaseMs: 120, makeupDb: 0 },
+          drive: { enabled: false, amount: 0 },
+          reverb: { enabled: false, type: 'room', mix: 0, decaySec: 0.9, preDelayMs: 18, dampHz: 7000 },
+        };
+        destTrack.soundReplacement = {
+          ...(destTrack.soundReplacement || {}),
+          enabled: false,
+        };
         proj.tracks.push(destTrack);
         createdTrackIds.push(destTrack.id);
       }
 
+      const fmtTag = rawExt ? rawExt.replace(/^\./, '').toUpperCase() : (importRes.mediaKind === 'video' ? 'VIDEO' : 'AUDIO');
       const clip = {
         id: clipId,
-        name: baseTitle,
+        name: rawExt && rawExt.toLowerCase() !== '.wav' ? `${baseTitle} [${fmtTag}]` : baseTitle,
+        sourceFile: srcPath,
+        mediaKind: importRes.mediaKind,
         wavFile: destPath,
         relativeWavPath: path.join('takes', destFileName),
         fileExists: true,
@@ -1042,6 +1095,18 @@ ipcMain.handle('daw:import-audio-files', async (_e, payload) => {
       };
       destTrack.clips.push(clip);
       importedClipIds.push(clip.id);
+      importedItems.push({
+        clipId: clip.id,
+        trackId: destTrack.id,
+        name: clip.name,
+        mediaKind: importRes.mediaKind,
+        audioCodec: importRes.audioCodec,
+        durationSec: clip.durationSec,
+      });
+    }
+
+    if (!importedClipIds.length && skippedErrors.length) {
+      return { ok: false, error: skippedErrors.join(' | ') };
     }
 
     return {
@@ -1049,6 +1114,8 @@ ipcMain.handle('daw:import-audio-files', async (_e, payload) => {
       project: proj,
       importedClipIds,
       createdTrackIds,
+      importedItems,
+      skippedErrors,
     };
   } catch (err) {
     return { ok: false, error: err.message };

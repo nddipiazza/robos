@@ -179,6 +179,10 @@
                 <svg class="daw-svg-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                 <span>Add Blank Audio Track (Ctrl+T)</span>
               </button>
+              <button type="button" class="btn btn-lg btn-bevel" id="btn-empty-import-media">
+                <svg class="daw-svg-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                <span>Import / Drop Audio &amp; Video (MP3, MP4, WAV...)</span>
+              </button>
               <button type="button" class="btn btn-primary btn-lg" id="btn-empty-open-drumset-wizard">
                 <img src="assets/icons/drumset-ai.webp" class="daw-ai-badge" width="20" height="20" alt="" />
                 <span>DrumSet AI Soundcheck (All Mics to Gemini)</span>
@@ -198,6 +202,10 @@
                   <button type="button" class="btn btn-sm btn-primary" id="btn-quick-add-track" title="Add Blank Audio Track on Next Hardware Input (Ctrl+T)">
                     <svg class="daw-svg-icon" width="12.5" height="12.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                     <span>Track</span>
+                  </button>
+                  <button type="button" class="btn btn-sm btn-bevel" id="btn-quick-import-media" title="Import or Drag &amp; Drop Audio/Video Files — MP3, MP4, WAV, FLAC, M4A, MKV, MOV, OGG, WebM... (Ctrl+Shift+I)">
+                    <svg class="daw-svg-icon" width="12.5" height="12.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    <span>Import</span>
                   </button>
                   <button type="button" class="btn btn-sm btn-bevel" id="btn-quick-arm-sel" title="Arm Selected Track(s) — or Arm All if none selected (Ctrl+Alt+R)">Arm</button>
                   <button type="button" class="btn btn-sm btn-bevel" id="btn-quick-disarm-all" title="Disarm All Tracks">Disarm All</button>
@@ -843,6 +851,14 @@
         <span class="hint">Press Ctrl+R (or R) to record, Alt+Backspace to discard a botched pass, or Ctrl+Shift+R / F4 for instant hands-free Retake.</span>
         <button type="button" class="btn btn-primary" id="btn-shortcuts-done">Close</button>
       </div>
+    </div>
+  </div>
+
+  <div id="media-drop-overlay" class="media-drop-overlay hidden" aria-hidden="true">
+    <div class="media-drop-card">
+      <svg class="daw-svg-icon" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      <div class="media-drop-title" id="media-drop-title">Drop Audio or Video Files to Import</div>
+      <div class="media-drop-sub" id="media-drop-sub">MP3 · MP4 · WAV · FLAC · M4A · AAC · OGG · Opus · MKV · WebM · MOV · AVI · AIFF · WMA</div>
     </div>
   </div>
 
