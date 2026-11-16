@@ -100,7 +100,16 @@ if (process.env.ROBOS_TEST !== '1' && !app.requestSingleInstanceLock()) {
 let mainWindow = null;
 let hotplugTimer = null;
 let lastUsbSignature = '';
+let lastProcCardsSignature = '';
 let currentProject = null;
+
+function readProcCardsSignature() {
+  try {
+    return fs.readFileSync('/proc/asound/cards', 'utf8').trim();
+  } catch {
+    return '';
+  }
+}
 
 const tapDetector = new MultiChannelTapDetector();
 const recorder = new MultiTrackRecorder();
@@ -1089,10 +1098,15 @@ ipcMain.handle('daw:open-session-folder', async () => {
 app.whenReady().then(() => {
   createWindow();
 
-  // Watch USB / PipeWire hotplug changes every 2.5s
+  // Watch USB ALSA card hotplug via 0.02ms /proc/asound/cards kernel read (never block main thread during recording!)
+  lastProcCardsSignature = readProcCardsSignature();
   hotplugTimer = setInterval(() => {
     if (!mainWindow || mainWindow.isDestroyed() || !audioDevices) return;
+    if (recorder.isRecording() || soundcheckRecorder.isRecording()) return;
     try {
+      const procSig = readProcCardsSignature();
+      if (procSig === lastProcCardsSignature) return;
+      lastProcCardsSignature = procSig;
       const snap = audioDevices.getAudioDevicesSnapshot();
       const sig = computeSignature(snap);
       if (lastUsbSignature && sig !== lastUsbSignature) {

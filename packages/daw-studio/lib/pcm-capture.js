@@ -216,6 +216,7 @@ function startDiscreteCaptureSession(
     let remainder = Buffer.alloc(0);
     const child = spawn('pw-cat', args, { stdio: ['ignore', 'pipe', 'ignore'] });
     child.stdout.on('data', (chunk) => {
+      if (stopped) return;
       const buf = remainder.length ? Buffer.concat([remainder, chunk]) : chunk;
       const usableLen = buf.length - (buf.length % 2);
       remainder = usableLen < buf.length ? buf.subarray(usableLen) : Buffer.alloc(0);
@@ -258,6 +259,7 @@ function startDiscreteCaptureSession(
     let remainder = Buffer.alloc(0);
     const child = spawn('pw-cat', args, { stdio: ['ignore', 'pipe', 'ignore'] });
     child.stdout.on('data', (chunk) => {
+      if (stopped) return;
       const buf = remainder.length ? Buffer.concat([remainder, chunk]) : chunk;
       const frames = Math.floor(buf.length / frameBytes);
       const usableLen = frames * frameBytes;
@@ -327,18 +329,20 @@ function startDiscreteCaptureSession(
       pendingFlushTimer = null;
     }
 
+    // Node writes the RIFF WAV header directly, so tear down raw pw-cat pipes immediately (<5ms)
     for (const p of procs) {
-      try { p.child.kill('SIGINT'); } catch {}
+      try { p.child.stdout?.destroy(); } catch {}
+      try { p.child.kill('SIGKILL'); } catch {}
     }
     await Promise.race([
       Promise.all(procs.map(p => p.closed)),
-      new Promise(r => setTimeout(r, 1800)),
+      new Promise(r => { const t = setTimeout(r, 25); if (t.unref) t.unref(); }),
     ]);
 
-    // Wait up to 500ms for any queued async pwrite calls to finish draining
-    const drainDeadline = Date.now() + 500;
+    // Drain any in-flight positional pwrite calls (typically <2ms)
+    const drainDeadline = Date.now() + 120;
     while (trackStates.some(st => st.inflightWrites > 0) && Date.now() < drainDeadline) {
-      await new Promise(r => setTimeout(r, 6));
+      await new Promise(r => setTimeout(r, 1));
     }
 
     for (const st of trackStates) {

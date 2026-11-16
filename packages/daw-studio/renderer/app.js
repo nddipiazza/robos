@@ -41,6 +41,7 @@ let studioAudioCtx = null;
 let decodedBufferCache = new Map();
 let isPlaying = false;
 let isRecording = false;
+let isStoppingRecording = false;
 let playheadSec = 0;
 let playStartWallSec = 0;
 let playStartOffsetSec = 0;
@@ -879,23 +880,39 @@ async function quickRetakeRecording() {
 }
 
 async function toggleRecording({ keepCursorAtStop = false } = {}) {
+  if (isStoppingRecording) return;
   if (isPlaying) stopPlayback({ returnToStart: false });
 
   if (isRecording) {
     const punchInStartSec = liveRecSession ? liveRecSession.startSec : 0;
     const stopEdgeSec = playheadSec;
     const injectTestSignal = Boolean(document.getElementById('chk-test-groove')?.checked);
+
+    // 0ms immediate transport stop on keydown — freeze clock, disarm REC LED, and snap playhead immediately
     stopRecordingRafLoop();
-    const res = await window.robos.recordStop({ injectTestSignal });
     isRecording = false;
-    liveRecSession = null;
-    liveRecLevels = {};
+    isStoppingRecording = true;
+    if (liveRecSession) liveRecSession.stoppedEndSec = stopEdgeSec;
     playheadSec = keepCursorAtStop ? stopEdgeSec : punchInStartSec;
     const tcEl = document.getElementById('transport-timecode');
     if (tcEl) tcEl.textContent = formatTimecode(playheadSec);
     document.getElementById('btn-transport-record')?.classList.remove('recording');
     document.getElementById('header-rec-dot')?.classList.remove('recording');
-    document.getElementById('transport-substate').textContent = 'READY';
+    const subEl = document.getElementById('transport-substate');
+    if (subEl) subEl.textContent = 'READY';
+    for (const trkId of (liveRecSession?.tracks?.keys() || [])) {
+      setMeterElementPercent(document.getElementById(`rec-meter-${trkId}`), 0);
+    }
+    drawAllTimelineCanvases();
+
+    let res = null;
+    try {
+      res = await window.robos.recordStop({ injectTestSignal });
+    } finally {
+      isStoppingRecording = false;
+      liveRecSession = null;
+      liveRecLevels = {};
+    }
 
     if (res?.ok && res.project) {
       if (currentProject) historyStack.pushSnapshot(currentProject, 'Record Multi-Track Take');
@@ -2143,11 +2160,14 @@ function drawAllTimelineCanvases() {
     const ctx = destCtx;
 
     // Live Low-Latency Sub-Pixel Growing Waveform Region + Fluid MS Timer on Armed Tracks
-    if (isRecording && track.armed) {
-      const recStartSec = liveRecSession ? liveRecSession.startSec : playheadSec;
-      const recElapsedSec = Math.max(0, playheadSec - recStartSec);
+    if ((isRecording || isStoppingRecording) && track.armed && liveRecSession) {
+      const recStartSec = liveRecSession.startSec;
+      const writeEdgeSec = isStoppingRecording && Number.isFinite(liveRecSession.stoppedEndSec)
+        ? liveRecSession.stoppedEndSec
+        : playheadSec;
+      const recElapsedSec = Math.max(0, writeEdgeSec - recStartSec);
       const startX = (recStartSec / totalSec) * w;
-      const endX = (playheadSec / totalSec) * w;
+      const endX = (writeEdgeSec / totalSec) * w;
       const clipW = Math.max(2, endX - startX);
       const regionTop = 4;
       const regionH = h - 8;
@@ -5307,12 +5327,19 @@ async function init() {
     if (isPlaying) { stopPlayback(); startPlayback(); }
     else drawAllTimelineCanvases();
   });
-  document.getElementById('btn-transport-play')?.addEventListener('click', startPlayback);
-  document.getElementById('btn-transport-stop')?.addEventListener('click', async () => {
+  document.getElementById('btn-transport-play')?.addEventListener('click', (ev) => {
+    ev.currentTarget?.blur?.();
+    startPlayback();
+  });
+  document.getElementById('btn-transport-stop')?.addEventListener('click', async (ev) => {
+    ev.currentTarget?.blur?.();
     if (isRecording) await toggleRecording();
     else stopPlayback();
   });
-  document.getElementById('btn-transport-record')?.addEventListener('click', toggleRecording);
+  document.getElementById('btn-transport-record')?.addEventListener('click', (ev) => {
+    ev.currentTarget?.blur?.();
+    toggleRecording();
+  });
 
   document.getElementById('timeline-ruler-wrap')?.addEventListener('click', (ev) => {
     if (isRecording) return;
@@ -5330,21 +5357,43 @@ async function init() {
     openTimelineSpaceContextMenu(ev, null, ratio * getTimelineDurationSec());
   });
 
-  // Full Workstation Keyboard Shortcuts
+  // Full Workstation Keyboard Shortcuts (capture phase so focused buttons/sliders/selects never delay Spacebar!)
   window.addEventListener('keydown', async (ev) => {
-    const activeTag = document.activeElement?.tagName || '';
-    const isTyping = ['INPUT', 'SELECT', 'TEXTAREA'].includes(activeTag) || document.activeElement?.isContentEditable;
+    const activeEl = document.activeElement;
+    const activeTag = activeEl?.tagName || '';
+    const inputType = String(activeEl?.type || '').toLowerCase();
+    const isTextInput = activeTag === 'INPUT' && !['range', 'checkbox', 'radio', 'button', 'color', 'file'].includes(inputType);
+    const isTyping = activeTag === 'TEXTAREA' || isTextInput || Boolean(activeEl?.isContentEditable);
     const isMod = ev.ctrlKey || ev.metaKey;
     const keyLower = (ev.key || '').toLowerCase();
 
     // Ctrl+S / Ctrl+Shift+S always works (even inside session name input)
     if (isMod && !ev.altKey && keyLower === 's') {
       ev.preventDefault();
+      ev.stopPropagation();
       await saveCurrentSession(ev.shiftKey);
       return;
     }
 
     if (isTyping) return;
+
+    // Fast-path Spacebar transport stop/start before any focused button/select handles keydown/keyup
+    if (!isMod && !ev.altKey && ev.code === 'Space') {
+      const anyModalOpen = ['add-mic-wizard-modal', 'open-project-modal', 'drumkits-modal', 'drumset-wizard-modal', 'rename-item-modal', 'shortcuts-modal']
+        .some(id => {
+          const el = document.getElementById(id);
+          return el && !el.classList.contains('hidden');
+        });
+      if (!anyModalOpen) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        if (ev.repeat) return;
+        if (isRecording) await toggleRecording({ keepCursorAtStop: false });
+        else if (isPlaying) stopPlayback({ returnToStart: true });
+        else await startPlayback();
+        return;
+      }
+    }
 
     // Escape closes menus/modals first, otherwise clears selection
     if (ev.key === 'Escape') {
@@ -5752,14 +5801,11 @@ async function init() {
     } else if (ev.key === 'F2') {
       ev.preventDefault();
       editRenameFocused();
-    } else if (ev.code === 'Space') {
-      ev.preventDefault();
-      if (isRecording) await toggleRecording({ keepCursorAtStop: false });
-      else if (isPlaying) stopPlayback({ returnToStart: true });
-      else await startPlayback();
     } else if (ev.key === 'Enter') {
       // REAPER Enter: Play/Pause (stops at current playhead cursor without rewinding)
       ev.preventDefault();
+      ev.stopPropagation();
+      if (ev.repeat) return;
       if (isRecording) await toggleRecording({ keepCursorAtStop: true });
       else if (isPlaying) stopPlayback({ returnToStart: false });
       else await startPlayback();
@@ -5852,7 +5898,7 @@ async function init() {
       ev.preventDefault();
       document.getElementById('shortcuts-modal')?.classList.remove('hidden');
     }
-  });
+  }, { capture: true });
 
   // Add Mic Wizard Controls
   document.getElementById('btn-wiz-close')?.addEventListener('click', closeAddMicWizard);

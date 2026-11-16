@@ -346,6 +346,8 @@ function parsePipeWireNodes(pwNodesText, defaultIds = new Set()) {
   return { inputs, outputs };
 }
 
+const alignedCaptureMatrixCards = new Set();
+
 function readFocusriteHardwareControls(cardIndex) {
   if (cardIndex === null || cardIndex === undefined || cardIndex < 0) return null;
   const scontrols = runCmd('amixer', ['-c', String(cardIndex), 'scontrols']);
@@ -406,33 +408,39 @@ function readFocusriteHardwareControls(cardIndex) {
   // `PCM 11..18` on `ADAT 1..8` (shifting ADAT by 2 channels and leaving ADAT 7..8 on `'Off'`).
   let captureRoutingAligned = false;
   if (hasControl('PCM 01') && hasControl('PCM 11') && hasControl('PCM 13') && hasControl('PCM 20')) {
-    const expectedPcmMap = [
-      ['PCM 01', 'Analogue 1'],
-      ['PCM 02', 'Analogue 2'],
-      ['PCM 03', 'Analogue 3'],
-      ['PCM 04', 'Analogue 4'],
-      ['PCM 05', 'Analogue 5'],
-      ['PCM 06', 'Analogue 6'],
-      ['PCM 07', 'Analogue 7'],
-      ['PCM 08', 'Analogue 8'],
-      ['PCM 11', 'S/PDIF 1'],
-      ['PCM 12', 'S/PDIF 2'],
-      ['PCM 13', 'ADAT 1'],
-      ['PCM 14', 'ADAT 2'],
-      ['PCM 15', 'ADAT 3'],
-      ['PCM 16', 'ADAT 4'],
-      ['PCM 17', 'ADAT 5'],
-      ['PCM 18', 'ADAT 6'],
-      ['PCM 19', 'ADAT 7'],
-      ['PCM 20', 'ADAT 8'],
-    ];
-    for (const [pcmCtrl, targetSrc] of expectedPcmMap) {
-      const cur = readEnum(pcmCtrl);
-      if (cur && cur.options.includes(targetSrc) && cur.value !== targetSrc) {
-        runCmd('amixer', ['-c', String(cardIndex), 'sset', pcmCtrl, targetSrc]);
+    const cacheKey = `${cardIndex}:${firmwareVersion || ''}`;
+    if (alignedCaptureMatrixCards.has(cacheKey)) {
+      captureRoutingAligned = true;
+    } else {
+      const expectedPcmMap = [
+        ['PCM 01', 'Analogue 1'],
+        ['PCM 02', 'Analogue 2'],
+        ['PCM 03', 'Analogue 3'],
+        ['PCM 04', 'Analogue 4'],
+        ['PCM 05', 'Analogue 5'],
+        ['PCM 06', 'Analogue 6'],
+        ['PCM 07', 'Analogue 7'],
+        ['PCM 08', 'Analogue 8'],
+        ['PCM 11', 'S/PDIF 1'],
+        ['PCM 12', 'S/PDIF 2'],
+        ['PCM 13', 'ADAT 1'],
+        ['PCM 14', 'ADAT 2'],
+        ['PCM 15', 'ADAT 3'],
+        ['PCM 16', 'ADAT 4'],
+        ['PCM 17', 'ADAT 5'],
+        ['PCM 18', 'ADAT 6'],
+        ['PCM 19', 'ADAT 7'],
+        ['PCM 20', 'ADAT 8'],
+      ];
+      for (const [pcmCtrl, targetSrc] of expectedPcmMap) {
+        const cur = readEnum(pcmCtrl);
+        if (cur && cur.options.includes(targetSrc) && cur.value !== targetSrc) {
+          runCmd('amixer', ['-c', String(cardIndex), 'sset', pcmCtrl, targetSrc]);
+        }
       }
+      alignedCaptureMatrixCards.add(cacheKey);
+      captureRoutingAligned = true;
     }
-    captureRoutingAligned = true;
   }
 
   const phantomBanks = [];
