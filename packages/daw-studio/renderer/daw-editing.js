@@ -703,7 +703,7 @@
   function normalizeClipGain(clip, targetPeakDb = -3.0) {
     const measuredPeak = Number(clip?.peakDb);
     if (!Number.isFinite(measuredPeak) || measuredPeak <= -80) return 0;
-    clip.gainDb = Number(clamp(-24, 24, targetPeakDb - measuredPeak).toFixed(1));
+    clip.gainDb = Number(clamp(-24, 36, targetPeakDb - measuredPeak).toFixed(1));
     return clip.gainDb;
   }
 
@@ -719,7 +719,7 @@
       track.gainDb = 0;
       return 0;
     }
-    track.gainDb = Number(clamp(-24, 24, targetPeakDb - maxPeak).toFixed(1));
+    track.gainDb = Number(clamp(-24, 36, targetPeakDb - maxPeak).toFixed(1));
     return track.gainDb;
   }
 

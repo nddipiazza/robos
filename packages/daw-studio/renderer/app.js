@@ -110,9 +110,11 @@ function dbToPercent(db) {
  * live-streaming takes and saved regions whenever they register on the track meter.
  */
 function waveformVisualAmp(linearPeak, gainLinear = 1, floorAmp = 0.012) {
+  const raw = Math.max(0, Number(linearPeak) || 0);
+  if (raw <= 0.00039) return floorAmp; // Gate raw ADC noise floor (<= -68.2 dBFS) before gain boost so silence stays 1px flat
   const zoomLin = waveformZoomDb === 0 ? 1 : DE.dbToGain(waveformZoomDb);
-  const p = Math.max(0, (Number(linearPeak) || 0) * gainLinear * zoomLin);
-  if (p <= 0.00039) return floorAmp; // <= -68.2 dBFS noise floor -> crisp 1px zero-crossing line
+  const p = raw * gainLinear * zoomLin;
+  if (p <= 0.00039) return floorAmp;
   const db = 20 * Math.log10(Math.min(1, p));
   if (db <= -68) return floorAmp;
   const normDb = Math.max(0, Math.min(1, (db + 68) / 68));
@@ -560,6 +562,14 @@ function buildTrackWebAudioChain(ctx, track) {
     comp.release.value = Math.max(0.02, (Number(compCfg.releaseMs) || 110) / 1000);
     tail.connect(comp);
     tail = comp;
+
+    const makeupDb = Number(compCfg.makeupDb) || 0;
+    if (Math.abs(makeupDb) >= 0.05) {
+      const makeupGain = ctx.createGain();
+      makeupGain.gain.value = DE.dbToGain(makeupDb);
+      tail.connect(makeupGain);
+      tail = makeupGain;
+    }
   }
 
   if (track.fx?.drive?.enabled && Number(track.fx.drive.amount) > 0) {
@@ -571,8 +581,11 @@ function buildTrackWebAudioChain(ctx, track) {
 
   const dryBusGain = ctx.createGain();
   const srActive = Boolean(track.soundReplacement?.enabled);
+  const anyClipHasTriggers = srActive && (track.clips || []).some(
+    c => !c.muted && Array.isArray(c.transients) && c.transients.length > 0
+  );
   const blend = srActive ? Math.max(0, Math.min(1, Number(track.soundReplacement?.blend ?? 0.75))) : 0;
-  dryBusGain.gain.value = srActive ? (1 - blend * 0.85) : 1.0;
+  dryBusGain.gain.value = anyClipHasTriggers ? (1 - blend * 0.85) : 1.0;
   tail.connect(dryBusGain);
 
   const trackMixBus = ctx.createGain();
@@ -625,6 +638,12 @@ async function startPlayback() {
   const playableTracks = tracks.filter(t => anySolo ? t.soloed : !t.muted);
 
   const ctx = await ensureRoutedStudioAudioCtx();
+  const projectEndSec = DE.getProjectEndSec(currentProject);
+  if (projectEndSec > 0.05 && playheadSec >= projectEndSec - 0.02) {
+    playheadSec = 0;
+    const tcEl = document.getElementById('transport-timecode');
+    if (tcEl) tcEl.textContent = formatTimecode(0);
+  }
   const startFrom = playheadSec;
   const maxDuration = getBaseProjectSpanSec();
 
@@ -709,7 +728,7 @@ async function startPlayback() {
 
       // Schedule Open-Source Drum Sound Replacement samples on transients!
       if (srActive && Array.isArray(clip.transients)) {
-        const clipVelScale = DE.clamp(0.15, 2.0, DE.dbToGain((Number(clip.gainDb) || 0) * 0.5));
+        const clipVelScale = clip.autoGainStaged ? 1.0 : DE.clamp(0.15, 1.4, DE.dbToGain((Number(clip.gainDb) || 0) * 0.25));
         for (const hit of clip.transients) {
           const absHitSec = clipStart + (Number(hit.timeSec) || 0);
           if (absHitSec < startFrom || absHitSec > clipEnd + 0.005) continue;
@@ -1046,7 +1065,7 @@ function renderStudio() {
             </div>
             <div class="track-gain-line">
               <span class="fader-lbl">TRIM</span>
-              <input type="range" class="track-gain-slider daw-fader" min="-24" max="24" step="0.5" value="${gainDb.toFixed(1)}" data-act="gain" data-id="${esc(t.id)}" title="Pre-FX Input Gain (-24 to +24 dB) · Double-click to reset 0.0 dB · Hold Ctrl to gang selected tracks" />
+              <input type="range" class="track-gain-slider daw-fader" min="-24" max="36" step="0.5" value="${gainDb.toFixed(1)}" data-act="gain" data-id="${esc(t.id)}" title="Pre-FX Input Gain (-24 to +36 dB) · Double-click to reset 0.0 dB · Hold Ctrl to gang selected tracks" />
               <span class="mono gain-db-badge ${Math.abs(gainDb) >= 0.05 ? 'boosted' : ''}" id="gain-badge-${esc(t.id)}" data-act="gain-reset" data-id="${esc(t.id)}" title="Double-click to reset Track Gain to 0.0 dB">${DE.formatDb(gainDb)}</span>
               <span class="fader-lbl" style="margin-left:auto;">FADER</span>
               <input type="range" class="track-vol-slider daw-fader" style="width:68px;" min="0" max="1.4" step="0.02" value="${Number(t.volume ?? 1).toFixed(2)}" data-act="vol" data-id="${esc(t.id)}" title="Post-FX Fader Volume · Double-click to reset to 100%" />
@@ -2386,7 +2405,7 @@ function renderInspectorDrawer() {
           <div class="slider-row">
             <label>Input Trim (${DE.formatDb(gainDb)})</label>
             <input type="checkbox" id="insp-phase-on" title="180° Phase Invert (Ø)" ${track.fx?.phaseInvert ? 'checked' : ''} />
-            <input type="range" class="daw-fader" id="insp-gain-db" min="-24" max="24" step="0.5" value="${gainDb}" />
+            <input type="range" class="daw-fader" id="insp-gain-db" min="-24" max="36" step="0.5" value="${gainDb}" />
           </div>
           <div class="slider-row">
             <label>High-Pass (${eq.hpfHz || 60} Hz)</label>
@@ -5693,7 +5712,8 @@ async function init() {
           for (const tr of (currentProject?.tracks || [])) {
             for (const c of (tr.clips || [])) {
               if (selectedClipIds.has(c.id)) {
-                c.gainDb = Number(DE.clamp(-24, 24, (Number(c.gainDb) || 0) + deltaDb).toFixed(1));
+                c.gainDb = Number(DE.clamp(-24, 36, (Number(c.gainDb) || 0) + deltaDb).toFixed(1));
+                c.autoGainStaged = false;
               }
             }
           }
@@ -5702,7 +5722,7 @@ async function init() {
         await commitEdit('Nudge Track Trim', () => {
           for (const tr of (currentProject?.tracks || [])) {
             if (selectedTrackIds.has(tr.id)) {
-              tr.gainDb = Number(DE.clamp(-24, 24, (Number(tr.gainDb) || 0) + deltaDb).toFixed(1));
+              tr.gainDb = Number(DE.clamp(-24, 36, (Number(tr.gainDb) || 0) + deltaDb).toFixed(1));
             }
           }
         });
@@ -6066,9 +6086,20 @@ async function init() {
       if (Array.isArray(tr.newPeaks) && tr.newPeaks.length) {
         for (let i = 0; i < tr.newPeaks.length; i++) {
           const p = Number(tr.newPeaks[i]) || 0;
+          if (!recState.liveNoiseEst || recState.peaks.length < 8) {
+            recState.liveNoiseEst = recState.liveNoiseEst ? Math.min(recState.liveNoiseEst, Math.max(0.00003, p)) : Math.max(0.00003, p);
+          } else if (p < recState.liveNoiseEst * 2.5) {
+            recState.liveNoiseEst = recState.liveNoiseEst * 0.92 + p * 0.08;
+          }
+          if (!recState.liveMaxLin || p > recState.liveMaxLin) {
+            recState.liveMaxLin = p;
+          }
+          const adaptiveLin = (recState.liveMaxLin >= Math.max(0.0008, (recState.liveNoiseEst || 0.00005) * 6.0) && recState.liveMaxLin < threshLin)
+            ? Math.max((recState.liveNoiseEst || 0.00005) * 5.0, recState.liveMaxLin * 0.38)
+            : threshLin;
           const sliceIdx = recState.peaks.length;
           const sliceSec = sliceIdx * sliceDur;
-          if (p >= threshLin && p > recState.prevSlicePeak * 1.22 && (sliceSec - recState.lastHitSec) >= minGapSec) {
+          if (p >= adaptiveLin && p > recState.prevSlicePeak * 1.22 && (sliceSec - recState.lastHitSec) >= minGapSec) {
             recState.hitTimesSec.push(Number(sliceSec.toFixed(3)));
             recState.lastHitSec = sliceSec;
           }

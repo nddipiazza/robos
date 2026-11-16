@@ -1107,5 +1107,30 @@ describe('DAW Editing Engine: Multi-Select, Track/Take Gain, Split/Trim, Copy/Pa
     const waveInfo = computeWaveformPeaks(wav, 4);
     assert.strictEqual(waveInfo.peakDb, -46.7);
     assert.strictEqual(waveInfo.peaks[1], 0.00464);
+
+    // Verify smart auto-gain staging and adaptive crest-factor drum transient detection on quiet -46.7 dBFS takes
+    const { computeSmartAutoGainDb } = require('../lib/drum-instruments');
+    const twoSecSamples = 48000 * 2;
+    const quietKickPcm = Buffer.alloc(twoSecSamples * 2);
+    for (let i = 0; i < twoSecSamples; i++) {
+      quietKickPcm.writeInt16LE((i % 2 === 0) ? 2 : -2, i * 2); // ~ -84 dBFS preamp noise floor
+    }
+    for (const hitSec of [0.25, 0.75, 1.25, 1.75]) {
+      const idx0 = Math.floor(hitSec * 48000);
+      for (let k = 0; k < 480; k++) {
+        const env = Math.exp(-k / 140);
+        const s = Math.round(152 * env * Math.sin(2 * Math.PI * 60 * (k / 48000)));
+        quietKickPcm.writeInt16LE(s, (idx0 + k) * 2);
+      }
+    }
+    const quietKickWav = Buffer.concat([makeWavHeader(quietKickPcm.length, 48000), quietKickPcm]);
+    const stagedDb = computeSmartAutoGainDb(quietKickWav);
+    assert.ok(stagedDb >= 30 && stagedDb <= 36, `expected +30..+36 dB auto-gain on -46.7 dBFS kick stem, got ${stagedDb}`);
+    const quietHits = detectDrumTransients(quietKickWav, { thresholdDb: -28, minIntervalMs: 75 });
+    assert.strictEqual(quietHits.length, 4);
+
+    // Pure room hiss without transients must NEVER get boosted
+    const roomOnlyWav = Buffer.concat([makeWavHeader(Buffer.alloc(48000 * 2), 48000), Buffer.alloc(48000 * 2)]);
+    assert.strictEqual(computeSmartAutoGainDb(roomOnlyWav), 0);
   });
 });

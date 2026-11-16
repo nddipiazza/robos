@@ -1890,37 +1890,94 @@ function computeWaveformPeaks(buffer, numBuckets = 240) {
   return { peaks, peakDb, durationSec: Number(durationSec.toFixed(3)), sampleRate };
 }
 
-/**
- * Detect drum strike transients in a recorded WAV stem for Sound Replacement triggering.
- */
-function detectDrumTransients(buffer, { thresholdDb = -28, minIntervalMs = 65 } = {}) {
-  const { samples, sampleRate } = decodeWavMono(buffer);
-  if (!samples.length) return [];
-
-  const thresholdLin = Math.pow(10, thresholdDb / 20);
+function measureWindowPeakStats(samples, sampleRate, gainLin = 1) {
   const windowSamples = Math.max(32, Math.floor(sampleRate * 0.004)); // 4ms attack window
-  const minGapSamples = Math.max(windowSamples, Math.floor((sampleRate * minIntervalMs) / 1000));
-
-  const hits = [];
-  let lastHitSample = -minGapSamples;
-  let prevEnv = 0;
+  const windowPeaks = [];
+  const windowPeakIndices = [];
+  let maxPeak = 0;
 
   for (let i = 0; i < samples.length; i += windowSamples) {
     const end = Math.min(samples.length, i + windowSamples);
     let peak = 0;
     let peakIdx = i;
     for (let j = i; j < end; j++) {
-      const a = Math.abs(samples[j]);
+      const a = Math.abs(samples[j]) * gainLin;
       if (a > peak) {
         peak = a;
         peakIdx = j;
       }
     }
+    if (peak > maxPeak) maxPeak = peak;
+    windowPeaks.push(peak);
+    windowPeakIndices.push(peakIdx);
+  }
+
+  if (!windowPeaks.length) {
+    return { windowSamples, windowPeaks, windowPeakIndices, maxPeak: 0, noiseFloor: 0 };
+  }
+  const sorted = [...windowPeaks].sort((a, b) => a - b);
+  const noiseFloor = sorted[Math.floor(sorted.length * 0.5)] || 0;
+  return { windowSamples, windowPeaks, windowPeakIndices, maxPeak, noiseFloor };
+}
+
+/**
+ * Compute non-destructive smart input gain staging (dB) for quiet hardware mic takes
+ * that have genuine transient/musical signal (>= 15 dB SNR above the preamp noise floor)
+ * so playback is immediately audible without boosting empty room hiss.
+ */
+function computeSmartAutoGainDb(buffer, { targetPeakDb = -9.0, maxBoostDb = 36.0 } = {}) {
+  const { samples, sampleRate } = decodeWavMono(buffer);
+  if (!samples.length) return 0;
+  const { maxPeak, noiseFloor } = measureWindowPeakStats(samples, sampleRate, 1.0);
+  if (maxPeak <= 0.00055) return 0; // <= -65 dBFS: treat as room silence
+  const maxDb = 20 * Math.log10(maxPeak);
+  if (maxDb >= -18.0) return 0; // Already at healthy studio level
+
+  const effNoise = Math.max(0.000015, noiseFloor);
+  const noiseDb = 20 * Math.log10(effNoise);
+  const snrDb = maxDb - noiseDb;
+  if (snrDb < 15.0) return 0; // Insufficient SNR; never boost steady background hum/hiss
+
+  const desiredBoost = targetPeakDb - maxDb;
+  const maxNoiseSafeBoost = Math.max(0, -42.0 - noiseDb);
+  const boostDb = Math.max(0, Math.min(maxBoostDb, desiredBoost, maxNoiseSafeBoost));
+  return Number(boostDb.toFixed(1));
+}
+
+/**
+ * Detect drum strike transients in a recorded WAV stem for Sound Replacement triggering.
+ * Supports both absolute dBFS thresholds and adaptive crest-factor triggering on quiet
+ * dynamic mic recordings where strikes sit >= 15.5 dB above the preamp noise floor.
+ */
+function detectDrumTransients(buffer, { thresholdDb = -28, minIntervalMs = 65, gainDb = 0 } = {}) {
+  const { samples, sampleRate } = decodeWavMono(buffer);
+  if (!samples.length) return [];
+
+  const gainLin = Math.pow(10, (Number(gainDb) || 0) / 20);
+  const thresholdLin = Math.pow(10, thresholdDb / 20);
+  const { windowSamples, windowPeaks, windowPeakIndices, maxPeak, noiseFloor } = measureWindowPeakStats(samples, sampleRate, gainLin);
+  if (!windowPeaks.length || maxPeak <= 0.0006) return [];
+
+  const minGapSamples = Math.max(windowSamples, Math.floor((sampleRate * minIntervalMs) / 1000));
+  const hasStrongCrest = maxPeak >= Math.max(0.0008, noiseFloor * 6.0);
+  const useAdaptiveFloor = maxPeak < thresholdLin && hasStrongCrest;
+  const effectiveThresholdLin = useAdaptiveFloor
+    ? Math.max(noiseFloor * 5.0, maxPeak * 0.35)
+    : thresholdLin;
+
+  const hits = [];
+  let lastHitSample = -minGapSamples;
+  let prevEnv = 0;
+
+  for (let w = 0; w < windowPeaks.length; w++) {
+    const peak = windowPeaks[w];
+    const peakIdx = windowPeakIndices[w];
     // Rising edge onset above threshold outside refractory window
-    if (peak >= thresholdLin && peak > prevEnv * 1.25 && (peakIdx - lastHitSample) >= minGapSamples) {
-      const peakDb = Number((20 * Math.log10(peak)).toFixed(1));
-      // Map [-42 dB .. -2 dB] to velocity [0.15 .. 1.0]
-      const normVel = Math.max(0.15, Math.min(1.0, (peakDb + 42) / 40));
+    if (peak >= effectiveThresholdLin && peak > prevEnv * 1.25 && (peakIdx - lastHitSample) >= minGapSamples) {
+      const peakDb = Number((20 * Math.log10(Math.min(1, peak))).toFixed(1));
+      const normVel = useAdaptiveFloor
+        ? Math.max(0.45, Math.min(0.96, 0.50 + 0.45 * (peak / Math.max(effectiveThresholdLin, maxPeak))))
+        : Math.max(0.15, Math.min(1.0, (peakDb + 42) / 40));
       hits.push({
         timeSec: Number((peakIdx / sampleRate).toFixed(4)),
         peakDb,
@@ -1944,5 +2001,6 @@ module.exports = {
   downloadDefaultOpenDrumkits,
   decodeWavMono,
   computeWaveformPeaks,
+  computeSmartAutoGainDb,
   detectDrumTransients,
 };

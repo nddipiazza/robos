@@ -16,7 +16,7 @@ const path = require('path');
 const os = require('os');
 const crypto = require('crypto');
 const { getMicProfile } = require('./mic-profiles');
-const { computeWaveformPeaks, detectDrumTransients } = require('./drum-instruments');
+const { computeWaveformPeaks, computeSmartAutoGainDb, detectDrumTransients } = require('./drum-instruments');
 const { startDiscreteCaptureSession } = require('./pcm-capture');
 
 function getProjectsRoot() {
@@ -239,11 +239,18 @@ function loadProject(idOrPath) {
       } else if (clip.durationSec && !clip.sourceDurationSec) {
         clip.sourceDurationSec = (Number(clip.offsetSec) || 0) + Number(clip.durationSec);
       }
-      if (clip.fileExists && !Array.isArray(clip.transients) && track.soundReplacement?.supported) {
+      if (clip.fileExists && clip.autoGainStaged === undefined && (Number(clip.gainDb) || 0) === 0 && (Number(track.gainDb) || 0) === 0 && Number(clip.peakDb) < -24 && Number(clip.peakDb) > -65) {
+        const buf = fs.readFileSync(abs);
+        clip.gainDb = computeSmartAutoGainDb(buf);
+        clip.autoGainStaged = true;
+      }
+      const needsTransientScan = !Array.isArray(clip.transients) || (clip.transients.length === 0 && Number(clip.peakDb) > -65);
+      if (clip.fileExists && needsTransientScan && track.soundReplacement?.supported) {
         const buf = fs.readFileSync(abs);
         clip.transients = detectDrumTransients(buf, {
           thresholdDb: track.soundReplacement.thresholdDb ?? -28,
           minIntervalMs: track.soundReplacement.minIntervalMs ?? 65,
+          gainDb: Number(track.gainDb) || 0,
         });
       }
     }
@@ -293,6 +300,7 @@ function reanalyzeTrackTransients(track) {
       clip.transients = detectDrumTransients(buf, {
         thresholdDb: track.soundReplacement?.thresholdDb ?? -28,
         minIntervalMs: track.soundReplacement?.minIntervalMs ?? 65,
+        gainDb: Number(track.gainDb) || 0,
       });
     }
   }
@@ -567,12 +575,17 @@ class MultiTrackRecorder {
         exists = true;
       }
 
+      const targetTrack = (session.project.tracks || []).find(t => t.id === entry.trackId);
       const buf = fs.readFileSync(entry.wavFile);
       const waveInfo = computeWaveformPeaks(buf);
+      const autoGainDb = (Number(targetTrack?.gainDb) || 0) === 0
+        ? computeSmartAutoGainDb(buf)
+        : 0;
       const transients = entry.soundReplacement?.supported
         ? detectDrumTransients(buf, {
           thresholdDb: entry.soundReplacement.thresholdDb ?? -28,
           minIntervalMs: entry.soundReplacement.minIntervalMs ?? 65,
+          gainDb: Number(targetTrack?.gainDb) || 0,
         })
         : [];
 
@@ -587,7 +600,8 @@ class MultiTrackRecorder {
         offsetSec: 0,
         durationSec: fullDur,
         sourceDurationSec: fullDur,
-        gainDb: 0,
+        gainDb: autoGainDb,
+        autoGainStaged: true,
         fadeInSec: 0,
         fadeOutSec: 0,
         muted: false,
@@ -596,8 +610,6 @@ class MultiTrackRecorder {
         transients,
         recordedAt: new Date().toISOString(),
       };
-
-      const targetTrack = (session.project.tracks || []).find(t => t.id === entry.trackId);
       if (targetTrack) {
         if (!Array.isArray(targetTrack.clips)) targetTrack.clips = [];
         targetTrack.clips.push(clip);
