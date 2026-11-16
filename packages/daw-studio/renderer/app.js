@@ -559,7 +559,119 @@ function makeSoftClipCurve(amount = 0.2) {
   return curve;
 }
 
-function buildTrackWebAudioChain(ctx, track) {
+const reverbImpulseWeakCache = new WeakMap();
+
+function getOrCreateStudioReverbImpulse(ctx, revCfg = {}) {
+  const type = revCfg.type === 'room' ? 'room' : 'plate';
+  const decaySec = DE.clamp(0.25, 4.5, Number(revCfg.decaySec) || (type === 'plate' ? 1.25 : 0.95));
+  const dampHz = DE.clamp(1800, 16000, Number(revCfg.dampHz) || (type === 'plate' ? 7400 : 6200));
+  const sr = ctx.sampleRate || 48000;
+  const cacheKey = `${type}:${decaySec.toFixed(2)}:${Math.round(dampHz)}:${sr}`;
+
+  let ctxMap = reverbImpulseWeakCache.get(ctx);
+  if (!ctxMap) {
+    ctxMap = new Map();
+    reverbImpulseWeakCache.set(ctx, ctxMap);
+  }
+  if (ctxMap.has(cacheKey)) return ctxMap.get(cacheKey);
+
+  const length = Math.max(1024, Math.floor(sr * decaySec));
+  const ir = ctx.createBuffer(2, length, sr);
+  const left = ir.getChannelData(0);
+  const right = ir.getChannelData(1);
+
+  // Deterministic PRNG so offline renders & live playback produce identical lush stereo tails
+  let seedL = type === 'plate' ? 0x9e3779b9 : 0x85ebca6b;
+  let seedR = type === 'plate' ? 0xc2b2ae35 : 0x27d4eb2f;
+  const randL = () => { seedL ^= seedL << 13; seedL ^= seedL >>> 17; seedL ^= seedL << 5; return ((seedL >>> 0) / 2147483648) - 1; };
+  const randR = () => { seedR ^= seedR << 13; seedR ^= seedR >>> 17; seedR ^= seedR << 5; return ((seedR >>> 0) / 2147483648) - 1; };
+
+  // Early studio room / plate reflections (decorrelated L/R)
+  const earlyTapsMs = type === 'room'
+    ? [[6.7, 0.42, 0.24], [11.3, -0.22, 0.40], [17.9, 0.31, -0.19], [24.3, -0.18, 0.29], [33.7, 0.21, 0.16]]
+    : [[4.3, 0.34, -0.28], [8.9, -0.26, 0.33], [14.1, 0.24, 0.21]];
+  for (const [ms, gL, gR] of earlyTapsMs) {
+    const idx = Math.floor((ms / 1000) * sr);
+    if (idx > 0 && idx < length) {
+      left[idx] += gL;
+      right[idx] += gR;
+    }
+  }
+
+  // Progressive HF air-absorption low-pass state along the tail
+  let lpL = 0;
+  let lpR = 0;
+  const baseCutoff = Math.min(0.45 * sr, dampHz);
+  const normGain = type === 'plate' ? 0.34 : 0.30;
+
+  for (let i = 0; i < length; i++) {
+    const tNorm = i / length;
+    // Fast initial build-up (3ms) so dry transient stays distinct, followed by natural 60dB exponential decay
+    const buildIn = Math.min(1, i / Math.max(1, sr * 0.0035));
+    const env = buildIn * Math.pow(1 - tNorm, type === 'plate' ? 2.6 : 3.1) * Math.exp(-3.4 * tNorm);
+    // Tail darkens naturally over time like a real steel plate / wood studio room
+    const dynFreq = Math.max(900, baseCutoff * (1 - 0.58 * tNorm));
+    const alpha = 1 - Math.exp((-2 * Math.PI * dynFreq) / sr);
+
+    lpL += alpha * (randL() - lpL);
+    lpR += alpha * (randR() - lpR);
+    left[i] += lpL * env * normGain;
+    right[i] += lpR * env * normGain;
+  }
+
+  ctxMap.set(cacheKey, ir);
+  return ir;
+}
+
+function makeMasterCeilingCurve() {
+  const n = 4096;
+  const curve = new Float32Array(n);
+  const knee = 0.78;
+  const maxOut = 0.965; // -0.31 dBFS true sample ceiling
+  const span = maxOut - knee;
+  for (let i = 0; i < n; i++) {
+    const x = (i * 2) / (n - 1) - 1;
+    const ax = Math.abs(x);
+    if (ax <= knee) {
+      curve[i] = x;
+    } else {
+      const sat = knee + span * Math.tanh((ax - knee) / span);
+      curve[i] = x < 0 ? -sat : sat;
+    }
+  }
+  return curve;
+}
+
+let cachedMasterCeilingCurve = null;
+
+function createMasterDrumBus(ctx) {
+  const busTrim = ctx.createGain();
+  busTrim.gain.value = DE.dbToGain(-7.5);
+
+  // SSL-style 2-bus drum glue compressor (18ms attack lets stick & beater transients snap cleanly)
+  const busGlue = ctx.createDynamicsCompressor();
+  busGlue.threshold.value = -9.0;
+  busGlue.knee.value = 6.0;
+  busGlue.ratio.value = 3.2;
+  busGlue.attack.value = 0.018;
+  busGlue.release.value = 0.085;
+
+  const glueMakeup = ctx.createGain();
+  glueMakeup.gain.value = DE.dbToGain(1.5);
+
+  // True-peak zero-overshoot studio ceiling (-0.31 dBFS; 100% linear below -2.1 dBFS)
+  const ceiling = ctx.createWaveShaper();
+  if (!cachedMasterCeilingCurve) cachedMasterCeilingCurve = makeMasterCeilingCurve();
+  ceiling.curve = cachedMasterCeilingCurve;
+
+  busTrim.connect(busGlue);
+  busGlue.connect(glueMakeup);
+  glueMakeup.connect(ceiling);
+  ceiling.connect(ctx.destination);
+  return busTrim;
+}
+
+function buildTrackWebAudioChain(ctx, track, masterDestination = ctx.destination) {
   const inputGain = ctx.createGain();
   const trackGainLin = DE.dbToGain(Number(track.gainDb) || 0) * (track.fx?.phaseInvert ? -1 : 1);
   inputGain.gain.value = trackGainLin;
@@ -602,6 +714,17 @@ function buildTrackWebAudioChain(ctx, track) {
     low.connect(mid);
     tail = mid;
 
+    // Optional upper-mid stick / beater attack presence band (e.g. 3.8–4.8 kHz punch)
+    if (Number.isFinite(Number(eq.presenceFreqHz)) && Math.abs(Number(eq.presenceGainDb) || 0) >= 0.1) {
+      const presence = ctx.createBiquadFilter();
+      presence.type = 'peaking';
+      presence.frequency.value = Number(eq.presenceFreqHz);
+      presence.Q.value = Number(eq.presenceQ) || 1.25;
+      presence.gain.value = Number(eq.presenceGainDb);
+      tail.connect(presence);
+      tail = presence;
+    }
+
     // Optional de-harsh / surgical notch stage (e.g. 2.95 kHz cymbal stick bite control)
     if (Number.isFinite(Number(eq.harshFreqHz)) && Math.abs(Number(eq.harshGainDb) || 0) >= 0.1) {
       const harsh = ctx.createBiquadFilter();
@@ -624,20 +747,39 @@ function buildTrackWebAudioChain(ctx, track) {
 
   const compCfg = track.fx?.compressor || {};
   if (compCfg.enabled !== false) {
+    const preCompNode = tail;
     const comp = ctx.createDynamicsCompressor();
     comp.threshold.value = Math.max(-60, Math.min(0, Number(compCfg.thresholdDb) || -18));
+    comp.knee.value = Math.max(0, Math.min(30, Number(compCfg.kneeDb ?? 5)));
     comp.ratio.value = Math.max(1, Math.min(20, Number(compCfg.ratio) || 3.5));
     comp.attack.value = Math.max(0.001, (Number(compCfg.attackMs) || 10) / 1000);
     comp.release.value = Math.max(0.02, (Number(compCfg.releaseMs) || 110) / 1000);
-    tail.connect(comp);
-    tail = comp;
+    preCompNode.connect(comp);
+    let compOut = comp;
 
     const makeupDb = Number(compCfg.makeupDb) || 0;
     if (Math.abs(makeupDb) >= 0.05) {
       const makeupGain = ctx.createGain();
       makeupGain.gain.value = DE.dbToGain(makeupDb);
-      tail.connect(makeupGain);
-      tail = makeupGain;
+      comp.connect(makeupGain);
+      compOut = makeupGain;
+    }
+
+    // Optional New-York style parallel compression blend (preserves 100% crisp stick attack + fat sustain)
+    const parallelMix = DE.clamp(0, 1, Number(compCfg.parallelMix ?? 1));
+    if (parallelMix < 0.99) {
+      const sumNode = ctx.createGain();
+      const wetCompGain = ctx.createGain();
+      const dryTransGain = ctx.createGain();
+      wetCompGain.gain.value = parallelMix;
+      dryTransGain.gain.value = 1 - parallelMix;
+      compOut.connect(wetCompGain);
+      wetCompGain.connect(sumNode);
+      preCompNode.connect(dryTransGain);
+      dryTransGain.connect(sumNode);
+      tail = sumNode;
+    } else {
+      tail = compOut;
     }
   }
 
@@ -665,7 +807,40 @@ function buildTrackWebAudioChain(ctx, track) {
 
   dryBusGain.connect(trackMixBus);
   trackMixBus.connect(panner);
-  panner.connect(ctx.destination);
+  panner.connect(masterDestination);
+
+  // Zero-latency parallel Stereo Plate / Studio Chamber Reverb send (Abbey Road 220Hz–7.4kHz filtered)
+  const revCfg = track.fx?.reverb || {};
+  const revMix = DE.clamp(0, 0.85, Number(revCfg.mix) || 0);
+  if (revCfg.enabled && revMix > 0.005) {
+    const preDelaySec = DE.clamp(0, 0.12, (Number(revCfg.preDelayMs ?? 20)) / 1000);
+    const preDelay = ctx.createDelay(0.2);
+    preDelay.delayTime.value = preDelaySec;
+
+    const revHpf = ctx.createBiquadFilter();
+    revHpf.type = 'highpass';
+    revHpf.frequency.value = DE.clamp(80, 900, Number(revCfg.lowCutHz) || 220);
+    revHpf.Q.value = 0.7071;
+
+    const revLpf = ctx.createBiquadFilter();
+    revLpf.type = 'lowpass';
+    revLpf.frequency.value = DE.clamp(1800, 16000, Number(revCfg.dampHz) || 7400);
+    revLpf.Q.value = 0.7071;
+
+    const convolver = ctx.createConvolver();
+    convolver.normalize = false;
+    convolver.buffer = getOrCreateStudioReverbImpulse(ctx, revCfg);
+
+    const revWet = ctx.createGain();
+    revWet.gain.value = revMix;
+
+    trackMixBus.connect(preDelay);
+    preDelay.connect(revHpf);
+    revHpf.connect(revLpf);
+    revLpf.connect(convolver);
+    convolver.connect(revWet);
+    revWet.connect(masterDestination);
+  }
 
   return { inputGain, trackMixBus, srActive, blend };
 }
@@ -740,8 +915,11 @@ async function startPlayback() {
   isPlaying = true;
   activeScheduledNodes = [];
 
+  const masterBus = createMasterDrumBus(ctx);
+  activeScheduledNodes.push(masterBus);
+
   for (const track of playableTracks) {
-    const { inputGain, trackMixBus, srActive, blend } = buildTrackWebAudioChain(ctx, track);
+    const { inputGain, trackMixBus, srActive, blend } = buildTrackWebAudioChain(ctx, track, masterBus);
 
     for (const clip of (track.clips || [])) {
       if (clip.muted) continue;
@@ -2452,6 +2630,7 @@ function renderInspectorDrawer() {
 
   const eq = track.fx?.eq || {};
   const comp = track.fx?.compressor || {};
+  const rev = track.fx?.reverb || {};
   const sr = track.soundReplacement || {};
   const kits = drumkitsStatus?.kits || [];
   const activeKit = kits.find(k => k.id === sr.kitId) || kits[0];
@@ -2537,9 +2716,14 @@ function renderInspectorDrawer() {
             <input type="range" class="daw-fader" id="insp-eq-high" min="-12" max="12" step="0.5" value="${eq.highGainDb ?? 0}" />
           </div>
           <div class="slider-row">
-            <label>Compressor (${comp.ratio ?? 3.5}:1)</label>
+            <label>Compressor (${comp.ratio ?? 3.5}:1${comp.makeupDb ? ` · +${comp.makeupDb}dB` : ''})</label>
             <input type="checkbox" id="insp-comp-on" ${comp.enabled !== false ? 'checked' : ''} />
-            <input type="range" class="daw-fader" id="insp-comp-ratio" min="1" max="10" step="0.5" value="${comp.ratio ?? 3.5}" />
+            <input type="range" class="daw-fader" id="insp-comp-ratio" min="1" max="12" step="0.5" value="${comp.ratio ?? 3.5}" />
+          </div>
+          <div class="slider-row">
+            <label>Studio Reverb (${Math.round((rev.mix ?? 0) * 100)}% ${rev.type === 'room' ? 'Room' : 'Plate'})</label>
+            <input type="checkbox" id="insp-rev-on" ${rev.enabled ? 'checked' : ''} />
+            <input type="range" class="daw-fader" id="insp-rev-mix" min="0" max="60" step="2" value="${Math.round((rev.mix ?? 0) * 100)}" />
           </div>
           <div class="slider-row">
             <label>Stereo Pan (${formatPan(track.pan)})</label>
@@ -2680,6 +2864,41 @@ function renderInspectorDrawer() {
   );
   document.getElementById('insp-comp-ratio')?.addEventListener('change', e =>
     saveInspectorPatch('Adjust Compressor Ratio', t => { t.fx = { ...(t.fx || {}), compressor: { ...(t.fx?.compressor || {}), ratio: Number(e.target.value) } }; })
+  );
+  document.getElementById('insp-rev-on')?.addEventListener('change', e =>
+    saveInspectorPatch('Toggle Studio Reverb', t => {
+      const prev = t.fx?.reverb || {};
+      t.fx = {
+        ...(t.fx || {}),
+        reverb: {
+          type: prev.type || 'plate',
+          decaySec: prev.decaySec || 1.2,
+          preDelayMs: prev.preDelayMs ?? 20,
+          dampHz: prev.dampHz || 7200,
+          ...prev,
+          enabled: e.target.checked,
+          mix: e.target.checked && !(Number(prev.mix) > 0) ? 0.20 : (Number(prev.mix) || 0),
+        },
+      };
+    })
+  );
+  document.getElementById('insp-rev-mix')?.addEventListener('change', e =>
+    saveInspectorPatch('Adjust Reverb Mix', t => {
+      const mix = DE.clamp(0, 0.85, (Number(e.target.value) || 0) / 100);
+      const prev = t.fx?.reverb || {};
+      t.fx = {
+        ...(t.fx || {}),
+        reverb: {
+          type: prev.type || 'plate',
+          decaySec: prev.decaySec || 1.2,
+          preDelayMs: prev.preDelayMs ?? 20,
+          dampHz: prev.dampHz || 7200,
+          ...prev,
+          enabled: mix > 0.005,
+          mix,
+        },
+      };
+    })
   );
   document.getElementById('insp-pan')?.addEventListener('change', e =>
     saveInspectorPatch('Adjust Pan', t => { t.pan = Number(e.target.value); })
@@ -2994,11 +3213,12 @@ async function exportSessionMixdownWav({ targetFile = undefined } = {}) {
     }
 
     const sampleRate = 48000;
-    const renderSpanSec = Math.min(900, maxEndSec + 0.5);
+    const renderSpanSec = Math.min(900, maxEndSec + 1.6);
     const offlineCtx = new OfflineAudioContext(2, Math.ceil(renderSpanSec * sampleRate), sampleRate);
+    const offlineMasterBus = createMasterDrumBus(offlineCtx);
 
     for (const track of playableTracks) {
-      const { inputGain, trackMixBus, srActive, blend } = buildTrackWebAudioChain(offlineCtx, track);
+      const { inputGain, trackMixBus, srActive, blend } = buildTrackWebAudioChain(offlineCtx, track, offlineMasterBus);
       for (const clip of (track.clips || [])) {
         if (clip.muted) continue;
         const clipStart = Math.max(0, Number(clip.startSec) || 0);
