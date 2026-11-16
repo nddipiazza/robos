@@ -50,6 +50,7 @@ const seoCheckedPages = [
   'security/index.html',
   'download/index.html',
   'contribute/index.html',
+  'contribute/poster/index.html',
   'blog/index.html',
   'future/index.html',
   'future/whitepaper/index.html',

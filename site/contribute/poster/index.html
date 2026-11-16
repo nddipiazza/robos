@@ -1,0 +1,208 @@
+---
+layout: default
+title: Recruitment Poster
+permalink: /contribute/poster/
+body_class: poster-page
+extra_css: /assets/contribute-poster.css
+description: "Printable 8.5×11 recruitment poster for RobOS: intern in context engineering at rowbose.com/contribute, with QR scan codes for each featured RobOS app suite."
+og_image: /assets/contribute/robos-recruitment-poster-og.png
+og_image_width: 1200
+og_image_height: 630
+og_image_alt: "RobOS Recruitment Poster — Steer coding agents. Build public software. Scan rowbose.com/contribute and 6 app suites."
+keywords: "RobOS recruitment poster, rowbose.com/contribute, context engineering internship, open-source flyer, QR scan codes, Point of Sale, Auto Center, Household, RobOS Games, Movie Player, eLearning"
+---
+<div class="poster-toolbar" aria-label="Poster actions">
+  <div class="poster-toolbar-left">
+    <a class="poster-back" href="{{ '/contribute/' | relative_url }}">← Back to Contribute</a>
+    <span class="poster-spec-tag">US Letter · 8.5 × 11 in · Vector QR</span>
+  </div>
+  <div class="poster-toolbar-actions">
+    <button type="button" class="btn btn-sm" id="print-poster-btn">Print poster</button>
+    <a class="btn btn-sm btn-ghost" href="{{ '/contribute/poster/robos-recruitment-poster.pdf' | relative_url }}" download="robos-recruitment-poster.pdf">Download PDF</a>
+    <a class="btn btn-sm btn-ghost" href="{{ '/assets/contribute/robos-recruitment-poster.png' | relative_url }}" download="robos-recruitment-poster.png">Download PNG</a>
+  </div>
+</div>
+
+<div class="poster-stage">
+  <article class="poster-sheet" aria-label="RobOS Contributor Recruitment Poster">
+    <header class="p-masthead">
+      <div class="p-brand-row">
+        <img class="p-logo" src="{{ '/assets/logo-mark.png' | relative_url }}" alt="RobOS logo" width="38" height="26">
+        <span class="p-brand-name">RobOS</span>
+        <span class="p-brand-sep" aria-hidden="true">/</span>
+        <span class="p-brand-tagline">One Open-Source App Suite on One Knowledge Graph</span>
+      </div>
+      <span class="p-recruit-pill"><i class="p-recruit-dot" aria-hidden="true"></i> Open Call for Contributors · Apache-2.0</span>
+    </header>
+
+    <div class="p-hero">
+      <div class="p-hero-copy">
+        <div>
+          <p class="p-eyebrow">Self-Directed Context-Engineering Internship</p>
+          <h1 class="p-headline">Steer coding agents.<br>Ship software that<br><em>replaces paid apps.</em></h1>
+          <p class="p-lead">RobOS replaces paid software one local app at a time, then keeps the code, knowledge graph, and tests so tomorrow needs less AI. Learn context engineering in public—every merged pull request carries your name.</p>
+          <ul class="p-pillars">
+            <li><b>Public GitHub portfolio</b> — Ship apps, <code>.agents/skills</code>, specs, and JSON-LD KGraph models</li>
+            <li><b>Agents type, you architect</b> — Bring Claude Code, Codex, Copilot, Gemini / Antigravity, or Ollama</li>
+            <li><b>Proof, not promises</b> — Automated headless E2E tests and narrated walkthroughs on every PR</li>
+          </ul>
+        </div>
+        <a class="p-main-link-bar" href="{{ '/contribute/' | relative_url }}">
+          <span class="p-main-link-tag">Main Link</span>
+          <span class="p-main-link-url">rowbose.com/contribute</span>
+        </a>
+      </div>
+
+      <a class="p-hero-qr" href="{{ '/contribute/' | relative_url }}" aria-label="Scan or open rowbose.com/contribute">
+        <span class="p-qr-kicker">★ Start Here · Scan to Join</span>
+        <div class="p-qr-frame-main">
+          <img src="{{ '/assets/contribute/qr/contribute.svg' | relative_url }}" alt="QR code for https://rowbose.com/contribute/" width="142" height="142">
+        </div>
+        <div class="p-qr-caption">
+          <b>rowbose.com/contribute</b>
+          <span>Pick a starter track &amp; say hello in Discord</span>
+        </div>
+      </a>
+    </div>
+
+    <div class="p-sec-head">
+      <div class="p-sec-head-left">
+        <span class="p-sec-eyebrow">6 Featured App Families</span>
+        <h2 class="p-sec-title">Scan any landing-page suite to try it, customize it, or build on it</h2>
+      </div>
+      <span class="p-sec-domain">www.rowbose.com</span>
+    </div>
+
+    <div class="p-suites" role="list">
+      <a class="p-suite-card" role="listitem" href="{{ '/point-of-sale/' | relative_url }}">
+        <div class="p-suite-info">
+          <div class="p-suite-top">
+            <img class="p-suite-ic" src="{{ '/assets/icons/building.svg' | relative_url }}" alt="" width="24" height="24">
+            <span class="p-suite-tag">Retail · Cafés · Bars</span>
+          </div>
+          <h3 class="p-suite-name">Point of Sale</h3>
+          <p class="p-suite-desc">Touchscreen register, self-checkout kiosk, barcode &amp; camera scanning, prep queues, open tabs, and local cash-drawer reports.</p>
+          <span class="p-suite-url">rowbose.com/point-of-sale</span>
+        </div>
+        <div class="p-suite-qr-wrap">
+          <div class="p-suite-qr">
+            <img src="{{ '/assets/contribute/qr/point-of-sale.svg' | relative_url }}" alt="QR code for https://rowbose.com/point-of-sale/" width="94" height="94">
+          </div>
+          <span class="p-suite-scan-lbl">Scan Suite</span>
+        </div>
+      </a>
+
+      <a class="p-suite-card" role="listitem" href="{{ '/auto-center/' | relative_url }}">
+        <div class="p-suite-info">
+          <div class="p-suite-top">
+            <img class="p-suite-ic" src="{{ '/assets/icons/tools.svg' | relative_url }}" alt="" width="24" height="24">
+            <span class="p-suite-tag">Repair Shops · OBD-II</span>
+          </div>
+          <h3 class="p-suite-name">Auto Center</h3>
+          <p class="p-suite-desc">Front-desk intake, mechanic bench with Bluetooth OBD-II diagnostics, customer estimates, invoicing, and owner recall care.</p>
+          <span class="p-suite-url">rowbose.com/auto-center</span>
+        </div>
+        <div class="p-suite-qr-wrap">
+          <div class="p-suite-qr">
+            <img src="{{ '/assets/contribute/qr/auto-center.svg' | relative_url }}" alt="QR code for https://rowbose.com/auto-center/" width="94" height="94">
+          </div>
+          <span class="p-suite-scan-lbl">Scan Suite</span>
+        </div>
+      </a>
+
+      <a class="p-suite-card" role="listitem" href="{{ '/family-finances/' | relative_url }}">
+        <div class="p-suite-info">
+          <div class="p-suite-top">
+            <img class="p-suite-ic" src="{{ '/assets/icons/money.svg' | relative_url }}" alt="" width="24" height="24">
+            <span class="p-suite-tag">Families · Personal Finance</span>
+          </div>
+          <h3 class="p-suite-name">Household</h3>
+          <p class="p-suite-desc">Statement imports, account reconciliation, spending categories, W-2 &amp; 1099 review, and local federal tax estimates.</p>
+          <span class="p-suite-url">rowbose.com/family-finances</span>
+        </div>
+        <div class="p-suite-qr-wrap">
+          <div class="p-suite-qr">
+            <img src="{{ '/assets/contribute/qr/family-finances.svg' | relative_url }}" alt="QR code for https://rowbose.com/family-finances/" width="94" height="94">
+          </div>
+          <span class="p-suite-scan-lbl">Scan Suite</span>
+        </div>
+      </a>
+
+      <a class="p-suite-card" role="listitem" href="{{ '/games/' | relative_url }}">
+        <div class="p-suite-info">
+          <div class="p-suite-top">
+            <img class="p-suite-ic" src="{{ '/assets/icons/gamepad.svg' | relative_url }}" alt="" width="24" height="24">
+            <span class="p-suite-tag">cRPG · Tabletop · RTS · Party</span>
+          </div>
+          <h3 class="p-suite-name">Games</h3>
+          <p class="p-suite-desc">Realm of Heroes cRPG, Tabletop RPG, Starfall Command RTS, and TV/phone Party Games built from the KGraph.</p>
+          <span class="p-suite-url">rowbose.com/games</span>
+        </div>
+        <div class="p-suite-qr-wrap">
+          <div class="p-suite-qr">
+            <img src="{{ '/assets/contribute/qr/games.svg' | relative_url }}" alt="QR code for https://rowbose.com/games/" width="94" height="94">
+          </div>
+          <span class="p-suite-scan-lbl">Scan Suite</span>
+        </div>
+      </a>
+
+      <a class="p-suite-card" role="listitem" href="{{ '/movie-player/' | relative_url }}">
+        <div class="p-suite-info">
+          <div class="p-suite-top">
+            <img class="p-suite-ic" src="{{ '/assets/icons/film.svg' | relative_url }}" alt="" width="24" height="24">
+            <span class="p-suite-tag">Cinema · Music · Smart TVs</span>
+          </div>
+          <h3 class="p-suite-name">Media &amp; Smart TVs</h3>
+          <p class="p-suite-desc">Home theater &amp; audio player for huge libraries with zero-cloud Roku &amp; Google Cast streaming, lyrics, and optional Virtual DJ.</p>
+          <span class="p-suite-url">rowbose.com/movie-player</span>
+        </div>
+        <div class="p-suite-qr-wrap">
+          <div class="p-suite-qr">
+            <img src="{{ '/assets/contribute/qr/movie-player.svg' | relative_url }}" alt="QR code for https://rowbose.com/movie-player/" width="94" height="94">
+          </div>
+          <span class="p-suite-scan-lbl">Scan Suite</span>
+        </div>
+      </a>
+
+      <a class="p-suite-card" role="listitem" href="{{ '/elearning/' | relative_url }}">
+        <div class="p-suite-info">
+          <div class="p-suite-top">
+            <img class="p-suite-ic" src="{{ '/assets/icons/book.svg' | relative_url }}" alt="" width="24" height="24">
+            <span class="p-suite-tag">Learners · Teachers · Teams</span>
+          </div>
+          <h3 class="p-suite-name">eLearning</h3>
+          <p class="p-suite-desc">Interactive courses, hands-on lab steps, quizzes that explain each answer, and offline progress with PDF certificates.</p>
+          <span class="p-suite-url">rowbose.com/elearning</span>
+        </div>
+        <div class="p-suite-qr-wrap">
+          <div class="p-suite-qr">
+            <img src="{{ '/assets/contribute/qr/elearning.svg' | relative_url }}" alt="QR code for https://rowbose.com/elearning/" width="94" height="94">
+          </div>
+          <span class="p-suite-scan-lbl">Scan Suite</span>
+        </div>
+      </a>
+    </div>
+
+    <footer class="p-footer">
+      <div class="p-tracks" aria-label="Four starter contributor tracks">
+        <div class="p-track"><b><i>01</i>Instructions &amp; Skills</b>Tighten <code>AGENTS.md</code> &amp; reusable playbooks</div>
+        <div class="p-track"><b><i>02</i>Knowledge Graph</b>Model JSON-LD entities &amp; SHACL shapes</div>
+        <div class="p-track"><b><i>03</i>Specs &amp; Issues</b>Write prompt-ready tasks any agent can run</div>
+        <div class="p-track"><b><i>04</i>Apps &amp; E2E Proof</b>Build features with tests &amp; video evidence</div>
+      </div>
+      <div class="p-foot-meta">
+        <span><strong>rowbose.com/contribute</strong> · No application or fixed dates</span>
+        <span>github.com/nddipiazza/robos · discord.gg/6PjxzkHujE</span>
+      </div>
+    </footer>
+  </article>
+
+  <p class="poster-foot-note">Tip: In your browser’s print dialog, choose <b>US Letter (8.5 × 11 in)</b>, set margins to <b>None</b>, and enable <b>Background graphics</b>—or download the pre-rendered <a href="{{ '/contribute/poster/robos-recruitment-poster.pdf' | relative_url }}" style="text-decoration:underline">print-ready PDF</a>.</p>
+</div>
+
+<script>
+(function () {
+  var btn = document.getElementById('print-poster-btn');
+  if (btn) btn.addEventListener('click', function () { window.print(); });
+})();
+</script>

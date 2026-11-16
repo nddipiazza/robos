@@ -1,0 +1,725 @@
+/* Printable US Letter (8.5 x 11 in) recruitment poster at /contribute/poster/.
+   Layered on /assets/site.css: respects [data-theme="dark"] on screen while
+   forcing the high-contrast warm light palette for @media print and PDF/PNG export. */
+
+.poster-page {
+  --p-paper: #f7f7f4;
+  --p-card: #fcfcfa;
+  --p-subtle: #efeee8;
+  --p-line: #dfded6;
+  --p-line-strong: #c9c7bc;
+  --p-ink: #22211a;
+  --p-muted: #595850;
+  --p-accent: #f54e00;
+  --p-accent-ink: #c23d00;
+  --p-accent-soft: rgba(245, 78, 0, 0.08);
+  --p-pedestal: #1d1c16;
+  --p-pedestal-fg: #f7f7f4;
+  --p-pedestal-muted: #b8b6ac;
+}
+
+[data-theme="dark"] .poster-page {
+  --p-paper: #16140d;
+  --p-card: #201e16;
+  --p-subtle: #1b1912;
+  --p-line: #323027;
+  --p-line-strong: #454236;
+  --p-ink: #f1f0ec;
+  --p-muted: #a8a69d;
+  --p-accent: #ff621a;
+  --p-accent-ink: #ff7c3f;
+  --p-accent-soft: rgba(255, 98, 26, 0.13);
+  --p-pedestal: #0e0d09;
+  --p-pedestal-fg: #f7f7f4;
+  --p-pedestal-muted: #b8b6ac;
+}
+
+.poster-toolbar {
+  width: min(8.5in, calc(100% - 40px));
+  margin: 26px auto 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.poster-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.poster-back {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--muted);
+  transition: color 0.15s;
+}
+.poster-back:hover {
+  color: var(--accent);
+}
+
+.poster-spec-tag {
+  font: 0.74rem 'Fira Code', monospace;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  background: var(--card);
+  border-radius: 999px;
+  padding: 3px 9px;
+}
+
+.poster-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+
+.poster-toolbar-actions .btn-sm {
+  padding: 6px 13px;
+  font-size: 0.84rem;
+}
+
+.poster-stage {
+  padding: 20px 20px 56px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Exact 8.5 x 11 in US Letter sheet (816 x 1056 CSS px at 96 dpi) */
+.poster-sheet {
+  width: 8.5in;
+  min-height: 11in;
+  height: 11in;
+  background: var(--p-paper);
+  color: var(--p-ink);
+  border: 1px solid var(--p-line-strong);
+  border-radius: 14px;
+  box-shadow: 0 28px 70px -28px rgba(18, 17, 12, 0.35);
+  padding: 0.29in 0.33in;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Subtle top brand rule */
+.poster-sheet::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: linear-gradient(90deg, var(--p-accent) 0%, #ff7e29 55%, #14205e 100%);
+}
+
+/* 1. Masthead */
+.p-masthead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 9px;
+  border-bottom: 1px solid var(--p-line);
+}
+
+.p-brand-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.p-logo {
+  height: 26px;
+  width: auto;
+  background: #f5f5f0;
+  border: 1px solid #dfded6;
+  border-radius: 6px;
+  padding: 2px 5px;
+  display: block;
+}
+
+.p-brand-name {
+  font-size: 16.5px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--p-ink);
+}
+
+.p-brand-sep {
+  color: var(--p-accent);
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.p-brand-tagline {
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--p-muted);
+}
+
+.p-recruit-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font: 600 10px/1 'Fira Code', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--p-accent-ink);
+  background: var(--p-accent-soft);
+  border: 1px solid color-mix(in srgb, var(--p-accent) 36%, transparent);
+  border-radius: 999px;
+  padding: 5px 10px;
+  white-space: nowrap;
+}
+
+.p-recruit-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--p-accent);
+  flex: none;
+}
+
+/* 2. Hero + Main Scan Code Pedestal */
+.p-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 222px;
+  gap: 14px;
+  align-items: stretch;
+  background: var(--p-card);
+  border: 1px solid var(--p-line);
+  border-radius: 12px;
+  padding: 15px 16px;
+}
+
+.p-hero-copy {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-width: 0;
+}
+
+.p-eyebrow {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--p-accent-ink);
+  margin: 0 0 5px;
+}
+
+.p-headline {
+  font-size: 29.5px;
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+  color: var(--p-ink);
+  margin: 0;
+}
+
+.p-headline em {
+  font-style: normal;
+  color: var(--p-accent);
+  white-space: nowrap;
+}
+
+.p-lead {
+  font-size: 12px;
+  line-height: 1.44;
+  color: var(--p-muted);
+  margin: 8px 0 0;
+}
+
+.p-pillars {
+  list-style: none;
+  padding: 0;
+  margin: 10px 0 0;
+  display: grid;
+  gap: 4.5px;
+  font-size: 11.2px;
+  line-height: 1.35;
+  color: var(--p-muted);
+}
+
+.p-pillars li {
+  position: relative;
+  padding-left: 17px;
+}
+
+.p-pillars li::before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: var(--p-accent);
+  font-weight: 800;
+}
+
+.p-pillars b {
+  color: var(--p-ink);
+  font-weight: 700;
+}
+
+.p-main-link-bar {
+  margin-top: 11px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--p-subtle);
+  border: 1.5px solid var(--p-accent);
+  border-radius: 9px;
+  padding: 6px 12px 6px 8px;
+  align-self: flex-start;
+  transition: transform 0.15s;
+}
+a.p-main-link-bar:hover {
+  transform: translateY(-1px);
+}
+
+.p-main-link-tag {
+  background: var(--p-accent);
+  color: #fff;
+  font: 700 9.5px/1 'Inter', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 5px 7px;
+  border-radius: 5px;
+}
+
+.p-main-link-url {
+  font: 700 15.5px/1.1 'Fira Code', monospace;
+  color: var(--p-ink);
+  letter-spacing: -0.02em;
+}
+
+/* Right pedestal: Main Contribute QR Code */
+.p-hero-qr {
+  background: var(--p-pedestal);
+  color: var(--p-pedestal-fg);
+  border-radius: 10px;
+  padding: 11px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  text-align: center;
+  border: 1.5px solid color-mix(in srgb, var(--p-accent) 60%, var(--p-pedestal));
+}
+
+.p-qr-kicker {
+  font: 700 9.5px/1.1 'Fira Code', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: #ff7e42;
+}
+
+.p-qr-frame-main {
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 5px;
+  width: 152px;
+  height: 152px;
+  display: grid;
+  place-items: center;
+  margin: 6px 0;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28);
+}
+
+.p-qr-frame-main img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  image-rendering: pixelated;
+}
+
+.p-qr-caption {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.p-qr-caption b {
+  font: 700 11.5px/1.15 'Fira Code', monospace;
+  color: #ffffff;
+}
+
+.p-qr-caption span {
+  font-size: 9.8px;
+  color: var(--p-pedestal-muted);
+}
+
+/* 3. Section Header for the 6 App Families */
+.p-sec-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 0 2px;
+}
+
+.p-sec-head-left {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+  flex-wrap: wrap;
+}
+
+.p-sec-eyebrow {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--p-accent-ink);
+}
+
+.p-sec-title {
+  font-size: 14.5px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--p-ink);
+  margin: 0;
+}
+
+.p-sec-domain {
+  font: 600 11px/1 'Fira Code', monospace;
+  color: var(--p-muted);
+}
+
+/* 4. 6 App-Family Scan Cards (2x3 Grid) */
+.p-suites {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.p-suite-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 104px;
+  gap: 11px;
+  align-items: stretch;
+  background: var(--p-card);
+  border: 1px solid var(--p-line);
+  border-radius: 11px;
+  padding: 11px 12px;
+  transition: border-color 0.15s, transform 0.15s;
+}
+
+a.p-suite-card:hover {
+  border-color: var(--p-accent);
+  transform: translateY(-1px);
+}
+
+.p-suite-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 4px;
+  min-width: 0;
+}
+
+.p-suite-top {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.p-suite-ic {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  flex: none;
+  display: block;
+}
+
+.p-suite-tag {
+  font-size: 9.2px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--p-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.p-suite-name {
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  color: var(--p-ink);
+  margin: 1px 0 0;
+}
+
+.p-suite-desc {
+  font-size: 10.8px;
+  line-height: 1.36;
+  color: var(--p-muted);
+  margin: 0;
+}
+
+.p-suite-url {
+  margin-top: 2px;
+  font: 600 10.4px/1.2 'Fira Code', monospace;
+  color: var(--p-accent-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.p-suite-qr-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+}
+
+.p-suite-qr {
+  width: 100px;
+  height: 100px;
+  background: #ffffff;
+  border: 1px solid #dfded6;
+  border-radius: 8px;
+  padding: 3px;
+  display: grid;
+  place-items: center;
+}
+
+.p-suite-qr img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  image-rendering: pixelated;
+}
+
+.p-suite-scan-lbl {
+  font: 600 8.5px/1 'Fira Code', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--p-muted);
+}
+
+/* 5. Bottom Contributor Tracks & Footer Strip */
+.p-footer {
+  background: var(--p-subtle);
+  border: 1px solid var(--p-line);
+  border-radius: 10px;
+  padding: 9px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.p-tracks {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.p-track {
+  font-size: 10px;
+  line-height: 1.28;
+  color: var(--p-muted);
+}
+
+.p-track b {
+  display: block;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--p-ink);
+  margin-bottom: 1px;
+}
+
+.p-track i {
+  font: 700 9.5px/1 'Fira Code', monospace;
+  font-style: normal;
+  color: var(--p-accent-ink);
+  margin-right: 3px;
+}
+
+.p-foot-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 6px;
+  border-top: 1px solid var(--p-line);
+  font: 500 9.4px/1.2 'Fira Code', monospace;
+  color: var(--p-muted);
+  white-space: nowrap;
+}
+
+.p-foot-meta strong {
+  color: var(--p-ink);
+  font-weight: 700;
+}
+
+.poster-foot-note {
+  max-width: 720px;
+  margin: 16px auto 0;
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+/* Responsive screen layout for narrow viewports (phones/tablets narrower than 8.5in) */
+@media screen and (max-width: 800px) {
+  html:not(.poster-export) .poster-stage {
+    padding: 16px 12px 44px;
+  }
+  html:not(.poster-export) .poster-sheet {
+    width: 100%;
+    max-width: 540px;
+    height: auto;
+    min-height: 0;
+    padding: 18px 14px;
+    gap: 14px;
+  }
+  html:not(.poster-export) .p-masthead {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  html:not(.poster-export) .p-hero {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 14px;
+  }
+  html:not(.poster-export) .p-headline {
+    font-size: 25px;
+  }
+  html:not(.poster-export) .p-headline em {
+    white-space: normal;
+  }
+  html:not(.poster-export) .p-main-link-bar {
+    max-width: 100%;
+    flex-wrap: wrap;
+  }
+  html:not(.poster-export) .p-main-link-url {
+    font-size: 13.5px;
+    overflow-wrap: anywhere;
+  }
+  html:not(.poster-export) .p-qr-frame-main {
+    width: 148px;
+    height: 148px;
+  }
+  html:not(.poster-export) .p-suites {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  html:not(.poster-export) .p-tracks {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  html:not(.poster-export) .p-foot-meta {
+    flex-direction: column;
+    align-items: flex-start;
+    white-space: normal;
+    gap: 4px;
+  }
+}
+
+/* Standalone export mode (used by scripts/build-recruitment-poster.mjs) and browser Print */
+html.poster-export,
+html.poster-export body {
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 8.5in !important;
+  height: 11in !important;
+  overflow: hidden !important;
+  background: #f7f7f4 !important;
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+}
+
+html.poster-export .nav,
+html.poster-export .foot,
+html.poster-export .poster-toolbar,
+html.poster-export .poster-foot-note {
+  display: none !important;
+}
+
+html.poster-export .poster-stage {
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+html.poster-export .poster-sheet {
+  --p-paper: #f7f7f4;
+  --p-card: #fcfcfa;
+  --p-subtle: #efeee8;
+  --p-line: #dfded6;
+  --p-line-strong: #c9c7bc;
+  --p-ink: #22211a;
+  --p-muted: #595850;
+  --p-accent: #f54e00;
+  --p-accent-ink: #c23d00;
+  --p-accent-soft: rgba(245, 78, 0, 0.08);
+  --p-pedestal: #1d1c16;
+  --p-pedestal-fg: #f7f7f4;
+  --p-pedestal-muted: #b8b6ac;
+  width: 8.5in !important;
+  height: 11in !important;
+  min-height: 11in !important;
+  margin: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+@page {
+  size: letter portrait;
+  margin: 0;
+}
+
+@media print {
+  html,
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 8.5in !important;
+    height: 11in !important;
+    background: #f7f7f4 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  .nav,
+  .foot,
+  .poster-toolbar,
+  .poster-foot-note {
+    display: none !important;
+  }
+  .poster-stage {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  .poster-sheet {
+    --p-paper: #f7f7f4 !important;
+    --p-card: #fcfcfa !important;
+    --p-subtle: #efeee8 !important;
+    --p-line: #dfded6 !important;
+    --p-line-strong: #c9c7bc !important;
+    --p-ink: #22211a !important;
+    --p-muted: #595850 !important;
+    --p-accent: #f54e00 !important;
+    --p-accent-ink: #c23d00 !important;
+    --p-accent-soft: rgba(245, 78, 0, 0.08) !important;
+    --p-pedestal: #1d1c16 !important;
+    --p-pedestal-fg: #f7f7f4 !important;
+    --p-pedestal-muted: #b8b6ac !important;
+    width: 8.5in !important;
+    height: 11in !important;
+    min-height: 11in !important;
+    max-width: none !important;
+    margin: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    break-inside: avoid;
+    page-break-after: avoid;
+  }
+}

@@ -162,3 +162,17 @@ The figures are drawn by `scripts/future/figures.mjs` (a dark palette for the si
 Playwright Chromium. Commit the regenerated SVGs and PDF (`.gitignore` allows this one PDF). When a figure
 changes, update its `robos:FlowDiagram` Mermaid text in the `documentation` KGraph package as well.
 
+## Contributor recruitment poster (`/contribute/poster/`)
+
+`contribute/poster/index.html` (styled by `assets/contribute-poster.css`) is the printable US Letter (8.5×11 in)
+flyer linked from `/contribute/`. It leads with a QR code for `https://rowbose.com/contribute/` and carries vector
+QR codes for the six featured app suites on the landing page. Regenerate the QR SVGs, the print-ready PDF, the
+high-resolution PNG and the Open Graph share card from that single source page:
+
+```bash
+node scripts/build-recruitment-poster.mjs
+```
+
+Needs `node` (20+), `qrencode` and headless Chrome (`CHROME_BIN` overrides `/usr/bin/google-chrome`). Commit the
+regenerated `site/assets/contribute/**` assets and `site/contribute/poster/robos-recruitment-poster.pdf`.
+

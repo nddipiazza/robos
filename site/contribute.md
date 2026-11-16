@@ -15,6 +15,7 @@ keywords: "contribute to RobOS, open-source AI project, context engineering inte
     <div class="cta">
       <a class="btn" href="https://github.com/nddipiazza/robos/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener">Read the contributor guide</a>
       <a class="btn btn-ghost" href="https://discord.gg/6PjxzkHujE" target="_blank" rel="noopener">Join the Discord</a>
+      <a class="btn btn-ghost" href="{{ '/contribute/poster/' | relative_url }}">Print recruitment poster</a>
     </div>
     <p class="sub">No application, no fixed dates. Go at your own pace.</p>
   </div>
@@ -101,7 +102,29 @@ cd packages/robos-test &amp;&amp; npm install &amp;&amp; npm run test:unit</code
   </div>
 </section>
 
-<section class="final">
+<section id="poster">
+  <div class="wrap split">
+    <div>
+      <p class="eyebrow">Spread the word</p>
+      <h3>Hang the recruitment poster</h3>
+      <p style="margin-top:14px">Running a campus CS club, hackathon, Linux user group or study hall? Print the one-page US Letter flyer. It leads with <code>rowbose.com/contribute</code> and carries vector QR scan codes for all six featured RobOS app suites.</p>
+      <ul class="ticks">
+        <li>Main QR scan code for <code>rowbose.com/contribute</code></li>
+        <li>Suite scan codes for Point of Sale, Auto Center, Household, Games, Media &amp; Smart TVs, and eLearning</li>
+        <li>Printer-friendly 8.5 × 11 in warm light layout, plus downloadable PDF and high-res PNG</li>
+      </ul>
+      <div class="cta" style="justify-content:flex-start;margin-top:26px">
+        <a class="btn" href="{{ '/contribute/poster/' | relative_url }}">Open printable poster</a>
+        <a class="btn btn-ghost" href="{{ '/contribute/poster/robos-recruitment-poster.pdf' | relative_url }}" download="robos-recruitment-poster.pdf">Download PDF</a>
+      </div>
+    </div>
+    <a class="art" href="{{ '/contribute/poster/' | relative_url }}" style="max-width:400px;margin:0 auto;display:block" aria-label="Open the printable RobOS recruitment poster">
+      <img src="{{ '/assets/contribute/robos-recruitment-poster.png' | relative_url }}" alt="Preview of the RobOS recruitment poster with QR scan codes for rowbose.com/contribute and six app suites" width="816" height="1056" loading="lazy" style="width:100%;height:auto;border:1px solid var(--line)">
+    </a>
+  </div>
+</section>
+
+<section class="final alt">
   <div class="wrap">
     <h2 class="h2">Learn context engineering where everyone can see the work.</h2>
     <div class="cta" style="margin-top:30px">
