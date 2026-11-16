@@ -39,10 +39,10 @@ The [RobOS App Manager](packages/app-manager) provides the same app selection an
 ```sh
 git clone https://github.com/nddipiazza/robos.git
 cd robos
-scripts/dev-launch.sh point-of-sale
+node scripts/dev-launch.cjs point-of-sale
 ```
 
-`dev-launch.sh` installs the app's dependencies on first run, then starts it. Run it with no argument to list the apps. On GNOME, `scripts/install-local.sh` adds the apps to the application launcher instead.
+The source launcher installs the app's dependencies on first run and gives it its own taskbar or Dock icon on Windows, GNOME and macOS. Run it with no argument to list the apps. The existing `scripts/dev-launch.sh` command runs the same launcher. On GNOME, `scripts/install-local.sh` also adds apps to the application grid.
 
 For the Ubuntu desktop setup, the VM image and per-platform notes, see the [installation guide](https://rowbose.com/v1/getting-started.html). To model another repository in a knowledge graph, see the [graph workspace guide](packages/robos-graph/WORKSPACES.md).
 

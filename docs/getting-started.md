@@ -39,13 +39,13 @@ For a custom folder, download `Install-RobOS.ps1` from the download page and run
 | Method | Where it runs | You need | What you get |
 |---|---|---|---|
 | [Windows app suite](#windows-app-suite) | Windows | Internet access during setup | Native apps in `%USERPROFILE%\RobOS` and a Start menu launcher |
-| [Run from source](#run-from-source) | Linux desktop; the shell scripts can also be used in a suitable macOS or WSL environment. Use native setup above for Windows. | Node.js 20 or newer, Git, a desktop session | One app window per command |
+| [Run from source](#run-from-source) | Windows, Linux or macOS | Node.js 20 or newer, Git, a desktop session | One app window per command, with its own desktop icon |
 | [GNOME launcher](#add-the-apps-to-the-gnome-launcher) | Ubuntu with GNOME | The same as above | A launcher entry for each app in your clone |
 | [USB installer](#install-the-appliance-from-a-usb-drive) | The installer app runs on Linux, macOS or Windows (it cannot flash on Windows, see below); the target is an x86_64 PC | A USB drive of 4 GB or more | The RobOS appliance on the target PC |
 | [Virtual machine](#boot-the-appliance-in-qemu) | A Linux host with QEMU | QEMU, 16 GB of RAM for the guest | The appliance in a QEMU window |
 
 {: .note }
-The `.dmg`, `.exe`, `.AppImage` and `.deb` files on the [download page](https://rowbose.com/download/) are the USB installer. These versioned appliance files do not install the app suite on macOS or Windows. The Windows app-suite setup is the separate download described above. On Windows, use the native app-suite setup above. For a Linux source checkout, use "Run from source".
+The `.dmg`, `.exe`, `.AppImage` and `.deb` files on the [download page](https://rowbose.com/download/) are the USB installer. These versioned appliance files do not install the app suite on macOS or Windows. The Windows app-suite setup is the separate download described above.
 
 ## Run from source
 
@@ -55,7 +55,7 @@ Prerequisites:
 
 - Node.js 20 or newer and npm. The README and `AGENTS.md` state Node 20+, and the release workflow and the Docker image both use Node 20.
 - Git.
-- A desktop session. The launch script sets `DISPLAY=:0` when `DISPLAY` is not set.
+- A desktop session. On Linux without a Wayland socket or an existing `DISPLAY`, the launcher defaults to `DISPLAY=:0`.
 
 1. Clone the repository.
 
@@ -67,10 +67,10 @@ Prerequisites:
 2. Launch an app by its folder name.
 
    ```bash
-   scripts/dev-launch.sh pr-review
+   node scripts/dev-launch.cjs pr-review
    ```
 
-   If the package has no `node_modules/.bin/electron` yet, the script runs `npm install` in that package first. It then starts Electron with `--no-sandbox --disable-gpu --disable-dev-shm-usage`. Run `scripts/dev-launch.sh` with no argument to list every package that has a `main.js` and a `package.json`.
+   The launcher runs `npm install` in the package if its Electron runtime is missing. It uses the package's artwork for the Windows taskbar, GNOME Dash or macOS Dock, and creates a per-user desktop entry for the running app on Linux. Run `node scripts/dev-launch.cjs` with no argument to list the apps. The Bash command `scripts/dev-launch.sh` is also available.
 
 You can also work in the package directly. Most packages that have a `main.js` define an `npm start` script.
 

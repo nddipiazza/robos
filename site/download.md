@@ -61,10 +61,10 @@ keywords: "download RobOS, Windows installer, Linux app suite, macOS install, Ub
         <button role="tab" id="t3" aria-controls="p3" aria-selected="false">Virtual machine</button>
       </div>
       <div class="panel" id="p1" role="tabpanel" aria-labelledby="t1">
-        <p>Needs Node.js 20+, Git and a desktop session. Each app is its own Electron package; the script installs that app's dependencies the first time and then launches it. Run it with no argument to list the apps.</p>
+        <p>Needs Node.js 20+, Git and a desktop session. The source launcher installs the selected app's dependencies on first run and uses its own icon on the Windows taskbar, GNOME Dash or macOS Dock. Run it with no argument to list the apps.</p>
         <pre class="code"><button data-copy>Copy</button><code>git clone https://github.com/nddipiazza/robos.git
 cd robos
-scripts/dev-launch.sh pr-review</code></pre>
+node scripts/dev-launch.cjs pr-review</code></pre>
       </div>
       <div class="panel" id="p2" role="tabpanel" aria-labelledby="t2" hidden>
         <p>On Debian or Ubuntu with GNOME. The first script installs the system packages the apps use (it uses <code>sudo</code>; run it with <code>--check</code> first to see what is missing). The second adds a launcher entry for each app in your clone.</p>
