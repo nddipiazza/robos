@@ -3966,12 +3966,10 @@ function renderWizardMicCards() {
       <div class="mic-card-img-wrap">
         <img src="${esc(p.image)}" alt="${esc(p.name)}" />
         ${p.soundReplacement?.supported
-          ? `<span class="mic-card-badge">${DI.badge('drum-replace', 12)}<span>Trigger Ready</span></span>`
-          : `<span class="mic-card-badge">${DI.badge('channel-fx', 12)}<span>Studio LV2/EQ</span></span>`}
+          ? `<span class="mic-card-badge">${DI.badge('drum-replace', 11)}<span>Trigger</span></span>`
+          : `<span class="mic-card-badge">${DI.badge('channel-fx', 11)}<span>LV2/EQ</span></span>`}
       </div>
       <div class="mic-card-title">${esc(p.name)}</div>
-      <div class="mic-card-desc">${esc(p.description)}</div>
-      <div class="mic-card-fx">${esc((p.fx?.openSourcePlugins || []).slice(0, 2).join(' · '))}</div>
     </button>
   `).join('');
 
@@ -4010,10 +4008,7 @@ function renderWizardChannelRows() {
     const isSpike = peakDb >= -36;
     return `
       <div class="wiz-ch-row ${isSel ? 'selected' : ''} ${isSpike ? 'spiking' : ''}" data-ch-name="${esc(inp.name)}">
-        <div class="wiz-ch-top">
-          <span>${inp.isFocusrite ? '<span class="fr-led"></span>' : ''}${esc(inp.description)}</span>
-          <span class="mono">${peakDb <= -90 ? '-∞' : peakDb.toFixed(1)} dBFS${isSel ? ' [SEL]' : ''}</span>
-        </div>
+        <span class="wiz-ch-label">${inp.isFocusrite ? '<span class="fr-led"></span>' : ''}${esc(inp.description)}</span>
         <div class="wiz-ch-bar">
           <div class="wiz-ch-bar-fill" style="width:${dbToPercent(peakDb).toFixed(1)}%"></div>
         </div>
@@ -4115,29 +4110,25 @@ async function renderWizardStep() {
   finishBtn.classList.toggle('hidden', wizStep !== 3);
 
   if (wizStep === 1) {
-    await window.robos.wizardStopTapDetect();
-    sub.textContent = 'Step 1 of 3 — Choose a studio microphone or instrument preset';
-    nextBtn.textContent = 'Next: Identify Channel →';
+    sub.textContent = 'Step 1 of 3 — Select preset';
+    nextBtn.textContent = 'Next: Input →';
     renderWizardMicCards();
+    await window.robos.wizardStopTapDetect();
   } else if (wizStep === 2) {
-    sub.textContent = `Step 2 of 3 — Strike ${profile.shortLabel} or tap the mic to auto-detect its Focusrite input channel`;
-    nextBtn.textContent = 'Next: Open-Source VST / EQ & Drum Replace →';
+    sub.textContent = `Step 2 of 3 — Select input for ${profile.shortLabel}`;
+    nextBtn.textContent = 'Next: EQ & Trigger →';
 
     document.getElementById('wiz-selected-banner').innerHTML = `
       <img src="${esc(profile.image)}" alt="${esc(profile.name)}" />
-      <div>
-        <strong style="font-size:14.5px;">${esc(profile.name)}</strong>
-        <div class="hint">${esc(profile.description)}</div>
-      </div>
+      <strong>${esc(profile.name)}</strong>
     `;
     const existingSame = (currentProject?.tracks || []).filter(t => t.profileId === profile.id).length;
     document.getElementById('wiz-track-name').value = existingSame > 0 ? `${profile.shortLabel} ${existingSame + 1}` : profile.shortLabel;
-    document.getElementById('wiz-placement-tip').innerHTML = `<strong>Studio Placement Tip:</strong> ${esc(profile.placementTip)}`;
     const hints = profile.hardwareHints || {};
     const hintParts = [
       hints.level || 'Line',
       hints.air ? 'Air ON' : 'Air OFF',
-      hints.phantom48v ? '+48V Condenser' : 'Dynamic (No +48V)',
+      hints.phantom48v ? '+48V' : 'No +48V',
     ];
     document.getElementById('wiz-hw-hint-summary').textContent = hintParts.join(' · ');
     document.getElementById('wiz-tap-alert')?.classList.add('hidden');
@@ -4146,7 +4137,7 @@ async function renderWizardStep() {
     await window.robos.wizardStartTapDetect({ strikeThresholdDb: -26 });
   } else if (wizStep === 3) {
     await window.robos.wizardStopTapDetect();
-    sub.textContent = 'Step 3 of 3 — Review automatic Open-Source VST/LV2 chain, Parametric EQ & Sound Replacement';
+    sub.textContent = 'Step 3 of 3 — EQ & Sound Replacement';
     populateWizardStep3(profile);
   }
 }
@@ -6103,7 +6094,7 @@ async function init() {
       wizSelectedChannelName = data.detected.name;
       const alertEl = document.getElementById('wiz-tap-alert');
       if (alertEl) {
-        alertEl.textContent = `Strike detected on "${data.detected.description}" (${data.detected.peakDb} dBFS) — channel auto-selected.`;
+        alertEl.textContent = `Detected: ${data.detected.description}`;
         alertEl.classList.remove('hidden');
       }
     }

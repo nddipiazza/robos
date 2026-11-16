@@ -401,22 +401,18 @@
         <div id="wiz-step-1">
           <div class="drumset-switch-callout">
             <div class="callout-with-badge">
-              <img src="assets/icons/drumset-ai.webp" class="daw-ai-badge" width="24" height="24" alt="" />
-              <div>
-                <strong>Tracking a full multi-mic drum kit?</strong>
-                <span>Run <strong>DrumSet AI Soundcheck</strong> to arm all Focusrite + ADAT channels together, play your kit, and let Gemini classify and dial in every channel automatically.</span>
-              </div>
+              <img src="assets/icons/drumset-ai.webp" class="daw-ai-badge" width="20" height="20" alt="" />
+              <strong>Multi-mic drum kit?</strong>
             </div>
             <button type="button" class="btn btn-primary btn-sm" id="btn-switch-to-drumset-wizard">Open DrumSet AI →</button>
           </div>
           <div class="wiz-filter-bar">
             <div class="filter-pills">
-              <button type="button" class="filter-pill active" data-cat="all">All Studio Presets (18)</button>
-              <button type="button" class="filter-pill" data-cat="drums">Drums &amp; Cymbals (14)</button>
+              <button type="button" class="filter-pill active" data-cat="all">All (18)</button>
+              <button type="button" class="filter-pill" data-cat="drums">Drums (14)</button>
               <button type="button" class="filter-pill" data-cat="guitar-bass">Guitar &amp; Bass</button>
               <button type="button" class="filter-pill" data-cat="vocals-room">Vocals &amp; Room</button>
             </div>
-            <span class="hint">Double-click any preset card to jump straight to input detection</span>
           </div>
           <div id="wiz-mic-cards-grid" class="mic-cards-grid"></div>
         </div>
@@ -428,10 +424,7 @@
           <div class="wiz-two-col">
             <div class="card wiz-subcard">
               <div class="tap-detect-header">
-                <div>
-                  <h3 class="card-title" style="margin-bottom:3px;">Strike Instrument or Tap Microphone</h3>
-                  <p class="hint">Monitoring all Focusrite Scarlett / PipeWire capture channels in real time. Strike the drum, strum, or tap the mic grille to auto-lock onto its input.</p>
-                </div>
+                <h3 class="card-title" style="margin:0;">Tap Mic or Select Channel</h3>
                 <span class="listen-badge" id="wiz-listen-badge">LISTENING</span>
               </div>
 
@@ -440,7 +433,7 @@
             </div>
 
             <div class="card wiz-subcard">
-              <h3 class="card-title">Channel &amp; Preamp Configuration</h3>
+              <h3 class="card-title">Channel &amp; Preamp</h3>
               <div class="form-row">
                 <label for="wiz-track-name">Track Label</label>
                 <input type="text" id="wiz-track-name" class="text-input" />
@@ -455,9 +448,8 @@
               </div>
               <label class="checkbox-row">
                 <input type="checkbox" id="wiz-apply-hw-hints" checked />
-                <span>Auto-apply Focusrite Scarlett preamp mode (<span id="wiz-hw-hint-summary" class="mono">Line</span>)</span>
+                <span>Auto-apply Scarlett preamp (<span id="wiz-hw-hint-summary" class="mono">Line</span>)</span>
               </label>
-              <div class="placement-tip-box" id="wiz-placement-tip"></div>
             </div>
           </div>
         </div>
