@@ -497,7 +497,12 @@ function setFocusriteHardwareControl({ cardIndex, control, value }) {
     if (!allowed.includes(value)) throw new Error('Invalid clock source');
     execFileSync('amixer', ['-c', String(idx), 'cset', `name='${safeControl}'`, value], { timeout: 3000 });
   } else if (typeof value === 'boolean') {
-    execFileSync('amixer', ['-c', String(idx), 'sset', safeControl, value ? 'on' : 'off'], { timeout: 3000 });
+    const isCaptureSwitch = /^Line In /i.test(safeControl);
+    try {
+      execFileSync('amixer', ['-c', String(idx), 'sset', safeControl, isCaptureSwitch ? (value ? 'cap' : 'nocap') : (value ? 'on' : 'off')], { timeout: 3000, stdio: ['ignore', 'pipe', 'pipe'] });
+    } catch {
+      execFileSync('amixer', ['-c', String(idx), 'sset', safeControl, value ? 'on' : 'off'], { timeout: 3000, stdio: ['ignore', 'pipe', 'pipe'] });
+    }
   } else {
     const safeEnum = String(value);
     if (!/^(Line|Inst|on|off)$/i.test(safeEnum)) throw new Error('Invalid control value');

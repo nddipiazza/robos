@@ -528,9 +528,25 @@ function buildTrackWebAudioChain(ctx, track) {
 
   const eq = track.fx?.eq || {};
   if (eq.enabled !== false) {
+    const hpfFreq = Number(eq.hpfHz) || 40;
+    const steep24dB = Number(eq.hpfSlope) === 24 || hpfFreq >= 220;
+
     const hpf = ctx.createBiquadFilter();
     hpf.type = 'highpass';
-    hpf.frequency.value = Number(eq.hpfHz) || 40;
+    hpf.frequency.value = hpfFreq;
+    hpf.Q.value = 0.7071;
+    tail.connect(hpf);
+    tail = hpf;
+
+    // Cascade 2nd Butterworth high-pass stage (24 dB/oct) for close cymbal/hi-hat rumble & snare-body rejection
+    if (steep24dB) {
+      const hpf2 = ctx.createBiquadFilter();
+      hpf2.type = 'highpass';
+      hpf2.frequency.value = hpfFreq;
+      hpf2.Q.value = 0.7071;
+      tail.connect(hpf2);
+      tail = hpf2;
+    }
 
     const low = ctx.createBiquadFilter();
     low.type = 'lowshelf';
@@ -543,15 +559,27 @@ function buildTrackWebAudioChain(ctx, track) {
     mid.Q.value = Number(eq.midQ) || 1.4;
     mid.gain.value = Number(eq.midGainDb) || 0;
 
+    tail.connect(low);
+    low.connect(mid);
+    tail = mid;
+
+    // Optional de-harsh / surgical notch stage (e.g. 2.95 kHz cymbal stick bite control)
+    if (Number.isFinite(Number(eq.harshFreqHz)) && Math.abs(Number(eq.harshGainDb) || 0) >= 0.1) {
+      const harsh = ctx.createBiquadFilter();
+      harsh.type = 'peaking';
+      harsh.frequency.value = Number(eq.harshFreqHz);
+      harsh.Q.value = Number(eq.harshQ) || 1.8;
+      harsh.gain.value = Number(eq.harshGainDb);
+      tail.connect(harsh);
+      tail = harsh;
+    }
+
     const high = ctx.createBiquadFilter();
     high.type = 'highshelf';
     high.frequency.value = Number(eq.highFreqHz) || 5000;
     high.gain.value = Number(eq.highGainDb) || 0;
 
-    tail.connect(hpf);
-    hpf.connect(low);
-    low.connect(mid);
-    mid.connect(high);
+    tail.connect(high);
     tail = high;
   }
 
@@ -2427,9 +2455,9 @@ function renderInspectorDrawer() {
             <input type="range" class="daw-fader" id="insp-gain-db" min="-24" max="36" step="0.5" value="${gainDb}" />
           </div>
           <div class="slider-row">
-            <label>High-Pass (${eq.hpfHz || 60} Hz)</label>
+            <label>High-Pass (${eq.hpfHz || 60} Hz${(Number(eq.hpfSlope) === 24 || (eq.hpfHz || 60) >= 220) ? ' · 24dB' : ''})</label>
             <input type="checkbox" id="insp-eq-on" ${eq.enabled !== false ? 'checked' : ''} />
-            <input type="range" class="daw-fader" id="insp-eq-hpf" min="20" max="320" step="5" value="${eq.hpfHz || 60}" />
+            <input type="range" class="daw-fader" id="insp-eq-hpf" min="20" max="800" step="5" value="${eq.hpfHz || 60}" />
           </div>
           <div class="slider-row">
             <label>Low Shelf (${eq.lowGainDb ?? 0} dB)</label>
@@ -2565,7 +2593,7 @@ function renderInspectorDrawer() {
   });
 
   document.getElementById('insp-gain-db')?.addEventListener('change', e =>
-    saveInspectorPatch('Adjust Input Gain', t => { t.gainDb = DE.clamp(-24, 24, Number(e.target.value) || 0); })
+    saveInspectorPatch('Adjust Input Gain', t => { t.gainDb = DE.clamp(-24, 36, Number(e.target.value) || 0); })
   );
   document.getElementById('insp-phase-on')?.addEventListener('change', e =>
     saveInspectorPatch('Toggle Phase Invert', t => { t.fx = { ...(t.fx || {}), phaseInvert: e.target.checked }; })
@@ -4151,6 +4179,11 @@ async function renderWizardStep() {
     `;
     const existingSame = (currentProject?.tracks || []).filter(t => t.profileId === profile.id).length;
     document.getElementById('wiz-track-name').value = existingSame > 0 ? `${profile.shortLabel} ${existingSame + 1}` : profile.shortLabel;
+    const defPan = Number(profile.defaultPan) || 0;
+    const panSlider = document.getElementById('wiz-pan-slider');
+    const panValEl = document.getElementById('wiz-pan-val');
+    if (panSlider) panSlider.value = String(defPan);
+    if (panValEl) panValEl.textContent = formatPan(defPan);
     const hints = profile.hardwareHints || {};
     const hintParts = [
       hints.level || 'Line',

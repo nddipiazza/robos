@@ -88,7 +88,7 @@ function buildTrackFromWizard({
   armed = true,
   soundReplacement,
   fxOverride,
-  pan = 0,
+  pan = undefined,
   gainDb = 0,
 }) {
   const profile = getMicProfile(profileId);
@@ -116,7 +116,7 @@ function buildTrackFromWizard({
     soloed: false,
     gainDb: Number(gainDb) || 0,
     volume: 1.0,
-    pan: Number(pan) || 0,
+    pan: pan !== undefined ? (Number(pan) || 0) : (Number(profile.defaultPan) || 0),
     fx,
     soundReplacement: sr,
     clips: [],
