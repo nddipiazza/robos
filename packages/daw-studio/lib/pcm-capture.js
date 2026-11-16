@@ -96,6 +96,7 @@ function startDiscreteCaptureSession(
       ...parsed,
       fd,
       dataBytes: 0,
+      inflightWrites: 0,
       windowPeakLin: 0,
       maxPeakLin: 0,
       lastPeakDb: -96,
@@ -104,6 +105,18 @@ function startDiscreteCaptureSession(
       pendingPeaks: [],
     };
   });
+
+  function queueAsyncPcmWrite(st, pcmBuf) {
+    if (st.fd === null || pcmBuf.length <= 0) return;
+    // Copy slice if backed by shared stdout slab so buffer stays immutable while pwrite completes
+    const owned = Buffer.from(pcmBuf);
+    const writePos = 44 + st.dataBytes;
+    st.dataBytes += owned.length;
+    st.inflightWrites++;
+    fs.write(st.fd, owned, 0, owned.length, writePos, () => {
+      st.inflightWrites = Math.max(0, st.inflightWrites - 1);
+    });
+  }
 
   let stopped = false;
   let lastFlushAtMs = 0;
@@ -209,10 +222,7 @@ function startDiscreteCaptureSession(
       if (usableLen <= 0 || st.fd === null) return;
 
       const slice = buf.subarray(0, usableLen);
-      try {
-        fs.writeSync(st.fd, slice, 0, slice.length, 44 + st.dataBytes);
-        st.dataBytes += slice.length;
-      } catch {}
+      queueAsyncPcmWrite(st, slice);
 
       ingestMonoPcmBuffer(st, slice, sliceSamples);
       scheduleLiveFlush();
@@ -276,10 +286,14 @@ function startDiscreteCaptureSession(
         }
         st.slicePos = slicePos;
         st.slicePeak = slicePeak;
-        try {
-          fs.writeSync(st.fd, monoBuf, 0, monoBuf.length, 44 + st.dataBytes);
+        if (st.fd !== null) {
+          const writePos = 44 + st.dataBytes;
           st.dataBytes += monoBuf.length;
-        } catch {}
+          st.inflightWrites++;
+          fs.write(st.fd, monoBuf, 0, monoBuf.length, writePos, () => {
+            st.inflightWrites = Math.max(0, st.inflightWrites - 1);
+          });
+        }
         if (localMax > st.windowPeakLin) st.windowPeakLin = localMax;
         if (localMax > st.maxPeakLin) st.maxPeakLin = localMax;
       }
@@ -320,6 +334,12 @@ function startDiscreteCaptureSession(
       Promise.all(procs.map(p => p.closed)),
       new Promise(r => setTimeout(r, 1800)),
     ]);
+
+    // Wait up to 500ms for any queued async pwrite calls to finish draining
+    const drainDeadline = Date.now() + 500;
+    while (trackStates.some(st => st.inflightWrites > 0) && Date.now() < drainDeadline) {
+      await new Promise(r => setTimeout(r, 6));
+    }
 
     for (const st of trackStates) {
       if (st.fd !== null) {

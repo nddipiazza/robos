@@ -638,7 +638,10 @@ input[type="range"].daw-fader:hover::-webkit-slider-thumb,
 .timecode-readout {
   font-size: 15.5px;
   font-weight: 800;
-  letter-spacing: 0.7px;
+  letter-spacing: 0.5px;
+  font-variant-numeric: tabular-nums;
+  display: inline-block;
+  min-width: 88px;
   color: #38e8ff;
   text-shadow: 0 0 10px rgba(0, 212, 255, 0.35);
 }
@@ -1084,9 +1087,10 @@ input[type="range"].daw-fader:hover::-webkit-slider-thumb,
 }
 .track-live-meter-fill {
   height: 100%;
-  width: 0%;
+  width: 100%;
   background: linear-gradient(90deg, #22c55e 0%, #22c55e 62%, #f59e0b 84%, #ef4444 100%);
-  transition: width 85ms linear;
+  clip-path: inset(0 100% 0 0);
+  will-change: clip-path;
 }
 
 .inline-rename-input {
