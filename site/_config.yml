@@ -57,6 +57,10 @@ defaults:
       path: "future/skill-commons-whitepaper.pdf"
     values:
       sitemap: false
+  - scope:
+      path: "contribute/poster/robos-recruitment-poster.pdf"
+    values:
+      sitemap: false
 
 exclude:
   - README.md
