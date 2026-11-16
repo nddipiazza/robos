@@ -64,6 +64,7 @@ let wizStep = 1;
 let wizCategory = 'all';
 let wizProfileId = 'kick-in';
 let wizSelectedChannelName = '';
+let wizChannelUserPicked = false;
 let wizTapLevels = {};
 
 // DrumSet AI Soundcheck Wizard State
@@ -1263,12 +1264,12 @@ function bindTrackRowEvents() {
           dragSnapshotSaved = true;
           updateEditToolbarState();
         }
-        const newVal = DE.clamp(-24, 24, Number(el.value) || 0);
+        const newVal = DE.clamp(-24, 36, Number(el.value) || 0);
         const origSelf = startGainMap ? (startGainMap.get(trackId) ?? 0) : (Number(track.gainDb) || 0);
         const delta = newVal - origSelf;
         const targetIds = gangedIds || getTargetTrackIdsForAction(trackId, ev);
 
-        DE.adjustTracksNumericBatch(currentProject, startGainMap, targetIds, 'gainDb', delta, -24, 24, 1);
+        DE.adjustTracksNumericBatch(currentProject, startGainMap, targetIds, 'gainDb', delta, -24, 36, 1);
         track.gainDb = newVal;
 
         for (const t of (currentProject?.tracks || [])) {
@@ -3976,12 +3977,34 @@ function renderWizardMicCards() {
   grid.querySelectorAll('[data-mic-id]').forEach(card => {
     card.addEventListener('click', () => {
       wizProfileId = card.dataset.micId;
-      renderWizardMicCards();
+      grid.querySelectorAll('[data-mic-id]').forEach(c => {
+        c.classList.toggle('selected', c.dataset.micId === wizProfileId);
+      });
     });
     card.addEventListener('dblclick', () => {
       wizProfileId = card.dataset.micId;
       goToWizardStep(2);
     });
+  });
+}
+
+function updateWizardChannelLevelsInPlace() {
+  const container = document.getElementById('wiz-channel-list');
+  const manualSel = document.getElementById('wiz-manual-channel');
+  if (!container) return;
+
+  if (manualSel && document.activeElement !== manualSel && manualSel.value !== wizSelectedChannelName) {
+    manualSel.value = wizSelectedChannelName;
+  }
+
+  container.querySelectorAll('[data-ch-name]').forEach(row => {
+    const chName = row.dataset.chName;
+    const lvl = wizTapLevels[chName];
+    const peakDb = lvl ? lvl.peakDb : -96;
+    row.classList.toggle('selected', chName === wizSelectedChannelName);
+    row.classList.toggle('spiking', peakDb >= -36);
+    const fill = row.querySelector('.wiz-ch-bar-fill');
+    if (fill) fill.style.width = `${dbToPercent(peakDb).toFixed(1)}%`;
   });
 }
 
@@ -3991,7 +4014,7 @@ function renderWizardChannelRows() {
   if (!container || !manualSel) return;
 
   const inputs = getOrderedInputs();
-  if (!wizSelectedChannelName && inputs.length) {
+  if ((!wizSelectedChannelName || !inputs.some(i => i.name === wizSelectedChannelName)) && inputs.length) {
     const usedNames = new Set((currentProject?.tracks || []).map(t => t.inputNodeName));
     const firstUnused = inputs.find(i => !usedNames.has(i.name)) || inputs[0];
     wizSelectedChannelName = firstUnused.name;
@@ -4017,10 +4040,14 @@ function renderWizardChannelRows() {
   }).join('');
 
   container.querySelectorAll('[data-ch-name]').forEach(row => {
-    row.addEventListener('click', () => {
+    const selectRow = () => {
       wizSelectedChannelName = row.dataset.chName;
-      renderWizardChannelRows();
-    });
+      wizChannelUserPicked = true;
+      if (manualSel) manualSel.value = wizSelectedChannelName;
+      updateWizardChannelLevelsInPlace();
+    };
+    row.addEventListener('mousedown', selectRow);
+    row.addEventListener('click', selectRow);
   });
 }
 
@@ -4133,6 +4160,7 @@ async function renderWizardStep() {
     document.getElementById('wiz-hw-hint-summary').textContent = hintParts.join(' · ');
     document.getElementById('wiz-tap-alert')?.classList.add('hidden');
     wizTapLevels = {};
+    wizChannelUserPicked = false;
     renderWizardChannelRows();
     await window.robos.wizardStartTapDetect({ strikeThresholdDb: -26 });
   } else if (wizStep === 3) {
@@ -5346,13 +5374,14 @@ async function init() {
     openTimelineSpaceContextMenu(ev, null, ratio * getTimelineDurationSec());
   });
 
-  // Full Workstation Keyboard Shortcuts (capture phase so focused buttons/sliders/selects never delay Spacebar!)
+  // Full Workstation Keyboard Shortcuts (capture phase so focused buttons/sliders never delay Spacebar!)
   window.addEventListener('keydown', async (ev) => {
     const activeEl = document.activeElement;
     const activeTag = activeEl?.tagName || '';
     const inputType = String(activeEl?.type || '').toLowerCase();
     const isTextInput = activeTag === 'INPUT' && !['range', 'checkbox', 'radio', 'button', 'color', 'file'].includes(inputType);
-    const isTyping = activeTag === 'TEXTAREA' || isTextInput || Boolean(activeEl?.isContentEditable);
+    const isTextTyping = activeTag === 'TEXTAREA' || isTextInput || Boolean(activeEl?.isContentEditable);
+    const isSelectFocused = activeTag === 'SELECT';
     const isMod = ev.ctrlKey || ev.metaKey;
     const keyLower = (ev.key || '').toLowerCase();
 
@@ -5364,16 +5393,14 @@ async function init() {
       return;
     }
 
-    if (isTyping) return;
-
-    // Fast-path Spacebar transport stop/start before any focused button/select handles keydown/keyup
-    if (!isMod && !ev.altKey && ev.code === 'Space') {
+    // Fast-path Spacebar transport stop/start (even if a slider/button/select is focused when recording or playing!)
+    if (!isTextTyping && !isMod && !ev.altKey && ev.code === 'Space') {
       const anyModalOpen = ['add-mic-wizard-modal', 'open-project-modal', 'drumkits-modal', 'drumset-wizard-modal', 'rename-item-modal', 'shortcuts-modal']
         .some(id => {
           const el = document.getElementById(id);
           return el && !el.classList.contains('hidden');
         });
-      if (!anyModalOpen) {
+      if (!anyModalOpen && (!isSelectFocused || isRecording || isPlaying)) {
         ev.preventDefault();
         ev.stopPropagation();
         if (ev.repeat) return;
@@ -5383,6 +5410,8 @@ async function init() {
         return;
       }
     }
+
+    if (isTextTyping || isSelectFocused) return;
 
     // Escape closes menus/modals first, otherwise clears selection
     if (ev.key === 'Escape') {
@@ -5911,7 +5940,8 @@ async function init() {
 
   document.getElementById('wiz-manual-channel')?.addEventListener('change', (e) => {
     wizSelectedChannelName = e.target.value;
-    renderWizardChannelRows();
+    wizChannelUserPicked = true;
+    updateWizardChannelLevelsInPlace();
   });
   document.getElementById('wiz-pan-slider')?.addEventListener('input', (e) => {
     document.getElementById('wiz-pan-val').textContent = formatPan(e.target.value);
@@ -6090,7 +6120,7 @@ async function init() {
     for (const item of (data?.levels || [])) {
       wizTapLevels[item.name] = item;
     }
-    if (data?.detected) {
+    if (data?.detected && !wizChannelUserPicked) {
       wizSelectedChannelName = data.detected.name;
       const alertEl = document.getElementById('wiz-tap-alert');
       if (alertEl) {
@@ -6098,7 +6128,7 @@ async function init() {
         alertEl.classList.remove('hidden');
       }
     }
-    renderWizardChannelRows();
+    updateWizardChannelLevelsInPlace();
   });
 
   window.robos.onRecordProgress((prog) => {
