@@ -400,6 +400,41 @@ function readFocusriteHardwareControls(cardIndex) {
     adat: /values=on/.test(readCardControlByName('ADAT Validity') || ''),
   };
 
+  // Align 20-channel Focusrite Scarlett 18i20 hardware USB capture mux with Linux ALSA UCM (`HiFi`):
+  // UCM splits Ch 0..7 (`PCM 01..08`) -> Analogue 1..8, Ch 10..11 (`PCM 11..12`) -> S/PDIF 1..2,
+  // and Ch 12..19 (`PCM 13..20`) -> ADAT 1..8 (`Direct2#ch=0..7`), whereas factory firmware leaves
+  // `PCM 11..18` on `ADAT 1..8` (shifting ADAT by 2 channels and leaving ADAT 7..8 on `'Off'`).
+  let captureRoutingAligned = false;
+  if (hasControl('PCM 01') && hasControl('PCM 11') && hasControl('PCM 13') && hasControl('PCM 20')) {
+    const expectedPcmMap = [
+      ['PCM 01', 'Analogue 1'],
+      ['PCM 02', 'Analogue 2'],
+      ['PCM 03', 'Analogue 3'],
+      ['PCM 04', 'Analogue 4'],
+      ['PCM 05', 'Analogue 5'],
+      ['PCM 06', 'Analogue 6'],
+      ['PCM 07', 'Analogue 7'],
+      ['PCM 08', 'Analogue 8'],
+      ['PCM 11', 'S/PDIF 1'],
+      ['PCM 12', 'S/PDIF 2'],
+      ['PCM 13', 'ADAT 1'],
+      ['PCM 14', 'ADAT 2'],
+      ['PCM 15', 'ADAT 3'],
+      ['PCM 16', 'ADAT 4'],
+      ['PCM 17', 'ADAT 5'],
+      ['PCM 18', 'ADAT 6'],
+      ['PCM 19', 'ADAT 7'],
+      ['PCM 20', 'ADAT 8'],
+    ];
+    for (const [pcmCtrl, targetSrc] of expectedPcmMap) {
+      const cur = readEnum(pcmCtrl);
+      if (cur && cur.options.includes(targetSrc) && cur.value !== targetSrc) {
+        runCmd('amixer', ['-c', String(cardIndex), 'sset', pcmCtrl, targetSrc]);
+      }
+    }
+    captureRoutingAligned = true;
+  }
+
   const phantomBanks = [];
   for (const bankName of ['Line In 1-4 Phantom Power', 'Line In 5-8 Phantom Power', 'Line In 1 Phantom Power', 'Line In 2 Phantom Power']) {
     const state = readSwitch(bankName);
@@ -433,6 +468,7 @@ function readFocusriteHardwareControls(cardIndex) {
     firmwareVersion,
     clockSource,
     syncValid,
+    captureRoutingAligned,
     phantomBanks,
     preamps,
     totalMixerControls: scontrols.split('\n').filter(Boolean).length,

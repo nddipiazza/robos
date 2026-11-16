@@ -55,7 +55,7 @@ function ingestMonoPcmBuffer(st, monoSlice, sliceSamples) {
     if (a > slicePeak) slicePeak = a;
     slicePos++;
     if (slicePos >= sliceSamples) {
-      st.pendingPeaks.push(Number(slicePeak.toFixed(4)));
+      st.pendingPeaks.push(Number(slicePeak.toFixed(5)));
       slicePos = 0;
       slicePeak = 0;
     }
@@ -152,7 +152,7 @@ function startDiscreteCaptureSession(
         durationSec: Number((framesRecorded / sampleRate).toFixed(3)),
         peakDb,
         maxPeakDb,
-        currentPeak: Number(st.slicePeak.toFixed(4)),
+        currentPeak: Number(st.slicePeak.toFixed(5)),
         newPeaks,
       };
     });
@@ -279,7 +279,7 @@ function startDiscreteCaptureSession(
           if (a > slicePeak) slicePeak = a;
           slicePos++;
           if (slicePos >= sliceSamples) {
-            st.pendingPeaks.push(Number(slicePeak.toFixed(4)));
+            st.pendingPeaks.push(Number(slicePeak.toFixed(5)));
             slicePos = 0;
             slicePeak = 0;
           }

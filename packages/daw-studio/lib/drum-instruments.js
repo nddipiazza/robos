@@ -1884,7 +1884,7 @@ function computeWaveformPeaks(buffer, numBuckets = 240) {
       if (a > max) max = a;
     }
     if (max > globalPeak) globalPeak = max;
-    peaks.push(Number(max.toFixed(4)));
+    peaks.push(Number(max.toFixed(5)));
   }
   const peakDb = globalPeak <= 0.000015 ? -96 : Number((20 * Math.log10(globalPeak)).toFixed(1));
   return { peaks, peakDb, durationSec: Number(durationSec.toFixed(3)), sampleRate };

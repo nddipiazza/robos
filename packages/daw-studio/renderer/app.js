@@ -51,6 +51,7 @@ let liveRecSession = null;
 let liveRecRafId = null;
 let rulerStaticCache = { key: '', canvas: null };
 let trackStaticCache = new Map(); // trackId -> { key, canvas }
+let waveformZoomDb = 0; // Non-destructive visual peak display zoom (REAPER Peak Display Gain)
 
 function invalidateStaticTimelineCaches() {
   rulerStaticCache.key = '';
@@ -100,6 +101,22 @@ function formatPan(pan) {
 function dbToPercent(db) {
   if (!Number.isFinite(db) || db <= -72) return 0;
   return Math.max(0, Math.min(100, ((db + 72) / 72) * 100));
+}
+
+/**
+ * Perceptual hybrid dBFS + power visual amplitude curve matching the channel meter's
+ * `-68 dBFS .. 0 dBFS` sensitivity range while keeping preamp noise floor (`<= -68 dBFS`)
+ * razor-flat. Ensures quiet mic hits (e.g. `-48 dBFS` to `-30 dBFS`) visibly grow on both
+ * live-streaming takes and saved regions whenever they register on the track meter.
+ */
+function waveformVisualAmp(linearPeak, gainLinear = 1, floorAmp = 0.012) {
+  const zoomLin = waveformZoomDb === 0 ? 1 : DE.dbToGain(waveformZoomDb);
+  const p = Math.max(0, (Number(linearPeak) || 0) * gainLinear * zoomLin);
+  if (p <= 0.00039) return floorAmp; // <= -68.2 dBFS noise floor -> crisp 1px zero-crossing line
+  const db = 20 * Math.log10(Math.min(1, p));
+  if (db <= -68) return floorAmp;
+  const normDb = Math.max(0, Math.min(1, (db + 68) / 68));
+  return Math.max(floorAmp, Math.min(1, Math.pow(normDb, 1.42)));
 }
 
 function showStatus(message, isError = false) {
@@ -1824,7 +1841,7 @@ function computeTrackStaticCacheKey(track, tIdx, w, h, totalSec, secPerBeat) {
     const drg = timelineDragState?.targetClipIds?.has(c.id) ? timelineDragState.mode : '';
     clipsSig += `|${c.id}:${c.startSec}:${c.durationSec}:${c.gainDb || 0}:${c.fadeInSec || 0}:${c.fadeOutSec || 0}:${c.muted ? 1 : 0}:${c.peaks?.length || 0}:${c.transients?.length || 0}:${sel}:${hov}:${drg}`;
   }
-  return `${w}x${h}:${tIdx}:${totalSec}:${secPerBeat.toFixed(4)}:${track.gainDb || 0}:${track.color || ''}:${isTrackSel}:${srOn}${clipsSig}`;
+  return `${w}x${h}:${tIdx}:${totalSec}:${secPerBeat.toFixed(4)}:${track.gainDb || 0}:${waveformZoomDb}:${track.color || ''}:${isTrackSel}:${srOn}${clipsSig}`;
 }
 
 function drawAllTimelineCanvases() {
@@ -1974,9 +1991,9 @@ function drawAllTimelineCanvases() {
           const maxAmpH = (regionH - 22) / 2;
 
           ctx.fillStyle = isMuted ? '#475569' : baseColor;
-          ctx.globalAlpha = isMuted ? 0.35 : 0.52;
+          ctx.globalAlpha = isMuted ? 0.35 : 0.54;
           for (let i = 0; i < peaks.length; i++) {
-            const amp = Math.max(0.02, Math.min(1, peaks[i] * 1.35 * totalGainLinear));
+            const amp = waveformVisualAmp(peaks[i], totalGainLinear, 0.012);
             const bh = amp * maxAmpH;
             ctx.fillRect(startX + i * stepX, midY - bh, barW, bh * 2);
           }
@@ -1984,7 +2001,7 @@ function drawAllTimelineCanvases() {
           ctx.fillStyle = isMuted ? '#94a3b8' : (isClipSel ? '#e0f2fe' : baseColor);
           ctx.globalAlpha = isMuted ? 0.4 : 0.92;
           for (let i = 0; i < peaks.length; i++) {
-            const amp = Math.max(0.015, Math.min(1, peaks[i] * 0.78 * totalGainLinear));
+            const amp = Math.max(0.010, waveformVisualAmp(peaks[i], totalGainLinear, 0.010) * 0.68);
             const bh = amp * maxAmpH;
             ctx.fillRect(startX + i * stepX, midY - bh, barW, bh * 2);
           }
@@ -2139,7 +2156,7 @@ function drawAllTimelineCanvases() {
       // Time-anchored live streaming Dual-Layer Peak + Core Waveform
       const peaks = recState?.peaks || [];
       const curTipPeak = Number(recState?.currentPeak) || 0;
-      const totalSlices = peaks.length + (curTipPeak > 0.002 ? 1 : 0);
+      const totalSlices = peaks.length + (curTipPeak > 0.00039 ? 1 : 0);
       if (totalSlices > 0) {
         const pxPerSlice = (sliceDur / totalSec) * w;
         const midY = regionTop + 17 + (regionH - 19) / 2;
@@ -2154,7 +2171,7 @@ function drawAllTimelineCanvases() {
             if (sx > endX + 0.5) break;
             if (sx + barW < 0) continue;
             const rawP = i < peaks.length ? peaks[i] : curTipPeak;
-            const amp = Math.max(0.02, Math.min(1, rawP * 1.35 * totalGainLinear));
+            const amp = waveformVisualAmp(rawP, totalGainLinear, 0.012);
             const bh = amp * maxAmpH;
             ctx.fillRect(sx, midY - bh, Math.min(barW, Math.max(0.8, endX - sx)), bh * 2);
           }
@@ -2166,7 +2183,7 @@ function drawAllTimelineCanvases() {
             if (sx > endX + 0.5) break;
             if (sx + barW < 0) continue;
             const rawP = i < peaks.length ? peaks[i] : curTipPeak;
-            const amp = Math.max(0.015, Math.min(1, rawP * 0.80 * totalGainLinear));
+            const amp = Math.max(0.010, waveformVisualAmp(rawP, totalGainLinear, 0.010) * 0.68);
             const bh = amp * maxAmpH;
             ctx.fillRect(sx, midY - bh, Math.min(barW, Math.max(0.8, endX - sx)), bh * 2);
           }
@@ -2177,8 +2194,7 @@ function drawAllTimelineCanvases() {
           for (let pass = 0; pass < 2; pass++) {
             ctx.fillStyle = pass === 0 ? '#f87171' : '#fecaca';
             ctx.globalAlpha = pass === 0 ? 0.58 : 0.94;
-            const scale = (pass === 0 ? 1.35 : 0.80) * totalGainLinear;
-            const floorAmp = pass === 0 ? 0.02 : 0.015;
+            const floorAmp = pass === 0 ? 0.012 : 0.010;
             for (let col = px0; col < px1; col++) {
               const tCol0 = ((col / w) * totalSec) - recStartSec;
               const tCol1 = (((col + 1) / w) * totalSec) - recStartSec;
@@ -2190,7 +2206,8 @@ function drawAllTimelineCanvases() {
                 const v = s < peaks.length ? peaks[s] : curTipPeak;
                 if (v > maxP) maxP = v;
               }
-              const amp = Math.max(floorAmp, Math.min(1, maxP * scale));
+              const baseAmp = waveformVisualAmp(maxP, totalGainLinear, floorAmp);
+              const amp = pass === 0 ? baseAmp : Math.max(floorAmp, baseAmp * 0.68);
               const bh = amp * maxAmpH;
               ctx.fillRect(col, midY - bh, 1, bh * 2);
             }
@@ -5628,6 +5645,17 @@ async function init() {
     } else if (!isMod && !ev.altKey && keyLower === 's') {
       ev.preventDefault();
       await editSplitSelectedOrPlayhead();
+    } else if (isMod && !ev.altKey && ev.shiftKey && (ev.key === 'ArrowUp' || ev.key === 'ArrowDown')) {
+      // REAPER Peak Display Gain: Ctrl+Shift+Up / Ctrl+Shift+Down scales waveform visual height non-destructively
+      ev.preventDefault();
+      waveformZoomDb = DE.clamp(-12, 36, waveformZoomDb + (ev.key === 'ArrowUp' ? 3 : -3));
+      drawAllTimelineCanvases();
+      showStatus(`Waveform Peak Display Zoom: ${waveformZoomDb >= 0 ? '+' : ''}${waveformZoomDb} dB`);
+    } else if (isMod && !ev.altKey && ev.shiftKey && (ev.key === '0' || ev.key === ')')) {
+      ev.preventDefault();
+      waveformZoomDb = 0;
+      drawAllTimelineCanvases();
+      showStatus('Waveform Peak Display Zoom: Reset (0 dB)');
     } else if ((isMod && ev.key === '0') || (!isMod && !ev.altKey && ev.key === '\\')) {
       ev.preventDefault();
       setTimelineZoom(1.0);
@@ -6138,6 +6166,7 @@ window.__dawStudioState = () => ({
   isPlaying,
   playheadSec,
   timelineZoom,
+  waveformZoomDb,
   snapToGrid,
   loopPlayback,
   countInEnabled,

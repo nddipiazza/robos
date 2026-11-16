@@ -1081,4 +1081,31 @@ describe('DAW Editing Engine: Multi-Select, Track/Take Gain, Split/Trim, Copy/Pa
       fs.rmSync(tmpRoot, { recursive: true, force: true });
     }
   });
+
+  it('preserves 5-decimal precision on quiet -46.7 dBFS drum transients across live streaming and saved takes', () => {
+    const { ingestMonoPcmBuffer, makeWavHeader } = require('../lib/pcm-capture');
+    const sliceSamples = 960; // 20ms @ 48kHz
+    const pcmData = Buffer.alloc(sliceSamples * 4 * 2); // 4 slices (80ms)
+    // Slice 0: -80 dBFS preamp floor (sample = 3)
+    pcmData.writeInt16LE(3, 10);
+    // Slice 1: -46.7 dBFS quiet kick drum transient (sample = 152 -> 0.00464 linear)
+    pcmData.writeInt16LE(152, sliceSamples * 2 + 20);
+
+    const st = {
+      slicePos: 0,
+      slicePeak: 0,
+      pendingPeaks: [],
+      windowPeakLin: 0,
+      maxPeakLin: 0,
+    };
+    ingestMonoPcmBuffer(st, pcmData, sliceSamples);
+    assert.strictEqual(st.pendingPeaks.length, 4);
+    assert.strictEqual(st.pendingPeaks[0], 0.00009); // -80 dBFS floor kept below -68 dBFS gate
+    assert.strictEqual(st.pendingPeaks[1], 0.00464); // -46.7 dBFS kick transient preserved accurately
+
+    const wav = Buffer.concat([makeWavHeader(pcmData.length, 48000), pcmData]);
+    const waveInfo = computeWaveformPeaks(wav, 4);
+    assert.strictEqual(waveInfo.peakDb, -46.7);
+    assert.strictEqual(waveInfo.peaks[1], 0.00464);
+  });
 });
