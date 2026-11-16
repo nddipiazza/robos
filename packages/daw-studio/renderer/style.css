@@ -257,35 +257,6 @@ code, .mono {
   font-weight: 700;
 }
 
-.rail-session-summary {
-  margin-top: auto;
-  background: var(--bg-lcd);
-  border: 1px solid #1e2736;
-  box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.8);
-  border-radius: 6px;
-  padding: 9px 10px;
-}
-.rail-summary-title {
-  font-size: 9.5px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.9px;
-  color: #64748b;
-  margin-bottom: 6px;
-  padding-bottom: 4px;
-  border-bottom: 1px solid #161d29;
-}
-.rail-stat {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 10.5px;
-  font-weight: 600;
-  letter-spacing: 0.4px;
-  padding: 2.5px 0;
-  color: #94a3b8;
-}
-.rail-stat strong { font-size: 11.5px; color: #e2e8f0; }
 .red-text { color: #f87171 !important; }
 .accent-text { color: var(--accent) !important; }
 

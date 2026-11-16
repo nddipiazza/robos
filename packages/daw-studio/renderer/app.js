@@ -1012,15 +1012,8 @@ function renderStudio() {
   updateEditToolbarState();
 
   const tracks = currentProject.tracks || [];
-  const armedCount = tracks.filter(t => t.armed).length;
-  const clipCount = tracks.reduce((n, t) => n + (t.clips?.length || 0), 0);
-  const replaceCount = tracks.filter(t => t.soundReplacement?.enabled).length;
-
-  document.getElementById('rail-track-count').textContent = String(tracks.length);
-  document.getElementById('rail-armed-count').textContent = String(armedCount);
-  document.getElementById('rail-clip-count').textContent = String(clipCount);
-  document.getElementById('rail-replace-count').textContent = String(replaceCount);
-  document.getElementById('tracks-header-count').textContent = String(tracks.length);
+  const tracksHeaderEl = document.getElementById('tracks-header-count');
+  if (tracksHeaderEl) tracksHeaderEl.textContent = String(tracks.length);
 
   const emptyEl = document.getElementById('studio-empty-state');
   const wsEl = document.getElementById('tracks-workspace');
