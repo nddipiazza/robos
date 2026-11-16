@@ -1007,7 +1007,9 @@ describe('DAW Editing Engine: Multi-Select, Track/Take Gain, Split/Trim, Copy/Pa
   it('supports REAPER tracking operations: abort & discard pass, live markers, overlapping take comping (T / Shift+T / Alt+Shift+T), and fade-to-cursor', async () => {
     const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'robos-daw-reaper-'));
     const prevProjDir = process.env.ROBOS_DAW_PROJECTS_DIR;
-    process.env.ROBOS_DAW_PROJECTS_DIR = tmpRoot;
+    const prevCfgDir = process.env.ROBOS_DAW_CONFIG_DIR;
+    process.env.ROBOS_DAW_PROJECTS_DIR = path.join(tmpRoot, 'projects');
+    process.env.ROBOS_DAW_CONFIG_DIR = path.join(tmpRoot, 'config');
     const recorder = new MultiTrackRecorder();
     try {
       const proj = createEmptyProject({ name: 'REAPER Tracking Test', bpm: 120 });
@@ -1074,6 +1076,8 @@ describe('DAW Editing Engine: Multi-Select, Track/Take Gain, Split/Trim, Copy/Pa
       if (recorder.isRecording()) await recorder.cancel();
       if (prevProjDir === undefined) delete process.env.ROBOS_DAW_PROJECTS_DIR;
       else process.env.ROBOS_DAW_PROJECTS_DIR = prevProjDir;
+      if (prevCfgDir === undefined) delete process.env.ROBOS_DAW_CONFIG_DIR;
+      else process.env.ROBOS_DAW_CONFIG_DIR = prevCfgDir;
       fs.rmSync(tmpRoot, { recursive: true, force: true });
     }
   });

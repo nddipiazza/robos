@@ -349,14 +349,85 @@ async function performRedo() {
 
 // ─── Web Audio Engine & Open-Source Sample Playback ─────────────────────────
 
+let activeStudioSinkInfo = { nodeName: '', deviceId: '', label: '' };
+
+function getTargetStudioOutputEndpoint() {
+  const outSel = document.getElementById('select-output-device');
+  const selNodeName = outSel?.value || '';
+  const outputs = Array.isArray(currentSnapshot?.outputs) ? currentSnapshot.outputs : [];
+  if (selNodeName) {
+    const found = outputs.find(o => o.name === selNodeName);
+    if (found) return found;
+  }
+  if (currentSnapshot?.activeOutput) return currentSnapshot.activeOutput;
+  return outputs.find(o => o.isFocusrite) || outputs[0] || null;
+}
+
 function ensureStudioAudioCtx() {
   if (!studioAudioCtx || studioAudioCtx.state === 'closed') {
     studioAudioCtx = new AudioContext();
+    activeStudioSinkInfo = { nodeName: '', deviceId: '', label: '' };
   }
   if (studioAudioCtx.state === 'suspended') {
     studioAudioCtx.resume().catch(() => {});
   }
   return studioAudioCtx;
+}
+
+/**
+ * Ensures `studioAudioCtx` is routed via Chromium `AudioContext.setSinkId()` directly
+ * to the user's configured DAW Output Interface (e.g. Focusrite Scarlett 18i20) rather
+ * than falling back to OS default laptop speakers.
+ */
+async function ensureRoutedStudioAudioCtx(forceRefresh = false) {
+  const ctx = ensureStudioAudioCtx();
+  if (typeof ctx.setSinkId !== 'function' || !navigator.mediaDevices?.enumerateDevices) {
+    return ctx;
+  }
+
+  const targetOut = getTargetStudioOutputEndpoint();
+  if (!targetOut) return ctx;
+
+  if (
+    !forceRefresh &&
+    activeStudioSinkInfo.nodeName === targetOut.name &&
+    activeStudioSinkInfo.deviceId &&
+    ctx.sinkId === activeStudioSinkInfo.deviceId
+  ) {
+    return ctx;
+  }
+
+  try {
+    const devs = await navigator.mediaDevices.enumerateDevices();
+    const audioOuts = devs.filter(d => d.kind === 'audiooutput' && d.deviceId && d.deviceId !== 'default' && d.deviceId !== 'communications');
+    const wantDesc = String(targetOut.description || '').trim();
+    const wantLower = wantDesc.toLowerCase();
+
+    let match = audioOuts.find(d => String(d.label || '').trim() === wantDesc)
+      || audioOuts.find(d => String(d.label || '').trim().toLowerCase() === wantLower)
+      || (wantLower ? audioOuts.find(d => String(d.label || '').toLowerCase().includes(wantLower) || wantLower.includes(String(d.label || '').toLowerCase())) : null);
+
+    if (!match && targetOut.isFocusrite) {
+      match = audioOuts.find(d => /line output 1\+2/i.test(d.label) && /scarlett|focusrite|clarett|vocaster/i.test(d.label))
+        || audioOuts.find(d => /scarlett|focusrite|clarett|vocaster/i.test(d.label));
+    }
+
+    if (match && match.deviceId && ctx.sinkId !== match.deviceId) {
+      await ctx.setSinkId(match.deviceId);
+    }
+    if (match) {
+      activeStudioSinkInfo = {
+        nodeName: targetOut.name,
+        deviceId: match.deviceId,
+        label: match.label || wantDesc,
+      };
+    }
+  } catch {}
+
+  if (ctx.state === 'suspended') {
+    try { await ctx.resume(); } catch {}
+  }
+  return ctx;
 }
 
 function base64ToArrayBuffer(b64) {
@@ -401,7 +472,7 @@ async function auditionDrumPiece(kitId, pieceId) {
     return;
   }
   try {
-    const ctx = ensureStudioAudioCtx();
+    const ctx = await ensureRoutedStudioAudioCtx();
     const audioBuf = await loadDecodedAudio(samplePath);
     if (!audioBuf) throw new Error('Could not decode drum sample');
     const src = ctx.createBufferSource();
@@ -410,7 +481,8 @@ async function auditionDrumPiece(kitId, pieceId) {
     gain.gain.value = 0.9;
     src.connect(gain).connect(ctx.destination);
     src.start();
-    showStatus(`Auditioned ${kitId} / ${pieceId}`);
+    const outLabel = activeStudioSinkInfo.label || getTargetStudioOutputEndpoint()?.description || 'Studio Output';
+    showStatus(`Auditioned ${kitId} / ${pieceId} -> ${outLabel}`);
   } catch (err) {
     showStatus(`Audition failed: ${err.message}`, true);
   }
@@ -535,7 +607,7 @@ async function startPlayback() {
   const anySolo = tracks.some(t => t.soloed);
   const playableTracks = tracks.filter(t => anySolo ? t.soloed : !t.muted);
 
-  const ctx = ensureStudioAudioCtx();
+  const ctx = await ensureRoutedStudioAudioCtx();
   const startFrom = playheadSec;
   const maxDuration = getBaseProjectSpanSec();
 
@@ -692,7 +764,7 @@ async function startPlayback() {
 // ─── Multi-Track Hardware Recording ─────────────────────────────────────────
 
 async function playRecordCountInClicks(bpm = 120) {
-  const ctx = ensureStudioAudioCtx();
+  const ctx = await ensureRoutedStudioAudioCtx();
   const safeBpm = DE.clamp(40, 280, Number(bpm) || 120);
   const beatSec = 60 / safeBpm;
   const sub = document.getElementById('transport-substate');
@@ -4278,7 +4350,7 @@ async function stopAndAnalyzeDrumsetSoundcheck() {
 async function playSoundcheckPreviewClip(filePath) {
   if (!filePath) return;
   try {
-    const ctx = ensureStudioAudioCtx();
+    const ctx = await ensureRoutedStudioAudioCtx();
     const buf = await loadDecodedAudio(filePath, true);
     if (!buf) throw new Error('Could not read soundcheck WAV');
     const src = ctx.createBufferSource();
@@ -5850,10 +5922,26 @@ async function init() {
   document.getElementById('btn-rescan')?.addEventListener('click', async () => {
     const snap = await window.robos.getAudioSnapshot();
     renderSnapshot(snap);
+    await ensureRoutedStudioAudioCtx(true);
     renderStudio();
     showStatus(snap.focusrite?.connected
       ? `Connected to ${snap.focusrite.model} (${snap.inputs.length} inputs, ${snap.outputs.length} outputs)`
       : 'Rescanned PipeWire & ALSA audio bus.');
+  });
+
+  document.getElementById('select-output-device')?.addEventListener('change', async (e) => {
+    const outSel = e.currentTarget;
+    const outOpt = outSel?.selectedOptions?.[0];
+    const res = await window.robos.saveAudioEngine({
+      defaultOutputId: outOpt ? Number(outOpt.dataset.nodeId) : undefined,
+      preferredOutputNodeName: outSel?.value || '',
+    });
+    if (res?.ok && res.snapshot) {
+      renderSnapshot(res.snapshot);
+    }
+    await ensureRoutedStudioAudioCtx(true);
+    const outLabel = activeStudioSinkInfo.label || outOpt?.textContent || 'Selected Output';
+    showStatus(`Studio Playback & Audition Routed -> ${outLabel}`);
   });
 
   document.getElementById('btn-apply-engine')?.addEventListener('click', async () => {
@@ -5871,7 +5959,8 @@ async function init() {
     });
     if (res?.ok) {
       renderSnapshot(res.snapshot);
-      showStatus(`Applied: ${res.snapshot.clock.effectiveRate} Hz · ${res.snapshot.clock.effectiveQuantum} samples (${res.snapshot.clock.latencyMs} ms latency)`);
+      await ensureRoutedStudioAudioCtx(true);
+      showStatus(`Applied: ${res.snapshot.clock.effectiveRate} Hz · ${res.snapshot.clock.effectiveQuantum} samples (${res.snapshot.clock.latencyMs} ms latency) -> ${activeStudioSinkInfo.label || res.snapshot.activeOutput?.description || 'Output'}`);
     } else {
       showStatus(`Failed to apply engine settings: ${res?.error || 'Unknown error'}`, true);
     }
@@ -5904,11 +5993,12 @@ async function init() {
   document.getElementById('btn-live-monitor')?.addEventListener('click', toggleLiveMonitor);
 
   // Backend Push Subscriptions
-  window.robos.onHardwareChanged((snap) => {
+  window.robos.onHardwareChanged(async (snap) => {
     renderSnapshot(snap);
+    await ensureRoutedStudioAudioCtx(true);
     renderStudio();
     showStatus(snap.focusrite?.connected
-      ? `USB Hotplug: ${snap.focusrite.model} connected.`
+      ? `USB Hotplug: ${snap.focusrite.model} connected (${activeStudioSinkInfo.label || snap.activeOutput?.description || 'routed'}).`
       : 'USB audio device state changed.');
   });
 
@@ -6026,15 +6116,22 @@ async function init() {
     anchorTrackId = currentProject?.tracks?.[0]?.id || null;
     updateDrumkitsBadge();
     renderSnapshot(boot.audioSnapshot);
+    await ensureRoutedStudioAudioCtx(true);
     renderStudio();
   } else {
     const snap = await window.robos.getAudioSnapshot();
     renderSnapshot(snap);
+    await ensureRoutedStudioAudioCtx(true);
   }
 }
 
 // Expose deterministic inspection hook for E2E verification
 window.__dawStudioState = () => ({
+  studioAudioSink: {
+    sinkId: studioAudioCtx?.sinkId || null,
+    nodeName: activeStudioSinkInfo.nodeName || null,
+    label: activeStudioSinkInfo.label || null,
+  },
   project: currentProject,
   isDirty,
   isRecording,
