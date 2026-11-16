@@ -1040,6 +1040,9 @@ function renderStudio() {
       `<option value="${esc(inp.name)}"${inp.name === t.inputNodeName ? ' selected' : ''}>${esc(inp.description)}</option>`
     ).join('');
 
+    const trackIconKey = t.category === 'drums'
+      ? 'drum'
+      : (/guitar|bass/i.test(`${t.category || ''} ${t.profileId || ''}`) ? 'guitar' : 'mic');
     const nameHtml = inlineRenamingTrackId === t.id
       ? `<input type="text" class="inline-rename-input" data-inline-rename="${esc(t.id)}" value="${esc(t.name)}" aria-label="Rename Track" />`
       : `<span class="track-name-label" data-name-dbl="${esc(t.id)}" title="${esc(t.name)} — Double-click to rename · Right-click for Track Menu">${esc(t.name)}</span>`;
@@ -1052,10 +1055,12 @@ function renderStudio() {
             <span class="track-index-num mono">${chNumStr}</span>
             <input type="checkbox" class="track-sel-chk" data-track-chk="${esc(t.id)}" ${isSel ? 'checked' : ''} title="Select Track for Batch Actions (Shift+Click for range)" aria-label="Select ${esc(t.name)}" />
           </div>
-          <img class="track-mic-thumb" src="${esc(t.image || 'assets/mics/snare-mic.webp')}" alt="${esc(t.name)}" />
           <div class="track-meta-stack">
             <div class="track-top-line">
-              ${nameHtml}
+              <div class="track-title-group">
+                <span class="track-tiny-icon" style="color:${esc(t.color || '#00d4ff')}">${DI.svg(trackIconKey, 13)}</span>
+                ${nameHtml}
+              </div>
               <div class="track-btn-strip">
                 <button type="button" class="trk-mini-btn hw-rec ${t.armed ? 'arm-on' : ''}" data-act="arm" data-id="${esc(t.id)}" title="Record Arm Track (F7 / Shift+R · Ctrl+Click = Selected · Alt+Click = Exclusive)">R</button>
                 <button type="button" class="trk-mini-btn hw-mon ${t.monitor ? 'mon-on' : ''}" data-act="mon" data-id="${esc(t.id)}" title="Toggle Input Monitoring (F8 / Alt+I · Ctrl+Click = Selected)">IN</button>

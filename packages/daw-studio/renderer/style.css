@@ -854,15 +854,21 @@ input[type="range"].daw-fader:hover::-webkit-slider-thumb,
   margin: 0;
 }
 
-.track-mic-thumb {
-  width: 50px;
-  height: 50px;
-  border-radius: 6px;
-  object-fit: cover;
-  border: 1px solid #2f3d52;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.55);
+.track-title-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  flex: 1;
+}
+.track-tiny-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
   flex-shrink: 0;
-  align-self: center;
+  opacity: 0.92;
 }
 
 .track-meta-stack {
