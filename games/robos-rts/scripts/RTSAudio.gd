@@ -55,6 +55,8 @@ const SOUND_FILES: Dictionary = {
 	"sentry_impact": "res://assets/audio/sfx/sentry_impact.wav",
 	"mortar_fire": "res://assets/audio/sfx/mortar_fire.wav",
 	"acid_spit": "res://assets/audio/sfx/acid_spit.wav",
+	"thorn_volley": "res://assets/audio/sfx/thorn_volley.wav",
+	"thorn_impale": "res://assets/audio/sfx/thorn_impale.wav",
 	"corrosive_lob": "res://assets/audio/sfx/corrosive_lob.wav",
 	"needler_fire": "res://assets/audio/sfx/needler_fire.wav",
 	"prism_beam": "res://assets/audio/sfx/prism_beam.wav",
@@ -63,6 +65,8 @@ const SOUND_FILES: Dictionary = {
 	# Melee Attack Strikes & Workers
 	"claw_slash": "res://assets/audio/sfx/claw_slash.wav",
 	"mandible_bite": "res://assets/audio/sfx/mandible_bite.wav",
+	"chitin_cleave": "res://assets/audio/sfx/chitin_cleave.wav",
+	"bio_melee_hit": "res://assets/audio/sfx/bio_melee_hit.wav",
 	"light_blade_strike": "res://assets/audio/sfx/light_blade_strike.wav",
 	"arc_welder": "res://assets/audio/sfx/arc_welder.wav",
 	"mote_spark": "res://assets/audio/sfx/mote_spark.wav",
@@ -71,6 +75,9 @@ const SOUND_FILES: Dictionary = {
 	# Combat Impacts & Shields
 	"shield_hit": "res://assets/audio/sfx/shield_hit.wav",
 	"explosion_splash": "res://assets/audio/sfx/explosion_splash.wav",
+	"thorn_impact": "res://assets/audio/sfx/thorn_impact.wav",
+	"acid_splat": "res://assets/audio/sfx/acid_splat.wav",
+	"acid_splash": "res://assets/audio/sfx/acid_splash.wav",
 	"volatile_burst": "res://assets/audio/sfx/volatile_burst.wav",
 
 	# Unit Abilities & Transforms
@@ -117,6 +124,9 @@ const SOUND_FILES: Dictionary = {
 	"vital_restore": "res://assets/audio/sfx/vital_restore.wav",
 	"aegis_restore": "res://assets/audio/sfx/aegis_restore.wav",
 	"brood_inject": "res://assets/audio/sfx/brood_inject.wav",
+	"brood_larva_ready": "res://assets/audio/sfx/brood_larva_ready.wav",
+	"brood_egg_morph": "res://assets/audio/sfx/brood_egg_morph.wav",
+	"brood_egg_hatch": "res://assets/audio/sfx/brood_egg_hatch.wav",
 	"burrow_shift": "res://assets/audio/sfx/burrow_shift.wav",
 
 	# Destruction & Unit Deaths
@@ -146,6 +156,19 @@ const SOUND_ALIASES: Dictionary = {
 	"melee_strike": "melee_hit"
 }
 
+const SOUND_VARIANTS: Dictionary = {
+	"acid_spit": ["res://assets/audio/sfx/acid_spit.wav", "res://assets/audio/sfx/acid_spit_2.wav", "res://assets/audio/sfx/acid_spit_3.wav"],
+	"thorn_volley": ["res://assets/audio/sfx/thorn_volley.wav", "res://assets/audio/sfx/thorn_volley_2.wav", "res://assets/audio/sfx/thorn_volley_3.wav"],
+	"corrosive_lob": ["res://assets/audio/sfx/corrosive_lob.wav", "res://assets/audio/sfx/corrosive_lob_2.wav", "res://assets/audio/sfx/corrosive_lob_3.wav"],
+	"claw_slash": ["res://assets/audio/sfx/claw_slash.wav", "res://assets/audio/sfx/claw_slash_2.wav", "res://assets/audio/sfx/claw_slash_3.wav"],
+	"mandible_bite": ["res://assets/audio/sfx/mandible_bite.wav", "res://assets/audio/sfx/mandible_bite_2.wav", "res://assets/audio/sfx/mandible_bite_3.wav"],
+	"chitin_cleave": ["res://assets/audio/sfx/chitin_cleave.wav", "res://assets/audio/sfx/chitin_cleave_2.wav", "res://assets/audio/sfx/chitin_cleave_3.wav"],
+	"bio_melee_hit": ["res://assets/audio/sfx/bio_melee_hit.wav", "res://assets/audio/sfx/bio_melee_hit_2.wav", "res://assets/audio/sfx/bio_melee_hit_3.wav"],
+	"thorn_impact": ["res://assets/audio/sfx/thorn_impact.wav", "res://assets/audio/sfx/thorn_impact_2.wav", "res://assets/audio/sfx/thorn_impact_3.wav"],
+	"acid_splat": ["res://assets/audio/sfx/acid_splat.wav", "res://assets/audio/sfx/acid_splat_2.wav", "res://assets/audio/sfx/acid_splat_3.wav"],
+	"acid_splash": ["res://assets/audio/sfx/acid_splash.wav", "res://assets/audio/sfx/acid_splash_2.wav", "res://assets/audio/sfx/acid_splash_3.wav"]
+}
+
 const WEAPON_NAME_TO_SFX: Dictionary = {
 	"Arc Welder": "arc_welder",
 	"Burst Rifle": "rifle_fire",
@@ -157,18 +180,62 @@ const WEAPON_NAME_TO_SFX: Dictionary = {
 	"155mm Siege Mortar": "mortar_fire",
 	"Mandibles": "mandible_bite",
 	"Razor Claws": "claw_slash",
+	"Needle Claws": "claw_slash",
+	"Claws": "claw_slash",
+	"Plate Splitter": "chitin_cleave",
+	"Chitin Blades": "chitin_cleave",
 	"Caustic Spit": "acid_spit",
+	"Locust Acid Spit": "acid_spit",
+	"Airborne Acid": "acid_spit",
+	"Needle Volley": "thorn_volley",
+	"Venom Needles": "thorn_volley",
+	"Brood Talons": "thorn_volley",
+	"Caustic Spines": "thorn_volley",
+	"Impaling Thorn": "thorn_impale",
 	"Corrosive Lob": "corrosive_lob",
+	"Caustic Discharge": "rupture_discharge",
+	"Spine Line": "spine_line",
+	"Parasitic Spore": "corrosion_spore",
+	"Broodling Strike": "broodling_launch",
+	"Volatile Burst": "volatile_burst",
 	"Mote Spark": "mote_spark",
 	"Light Blades": "light_blade_strike",
 	"Lattice Needlers": "needler_fire",
 	"Prism Beams": "prism_beam"
 }
 
+const WEAPON_NAME_TO_IMPACT_SFX: Dictionary = {
+	"Mandibles": "bio_melee_hit",
+	"Razor Claws": "bio_melee_hit",
+	"Needle Claws": "bio_melee_hit",
+	"Claws": "bio_melee_hit",
+	"Plate Splitter": "bio_melee_hit",
+	"Chitin Blades": "bio_melee_hit",
+	"Impaling Thorn": "bio_melee_hit",
+	"Broodling Strike": "bio_melee_hit",
+	"Caustic Spit": "acid_splat",
+	"Locust Acid Spit": "acid_splat",
+	"Airborne Acid": "acid_splat",
+	"Venom Needles": "acid_splat",
+	"Caustic Spines": "acid_splat",
+	"Caustic Discharge": "acid_splat",
+	"Parasitic Spore": "acid_splat",
+	"Needle Volley": "thorn_impact",
+	"Brood Talons": "thorn_impact",
+	"Spine Line": "thorn_impact",
+	"Corrosive Lob": "acid_splash",
+	"Volatile Burst": "acid_splash",
+	"Fungal Grasp": ""
+}
+
 const MELEE_WEAPONS: Dictionary = {
 	"Arc Welder": true,
 	"Mandibles": true,
 	"Razor Claws": true,
+	"Needle Claws": true,
+	"Claws": true,
+	"Plate Splitter": true,
+	"Chitin Blades": true,
 	"Mote Spark": true,
 	"Light Blades": true
 }
@@ -178,20 +245,37 @@ const SOUND_VOLUME_OFFSET_DB: Dictionary = {
 	"breach_charge": -1.0,
 	"autocannon_fire": -1.5,
 	"mortar_fire": -3.0,
-	"acid_spit": -2.0,
+	"acid_spit": -1.5,
+	"thorn_volley": -1.5,
+	"thorn_impale": -1.0,
 	"corrosive_lob": -1.0,
+	"rupture_discharge": -1.5,
+	"rupture_launch": -1.0,
+	"rupture_impact": 0.5,
+	"spine_line": -1.0,
+	"corrosion_spore": -1.5,
+	"corrosion_spray": -1.5,
+	"broodling_launch": -1.0,
+	"locust_launch": -1.5,
 	"needler_fire": -2.0,
 	"prism_beam": -0.5,
 	"crown_lance": 0.0,
 	"claw_slash": -1.5,
 	"mandible_bite": -2.0,
+	"chitin_cleave": -1.0,
+	"bio_melee_hit": -2.0,
 	"light_blade_strike": -1.0,
 	"arc_welder": -3.5,
 	"mote_spark": -3.0,
 	"melee_hit": -2.0,
 	"shield_hit": -2.5,
 	"explosion_splash": 1.0,
+	"thorn_impact": -2.0,
+	"acid_splat": -1.5,
+	"acid_splash": 0.5,
 	"volatile_burst": 1.0,
+	"brood_inject": -1.5,
+	"burrow_shift": -1.5,
 	"surge_activate": -1.0,
 	"charge_activate": -1.0,
 	"phase_step": -0.5,
@@ -227,19 +311,34 @@ const SOUND_MIN_INTERVAL_SEC: Dictionary = {
 	"breach_charge": 0.045,
 	"autocannon_fire": 0.045,
 	"mortar_fire": 0.06,
-	"acid_spit": 0.045,
-	"corrosive_lob": 0.055,
+	"acid_spit": 0.04,
+	"thorn_volley": 0.035,
+	"thorn_impale": 0.05,
+	"corrosive_lob": 0.05,
+	"rupture_discharge": 0.045,
+	"rupture_launch": 0.055,
+	"rupture_impact": 0.055,
+	"spine_line": 0.05,
+	"corrosion_spore": 0.045,
+	"corrosion_spray": 0.06,
+	"broodling_launch": 0.055,
+	"locust_launch": 0.06,
 	"needler_fire": 0.04,
 	"prism_beam": 0.055,
 	"crown_lance": 0.08,
-	"claw_slash": 0.035,
-	"mandible_bite": 0.045,
+	"claw_slash": 0.032,
+	"mandible_bite": 0.04,
+	"chitin_cleave": 0.045,
+	"bio_melee_hit": 0.032,
 	"light_blade_strike": 0.04,
 	"arc_welder": 0.055,
 	"mote_spark": 0.055,
 	"melee_hit": 0.035,
 	"shield_hit": 0.04,
 	"explosion_splash": 0.055,
+	"thorn_impact": 0.035,
+	"acid_splat": 0.038,
+	"acid_splash": 0.05,
 	"volatile_burst": 0.035,
 	"harvest_hit": 0.45,
 	"ui_select": 0.04,
@@ -249,6 +348,7 @@ const SOUND_MIN_INTERVAL_SEC: Dictionary = {
 
 var sound_effects: Dictionary = {}
 var sound_streams: Dictionary = {}
+var sound_variant_streams: Dictionary = {}
 var voice_streams: Dictionary = {}
 var voice_texts: Dictionary = {}
 
@@ -273,6 +373,7 @@ var _last_play_time_sec: Dictionary = {}
 var _last_voice_time_sec: float = -999.0
 var _last_auto_attack_voice_sec: float = -999.0
 var _dialogue_cursors: Dictionary = {}
+var _variant_cursors: Dictionary = {}
 var _pitch_rng: RandomNumberGenerator = RandomNumberGenerator.new()
 var _last_weapon_attack_tick: int = -1
 var _last_weapon_attack_pos: Vector2 = Vector2.INF
@@ -300,10 +401,19 @@ func _ready() -> void:
 func _init_sound_catalog() -> void:
 	sound_effects.clear()
 	sound_streams.clear()
+	sound_variant_streams.clear()
 	for key in SOUND_FILES.keys():
 		var path: String = str(SOUND_FILES[key])
 		sound_effects[key] = path
 		sound_streams[key] = _load_wav_stream(path, key)
+	for v_key in SOUND_VARIANTS.keys():
+		var list: Array[AudioStreamWAV] = []
+		for v_path in SOUND_VARIANTS[v_key]:
+			var s := _load_wav_stream(str(v_path), str(v_key))
+			if s != null:
+				list.append(s)
+		if not list.is_empty():
+			sound_variant_streams[v_key] = list
 	for alias_key in SOUND_ALIASES.keys():
 		var target_key: String = str(SOUND_ALIASES[alias_key])
 		sound_effects[alias_key] = sound_effects.get(target_key, "")
@@ -437,6 +547,10 @@ func _load_wav_stream(path: String, fallback_key: String = "") -> AudioStreamWAV
 		var parsed := _parse_riff_wav(raw)
 		if parsed != null and parsed.data.size() > 0:
 			return parsed
+	if ResourceLoader.exists(path):
+		var loaded := ResourceLoader.load(path)
+		if loaded is AudioStreamWAV:
+			return loaded
 	return _build_fallback_stream(fallback_key)
 
 func _parse_riff_wav(raw: PackedByteArray) -> AudioStreamWAV:
@@ -550,6 +664,7 @@ func reset_stats() -> void:
 	last_spoken_text = ""
 	recent_dialogues.clear()
 	_last_play_time_sec.clear()
+	_variant_cursors.clear()
 	_world_sound_window_ms = 0
 	_world_sounds_in_window = 0
 	_last_voice_time_sec = -999.0
@@ -643,6 +758,17 @@ func play_ui(sfx_key: String, volume_offset_db: float = 0.0, pitch_scale: float 
 	player.play()
 	return true
 
+func _pick_world_stream(resolved_key: String) -> AudioStreamWAV:
+	if sound_variant_streams.has(resolved_key):
+		var variants: Array = sound_variant_streams[resolved_key]
+		if variants.size() > 1:
+			var prev: int = int(_variant_cursors.get(resolved_key, -1))
+			var step: int = _pitch_rng.randi_range(1, variants.size() - 1)
+			var next_idx: int = (prev + step) % variants.size() if prev >= 0 else 0
+			_variant_cursors[resolved_key] = next_idx
+			return variants[next_idx]
+	return sound_streams.get(resolved_key, null)
+
 func play_at(sfx_key: String, world_pos: Vector2, volume_offset_db: float = 0.0, pitch_jitter: float = 0.05) -> bool:
 	if not SimEngine.can_see_position(local_player_id, world_pos):
 		return false
@@ -661,7 +787,7 @@ func play_at(sfx_key: String, world_pos: Vector2, volume_offset_db: float = 0.0,
 		_record_sfx_trigger(resolved, world_pos, false)
 		return true
 
-	var stream: AudioStreamWAV = sound_streams[resolved]
+	var stream: AudioStreamWAV = _pick_world_stream(resolved)
 	if stream == null or _world_players.is_empty():
 		return false
 	var now := Time.get_ticks_msec()
@@ -803,15 +929,21 @@ func _on_weapon_attack(attacker: Dictionary, target: Dictionary, weapon: Diction
 		return
 
 	if SimEngine.can_see_unit(local_player_id, target):
-		if is_melee_weapon(weapon):
-			play_at("melee_hit", target_pos, -2.5, 0.06)
+		var is_monster := str(attacker.get("faction", "")) == RTSData.FACTION_MONSTERS
 		var impact_sfx: String = str(weapon.get("impact_sfx", ""))
+		if impact_sfx == "":
+			var wpn_name: String = str(weapon.get("name", ""))
+			if WEAPON_NAME_TO_IMPACT_SFX.has(wpn_name):
+				impact_sfx = str(WEAPON_NAME_TO_IMPACT_SFX[wpn_name])
 		if impact_sfx != "" and has_sfx(impact_sfx):
 			# Keep headroom when the siege report and splash play on the same tick.
-			var impact_db := -9.5 if unit_type == "howitzer_emplaced" else -1.0
+			var impact_db := -9.5 if unit_type == "howitzer_emplaced" else -1.5
 			play_at(impact_sfx, target_pos, impact_db, 0.05)
+		elif is_melee_weapon(weapon):
+			if str(weapon.get("sfx", "")) != "volatile_burst":
+				play_at("bio_melee_hit" if is_monster else "melee_hit", target_pos, -2.5, 0.06)
 		elif float(weapon.get("splash_radius", 0.0)) > 0.0:
-			play_at("explosion_splash", target_pos, -1.5, 0.05)
+			play_at("acid_splash" if is_monster else "explosion_splash", target_pos, -1.5, 0.05)
 		if hit_shields or float(target.get("shields", 0.0)) > 0.0:
 			play_at("shield_hit", target_pos, -2.0, 0.05)
 
@@ -830,6 +962,11 @@ func _on_projectile_fired(from_pos: Vector2, to_pos: Vector2, weapon_name: Strin
 	var sfx_key: String = str(WEAPON_NAME_TO_SFX.get(weapon_name, ""))
 	if not sfx_key.is_empty():
 		play_at(sfx_key, from_pos, 0.0, 0.055)
+	if WEAPON_NAME_TO_IMPACT_SFX.has(weapon_name):
+		var mapped_impact: String = str(WEAPON_NAME_TO_IMPACT_SFX[weapon_name])
+		if not mapped_impact.is_empty():
+			play_at(mapped_impact, to_pos, -1.5, 0.05)
+		return
 	if MELEE_WEAPONS.has(weapon_name):
 		play_at("melee_hit", to_pos, -2.5, 0.06)
 	if is_splash:
@@ -869,7 +1006,7 @@ func _on_ability_triggered(unit: Dictionary, ability_id: String, pos: Vector2) -
 	var cue_unit: Dictionary = unit
 	if ab_id in ["restore_vitals", "restore_aegis"]:
 		cue_unit = SimEngine.units.get(unit.get("support_target_tag", 0), unit)
-	var ground_cue := ab_id in ["canticle_storm", "scribe_feedback", "caustic_impact", "agent_emp_impact", "agent_strike_impact", "agent_snipe_hit",
+	var ground_cue := ab_id in ["canticle_storm", "scribe_feedback", "caustic_impact", "fungal_impact", "agent_emp_impact", "agent_strike_impact", "agent_snipe_hit",
 		"systems_jammer_impact", "armor_breaker_impact", "dreadnought_beam_hit", "sentinel_impact", "stasis_ward_detonate"]
 	var visible := SimEngine.can_see_position(local_player_id, pos) if ground_cue else SimEngine.can_see_unit(local_player_id, cue_unit)
 	if not visible:
@@ -900,6 +1037,8 @@ func _on_ability_triggered(unit: Dictionary, ability_id: String, pos: Vector2) -
 				sfx_key = ab_id
 			"caustic_impact":
 				sfx_key = "rupture_impact"
+			"fungal_impact":
+				sfx_key = "acid_splash"
 			"rupture_ready", "ambusher_ready", "seer_ready", "hauler_ready", "siege_flyer_ready":
 				sfx_key = "brood_egg_hatch"
 			"emplace", "mobilize", "mobile_mode":

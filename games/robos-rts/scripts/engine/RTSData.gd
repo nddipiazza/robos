@@ -1067,6 +1067,7 @@ var units: Dictionary = {
 			"backswing": 0.25,
 			"splash_radius": 0.0,
 			"sfx": "mandible_bite",
+			"impact_sfx": "bio_melee_hit",
 			"attack_type": "melee"
 		},
 		"abilities": ["move", "stop", "hold_position", "attack", "harvest", "build_brood_nest", "build_brood_pod", "build_spore_tap", "build_brood_growth_node", "build_blight_spire", "build_spore_watch", "build_tunnel_mouth", "build_spore_nursery"],
@@ -1135,6 +1136,7 @@ var units: Dictionary = {
 			"backswing": 0.20,
 			"splash_radius": 0.0,
 			"sfx": "claw_slash",
+			"impact_sfx": "bio_melee_hit",
 			"attack_type": "melee"
 		},
 		"abilities": ["move", "stop", "hold_position", "attack", "burrow", "morph_sporeburst"]
@@ -1150,7 +1152,7 @@ var units: Dictionary = {
 		"weapon": {
 			"name": "Volatile Burst", "damage": 16.0, "bonus": {"Light": 19.0},
 			"structure_damage": 80.0, "range": 0.25, "splash_radius": 2.2,
-			"sfx": "volatile_burst", "attack_type": "melee", "targets_air": false,
+			"sfx": "volatile_burst", "impact_sfx": "acid_splash", "attack_type": "melee", "targets_air": false,
 		},
 		"abilities": ["move", "stop", "hold_position", "attack", "detonate_sporeburst", "sporeburst_structures", "burrow"],
 		"dialogues": {
@@ -1218,6 +1220,7 @@ var units: Dictionary = {
 			"backswing": 0.30,
 			"splash_radius": 0.0,
 			"sfx": "acid_spit",
+			"impact_sfx": "acid_splat",
 			"targets_air": true,
 			"attack_type": "ranged"
 		},
@@ -1229,7 +1232,7 @@ var units: Dictionary = {
 		"attributes": ["Armored", "Biological"], "supply_cost": 3, "build_time": 55.0, "max_hp": 235.0,
 		"armor": 2.0, "radius": 1.15, "speed": 6.0, "sight_range": 19.0, "push_priority": 4,
 		"living_ground_speed_bonus": 0.30,
-		"weapon": {"name": "Plate Splitter", "sfx": "mandible_bite", "attack_type": "melee",
+		"weapon": {"name": "Plate Splitter", "sfx": "chitin_cleave", "impact_sfx": "bio_melee_hit", "attack_type": "melee",
 			"damage": 24.0, "bonus": {"Armored": 8.0}, "range": 2.2, "period": 1.32,
 			"damage_point": 0.22, "backswing": 0.30, "targets_air": false, "targets_ground": true},
 		"abilities": ["move", "stop", "hold_position", "attack"],
@@ -1269,7 +1272,7 @@ var units: Dictionary = {
 		"supply_cost": 3, "max_hp": 120.0, "armor": 1.0, "cargo_size": 4, "radius": 1.875,
 		"speed": 9.625, "sight_range": 22.5, "hp_regen": 0.3828, "living_ground_speed_bonus": 0.3,
 		"abilities": ["move", "stop", "hold_position", "attack", "caustic_barrage"],
-		"weapon": {"name": "Caustic Discharge", "attack_type": "ranged", "sfx": "rupture_discharge",
+		"weapon": {"name": "Caustic Discharge", "attack_type": "ranged", "sfx": "rupture_discharge", "impact_sfx": "acid_splat",
 			"damage": 16.0, "damage_per_upgrade": 2.0, "range": 15.0, "period": 1.143,
 			"targets_air": false, "damage_point": 0.1429, "backswing": 0.3571},
 		"dialogues": {
@@ -1314,7 +1317,7 @@ var units: Dictionary = {
 		"max_hp": 190.0, "armor": 1.0, "cargo_size": 4, "radius": 1.875, "speed": 2.9531 * 1.4 * 2.5,
 		"sight_range": 27.5, "hp_regen": 0.3828, "living_ground_speed_bonus": 0.3,
 		"abilities": ["move", "stop", "hold_position", "burrow"],
-		"weapon": {"name": "Spine Line", "attack_type": "ranged", "sfx": "spine_line", "line_splash_width": 1.25,
+		"weapon": {"name": "Spine Line", "attack_type": "ranged", "sfx": "spine_line", "impact_sfx": "thorn_impact", "line_splash_width": 1.25,
 			"damage": 20.0, "damage_per_upgrade": 2.0, "bonus": {"Armored": 10.0}, "bonus_per_upgrade": {"Armored": 1.0},
 			"range": 20.0, "period": 1.429, "targets_air": false, "damage_point": 0.0, "backswing": 0.3571},
 		"dialogues": {
@@ -1383,7 +1386,7 @@ var units: Dictionary = {
 			"backswing": 0.28,
 			"splash_radius": 2.0,
 			"sfx": "corrosive_lob",
-			"impact_sfx": "explosion_splash",
+			"impact_sfx": "acid_splash",
 			"attack_type": "ranged"
 		},
 		"abilities": ["move", "stop", "hold_position", "attack", "corrosive_miasma"]
@@ -1487,7 +1490,7 @@ var units: Dictionary = {
 		"max_hp": 50.0, "radius": 0.9375, "speed": 1.875 * 1.4 * 2.5, "living_ground_speed_bonus": 0.4,
 		"sight_range": 15.0, "hp_regen": 0.3828, "lifetime_seconds": LadderRules.LOCUST_LIFETIME_SECONDS,
 		"abilities": ["move", "stop", "hold_position", "attack"],
-		"weapon": {"name": "Locust Acid Spit", "attack_type": "ranged", "sfx": "acid_spit",
+		"weapon": {"name": "Locust Acid Spit", "attack_type": "ranged", "sfx": "acid_spit", "impact_sfx": "acid_splat",
 			"damage": 10.0, "damage_per_upgrade": 1, "range": 7.5, "period": 0.6 / 1.4,
 			"damage_point": 0.1904, "backswing": 0.3571, "targets_air": false, "targets_ground": true},
 	},
@@ -1508,7 +1511,7 @@ var units: Dictionary = {
 		"max_hp": 200.0, "armor": 2.0, "radius": 1.5625, "speed": 3.375 * 1.4 * 2.5, "flight_height": 7.5,
 		"sight_range": 25.0, "hp_regen": 0.3828,
 		"abilities": ["move", "stop", "hold_position", "attack", "caustic_spray", "morph_brood_siege_flyer"],
-		"weapon": {"name": "Parasitic Spore", "attack_type": "ranged", "sfx": "corrosion_spore",
+		"weapon": {"name": "Parasitic Spore", "attack_type": "ranged", "sfx": "corrosion_spore", "impact_sfx": "acid_splat",
 			"damage": 14.0, "bonus": {"Massive": 6.0}, "bonus_per_upgrade": {"Massive": 1.0},
 			"range": 15.0, "period": 1.357, "damage_point": 0.0446, "backswing": 0.3571,
 			"targets_air": true, "targets_ground": false, "damage_per_upgrade": 1},
@@ -1520,7 +1523,7 @@ var units: Dictionary = {
 		"crystal_cost": 150, "aether_cost": 150, "supply_cost": 4, "build_time": 34.0,
 		"max_hp": 225.0, "armor": 1.0, "radius": 2.5, "speed": 2.24 * 2.5, "flight_height": 7.5,
 		"sight_range": 30.0, "hp_regen": 0.3828, "abilities": ["move", "stop", "hold_position", "attack"],
-		"weapon": {"name": "Broodling Strike", "attack_type": "ranged", "sfx": "broodling_launch",
+		"weapon": {"name": "Broodling Strike", "attack_type": "ranged", "sfx": "broodling_launch", "impact_sfx": "bio_melee_hit",
 			"damage": 20.0, "damage_per_upgrade": 2.0, "attacks": 2, "spawn_broodlings": 2,
 			"range": 25.0, "period": 1.786, "damage_point": 0.0, "backswing": 0.3571, "targets_air": false},
 	},
@@ -1536,7 +1539,7 @@ var units: Dictionary = {
 		"ladder_only": true, "morph_only": true, "attributes": ["Light", "Biological"],
 		"supply_cost": 0, "max_hp": 20.0, "radius": 0.625, "speed": 2.9531 * 1.4 * 2.5,
 		"sight_range": 17.5, "lifetime_seconds": 5.0 / 1.4, "abilities": ["move", "stop", "hold_position", "attack"],
-		"weapon": {"name": "Needle Claws", "attack_type": "melee", "sfx": "claw_slash", "damage": 4.0,
+		"weapon": {"name": "Needle Claws", "attack_type": "melee", "sfx": "claw_slash", "impact_sfx": "bio_melee_hit", "damage": 4.0,
 			"range": 0.25, "period": 0.571, "damage_point": 0.1193, "backswing": 0.3571, "targets_air": false},
 	},
 	"needlewing": {
@@ -1545,7 +1548,7 @@ var units: Dictionary = {
 		"attributes": ["Light", "Biological", "Air"], "crystal_cost": 100, "aether_cost": 100,
 		"supply_cost": 2, "build_time": 33.0, "max_hp": 90.0, "radius": 0.95,
 		"speed": 13.0, "sight_range": 25.0, "flight_height": 6.4,
-		"weapon": {"name": "Venom Needles", "sfx": "acid_spit", "attack_type": "ranged",
+		"weapon": {"name": "Venom Needles", "sfx": "thorn_volley", "impact_sfx": "acid_splat", "attack_type": "ranged",
 			"damage": 9.0, "bonus": {"Light": 3.0}, "range": 9.0, "period": 0.95,
 			"damage_point": 0.14, "backswing": 0.24, "targets_air": false, "targets_ground": true},
 		"abilities": ["move", "stop", "hold_position", "attack"],
@@ -1584,7 +1587,7 @@ var units: Dictionary = {
 		"max_hp": 145.0, "armor": 1.0, "radius": 1.2, "speed": 5.2, "sight_range": 21.0,
 		"energy_profile": {"max": 75.0, "start": 25.0, "regen": 0.75},
 		"weapon": {
-			"name": "Caustic Spit", "sfx": "acid_spit", "attack_type": "ranged",
+			"name": "Caustic Spit", "sfx": "acid_spit", "impact_sfx": "acid_splat", "attack_type": "ranged",
 			"damage": 9.0, "range": 8.0, "period": 1.25, "damage_point": 0.14,
 			"backswing": 0.25, "targets_air": true,
 		},
@@ -1822,7 +1825,7 @@ var units: Dictionary = {
 		"max_hp": 300.0, "armor": 2.0, "radius": 2.5, "sight_range": 27.5,
 		"footprint": Vector2i(2, 2), "push_priority": 100, "hp_regen": 0.3828,
 		"abilities": ["attack", "crawler_uproot"],
-		"weapon": {"name": "Impaling Thorn", "sfx": "mandible_bite", "attack_type": "ranged",
+		"weapon": {"name": "Impaling Thorn", "sfx": "thorn_impale", "impact_sfx": "bio_melee_hit", "attack_type": "ranged",
 			"damage": 25.0, "bonus": {"Armored": 5.0}, "range": 17.5, "period": 1.321,
 			"damage_point": 0.238, "backswing": 0.3571, "targets_ground": true, "targets_air": false},
 	},
@@ -2724,7 +2727,7 @@ var units: Dictionary = {
 	"blighted_colonist": {
 		"id": "blighted_colonist", "name": "Blighted Colonist", "faction": FACTION_MONSTERS,
 		"attributes": ["Light", "Biological"], "max_hp": 35.0, "radius": 0.5, "speed": 6.0, "sight_range": 15.0,
-		"weapon": {"name": "Claws", "sfx": "mandible_bite", "attack_type": "melee",
+		"weapon": {"name": "Claws", "sfx": "claw_slash", "impact_sfx": "bio_melee_hit", "attack_type": "melee",
 			"damage": 5.0, "range": 1.4, "period": 1.5},
 	},
 	"blighted_rifleman": {

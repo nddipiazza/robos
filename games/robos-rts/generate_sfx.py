@@ -51,6 +51,234 @@ def _one_pole_hp(samples: list[float], cutoff_hz: float) -> list[float]:
     return [x - l for x, l in zip(samples, lp)]
 
 
+def _svf_process(
+    samples: list[float],
+    cutoff_hz: list[float] | float,
+    q_val: list[float] | float = 2.0,
+    mode: str = "bp",
+) -> list[float]:
+    """Unconditionally stable Cytomic trapezoidal 2-pole State-Variable Filter (lp/bp/hp)."""
+    n = len(samples)
+    out = [0.0] * n
+    ic1eq = 0.0
+    ic2eq = 0.0
+    max_fc = SAMPLE_RATE * 0.44
+    is_fc_list = isinstance(cutoff_hz, list)
+    is_q_list = isinstance(q_val, list)
+    for i in range(n):
+        fc = cutoff_hz[i] if is_fc_list else cutoff_hz
+        fc = max(25.0, min(max_fc, fc))
+        qv = q_val[i] if is_q_list else q_val
+        qv = max(0.5, min(16.0, qv))
+        g = math.tan(math.pi * fc / SAMPLE_RATE)
+        k = 1.0 / qv
+        a1 = 1.0 / (1.0 + g * (g + k))
+        a2 = g * a1
+        a3 = g * a2
+        v0 = samples[i]
+        v3 = v0 - ic2eq
+        v1 = a1 * ic1eq + a2 * v3
+        v2 = ic2eq + a2 * ic1eq + a3 * v3
+        ic1eq = 2.0 * v1 - ic1eq
+        ic2eq = 2.0 * v2 - ic2eq
+        if mode == "lp":
+            out[i] = v2
+        elif mode == "hp":
+            out[i] = v0 - k * v1 - v2
+        else:
+            out[i] = v1 * (k ** 0.55) * 1.9
+    return out
+
+
+def _svf_bp4(
+    samples: list[float],
+    cutoff_hz: list[float] | float,
+    q_val: list[float] | float = 4.0,
+) -> list[float]:
+    """Cascaded 4-pole (-12 dB/oct skirts) resonant bandpass — eliminates broadband static hiss."""
+    stage1 = _svf_process(samples, cutoff_hz, q_val, "bp")
+    q2 = [max(1.2, q * 0.75) for q in q_val] if isinstance(q_val, list) else max(1.2, q_val * 0.75)
+    return _svf_process(stage1, cutoff_hz, q2, "bp")
+
+
+def _make_pink_noise(n: int, seed: int) -> list[float]:
+    """Warm 1/f pink noise for organic flesh, fluid, soil, and turbulent air excitation."""
+    rng = random.Random(seed)
+    out = [0.0] * n
+    b0 = b1 = b2 = 0.0
+    for i in range(n):
+        w = rng.uniform(-1.0, 1.0)
+        b0 = 0.99765 * b0 + w * 0.0990460
+        b1 = 0.96300 * b1 + w * 0.2965164
+        b2 = 0.57000 * b2 + w * 0.1052691
+        out[i] = _clamp((b0 + b1 + b2 + w * 0.1848) * 0.35)
+    return out
+
+
+def _random_walk_curve(n: int, knots: int, seed: int, lo: float, hi: float) -> list[float]:
+    """Smoothly interpolated non-periodic organic curve (avoids robotic sine LFOs)."""
+    rng = random.Random(seed)
+    pts = [rng.uniform(lo, hi) for _ in range(max(2, knots))]
+    out = [0.0] * n
+    span = len(pts) - 1
+    for i in range(n):
+        pos = (i / max(1, n - 1)) * span
+        idx = min(span - 1, int(pos))
+        frac = pos - idx
+        smooth = frac * frac * (3.0 - 2.0 * frac)
+        out[i] = pts[idx] + (pts[idx + 1] - pts[idx]) * smooth
+    return out
+
+
+def _sticky_impulses(
+    n: int,
+    seed: int,
+    min_gap_ms: float = 2.2,
+    max_gap_ms: float = 11.0,
+    decay_ms: float = 1.4,
+) -> list[float]:
+    """Irregular sticky cavitation / filament-snap / chitin-crackle impulse train."""
+    rng = random.Random(seed)
+    out = [0.0] * n
+    idx = rng.randint(0, max(1, int(0.004 * SAMPLE_RATE)))
+    decay_samples = max(1.0, decay_ms * 0.001 * SAMPLE_RATE)
+    while idx < n:
+        amp = rng.uniform(0.35, 1.0) * (1.0 if rng.random() < 0.55 else -0.85)
+        span = min(n - idx, int(decay_samples * 4.5) + 2)
+        for k in range(span):
+            out[idx + k] += amp * math.exp(-k / decay_samples)
+        gap = rng.uniform(min_gap_ms, max_gap_ms) * 0.001 * SAMPLE_RATE
+        idx += max(2, int(gap))
+    return out
+
+
+def _wet_squelch_layer(
+    n: int,
+    seed: int,
+    t_start: float,
+    dur: float,
+    f1_lo: float = 280.0,
+    f1_hi: float = 1150.0,
+    bubble_count: int = 12,
+) -> list[float]:
+    """Juicy Gnarl Brood wet squelch: gapped sticky globule bursts + 4-pole liquid formants + Minnaert bubbles."""
+    rng = random.Random(seed)
+    pink = _make_pink_noise(n, seed + 11)
+    snaps = _sticky_impulses(n, seed + 23, 3.0, 12.5, 1.8)
+
+    glob_gate = [0.04] * n
+    num_globs = max(3, int(dur * 34.0))
+    for g_idx in range(num_globs):
+        gt = t_start + (g_idx / num_globs) * dur * 0.88 + rng.uniform(-0.004, 0.006)
+        gdur = rng.uniform(0.014, 0.036)
+        gamp = rng.uniform(0.55, 1.0) * (1.0 - 0.35 * (g_idx / num_globs))
+        i0 = max(0, int(gt * SAMPLE_RATE))
+        i1 = min(n, int((gt + gdur) * SAMPLE_RATE))
+        for i in range(i0, i1):
+            u = (i - i0) / max(1, i1 - i0)
+            glob_gate[i] = max(glob_gate[i], (math.sin(math.pi * u) ** 1.3) * gamp)
+
+    raw = [0.0] * n
+    for i in range(n):
+        t = i / SAMPLE_RATE - t_start
+        if 0.0 <= t <= dur:
+            raw[i] = (snaps[i] * 0.92 + pink[i] * 0.36) * glob_gate[i]
+
+    knots = max(6, int(dur * 48.0))
+    f1_curve = _random_walk_curve(n, knots, seed + 37, f1_lo, f1_hi)
+    f2_curve = [min(6200.0, f * rng_mult) for f, rng_mult in zip(
+        f1_curve, _random_walk_curve(n, knots, seed + 53, 1.95, 2.65)
+    )]
+    q1_curve = _random_walk_curve(n, max(4, knots // 2), seed + 71, 5.5, 9.5)
+    q2_curve = _random_walk_curve(n, max(4, knots // 2), seed + 89, 4.5, 8.0)
+
+    band1 = _svf_bp4(raw, f1_curve, q1_curve)
+    band2 = _svf_bp4(raw, f2_curve, q2_curve)
+
+    bubbles = [0.0] * n
+    for _ in range(bubble_count):
+        bt = t_start + (rng.random() ** 1.15) * max(0.01, dur * 0.90)
+        bdur = rng.uniform(0.0048, 0.0125)
+        bf0 = rng.uniform(320.0, 1380.0)
+        chirp = rng.uniform(0.45, 0.95)
+        bamp = rng.uniform(0.22, 0.48)
+        i0 = max(0, int(bt * SAMPLE_RATE))
+        i1 = min(n, int((bt + bdur) * SAMPLE_RATE))
+        ph = 0.0
+        for i in range(i0, i1):
+            dt = (i - i0) / SAMPLE_RATE
+            u = dt / bdur
+            f_inst = bf0 * (1.0 + chirp * (u ** 1.8))
+            ph += 2.0 * math.pi * f_inst / SAMPLE_RATE
+            b_env = math.sin(math.pi * u) * math.exp(-u * 1.9)
+            bubbles[i] += math.sin(ph) * b_env * bamp
+
+    return [band1[i] * 1.15 + band2[i] * 0.82 + bubbles[i] for i in range(n)]
+
+
+def _thorn_whiz_layer(
+    n: int,
+    seed: int,
+    t_onset: float,
+    dur: float,
+    f_hi: float = 3400.0,
+    f_lo: float = 480.0,
+    pass_frac: float = 0.56,
+    spin_hz: float = 28.0,
+    sharpness: float = 7.0,
+) -> list[float]:
+    """Sleek aerodynamic thorn/spine whizzing past: Doppler air-whoosh + high-Q vortex edge whistle (zero synth sine)."""
+    pink = _make_pink_noise(n, seed + 5)
+    white = _make_noise(n, seed + 17)
+    air_edge = [0.0] * n
+    air_whoosh = [0.0] * n
+    fc_edge = [1400.0] * n
+    fc_whoosh = [900.0] * n
+    q_edge = [9.5] * n
+
+    for i in range(n):
+        t = i / SAMPLE_RATE - t_onset
+        if t < 0.0 or t > dur:
+            continue
+        u = t / max(1e-4, dur)
+        s = (u - pass_frac) * sharpness
+        doppler = 0.5 * (1.0 - s / math.sqrt(1.0 + s * s))
+        f_cur = f_lo + (f_hi - f_lo) * doppler
+        fc_edge[i] = f_cur
+        fc_whoosh[i] = max(260.0, f_cur * 0.58)
+        q_edge[i] = 8.5 + 4.5 * math.exp(-0.5 * (s * 0.6) ** 2)
+
+        shimmer = 0.88 + 0.12 * math.sin(2.0 * math.pi * spin_hz * t)
+        pass_peak = 1.0 / ((1.0 + (s * 0.58) ** 2) ** 0.85)
+        win = (math.sin(math.pi * min(1.0, u)) ** 0.55) * shimmer * pass_peak
+        air_edge[i] = (white[i] * 0.65 + pink[i] * 0.45) * win
+        air_whoosh[i] = pink[i] * win
+
+    whiz_edge = _svf_bp4(air_edge, fc_edge, q_edge)
+    whiz_body = _svf_bp4(air_whoosh, fc_whoosh, 2.6)
+    return [whiz_edge[i] * 3.4 + whiz_body[i] * 1.45 for i in range(n)]
+
+
+def _chitin_snap_layer(n: int, t_hit: float, base_hz: float, seed: int, amp: float = 1.0) -> list[float]:
+    """Crisp exoskeleton/bone crunch: staggered micro-fracture snaps through woody/chitin 4-pole modes."""
+    rng = random.Random(seed)
+    pink = _make_pink_noise(n, seed + 3)
+    exc = [0.0] * n
+    for sub_idx in range(3):
+        sub_t = t_hit + sub_idx * rng.uniform(0.0035, 0.0065)
+        sub_amp = amp * (1.0 if sub_idx == 0 else rng.uniform(0.45, 0.78))
+        i0 = max(0, int(sub_t * SAMPLE_RATE))
+        span = min(n - i0, int(0.016 * SAMPLE_RATE))
+        for k in range(span):
+            dt = k / SAMPLE_RATE
+            exc[i0 + k] += pink[i0 + k] * math.exp(-dt * 260.0) * sub_amp * 2.2
+
+    m1 = _svf_bp4(exc, base_hz, 4.6)
+    m2 = _svf_bp4(exc, base_hz * 1.71, 5.4)
+    m3 = _svf_bp4(exc, min(6800.0, base_hz * 2.63), 4.2)
+    return [m1[i] * 1.05 + m2[i] * 0.90 + m3[i] * 0.65 for i in range(n)]
+
+
 def _save_wav(name: str, samples: list[float], gain: float = 0.9) -> Path:
     SFX_DIR.mkdir(parents=True, exist_ok=True)
     path = SFX_DIR / f"{name}.wav"
@@ -316,51 +544,155 @@ def gen_mortar_fire() -> list[float]:
     return out
 
 
-def gen_acid_spit() -> list[float]:
-    """Caustic Spit (Bile Crawler): pressurized organic spit launch + wet caustic sizzle."""
-    dur = 0.28
+def gen_acid_spit(variant: int = 0) -> list[float]:
+    """Caustic Spit (Bile Crawler / Locust / Spore Watch): wet gland squelch + barbed acid-spine whizzing past."""
+    dur = 0.30 + 0.015 * variant
     n = int(dur * SAMPLE_RATE)
-    noise = _make_noise(n, 105)
-    sizzle = _one_pole_hp(_one_pole_lp(noise, 5600.0), 1400.0)
-    wet = _one_pole_hp(_one_pole_lp(noise, 1800.0), 300.0)
+    seed = 1050 + variant * 137
+
+    squelch = _wet_squelch_layer(
+        n, seed, 0.0, 0.055,
+        f1_lo=330.0 + 35.0 * variant,
+        f1_hi=1240.0 + 80.0 * variant,
+        bubble_count=8 + variant,
+    )
+    valve_snap = _chitin_snap_layer(n, 0.003, 1140.0 + 110.0 * variant, seed + 41, amp=0.78)
+    whiz_main = _thorn_whiz_layer(
+        n, seed + 73,
+        t_onset=0.036,
+        dur=0.175,
+        f_hi=3750.0 + 220.0 * (variant - 1),
+        f_lo=520.0 + 40.0 * variant,
+        pass_frac=0.58,
+        spin_hz=30.0 + 5.0 * variant,
+        sharpness=6.8,
+    )
+    whiz_second = _thorn_whiz_layer(
+        n, seed + 109,
+        t_onset=0.090,
+        dur=0.150,
+        f_hi=4050.0,
+        f_lo=610.0,
+        pass_frac=0.56,
+        spin_hz=35.0,
+        sharpness=7.2,
+    ) if variant == 1 else [0.0] * n
+
     out = [0.0] * n
-    phase = 0.0
     for i in range(n):
-        t = i / SAMPLE_RATE
-        # Organic pitch-swept spit ("pff-twip")
-        spit_env = _env_ad(t, 0.004, 0.11, 2.0)
-        f = 220.0 + 680.0 * math.sin(min(1.0, t / 0.09) * math.pi)
-        phase += 2.0 * math.pi * f / SAMPLE_RATE
-        spit_tone = math.sin(phase + 0.6 * math.sin(2.0 * math.pi * 38.0 * t)) * spit_env * 0.65
-        # Caustic sizzle tail
-        siz_env = _env_ad(t - 0.03, 0.01, 0.22, 1.8)
-        mod = 0.65 + 0.35 * math.sin(2.0 * math.pi * 55.0 * t)
-        out[i] = _soft_clip(spit_tone + wet[i] * spit_env * 0.8 + sizzle[i] * siz_env * mod * 0.95, 1.5)
+        sample = squelch[i] * 1.08 + valve_snap[i] * 0.65 + whiz_main[i] * 1.52 + whiz_second[i] * 1.22
+        out[i] = _soft_clip(sample, 1.75)
     return out
 
 
-def gen_corrosive_lob() -> list[float]:
-    """Corrosive Lob (Blight Hurler): deep organic mortar launch + bubbling corrosive splash burst."""
-    dur = 0.40
+def gen_thorn_volley(variant: int = 0) -> list[float]:
+    """Needle Volley / Venom Needles / Brood Talons (Blight Hurler / Needlewing / Brood Keeper): crisp chitin release + razor-sharp thorns whizzing by."""
+    dur = 0.27 + 0.015 * variant
     n = int(dur * SAMPLE_RATE)
-    noise = _make_noise(n, 106)
-    bub_noise = _one_pole_lp(noise, 1400.0)
-    hiss_noise = _one_pole_hp(_one_pole_lp(noise, 4800.0), 1100.0)
+    seed = 1520 + variant * 163
+
+    # Snappy dorsal-groove chitin click + brief wet muscular contraction
+    snap = _chitin_snap_layer(n, 0.001, 1420.0 + 130.0 * variant, seed, amp=0.92)
+    sac_squeeze = _wet_squelch_layer(
+        n, seed + 19, 0.0, 0.042,
+        f1_lo=420.0,
+        f1_hi=1480.0 + 90.0 * variant,
+        bubble_count=6 + variant,
+    )
+
+    # Primary razor-sharp needle-thorn whizzing right past
+    thorn1 = _thorn_whiz_layer(
+        n, seed + 47,
+        t_onset=0.022,
+        dur=0.155,
+        f_hi=4250.0 + 260.0 * variant,
+        f_lo=640.0 + 45.0 * variant,
+        pass_frac=0.56,
+        spin_hz=34.0 + 6.0 * variant,
+        sharpness=7.4,
+    )
+    # Rapid staggered second needle whizzing past ("fwhip-fwhip!")
+    thorn2 = _thorn_whiz_layer(
+        n, seed + 89,
+        t_onset=0.068 + 0.008 * variant,
+        dur=0.145,
+        f_hi=4450.0 - 190.0 * variant,
+        f_lo=580.0 + 35.0 * variant,
+        pass_frac=0.55,
+        spin_hz=39.0,
+        sharpness=7.8,
+    )
+
+    out = [0.0] * n
+    for i in range(n):
+        sample = snap[i] * 0.78 + sac_squeeze[i] * 0.88 + thorn1[i] * 1.55 + thorn2[i] * 1.28
+        out[i] = _soft_clip(sample, 1.75)
+    return out
+
+
+def gen_thorn_impale() -> list[float]:
+    """Impaling Thorn (Thorn Watch): subterranean root-tentacle lash + heavy chitin spike impale."""
+    dur = 0.34
+    n = int(dur * SAMPLE_RATE)
+    seed = 1790
+    pink = _make_pink_noise(n, seed)
+
+    # Shifting living-ground earth & muscular tentacle heave
+    soil_exc = [pink[i] * _env_ad(i / SAMPLE_RATE, 0.006, 0.14, 1.8) for i in range(n)]
+    soil = _svf_process(soil_exc, _random_walk_curve(n, 6, seed + 11, 95.0, 260.0), 2.3, "lp")
+    lash_whiz = _thorn_whiz_layer(
+        n, seed + 29,
+        t_onset=0.018,
+        dur=0.145,
+        f_hi=2850.0,
+        f_lo=420.0,
+        pass_frac=0.52,
+        spin_hz=24.0,
+        sharpness=6.5,
+    )
+    # Heavy impaling chitin spike strike + visceral wet squelch at t=0.115
+    impale_crunch = _chitin_snap_layer(n, 0.112, 620.0, seed + 53, amp=1.35)
+    impale_squelch = _wet_squelch_layer(n, seed + 79, 0.108, 0.185, f1_lo=260.0, f1_hi=1180.0, bubble_count=12)
+
     out = [0.0] * n
     for i in range(n):
         t = i / SAMPLE_RATE
-        # Guttural bio-launch thud
-        l_env = _env_ad(t, 0.005, 0.16, 1.9)
-        fl = 85.0 + 160.0 * math.exp(-t * 18.0)
-        launch = math.sin(2.0 * math.pi * fl * t + 0.8 * math.sin(2.0 * math.pi * 28.0 * t)) * l_env
-        # Splash burst at t=0.09
-        ts = t - 0.09
-        splash = 0.0
-        if ts >= 0.0:
-            s_env = _env_ad(ts, 0.004, 0.28, 1.7)
-            bubble_mod = math.sin(2.0 * math.pi * (18.0 + 35.0 * ts) * ts)
-            splash = (bub_noise[i] * (0.8 + 0.4 * bubble_mod) + hiss_noise[i] * 0.85) * s_env
-        out[i] = _soft_clip(launch * 0.95 + bub_noise[i] * l_env * 0.5 + splash, 1.6)
+        thud = soil[i] * (1.2 + 0.9 * _env_ad(t - 0.11, 0.001, 0.12, 2.2))
+        out[i] = _soft_clip(thud + lash_whiz[i] * 1.30 + impale_crunch[i] * 1.10 + impale_squelch[i] * 1.15, 1.8)
+    return out
+
+
+def gen_corrosive_lob(variant: int = 0) -> list[float]:
+    """Corrosive Lob (Blight Hurler): deep wet bile-sac heave & squelch + heavy spiny pod whizzing overhead."""
+    dur = 0.36 + 0.02 * variant
+    n = int(dur * SAMPLE_RATE)
+    seed = 1260 + variant * 149
+    pink = _make_pink_noise(n, seed)
+
+    heave_exc = [pink[i] * _env_ad(i / SAMPLE_RATE, 0.008, 0.15, 1.7) for i in range(n)]
+    heave_body = _svf_process(heave_exc, _random_walk_curve(n, 6, seed + 7, 95.0, 240.0), 2.8, "lp")
+    squelch = _wet_squelch_layer(
+        n, seed + 31, 0.004, 0.165,
+        f1_lo=220.0 + 25.0 * variant,
+        f1_hi=820.0 + 60.0 * variant,
+        bubble_count=12 + variant * 2,
+    )
+    sac_pop = _chitin_snap_layer(n, 0.022 + 0.004 * variant, 520.0 + 45.0 * variant, seed + 59, amp=0.8)
+    pod_whiz = _thorn_whiz_layer(
+        n, seed + 83,
+        t_onset=0.042,
+        dur=0.23,
+        f_hi=2350.0 + 150.0 * variant,
+        f_lo=440.0 + 40.0 * variant,
+        pass_frac=0.54,
+        spin_hz=22.0 + 4.0 * variant,
+        sharpness=6.0,
+    )
+
+    out = [0.0] * n
+    for i in range(n):
+        sample = heave_body[i] * 1.35 + squelch[i] * 1.15 + sac_pop[i] * 0.55 + pod_whiz[i] * 1.10
+        out[i] = _soft_clip(sample, 1.65)
     return out
 
 
@@ -430,49 +762,133 @@ def gen_prism_beam() -> list[float]:
 # 2. Melee Attack Strike & Worker Weapons
 # ---------------------------------------------------------------------------
 
-def gen_claw_slash() -> list[float]:
-    """Razor Claws (Skitterling): fast slashing melee swipe + sharp armor/flesh strike impact."""
-    dur = 0.19
+def gen_claw_slash(variant: int = 0) -> list[float]:
+    """Razor Claws / Needle Claws (Skitterling / Broodling): scythe-talon whip, flesh tear, chitin crunch & wet squelch."""
+    dur = 0.21 + 0.01 * variant
     n = int(dur * SAMPLE_RATE)
-    noise = _make_noise(n, 201)
-    swipe = _one_pole_hp(_one_pole_lp(noise, 5200.0), 950.0)
-    thud_noise = _one_pole_lp(noise, 850.0)
+    seed = 2010 + variant * 113
+
+    talon_whip = _thorn_whiz_layer(
+        n, seed,
+        t_onset=0.0,
+        dur=0.082,
+        f_hi=3900.0 + 240.0 * variant,
+        f_lo=640.0,
+        pass_frac=0.42,
+        spin_hz=32.0,
+        sharpness=8.2,
+    )
+    snap1 = _chitin_snap_layer(n, 0.018, 820.0 + 90.0 * variant, seed + 19, amp=1.15)
+    snap2 = _chitin_snap_layer(n, 0.042 + 0.006 * variant, 1240.0 - 80.0 * variant, seed + 37, amp=0.92)
+    squelch = _wet_squelch_layer(
+        n, seed + 61, 0.016, 0.145,
+        f1_lo=340.0 + 35.0 * variant,
+        f1_hi=1380.0 + 90.0 * variant,
+        bubble_count=10 + variant,
+    )
+    pink = _make_pink_noise(n, seed + 83)
+    flesh_thud = _svf_process(pink, 185.0, 1.9, "lp")
     out = [0.0] * n
-    phase = 0.0
     for i in range(n):
         t = i / SAMPLE_RATE
-        # Fast whoosh-rip sweep
-        sw_env = _env_ad(t, 0.003, 0.095, 2.0)
-        f_rip = 1400.0 * math.exp(-t * 22.0) + 180.0
-        phase += 2.0 * math.pi * f_rip / SAMPLE_RATE
-        rip = math.sin(phase) * _env_ad(t, 0.001, 0.055, 2.4) * 0.65
-        # Strike impact at t=0.022
-        ti = t - 0.022
-        hit = 0.0
-        if ti >= 0.0:
-            h_env = _env_ad(ti, 0.0008, 0.11, 2.3)
-            f_hit = 110.0 + 260.0 * math.exp(-ti * 48.0)
-            hit = (math.sin(2.0 * math.pi * f_hit * ti) * 0.95 + thud_noise[i] * 0.85) * h_env
-        out[i] = _soft_clip(swipe[i] * sw_env * 1.1 + rip + hit, 1.75)
+        thud_env = _env_ad(t - 0.016, 0.001, 0.090, 2.3)
+        sample = (
+            talon_whip[i] * 1.10
+            + snap1[i] * 1.05
+            + snap2[i] * 0.85
+            + squelch[i] * 1.20
+            + flesh_thud[i] * thud_env * 1.05
+        )
+        out[i] = _soft_clip(sample, 1.75)
     return out
 
 
-def gen_mandible_bite() -> list[float]:
-    """Mandibles (Forager): snapping chitin mandible bite & crunch strike."""
-    dur = 0.18
+def gen_mandible_bite(variant: int = 0) -> list[float]:
+    """Mandibles (Forager): hard insectoid chitin jaw clack-crunch & wet organic chomp squelch."""
+    dur = 0.21 + 0.01 * variant
     n = int(dur * SAMPLE_RATE)
-    noise = _make_noise(n, 202)
-    crunch = _one_pole_hp(_one_pole_lp(noise, 3600.0), 600.0)
+    seed = 2220 + variant * 127
+
+    jaw1 = _chitin_snap_layer(n, 0.002, 620.0 + 55.0 * variant, seed, amp=0.95)
+    jaw2 = _chitin_snap_layer(n, 0.038 + 0.006 * variant, 840.0 - 45.0 * variant, seed + 29, amp=1.08)
+    chomp_squelch = _wet_squelch_layer(
+        n, seed + 53, 0.012, 0.145,
+        f1_lo=290.0 + 25.0 * variant,
+        f1_hi=960.0 + 75.0 * variant,
+        bubble_count=8 + variant,
+    )
+    pink = _make_pink_noise(n, seed + 79)
+    bite_body = _svf_process(pink, 210.0, 2.1, "lp")
     out = [0.0] * n
-    for snap_t, amp in ((0.0, 0.9), (0.032, 1.0)):
-        for i in range(n):
-            t = i / SAMPLE_RATE - snap_t
-            if t < 0.0:
-                continue
-            env = _env_ad(t, 0.0007, 0.08, 2.5)
-            f = 150.0 + 520.0 * math.exp(-t * 55.0)
-            click = math.sin(2.0 * math.pi * f * t)
-            out[i] += _soft_clip((click * 0.9 + crunch[i] * 0.95) * env * amp, 1.65)
+    for i in range(n):
+        t = i / SAMPLE_RATE
+        b_env = _env_ad(t - 0.035, 0.001, 0.085, 2.4)
+        sample = jaw1[i] * 0.95 + jaw2[i] * 1.05 + chomp_squelch[i] * 0.95 + bite_body[i] * b_env * 0.9
+        out[i] = _soft_clip(sample, 1.7)
+    return out
+
+
+def gen_chitin_cleave(variant: int = 0) -> list[float]:
+    """Plate Splitter / Chitin Blades (Carapace Bulwark): massive scythe-tusk air cleave + heavy carapace crush & gore squelch."""
+    dur = 0.29 + 0.015 * variant
+    n = int(dur * SAMPLE_RATE)
+    seed = 2640 + variant * 139
+    pink = _make_pink_noise(n, seed)
+
+    # Massive dual scythe-tusk air slice
+    tusk_whip = _thorn_whiz_layer(
+        n, seed + 13,
+        t_onset=0.0,
+        dur=0.125,
+        f_hi=2450.0 + 160.0 * variant,
+        f_lo=340.0,
+        pass_frac=0.45,
+        spin_hz=20.0,
+        sharpness=6.8,
+    )
+    crush1 = _chitin_snap_layer(n, 0.028, 430.0 + 40.0 * variant, seed + 31, amp=1.4)
+    crush2 = _chitin_snap_layer(n, 0.056, 670.0 - 35.0 * variant, seed + 49, amp=1.15)
+    gore_squelch = _wet_squelch_layer(
+        n, seed + 71, 0.025, 0.21,
+        f1_lo=220.0,
+        f1_hi=1080.0 + 70.0 * variant,
+        bubble_count=14 + variant * 2,
+    )
+    heavy_body = _svf_process(pink, 135.0, 2.3, "lp")
+    out = [0.0] * n
+    for i in range(n):
+        t = i / SAMPLE_RATE
+        h_env = _env_ad(t - 0.024, 0.002, 0.165, 2.0)
+        sample = (
+            tusk_whip[i] * 1.25
+            + crush1[i] * 1.15
+            + crush2[i] * 0.95
+            + gore_squelch[i] * 1.20
+            + heavy_body[i] * h_env * 1.45
+        )
+        out[i] = _soft_clip(sample, 1.85)
+    return out
+
+
+def gen_bio_melee_hit(variant: int = 0) -> list[float]:
+    """Biological melee impact (Gnarl Brood claws/mandibles/tusks): meaty flesh puncture & wet squelch (no metal clang)."""
+    dur = 0.17 + 0.01 * variant
+    n = int(dur * SAMPLE_RATE)
+    seed = 2460 + variant * 103
+    pink = _make_pink_noise(n, seed)
+    thud = _svf_process(pink, 165.0 + 18.0 * variant, 2.2, "lp")
+    puncture = _chitin_snap_layer(n, 0.001, 540.0 + 60.0 * variant, seed + 17, amp=0.75)
+    squelch = _wet_squelch_layer(
+        n, seed + 43, 0.003, 0.125,
+        f1_lo=320.0,
+        f1_hi=1120.0 + 80.0 * variant,
+        bubble_count=6 + variant,
+    )
+    out = [0.0] * n
+    for i in range(n):
+        t = i / SAMPLE_RATE
+        t_env = _env_ad(t, 0.001, 0.105, 2.3)
+        out[i] = _soft_clip(thud[i] * t_env * 1.35 + puncture[i] * 0.70 + squelch[i] * 0.95, 1.65)
     return out
 
 
@@ -589,6 +1005,127 @@ def gen_explosion_splash() -> list[float]:
         f = 42.0 + 150.0 * math.exp(-t * 18.0)
         sub = math.sin(2.0 * math.pi * f * t) * 1.2
         out[i] = _soft_clip((sub + rumble[i] * 1.15 + debris[i] * 0.55) * env, 1.85)
+    return out
+
+
+def gen_thorn_impact(variant: int = 0) -> list[float]:
+    """Needle/thorn target hit: crisp barbed spine thwack into armor/flesh + brief wet ichor splat."""
+    dur = 0.16 + 0.01 * variant
+    n = int(dur * SAMPLE_RATE)
+    seed = 2980 + variant * 107
+    pink = _make_pink_noise(n, seed)
+    thwack = _chitin_snap_layer(n, 0.001, 920.0 + 85.0 * variant, seed + 19, amp=1.05)
+    splat = _wet_squelch_layer(
+        n, seed + 41, 0.002, 0.115,
+        f1_lo=380.0,
+        f1_hi=1480.0 + 90.0 * variant,
+        bubble_count=7 + variant,
+    )
+    body = _svf_process(pink, 210.0, 2.0, "lp")
+    out = [0.0] * n
+    for i in range(n):
+        t = i / SAMPLE_RATE
+        b_env = _env_ad(t, 0.001, 0.065, 2.4)
+        out[i] = _soft_clip(thwack[i] * 0.95 + splat[i] * 1.05 + body[i] * b_env * 0.85, 1.7)
+    return out
+
+
+def gen_acid_splat(variant: int = 0) -> list[float]:
+    """Acid projectile impact: sharp spine/glob thwack + juicy wet acid splatter & crackling fizz."""
+    dur = 0.26 + 0.015 * variant
+    n = int(dur * SAMPLE_RATE)
+    seed = 3110 + variant * 131
+    pink = _make_pink_noise(n, seed + 13)
+    fizz_imp = _sticky_impulses(n, seed + 29, 2.0, 8.5, 0.9)
+
+    thwack = _chitin_snap_layer(n, 0.001, 640.0 + 65.0 * variant, seed + 41, amp=0.88)
+    wet_slap = _wet_squelch_layer(
+        n, seed + 59, 0.002, 0.195,
+        f1_lo=310.0 + 30.0 * variant,
+        f1_hi=1420.0 + 95.0 * variant,
+        bubble_count=16 + variant * 2,
+    )
+    sizzle_fc = [4200.0 - 1500.0 * (i / max(1, n - 1)) for i in range(n)]
+    sizzle = _svf_bp4(fizz_imp, sizzle_fc, 2.8)
+    body = _svf_process(pink, 185.0, 2.0, "lp")
+    bub_mod = _random_walk_curve(n, 16, seed + 77, 0.35, 1.0)
+
+    out = [0.0] * n
+    for i in range(n):
+        t = i / SAMPLE_RATE
+        siz_env = _env_ad(t - 0.008, 0.006, 0.22, 1.9)
+        b_env = _env_ad(t, 0.001, 0.080, 2.3)
+        sample = (
+            thwack[i] * 0.72
+            + wet_slap[i] * 1.35
+            + sizzle[i] * siz_env * bub_mod[i] * 0.38
+            + body[i] * b_env * 0.90
+        )
+        out[i] = _soft_clip(sample, 1.7)
+    return out
+
+
+def gen_acid_splash(variant: int = 0) -> list[float]:
+    """Blight Hurler / Sporeburst splash impact: heavy wet liquid splash, squelching globs & acid fizz."""
+    dur = 0.45 + 0.02 * variant
+    n = int(dur * SAMPLE_RATE)
+    seed = 3340 + variant * 157
+    rng = random.Random(seed)
+    pink = _make_pink_noise(n, seed + 19)
+    fizz_imp = _sticky_impulses(n, seed + 31, 1.6, 7.2, 0.95)
+
+    burst_exc = [pink[i] * _env_ad(i / SAMPLE_RATE, 0.002, 0.14, 2.0) for i in range(n)]
+    wet_body = _svf_process(burst_exc, _random_walk_curve(n, 7, seed + 43, 105.0, 250.0), 2.5, "lp")
+    slosh_burst = _svf_bp4(
+        [pink[i] * _env_ad(i / SAMPLE_RATE, 0.002, 0.11, 1.9) for i in range(n)],
+        _random_walk_curve(n, 8, seed + 53, 420.0, 1450.0),
+        3.8,
+    )
+    squelch_main = _wet_squelch_layer(
+        n, seed + 67, 0.002, 0.29,
+        f1_lo=240.0 + 25.0 * variant,
+        f1_hi=1350.0 + 80.0 * variant,
+        bubble_count=26 + variant * 3,
+    )
+    squelch_tail = _wet_squelch_layer(
+        n, seed + 89, 0.065, 0.34,
+        f1_lo=310.0,
+        f1_hi=1580.0,
+        bubble_count=20 + variant * 2,
+    )
+
+    droplets = [0.0] * n
+    for _ in range(24):
+        dt_on = 0.012 + (rng.random() ** 1.25) * 0.34
+        ddur = rng.uniform(0.005, 0.015)
+        df0 = rng.uniform(360.0, 1850.0)
+        damp = rng.uniform(0.18, 0.42)
+        i0 = max(0, int(dt_on * SAMPLE_RATE))
+        i1 = min(n, int((dt_on + ddur) * SAMPLE_RATE))
+        ph = 0.0
+        for i in range(i0, i1):
+            u = (i - i0) / max(1, i1 - i0)
+            f_d = df0 * (1.0 + 0.72 * (u ** 1.65))
+            ph += 2.0 * math.pi * f_d / SAMPLE_RATE
+            droplets[i] += math.sin(ph) * math.sin(math.pi * u) * math.exp(-u * 1.85) * damp
+
+    sizzle_fc = [4600.0 - 1900.0 * (i / max(1, n - 1)) for i in range(n)]
+    sizzle = _svf_bp4(fizz_imp, sizzle_fc, 2.9)
+    fizz_mod = _random_walk_curve(n, 24, seed + 109, 0.30, 1.0)
+
+    out = [0.0] * n
+    for i in range(n):
+        t = i / SAMPLE_RATE
+        siz_env = _env_ad(t - 0.012, 0.015, 0.39, 1.75)
+        sample = (
+            wet_body[i] * 1.15
+            + slosh_burst[i] * 0.95
+            + squelch_main[i] * 1.30
+            + squelch_tail[i] * 0.95
+            + droplets[i] * 1.05
+            + sizzle[i] * siz_env * fizz_mod[i] * 0.42
+        )
+        out[i] = _soft_clip(sample, 1.75)
     return out
 
 
@@ -734,20 +1271,44 @@ def gen_unit_death_human() -> list[float]:
 
 
 def gen_unit_death_monster() -> list[float]:
-    """Monster unit death: descending organic screech + wet thud."""
-    dur = 0.32
+    """Monster unit death: guttural creature vocal rasp + carapace crack + wet ichor squelch thud."""
+    dur = 0.36
     n = int(dur * SAMPLE_RATE)
-    noise = _make_noise(n, 502)
-    wet = _one_pole_lp(noise, 1300.0)
+    seed = 5020
+    rng = random.Random(seed)
+    pink = _make_pink_noise(n, seed + 7)
+
+    # Irregular biological glottal pulse train with jitter (no pure sine sweep)
+    glottal = [0.0] * n
+    idx = int(0.004 * SAMPLE_RATE)
+    while idx < int(0.24 * SAMPLE_RATE):
+        t = idx / SAMPLE_RATE
+        f0 = 255.0 * math.exp(-t * 5.8) + 62.0
+        period = SAMPLE_RATE / f0
+        jitter = rng.uniform(0.84, 1.18)
+        amp = rng.uniform(0.65, 1.0) * _env_ad(t, 0.004, 0.22, 1.5)
+        pulse_w = max(3, int(period * 0.28))
+        for k in range(min(pulse_w, n - idx)):
+            u = k / pulse_w
+            glottal[idx + k] += amp * math.sin(math.pi * u) * (1.0 - 0.45 * u)
+        idx += max(4, int(period * jitter))
+
+    rasp_src = [glottal[i] * 1.15 + pink[i] * _env_ad(i / SAMPLE_RATE, 0.005, 0.21, 1.6) * 0.48 for i in range(n)]
+    f1 = [740.0 * math.exp(-(i / SAMPLE_RATE) * 5.2) + 210.0 for i in range(n)]
+    f2 = [1720.0 * math.exp(-(i / SAMPLE_RATE) * 5.8) + 520.0 for i in range(n)]
+    formant1 = _svf_bp4(rasp_src, f1, 4.8)
+    formant2 = _svf_bp4(rasp_src, f2, 5.4)
+
+    crack = _chitin_snap_layer(n, 0.026, 560.0, seed + 31, amp=1.05)
+    squelch = _wet_squelch_layer(n, seed + 59, 0.018, 0.27, f1_lo=240.0, f1_hi=1060.0, bubble_count=14)
+    body_lp = _svf_process(pink, 145.0, 2.2, "lp")
+
     out = [0.0] * n
-    phase = 0.0
     for i in range(n):
         t = i / SAMPLE_RATE
-        env = _env_ad(t, 0.003, 0.29, 1.8)
-        f = 540.0 * math.exp(-t * 8.5) + 75.0
-        phase += 2.0 * math.pi * f / SAMPLE_RATE
-        screech = math.sin(phase + 0.9 * math.sin(2.0 * math.pi * 34.0 * t)) * 0.75
-        out[i] = _soft_clip((screech + wet[i] * 0.65) * env, 1.55)
+        thud_env = _env_ad(t - 0.032, 0.003, 0.24, 1.9)
+        vocal = formant1[i] * 1.35 + formant2[i] * 0.92
+        out[i] = _soft_clip(vocal + crack[i] * 0.85 + squelch[i] * 1.10 + body_lp[i] * thud_env * 1.25, 1.75)
     return out
 
 
@@ -979,34 +1540,72 @@ def gen_support_pulse(frequency: float, duration: float) -> list[float]:
 
 
 def gen_volatile_burst() -> list[float]:
-    """A short organic pop followed by acid hiss and scattered droplets."""
-    duration = 0.52
-    rng = random.Random(9061)
-    noise = [rng.uniform(-1.0, 1.0) for _ in range(int(SAMPLE_RATE * duration))]
-    hiss = _one_pole_hp(_one_pole_lp(noise, 5800), 640)
-    thump = _one_pole_lp(noise, 290)
-    samples = []
-    for i, (sizzle, pressure) in enumerate(zip(hiss, thump)):
+    """Sporeburst rupture: swollen acid-sac pop + heavy wet liquid splash, squelch & corrosive fizz."""
+    dur = 0.50
+    n = int(dur * SAMPLE_RATE)
+    seed = 9061
+    rng = random.Random(seed)
+    pink = _make_pink_noise(n, seed + 11)
+    fizz_imp = _sticky_impulses(n, seed + 23, 1.5, 6.8, 0.95)
+
+    # Swollen membrane rupture snap + low-end organic fluid pressure pop (no pure sine sweep)
+    sac_snap = _chitin_snap_layer(n, 0.001, 490.0, seed + 37, amp=1.25)
+    pop_exc = [pink[i] * _env_ad(i / SAMPLE_RATE, 0.0015, 0.13, 2.1) for i in range(n)]
+    pop_body = _svf_process(pop_exc, _random_walk_curve(n, 6, seed + 49, 88.0, 220.0), 2.8, "lp")
+
+    squelch_core = _wet_squelch_layer(n, seed + 61, 0.003, 0.28, f1_lo=230.0, f1_hi=1420.0, bubble_count=28)
+    squelch_tail = _wet_squelch_layer(n, seed + 83, 0.075, 0.36, f1_lo=320.0, f1_hi=1650.0, bubble_count=22)
+
+    droplets = [0.0] * n
+    for _ in range(26):
+        dt_on = 0.015 + (rng.random() ** 1.2) * 0.38
+        ddur = rng.uniform(0.005, 0.014)
+        df0 = rng.uniform(380.0, 1920.0)
+        damp = rng.uniform(0.20, 0.46)
+        i0 = max(0, int(dt_on * SAMPLE_RATE))
+        i1 = min(n, int((dt_on + ddur) * SAMPLE_RATE))
+        ph = 0.0
+        for i in range(i0, i1):
+            u = (i - i0) / max(1, i1 - i0)
+            f_d = df0 * (1.0 + 0.75 * (u ** 1.65))
+            ph += 2.0 * math.pi * f_d / SAMPLE_RATE
+            droplets[i] += math.sin(ph) * math.sin(math.pi * u) * math.exp(-u * 1.85) * damp
+
+    sizzle = _svf_bp4(fizz_imp, [4800.0 - 2100.0 * (i / max(1, n - 1)) for i in range(n)], 3.0)
+    fizz_mod = _random_walk_curve(n, 22, seed + 97, 0.32, 1.0)
+
+    out = [0.0] * n
+    for i in range(n):
         t = i / SAMPLE_RATE
-        pop = math.sin(2.0 * math.pi * (132 * t - 107 * t * t)) * math.exp(-25 * t)
-        droplets = sum(math.exp(-((t - hit) / 0.011) ** 2) for hit in (0.058, 0.094, 0.141, 0.207))
-        samples.append(0.65 * pop + pressure * math.exp(-19 * t) +
-                       sizzle * (0.55 * math.exp(-5.5 * t) + 0.25 * droplets))
-    return samples
+        siz_env = _env_ad(t - 0.008, 0.012, 0.42, 1.8)
+        sample = (
+            sac_snap[i] * 0.95
+            + pop_body[i] * 1.35
+            + squelch_core[i] * 1.35
+            + squelch_tail[i] * 0.95
+            + droplets[i] * 1.05
+            + sizzle[i] * siz_env * fizz_mod[i] * 0.44
+        )
+        out[i] = _soft_clip(sample, 1.80)
+    return out
 
 
 def gen_brood_hatch(frequency: float, duration: float, seed: int) -> list[float]:
-    """Soft tissue movement with a short shell crack and falling pitch."""
-    count = int(SAMPLE_RATE * duration)
-    noise = _one_pole_lp(_make_noise(count, seed), 1850.0)
-    samples = []
-    for index, grain in enumerate(noise):
-        t = index / SAMPLE_RATE
-        pitch = math.sin(math.tau * frequency * (t - 0.9 * t * t))
-        swell = _env_ad(t, 0.035, duration - 0.035)
-        crack = math.exp(-((t - 0.075) / 0.018) ** 2)
-        samples.append(pitch * swell * 0.42 + grain * (0.58 * crack + 0.23 * swell))
-    return samples
+    """Larva / Egg morph & hatch: wet embryonic membrane stretch, viscous squelch, and crisp chitin shell crack."""
+    n = int(SAMPLE_RATE * duration)
+    pink = _make_pink_noise(n, seed)
+    f_lo = max(210.0, frequency * 1.35)
+    f_hi = min(1550.0, frequency * 5.8)
+    squelch = _wet_squelch_layer(n, seed + 17, 0.004, duration * 0.88, f1_lo=f_lo, f1_hi=f_hi, bubble_count=max(6, int(duration * 36)))
+    crack_t = min(duration * 0.34, 0.072)
+    shell_crack = _chitin_snap_layer(n, crack_t, max(520.0, frequency * 3.8), seed + 43, amp=0.92)
+    warm_sac = _svf_process(pink, max(120.0, frequency * 0.95), 2.1, "lp")
+    out = [0.0] * n
+    for i in range(n):
+        t = i / SAMPLE_RATE
+        swell = _env_ad(t, 0.018, max(0.06, duration - 0.022), 1.65)
+        out[i] = _soft_clip(squelch[i] * 1.15 + shell_crack[i] * 0.85 + warm_sac[i] * swell * 0.95, 1.65)
+    return out
 
 
 def gen_ridge_pistols() -> list[float]:
@@ -1047,22 +1646,30 @@ def gen_ridge_charge_impact() -> list[float]:
 
 
 def gen_gnarl_tech_ready(hatchling_pool: bool) -> list[float]:
-    length = 0.58 if hatchling_pool else 0.72
-    pulse_starts = (0.0, 0.13, 0.22, 0.31) if hatchling_pool else (0.0, 0.17, 0.40)
-    cutoff = 820.0 if hatchling_pool else 480.0
-    rng_seed = 8751 if hatchling_pool else 8752
-    noise = _one_pole_lp(_make_noise(int(length * SAMPLE_RATE), rng_seed), cutoff)
-    samples = []
-    for index, grain in enumerate(noise):
-        time = index / SAMPLE_RATE
-        sound = 0.0
-        for count, onset in enumerate(pulse_starts):
-            pulse = time - onset
-            pitch = 140.0 + count * 47.0 if hatchling_pool else 85.0 + count * 15.0
-            chamber = math.sin(math.tau * (pitch * pulse - 130.0 * pulse * pulse))
-            sound += (0.57 * chamber + 0.55 * grain) * _env_ad(pulse, 0.024, 0.22)
-        samples.append(_soft_clip(sound, 1.3))
-    return samples
+    """Hatchling Pool / Bile Warren complete: bubbling nutrient-fluid churn & pulsing heart-sac throbs."""
+    dur = 0.58 if hatchling_pool else 0.72
+    n = int(dur * SAMPLE_RATE)
+    seed = 8751 if hatchling_pool else 8752
+    pink = _make_pink_noise(n, seed)
+    pulse_starts = (0.0, 0.13, 0.24, 0.36) if hatchling_pool else (0.0, 0.18, 0.40)
+
+    throb_exc = [0.0] * n
+    for i in range(n):
+        t = i / SAMPLE_RATE
+        env = sum(_env_ad(t - onset, 0.022, 0.21, 1.7) for onset in pulse_starts)
+        throb_exc[i] = pink[i] * env
+
+    fc_lo = 105.0 if hatchling_pool else 78.0
+    fc_hi = 250.0 if hatchling_pool else 175.0
+    heart_throb = _svf_process(throb_exc, _random_walk_curve(n, 8, seed + 13, fc_lo, fc_hi), 2.8, "lp")
+    pool_squelch = _wet_squelch_layer(
+        n, seed + 37, 0.01, dur * 0.90,
+        f1_lo=260.0 if hatchling_pool else 195.0,
+        f1_hi=1280.0 if hatchling_pool else 940.0,
+        bubble_count=20 if hatchling_pool else 26,
+    )
+    sac_snap = _chitin_snap_layer(n, pulse_starts[-1] + 0.02, 640.0 if hatchling_pool else 460.0, seed + 71, amp=0.65)
+    return [_soft_clip(heart_throb[i] * 1.25 + pool_squelch[i] * 1.15 + sac_snap[i] * 0.55, 1.65) for i in range(n)]
 
 
 def gen_concord_resonance(notes: tuple[float, ...], sweep: float) -> list[float]:
@@ -1099,58 +1706,268 @@ def gen_canticle_storm() -> list[float]:
 
 
 def gen_rupture_bile(impact: bool, light: bool = False) -> list[float]:
-    """A pressurized wet launch or a short bubbling acid impact."""
-    duration = 0.32 if light else (0.65 if impact else 0.49)
-    rng = random.Random(371 if impact else (372 if light else 373))
-    fluid = 0.0
-    samples = []
-    for index in range(int(duration * SAMPLE_RATE)):
-        time = index / SAMPLE_RATE
-        noise = rng.uniform(-1.0, 1.0)
-        fluid = fluid * 0.83 + noise * 0.17
-        tone = math.sin(math.tau * (130.0 * time + (-90.0 if impact else 120.0) * time * time))
-        envelope = _env_ad(time, 0.012, duration - 0.012)
-        samples.append(envelope * (0.35 * tone + fluid * 1.2 + noise * (0.22 if impact else 0.08)))
-    return samples
+    """Rupture Crawler: pressurized wet bile-glob shot, mortar launch, or corrosive bile splash."""
+    if light:
+        # Primary ranged attack (rupture_discharge): wet bile-duct squelch + barbed acid-glob whizzing past
+        dur = 0.32
+        n = int(dur * SAMPLE_RATE)
+        seed = 3720
+        squelch = _wet_squelch_layer(n, seed, 0.0, 0.068, f1_lo=260.0, f1_hi=1080.0, bubble_count=10)
+        duct_snap = _chitin_snap_layer(n, 0.005, 860.0, seed + 29, amp=0.75)
+        glob_whiz = _thorn_whiz_layer(
+            n, seed + 53,
+            t_onset=0.042,
+            dur=0.195,
+            f_hi=2950.0,
+            f_lo=450.0,
+            pass_frac=0.56,
+            spin_hz=25.0,
+            sharpness=6.5,
+        )
+        return [_soft_clip(squelch[i] * 1.15 + duct_snap[i] * 0.65 + glob_whiz[i] * 1.45, 1.75) for i in range(n)]
+
+    if not impact:
+        # Artillery mortar launch (rupture_launch): deep gut heave + thick wet suction pop + rising bile-meteor whoosh
+        dur = 0.48
+        n = int(dur * SAMPLE_RATE)
+        seed = 3730
+        pink = _make_pink_noise(n, seed)
+        heave = _svf_process([pink[i] * _env_ad(i / SAMPLE_RATE, 0.010, 0.22, 1.8) for i in range(n)], 145.0, 2.6, "lp")
+        squelch = _wet_squelch_layer(n, seed + 19, 0.008, 0.24, f1_lo=210.0, f1_hi=960.0, bubble_count=18)
+        pop_snap = _chitin_snap_layer(n, 0.032, 540.0, seed + 41, amp=0.95)
+        arc_whiz = _thorn_whiz_layer(
+            n, seed + 67,
+            t_onset=0.055,
+            dur=0.31,
+            f_hi=2450.0,
+            f_lo=520.0,
+            pass_frac=0.50,
+            spin_hz=19.0,
+            sharpness=5.6,
+        )
+        return [_soft_clip(heave[i] * 1.35 + squelch[i] * 1.25 + pop_snap[i] * 0.70 + arc_whiz[i] * 1.20, 1.75) for i in range(n)]
+
+    # Artillery corrosive bile impact (rupture_impact): massive overhead acid meteor splash & sizzle
+    dur = 0.62
+    n = int(dur * SAMPLE_RATE)
+    seed = 3710
+    rng = random.Random(seed)
+    pink = _make_pink_noise(n, seed + 11)
+    fizz_imp = _sticky_impulses(n, seed + 23, 1.5, 6.5, 1.0)
+
+    whistle_in = _thorn_whiz_layer(
+        n, seed + 31,
+        t_onset=0.0,
+        dur=0.095,
+        f_hi=2600.0,
+        f_lo=580.0,
+        pass_frac=0.68,
+        spin_hz=26.0,
+        sharpness=7.2,
+    )
+    impact_lp = _svf_process(
+        [pink[i] * _env_ad(i / SAMPLE_RATE - 0.055, 0.002, 0.20, 2.0) for i in range(n)],
+        _random_walk_curve(n, 8, seed + 43, 85.0, 215.0),
+        2.7,
+        "lp",
+    )
+    squelch1 = _wet_squelch_layer(n, seed + 59, 0.052, 0.34, f1_lo=220.0, f1_hi=1420.0, bubble_count=30)
+    squelch2 = _wet_squelch_layer(n, seed + 79, 0.140, 0.42, f1_lo=300.0, f1_hi=1680.0, bubble_count=24)
+
+    droplets = [0.0] * n
+    for _ in range(30):
+        dt_on = 0.065 + (rng.random() ** 1.2) * 0.46
+        ddur = rng.uniform(0.005, 0.015)
+        df0 = rng.uniform(340.0, 1950.0)
+        damp = rng.uniform(0.20, 0.46)
+        i0 = max(0, int(dt_on * SAMPLE_RATE))
+        i1 = min(n, int((dt_on + ddur) * SAMPLE_RATE))
+        ph = 0.0
+        for i in range(i0, i1):
+            u = (i - i0) / max(1, i1 - i0)
+            f_d = df0 * (1.0 + 0.74 * (u ** 1.65))
+            ph += 2.0 * math.pi * f_d / SAMPLE_RATE
+            droplets[i] += math.sin(ph) * math.sin(math.pi * u) * math.exp(-u * 1.85) * damp
+
+    sizzle = _svf_bp4(fizz_imp, [4700.0 - 2000.0 * (i / max(1, n - 1)) for i in range(n)], 2.9)
+    fizz_mod = _random_walk_curve(n, 26, seed + 97, 0.35, 1.0)
+    out = [0.0] * n
+    for i in range(n):
+        t = i / SAMPLE_RATE
+        siz_env = _env_ad(t - 0.058, 0.014, 0.50, 1.75)
+        sample = (
+            whistle_in[i] * 1.05
+            + impact_lp[i] * 1.40
+            + squelch1[i] * 1.35
+            + squelch2[i] * 0.95
+            + droplets[i] * 1.05
+            + sizzle[i] * siz_env * fizz_mod[i] * 0.44
+        )
+        out[i] = _soft_clip(sample, 1.80)
+    return out
 
 
 def gen_spine_line() -> list[float]:
-    """Five rising chitin strikes with a low bed of shifting soil."""
-    rng = random.Random(613)
-    samples = []
-    earth = 0.0
-    for index in range(int(0.52 * SAMPLE_RATE)):
-        time = index / SAMPLE_RATE
-        noise = rng.uniform(-1.0, 1.0)
-        earth = 0.90 * earth + 0.10 * noise
-        strike = 0.0
-        for number in range(5):
-            phase = time - 0.038 * number
-            if 0.0 <= phase < 0.2:
-                strike += math.exp(-24.0 * phase) * (noise * 0.25 + math.sin(math.tau * (82 + 12 * number) * phase) * 0.4)
-        samples.append((strike + earth * 0.35) * min(1.0, (0.52 - time) * 8.0))
-    return samples
+    """Spine Ambusher: rumbling earth fissure + 5 staggered subterranean chitin spines erupting & whizzing."""
+    dur = 0.52
+    n = int(dur * SAMPLE_RATE)
+    seed = 6130
+    pink = _make_pink_noise(n, seed)
+    gravel_imp = _sticky_impulses(n, seed + 11, 2.0, 7.5, 1.3)
+
+    # Shifting soil & gravel rumble along the burrow line
+    soil_env = [math.sin(math.pi * min(1.0, (i / SAMPLE_RATE) / 0.36)) ** 0.7 if (i / SAMPLE_RATE) < 0.36 else math.exp(-((i / SAMPLE_RATE) - 0.36) * 14.0) for i in range(n)]
+    earth_lp = _svf_process([pink[i] * soil_env[i] for i in range(n)], _random_walk_curve(n, 8, seed + 19, 85.0, 210.0), 2.3, "lp")
+    gravel_mid = _svf_bp4([gravel_imp[i] * soil_env[i] for i in range(n)], _random_walk_curve(n, 10, seed + 29, 480.0, 1350.0), 3.4)
+
+    spines = [0.0] * n
+    for idx_s in range(5):
+        onset = 0.008 + idx_s * 0.048
+        snap = _chitin_snap_layer(n, onset, 680.0 + idx_s * 115.0, seed + 41 + idx_s * 17, amp=1.05)
+        whiz = _thorn_whiz_layer(
+            n, seed + 131 + idx_s * 23,
+            t_onset=onset + 0.006,
+            dur=0.115,
+            f_hi=3350.0 + idx_s * 180.0,
+            f_lo=520.0 + idx_s * 35.0,
+            pass_frac=0.48,
+            spin_hz=30.0 + idx_s * 3.0,
+            sharpness=7.5,
+        )
+        for i in range(n):
+            spines[i] += snap[i] * 0.88 + whiz[i] * 0.92
+
+    squelch = _wet_squelch_layer(n, seed + 271, 0.015, 0.34, f1_lo=280.0, f1_hi=1220.0, bubble_count=14)
+    return [_soft_clip(earth_lp[i] * 1.15 + gravel_mid[i] * 0.55 + spines[i] + squelch[i] * 0.78, 1.80) for i in range(n)]
 
 
 def gen_brood_air(kind: str) -> list[float]:
-    """Layer chitin clicks and a resonant air pulse for flying Brood weapons."""
-    duration, frequency, clicks, seed = {
-        "corrosion_spore": (0.29, 210.0, 2, 491),
-        "corrosion_spray": (0.48, 128.0, 5, 492),
-        "broodling_launch": (0.54, 103.0, 2, 493),
-        "locust_launch": (0.61, 174.0, 7, 494),
-    }[kind]
-    rng = random.Random(seed)
-    samples = []
-    resonance = 0.0
-    for index in range(int(duration * SAMPLE_RATE)):
-        time = index / SAMPLE_RATE
-        noise = rng.uniform(-1.0, 1.0)
-        resonance = resonance * 0.85 + noise * 0.15
-        pulse = sum(math.exp(-33.0 * (time - 0.041 * onset)) for onset in range(clicks) if time >= 0.041 * onset)
-        sweep = math.sin(math.tau * (frequency * time - 38.0 * time * time + 0.3 * math.sin(time * 39.0)))
-        samples.append(_env_ad(time, 0.008, duration - 0.008) * (0.34 * sweep + pulse * (0.28 * noise + 0.36 * resonance)))
-    return samples
+    """Biological flying Gnarl Brood weapons: Corrosion Spore, Caustic Spray, Broodling Launch, and Locust Wave."""
+    if kind == "corrosion_spore":
+        dur = 0.30
+        n = int(dur * SAMPLE_RATE)
+        seed = 4910
+        squelch = _wet_squelch_layer(n, seed, 0.0, 0.065, f1_lo=310.0, f1_hi=1280.0, bubble_count=9)
+        snap = _chitin_snap_layer(n, 0.003, 980.0, seed + 17, amp=0.72)
+        whiz = _thorn_whiz_layer(
+            n, seed + 43,
+            t_onset=0.038,
+            dur=0.185,
+            f_hi=3150.0,
+            f_lo=490.0,
+            pass_frac=0.56,
+            spin_hz=27.0,
+            sharpness=6.6,
+        )
+        return [_soft_clip(squelch[i] * 1.15 + snap[i] * 0.60 + whiz[i] * 1.45, 1.70) for i in range(n)]
+
+    if kind == "corrosion_spray":
+        dur = 0.48
+        n = int(dur * SAMPLE_RATE)
+        seed = 4920
+        fizz_imp = _sticky_impulses(n, seed + 13, 1.6, 6.2, 1.0)
+        stream_squelch = _wet_squelch_layer(n, seed + 29, 0.0, 0.43, f1_lo=280.0, f1_hi=1480.0, bubble_count=28)
+        sizzle = _svf_bp4(fizz_imp, _random_walk_curve(n, 14, seed + 53, 2400.0, 4600.0), 3.1)
+        mod = _random_walk_curve(n, 18, seed + 71, 0.45, 1.0)
+        out = [0.0] * n
+        for i in range(n):
+            env = _env_ad(i / SAMPLE_RATE, 0.015, 0.44, 1.6)
+            out[i] = _soft_clip(stream_squelch[i] * 1.35 + sizzle[i] * env * mod[i] * 0.52, 1.70)
+        return out
+
+    if kind == "broodling_launch":
+        # Brood Siege Flyer: heavy carapace heave + twin broodling pods hurled downward + wet impact
+        dur = 0.52
+        n = int(dur * SAMPLE_RATE)
+        seed = 4930
+        pink = _make_pink_noise(n, seed)
+        wing_heave = _svf_process([pink[i] * _env_ad(i / SAMPLE_RATE, 0.008, 0.22, 1.8) for i in range(n)], 135.0, 2.4, "lp")
+        jaw_snap1 = _chitin_snap_layer(n, 0.006, 540.0, seed + 19, amp=1.10)
+        jaw_snap2 = _chitin_snap_layer(n, 0.092, 620.0, seed + 37, amp=0.95)
+        pod1 = _thorn_whiz_layer(
+            n, seed + 59,
+            t_onset=0.022,
+            dur=0.195,
+            f_hi=3250.0,
+            f_lo=460.0,
+            pass_frac=0.55,
+            spin_hz=28.0,
+            sharpness=6.8,
+        )
+        pod2 = _thorn_whiz_layer(
+            n, seed + 83,
+            t_onset=0.105,
+            dur=0.195,
+            f_hi=3480.0,
+            f_lo=510.0,
+            pass_frac=0.55,
+            spin_hz=31.0,
+            sharpness=7.0,
+        )
+        squelch = _wet_squelch_layer(n, seed + 107, 0.010, 0.36, f1_lo=250.0, f1_hi=1160.0, bubble_count=18)
+        return [_soft_clip(wing_heave[i] * 1.20 + jaw_snap1[i] * 0.85 + jaw_snap2[i] * 0.75 + pod1[i] * 1.35 + pod2[i] * 1.25 + squelch[i] * 1.05, 1.80) for i in range(n)]
+
+    # kind == "locust_launch": Mireweaver spawning locust wave — rapid wet egg-pod pops + chittering wing-flutter
+    dur = 0.58
+    n = int(dur * SAMPLE_RATE)
+    seed = 4940
+    pink = _make_pink_noise(n, seed)
+    pops = [0.0] * n
+    for p_idx in range(5):
+        onset = 0.008 + p_idx * 0.068
+        snap = _chitin_snap_layer(n, onset, 760.0 + p_idx * 70.0, seed + 17 + p_idx * 13, amp=0.82)
+        whiz = _thorn_whiz_layer(
+            n, seed + 101 + p_idx * 19,
+            t_onset=onset + 0.012,
+            dur=0.11,
+            f_hi=3100.0 + p_idx * 120.0,
+            f_lo=680.0,
+            pass_frac=0.50,
+            spin_hz=44.0,
+            sharpness=6.4,
+        )
+        for i in range(n):
+            pops[i] += snap[i] * 0.78 + whiz[i] * 0.82
+
+    squelch = _wet_squelch_layer(n, seed + 223, 0.005, 0.48, f1_lo=290.0, f1_hi=1360.0, bubble_count=24)
+    wing_buzz = _svf_bp4(pink, _random_walk_curve(n, 16, seed + 251, 950.0, 2100.0), 3.6)
+    out = [0.0] * n
+    for i in range(n):
+        t = i / SAMPLE_RATE
+        flutter = (0.55 + 0.45 * math.sin(2.0 * math.pi * 38.0 * t)) * _env_ad(t - 0.04, 0.04, 0.48, 1.5)
+        out[i] = _soft_clip(pops[i] + squelch[i] * 1.15 + wing_buzz[i] * flutter * 0.48, 1.75)
+    return out
+
+
+def gen_brood_inject() -> list[float]:
+    """Brood Keeper Spawn Larvae: wet ovipositor plunge, sticky clutch squelch & membrane pop (no synth chime)."""
+    dur = 0.38
+    n = int(dur * SAMPLE_RATE)
+    seed = 7180
+    pink = _make_pink_noise(n, seed)
+    plunge_snap = _chitin_snap_layer(n, 0.008, 610.0, seed + 19, amp=0.78)
+    squelch = _wet_squelch_layer(n, seed + 41, 0.004, 0.33, f1_lo=240.0, f1_hi=1280.0, bubble_count=20)
+    sac_throb = _svf_process([pink[i] * _env_ad(i / SAMPLE_RATE, 0.015, 0.30, 1.7) for i in range(n)], 150.0, 2.3, "lp")
+    return [_soft_clip(plunge_snap[i] * 0.72 + squelch[i] * 1.30 + sac_throb[i] * 1.05, 1.65) for i in range(n)]
+
+
+def gen_burrow_shift() -> list[float]:
+    """Gnarl Brood Burrow / Unburrow: rapid clawing earth dig, shifting gravel & carapace plate tuck (no synth chime)."""
+    dur = 0.28
+    n = int(dur * SAMPLE_RATE)
+    seed = 7290
+    pink = _make_pink_noise(n, seed)
+    grit = _sticky_impulses(n, seed + 13, 1.8, 7.0, 1.2)
+    earth = _svf_process([pink[i] * _env_ad(i / SAMPLE_RATE, 0.008, 0.24, 1.7) for i in range(n)], 185.0, 2.1, "lp")
+    dig_scrape = _svf_bp4(
+        [(grit[i] * 0.8 + pink[i] * 0.4) * _env_ad(i / SAMPLE_RATE, 0.006, 0.22, 1.6) for i in range(n)],
+        _random_walk_curve(n, 9, seed + 31, 460.0, 1420.0),
+        3.2,
+    )
+    claw1 = _chitin_snap_layer(n, 0.012, 720.0, seed + 53, amp=0.80)
+    claw2 = _chitin_snap_layer(n, 0.068, 580.0, seed + 71, amp=0.75)
+    claw3 = _chitin_snap_layer(n, 0.125, 490.0, seed + 89, amp=0.68)
+    return [_soft_clip(earth[i] * 1.25 + dig_scrape[i] * 0.85 + (claw1[i] + claw2[i] + claw3[i]) * 0.78, 1.65) for i in range(n)]
 
 
 def gen_workshop_cue(cue: str) -> list[float]:
@@ -1258,14 +2075,32 @@ GENERATORS = {
     "sentry_fire": (gen_sentry_fire, 0.38),
     "sentry_impact": (gen_sentry_impact, 0.17),
     "mortar_fire": (gen_mortar_fire, 0.95),
-    "acid_spit": (gen_acid_spit, 0.85),
-    "corrosive_lob": (gen_corrosive_lob, 0.88),
+    "acid_spit": (lambda: gen_acid_spit(0), 0.88),
+    "acid_spit_2": (lambda: gen_acid_spit(1), 0.88),
+    "acid_spit_3": (lambda: gen_acid_spit(2), 0.88),
+    "thorn_volley": (lambda: gen_thorn_volley(0), 0.89),
+    "thorn_volley_2": (lambda: gen_thorn_volley(1), 0.89),
+    "thorn_volley_3": (lambda: gen_thorn_volley(2), 0.89),
+    "thorn_impale": (gen_thorn_impale, 0.90),
+    "corrosive_lob": (lambda: gen_corrosive_lob(0), 0.90),
+    "corrosive_lob_2": (lambda: gen_corrosive_lob(1), 0.90),
+    "corrosive_lob_3": (lambda: gen_corrosive_lob(2), 0.90),
     "needler_fire": (gen_needler_fire, 0.84),
     "prism_beam": (gen_prism_beam, 0.86),
     "crown_lance": (gen_crown_lance, 0.89),
     # Melee Strikes & Worker Weapons
-    "claw_slash": (gen_claw_slash, 0.88),
-    "mandible_bite": (gen_mandible_bite, 0.84),
+    "claw_slash": (lambda: gen_claw_slash(0), 0.90),
+    "claw_slash_2": (lambda: gen_claw_slash(1), 0.90),
+    "claw_slash_3": (lambda: gen_claw_slash(2), 0.90),
+    "mandible_bite": (lambda: gen_mandible_bite(0), 0.86),
+    "mandible_bite_2": (lambda: gen_mandible_bite(1), 0.86),
+    "mandible_bite_3": (lambda: gen_mandible_bite(2), 0.86),
+    "chitin_cleave": (lambda: gen_chitin_cleave(0), 0.92),
+    "chitin_cleave_2": (lambda: gen_chitin_cleave(1), 0.92),
+    "chitin_cleave_3": (lambda: gen_chitin_cleave(2), 0.92),
+    "bio_melee_hit": (lambda: gen_bio_melee_hit(0), 0.86),
+    "bio_melee_hit_2": (lambda: gen_bio_melee_hit(1), 0.86),
+    "bio_melee_hit_3": (lambda: gen_bio_melee_hit(2), 0.86),
     "light_blade_strike": (gen_light_blade_strike, 0.88),
     "arc_welder": (gen_arc_welder, 0.82),
     "mote_spark": (gen_mote_spark, 0.80),
@@ -1273,7 +2108,16 @@ GENERATORS = {
     # Combat Impacts & Shields
     "shield_hit": (gen_shield_hit, 0.80),
     "explosion_splash": (gen_explosion_splash, 0.94),
-    "volatile_burst": (gen_volatile_burst, 0.88),
+    "thorn_impact": (lambda: gen_thorn_impact(0), 0.84),
+    "thorn_impact_2": (lambda: gen_thorn_impact(1), 0.84),
+    "thorn_impact_3": (lambda: gen_thorn_impact(2), 0.84),
+    "acid_splat": (lambda: gen_acid_splat(0), 0.86),
+    "acid_splat_2": (lambda: gen_acid_splat(1), 0.86),
+    "acid_splat_3": (lambda: gen_acid_splat(2), 0.86),
+    "acid_splash": (lambda: gen_acid_splash(0), 0.94),
+    "acid_splash_2": (lambda: gen_acid_splash(1), 0.94),
+    "acid_splash_3": (lambda: gen_acid_splash(2), 0.94),
+    "volatile_burst": (gen_volatile_burst, 0.92),
     "ridge_charge_throw": (gen_ridge_charge_throw, 0.75),
     "ridge_charge_impact": (gen_ridge_charge_impact, 0.88),
     "hatchling_pool_ready": (lambda: gen_gnarl_tech_ready(True), 0.80),
@@ -1295,14 +2139,14 @@ GENERATORS = {
     "archon_shockwave": (lambda: gen_concord_resonance((94, 141, 421, 666), -0.52), 0.77),
     "archon_warp": (lambda: gen_concord_resonance((114, 171, 228, 342), 0.73), 0.56),
     "archon_ready": (lambda: gen_concord_resonance((154, 231, 308, 462), -0.08), 0.57),
-    "rupture_discharge": (lambda: gen_rupture_bile(False, light=True), 0.68),
-    "rupture_launch": (lambda: gen_rupture_bile(False), 0.74),
-    "rupture_impact": (lambda: gen_rupture_bile(True), 0.85),
-    "spine_line": (gen_spine_line, 0.78),
-    "corrosion_spore": (lambda: gen_brood_air("corrosion_spore"), 0.72),
-    "corrosion_spray": (lambda: gen_brood_air("corrosion_spray"), 0.67),
-    "broodling_launch": (lambda: gen_brood_air("broodling_launch"), 0.79),
-    "locust_launch": (lambda: gen_brood_air("locust_launch"), 0.76),
+    "rupture_discharge": (lambda: gen_rupture_bile(False, light=True), 0.85),
+    "rupture_launch": (lambda: gen_rupture_bile(False), 0.86),
+    "rupture_impact": (lambda: gen_rupture_bile(True), 0.94),
+    "spine_line": (gen_spine_line, 0.88),
+    "corrosion_spore": (lambda: gen_brood_air("corrosion_spore"), 0.85),
+    "corrosion_spray": (lambda: gen_brood_air("corrosion_spray"), 0.82),
+    "broodling_launch": (lambda: gen_brood_air("broodling_launch"), 0.90),
+    "locust_launch": (lambda: gen_brood_air("locust_launch"), 0.86),
     "bile_warren_ready": (lambda: gen_gnarl_tech_ready(False), 0.82),
     # Abilities & Mode Transforms
     "surge_activate": (gen_surge_activate, 0.85),
@@ -1315,11 +2159,11 @@ GENERATORS = {
     "siege_transform": (gen_siege_transform, 0.88),
     "silo_gate": (gen_silo_gate, 0.82),
     "vital_restore": (lambda: gen_support_pulse(360, 0.26), 0.50),
-    "brood_inject": (lambda: gen_support_pulse(182, 0.39), 0.52),
-    "brood_larva_ready": (lambda: gen_brood_hatch(230, 0.18, 241), 0.24),
-    "brood_egg_morph": (lambda: gen_brood_hatch(145, 0.36, 242), 0.45),
-    "brood_egg_hatch": (lambda: gen_brood_hatch(185, 0.30, 243), 0.51),
-    "burrow_shift": (lambda: gen_support_pulse(118, 0.25), 0.48),
+    "brood_inject": (gen_brood_inject, 0.68),
+    "brood_larva_ready": (lambda: gen_brood_hatch(230, 0.18, 241), 0.34),
+    "brood_egg_morph": (lambda: gen_brood_hatch(145, 0.36, 242), 0.55),
+    "brood_egg_hatch": (lambda: gen_brood_hatch(185, 0.30, 243), 0.62),
+    "burrow_shift": (gen_burrow_shift, 0.65),
     "aegis_restore": (lambda: gen_support_pulse(530, 0.39), 0.56),
     # Unit & Structure Destruction
     "unit_death_human": (gen_unit_death_human, 0.86),

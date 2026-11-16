@@ -38,4 +38,6 @@ test('web exports run single-threaded without cross-origin isolation', () => {
   assert.match(config, /platform="Web"/);
   assert.match(config, /variant\/thread_support=false/);
   assert.match(config, /progressive_web_app\/enabled=false/);
+  assert.match(config, /include_filter="[^"]*\*\.wav"/);
+  assert.match(preset('windows', 'robos-rts'), /include_filter="[^"]*\*\.wav"/);
 });

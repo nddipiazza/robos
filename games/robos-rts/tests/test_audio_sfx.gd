@@ -19,6 +19,7 @@ func _run() -> void:
 	_test_ranged_gunfire_and_splash_sfx()
 	_test_sentry_missile_timing()
 	_test_melee_attack_strike_sfx()
+	_test_all_gnarl_brood_biological_sfx()
 	_test_abilities_and_deaths_sfx()
 	_test_economy_and_ui_sfx()
 	_test_human_unit_dialogues_and_voices()
@@ -83,8 +84,10 @@ func _test_unit_weapon_metadata() -> void:
 		assert(atk_type in ["ranged", "melee"], "Invalid weapon 'attack_type' on %s: %s" % [utype, atk_type])
 		assert(audio.has_sfx(sfx_key), "Weapon sfx '%s' on %s not found in RTSAudio" % [sfx_key, utype])
 
-func _assert_combat_sfx(attacker_type: String, target_type: String, expected_sfx: Array) -> void:
+func _assert_combat_sfx(attacker_type: String, target_type: String, expected_sfx: Array, ladder: bool = false) -> void:
 	sim.reset_state(101, 64.0, 64.0)
+	sim.ladder_rules = ladder
+	data.ladder_active = ladder
 	audio.reset_stats()
 	var attacker: Dictionary = sim.spawn_unit(attacker_type, 1, Vector2(20.0, 32.0))
 	var dist := 8.0 if attacker_type == "howitzer_emplaced" else 1.5
@@ -102,8 +105,10 @@ func _test_ranged_gunfire_and_splash_sfx() -> void:
 	_assert_combat_sfx("howitzer", "bile_crawler", ["autocannon_fire"])
 	_assert_combat_sfx("sentry_turret", "bile_crawler", ["sentry_fire", "sentry_impact"])
 	_assert_combat_sfx("howitzer_emplaced", "bile_crawler", ["mortar_fire", "explosion_splash"])
-	_assert_combat_sfx("bile_crawler", "rifleman", ["acid_spit"])
-	_assert_combat_sfx("blight_hurler", "rifleman", ["corrosive_lob", "explosion_splash"])
+	_assert_combat_sfx("bile_crawler", "rifleman", ["acid_spit", "acid_splat"])
+	assert(int(audio.sfx_counts.get("explosion_splash", 0)) == 0, "Bile Crawler should not play mechanical explosion_splash")
+	_assert_combat_sfx("blight_hurler", "rifleman", ["corrosive_lob", "acid_splash"])
+	assert(int(audio.sfx_counts.get("explosion_splash", 0)) == 0, "Blight Hurler should play acid_splash instead of explosion_splash")
 	_assert_combat_sfx("skirmisher", "rifleman", ["needler_fire"])
 	_assert_combat_sfx("spire_walker", "skirmisher", ["prism_beam", "explosion_splash", "shield_hit"])
 	_assert_combat_sfx("crownspire", "spire_walker", ["crown_lance", "shield_hit"])
@@ -134,12 +139,83 @@ func _test_sentry_missile_timing() -> void:
 	sim.reset_state(181, 64.0, 64.0)
 
 func _test_melee_attack_strike_sfx() -> void:
-	_assert_combat_sfx("skitterling", "rifleman", ["claw_slash", "melee_hit"])
+	_assert_combat_sfx("skitterling", "rifleman", ["claw_slash", "bio_melee_hit"])
+	assert(int(audio.sfx_counts.get("melee_hit", 0)) == 0, "Skitterling should play bio_melee_hit instead of metallic melee_hit")
 	_assert_combat_sfx("sporeburst", "rifleman", ["volatile_burst"])
+	assert(int(audio.sfx_counts.get("melee_hit", 0)) == 0 and int(audio.sfx_counts.get("explosion_splash", 0)) == 0, "Sporeburst should use biological volatile_burst")
 	_assert_combat_sfx("sunblade", "rifleman", ["light_blade_strike", "melee_hit"])
-	_assert_combat_sfx("forager", "rifleman", ["mandible_bite", "melee_hit"])
+	_assert_combat_sfx("forager", "rifleman", ["mandible_bite", "bio_melee_hit"])
+	assert(int(audio.sfx_counts.get("melee_hit", 0)) == 0, "Forager should play bio_melee_hit instead of metallic melee_hit")
 	_assert_combat_sfx("pioneer", "skitterling", ["arc_welder", "melee_hit"])
 	_assert_combat_sfx("mote", "skitterling", ["mote_spark", "melee_hit"])
+
+func _test_all_gnarl_brood_biological_sfx() -> void:
+	# Verify non-repeating multi-variant organic foley streams are loaded and cycle without immediate repeats
+	for v_key in ["acid_spit", "thorn_volley", "corrosive_lob", "claw_slash", "mandible_bite", "chitin_cleave", "bio_melee_hit", "thorn_impact", "acid_splat", "acid_splash"]:
+		assert(audio.sound_variant_streams.has(v_key), "Missing sound_variant_streams for %s" % v_key)
+		var variants: Array = audio.sound_variant_streams[v_key]
+		assert(variants.size() == 3, "Expected 3 organic foley variants for %s" % v_key)
+		var prev_stream: AudioStreamWAV = null
+		for _pick in range(9):
+			var picked: AudioStreamWAV = audio._pick_world_stream(v_key)
+			assert(picked != null and picked.data.size() > 1000, "Invalid variant stream for %s" % v_key)
+			if prev_stream != null:
+				assert(picked != prev_stream, "Consecutive %s plays should not repeat the same variant stream" % v_key)
+			prev_stream = picked
+
+	# Default / campaign Gnarl Brood combat cues
+	_assert_combat_sfx("carapace_bulwark", "rifleman", ["chitin_cleave", "bio_melee_hit"])
+	assert(int(audio.sfx_counts.get("melee_hit", 0)) == 0, "Carapace Bulwark should not play metallic melee_hit")
+	_assert_combat_sfx("needlewing", "rifleman", ["thorn_volley", "acid_splat"])
+	_assert_combat_sfx("brood_keeper", "rifleman", ["acid_spit", "acid_splat"])
+	_assert_combat_sfx("blighted_colonist", "rifleman", ["claw_slash", "bio_melee_hit"])
+
+	# Skirmish / Ladder Gnarl Brood combat & spell cues
+	data._ladder_units.clear()
+	_assert_combat_sfx("blight_hurler", "rifleman", ["thorn_volley", "thorn_impact"], true)
+	assert(int(audio.sfx_counts.get("explosion_splash", 0)) == 0, "Ladder Blight Hurler Needle Volley must not play explosion_splash")
+	_assert_combat_sfx("brood_keeper", "rifleman", ["thorn_volley", "thorn_impact"], true)
+	_assert_combat_sfx("brood_keeper", "kestrel_interceptor", ["thorn_volley", "acid_splat"], true)
+	_assert_combat_sfx("carapace_bulwark", "rifleman", ["chitin_cleave", "bio_melee_hit"], true)
+	_assert_combat_sfx("rupture_crawler", "rifleman", ["rupture_discharge", "acid_splat"], true)
+	_assert_combat_sfx("corrosion_flyer", "kestrel_interceptor", ["corrosion_spore", "acid_splat"], true)
+	_assert_combat_sfx("brood_siege_flyer", "rifleman", ["broodling_launch", "bio_melee_hit"], true)
+	_assert_combat_sfx("thorn_watch", "rifleman", ["thorn_impale", "bio_melee_hit"], true)
+	_assert_combat_sfx("spore_watch", "kestrel_interceptor", ["acid_spit", "acid_splat"], true)
+
+	# Spine Ambusher attacks while burrowed
+	sim.reset_state(155, 64.0, 64.0)
+	sim.ladder_rules = true
+	data.ladder_active = true
+	audio.reset_stats()
+	var ambusher: Dictionary = sim.spawn_unit("spine_ambusher", 1, Vector2(20.0, 32.0))
+	var _rifle_target: Dictionary = sim.spawn_unit("rifleman", 2, Vector2(28.0, 32.0))
+	assert(sim.issue_command([ambusher["tag"]], "burrow").ok)
+	var down_ticks: int = int(ambusher.burrow_transition.finish) - sim.tick
+	sim.step_ticks(down_ticks + 32)
+	assert(int(audio.sfx_counts.get("burrow_shift", 0)) > 0, "Expected burrow_shift when burrowing")
+	assert(int(audio.sfx_counts.get("spine_line", 0)) > 0, "Expected spine_line when burrowed Spine Ambusher attacks")
+	assert(int(audio.sfx_counts.get("thorn_impact", 0)) > 0, "Expected thorn_impact on Spine Line hit")
+	assert(int(audio.sfx_counts.get("explosion_splash", 0)) == 0, "Spine Ambusher must not play explosion_splash")
+
+	# Mireweaver Fungal Grasp launches biologically and splashes with acid_splash (never explosion_splash)
+	sim.reset_state(156, 64.0, 64.0)
+	sim.ladder_rules = true
+	data.ladder_active = true
+	audio.reset_stats()
+	var weaver: Dictionary = sim.spawn_unit("mireweaver", 1, Vector2(20.0, 32.0))
+	weaver["energy"] = 100.0
+	var enemy_group: Dictionary = sim.spawn_unit("rifleman", 2, Vector2(26.0, 32.0))
+	assert(sim.issue_command([weaver["tag"]], "fungal_grasp", enemy_group["pos"]).ok)
+	sim.step_ticks(48)
+	assert(int(audio.sfx_counts.get("rupture_launch", 0)) > 0, "Expected rupture_launch on Fungal Grasp cast")
+	assert(int(audio.sfx_counts.get("acid_splash", 0)) > 0, "Expected acid_splash on Fungal Grasp impact")
+	assert(int(audio.sfx_counts.get("explosion_splash", 0)) == 0, "Fungal Grasp must not play explosion_splash")
+
+	sim.ladder_rules = false
+	data.ladder_active = false
+	data._ladder_units.clear()
+	sim.reset_state(157, 64.0, 64.0)
 
 func _test_abilities_and_deaths_sfx() -> void:
 	sim.reset_state(202, 64.0, 64.0)
