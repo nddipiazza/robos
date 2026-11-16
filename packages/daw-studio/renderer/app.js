@@ -549,12 +549,13 @@ async function auditionDrumPiece(kitId, pieceId) {
 }
 
 function makeSoftClipCurve(amount = 0.2) {
-  const k = Math.max(0, Number(amount) || 0) * 35;
+  const k = Math.max(0, Number(amount) || 0) * 4.5;
   const n = 512;
   const curve = new Float32Array(n);
+  const norm = Math.tanh(1 + k) || 1;
   for (let i = 0; i < n; i++) {
-    const x = (i * 2) / n - 1;
-    curve[i] = k === 0 ? x : ((1 + k) * x) / (1 + k * Math.abs(x));
+    const x = (i * 2) / (n - 1) - 1;
+    curve[i] = k === 0 ? x : Math.tanh((1 + k) * x) / norm;
   }
   return curve;
 }
@@ -608,7 +609,7 @@ function getOrCreateStudioReverbImpulse(ctx, revCfg = {}) {
     const tNorm = i / length;
     // Fast initial build-up (3ms) so dry transient stays distinct, followed by natural 60dB exponential decay
     const buildIn = Math.min(1, i / Math.max(1, sr * 0.0035));
-    const env = buildIn * Math.pow(1 - tNorm, type === 'plate' ? 2.6 : 3.1) * Math.exp(-3.4 * tNorm);
+    const env = buildIn * Math.pow(1 - tNorm, type === 'plate' ? 2.6 : 3.1) * Math.exp(-3.8 * tNorm);
     // Tail darkens naturally over time like a real steel plate / wood studio room
     const dynFreq = Math.max(900, baseCutoff * (1 - 0.58 * tNorm));
     const alpha = 1 - Math.exp((-2 * Math.PI * dynFreq) / sr);
@@ -617,6 +618,18 @@ function getOrCreateStudioReverbImpulse(ctx, revCfg = {}) {
     lpR += alpha * (randR() - lpR);
     left[i] += lpL * env * normGain;
     right[i] += lpR * env * normGain;
+  }
+
+  // Normalize discrete L2 convolution energy to -3 dB studio reference so mix=0.10 sits 20 dB below dry!
+  let sumSq = 0;
+  for (let i = 0; i < length; i++) {
+    sumSq += 0.5 * (left[i] * left[i] + right[i] * right[i]);
+  }
+  const l2Norm = Math.sqrt(Math.max(1e-9, sumSq));
+  const targetScale = 0.7071 / l2Norm;
+  for (let i = 0; i < length; i++) {
+    left[i] *= targetScale;
+    right[i] *= targetScale;
   }
 
   ctxMap.set(cacheKey, ir);
@@ -646,18 +659,18 @@ let cachedMasterCeilingCurve = null;
 
 function createMasterDrumBus(ctx) {
   const busTrim = ctx.createGain();
-  busTrim.gain.value = DE.dbToGain(-7.5);
+  busTrim.gain.value = DE.dbToGain(-1.5);
 
-  // SSL-style 2-bus drum glue compressor (18ms attack lets stick & beater transients snap cleanly)
+  // SSL-style 2-bus drum glue compressor (22ms attack lets stick & beater transients snap cleanly)
   const busGlue = ctx.createDynamicsCompressor();
-  busGlue.threshold.value = -9.0;
+  busGlue.threshold.value = -7.0;
   busGlue.knee.value = 6.0;
-  busGlue.ratio.value = 3.2;
-  busGlue.attack.value = 0.018;
-  busGlue.release.value = 0.085;
+  busGlue.ratio.value = 2.6;
+  busGlue.attack.value = 0.022;
+  busGlue.release.value = 0.070;
 
   const glueMakeup = ctx.createGain();
-  glueMakeup.gain.value = DE.dbToGain(1.5);
+  glueMakeup.gain.value = DE.dbToGain(1.2);
 
   // True-peak zero-overshoot studio ceiling (-0.31 dBFS; 100% linear below -2.1 dBFS)
   const ceiling = ctx.createWaveShaper();
