@@ -268,10 +268,20 @@ body.panning-timeline * {
 /* ── Main Workstation Pane ───────────────────────────────────────────── */
 .main-pane {
   flex: 1;
+  display: flex;
+  flex-direction: column;
   overflow-y: auto;
-  padding: 10px 12px 22px;
+  padding: 8px 12px 12px;
   min-width: 0;
+  min-height: 0;
   background: var(--bg-primary);
+}
+
+.studio-panel:not(.hidden) {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .panel-header { margin-bottom: 12px; }
@@ -284,6 +294,7 @@ body.panning-timeline * {
 .subtitle { margin: 0; color: var(--muted); font-size: 12px; }
 
 .status-banner {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -453,12 +464,16 @@ input[type="range"].daw-fader:hover::-webkit-slider-thumb,
 
 /* ── Master Control & Recessed Obsidian LCD Transport Deck ───────────── */
 .transport-bar {
+  position: sticky;
+  top: 0;
+  z-index: 60;
+  flex-shrink: 0;
   background: linear-gradient(180deg, #181e29 0%, #10151d 100%);
   border: 1px solid #283344;
   box-shadow: var(--bevel-top), 0 4px 14px rgba(0, 0, 0, 0.45);
   border-radius: 7px;
   padding: 7px 10px;
-  margin-bottom: 9px;
+  margin-bottom: 8px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -705,6 +720,10 @@ input[type="range"].daw-fader:hover::-webkit-slider-thumb,
 
 /* ── Arrangement Tool Dock, Dual-Tier Ruler & Channel Console ────────── */
 .tracks-workspace {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
   background: #0d1118;
   border: 1px solid #263142;
   border-radius: 7px;
@@ -713,6 +732,8 @@ input[type="range"].daw-fader:hover::-webkit-slider-thumb,
 }
 
 .edit-toolbar {
+  flex-shrink: 0;
+  z-index: 45;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -761,12 +782,23 @@ input[type="range"].daw-fader:hover::-webkit-slider-thumb,
   color: #cbd5e1;
 }
 
+.timeline-scroll-area {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  position: relative;
+}
+
 .timeline-header-row {
+  position: sticky;
+  top: 0;
+  z-index: 35;
   display: grid;
   grid-template-columns: 476px 1fr;
   background: #0a0d13;
   border-bottom: 1px solid #253041;
   align-items: stretch;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.55);
 }
 .track-header-col-title {
   padding: 0 10px;
@@ -1107,7 +1139,10 @@ input[type="range"].daw-fader:hover::-webkit-slider-thumb,
 
 /* ── Channel Insert & Trigger Rack (Inspector Drawer) ────────────────── */
 .inspector-drawer {
-  margin-top: 10px;
+  flex-shrink: 0;
+  max-height: 36vh;
+  overflow-y: auto;
+  margin-top: 8px;
   background: linear-gradient(180deg, #151b26 0%, #0f141d 100%);
   border: 1px solid #314056;
   box-shadow: var(--bevel-top), 0 8px 24px rgba(0, 0, 0, 0.55);

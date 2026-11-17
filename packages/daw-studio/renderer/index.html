@@ -273,20 +273,22 @@
               </div>
             </div>
 
-            <div class="timeline-header-row">
-              <div class="track-header-col-title" id="track-header-col-title" title="Right-click for Track Rack Menu">
-                <label class="select-all-tracks-lbl" title="Select / Deselect All Tracks (Ctrl+Shift+A)">
-                  <input type="checkbox" id="chk-select-all-tracks" />
-                  <span>CHANNELS (<span id="tracks-header-count">0</span>)</span>
-                </label>
-                <span class="rack-subhint">Multi-Select · Right-Click</span>
+            <div class="timeline-scroll-area" id="timeline-scroll-area">
+              <div class="timeline-header-row">
+                <div class="track-header-col-title" id="track-header-col-title" title="Right-click for Track Rack Menu">
+                  <label class="select-all-tracks-lbl" title="Select / Deselect All Tracks (Ctrl+Shift+A)">
+                    <input type="checkbox" id="chk-select-all-tracks" />
+                    <span>CHANNELS (<span id="tracks-header-count">0</span>)</span>
+                  </label>
+                  <span class="rack-subhint">Multi-Select · Right-Click</span>
+                </div>
+                <div class="timeline-ruler-wrap" id="timeline-ruler-wrap">
+                  <canvas id="timeline-ruler-canvas" height="32"></canvas>
+                </div>
               </div>
-              <div class="timeline-ruler-wrap" id="timeline-ruler-wrap">
-                <canvas id="timeline-ruler-canvas" height="32"></canvas>
-              </div>
-            </div>
 
-            <div id="tracks-list" class="tracks-list"></div>
+              <div id="tracks-list" class="tracks-list"></div>
+            </div>
           </div>
 
           <!-- Selected Track Console Insert / EQ / Sound Replacement Rack -->
