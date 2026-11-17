@@ -861,7 +861,10 @@ function buildTrackWebAudioChain(ctx, track, masterDestination = ctx.destination
   let hpf2Node = null;
   let lowNode = null;
   let midNode = null;
+  let punchNode = null;
+  let presenceNode = null;
   let highNode = null;
+  let lpfNode = null;
   let airShelfNode = null;
   let compNode = null;
   let excWetNode = null;
@@ -880,7 +883,7 @@ function buildTrackWebAudioChain(ctx, track, masterDestination = ctx.destination
     tail = hpf;
     hpfNode = hpf;
 
-    // Cascade 2nd Butterworth high-pass stage (24 dB/oct) for close cymbal/hi-hat rumble & snare-body rejection
+    // Cascade 2nd Butterworth high-pass stage (24 dB/oct) for close cymbal/hi-hat rumble & sub-boom control
     if (steep24dB) {
       const hpf2 = ctx.createBiquadFilter();
       hpf2.type = 'highpass';
@@ -908,16 +911,27 @@ function buildTrackWebAudioChain(ctx, track, masterDestination = ctx.destination
     low.connect(mid);
     tail = mid;
 
-    // Optional upper-mid stick / beater attack presence band (e.g. 3.8–4.8 kHz punch)
-    if (Number.isFinite(Number(eq.presenceFreqHz)) && Math.abs(Number(eq.presenceGainDb) || 0) >= 0.1) {
-      const presence = ctx.createBiquadFilter();
-      presence.type = 'peaking';
-      presence.frequency.value = Number(eq.presenceFreqHz);
-      presence.Q.value = Number(eq.presenceQ) || 1.25;
-      presence.gain.value = Number(eq.presenceGainDb);
-      tail.connect(presence);
-      tail = presence;
+    // Optional lower-mid chest knock / note-body punch band (e.g. 950–1,150 Hz metal kick knock)
+    if (Number.isFinite(Number(eq.punchFreqHz))) {
+      const punch = ctx.createBiquadFilter();
+      punch.type = 'peaking';
+      punch.frequency.value = Number(eq.punchFreqHz);
+      punch.Q.value = Number(eq.punchQ) || 0.85;
+      punch.gain.value = Number(eq.punchGainDb) || 0;
+      tail.connect(punch);
+      tail = punch;
+      punchNode = punch;
     }
+
+    // Live-sweepable upper-mid beater / stick attack presence band (e.g. 1.9–4.6 kHz note definition)
+    const presence = ctx.createBiquadFilter();
+    presence.type = 'peaking';
+    presence.frequency.value = Number(eq.presenceFreqHz) || 2000;
+    presence.Q.value = Number(eq.presenceQ) || 1.1;
+    presence.gain.value = Number(eq.presenceGainDb) || 0;
+    tail.connect(presence);
+    tail = presence;
+    presenceNode = presence;
 
     // Optional de-harsh / surgical notch stage (e.g. 2.95 kHz cymbal stick bite control)
     if (Number.isFinite(Number(eq.harshFreqHz)) && Math.abs(Number(eq.harshGainDb) || 0) >= 0.1) {
@@ -938,6 +952,17 @@ function buildTrackWebAudioChain(ctx, track, masterDestination = ctx.destination
 
     tail.connect(high);
     tail = high;
+
+    // Optional Butterworth high-cut / fizz roll-off stage (e.g. 4.6 kHz kick top-end bleed control)
+    if (Number(eq.lpfHz) > 0) {
+      const lpf = ctx.createBiquadFilter();
+      lpf.type = 'lowpass';
+      lpf.frequency.value = DE.clamp(1200, 20000, Number(eq.lpfHz));
+      lpf.Q.value = 0.7071;
+      tail.connect(lpf);
+      tail = lpf;
+      lpfNode = lpf;
+    }
 
     // Optional Maag-style Ultra-Air Band (12.5–16 kHz studio cymbal glass & top-end sheen)
     if (Number.isFinite(Number(eq.airFreqHz)) && Math.abs(Number(eq.airGainDb) || 0) >= 0.1) {
@@ -1109,7 +1134,10 @@ function buildTrackWebAudioChain(ctx, track, masterDestination = ctx.destination
     hpf2Node,
     lowNode,
     midNode,
+    punchNode,
+    presenceNode,
     highNode,
+    lpfNode,
     airShelfNode,
     compNode,
     excWetNode,
@@ -1157,7 +1185,15 @@ function applyLiveTrackParamsInPlace(targetTrackIds = null) {
       if (h.hpf2Node) h.hpf2Node.frequency.setTargetAtTime(Number(eq.hpfHz) || 40, tNow, 0.010);
       if (h.lowNode) h.lowNode.gain.setTargetAtTime(Number(eq.lowGainDb) || 0, tNow, 0.010);
       if (h.midNode) h.midNode.gain.setTargetAtTime(Number(eq.midGainDb) || 0, tNow, 0.010);
+      if (h.punchNode) h.punchNode.gain.setTargetAtTime(Number(eq.punchGainDb) || 0, tNow, 0.010);
+      if (h.presenceNode) {
+        h.presenceNode.frequency.setTargetAtTime(Number(eq.presenceFreqHz) || 2000, tNow, 0.010);
+        h.presenceNode.gain.setTargetAtTime(Number(eq.presenceGainDb) || 0, tNow, 0.010);
+      }
       if (h.highNode) h.highNode.gain.setTargetAtTime(Number(eq.highGainDb) || 0, tNow, 0.010);
+      if (h.lpfNode && Number(eq.lpfHz) > 0) {
+        h.lpfNode.frequency.setTargetAtTime(DE.clamp(1200, 20000, Number(eq.lpfHz)), tNow, 0.010);
+      }
       if (h.airShelfNode) h.airShelfNode.gain.setTargetAtTime(Number(eq.airGainDb) || 0, tNow, 0.010);
       if (h.compNode) h.compNode.ratio.setTargetAtTime(Math.max(1, Math.min(20, Number(comp.ratio) || 3.5)), tNow, 0.012);
 
@@ -3685,17 +3721,22 @@ function renderInspectorDrawer() {
             <input type="range" class="daw-fader" id="insp-eq-hpf" min="20" max="800" step="5" value="${eq.hpfHz || 60}" />
           </div>
           <div class="slider-row">
-            <label>Low Shelf (${eq.lowGainDb ?? 0} dB)</label>
+            <label>Low Shelf (${eq.lowGainDb ?? 0} dB @ ${eq.lowFreqHz || 80}Hz)</label>
             <span></span>
             <input type="range" class="daw-fader" id="insp-eq-low" min="-12" max="12" step="0.5" value="${eq.lowGainDb ?? 0}" />
           </div>
           <div class="slider-row">
-            <label>Mid Peak (${eq.midGainDb ?? 0} dB)</label>
+            <label>Low-Mid (${eq.midGainDb ?? 0} dB @ ${eq.midFreqHz || 500}Hz)</label>
             <span></span>
             <input type="range" class="daw-fader" id="insp-eq-mid" min="-12" max="12" step="0.5" value="${eq.midGainDb ?? 0}" />
           </div>
           <div class="slider-row">
-            <label>High Air (${eq.highGainDb ?? 0} dB${eq.airGainDb ? ` · +${eq.airGainDb}dB@14k` : ''})</label>
+            <label>Mid Punch (${eq.presenceGainDb ?? 0} dB @ ${((Number(eq.presenceFreqHz) || 2000) / 1000).toFixed(2).replace(/\.?0+$/, '')}kHz)</label>
+            <span></span>
+            <input type="range" class="daw-fader" id="insp-eq-presence" min="-12" max="18" step="0.5" value="${eq.presenceGainDb ?? 0}" />
+          </div>
+          <div class="slider-row">
+            <label>High Air (${eq.highGainDb ?? 0} dB${eq.lpfHz ? ` · LPF ${(Number(eq.lpfHz) / 1000).toFixed(1)}k` : (eq.airGainDb ? ` · +${eq.airGainDb}dB@14k` : '')})</label>
             <span></span>
             <input type="range" class="daw-fader" id="insp-eq-high" min="-12" max="16" step="0.5" value="${eq.highGainDb ?? 0}" />
           </div>
@@ -3909,19 +3950,50 @@ function renderInspectorDrawer() {
     'insp-eq-low',
     'Adjust Low Shelf',
     (t, val) => { t.fx = { ...(t.fx || {}), eq: { ...(t.fx?.eq || {}), lowGainDb: Number(val) } }; },
-    { formatLabel: (t) => `Low Shelf (${t.fx?.eq?.lowGainDb ?? 0} dB)` }
+    { formatLabel: (t) => `Low Shelf (${t.fx?.eq?.lowGainDb ?? 0} dB @ ${t.fx?.eq?.lowFreqHz || 80}Hz)` }
   );
   bindLiveInspectorSlider(
     'insp-eq-mid',
-    'Adjust Mid EQ',
+    'Adjust Low-Mid EQ',
     (t, val) => { t.fx = { ...(t.fx || {}), eq: { ...(t.fx?.eq || {}), midGainDb: Number(val) } }; },
-    { formatLabel: (t) => `Mid Peak (${t.fx?.eq?.midGainDb ?? 0} dB)` }
+    { formatLabel: (t) => `Low-Mid (${t.fx?.eq?.midGainDb ?? 0} dB @ ${t.fx?.eq?.midFreqHz || 500}Hz)` }
+  );
+  bindLiveInspectorSlider(
+    'insp-eq-presence',
+    'Adjust Mid Punch',
+    (t, val) => {
+      const nextPresence = Number(val) || 0;
+      const prevEq = t.fx?.eq || {};
+      const nextEq = {
+        ...prevEq,
+        presenceFreqHz: Number(prevEq.presenceFreqHz) || 2000,
+        presenceGainDb: nextPresence,
+      };
+      if (Number.isFinite(Number(prevEq.punchFreqHz))) {
+        nextEq.punchGainDb = Math.round(nextPresence * 0.9 * 2) / 2;
+      }
+      t.fx = { ...(t.fx || {}), eq: nextEq };
+    },
+    {
+      formatLabel: (t) => {
+        const pFreq = ((Number(t.fx?.eq?.presenceFreqHz) || 2000) / 1000).toFixed(2).replace(/\.?0+$/, '');
+        return `Mid Punch (${t.fx?.eq?.presenceGainDb ?? 0} dB @ ${pFreq}kHz)`;
+      },
+    }
   );
   bindLiveInspectorSlider(
     'insp-eq-high',
     'Adjust High EQ',
     (t, val) => { t.fx = { ...(t.fx || {}), eq: { ...(t.fx?.eq || {}), highGainDb: Number(val) } }; },
-    { formatLabel: (t) => `High Air (${t.fx?.eq?.highGainDb ?? 0} dB${t.fx?.eq?.airGainDb ? ` · +${t.fx.eq.airGainDb}dB@14k` : ''})` }
+    {
+      formatLabel: (t) => {
+        const teq = t.fx?.eq || {};
+        const suffix = teq.lpfHz
+          ? ` · LPF ${(Number(teq.lpfHz) / 1000).toFixed(1)}k`
+          : (teq.airGainDb ? ` · +${teq.airGainDb}dB@14k` : '');
+        return `High Air (${teq.highGainDb ?? 0} dB${suffix})`;
+      },
+    }
   );
   document.getElementById('insp-exc-on')?.addEventListener('change', e =>
     saveInspectorPatch('Toggle Cymbal Air Exciter', t => {
