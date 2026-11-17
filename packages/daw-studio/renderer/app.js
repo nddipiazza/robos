@@ -7472,12 +7472,21 @@ async function toggleLiveMonitor() {
 }
 
 function switchView(viewId) {
-  document.querySelectorAll('.nav-btn[data-view]').forEach(b => b.classList.toggle('active', b.dataset.view === viewId));
-  document.getElementById('view-audio-devices')?.classList.toggle('hidden', viewId !== 'audio-devices');
+  const inAudioDevices = viewId === 'audio-devices';
+  document.getElementById('view-audio-devices')?.classList.toggle('hidden', !inAudioDevices);
   document.getElementById('view-studio-stage')?.classList.toggle('hidden', viewId !== 'studio-stage');
-  document.getElementById('header-crumb').textContent =
-    viewId === 'audio-devices' ? 'Preferences › Audio Devices' : 'Workstation › Recording Studio';
+  document.getElementById('btn-topbar-audio-devices')?.classList.toggle('active', inAudioDevices);
+  document.getElementById('header-hw-pill')?.classList.toggle('active', inAudioDevices);
+  const crumb = document.getElementById('header-crumb');
+  if (crumb) {
+    crumb.textContent = inAudioDevices ? 'Preferences / Audio Devices' : 'Workstation / Arrangement';
+  }
   if (viewId === 'studio-stage') requestAnimationFrame(drawAllTimelineCanvases);
+}
+
+function toggleAudioDevicesView() {
+  const inAudioDevices = !document.getElementById('view-audio-devices')?.classList.contains('hidden');
+  switchView(inAudioDevices ? 'studio-stage' : 'audio-devices');
 }
 
 // ─── Initialization & Event Wiring ──────────────────────────────────────────
@@ -7497,12 +7506,23 @@ async function init() {
     });
   });
 
-  // Navigation
-  document.querySelectorAll('.nav-btn[data-view]').forEach(btn => {
-    btn.addEventListener('click', () => switchView(btn.dataset.view));
+  // Topbar View Navigation (Hardware I/O <-> Arrangement)
+  document.getElementById('btn-topbar-audio-devices')?.addEventListener('click', toggleAudioDevicesView);
+  document.getElementById('header-hw-pill')?.addEventListener('click', toggleAudioDevicesView);
+  document.getElementById('header-hw-pill')?.addEventListener('keydown', (ev) => {
+    if (ev.key === 'Enter' || ev.key === ' ') {
+      ev.preventDefault();
+      toggleAudioDevicesView();
+    }
   });
-  document.getElementById('nav-open-drumset-wizard')?.addEventListener('click', openDrumsetWizard);
-  document.getElementById('nav-open-wizard-rail')?.addEventListener('click', openAddMicWizard);
+  document.getElementById('btn-brand-home')?.addEventListener('click', () => switchView('studio-stage'));
+  document.getElementById('btn-brand-home')?.addEventListener('keydown', (ev) => {
+    if (ev.key === 'Enter' || ev.key === ' ') {
+      ev.preventDefault();
+      switchView('studio-stage');
+    }
+  });
+  document.getElementById('btn-back-to-studio')?.addEventListener('click', () => switchView('studio-stage'));
 
   // Studio CTAs & Quick Track Batch Controls
   document.getElementById('btn-open-drumset-wizard')?.addEventListener('click', openDrumsetWizard);
@@ -7926,6 +7946,11 @@ async function init() {
       const scModal = document.getElementById('shortcuts-modal');
       if (scModal && !scModal.classList.contains('hidden')) {
         scModal.classList.add('hidden');
+        return;
+      }
+      const audioView = document.getElementById('view-audio-devices');
+      if (audioView && !audioView.classList.contains('hidden')) {
+        switchView('studio-stage');
         return;
       }
       if (selectedClipIds.size > 0 || selectedTrackIds.size > 0) {
@@ -8489,9 +8514,6 @@ async function init() {
 
   // VST & Sample Directories + Drumkits Modal
   document.getElementById('btn-open-drumkits-modal')?.addEventListener('click', () => {
-    openVstDirectoriesModal();
-  });
-  document.getElementById('nav-open-vst-dirs')?.addEventListener('click', () => {
     openVstDirectoriesModal();
   });
   document.getElementById('btn-vst-browse-dir')?.addEventListener('click', () => {
