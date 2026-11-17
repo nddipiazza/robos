@@ -796,6 +796,30 @@ function makeMasterCeilingCurve() {
 }
 
 let cachedMasterCeilingCurve = null;
+const cachedAirExciterCurves = new Map();
+
+/**
+ * Asymmetric studio triode + tape harmonic curve for high-frequency cymbal / air excitation.
+ * Generates smooth 2nd & 3rd order harmonics from >= 5.8 kHz bronze transients (followed by
+ * a 6.5 kHz post-HPF to eliminate DC offset and difference tones).
+ */
+function makeAirExciterCurve(drive = 2.6) {
+  const safeDrive = DE.clamp(1.0, 6.0, Number(drive) || 2.6);
+  const key = safeDrive.toFixed(2);
+  if (cachedAirExciterCurves.has(key)) return cachedAirExciterCurves.get(key);
+
+  const n = 4096;
+  const curve = new Float32Array(n);
+  const norm = Math.tanh(safeDrive) || 1;
+  for (let i = 0; i < n; i++) {
+    const x = (i * 2) / (n - 1) - 1;
+    const odd = Math.tanh(safeDrive * x) / norm;
+    const even = x * Math.abs(x) * 0.24 + (x * x - 0.5) * 0.16;
+    curve[i] = DE.clamp(-0.99, 0.99, 0.80 * odd + 0.20 * even);
+  }
+  cachedAirExciterCurves.set(key, curve);
+  return curve;
+}
 
 function createMasterDrumBus(ctx, destinationNode = ctx.destination) {
   const busTrim = ctx.createGain();
@@ -835,7 +859,9 @@ function buildTrackWebAudioChain(ctx, track, masterDestination = ctx.destination
   let lowNode = null;
   let midNode = null;
   let highNode = null;
+  let airShelfNode = null;
   let compNode = null;
+  let excWetNode = null;
   let revWetNode = null;
 
   const eq = track.fx?.eq || {};
@@ -909,6 +935,17 @@ function buildTrackWebAudioChain(ctx, track, masterDestination = ctx.destination
 
     tail.connect(high);
     tail = high;
+
+    // Optional Maag-style Ultra-Air Band (12.5–16 kHz studio cymbal glass & top-end sheen)
+    if (Number.isFinite(Number(eq.airFreqHz)) && Math.abs(Number(eq.airGainDb) || 0) >= 0.1) {
+      const airShelf = ctx.createBiquadFilter();
+      airShelf.type = 'highshelf';
+      airShelf.frequency.value = Number(eq.airFreqHz);
+      airShelf.gain.value = Number(eq.airGainDb);
+      tail.connect(airShelf);
+      tail = airShelf;
+      airShelfNode = airShelf;
+    }
   }
 
   const compCfg = track.fx?.compressor || {};
@@ -955,6 +992,58 @@ function buildTrackWebAudioChain(ctx, track, masterDestination = ctx.destination
     shaper.curve = makeSoftClipCurve(track.fx.drive.amount);
     tail.connect(shaper);
     tail = shaper;
+  }
+
+  // Parallel 4x-Oversampled High-Frequency Harmonic Air Exciter (studio cymbal & overhead sizzle)
+  const excCfg = track.fx?.airExciter || {};
+  const excMix = DE.clamp(0, 1.0, Number(excCfg.mix) || 0);
+  if (excCfg.enabled && excMix > 0.005) {
+    const preExcNode = tail;
+    const excFreq = DE.clamp(3500, 11000, Number(excCfg.freqHz) || 5800);
+
+    const excHpf1 = ctx.createBiquadFilter();
+    excHpf1.type = 'highpass';
+    excHpf1.frequency.value = excFreq;
+    excHpf1.Q.value = 0.7071;
+
+    const excHpf2 = ctx.createBiquadFilter();
+    excHpf2.type = 'highpass';
+    excHpf2.frequency.value = excFreq;
+    excHpf2.Q.value = 0.7071;
+
+    const excPreDrive = ctx.createGain();
+    excPreDrive.gain.value = 1.85;
+
+    const excShaper = ctx.createWaveShaper();
+    excShaper.curve = makeAirExciterCurve(Number(excCfg.drive) || 2.7);
+    excShaper.oversample = '4x';
+
+    // Strip DC / sub-difference products & lift >= 12.5 kHz studio air shimmer
+    const excPostHpf = ctx.createBiquadFilter();
+    excPostHpf.type = 'highpass';
+    excPostHpf.frequency.value = Math.max(6200, excFreq);
+    excPostHpf.Q.value = 0.7071;
+
+    const excAirLift = ctx.createBiquadFilter();
+    excAirLift.type = 'highshelf';
+    excAirLift.frequency.value = 12500;
+    excAirLift.gain.value = 4.5;
+
+    const excWet = ctx.createGain();
+    excWet.gain.value = excMix * 1.15;
+    excWetNode = excWet;
+
+    const excSum = ctx.createGain();
+    preExcNode.connect(excSum);
+    preExcNode.connect(excHpf1);
+    excHpf1.connect(excHpf2);
+    excHpf2.connect(excPreDrive);
+    excPreDrive.connect(excShaper);
+    excShaper.connect(excPostHpf);
+    excPostHpf.connect(excAirLift);
+    excAirLift.connect(excWet);
+    excWet.connect(excSum);
+    tail = excSum;
   }
 
   const dryBusGain = ctx.createGain();
@@ -1018,7 +1107,10 @@ function buildTrackWebAudioChain(ctx, track, masterDestination = ctx.destination
     lowNode,
     midNode,
     highNode,
+    airShelfNode,
     compNode,
+    excWetNode,
+    hasExciterNode: Boolean(excWetNode),
     dryBusGain,
     trackMixBus,
     panner,
@@ -1047,6 +1139,8 @@ function applyLiveTrackParamsInPlace(targetTrackIds = null) {
     const pan = Math.max(-1, Math.min(1, Number(track.pan) || 0));
     const eq = track.fx?.eq || {};
     const comp = track.fx?.compressor || {};
+    const exc = track.fx?.airExciter || {};
+    const wantExc = Boolean(exc.enabled) && (Number(exc.mix) || 0) > 0.005;
     const rev = track.fx?.reverb || {};
     const wantRev = Boolean(rev.enabled) && (Number(rev.mix) || 0) > 0.005;
 
@@ -1061,7 +1155,14 @@ function applyLiveTrackParamsInPlace(targetTrackIds = null) {
       if (h.lowNode) h.lowNode.gain.setTargetAtTime(Number(eq.lowGainDb) || 0, tNow, 0.010);
       if (h.midNode) h.midNode.gain.setTargetAtTime(Number(eq.midGainDb) || 0, tNow, 0.010);
       if (h.highNode) h.highNode.gain.setTargetAtTime(Number(eq.highGainDb) || 0, tNow, 0.010);
+      if (h.airShelfNode) h.airShelfNode.gain.setTargetAtTime(Number(eq.airGainDb) || 0, tNow, 0.010);
       if (h.compNode) h.compNode.ratio.setTargetAtTime(Math.max(1, Math.min(20, Number(comp.ratio) || 3.5)), tNow, 0.012);
+
+      if (wantExc !== h.hasExciterNode) {
+        needsStructuralSwap = true;
+      } else if (h.excWetNode) {
+        h.excWetNode.gain.setTargetAtTime(DE.clamp(0, 1.0, Number(exc.mix) || 0) * 1.15, tNow, 0.010);
+      }
 
       if (wantRev !== h.hasReverbNode) {
         needsStructuralSwap = true;
@@ -3449,6 +3550,7 @@ function renderInspectorDrawer() {
 
   const eq = track.fx?.eq || {};
   const comp = track.fx?.compressor || {};
+  const exc = track.fx?.airExciter || {};
   const rev = track.fx?.reverb || {};
   const sr = track.soundReplacement || {};
   const kits = drumkitsStatus?.kits || [];
@@ -3530,9 +3632,14 @@ function renderInspectorDrawer() {
             <input type="range" class="daw-fader" id="insp-eq-mid" min="-12" max="12" step="0.5" value="${eq.midGainDb ?? 0}" />
           </div>
           <div class="slider-row">
-            <label>High Air (${eq.highGainDb ?? 0} dB)</label>
+            <label>High Air (${eq.highGainDb ?? 0} dB${eq.airGainDb ? ` · +${eq.airGainDb}dB@14k` : ''})</label>
             <span></span>
-            <input type="range" class="daw-fader" id="insp-eq-high" min="-12" max="12" step="0.5" value="${eq.highGainDb ?? 0}" />
+            <input type="range" class="daw-fader" id="insp-eq-high" min="-12" max="16" step="0.5" value="${eq.highGainDb ?? 0}" />
+          </div>
+          <div class="slider-row">
+            <label>Cymbal Air Sheen (${Math.round((exc.mix ?? 0) * 100)}% Exciter)</label>
+            <input type="checkbox" id="insp-exc-on" title="4x-Oversampled Studio High-Frequency Harmonic Air Exciter" ${exc.enabled ? 'checked' : ''} />
+            <input type="range" class="daw-fader" id="insp-exc-mix" min="0" max="100" step="2" value="${Math.round((exc.mix ?? 0) * 100)}" />
           </div>
           <div class="slider-row">
             <label>Compressor (${comp.ratio ?? 3.5}:1${comp.makeupDb ? ` · +${comp.makeupDb}dB` : ''})</label>
@@ -3751,7 +3858,47 @@ function renderInspectorDrawer() {
     'insp-eq-high',
     'Adjust High EQ',
     (t, val) => { t.fx = { ...(t.fx || {}), eq: { ...(t.fx?.eq || {}), highGainDb: Number(val) } }; },
-    { formatLabel: (t) => `High Air (${t.fx?.eq?.highGainDb ?? 0} dB)` }
+    { formatLabel: (t) => `High Air (${t.fx?.eq?.highGainDb ?? 0} dB${t.fx?.eq?.airGainDb ? ` · +${t.fx.eq.airGainDb}dB@14k` : ''})` }
+  );
+  document.getElementById('insp-exc-on')?.addEventListener('change', e =>
+    saveInspectorPatch('Toggle Cymbal Air Exciter', t => {
+      const prev = t.fx?.airExciter || {};
+      t.fx = {
+        ...(t.fx || {}),
+        airExciter: {
+          freqHz: prev.freqHz || 5800,
+          drive: prev.drive || 2.7,
+          ...prev,
+          enabled: e.target.checked,
+          mix: e.target.checked && !(Number(prev.mix) > 0) ? 0.45 : (Number(prev.mix) || 0),
+        },
+      };
+    })
+  );
+  bindLiveInspectorSlider(
+    'insp-exc-mix',
+    'Adjust Cymbal Air Sheen',
+    (t, val) => {
+      const mix = DE.clamp(0, 1.0, (Number(val) || 0) / 100);
+      const prev = t.fx?.airExciter || {};
+      t.fx = {
+        ...(t.fx || {}),
+        airExciter: {
+          freqHz: prev.freqHz || 5800,
+          drive: prev.drive || 2.7,
+          ...prev,
+          enabled: mix > 0.005,
+          mix,
+        },
+      };
+    },
+    {
+      formatLabel: (t) => `Cymbal Air Sheen (${Math.round((t.fx?.airExciter?.mix ?? 0) * 100)}% Exciter)`,
+      syncTrackRow: (val) => {
+        const chk = document.getElementById('insp-exc-on');
+        if (chk) chk.checked = (Number(val) || 0) > 0.5;
+      },
+    }
   );
   document.getElementById('insp-comp-on')?.addEventListener('change', e =>
     saveInspectorPatch('Toggle Compressor', t => { t.fx = { ...(t.fx || {}), compressor: { ...(t.fx?.compressor || {}), enabled: e.target.checked } }; })
