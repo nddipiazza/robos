@@ -156,17 +156,136 @@ function hasActiveTimeSelection() {
   );
 }
 
+function formatShortClock(sec) {
+  const safe = Math.max(0, Number(sec) || 0);
+  const mins = Math.floor(safe / 60);
+  const rem = safe - mins * 60;
+  return `${String(mins).padStart(2, '0')}:${rem.toFixed(2).padStart(5, '0')}`;
+}
+
+function updateStatusBarTelemetry() {
+  const tracks = currentProject?.tracks || [];
+  const bpm = Math.max(20, Number(currentProject?.bpm) || 120);
+  const beatsPerBar = Math.max(1, Math.round(Number(String(currentProject?.timeSignature || '4/4').split('/')[0]) || 4));
+  const barSec = (60 / bpm) * beatsPerBar;
+
+  // 1. Selection Length Panel (Timeline From->To range OR Selected Take span)
+  const selPanel = document.getElementById('sb-panel-selection');
+  const selValEl = document.getElementById('sb-selection-length');
+  const selClearBtn = document.getElementById('btn-sb-clear-sel');
+  if (selValEl) {
+    if (hasActiveTimeSelection()) {
+      const dur = Math.max(0, timeSelection.toSec - timeSelection.fromSec);
+      const bars = barSec > 0 ? (dur / barSec) : 0;
+      selValEl.textContent = `${formatTimecode(dur)} (${formatShortClock(timeSelection.fromSec)} -> ${formatShortClock(timeSelection.toSec)} · ${bars.toFixed(1)} bars)`;
+      selPanel?.classList.add('sb-panel-selection-active');
+      selClearBtn?.classList.remove('hidden');
+    } else if (selectedClipIds.size > 0) {
+      let minStart = Infinity;
+      let maxEnd = 0;
+      let count = 0;
+      for (const tr of tracks) {
+        for (const c of (tr.clips || [])) {
+          if (!selectedClipIds.has(c.id)) continue;
+          const s = Math.max(0, Number(c.startSec) || 0);
+          const d = Math.max(0, Number(c.durationSec) || 0);
+          if (s < minStart) minStart = s;
+          if (s + d > maxEnd) maxEnd = s + d;
+          count++;
+        }
+      }
+      const span = count > 0 && Number.isFinite(minStart) ? Math.max(0, maxEnd - minStart) : 0;
+      selValEl.textContent = count > 0
+        ? `${formatTimecode(span)} (${count} take${count === 1 ? '' : 's'})`
+        : '00:00.000';
+      selPanel?.classList.toggle('sb-panel-selection-active', count > 0);
+      selClearBtn?.classList.add('hidden');
+    } else {
+      selValEl.textContent = '00:00.000';
+      selPanel?.classList.remove('sb-panel-selection-active');
+      selClearBtn?.classList.add('hidden');
+    }
+  }
+
+  // 2. Focused / Selected Track Length Panel
+  const trkLenEl = document.getElementById('sb-track-length');
+  if (trkLenEl) {
+    const singleTrack = (selectedTrackId && tracks.find(t => t.id === selectedTrackId))
+      || (selectedTrackIds.size === 1 ? tracks.find(t => selectedTrackIds.has(t.id)) : null);
+    if (singleTrack) {
+      const activeClips = (singleTrack.clips || []).filter(c => !c.muted);
+      let audioSum = 0;
+      let maxEnd = 0;
+      for (const c of activeClips) {
+        const s = Math.max(0, Number(c.startSec) || 0);
+        const d = Math.max(0, Number(c.durationSec) || 0);
+        audioSum += d;
+        if (s + d > maxEnd) maxEnd = s + d;
+      }
+      const shortName = String(singleTrack.name || 'Track').slice(0, 18);
+      trkLenEl.textContent = activeClips.length > 0
+        ? `${shortName}: ${formatShortClock(audioSum)} (end ${formatShortClock(maxEnd)})`
+        : `${shortName}: 00:00.00 (empty)`;
+    } else if (selectedTrackIds.size > 1) {
+      let selMaxEnd = 0;
+      let selClips = 0;
+      for (const tr of tracks) {
+        if (!selectedTrackIds.has(tr.id)) continue;
+        for (const c of (tr.clips || [])) {
+          if (c.muted) continue;
+          selClips++;
+          const e = (Number(c.startSec) || 0) + (Number(c.durationSec) || 0);
+          if (e > selMaxEnd) selMaxEnd = e;
+        }
+      }
+      trkLenEl.textContent = `${selectedTrackIds.size} sel · max ${formatShortClock(selMaxEnd)} (${selClips} takes)`;
+    } else {
+      const projEnd = DE.getProjectEndSec(currentProject);
+      trkLenEl.textContent = tracks.length > 0 ? `Max ${formatShortClock(projEnd)}` : '00:00.00';
+    }
+  }
+
+  // 3. Session Length Panel (Overall Arrangement Span + Bar Count)
+  const sessLenEl = document.getElementById('sb-session-length');
+  if (sessLenEl) {
+    const projEnd = DE.getProjectEndSec(currentProject);
+    const totalBars = projEnd > 0.01 && barSec > 0 ? Math.ceil(projEnd / barSec) : 0;
+    sessLenEl.textContent = projEnd > 0.01
+      ? `${formatShortClock(projEnd)} (${totalBars} bars @ ${bpm} BPM)`
+      : `00:00.00 (${bpm} BPM)`;
+  }
+
+  // 4. Tracks / Armed / Takes Summary Panel
+  const trkSumEl = document.getElementById('sb-tracks-summary');
+  if (trkSumEl) {
+    const armedCnt = tracks.filter(t => t.armed).length;
+    const takeCnt = tracks.reduce((sum, t) => sum + ((t.clips || []).length), 0);
+    trkSumEl.textContent = `${tracks.length} ch · ${armedCnt} armed · ${takeCnt} take${takeCnt === 1 ? '' : 's'}`;
+  }
+
+  // 5. Audio Engine Clock & Latency Panel
+  const engEl = document.getElementById('sb-engine-summary');
+  if (engEl) {
+    const rateHz = Number(currentSnapshot?.clock?.effectiveRate) || Number(currentProject?.sampleRate) || 48000;
+    const rateKhz = (rateHz / 1000).toFixed(1).replace(/\.0$/, '');
+    const latMs = currentSnapshot?.clock?.latencyMs;
+    engEl.textContent = latMs ? `${rateKhz} kHz · ${latMs} ms` : `${rateKhz} kHz`;
+  }
+}
+
 function updateTimeSelectionPillUi() {
   const pill = document.getElementById('time-selection-pill');
   const txt = document.getElementById('time-selection-pill-text');
-  if (!pill || !txt) return;
-  if (hasActiveTimeSelection()) {
-    const dur = Math.max(0, timeSelection.toSec - timeSelection.fromSec);
-    txt.textContent = `FROM ${formatTimecode(timeSelection.fromSec)} -> TO ${formatTimecode(timeSelection.toSec)} (${dur.toFixed(2)}s)`;
-    pill.classList.remove('hidden');
-  } else {
-    pill.classList.add('hidden');
+  if (pill && txt) {
+    if (hasActiveTimeSelection()) {
+      const dur = Math.max(0, timeSelection.toSec - timeSelection.fromSec);
+      txt.textContent = `SELECTION LENGTH: ${formatTimecode(dur)} (${formatShortClock(timeSelection.fromSec)} -> ${formatShortClock(timeSelection.toSec)})`;
+      pill.classList.remove('hidden');
+    } else {
+      pill.classList.add('hidden');
+    }
   }
+  updateStatusBarTelemetry();
 }
 
 function setTimeSelectionRange(aSec, bSec, { redraw = true } = {}) {
@@ -238,10 +357,15 @@ function waveformVisualAmp(linearPeak, gainLinear = 1, floorAmp = 0.012) {
 
 function showStatus(message, isError = false) {
   const el = document.getElementById('status-banner');
-  if (!el) return;
-  el.textContent = message;
-  el.className = `status-banner${isError ? ' error' : ''}`;
-  el.classList.remove('hidden');
+  const dot = document.getElementById('sb-status-dot');
+  if (el) {
+    el.textContent = message;
+    el.title = message;
+    el.className = `sb-status-msg${isError ? ' error' : ''}`;
+  }
+  if (dot) {
+    dot.className = `sb-status-dot${isError ? ' error' : ''}`;
+  }
 }
 
 function markDirty(dirty = true) {
@@ -485,6 +609,7 @@ function updateEditToolbarState() {
 
   const zEl = document.getElementById('zoom-readout');
   if (zEl) zEl.textContent = `${Math.round(timelineZoom * 100)}%`;
+  updateStatusBarTelemetry();
 }
 
 async function syncProjectToMain(reanalyzeTrackIds = []) {
@@ -7415,6 +7540,7 @@ function renderSnapshot(snap) {
       </li>
     `).join('');
   }
+  updateStatusBarTelemetry();
 }
 
 async function toggleLiveMonitor() {
@@ -7606,7 +7732,7 @@ async function init() {
   document.getElementById('btn-open-modal-cancel')?.addEventListener('click', () => document.getElementById('open-project-modal')?.classList.add('hidden'));
   document.getElementById('btn-browse-project-file')?.addEventListener('click', () => loadProjectByIdOrDialog({ openDialog: true }));
 
-  // Time Selection Toolbar Pill & Export Audio Mixdown Modal Controls
+  // Time Selection Toolbar Pill, Bottom Status Bar Telemetry & Export Audio Mixdown Modal Controls
   document.getElementById('time-selection-pill')?.addEventListener('click', (ev) => {
     if (ev.target.closest('#btn-clear-time-selection')) return;
     openExportMixdownModal();
@@ -7615,6 +7741,17 @@ async function init() {
     ev.stopPropagation();
     clearTimeSelection();
   });
+  document.getElementById('sb-panel-selection')?.addEventListener('click', (ev) => {
+    if (ev.target.closest('#btn-sb-clear-sel')) return;
+    if (hasActiveTimeSelection() || selectedClipIds.size > 0) {
+      openExportMixdownModal();
+    }
+  });
+  document.getElementById('btn-sb-clear-sel')?.addEventListener('click', (ev) => {
+    ev.stopPropagation();
+    clearTimeSelection();
+  });
+  document.getElementById('sb-panel-engine')?.addEventListener('click', toggleAudioDevicesView);
   document.getElementById('btn-export-modal-close')?.addEventListener('click', closeExportMixdownModal);
   document.getElementById('btn-export-modal-cancel')?.addEventListener('click', closeExportMixdownModal);
   document.getElementById('btn-export-confirm')?.addEventListener('click', executeExportMixdownFromModal);
@@ -8761,6 +8898,7 @@ async function init() {
     renderSnapshot(boot.audioSnapshot);
     await ensureRoutedStudioAudioCtx(true);
     renderStudio();
+    showStatus(`Loaded session: ${currentProject?.name || 'Session'}`);
   } else {
     const snap = await window.robos.getAudioSnapshot();
     renderSnapshot(snap);

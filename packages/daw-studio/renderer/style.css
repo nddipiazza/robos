@@ -242,7 +242,7 @@ body.panning-timeline * {
   display: flex;
   flex-direction: column;
   overflow-y: auto;
-  padding: 8px 12px 12px;
+  padding: 7px 12px 6px;
   min-width: 0;
   min-height: 0;
   background: var(--bg-primary);
@@ -2442,4 +2442,105 @@ kbd {
   opacity: 0.52;
   cursor: wait;
   pointer-events: none;
+}
+
+/* ── Skinny Bottom Grey Workstation Telemetry Status Bar ────────────── */
+.daw-statusbar {
+  height: 24px;
+  min-height: 24px;
+  max-height: 24px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: stretch;
+  background: linear-gradient(180deg, #212631 0%, #191e27 100%);
+  border-top: 1px solid #313a4a;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  font-size: 10.5px;
+  color: #b8c4d4;
+  user-select: none;
+  overflow: hidden;
+}
+.sb-panel {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 9px;
+  border-right: 1px solid #2d3544;
+  white-space: nowrap;
+  min-width: 0;
+}
+.sb-panel:last-child {
+  border-right: none;
+}
+.sb-panel-status {
+  flex: 1 1 220px;
+  overflow: hidden;
+}
+.sb-panel-clickable {
+  cursor: pointer;
+  transition: background 90ms ease, color 90ms ease;
+}
+.sb-panel-clickable:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #f1f5f9;
+}
+.sb-panel-selection-active {
+  background: rgba(0, 212, 255, 0.11);
+}
+.sb-panel-selection-active .sb-val {
+  color: #67e8f9;
+  font-weight: 700;
+}
+.sb-lbl {
+  font-size: 9px;
+  font-weight: 750;
+  letter-spacing: 0.55px;
+  color: #7c8ba1;
+  text-transform: uppercase;
+}
+.sb-val {
+  font-size: 10.5px;
+  color: #dbe4f0;
+}
+.sb-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #00d4ff;
+  box-shadow: 0 0 5px rgba(0, 212, 255, 0.65);
+  flex-shrink: 0;
+}
+.sb-status-dot.error {
+  background: #ef4444;
+  box-shadow: 0 0 6px rgba(239, 68, 68, 0.85);
+}
+.sb-status-msg {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #cbd5e1;
+  font-size: 10.5px;
+}
+.sb-status-msg.error {
+  color: #fca5a5;
+  font-weight: 650;
+}
+.sb-inline-clear {
+  border: none;
+  background: rgba(148, 163, 184, 0.18);
+  color: #cbd5e1;
+  width: 14px;
+  height: 14px;
+  line-height: 12px;
+  padding: 0;
+  border-radius: 3px;
+  font-size: 11px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.sb-inline-clear:hover {
+  background: rgba(239, 68, 68, 0.35);
+  color: #ffffff;
 }

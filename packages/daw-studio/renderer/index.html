@@ -52,8 +52,6 @@
 
     <div class="workspace">
       <main class="main-pane">
-        <div id="status-banner" class="status-banner hidden" role="status" aria-live="polite"></div>
-
         <!-- ==================== WORKSTATION: ARRANGEMENT & MIXER ==================== -->
         <section id="view-studio-stage" class="view-panel studio-panel">
           <!-- Master Control & LCD Transport Deck -->
@@ -62,7 +60,6 @@
               <div class="lcd-project-box">
                 <span class="lcd-micro-lbl">SESSION</span>
                 <input type="text" id="project-name-input" class="session-title-input" value="Studio Drum &amp; Band Session" aria-label="Project Session Name" />
-                <span class="save-badge" id="project-save-state">UNSAVED</span>
               </div>
               <div class="btn-cluster">
                 <button type="button" class="btn btn-sm btn-bevel" id="btn-project-new" title="New Session (Ctrl+N)">
@@ -374,6 +371,41 @@
         </section>
       </main>
     </div>
+
+    <!-- ==================== SKINNY BOTTOM GREY TELEMETRY & STATUS TOOLBAR ==================== -->
+    <footer class="daw-statusbar" id="daw-statusbar" role="status" aria-live="polite">
+      <div class="sb-panel sb-panel-status" id="sb-panel-status">
+        <span class="save-badge" id="project-save-state">UNSAVED</span>
+        <span class="sb-status-dot" id="sb-status-dot"></span>
+        <span class="sb-status-msg" id="status-banner" title="Ready">Ready</span>
+      </div>
+
+      <div class="sb-panel sb-panel-clickable" id="sb-panel-selection" title="Timeline or Take Selection Length (click when active to Export Mixdown)">
+        <span class="sb-lbl">SELECTION LENGTH</span>
+        <span class="sb-val mono" id="sb-selection-length">00:00.000</span>
+        <button type="button" class="sb-inline-clear hidden" id="btn-sb-clear-sel" title="Clear Timeline Selection">&times;</button>
+      </div>
+
+      <div class="sb-panel" id="sb-panel-track-len" title="Selected Track Audio Length and End Position">
+        <span class="sb-lbl">TRACK LENGTH</span>
+        <span class="sb-val mono" id="sb-track-length">00:00.00</span>
+      </div>
+
+      <div class="sb-panel" id="sb-panel-session-len" title="Total Arrangement Length Across All Tracks">
+        <span class="sb-lbl">SESSION LENGTH</span>
+        <span class="sb-val mono" id="sb-session-length">00:00.00</span>
+      </div>
+
+      <div class="sb-panel" id="sb-panel-tracks" title="Channel Count, Armed Inputs, and Recorded Regions">
+        <span class="sb-lbl">TRACKS</span>
+        <span class="sb-val mono" id="sb-tracks-summary">0 ch</span>
+      </div>
+
+      <div class="sb-panel sb-panel-clickable" id="sb-panel-engine" title="Click to open Hardware I/O &amp; Audio Device Settings">
+        <span class="sb-lbl">ENGINE</span>
+        <span class="sb-val mono" id="sb-engine-summary">48.0 kHz</span>
+      </div>
+    </footer>
   </div>
 
   <!-- ==================== MODAL 1: ADD MIC WIZARD ==================== -->
