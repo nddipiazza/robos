@@ -2458,3 +2458,10 @@ kbd {
 .export-chk-row input[type="checkbox"] {
   accent-color: var(--accent);
 }
+
+.transport-btn:disabled,
+.transport-btn.starting {
+  opacity: 0.52;
+  cursor: wait;
+  pointer-events: none;
+}

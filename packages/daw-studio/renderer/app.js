@@ -63,7 +63,10 @@ const DEFAULT_TIMELINE_SECONDS = 16;
 let studioAudioCtx = null;
 let decodedBufferCache = new Map();
 let isPlaying = false;
+let isStartingPlayback = false;
+let playbackLaunchSeq = 0;
 let isRecording = false;
+let isStartingRecording = false;
 let isStoppingRecording = false;
 let playheadSec = 0;
 let playReturnAnchorSec = 0;
@@ -1414,6 +1417,8 @@ function seekPlayheadTo(targetSec, { updateReturnAnchor = true, ensureVisible = 
 function stopPlayback({ returnToStart = true } = {}) {
   const wasPlaying = isPlaying;
   isPlaying = false;
+  isStartingPlayback = false;
+  playbackLaunchSeq++;
   playbackHotSwapSeq++;
   if (transportRafId) {
     cancelAnimationFrame(transportRafId);
@@ -1433,7 +1438,11 @@ function stopPlayback({ returnToStart = true } = {}) {
     const tcEl = document.getElementById('transport-timecode');
     if (tcEl) tcEl.textContent = formatTimecode(playheadSec);
   }
-  document.getElementById('btn-transport-play')?.classList.remove('playing');
+  const playBtn = document.getElementById('btn-transport-play');
+  if (playBtn) {
+    playBtn.disabled = false;
+    playBtn.classList.remove('playing', 'starting');
+  }
   if (!isRecording) {
     const sub = document.getElementById('transport-substate');
     if (sub) sub.textContent = returnToStart ? 'READY' : 'PAUSED';
@@ -1442,85 +1451,127 @@ function stopPlayback({ returnToStart = true } = {}) {
 }
 
 async function startPlayback() {
-  if (isRecording) return;
+  if (isRecording || isStartingRecording || isStartingPlayback) return;
   if (isPlaying) {
     stopPlayback();
     return;
   }
 
-  const tracks = currentProject?.tracks || [];
-  const anySolo = tracks.some(t => t.soloed);
-  const playableTracks = tracks.filter(t => anySolo ? t.soloed : !t.muted);
-
-  const ctx = await ensureRoutedStudioAudioCtx();
-  const projectEndSec = DE.getProjectEndSec(currentProject);
-  if (projectEndSec > 0.05 && playheadSec >= projectEndSec - 0.02) {
-    playheadSec = 0;
-    const tcEl = document.getElementById('transport-timecode');
-    if (tcEl) tcEl.textContent = formatTimecode(0);
+  isStartingPlayback = true;
+  const myLaunchSeq = ++playbackLaunchSeq;
+  const playBtn = document.getElementById('btn-transport-play');
+  const sub = document.getElementById('transport-substate');
+  if (playBtn) {
+    playBtn.disabled = true;
+    playBtn.classList.add('starting');
   }
-  const startFrom = playheadSec;
-  playMaxDurationSec = getBaseProjectSpanSec();
+  if (sub) sub.textContent = 'STARTING...';
 
-  for (const track of playableTracks) {
-    for (const clip of (track.clips || [])) {
-      if (clip.muted) continue;
-      if (clip.wavFile) {
-        try { await loadDecodedAudio(clip.wavFile); } catch {}
-      }
-      if (track.soundReplacement?.enabled && Array.isArray(clip.transients)) {
-        for (const hit of clip.transients) {
-          const sp = resolveDrumSamplePath(track.soundReplacement.kitId, track.soundReplacement.pieceId, hit.velocity);
-          if (sp) {
-            try { await loadDecodedAudio(sp); } catch {}
+  try {
+    const tracks = currentProject?.tracks || [];
+    const anySolo = tracks.some(t => t.soloed);
+    const playableTracks = tracks.filter(t => anySolo ? t.soloed : !t.muted);
+
+    const ctx = await ensureRoutedStudioAudioCtx();
+    if (myLaunchSeq !== playbackLaunchSeq || isRecording || isStartingRecording) return;
+
+    const projectEndSec = DE.getProjectEndSec(currentProject);
+    if (projectEndSec > 0.05 && playheadSec >= projectEndSec - 0.02) {
+      playheadSec = 0;
+      const tcEl = document.getElementById('transport-timecode');
+      if (tcEl) tcEl.textContent = formatTimecode(0);
+    }
+    const startFrom = playheadSec;
+    playMaxDurationSec = getBaseProjectSpanSec();
+
+    for (const track of playableTracks) {
+      for (const clip of (track.clips || [])) {
+        if (clip.muted) continue;
+        if (clip.wavFile) {
+          try { await loadDecodedAudio(clip.wavFile); } catch {}
+        }
+        if (myLaunchSeq !== playbackLaunchSeq || isRecording || isStartingRecording) return;
+        if (track.soundReplacement?.enabled && Array.isArray(clip.transients)) {
+          for (const hit of clip.transients) {
+            const sp = resolveDrumSamplePath(track.soundReplacement.kitId, track.soundReplacement.pieceId, hit.velocity);
+            if (sp) {
+              try { await loadDecodedAudio(sp); } catch {}
+            }
           }
         }
       }
     }
-  }
+    if (myLaunchSeq !== playbackLaunchSeq || isRecording || isStartingRecording) return;
 
-  const now = ctx.currentTime + 0.025;
-  playReturnAnchorSec = startFrom;
-  playStartWallSec = now;
-  playStartOffsetSec = startFrom;
-  isPlaying = true;
-
-  activePlaybackPass = buildAndSchedulePlaybackPass(ctx, playableTracks, startFrom, now, playMaxDurationSec);
-  activeScheduledNodes = activePlaybackPass.nodes;
-
-  document.getElementById('btn-transport-play')?.classList.add('playing');
-  const sub = document.getElementById('transport-substate');
-  if (sub) sub.textContent = 'PLAYING';
-
-  const tcEl = document.getElementById('transport-timecode');
-  const tick = () => {
-    if (!isPlaying) return;
-    playheadSec = playStartOffsetSec + Math.max(0, ctx.currentTime - playStartWallSec);
-    if (tcEl) tcEl.textContent = formatTimecode(playheadSec);
-    if (!middlePanDragState) ensurePlayheadInViewport(playheadSec);
-    drawAllTimelineCanvases();
-    if (loopPlayback && hasActiveTimeSelection() && playheadSec >= timeSelection.toSec) {
-      seekPlayheadTo(timeSelection.fromSec, { updateReturnAnchor: false });
-      transportRafId = requestAnimationFrame(tick);
-      return;
+    // Guarantee zero leftover playback pass before scheduling
+    if (activePlaybackPass) {
+      destroyPlaybackPassImmediate(activePlaybackPass);
+      activePlaybackPass = null;
     }
-    if (playheadSec >= playMaxDurationSec) {
-      if (loopPlayback) {
-        const loopStart = hasActiveTimeSelection() ? timeSelection.fromSec : 0;
-        stopPlayback({ returnToStart: false });
-        playheadSec = loopStart;
-        document.getElementById('transport-timecode').textContent = formatTimecode(loopStart);
-        startPlayback();
+    for (const node of activeScheduledNodes) {
+      try { node.stop?.(); } catch {}
+      try { node.disconnect?.(); } catch {}
+    }
+    activeScheduledNodes = [];
+
+    const now = ctx.currentTime + 0.025;
+    playReturnAnchorSec = startFrom;
+    playStartWallSec = now;
+    playStartOffsetSec = startFrom;
+    isPlaying = true;
+    isStartingPlayback = false;
+
+    activePlaybackPass = buildAndSchedulePlaybackPass(ctx, playableTracks, startFrom, now, playMaxDurationSec);
+    activeScheduledNodes = activePlaybackPass.nodes;
+
+    if (playBtn) {
+      playBtn.disabled = false;
+      playBtn.classList.remove('starting');
+      playBtn.classList.add('playing');
+    }
+    if (sub) sub.textContent = 'PLAYING';
+
+    const tcEl = document.getElementById('transport-timecode');
+    const tick = () => {
+      if (!isPlaying) return;
+      playheadSec = playStartOffsetSec + Math.max(0, ctx.currentTime - playStartWallSec);
+      if (tcEl) tcEl.textContent = formatTimecode(playheadSec);
+      if (!middlePanDragState) ensurePlayheadInViewport(playheadSec);
+      drawAllTimelineCanvases();
+      if (loopPlayback && hasActiveTimeSelection() && playheadSec >= timeSelection.toSec) {
+        seekPlayheadTo(timeSelection.fromSec, { updateReturnAnchor: false });
+        transportRafId = requestAnimationFrame(tick);
         return;
       }
-      playheadSec = 0;
-      document.getElementById('transport-timecode').textContent = formatTimecode(0);
-      stopPlayback({ returnToStart: false });
-      return;
+      if (playheadSec >= playMaxDurationSec) {
+        if (loopPlayback) {
+          const loopStart = hasActiveTimeSelection() ? timeSelection.fromSec : 0;
+          stopPlayback({ returnToStart: false });
+          playheadSec = loopStart;
+          document.getElementById('transport-timecode').textContent = formatTimecode(loopStart);
+          startPlayback();
+          return;
+        }
+        playheadSec = 0;
+        document.getElementById('transport-timecode').textContent = formatTimecode(0);
+        stopPlayback({ returnToStart: false });
+        return;
+      }
+      transportRafId = requestAnimationFrame(tick);
+    };
+    tick();
+  } finally {
+    if (myLaunchSeq === playbackLaunchSeq && isStartingPlayback) {
+      isStartingPlayback = false;
+      if (playBtn) {
+        playBtn.disabled = false;
+        playBtn.classList.remove('starting');
+      }
+      if (!isPlaying && !isRecording && sub) {
+        sub.textContent = 'READY';
+      }
     }
-    transportRafId = requestAnimationFrame(tick);
-  };
-  tick();
+  }
 }
 
 // ─── Multi-Track Hardware Recording ─────────────────────────────────────────
@@ -1794,8 +1845,8 @@ async function quickRetakeRecording() {
 }
 
 async function toggleRecording({ keepCursorAtStop = false } = {}) {
-  if (isStoppingRecording) return;
-  if (isPlaying) stopPlayback({ returnToStart: false });
+  if (isStoppingRecording || isStartingRecording) return;
+  if (isPlaying || isStartingPlayback) stopPlayback({ returnToStart: false });
 
   if (isRecording) {
     const punchInStartSec = liveRecSession ? liveRecSession.startSec : 0;
@@ -1855,79 +1906,91 @@ async function toggleRecording({ keepCursorAtStop = false } = {}) {
     return;
   }
 
-  const bpm = Number(document.getElementById('project-bpm-input')?.value) || Number(currentProject?.bpm) || 120;
-  const punchTargetSec = playheadSec;
+  isStartingRecording = true;
+  const recBtn = document.getElementById('btn-transport-record');
+  const playBtn = document.getElementById('btn-transport-play');
+  if (recBtn) recBtn.disabled = true;
+  if (playBtn) playBtn.disabled = true;
 
-  // Pre-warm Studio Output AudioContext & pre-decode any backing tracks BEFORE spawning capture (0ms punch-in lag)
-  const overdubEntries = await prepareOverdubBackingEntries(punchTargetSec);
-  let studioCtx = null;
-  if (overdubEntries.length > 0 || currentProject?.metronome || countInEnabled) {
-    studioCtx = await ensureRoutedStudioAudioCtx();
-  }
+  try {
+    const bpm = Number(document.getElementById('project-bpm-input')?.value) || Number(currentProject?.bpm) || 120;
+    const punchTargetSec = playheadSec;
 
-  if (countInEnabled) {
-    await playRecordCountInClicks(bpm);
-  }
+    // Pre-warm Studio Output AudioContext & pre-decode any backing tracks BEFORE spawning capture (0ms punch-in lag)
+    const overdubEntries = await prepareOverdubBackingEntries(punchTargetSec);
+    let studioCtx = null;
+    if (overdubEntries.length > 0 || currentProject?.metronome || countInEnabled) {
+      studioCtx = await ensureRoutedStudioAudioCtx();
+    }
 
-  const injectTestSignal = Boolean(document.getElementById('chk-test-groove')?.checked);
-  const res = await window.robos.recordStart({
-    startSec: punchTargetSec,
-    injectTestSignal,
-    projectMeta: {
-      name: document.getElementById('project-name-input')?.value,
-      bpm,
-    },
-  });
+    if (countInEnabled) {
+      await playRecordCountInClicks(bpm);
+    }
 
-  if (!res?.ok) {
-    showStatus(res?.error || 'Could not start multi-track recording.', true);
-    return;
-  }
-
-  const punchStartSec = Number(res.startSec) || 0;
-  const overdubMonitor = studioCtx
-    ? startOverdubMonitorPlayback(studioCtx, punchStartSec, overdubEntries)
-    : { active: false, earsStartWallMs: null, backingTrackCount: 0 };
-
-  const trackStatesMap = new Map();
-  for (const tr of (res.tracks || [])) {
-    trackStatesMap.set(tr.trackId, {
-      trackId: tr.trackId,
-      clipId: tr.clipId,
-      name: `${tr.trackName || 'Track'} Take`,
-      peaks: [],
-      currentPeak: 0,
-      peakDb: -96,
-      maxPeakDb: -96,
-      hitTimesSec: [],
-      lastHitSec: -1,
-      prevSlicePeak: 0,
+    const injectTestSignal = Boolean(document.getElementById('chk-test-groove')?.checked);
+    const res = await window.robos.recordStart({
+      startSec: punchTargetSec,
+      injectTestSignal,
+      projectMeta: {
+        name: document.getElementById('project-name-input')?.value,
+        bpm,
+      },
     });
-  }
 
-  liveRecSession = {
-    startSec: punchStartSec,
-    startedPerfMs: performance.now(),
-    firstSampleMicWallMs: Number.isFinite(res.firstSampleMicWallMs) ? res.firstSampleMicWallMs : null,
-    earsStartWallMs: overdubMonitor.earsStartWallMs,
-    overdubMonitor,
-    ipcElapsedSec: 0,
-    sliceDurationSec: Number(res.sliceDurationSec) || 0.02,
-    tracks: trackStatesMap,
-  };
-  isRecording = true;
-  document.getElementById('btn-transport-record')?.classList.add('recording');
-  document.getElementById('header-rec-dot')?.classList.add('recording');
-  document.getElementById('transport-substate').textContent = overdubMonitor.backingTrackCount > 0
-    ? `REC (${res.armedCount} CH + PLAY)`
-    : `REC (${res.armedCount} CH)`;
-  drawAllTimelineCanvases();
-  startRecordingRafLoop();
-  showStatus(
-    overdubMonitor.backingTrackCount > 0
-      ? `Recording ${res.armedCount} armed channel(s) synced to ${overdubMonitor.backingTrackCount} backing track(s) — press Space to stop.`
-      : `Recording ${res.armedCount} armed channel(s) live via PipeWire (10ms low-latency waveform stream) — press Space to stop.`
-  );
+    if (!res?.ok) {
+      showStatus(res?.error || 'Could not start multi-track recording.', true);
+      return;
+    }
+
+    const punchStartSec = Number(res.startSec) || 0;
+    const overdubMonitor = studioCtx
+      ? startOverdubMonitorPlayback(studioCtx, punchStartSec, overdubEntries)
+      : { active: false, earsStartWallMs: null, backingTrackCount: 0 };
+
+    const trackStatesMap = new Map();
+    for (const tr of (res.tracks || [])) {
+      trackStatesMap.set(tr.trackId, {
+        trackId: tr.trackId,
+        clipId: tr.clipId,
+        name: `${tr.trackName || 'Track'} Take`,
+        peaks: [],
+        currentPeak: 0,
+        peakDb: -96,
+        maxPeakDb: -96,
+        hitTimesSec: [],
+        lastHitSec: -1,
+        prevSlicePeak: 0,
+      });
+    }
+
+    liveRecSession = {
+      startSec: punchStartSec,
+      startedPerfMs: performance.now(),
+      firstSampleMicWallMs: Number.isFinite(res.firstSampleMicWallMs) ? res.firstSampleMicWallMs : null,
+      earsStartWallMs: overdubMonitor.earsStartWallMs,
+      overdubMonitor,
+      ipcElapsedSec: 0,
+      sliceDurationSec: Number(res.sliceDurationSec) || 0.02,
+      tracks: trackStatesMap,
+    };
+    isRecording = true;
+    document.getElementById('btn-transport-record')?.classList.add('recording');
+    document.getElementById('header-rec-dot')?.classList.add('recording');
+    document.getElementById('transport-substate').textContent = overdubMonitor.backingTrackCount > 0
+      ? `REC (${res.armedCount} CH + PLAY)`
+      : `REC (${res.armedCount} CH)`;
+    drawAllTimelineCanvases();
+    startRecordingRafLoop();
+    showStatus(
+      overdubMonitor.backingTrackCount > 0
+        ? `Recording ${res.armedCount} armed channel(s) synced to ${overdubMonitor.backingTrackCount} backing track(s) — press Space to stop.`
+        : `Recording ${res.armedCount} armed channel(s) live via PipeWire (10ms low-latency waveform stream) — press Space to stop.`
+    );
+  } finally {
+    isStartingRecording = false;
+    if (recBtn) recBtn.disabled = false;
+    if (playBtn) playBtn.disabled = false;
+  }
 }
 
 // ─── Studio & Timeline Rendering ────────────────────────────────────────────
@@ -7758,10 +7821,10 @@ async function init() {
           const el = document.getElementById(id);
           return el && !el.classList.contains('hidden');
         });
-      if (!anyModalOpen && (!isSelectFocused || isRecording || isPlaying)) {
+      if (!anyModalOpen && (!isSelectFocused || isRecording || isPlaying || isStartingPlayback || isStartingRecording)) {
         ev.preventDefault();
         ev.stopPropagation();
-        if (ev.repeat) return;
+        if (ev.repeat || isStartingPlayback || isStartingRecording) return;
         if (isRecording) await toggleRecording({ keepCursorAtStop: false });
         else if (isPlaying) stopPlayback({ returnToStart: true });
         else await startPlayback();
@@ -8181,7 +8244,7 @@ async function init() {
       // REAPER Enter: Play/Pause (stops at current playhead cursor without rewinding)
       ev.preventDefault();
       ev.stopPropagation();
-      if (ev.repeat) return;
+      if (ev.repeat || isStartingPlayback || isStartingRecording) return;
       if (isRecording) await toggleRecording({ keepCursorAtStop: true });
       else if (isPlaying) stopPlayback({ returnToStart: false });
       else await startPlayback();
@@ -8621,7 +8684,9 @@ window.__dawStudioState = () => ({
   project: currentProject,
   isDirty,
   isRecording,
+  isStartingRecording,
   isPlaying,
+  isStartingPlayback,
   playheadSec,
   playReturnAnchorSec,
   playbackHotSwapSeq,
