@@ -262,7 +262,7 @@ function getBaseProjectSpanSec() {
 
 function getTimelineDurationSec() {
   const base = getBaseProjectSpanSec();
-  return Math.max(2, Number((base / Math.max(0.25, timelineZoom)).toFixed(2)));
+  return Math.max(1.5, Number((base / Math.max(0.25, timelineZoom)).toFixed(2)));
 }
 
 function setTimelineOffsetSec(nextOffsetSec) {
@@ -288,7 +288,8 @@ function endMiddlePanDrag() {
 
 function setTimelineZoom(nextZoom, { anchorRatio = null, resetOffset = false } = {}) {
   const prevSpan = getTimelineDurationSec();
-  const clampedZoom = DE.clamp(0.25, 8.0, Number(nextZoom) || 1.0);
+  const maxZoom = Math.max(16.0, Math.min(128.0, Math.ceil(getBaseProjectSpanSec() / 2)));
+  const clampedZoom = DE.clamp(0.25, maxZoom, Number(nextZoom) || 1.0);
   if (resetOffset) {
     timelineZoom = clampedZoom;
     timelineOffsetSec = 0;
@@ -2270,11 +2271,49 @@ async function handleGlobalTimelineMouseUp(ev) {
   }
 }
 
-function renderStaticRulerLayer(w, h, totalSec, secPerBeat, viewStart = 0) {
+function pickBarGridStrides(pxPerBar) {
+  const labelSteps = [1, 2, 4, 8, 16, 32, 64, 128, 256];
+  const labelStride = labelSteps.find(s => s * pxPerBar >= 48) || 256;
+  const tickSteps = [1, 2, 4, 8, 16, 32, 64, 128];
+  const tickStride = tickSteps.find(s => s * pxPerBar >= 14) || labelStride;
+  return { labelStride, tickStride: Math.min(labelStride, tickStride) };
+}
+
+function pickTimeRulerSteps(w, totalSec) {
+  const majorCandidates = [0.25, 0.5, 1, 2, 5, 10, 15, 30, 60, 120, 300, 600];
+  const pxPerSec = w / Math.max(0.1, totalSec);
+  const majorSec = majorCandidates.find(s => s * pxPerSec >= 68) || 600;
+  let minorSec = majorSec / 2;
+  if (majorSec === 5) minorSec = 1;
+  else if (majorSec === 15) minorSec = 5;
+  else if (majorSec === 30) minorSec = 10;
+  else if (majorSec === 60) minorSec = 15;
+  else if (majorSec === 120) minorSec = 30;
+  else if (majorSec === 300) minorSec = 60;
+  if (minorSec * pxPerSec < 12) minorSec = majorSec;
+  return { majorSec, minorSec };
+}
+
+function formatRulerTimeLabel(sec, majorSec) {
+  if (majorSec < 1) {
+    return `${sec.toFixed(majorSec < 0.5 ? 2 : 1)}s`;
+  }
+  if (sec >= 60 || majorSec >= 15) {
+    const whole = Math.round(sec);
+    const mins = Math.floor(whole / 60);
+    const rem = whole % 60;
+    return `${mins}:${String(rem).padStart(2, '0')}`;
+  }
+  return `${Math.round(sec)}s`;
+}
+
+function renderStaticRulerLayer(w, h, totalSec, secPerBeat, viewStart = 0, beatsPerBar = 4) {
   const viewEnd = viewStart + totalSec;
+  const safeBeatsPerBar = Math.max(1, Math.round(Number(beatsPerBar) || 4));
+  const secPerBar = secPerBeat * safeBeatsPerBar;
   const markersArr = Array.isArray(currentProject?.markers) ? currentProject.markers : [];
   const markersSig = markersArr.map(m => `${m.num}:${m.timeSec}:${m.name}`).join('|');
-  const key = `${w}x${h}:${viewStart.toFixed(4)}:${totalSec}:${secPerBeat.toFixed(5)}:${markersSig}`;
+  const key = `${w}x${h}:${viewStart.toFixed(4)}:${totalSec}:${secPerBeat.toFixed(5)}:${safeBeatsPerBar}:${markersSig}`;
   if (rulerStaticCache.key === key && rulerStaticCache.canvas) {
     return rulerStaticCache.canvas;
   }
@@ -2295,52 +2334,97 @@ function renderStaticRulerLayer(w, h, totalSec, secPerBeat, viewStart = 0) {
   ctx.lineTo(w, 16.5);
   ctx.stroke();
 
-  // Bars & Beats markers (4/4)
+  // Adaptive Bars & Beats markers (never overlaps labels at any song length or zoom!)
   const pxPerBeat = (secPerBeat / totalSec) * w;
-  const firstBeat = Math.max(0, Math.floor(viewStart / secPerBeat));
-  const maxBeats = Math.ceil(viewEnd / secPerBeat) + 1;
-  ctx.font = '700 9.5px ui-monospace, SFMono-Regular, Menlo, monospace';
-  for (let beat = firstBeat; beat <= maxBeats; beat++) {
-    const t = beat * secPerBeat;
-    if (t > viewEnd + 0.01) break;
-    const x = Math.round(((t - viewStart) / totalSec) * w) + 0.5;
-    const isBar = beat % 4 === 0;
-    const barNum = Math.floor(beat / 4) + 1;
+  const pxPerBar = (secPerBar / totalSec) * w;
+  const { labelStride, tickStride } = pickBarGridStrides(pxPerBar);
 
-    if (isBar) {
-      ctx.strokeStyle = '#334155';
-      ctx.beginPath();
-      ctx.moveTo(x, 0);
-      ctx.lineTo(x, 17);
-      ctx.stroke();
-      if (x >= -2 && x < w - 26) {
-        ctx.fillStyle = '#cbd5e1';
-        ctx.fillText(barNum === 1 ? 'BAR 1' : String(barNum), x + 4, 12);
+  ctx.font = '700 9.5px ui-monospace, SFMono-Regular, Menlo, monospace';
+  let lastBarLabelRightPx = -999;
+
+  if (pxPerBeat >= 14) {
+    // Zoomed in: draw individual beat ticks + bar labels
+    const firstBeat = Math.max(0, Math.floor(viewStart / secPerBeat));
+    const maxBeats = Math.ceil(viewEnd / secPerBeat) + 1;
+    for (let beat = firstBeat; beat <= maxBeats; beat++) {
+      const t = beat * secPerBeat;
+      if (t > viewEnd + 0.01) break;
+      const x = Math.round(((t - viewStart) / totalSec) * w) + 0.5;
+      const isBar = beat % safeBeatsPerBar === 0;
+      const barZeroIdx = Math.floor(beat / safeBeatsPerBar);
+      const barNum = barZeroIdx + 1;
+
+      if (isBar) {
+        ctx.strokeStyle = '#334155';
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, 17);
+        ctx.stroke();
+        const onStride = (barZeroIdx % labelStride) === 0;
+        if (onStride && x >= -2 && x < w - 24 && x >= lastBarLabelRightPx + 6) {
+          const lbl = barNum === 1 ? 'BAR 1' : String(barNum);
+          ctx.fillStyle = '#cbd5e1';
+          ctx.fillText(lbl, x + 4, 12);
+          lastBarLabelRightPx = x + 4 + ctx.measureText(lbl).width;
+        }
+      } else {
+        ctx.strokeStyle = '#1e293b';
+        ctx.beginPath();
+        ctx.moveTo(x, 10);
+        ctx.lineTo(x, 17);
+        ctx.stroke();
       }
-    } else if (pxPerBeat >= 14) {
-      ctx.strokeStyle = '#1e293b';
+    }
+  } else {
+    // Zoomed out on full-length songs: iterate bars at clean musical strides (1, 2, 4, 8, 16...)
+    const firstBarIdx = Math.max(0, Math.floor(viewStart / secPerBar));
+    const maxBarIdx = Math.ceil(viewEnd / secPerBar) + 1;
+    for (let barZeroIdx = firstBarIdx; barZeroIdx <= maxBarIdx; barZeroIdx++) {
+      const onLabel = (barZeroIdx % labelStride) === 0;
+      const onTick = onLabel || (barZeroIdx % tickStride) === 0;
+      if (!onTick) continue;
+      const t = barZeroIdx * secPerBar;
+      if (t > viewEnd + 0.01) break;
+      const x = Math.round(((t - viewStart) / totalSec) * w) + 0.5;
+
+      ctx.strokeStyle = onLabel ? '#334155' : '#1e293b';
       ctx.beginPath();
-      ctx.moveTo(x, 10);
+      ctx.moveTo(x, onLabel ? 0 : 8);
       ctx.lineTo(x, 17);
       ctx.stroke();
+
+      if (onLabel && x >= -2 && x < w - 24 && x >= lastBarLabelRightPx + 8) {
+        const barNum = barZeroIdx + 1;
+        const lbl = barNum === 1 ? 'BAR 1' : String(barNum);
+        ctx.fillStyle = '#cbd5e1';
+        ctx.fillText(lbl, x + 4, 12);
+        lastBarLabelRightPx = x + 4 + ctx.measureText(lbl).width;
+      }
     }
   }
 
-  // Seconds sub-lane markers
+  // Adaptive Timecode (M:SS / Seconds) sub-lane markers
   ctx.font = '500 9px ui-monospace, SFMono-Regular, Menlo, monospace';
-  const stepSec = totalSec <= 8 ? 0.5 : (totalSec <= 24 ? 1 : 2);
-  const firstSecTick = Math.max(0, Math.floor(viewStart / stepSec) * stepSec);
-  for (let s = firstSecTick; s <= viewEnd + 0.001; s += stepSec) {
+  const { majorSec, minorSec } = pickTimeRulerSteps(w, totalSec);
+  const firstTickIdx = Math.max(0, Math.floor(viewStart / minorSec));
+  const maxTickIdx = Math.ceil(viewEnd / minorSec) + 1;
+  let lastTimeLabelRightPx = -999;
+
+  for (let ti = firstTickIdx; ti <= maxTickIdx; ti++) {
+    const s = ti * minorSec;
+    if (s > viewEnd + 0.001) break;
     const x = Math.round(((s - viewStart) / totalSec) * w) + 0.5;
-    const isMajor = Math.abs(s % (stepSec * 2)) < 0.01;
+    const isMajor = Math.abs((s / majorSec) - Math.round(s / majorSec)) < 0.001;
     ctx.strokeStyle = isMajor ? '#283446' : '#18202c';
     ctx.beginPath();
     ctx.moveTo(x, isMajor ? 18 : 24);
     ctx.lineTo(x, h);
     ctx.stroke();
-    if (isMajor && x >= -2 && x < w - 32) {
+    if (isMajor && x >= -2 && x < w - 34 && x >= lastTimeLabelRightPx + 10) {
+      const lbl = formatRulerTimeLabel(s, majorSec);
       ctx.fillStyle = '#64748b';
-      ctx.fillText(`${Number(s.toFixed(1))}s`, x + 3, 29);
+      ctx.fillText(lbl, x + 3.5, 29);
+      lastTimeLabelRightPx = x + 3.5 + ctx.measureText(lbl).width;
     }
   }
 
@@ -2389,8 +2473,10 @@ function drawAllTimelineCanvases() {
   const viewStart = timelineOffsetSec;
   const viewEnd = viewStart + totalSec;
   const bpm = Number(currentProject.bpm) || 120;
+  const tsParts = String(currentProject.timeSignature || '4/4').split('/');
+  const beatsPerBar = Math.max(1, Math.round(Number(tsParts[0]) || 4));
   const secPerBeat = 60 / bpm;
-  const secPerBar = secPerBeat * 4;
+  const secPerBar = secPerBeat * beatsPerBar;
 
   // 1. Dual-Tier Pro-DAW Arrangement Ruler (Cached Static Grid + Sub-Pixel Playhead)
   const ruler = document.getElementById('timeline-ruler-canvas');
@@ -2400,7 +2486,7 @@ function drawAllTimelineCanvases() {
     if (ruler.width !== w) ruler.width = w;
     if (ruler.height !== h) ruler.height = h;
     const ctx = ruler.getContext('2d');
-    const staticRuler = renderStaticRulerLayer(w, h, totalSec, secPerBeat, viewStart);
+    const staticRuler = renderStaticRulerLayer(w, h, totalSec, secPerBeat, viewStart, beatsPerBar);
     ctx.clearRect(0, 0, w, h);
     ctx.drawImage(staticRuler, 0, 0);
 
@@ -2454,31 +2540,50 @@ function drawAllTimelineCanvases() {
       ctx.fillStyle = tIdx % 2 === 0 ? '#0b0e14' : '#0d1118';
       ctx.fillRect(0, 0, w, h);
 
-      // Subtle alternating 1-bar shading + beat gridlines
-      const firstBeat = Math.max(0, Math.floor(viewStart / secPerBeat));
-      const maxBeats = Math.ceil(viewEnd / secPerBeat) + 1;
+      // Subtle alternating bar-group shading + adaptive beat/bar gridlines
       const pxPerBar = (secPerBar / totalSec) * w;
-      if (pxPerBar >= 28) {
-        let firstBar = Math.max(0, Math.floor(viewStart / secPerBar));
-        if (firstBar % 2 !== 0) firstBar--;
-        for (let bar = firstBar; bar * secPerBar < viewEnd; bar += 2) {
-          const bx = (((bar * secPerBar) - viewStart) / totalSec) * w;
+      const pxPerBeat = (secPerBeat / totalSec) * w;
+      const { labelStride, tickStride } = pickBarGridStrides(pxPerBar);
+      const shadeSpanPx = labelStride * pxPerBar;
+      if (shadeSpanPx >= 28) {
+        let firstGroup = Math.max(0, Math.floor(viewStart / (secPerBar * labelStride)));
+        if (firstGroup % 2 !== 0) firstGroup--;
+        for (let g = firstGroup; g * labelStride * secPerBar < viewEnd; g += 2) {
+          const bx = (((g * labelStride * secPerBar) - viewStart) / totalSec) * w;
           ctx.fillStyle = 'rgba(255, 255, 255, 0.012)';
-          ctx.fillRect(bx, 0, pxPerBar, h);
+          ctx.fillRect(bx, 0, shadeSpanPx, h);
         }
       }
 
-      for (let beat = firstBeat; beat <= maxBeats; beat++) {
-        const t = beat * secPerBeat;
-        if (t > viewEnd + 0.01) break;
-        const x = Math.round(((t - viewStart) / totalSec) * w) + 0.5;
-        const isBar = beat % 4 === 0;
-        if (!isBar && (secPerBeat / totalSec) * w < 14) continue;
-        ctx.strokeStyle = isBar ? 'rgba(148, 163, 184, 0.13)' : 'rgba(148, 163, 184, 0.045)';
-        ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, h);
-        ctx.stroke();
+      if (pxPerBeat >= 14) {
+        const firstBeat = Math.max(0, Math.floor(viewStart / secPerBeat));
+        const maxBeats = Math.ceil(viewEnd / secPerBeat) + 1;
+        for (let beat = firstBeat; beat <= maxBeats; beat++) {
+          const t = beat * secPerBeat;
+          if (t > viewEnd + 0.01) break;
+          const x = Math.round(((t - viewStart) / totalSec) * w) + 0.5;
+          const isBar = beat % beatsPerBar === 0;
+          ctx.strokeStyle = isBar ? 'rgba(148, 163, 184, 0.13)' : 'rgba(148, 163, 184, 0.045)';
+          ctx.beginPath();
+          ctx.moveTo(x, 0);
+          ctx.lineTo(x, h);
+          ctx.stroke();
+        }
+      } else {
+        const firstBarIdx = Math.max(0, Math.floor(viewStart / secPerBar));
+        const maxBarIdx = Math.ceil(viewEnd / secPerBar) + 1;
+        for (let barIdx = firstBarIdx; barIdx <= maxBarIdx; barIdx++) {
+          const isMajorBar = (barIdx % labelStride) === 0;
+          if (!isMajorBar && (barIdx % tickStride) !== 0) continue;
+          const t = barIdx * secPerBar;
+          if (t > viewEnd + 0.01) break;
+          const x = Math.round(((t - viewStart) / totalSec) * w) + 0.5;
+          ctx.strokeStyle = isMajorBar ? 'rgba(148, 163, 184, 0.13)' : 'rgba(148, 163, 184, 0.05)';
+          ctx.beginPath();
+          ctx.moveTo(x, 0);
+          ctx.lineTo(x, h);
+          ctx.stroke();
+        }
       }
 
       // Center zero-crossing reference line
