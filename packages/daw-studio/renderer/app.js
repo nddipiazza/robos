@@ -38,6 +38,8 @@ let liveAudioCtx = null;
 let liveMediaStream = null;
 let liveRafId = null;
 
+const DEFAULT_TIMELINE_SECONDS = 16;
+
 // Playback & Recording Transport State
 let studioAudioCtx = null;
 let decodedBufferCache = new Map();
@@ -45,9 +47,14 @@ let isPlaying = false;
 let isRecording = false;
 let isStoppingRecording = false;
 let playheadSec = 0;
+let playReturnAnchorSec = 0;
 let playStartWallSec = 0;
 let playStartOffsetSec = 0;
+let playMaxDurationSec = DEFAULT_TIMELINE_SECONDS;
 let activeScheduledNodes = [];
+let activePlaybackPass = null; // { passGain, nodes, trackHandles: Map<trackId, handle> }
+let playbackHotSwapSeq = 0;
+let liveOverdubTrackHandles = new Map();
 let transportRafId = null;
 let liveRecLevels = {}; // trackId -> { peakDb, bytes }
 let liveRecSession = null;
@@ -77,8 +84,6 @@ let scSelectedInputs = new Set();
 let scArmedInputsList = [];
 let scClassifications = [];
 let scLastProviderLabel = '';
-
-const DEFAULT_TIMELINE_SECONDS = 16;
 
 function esc(str) {
   return String(str ?? '')
@@ -385,6 +390,9 @@ async function syncProjectToMain(reanalyzeTrackIds = []) {
   if (res?.ok && res.project && reanalyzeTrackIds.length > 0) {
     currentProject = res.project;
     renderStudio();
+    if (isPlaying || isRecording) {
+      seamlessRefreshLiveAudio();
+    }
   }
 }
 
@@ -396,6 +404,9 @@ async function commitEdit(label, mutatorFn, { reanalyzeTrackIds = [], statusMsg 
   markDirty(true);
   renderStudio();
   if (statusMsg) showStatus(statusMsg);
+  if (isPlaying || isRecording) {
+    seamlessRefreshLiveAudio();
+  }
   await syncProjectToMain(reanalyzeTrackIds);
 }
 
@@ -409,6 +420,9 @@ async function performUndo() {
   pruneSelections();
   markDirty(true);
   renderStudio();
+  if (isPlaying || isRecording) {
+    seamlessRefreshLiveAudio();
+  }
   showStatus(`Undo: ${res.label}`);
   await syncProjectToMain();
 }
@@ -423,6 +437,9 @@ async function performRedo() {
   pruneSelections();
   markDirty(true);
   renderStudio();
+  if (isPlaying || isRecording) {
+    seamlessRefreshLiveAudio();
+  }
   showStatus(`Redo: ${res.label}`);
   await syncProjectToMain();
 }
@@ -677,7 +694,7 @@ function makeMasterCeilingCurve() {
 
 let cachedMasterCeilingCurve = null;
 
-function createMasterDrumBus(ctx) {
+function createMasterDrumBus(ctx, destinationNode = ctx.destination) {
   const busTrim = ctx.createGain();
   busTrim.gain.value = DE.dbToGain(-1.5);
 
@@ -700,7 +717,7 @@ function createMasterDrumBus(ctx) {
   busTrim.connect(busGlue);
   busGlue.connect(glueMakeup);
   glueMakeup.connect(ceiling);
-  ceiling.connect(ctx.destination);
+  ceiling.connect(destinationNode);
   return busTrim;
 }
 
@@ -709,6 +726,14 @@ function buildTrackWebAudioChain(ctx, track, masterDestination = ctx.destination
   const trackGainLin = DE.dbToGain(Number(track.gainDb) || 0) * (track.fx?.phaseInvert ? -1 : 1);
   inputGain.gain.value = trackGainLin;
   let tail = inputGain;
+
+  let hpfNode = null;
+  let hpf2Node = null;
+  let lowNode = null;
+  let midNode = null;
+  let highNode = null;
+  let compNode = null;
+  let revWetNode = null;
 
   const eq = track.fx?.eq || {};
   if (eq.enabled !== false) {
@@ -721,6 +746,7 @@ function buildTrackWebAudioChain(ctx, track, masterDestination = ctx.destination
     hpf.Q.value = 0.7071;
     tail.connect(hpf);
     tail = hpf;
+    hpfNode = hpf;
 
     // Cascade 2nd Butterworth high-pass stage (24 dB/oct) for close cymbal/hi-hat rumble & snare-body rejection
     if (steep24dB) {
@@ -730,18 +756,21 @@ function buildTrackWebAudioChain(ctx, track, masterDestination = ctx.destination
       hpf2.Q.value = 0.7071;
       tail.connect(hpf2);
       tail = hpf2;
+      hpf2Node = hpf2;
     }
 
     const low = ctx.createBiquadFilter();
     low.type = 'lowshelf';
     low.frequency.value = Number(eq.lowFreqHz) || 80;
     low.gain.value = Number(eq.lowGainDb) || 0;
+    lowNode = low;
 
     const mid = ctx.createBiquadFilter();
     mid.type = 'peaking';
     mid.frequency.value = Number(eq.midFreqHz) || 500;
     mid.Q.value = Number(eq.midQ) || 1.4;
     mid.gain.value = Number(eq.midGainDb) || 0;
+    midNode = mid;
 
     tail.connect(low);
     low.connect(mid);
@@ -773,6 +802,7 @@ function buildTrackWebAudioChain(ctx, track, masterDestination = ctx.destination
     high.type = 'highshelf';
     high.frequency.value = Number(eq.highFreqHz) || 5000;
     high.gain.value = Number(eq.highGainDb) || 0;
+    highNode = high;
 
     tail.connect(high);
     tail = high;
@@ -788,6 +818,7 @@ function buildTrackWebAudioChain(ctx, track, masterDestination = ctx.destination
     comp.attack.value = Math.max(0.001, (Number(compCfg.attackMs) || 10) / 1000);
     comp.release.value = Math.max(0.02, (Number(compCfg.releaseMs) || 110) / 1000);
     preCompNode.connect(comp);
+    compNode = comp;
     let compOut = comp;
 
     const makeupDb = Number(compCfg.makeupDb) || 0;
@@ -866,6 +897,7 @@ function buildTrackWebAudioChain(ctx, track, masterDestination = ctx.destination
 
     const revWet = ctx.createGain();
     revWet.gain.value = revMix;
+    revWetNode = revWet;
 
     trackMixBus.connect(preDelay);
     preDelay.connect(revHpf);
@@ -875,23 +907,296 @@ function buildTrackWebAudioChain(ctx, track, masterDestination = ctx.destination
     revWet.connect(masterDestination);
   }
 
-  return { inputGain, trackMixBus, srActive, blend };
+  const liveHandle = {
+    ctx,
+    inputGain,
+    hpfNode,
+    hpf2Node,
+    lowNode,
+    midNode,
+    highNode,
+    compNode,
+    dryBusGain,
+    trackMixBus,
+    panner,
+    revWetNode,
+    hasReverbNode: Boolean(revWetNode),
+  };
+
+  return { inputGain, trackMixBus, srActive, blend, liveHandle };
+}
+
+function applyLiveTrackParamsInPlace(targetTrackIds = null) {
+  if (!currentProject) return;
+  const tracks = currentProject.tracks || [];
+  let needsStructuralSwap = false;
+
+  for (const track of tracks) {
+    if (targetTrackIds && !targetTrackIds.has(track.id)) continue;
+    const handles = [
+      activePlaybackPass?.trackHandles?.get(track.id),
+      liveOverdubTrackHandles?.get(track.id),
+    ].filter(Boolean);
+    if (!handles.length) continue;
+
+    const gainLin = DE.dbToGain(Number(track.gainDb) || 0) * (track.fx?.phaseInvert ? -1 : 1);
+    const vol = Math.max(0, Math.min(1.5, Number(track.volume ?? 1.0)));
+    const pan = Math.max(-1, Math.min(1, Number(track.pan) || 0));
+    const eq = track.fx?.eq || {};
+    const comp = track.fx?.compressor || {};
+    const rev = track.fx?.reverb || {};
+    const wantRev = Boolean(rev.enabled) && (Number(rev.mix) || 0) > 0.005;
+
+    for (const h of handles) {
+      const tNow = h.ctx.currentTime;
+      h.inputGain.gain.setTargetAtTime(gainLin, tNow, 0.008);
+      h.trackMixBus.gain.setTargetAtTime(vol, tNow, 0.008);
+      h.panner.pan.setTargetAtTime(pan, tNow, 0.008);
+
+      if (h.hpfNode) h.hpfNode.frequency.setTargetAtTime(Number(eq.hpfHz) || 40, tNow, 0.010);
+      if (h.hpf2Node) h.hpf2Node.frequency.setTargetAtTime(Number(eq.hpfHz) || 40, tNow, 0.010);
+      if (h.lowNode) h.lowNode.gain.setTargetAtTime(Number(eq.lowGainDb) || 0, tNow, 0.010);
+      if (h.midNode) h.midNode.gain.setTargetAtTime(Number(eq.midGainDb) || 0, tNow, 0.010);
+      if (h.highNode) h.highNode.gain.setTargetAtTime(Number(eq.highGainDb) || 0, tNow, 0.010);
+      if (h.compNode) h.compNode.ratio.setTargetAtTime(Math.max(1, Math.min(20, Number(comp.ratio) || 3.5)), tNow, 0.012);
+
+      if (wantRev !== h.hasReverbNode) {
+        needsStructuralSwap = true;
+      } else if (h.revWetNode) {
+        h.revWetNode.gain.setTargetAtTime(DE.clamp(0, 0.85, Number(rev.mix) || 0), tNow, 0.010);
+      }
+    }
+  }
+
+  if (needsStructuralSwap && (isPlaying || isRecording)) {
+    seamlessRefreshLiveAudio();
+  }
+}
+
+function destroyPlaybackPassImmediate(pass) {
+  if (!pass) return;
+  for (const node of (pass.nodes || [])) {
+    try { node.stop?.(); } catch {}
+    try { node.disconnect?.(); } catch {}
+  }
+  try { pass.passGain?.disconnect?.(); } catch {}
+}
+
+function buildAndSchedulePlaybackPass(ctx, playableTracks, startFrom, startWallTime, maxDuration, { fadeInDurSec = 0 } = {}) {
+  const passGain = ctx.createGain();
+  if (fadeInDurSec > 0.001) {
+    passGain.gain.setValueAtTime(0.0001, startWallTime);
+    passGain.gain.linearRampToValueAtTime(1.0, startWallTime + fadeInDurSec);
+  } else {
+    passGain.gain.setValueAtTime(1.0, startWallTime);
+  }
+  passGain.connect(ctx.destination);
+
+  const nodes = [];
+  const trackHandles = new Map();
+  const masterBus = createMasterDrumBus(ctx, passGain);
+  nodes.push(masterBus);
+
+  for (const track of playableTracks) {
+    const { inputGain, trackMixBus, srActive, blend, liveHandle } = buildTrackWebAudioChain(ctx, track, masterBus);
+    nodes.push(inputGain, trackMixBus);
+    trackHandles.set(track.id, liveHandle);
+
+    for (const clip of (track.clips || [])) {
+      if (clip.muted) continue;
+      const clipStart = Number(clip.startSec) || 0;
+      const clipOff = Math.max(0, Number(clip.offsetSec) || 0);
+      const buf = decodedBufferCache.get(clip.wavFile);
+      const clipDur = Math.max(0.04, Number(clip.durationSec) || (buf ? Math.max(0.04, buf.duration - clipOff) : 0));
+      const clipEnd = clipStart + clipDur;
+
+      if (buf && clipEnd > startFrom && clipOff < buf.duration) {
+        const src = ctx.createBufferSource();
+        src.buffer = buf;
+
+        const clipGainNode = ctx.createGain();
+        const clipGainLin = DE.dbToGain(Number(clip.gainDb) || 0);
+        const fadeIn = Math.max(0, Number(clip.fadeInSec) || 0);
+        const fadeOut = Math.max(0, Number(clip.fadeOutSec) || 0);
+
+        if (clipStart >= startFrom) {
+          const t0 = startWallTime + (clipStart - startFrom);
+          const playDur = Math.min(clipDur, Math.max(0.01, buf.duration - clipOff));
+          const tEnd = t0 + playDur;
+          if (fadeIn > 0.002) {
+            clipGainNode.gain.setValueAtTime(0.0001, t0);
+            clipGainNode.gain.linearRampToValueAtTime(clipGainLin, t0 + Math.min(fadeIn, playDur));
+          } else {
+            clipGainNode.gain.setValueAtTime(clipGainLin, t0);
+          }
+          if (fadeOut > 0.002 && playDur > fadeOut) {
+            clipGainNode.gain.setValueAtTime(clipGainLin, Math.max(t0 + Math.min(fadeIn, playDur), tEnd - fadeOut));
+            clipGainNode.gain.linearRampToValueAtTime(0.0001, tEnd);
+          }
+          src.connect(clipGainNode).connect(inputGain);
+          src.start(t0, clipOff, playDur);
+        } else {
+          const intoClip = startFrom - clipStart;
+          const srcOffset = clipOff + intoClip;
+          const playDur = Math.min(clipEnd - startFrom, Math.max(0.01, buf.duration - srcOffset));
+          if (playDur > 0.01 && srcOffset < buf.duration) {
+            const tEnd = startWallTime + playDur;
+            clipGainNode.gain.setValueAtTime(clipGainLin, startWallTime);
+            if (fadeOut > 0.002) {
+              const fadeStartWall = Math.max(startWallTime, tEnd - fadeOut);
+              clipGainNode.gain.setValueAtTime(clipGainLin, fadeStartWall);
+              clipGainNode.gain.linearRampToValueAtTime(0.0001, tEnd);
+            }
+            src.connect(clipGainNode).connect(inputGain);
+            src.start(startWallTime, srcOffset, playDur);
+          }
+        }
+        nodes.push(src);
+      }
+
+      if (srActive && Array.isArray(clip.transients)) {
+        const clipVelScale = clip.autoGainStaged ? 1.0 : DE.clamp(0.15, 1.4, DE.dbToGain((Number(clip.gainDb) || 0) * 0.25));
+        for (const hit of clip.transients) {
+          const absHitSec = clipStart + (Number(hit.timeSec) || 0);
+          if (absHitSec < startFrom || absHitSec > clipEnd + 0.005) continue;
+          const sp = resolveDrumSamplePath(track.soundReplacement.kitId, track.soundReplacement.pieceId, hit.velocity);
+          const srBuf = sp ? decodedBufferCache.get(sp) : null;
+          if (!srBuf) continue;
+
+          const hitSrc = ctx.createBufferSource();
+          hitSrc.buffer = srBuf;
+          const hitGain = ctx.createGain();
+          hitGain.gain.value = blend * Math.max(0.25, Math.min(1.3, (Number(hit.velocity) || 0.8) * clipVelScale));
+          hitSrc.connect(hitGain).connect(trackMixBus);
+          hitSrc.start(startWallTime + (absHitSec - startFrom));
+          nodes.push(hitSrc);
+        }
+      }
+    }
+  }
+
+  if (currentProject?.metronome) {
+    const bpm = Number(currentProject?.bpm) || 120;
+    const tsParts = String(currentProject?.timeSignature || '4/4').split('/');
+    const beatsPerBar = Math.max(1, Math.round(Number(tsParts[0]) || 4));
+    const secPerBeat = 60 / bpm;
+    const firstBeat = Math.ceil(startFrom / secPerBeat);
+    const totalBeats = Math.min(firstBeat + 1200, Math.floor(maxDuration / secPerBeat));
+    for (let b = firstBeat; b <= totalBeats; b++) {
+      const beatSec = b * secPerBeat;
+      const osc = ctx.createOscillator();
+      const g = ctx.createGain();
+      osc.frequency.value = (b % beatsPerBar === 0) ? 1180 : 840;
+      const t0 = startWallTime + (beatSec - startFrom);
+      g.gain.setValueAtTime(0.08, t0);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.045);
+      osc.connect(g).connect(passGain);
+      osc.start(t0);
+      osc.stop(t0 + 0.05);
+      nodes.push(osc);
+    }
+  }
+
+  return { passGain, nodes, trackHandles };
+}
+
+/**
+ * Seamlessly hot-swaps the running WebAudio graph in 6ms with an 8ms de-clicked micro-crossfade
+ * at the exact sub-sample playhead position so Solo, Mute, Volume, EQ, Compression, Reverb,
+ * Plugin Inserts, Sound Replacement, Metronome, and Clip edits take effect instantaneously
+ * without interrupting playback or overdub monitoring.
+ */
+async function seamlessRefreshLiveAudio() {
+  if (!currentProject) return;
+
+  if (isRecording && liveRecSession) {
+    const ctx = liveRecSession.overdubMonitor?.ctx || studioAudioCtx;
+    if (!ctx || ctx.state === 'closed') return;
+    const overdubEntries = await prepareOverdubBackingEntries(playheadSec);
+    if (!isRecording || !liveRecSession) return;
+    const nowElapsed = getLiveRecordingElapsedSec();
+    const outLatSec = ((Number(ctx.baseLatency) || 0) + (Number(ctx.outputLatency) || 0)) || 0.042;
+    const resumeAtSec = liveRecSession.startSec + nowElapsed + outLatSec + 0.015;
+    stopOverdubMonitorPlayback();
+    const nextMon = startOverdubMonitorPlayback(ctx, resumeAtSec, overdubEntries, { preserveSyncClock: true });
+    if (liveRecSession.overdubMonitor) {
+      liveRecSession.overdubMonitor.backingTrackCount = nextMon.backingTrackCount;
+    }
+    return;
+  }
+
+  if (!isPlaying) return;
+  const mySeq = ++playbackHotSwapSeq;
+  const ctx = await ensureRoutedStudioAudioCtx();
+  if (!isPlaying || mySeq !== playbackHotSwapSeq) return;
+
+  const tracks = currentProject?.tracks || [];
+  const anySolo = tracks.some(t => t.soloed);
+  const playableTracks = tracks.filter(t => anySolo ? t.soloed : !t.muted);
+
+  for (const track of playableTracks) {
+    for (const clip of (track.clips || [])) {
+      if (clip.muted) continue;
+      if (clip.wavFile && !decodedBufferCache.has(clip.wavFile)) {
+        try { await loadDecodedAudio(clip.wavFile); } catch {}
+      }
+      if (track.soundReplacement?.enabled && Array.isArray(clip.transients)) {
+        for (const hit of clip.transients) {
+          const sp = resolveDrumSamplePath(track.soundReplacement.kitId, track.soundReplacement.pieceId, hit.velocity);
+          if (sp && !decodedBufferCache.has(sp)) {
+            try { await loadDecodedAudio(sp); } catch {}
+          }
+        }
+      }
+    }
+  }
+  if (!isPlaying || mySeq !== playbackHotSwapSeq) return;
+
+  const fadeDur = 0.008;
+  const tSplice = ctx.currentTime + 0.006;
+  const exactResumeSec = playStartOffsetSec + Math.max(0, tSplice - playStartWallSec);
+  const maxDuration = getBaseProjectSpanSec();
+
+  const prevPass = activePlaybackPass;
+  const nextPass = buildAndSchedulePlaybackPass(ctx, playableTracks, exactResumeSec, tSplice, maxDuration, {
+    fadeInDurSec: fadeDur,
+  });
+
+  if (prevPass?.passGain) {
+    try {
+      prevPass.passGain.gain.cancelScheduledValues(tSplice);
+      prevPass.passGain.gain.setValueAtTime(1.0, tSplice);
+      prevPass.passGain.gain.linearRampToValueAtTime(0.0001, tSplice + fadeDur);
+    } catch {}
+    setTimeout(() => destroyPlaybackPassImmediate(prevPass), 28);
+  }
+
+  activePlaybackPass = nextPass;
+  activeScheduledNodes = nextPass.nodes;
+  playStartWallSec = tSplice;
+  playStartOffsetSec = exactResumeSec;
+  playMaxDurationSec = maxDuration;
 }
 
 function stopPlayback({ returnToStart = true } = {}) {
   const wasPlaying = isPlaying;
   isPlaying = false;
+  playbackHotSwapSeq++;
   if (transportRafId) {
     cancelAnimationFrame(transportRafId);
     transportRafId = null;
   }
+  if (activePlaybackPass) {
+    destroyPlaybackPassImmediate(activePlaybackPass);
+    activePlaybackPass = null;
+  }
   for (const node of activeScheduledNodes) {
-    try { node.stop(); } catch {}
-    try { node.disconnect(); } catch {}
+    try { node.stop?.(); } catch {}
+    try { node.disconnect?.(); } catch {}
   }
   activeScheduledNodes = [];
   if (wasPlaying && returnToStart) {
-    playheadSec = playStartOffsetSec;
+    playheadSec = playReturnAnchorSec;
     const tcEl = document.getElementById('transport-timecode');
     if (tcEl) tcEl.textContent = formatTimecode(playheadSec);
   }
@@ -922,9 +1227,8 @@ async function startPlayback() {
     if (tcEl) tcEl.textContent = formatTimecode(0);
   }
   const startFrom = playheadSec;
-  const maxDuration = getBaseProjectSpanSec();
+  playMaxDurationSec = getBaseProjectSpanSec();
 
-  // Pre-decode needed clip & replacement buffers
   for (const track of playableTracks) {
     for (const clip of (track.clips || [])) {
       if (clip.muted) continue;
@@ -942,112 +1246,14 @@ async function startPlayback() {
     }
   }
 
-  const now = ctx.currentTime + 0.04;
+  const now = ctx.currentTime + 0.025;
+  playReturnAnchorSec = startFrom;
   playStartWallSec = now;
   playStartOffsetSec = startFrom;
   isPlaying = true;
-  activeScheduledNodes = [];
 
-  const masterBus = createMasterDrumBus(ctx);
-  activeScheduledNodes.push(masterBus);
-
-  for (const track of playableTracks) {
-    const { inputGain, trackMixBus, srActive, blend } = buildTrackWebAudioChain(ctx, track, masterBus);
-
-    for (const clip of (track.clips || [])) {
-      if (clip.muted) continue;
-      const clipStart = Number(clip.startSec) || 0;
-      const clipOff = Math.max(0, Number(clip.offsetSec) || 0);
-      const buf = decodedBufferCache.get(clip.wavFile);
-      const clipDur = Math.max(0.04, Number(clip.durationSec) || (buf ? Math.max(0.04, buf.duration - clipOff) : 0));
-      const clipEnd = clipStart + clipDur;
-
-      if (buf && clipEnd > startFrom && clipOff < buf.duration) {
-        const src = ctx.createBufferSource();
-        src.buffer = buf;
-
-        const clipGainNode = ctx.createGain();
-        const clipGainLin = DE.dbToGain(Number(clip.gainDb) || 0);
-        const fadeIn = Math.max(0, Number(clip.fadeInSec) || 0);
-        const fadeOut = Math.max(0, Number(clip.fadeOutSec) || 0);
-
-        if (clipStart >= startFrom) {
-          const t0 = now + (clipStart - startFrom);
-          const playDur = Math.min(clipDur, Math.max(0.01, buf.duration - clipOff));
-          const tEnd = t0 + playDur;
-          if (fadeIn > 0.002) {
-            clipGainNode.gain.setValueAtTime(0.0001, t0);
-            clipGainNode.gain.linearRampToValueAtTime(clipGainLin, t0 + Math.min(fadeIn, playDur));
-          } else {
-            clipGainNode.gain.setValueAtTime(clipGainLin, t0);
-          }
-          if (fadeOut > 0.002 && playDur > fadeOut) {
-            clipGainNode.gain.setValueAtTime(clipGainLin, Math.max(t0 + Math.min(fadeIn, playDur), tEnd - fadeOut));
-            clipGainNode.gain.linearRampToValueAtTime(0.0001, tEnd);
-          }
-          src.connect(clipGainNode).connect(inputGain);
-          src.start(t0, clipOff, playDur);
-        } else {
-          const intoClip = startFrom - clipStart;
-          const srcOffset = clipOff + intoClip;
-          const playDur = Math.min(clipEnd - startFrom, Math.max(0.01, buf.duration - srcOffset));
-          if (playDur > 0.01 && srcOffset < buf.duration) {
-            const tEnd = now + playDur;
-            clipGainNode.gain.setValueAtTime(clipGainLin, now);
-            if (fadeOut > 0.002) {
-              const fadeStartWall = Math.max(now, tEnd - fadeOut);
-              clipGainNode.gain.setValueAtTime(clipGainLin, fadeStartWall);
-              clipGainNode.gain.linearRampToValueAtTime(0.0001, tEnd);
-            }
-            src.connect(clipGainNode).connect(inputGain);
-            src.start(now, srcOffset, playDur);
-          }
-        }
-        activeScheduledNodes.push(src);
-      }
-
-      // Schedule Open-Source Drum Sound Replacement samples on transients!
-      if (srActive && Array.isArray(clip.transients)) {
-        const clipVelScale = clip.autoGainStaged ? 1.0 : DE.clamp(0.15, 1.4, DE.dbToGain((Number(clip.gainDb) || 0) * 0.25));
-        for (const hit of clip.transients) {
-          const absHitSec = clipStart + (Number(hit.timeSec) || 0);
-          if (absHitSec < startFrom || absHitSec > clipEnd + 0.005) continue;
-          const sp = resolveDrumSamplePath(track.soundReplacement.kitId, track.soundReplacement.pieceId, hit.velocity);
-          const srBuf = sp ? decodedBufferCache.get(sp) : null;
-          if (!srBuf) continue;
-
-          const hitSrc = ctx.createBufferSource();
-          hitSrc.buffer = srBuf;
-          const hitGain = ctx.createGain();
-          hitGain.gain.value = blend * Math.max(0.25, Math.min(1.3, (Number(hit.velocity) || 0.8) * clipVelScale));
-          hitSrc.connect(hitGain).connect(trackMixBus);
-          hitSrc.start(now + (absHitSec - startFrom));
-          activeScheduledNodes.push(hitSrc);
-        }
-      }
-    }
-  }
-
-  // Optional Metronome Click
-  if (currentProject?.metronome) {
-    const bpm = Number(currentProject?.bpm) || 120;
-    const secPerBeat = 60 / bpm;
-    const firstBeat = Math.ceil(startFrom / secPerBeat);
-    const totalBeats = Math.min(64, Math.floor(maxDuration / secPerBeat));
-    for (let b = firstBeat; b <= totalBeats; b++) {
-      const beatSec = b * secPerBeat;
-      const osc = ctx.createOscillator();
-      const g = ctx.createGain();
-      osc.frequency.value = (b % 4 === 0) ? 1180 : 840;
-      const t0 = now + (beatSec - startFrom);
-      g.gain.setValueAtTime(0.08, t0);
-      g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.045);
-      osc.connect(g).connect(ctx.destination);
-      osc.start(t0);
-      osc.stop(t0 + 0.05);
-      activeScheduledNodes.push(osc);
-    }
-  }
+  activePlaybackPass = buildAndSchedulePlaybackPass(ctx, playableTracks, startFrom, now, playMaxDurationSec);
+  activeScheduledNodes = activePlaybackPass.nodes;
 
   document.getElementById('btn-transport-play')?.classList.add('playing');
   const sub = document.getElementById('transport-substate');
@@ -1060,9 +1266,9 @@ async function startPlayback() {
     if (tcEl) tcEl.textContent = formatTimecode(playheadSec);
     if (!middlePanDragState) ensurePlayheadInViewport(playheadSec);
     drawAllTimelineCanvases();
-    if (playheadSec >= maxDuration) {
+    if (playheadSec >= playMaxDurationSec) {
       if (loopPlayback) {
-        stopPlayback();
+        stopPlayback({ returnToStart: false });
         playheadSec = 0;
         document.getElementById('transport-timecode').textContent = formatTimecode(0);
         startPlayback();
@@ -1070,7 +1276,7 @@ async function startPlayback() {
       }
       playheadSec = 0;
       document.getElementById('transport-timecode').textContent = formatTimecode(0);
-      stopPlayback();
+      stopPlayback({ returnToStart: false });
       return;
     }
     transportRafId = requestAnimationFrame(tick);
@@ -1114,6 +1320,7 @@ function stopOverdubMonitorPlayback() {
     try { node.disconnect?.(); } catch {}
   }
   activeOverdubMonitorNodes = [];
+  liveOverdubTrackHandles.clear();
 }
 
 async function prepareOverdubBackingEntries(startFrom) {
@@ -1154,11 +1361,11 @@ async function prepareOverdubBackingEntries(startFrom) {
   return entries;
 }
 
-function startOverdubMonitorPlayback(ctx, startFrom, overdubEntries) {
+function startOverdubMonitorPlayback(ctx, startFrom, overdubEntries, { preserveSyncClock = false } = {}) {
   stopOverdubMonitorPlayback();
   const useMetronome = Boolean(currentProject?.metronome);
   if (!overdubEntries.length && !useMetronome) {
-    return { active: false, earsStartWallMs: null };
+    return { active: false, earsStartWallMs: preserveSyncClock ? (liveRecSession?.earsStartWallMs ?? null) : null, backingTrackCount: 0 };
   }
 
   const schedLeadSec = 0.020;
@@ -1175,8 +1382,9 @@ function startOverdubMonitorPlayback(ctx, startFrom, overdubEntries) {
   activeOverdubMonitorNodes.push(silentAnchorOsc, silentAnchorGain);
 
   for (const { track, clips } of overdubEntries) {
-    const { inputGain, trackMixBus, srActive, blend } = buildTrackWebAudioChain(ctx, track, masterBus);
+    const { inputGain, trackMixBus, srActive, blend, liveHandle } = buildTrackWebAudioChain(ctx, track, masterBus);
     activeOverdubMonitorNodes.push(inputGain, trackMixBus);
+    if (liveHandle) liveOverdubTrackHandles.set(track.id, liveHandle);
 
     for (const clip of clips) {
       const clipStart = Number(clip.startSec) || 0;
@@ -1268,16 +1476,18 @@ function startOverdubMonitorPlayback(ctx, startFrom, overdubEntries) {
     }
   }
 
-  const ts = typeof ctx.getOutputTimestamp === 'function' ? ctx.getOutputTimestamp() : null;
-  let earsStartWallMs = null;
+  let earsStartWallMs = preserveSyncClock ? (liveRecSession?.earsStartWallMs ?? null) : null;
   let lockedByHwTs = false;
-  if (ts && ts.contextTime > 0 && ts.performanceTime > 0) {
-    earsStartWallMs = (performance.timeOrigin + ts.performanceTime) + (playStartCtxTime - ts.contextTime) * 1000;
-    lockedByHwTs = true;
-  } else {
-    const fallbackOutLatSec = ((Number(ctx.baseLatency) || 0) + (Number(ctx.outputLatency) || 0))
-      || ((Number(audioSnapshot?.clock?.latencyMs) || 42) / 1000);
-    earsStartWallMs = Date.now() + schedLeadSec * 1000 + fallbackOutLatSec * 1000;
+  if (!preserveSyncClock) {
+    const ts = typeof ctx.getOutputTimestamp === 'function' ? ctx.getOutputTimestamp() : null;
+    if (ts && ts.contextTime > 0 && ts.performanceTime > 0) {
+      earsStartWallMs = (performance.timeOrigin + ts.performanceTime) + (playStartCtxTime - ts.contextTime) * 1000;
+      lockedByHwTs = true;
+    } else {
+      const fallbackOutLatSec = ((Number(ctx.baseLatency) || 0) + (Number(ctx.outputLatency) || 0))
+        || ((Number(audioSnapshot?.clock?.latencyMs) || 42) / 1000);
+      earsStartWallMs = Date.now() + schedLeadSec * 1000 + fallbackOutLatSec * 1000;
+    }
   }
 
   return {
@@ -1774,6 +1984,7 @@ function bindTrackRowEvents() {
           }
         }
         markDirty(true);
+        applyLiveTrackParamsInPlace(targetIds);
         drawAllTimelineCanvases();
       });
       el.addEventListener('change', async () => {
@@ -1836,6 +2047,7 @@ function bindTrackRowEvents() {
           if (otherSlider) otherSlider.value = Number(t.volume ?? 1).toFixed(2);
         }
         markDirty(true);
+        applyLiveTrackParamsInPlace(targetIds);
       });
       el.addEventListener('change', async () => {
         volSnapSaved = false;
@@ -2099,7 +2311,8 @@ function bindTrackRowEvents() {
       playheadSec = DE.snapTimeToBeatGrid(rawSec, currentProject?.bpm || 120, snapToGrid && !ev.altKey);
       document.getElementById('transport-timecode').textContent = formatTimecode(playheadSec);
       if (isPlaying) {
-        stopPlayback();
+        stopPlayback({ returnToStart: false });
+        renderStudio();
         startPlayback();
       } else {
         renderStudio();
@@ -2267,6 +2480,9 @@ async function handleGlobalTimelineMouseUp(ev) {
       }
     }
     renderStudio();
+    if (isPlaying || isRecording) {
+      seamlessRefreshLiveAudio();
+    }
     await syncProjectToMain();
   }
 }
@@ -3189,8 +3405,71 @@ function renderInspectorDrawer() {
     });
   });
 
-  document.getElementById('insp-gain-db')?.addEventListener('change', e =>
-    saveInspectorPatch('Adjust Input Gain', t => { t.gainDb = DE.clamp(-24, 36, Number(e.target.value) || 0); })
+  const gangedIdSet = new Set(gangedTargets.map(t => t.id));
+  const bindLiveInspectorSlider = (id, undoLabel, mutatorFn, { formatLabel = null, hotSwapOnInput = false, syncTrackRow = null } = {}) => {
+    const inp = document.getElementById(id);
+    if (!inp) return;
+    const lblEl = inp.closest('.slider-row')?.querySelector('label');
+    let snapSaved = false;
+    inp.addEventListener('pointerdown', () => { snapSaved = false; });
+    inp.addEventListener('input', (e) => {
+      if (!currentProject) return;
+      if (!snapSaved) {
+        historyStack.pushSnapshot(currentProject, undoLabel);
+        snapSaved = true;
+        updateEditToolbarState();
+      }
+      for (const t of gangedTargets) mutatorFn(t, e.target.value);
+      if (lblEl && typeof formatLabel === 'function') {
+        lblEl.textContent = formatLabel(track, e.target.value);
+      }
+      if (typeof syncTrackRow === 'function') {
+        syncTrackRow(e.target.value);
+      }
+      markDirty(true);
+      if (hotSwapOnInput) {
+        if (isPlaying || isRecording) seamlessRefreshLiveAudio();
+      } else {
+        applyLiveTrackParamsInPlace(gangedIdSet);
+      }
+    });
+    inp.addEventListener('change', async (e) => {
+      if (!snapSaved && currentProject) {
+        historyStack.pushSnapshot(currentProject, undoLabel);
+        for (const t of gangedTargets) mutatorFn(t, e.target.value);
+        markDirty(true);
+        if (hotSwapOnInput) {
+          if (isPlaying || isRecording) seamlessRefreshLiveAudio();
+        } else {
+          applyLiveTrackParamsInPlace(gangedIdSet);
+        }
+      }
+      snapSaved = false;
+      await syncProjectToMain();
+    });
+  };
+
+  bindLiveInspectorSlider(
+    'insp-gain-db',
+    'Adjust Input Gain',
+    (t, val) => { t.gainDb = DE.clamp(-24, 36, Number(val) || 0); },
+    {
+      formatLabel: (t) => `Input Trim (${DE.formatDb(Number(t.gainDb) || 0)})`,
+      syncTrackRow: () => {
+        const listEl = document.getElementById('tracks-list');
+        for (const t of gangedTargets) {
+          const gVal = Number(t.gainDb) || 0;
+          const ob = document.getElementById(`gain-badge-${t.id}`);
+          if (ob) {
+            ob.textContent = DE.formatDb(gVal);
+            ob.classList.toggle('boosted', Math.abs(gVal) >= 0.05);
+          }
+          const sl = listEl?.querySelector(`input[data-act="gain"][data-id="${t.id}"]`);
+          if (sl) sl.value = gVal.toFixed(1);
+        }
+        drawAllTimelineCanvases();
+      },
+    }
   );
   document.getElementById('insp-phase-on')?.addEventListener('change', e =>
     saveInspectorPatch('Toggle Phase Invert', t => { t.fx = { ...(t.fx || {}), phaseInvert: e.target.checked }; })
@@ -3198,23 +3477,38 @@ function renderInspectorDrawer() {
   document.getElementById('insp-eq-on')?.addEventListener('change', e =>
     saveInspectorPatch('Toggle EQ', t => { t.fx = { ...(t.fx || {}), eq: { ...(t.fx?.eq || {}), enabled: e.target.checked } }; })
   );
-  document.getElementById('insp-eq-hpf')?.addEventListener('change', e =>
-    saveInspectorPatch('Adjust HPF', t => { t.fx = { ...(t.fx || {}), eq: { ...(t.fx?.eq || {}), hpfHz: Number(e.target.value) } }; })
+  bindLiveInspectorSlider(
+    'insp-eq-hpf',
+    'Adjust HPF',
+    (t, val) => { t.fx = { ...(t.fx || {}), eq: { ...(t.fx?.eq || {}), hpfHz: Number(val) } }; },
+    { formatLabel: (t) => `High-Pass (${t.fx?.eq?.hpfHz || 60} Hz${Number(t.fx?.eq?.hpfSlope) === 24 ? ' · 24dB' : ''})` }
   );
-  document.getElementById('insp-eq-low')?.addEventListener('change', e =>
-    saveInspectorPatch('Adjust Low Shelf', t => { t.fx = { ...(t.fx || {}), eq: { ...(t.fx?.eq || {}), lowGainDb: Number(e.target.value) } }; })
+  bindLiveInspectorSlider(
+    'insp-eq-low',
+    'Adjust Low Shelf',
+    (t, val) => { t.fx = { ...(t.fx || {}), eq: { ...(t.fx?.eq || {}), lowGainDb: Number(val) } }; },
+    { formatLabel: (t) => `Low Shelf (${t.fx?.eq?.lowGainDb ?? 0} dB)` }
   );
-  document.getElementById('insp-eq-mid')?.addEventListener('change', e =>
-    saveInspectorPatch('Adjust Mid EQ', t => { t.fx = { ...(t.fx || {}), eq: { ...(t.fx?.eq || {}), midGainDb: Number(e.target.value) } }; })
+  bindLiveInspectorSlider(
+    'insp-eq-mid',
+    'Adjust Mid EQ',
+    (t, val) => { t.fx = { ...(t.fx || {}), eq: { ...(t.fx?.eq || {}), midGainDb: Number(val) } }; },
+    { formatLabel: (t) => `Mid Peak (${t.fx?.eq?.midGainDb ?? 0} dB)` }
   );
-  document.getElementById('insp-eq-high')?.addEventListener('change', e =>
-    saveInspectorPatch('Adjust High EQ', t => { t.fx = { ...(t.fx || {}), eq: { ...(t.fx?.eq || {}), highGainDb: Number(e.target.value) } }; })
+  bindLiveInspectorSlider(
+    'insp-eq-high',
+    'Adjust High EQ',
+    (t, val) => { t.fx = { ...(t.fx || {}), eq: { ...(t.fx?.eq || {}), highGainDb: Number(val) } }; },
+    { formatLabel: (t) => `High Air (${t.fx?.eq?.highGainDb ?? 0} dB)` }
   );
   document.getElementById('insp-comp-on')?.addEventListener('change', e =>
     saveInspectorPatch('Toggle Compressor', t => { t.fx = { ...(t.fx || {}), compressor: { ...(t.fx?.compressor || {}), enabled: e.target.checked } }; })
   );
-  document.getElementById('insp-comp-ratio')?.addEventListener('change', e =>
-    saveInspectorPatch('Adjust Compressor Ratio', t => { t.fx = { ...(t.fx || {}), compressor: { ...(t.fx?.compressor || {}), ratio: Number(e.target.value) } }; })
+  bindLiveInspectorSlider(
+    'insp-comp-ratio',
+    'Adjust Compressor Ratio',
+    (t, val) => { t.fx = { ...(t.fx || {}), compressor: { ...(t.fx?.compressor || {}), ratio: Number(val) } }; },
+    { formatLabel: (t) => `Compressor (${t.fx?.compressor?.ratio ?? 3.5}:1${t.fx?.compressor?.makeupDb ? ` · +${t.fx.compressor.makeupDb}dB` : ''})` }
   );
   document.getElementById('insp-rev-on')?.addEventListener('change', e =>
     saveInspectorPatch('Toggle Studio Reverb', t => {
@@ -3233,9 +3527,11 @@ function renderInspectorDrawer() {
       };
     })
   );
-  document.getElementById('insp-rev-mix')?.addEventListener('change', e =>
-    saveInspectorPatch('Adjust Reverb Mix', t => {
-      const mix = DE.clamp(0, 0.85, (Number(e.target.value) || 0) / 100);
+  bindLiveInspectorSlider(
+    'insp-rev-mix',
+    'Adjust Reverb Mix',
+    (t, val) => {
+      const mix = DE.clamp(0, 0.85, (Number(val) || 0) / 100);
       const prev = t.fx?.reverb || {};
       t.fx = {
         ...(t.fx || {}),
@@ -3249,10 +3545,29 @@ function renderInspectorDrawer() {
           mix,
         },
       };
-    })
+    },
+    {
+      formatLabel: (t) => `Studio Reverb (${Math.round((t.fx?.reverb?.mix ?? 0) * 100)}% ${t.fx?.reverb?.type === 'room' ? 'Room' : 'Plate'})`,
+      syncTrackRow: (val) => {
+        const chk = document.getElementById('insp-rev-on');
+        if (chk) chk.checked = (Number(val) || 0) > 0.5;
+      },
+    }
   );
-  document.getElementById('insp-pan')?.addEventListener('change', e =>
-    saveInspectorPatch('Adjust Pan', t => { t.pan = Number(e.target.value); })
+  bindLiveInspectorSlider(
+    'insp-pan',
+    'Adjust Pan',
+    (t, val) => { t.pan = Number(val); },
+    {
+      formatLabel: (t) => `Stereo Pan (${formatPan(t.pan)})`,
+      syncTrackRow: () => {
+        const listEl = document.getElementById('tracks-list');
+        for (const t of gangedTargets) {
+          const pb = listEl?.querySelector(`[data-act="pan-reset"][data-id="${t.id}"]`);
+          if (pb) pb.textContent = formatPan(t.pan);
+        }
+      },
+    }
   );
 
   document.getElementById('insp-sr-on')?.addEventListener('change', e =>
@@ -3282,10 +3597,14 @@ function renderInspectorDrawer() {
       t.soundReplacement = { ...(t.soundReplacement || {}), thresholdDb: Number(e.target.value) };
     }, true)
   );
-  document.getElementById('insp-sr-blend')?.addEventListener('change', e =>
-    saveInspectorPatch('Adjust Replacement Blend', t => {
-      t.soundReplacement = { ...(t.soundReplacement || {}), blend: Number(e.target.value) / 100 };
-    })
+  bindLiveInspectorSlider(
+    'insp-sr-blend',
+    'Adjust Replacement Blend',
+    (t, val) => { t.soundReplacement = { ...(t.soundReplacement || {}), blend: Number(val) / 100 }; },
+    {
+      formatLabel: (t) => `Sample Blend (${Math.round((t.soundReplacement?.blend ?? 0.75) * 100)}%)`,
+      hotSwapOnInput: true,
+    }
   );
 
   if (justOpened) {
@@ -3680,6 +3999,9 @@ async function importAudioWavFiles({ startSec = playheadSec, targetTrackId = nul
   markDirty(true);
   switchView('studio-stage');
   renderStudio();
+  if (isPlaying || isRecording) {
+    seamlessRefreshLiveAudio();
+  }
 
   const items = res.importedItems || [];
   const videoCount = items.filter(x => x.mediaKind === 'video').length;
@@ -4436,9 +4758,10 @@ function openTimelineSpaceContextMenu(ev, track, clickTimeSec) {
       if (cmd === 'move-ph') {
         playheadSec = safeTime;
         document.getElementById('transport-timecode').textContent = formatTimecode(playheadSec);
-        drawAllTimelineCanvases();
+        if (isPlaying) { stopPlayback({ returnToStart: false }); startPlayback(); }
+        else drawAllTimelineCanvases();
       } else if (cmd === 'play-here') {
-        stopPlayback();
+        stopPlayback({ returnToStart: false });
         playheadSec = safeTime;
         document.getElementById('transport-timecode').textContent = formatTimecode(playheadSec);
         await startPlayback();
@@ -6252,12 +6575,21 @@ async function init() {
   });
   document.getElementById('project-bpm-input')?.addEventListener('change', async (e) => {
     const res = await window.robos.updateProjectMeta({ bpm: Number(e.target.value) || 120 });
-    if (res?.ok) { currentProject = res.project; markDirty(true); drawAllTimelineCanvases(); }
+    if (res?.ok) {
+      currentProject = res.project;
+      markDirty(true);
+      drawAllTimelineCanvases();
+      if (isPlaying || isRecording) seamlessRefreshLiveAudio();
+    }
   });
   document.getElementById('btn-metronome-toggle')?.addEventListener('click', async () => {
     const next = !Boolean(currentProject?.metronome);
     const res = await window.robos.updateProjectMeta({ metronome: next });
-    if (res?.ok) { currentProject = res.project; renderStudio(); }
+    if (res?.ok) {
+      currentProject = res.project;
+      renderStudio();
+      if (isPlaying || isRecording) seamlessRefreshLiveAudio();
+    }
   });
 
   document.getElementById('btn-project-new')?.addEventListener('click', createNewSession);
@@ -6388,7 +6720,7 @@ async function init() {
     playheadSec = 0;
     timelineOffsetSec = 0;
     document.getElementById('transport-timecode').textContent = formatTimecode(0);
-    if (isPlaying) { stopPlayback(); startPlayback(); }
+    if (isPlaying) { stopPlayback({ returnToStart: false }); startPlayback(); }
     else drawAllTimelineCanvases();
   });
   document.getElementById('btn-transport-play')?.addEventListener('click', (ev) => {
@@ -6411,7 +6743,7 @@ async function init() {
     const ratio = Math.max(0, Math.min(1, (ev.clientX - rect.left) / Math.max(1, rect.width)));
     playheadSec = DE.snapTimeToBeatGrid(timelineOffsetSec + ratio * getTimelineDurationSec(), currentProject?.bpm || 120, snapToGrid && !ev.altKey);
     document.getElementById('transport-timecode').textContent = formatTimecode(playheadSec);
-    if (isPlaying) { stopPlayback(); startPlayback(); }
+    if (isPlaying) { stopPlayback({ returnToStart: false }); startPlayback(); }
     else drawAllTimelineCanvases();
   });
   document.getElementById('timeline-ruler-wrap')?.addEventListener('contextmenu', (ev) => {
@@ -6900,7 +7232,11 @@ async function init() {
       ev.preventDefault();
       const next = !Boolean(currentProject?.metronome);
       const res = await window.robos.updateProjectMeta({ metronome: next });
-      if (res?.ok) { currentProject = res.project; renderStudio(); }
+      if (res?.ok) {
+        currentProject = res.project;
+        renderStudio();
+        if (isPlaying || isRecording) seamlessRefreshLiveAudio();
+      }
     } else if (!isMod && !ev.altKey && keyLower === 'i') {
       ev.preventDefault();
       const primaryId = [...selectedTrackIds][0] || currentProject?.tracks?.[0]?.id || null;
@@ -7310,6 +7646,8 @@ window.__dawStudioState = () => ({
   isRecording,
   isPlaying,
   playheadSec,
+  playReturnAnchorSec,
+  playbackHotSwapSeq,
   timelineZoom,
   timelineOffsetSec,
   waveformZoomDb,
