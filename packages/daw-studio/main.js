@@ -774,12 +774,19 @@ ipcMain.handle('daw:record-start', async (_e, payload) => {
       if (payload.projectMeta.bpm) proj.bpm = Number(payload.projectMeta.bpm) || proj.bpm;
     }
     const startSec = Number(payload?.startSec || 0);
+    const injectTestSignal = Boolean(payload?.injectTestSignal);
     const started = recorder.start(proj, {
       startSec,
-      injectTestSignal: Boolean(payload?.injectTestSignal),
+      injectTestSignal,
       onMeter: (m) => sendToRenderer('daw:record-progress', m),
     });
-    return started;
+    if (!injectTestSignal) {
+      await recorder.waitCaptureReady(280);
+    }
+    return {
+      ...started,
+      firstSampleMicWallMs: recorder.getFirstSampleMicWallMs(),
+    };
   } catch (err) {
     return { ok: false, error: err.message };
   }
@@ -787,8 +794,13 @@ ipcMain.handle('daw:record-start', async (_e, payload) => {
 
 ipcMain.handle('daw:record-stop', async (_e, payload) => {
   try {
+    const rawEars = payload?.earsStartWallMs;
+    const earsStartWallMs = rawEars !== null && rawEars !== undefined && Number.isFinite(Number(rawEars))
+      ? Number(rawEars)
+      : null;
     const res = await recorder.stop({
       injectTestSignal: Boolean(payload?.injectTestSignal),
+      earsStartWallMs,
     });
     if (res.ok && res.project) {
       currentProject = res.project;
@@ -1054,6 +1066,9 @@ ipcMain.handle('daw:import-audio-files', async (_e, payload) => {
         // Flat full-range 20 Hz–20 kHz strip so imported backing MP3/MP4 songs retain full sub-bass & dynamics
         destTrack.color = importRes.mediaKind === 'video' ? '#8b5cf6' : '#06b6d4';
         destTrack.volume = 0.88;
+        if ((proj.tracks || []).some(t => t.soloed)) {
+          destTrack.soloed = true;
+        }
         destTrack.fx = {
           ...(destTrack.fx || {}),
           openSourcePlugins: ['x42 Parametric EQ4 (LV2)', 'Calf Bus Glue (LV2)'],

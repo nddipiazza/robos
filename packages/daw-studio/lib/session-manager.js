@@ -17,7 +17,7 @@ const os = require('os');
 const crypto = require('crypto');
 const { getMicProfile } = require('./mic-profiles');
 const { computeWaveformPeaks, computeSmartAutoGainDb, detectDrumTransients } = require('./drum-instruments');
-const { startDiscreteCaptureSession } = require('./pcm-capture');
+const { startDiscreteCaptureSession, makeWavHeader } = require('./pcm-capture');
 
 function getProjectsRoot() {
   if (process.env.ROBOS_DAW_PROJECTS_DIR) return process.env.ROBOS_DAW_PROJECTS_DIR;
@@ -402,6 +402,68 @@ function computeSyntheticSlicePeak(profileId, sliceStartSec, sliceDurSec = 0.02)
 }
 
 /**
+ * Sample-accurate overdub latency alignment: aligns a recorded 16-bit mono PCM WAV buffer
+ * captured starting at `firstSampleMicWallMs` against the exact wall-clock instant
+ * `earsStartWallMs` when `punchStartSec` of the backing track physically exited the
+ * audio interface headphones (`AudioContext.getOutputTimestamp()`).
+ */
+function alignRecordedWavBuffer(buf, {
+  punchStartSec = 0,
+  sampleRate = 48000,
+  firstSampleMicWallMs = null,
+  earsStartWallMs = null,
+} = {}) {
+  const baseStart = Number(punchStartSec) || 0;
+  if (
+    !buf ||
+    buf.length <= 44 ||
+    buf.toString('ascii', 0, 4) !== 'RIFF' ||
+    !Number.isFinite(firstSampleMicWallMs) ||
+    !Number.isFinite(earsStartWallMs)
+  ) {
+    return { buffer: buf, clipStartSec: baseStart, trimmedSec: 0 };
+  }
+
+  const syncDeltaSec = (earsStartWallMs - firstSampleMicWallMs) / 1000;
+  // Sanity bound: ignore bogus clock jumps > 3 seconds
+  if (Math.abs(syncDeltaSec) > 3.0 || Math.abs(syncDeltaSec) < 0.0004) {
+    return { buffer: buf, clipStartSec: baseStart, trimmedSec: 0 };
+  }
+
+  if (syncDeltaSec > 0) {
+    // pw-cat began capturing `syncDeltaSec` BEFORE `punchStartSec` reached the user's headphones:
+    // trim those exact leading pre-roll + round-trip frames so Sample #0 = `punchStartSec`.
+    const totalDataBytes = Math.max(0, buf.length - 44);
+    const totalFrames = Math.floor(totalDataBytes / 2);
+    const minKeepFrames = Math.min(totalFrames, Math.floor(sampleRate * 0.04));
+    const trimFrames = Math.min(Math.max(0, totalFrames - minKeepFrames), Math.round(syncDeltaSec * sampleRate));
+    if (trimFrames <= 0) {
+      return { buffer: buf, clipStartSec: baseStart, trimmedSec: 0 };
+    }
+    const pcmSlice = Buffer.from(buf.subarray(44 + trimFrames * 2));
+    // 2ms linear micro-fade at Sample #0 to prevent any DC/zero-crossing boundary click
+    const rampFrames = Math.min(Math.floor(pcmSlice.length / 2), Math.floor(sampleRate * 0.002));
+    for (let i = 0; i < rampFrames; i++) {
+      const s = pcmSlice.readInt16LE(i * 2);
+      pcmSlice.writeInt16LE(Math.round(s * (i / rampFrames)), i * 2);
+    }
+    const header = makeWavHeader(pcmSlice.length, sampleRate);
+    return {
+      buffer: Buffer.concat([header, pcmSlice]),
+      clipStartSec: baseStart,
+      trimmedSec: Number((trimFrames / sampleRate).toFixed(4)),
+    };
+  }
+
+  // Capture started `|syncDeltaSec|` AFTER `punchStartSec` reached the headphones: shift clip start forward
+  return {
+    buffer: buf,
+    clipStartSec: Number((baseStart + Math.abs(syncDeltaSec)).toFixed(4)),
+    trimmedSec: Number(syncDeltaSec.toFixed(4)),
+  };
+}
+
+/**
  * Active Multi-Track Hardware Recording Session Controller
  */
 class MultiTrackRecorder {
@@ -413,9 +475,23 @@ class MultiTrackRecorder {
     return Boolean(this.active);
   }
 
+  waitCaptureReady(timeoutMs = 280) {
+    if (!this.active?.capture?.waitReady) return Promise.resolve(null);
+    return this.active.capture.waitReady(timeoutMs);
+  }
+
+  getFirstSampleMicWallMs() {
+    return this.active?.capture?.getFirstSampleMicWallMs?.() ?? null;
+  }
+
   start(project, { startSec = 0, injectTestSignal = false, onMeter } = {}) {
     if (this.active) throw new Error('Recording is already in progress');
-    const armedTracks = (project.tracks || []).filter(t => t.armed);
+    const allArmed = (project.tracks || []).filter(t => t.armed);
+    // Do not overwrite pure imported backing-media tracks (no hardware input assigned) when mic tracks are armed
+    const hasHardwareArmed = allArmed.some(t => Boolean(t.inputNodeName));
+    const armedTracks = hasHardwareArmed
+      ? allArmed.filter(t => Boolean(t.inputNodeName) || !(t.clips || []).some(c => c.sourceFile || c.mediaKind))
+      : allArmed;
     if (!armedTracks.length) {
       throw new Error('No tracks are armed for recording. Arm at least one mic track [R] first.');
     }
@@ -553,17 +629,19 @@ class MultiTrackRecorder {
     };
   }
 
-  async stop({ injectTestSignal = false } = {}) {
+  async stop({ injectTestSignal = false, earsStartWallMs = null } = {}) {
     if (!this.active) return { ok: false, error: 'Not currently recording' };
     const session = this.active;
     this.active = null;
 
     const wallDurationSec = Math.max(0.4, (Date.now() - session.startedAtMs) / 1000);
+    const firstSampleMicWallMs = session.capture.getFirstSampleMicWallMs?.() ?? null;
     await session.capture.stop();
 
     const recordedClips = [];
     for (const entry of session.entries) {
       let exists = fs.existsSync(entry.wavFile) && fs.statSync(entry.wavFile).size > 100;
+      let usedSynthetic = false;
       if (injectTestSignal || !exists) {
         // Only synthesize fallback if explicitly requested in test-signal mode or if headless container lacks PipeWire
         const synth = synthesizeDrumTakeWav({
@@ -573,10 +651,27 @@ class MultiTrackRecorder {
         });
         fs.writeFileSync(entry.wavFile, synth);
         exists = true;
+        usedSynthetic = true;
       }
 
       const targetTrack = (session.project.tracks || []).find(t => t.id === entry.trackId);
-      const buf = fs.readFileSync(entry.wavFile);
+      let buf = fs.readFileSync(entry.wavFile);
+      let alignedClipStartSec = session.startSec;
+
+      if (!usedSynthetic && Number.isFinite(earsStartWallMs) && Number.isFinite(firstSampleMicWallMs)) {
+        const aligned = alignRecordedWavBuffer(buf, {
+          punchStartSec: session.startSec,
+          sampleRate: session.sampleRate,
+          firstSampleMicWallMs,
+          earsStartWallMs,
+        });
+        alignedClipStartSec = aligned.clipStartSec;
+        if (aligned.buffer !== buf) {
+          buf = aligned.buffer;
+          fs.writeFileSync(entry.wavFile, buf);
+        }
+      }
+
       const waveInfo = computeWaveformPeaks(buf);
       const autoGainDb = (Number(targetTrack?.gainDb) || 0) === 0
         ? computeSmartAutoGainDb(buf)
@@ -596,7 +691,7 @@ class MultiTrackRecorder {
         wavFile: entry.wavFile,
         relativeWavPath: entry.relativeWavPath,
         fileExists: true,
-        startSec: session.startSec,
+        startSec: alignedClipStartSec,
         offsetSec: 0,
         durationSec: fullDur,
         sourceDurationSec: fullDur,
@@ -635,5 +730,6 @@ module.exports = {
   listProjects,
   reanalyzeTrackTransients,
   synthesizeDrumTakeWav,
+  alignRecordedWavBuffer,
   MultiTrackRecorder,
 };

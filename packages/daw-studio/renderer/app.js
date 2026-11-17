@@ -177,6 +177,10 @@ function setMeterElementPercent(el, pct) {
 
 function getLiveRecordingElapsedSec(nowPerfMs = performance.now()) {
   if (!isRecording || !liveRecSession) return 0;
+  if (Number.isFinite(liveRecSession.earsStartWallMs)) {
+    const nowWallMs = performance.timeOrigin + nowPerfMs;
+    return Math.max(0, (nowWallMs - liveRecSession.earsStartWallMs) / 1000);
+  }
   return Math.max(0, (nowPerfMs - liveRecSession.startedPerfMs) / 1000);
 }
 
@@ -200,6 +204,21 @@ function startRecordingRafLoop() {
       liveRecRafId = null;
       return;
     }
+    // Continuously lock earsStartWallMs to PipeWire/ALSA hardware DAC presentation clock
+    const mon = liveRecSession.overdubMonitor;
+    if (mon?.active && mon.ctx && mon.ctx.currentTime >= mon.playStartCtxTime + 0.06) {
+      const ts = typeof mon.ctx.getOutputTimestamp === 'function' ? mon.ctx.getOutputTimestamp() : null;
+      if (ts && ts.contextTime > 0 && ts.performanceTime > 0) {
+        const measuredEarsMs = (performance.timeOrigin + ts.performanceTime) + (mon.playStartCtxTime - ts.contextTime) * 1000;
+        if (!mon.lockedByHwTs || !Number.isFinite(liveRecSession.earsStartWallMs)) {
+          liveRecSession.earsStartWallMs = measuredEarsMs;
+          mon.lockedByHwTs = true;
+        } else {
+          liveRecSession.earsStartWallMs = liveRecSession.earsStartWallMs * 0.85 + measuredEarsMs * 0.15;
+        }
+      }
+    }
+
     const nowPerf = typeof rafTimestamp === 'number' && rafTimestamp > 0 ? rafTimestamp : performance.now();
     const elapsed = getLiveRecordingElapsedSec(nowPerf);
     playheadSec = liveRecSession.startSec + elapsed;
@@ -1086,10 +1105,195 @@ async function playRecordCountInClicks(bpm = 120) {
   }
 }
 
+let activeOverdubMonitorNodes = [];
+
+function stopOverdubMonitorPlayback() {
+  for (const node of activeOverdubMonitorNodes) {
+    try { node.stop?.(); } catch {}
+    try { node.disconnect?.(); } catch {}
+  }
+  activeOverdubMonitorNodes = [];
+}
+
+async function prepareOverdubBackingEntries(startFrom) {
+  const tracks = currentProject?.tracks || [];
+  const candidateTracks = tracks.filter(t => {
+    if (t.muted) return false;
+    const isBackingTrack = !t.armed || !t.inputNodeName;
+    return isBackingTrack || (t.clips || []).some(c => Boolean(c.sourceFile || c.mediaKind));
+  });
+  const anyBackingSolo = candidateTracks.some(t => t.soloed);
+  const entries = [];
+
+  for (const track of candidateTracks) {
+    if (anyBackingSolo && !track.soloed) continue;
+    const isBackingTrack = !track.armed || !track.inputNodeName;
+    const clipsToPlay = (track.clips || []).filter((c) => {
+      if (c.muted || !c.wavFile) return false;
+      const cStart = Number(c.startSec) || 0;
+      const cDur = Math.max(0.04, Number(c.durationSec) || 0);
+      if (cStart + cDur <= startFrom + 0.005) return false;
+      return isBackingTrack || Boolean(c.sourceFile || c.mediaKind);
+    });
+    if (!clipsToPlay.length) continue;
+
+    for (const clip of clipsToPlay) {
+      try { await loadDecodedAudio(clip.wavFile); } catch {}
+      if (track.soundReplacement?.enabled && Array.isArray(clip.transients)) {
+        for (const hit of clip.transients) {
+          const sp = resolveDrumSamplePath(track.soundReplacement.kitId, track.soundReplacement.pieceId, hit.velocity);
+          if (sp) {
+            try { await loadDecodedAudio(sp); } catch {}
+          }
+        }
+      }
+    }
+    entries.push({ track, clips: clipsToPlay });
+  }
+  return entries;
+}
+
+function startOverdubMonitorPlayback(ctx, startFrom, overdubEntries) {
+  stopOverdubMonitorPlayback();
+  const useMetronome = Boolean(currentProject?.metronome);
+  if (!overdubEntries.length && !useMetronome) {
+    return { active: false, earsStartWallMs: null };
+  }
+
+  const schedLeadSec = 0.020;
+  const playStartCtxTime = ctx.currentTime + schedLeadSec;
+  const masterBus = createMasterDrumBus(ctx);
+  activeOverdubMonitorNodes.push(masterBus);
+
+  // Silent clock-anchor oscillator keeps PipeWire output stream running continuously for exact getOutputTimestamp()
+  const silentAnchorOsc = ctx.createOscillator();
+  const silentAnchorGain = ctx.createGain();
+  silentAnchorGain.gain.value = 0;
+  silentAnchorOsc.connect(silentAnchorGain).connect(ctx.destination);
+  silentAnchorOsc.start(playStartCtxTime);
+  activeOverdubMonitorNodes.push(silentAnchorOsc, silentAnchorGain);
+
+  for (const { track, clips } of overdubEntries) {
+    const { inputGain, trackMixBus, srActive, blend } = buildTrackWebAudioChain(ctx, track, masterBus);
+    activeOverdubMonitorNodes.push(inputGain, trackMixBus);
+
+    for (const clip of clips) {
+      const clipStart = Number(clip.startSec) || 0;
+      const clipOff = Math.max(0, Number(clip.offsetSec) || 0);
+      const buf = decodedBufferCache.get(clip.wavFile);
+      const clipDur = Math.max(0.04, Number(clip.durationSec) || (buf ? Math.max(0.04, buf.duration - clipOff) : 0));
+      const clipEnd = clipStart + clipDur;
+
+      if (buf && clipEnd > startFrom && clipOff < buf.duration) {
+        const src = ctx.createBufferSource();
+        src.buffer = buf;
+        const clipGainNode = ctx.createGain();
+        const clipGainLin = DE.dbToGain(Number(clip.gainDb) || 0);
+        const fadeIn = Math.max(0, Number(clip.fadeInSec) || 0);
+        const fadeOut = Math.max(0, Number(clip.fadeOutSec) || 0);
+
+        if (clipStart >= startFrom) {
+          const t0 = playStartCtxTime + (clipStart - startFrom);
+          const playDur = Math.min(clipDur, Math.max(0.01, buf.duration - clipOff));
+          const tEnd = t0 + playDur;
+          if (fadeIn > 0.002) {
+            clipGainNode.gain.setValueAtTime(0.0001, t0);
+            clipGainNode.gain.linearRampToValueAtTime(clipGainLin, t0 + Math.min(fadeIn, playDur));
+          } else {
+            clipGainNode.gain.setValueAtTime(clipGainLin, t0);
+          }
+          if (fadeOut > 0.002 && playDur > fadeOut) {
+            clipGainNode.gain.setValueAtTime(clipGainLin, Math.max(t0 + Math.min(fadeIn, playDur), tEnd - fadeOut));
+            clipGainNode.gain.linearRampToValueAtTime(0.0001, tEnd);
+          }
+          src.connect(clipGainNode).connect(inputGain);
+          src.start(t0, clipOff, playDur);
+        } else {
+          const intoClip = startFrom - clipStart;
+          const srcOffset = clipOff + intoClip;
+          const playDur = Math.min(clipEnd - startFrom, Math.max(0.01, buf.duration - srcOffset));
+          if (playDur > 0.01 && srcOffset < buf.duration) {
+            const tEnd = playStartCtxTime + playDur;
+            clipGainNode.gain.setValueAtTime(clipGainLin, playStartCtxTime);
+            if (fadeOut > 0.002) {
+              const fadeStartWall = Math.max(playStartCtxTime, tEnd - fadeOut);
+              clipGainNode.gain.setValueAtTime(clipGainLin, fadeStartWall);
+              clipGainNode.gain.linearRampToValueAtTime(0.0001, tEnd);
+            }
+            src.connect(clipGainNode).connect(inputGain);
+            src.start(playStartCtxTime, srcOffset, playDur);
+          }
+        }
+        activeOverdubMonitorNodes.push(src);
+      }
+
+      if (srActive && Array.isArray(clip.transients)) {
+        const clipVelScale = clip.autoGainStaged ? 1.0 : DE.clamp(0.15, 1.4, DE.dbToGain((Number(clip.gainDb) || 0) * 0.25));
+        for (const hit of clip.transients) {
+          const absHitSec = clipStart + (Number(hit.timeSec) || 0);
+          if (absHitSec < startFrom || absHitSec > clipEnd + 0.005) continue;
+          const sp = resolveDrumSamplePath(track.soundReplacement.kitId, track.soundReplacement.pieceId, hit.velocity);
+          const srBuf = sp ? decodedBufferCache.get(sp) : null;
+          if (!srBuf) continue;
+          const hitSrc = ctx.createBufferSource();
+          hitSrc.buffer = srBuf;
+          const hitGain = ctx.createGain();
+          hitGain.gain.value = blend * Math.max(0.25, Math.min(1.3, (Number(hit.velocity) || 0.8) * clipVelScale));
+          hitSrc.connect(hitGain).connect(trackMixBus);
+          hitSrc.start(playStartCtxTime + (absHitSec - startFrom));
+          activeOverdubMonitorNodes.push(hitSrc);
+        }
+      }
+    }
+  }
+
+  if (useMetronome) {
+    const bpm = Number(currentProject?.bpm) || 120;
+    const secPerBeat = 60 / bpm;
+    const firstBeat = Math.ceil(startFrom / secPerBeat);
+    const maxBeats = firstBeat + 600;
+    for (let b = firstBeat; b <= maxBeats; b++) {
+      const beatSec = b * secPerBeat;
+      const osc = ctx.createOscillator();
+      const g = ctx.createGain();
+      osc.frequency.value = (b % 4 === 0) ? 1180 : 840;
+      const t0 = playStartCtxTime + (beatSec - startFrom);
+      g.gain.setValueAtTime(0.08, t0);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.045);
+      osc.connect(g).connect(ctx.destination);
+      osc.start(t0);
+      osc.stop(t0 + 0.05);
+      activeOverdubMonitorNodes.push(osc);
+    }
+  }
+
+  const ts = typeof ctx.getOutputTimestamp === 'function' ? ctx.getOutputTimestamp() : null;
+  let earsStartWallMs = null;
+  let lockedByHwTs = false;
+  if (ts && ts.contextTime > 0 && ts.performanceTime > 0) {
+    earsStartWallMs = (performance.timeOrigin + ts.performanceTime) + (playStartCtxTime - ts.contextTime) * 1000;
+    lockedByHwTs = true;
+  } else {
+    const fallbackOutLatSec = ((Number(ctx.baseLatency) || 0) + (Number(ctx.outputLatency) || 0))
+      || ((Number(audioSnapshot?.clock?.latencyMs) || 42) / 1000);
+    earsStartWallMs = Date.now() + schedLeadSec * 1000 + fallbackOutLatSec * 1000;
+  }
+
+  return {
+    active: true,
+    ctx,
+    playStartCtxTime,
+    earsStartWallMs,
+    lockedByHwTs,
+    backingTrackCount: overdubEntries.length,
+  };
+}
+
 async function abortCurrentRecording() {
   if (!isRecording) return false;
   const punchInStartSec = liveRecSession ? liveRecSession.startSec : 0;
   stopRecordingRafLoop();
+  stopOverdubMonitorPlayback();
   const res = await window.robos.recordCancel();
   isRecording = false;
   liveRecSession = null;
@@ -1146,10 +1350,12 @@ async function toggleRecording({ keepCursorAtStop = false } = {}) {
   if (isRecording) {
     const punchInStartSec = liveRecSession ? liveRecSession.startSec : 0;
     const stopEdgeSec = playheadSec;
+    const earsStartWallMs = liveRecSession?.earsStartWallMs ?? null;
     const injectTestSignal = Boolean(document.getElementById('chk-test-groove')?.checked);
 
-    // 0ms immediate transport stop on keydown — freeze clock, disarm REC LED, and snap playhead immediately
+    // 0ms immediate transport stop on keydown — freeze clock, stop backing audio, disarm REC LED, and snap playhead immediately
     stopRecordingRafLoop();
+    stopOverdubMonitorPlayback();
     isRecording = false;
     isStoppingRecording = true;
     if (liveRecSession) liveRecSession.stoppedEndSec = stopEdgeSec;
@@ -1167,7 +1373,7 @@ async function toggleRecording({ keepCursorAtStop = false } = {}) {
 
     let res = null;
     try {
-      res = await window.robos.recordStop({ injectTestSignal });
+      res = await window.robos.recordStop({ injectTestSignal, earsStartWallMs });
     } finally {
       isStoppingRecording = false;
       liveRecSession = null;
@@ -1200,13 +1406,22 @@ async function toggleRecording({ keepCursorAtStop = false } = {}) {
   }
 
   const bpm = Number(document.getElementById('project-bpm-input')?.value) || Number(currentProject?.bpm) || 120;
+  const punchTargetSec = playheadSec;
+
+  // Pre-warm Studio Output AudioContext & pre-decode any backing tracks BEFORE spawning capture (0ms punch-in lag)
+  const overdubEntries = await prepareOverdubBackingEntries(punchTargetSec);
+  let studioCtx = null;
+  if (overdubEntries.length > 0 || currentProject?.metronome || countInEnabled) {
+    studioCtx = await ensureRoutedStudioAudioCtx();
+  }
+
   if (countInEnabled) {
     await playRecordCountInClicks(bpm);
   }
 
   const injectTestSignal = Boolean(document.getElementById('chk-test-groove')?.checked);
   const res = await window.robos.recordStart({
-    startSec: playheadSec,
+    startSec: punchTargetSec,
     injectTestSignal,
     projectMeta: {
       name: document.getElementById('project-name-input')?.value,
@@ -1220,6 +1435,10 @@ async function toggleRecording({ keepCursorAtStop = false } = {}) {
   }
 
   const punchStartSec = Number(res.startSec) || 0;
+  const overdubMonitor = studioCtx
+    ? startOverdubMonitorPlayback(studioCtx, punchStartSec, overdubEntries)
+    : { active: false, earsStartWallMs: null, backingTrackCount: 0 };
+
   const trackStatesMap = new Map();
   for (const tr of (res.tracks || [])) {
     trackStatesMap.set(tr.trackId, {
@@ -1239,6 +1458,9 @@ async function toggleRecording({ keepCursorAtStop = false } = {}) {
   liveRecSession = {
     startSec: punchStartSec,
     startedPerfMs: performance.now(),
+    firstSampleMicWallMs: Number.isFinite(res.firstSampleMicWallMs) ? res.firstSampleMicWallMs : null,
+    earsStartWallMs: overdubMonitor.earsStartWallMs,
+    overdubMonitor,
     ipcElapsedSec: 0,
     sliceDurationSec: Number(res.sliceDurationSec) || 0.02,
     tracks: trackStatesMap,
@@ -1246,10 +1468,16 @@ async function toggleRecording({ keepCursorAtStop = false } = {}) {
   isRecording = true;
   document.getElementById('btn-transport-record')?.classList.add('recording');
   document.getElementById('header-rec-dot')?.classList.add('recording');
-  document.getElementById('transport-substate').textContent = `REC (${res.armedCount} CH)`;
+  document.getElementById('transport-substate').textContent = overdubMonitor.backingTrackCount > 0
+    ? `REC (${res.armedCount} CH + PLAY)`
+    : `REC (${res.armedCount} CH)`;
   drawAllTimelineCanvases();
   startRecordingRafLoop();
-  showStatus(`Recording ${res.armedCount} armed channel(s) live via PipeWire (10ms low-latency waveform stream) — press Stop when finished.`);
+  showStatus(
+    overdubMonitor.backingTrackCount > 0
+      ? `Recording ${res.armedCount} armed channel(s) synced to ${overdubMonitor.backingTrackCount} backing track(s) — press Space to stop.`
+      : `Recording ${res.armedCount} armed channel(s) live via PipeWire (10ms low-latency waveform stream) — press Space to stop.`
+  );
 }
 
 // ─── Studio & Timeline Rendering ────────────────────────────────────────────
@@ -2472,8 +2700,13 @@ function drawAllTimelineCanvases() {
       ctx.fillStyle = '#ef4444';
       ctx.fillRect(startX, regionTop, clipW, 2.5);
 
-      // Time-anchored live streaming Dual-Layer Peak + Core Waveform
-      const peaks = recState?.peaks || [];
+      // Time-anchored live streaming Dual-Layer Peak + Core Waveform (aligned for pre-roll latency)
+      const rawPeaks = recState?.peaks || [];
+      const preRollSec = (Number.isFinite(liveRecSession?.earsStartWallMs) && Number.isFinite(liveRecSession?.firstSampleMicWallMs))
+        ? Math.max(0, (liveRecSession.earsStartWallMs - liveRecSession.firstSampleMicWallMs) / 1000)
+        : 0;
+      const skipSlices = Math.min(rawPeaks.length, Math.max(0, Math.round(preRollSec / sliceDur)));
+      const peaks = skipSlices > 0 ? rawPeaks.slice(skipSlices) : rawPeaks;
       const curTipPeak = Number(recState?.currentPeak) || 0;
       const totalSlices = peaks.length + (curTipPeak > 0.00039 ? 1 : 0);
       if (totalSlices > 0) {
@@ -3084,9 +3317,17 @@ async function armAllTracks() {
     showStatus('No tracks in session yet — press Ctrl+T or + Track first.', true);
     return;
   }
+  const hwIds = new Set(
+    (currentProject.tracks || [])
+      .filter(t => Boolean(t.inputNodeName) || !(t.clips || []).some(c => c.sourceFile || c.mediaKind))
+      .map(t => t.id)
+  );
+  const target = hwIds.size > 0 ? hwIds : 'all';
+  const count = target === 'all' ? currentProject.tracks.length : hwIds.size;
   await commitEdit('Arm All Tracks', () => {
-    DE.setTracksPropertyBatch(currentProject, 'all', 'armed', true);
-  }, { statusMsg: `Armed all ${currentProject.tracks.length} studio tracks for recording` });
+    DE.setTracksPropertyBatch(currentProject, 'all', 'armed', false);
+    DE.setTracksPropertyBatch(currentProject, target, 'armed', true);
+  }, { statusMsg: `Armed ${count} hardware capture track(s) (backing media tracks kept ready for playback)` });
 }
 
 async function disarmAllTracks() {

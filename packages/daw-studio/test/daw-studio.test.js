@@ -1227,4 +1227,43 @@ describe('DAW Editing Engine: Multi-Select, Track/Take Gain, Split/Trim, Copy/Pa
       fs.rmSync(tmpDir, { recursive: true, force: true });
     }
   });
+
+  it('aligns overdubbed takes to backing-track headphone presentation timestamps with sub-millisecond accuracy', () => {
+    const { alignRecordedWavBuffer } = require('../lib/session-manager');
+
+    // Case 1: pw-cat began capturing at wall 1000ms; backing track 0.000s reached headphones at 1125ms (+125ms pre-roll + RTL).
+    // Drummer strikes snare in sync with backing beat at 1.000s (wall 2125ms -> raw WAV offset 1.125s).
+    const rawWav = synthesizeDrumTakeWav({
+      profileId: 'snare-top',
+      durationSec: 2.2,
+      sampleRate: 48000,
+      hitTimesSec: [1.125],
+    });
+    const aligned = alignRecordedWavBuffer(rawWav, {
+      punchStartSec: 4.0,
+      sampleRate: 48000,
+      firstSampleMicWallMs: 1000,
+      earsStartWallMs: 1125,
+    });
+    assert.strictEqual(aligned.clipStartSec, 4.0);
+    assert.strictEqual(aligned.trimmedSec, 0.125);
+    const hits = detectDrumTransients(aligned.buffer, { thresholdDb: -28, minIntervalMs: 65 });
+    assert.ok(hits.length >= 1, 'Expected detected snare transient after pre-roll alignment');
+    assert.ok(Math.abs(hits[0].timeSec - 1.0) <= 0.006, `Expected snare hit aligned to 1.000s, got ${hits[0].timeSec}s`);
+
+    // Case 2: capture started 40ms AFTER backing track reached headphones -> shifts clipStartSec +0.040s
+    const lateWav = synthesizeDrumTakeWav({
+      profileId: 'snare-top',
+      durationSec: 2.0,
+      sampleRate: 48000,
+      hitTimesSec: [0.96],
+    });
+    const lateAligned = alignRecordedWavBuffer(lateWav, {
+      punchStartSec: 4.0,
+      sampleRate: 48000,
+      firstSampleMicWallMs: 1040,
+      earsStartWallMs: 1000,
+    });
+    assert.strictEqual(lateAligned.clipStartSec, 4.04);
+  });
 });

@@ -212,6 +212,42 @@ function startDiscreteCaptureSession(
   let lastFlushAtMs = 0;
   let pendingFlushTimer = null;
 
+  // Sub-millisecond hardware sync: wall-clock timestamp when Sample #0 left PipeWire / hit the mic
+  const reqLatMatch = String(pwLatency || '10ms').match(/([\d.]+)\s*ms/i);
+  const adcCaptureLatencyMs = (reqLatMatch ? Number(reqLatMatch[1]) : 10) + 1.5;
+  let firstSampleEmittedAtMs = null;
+  let resolveFirstSample = null;
+  const firstSamplePromise = new Promise((resolve) => {
+    resolveFirstSample = resolve;
+  });
+
+  function recordFirstSampleTimestamp(chunkFrames) {
+    if (firstSampleEmittedAtMs !== null || chunkFrames <= 0) return;
+    firstSampleEmittedAtMs = Date.now() - (chunkFrames / sampleRate) * 1000;
+    if (resolveFirstSample) {
+      const fn = resolveFirstSample;
+      resolveFirstSample = null;
+      fn(firstSampleEmittedAtMs);
+    }
+  }
+
+  function getFirstSampleMicWallMs() {
+    return firstSampleEmittedAtMs !== null ? (firstSampleEmittedAtMs - adcCaptureLatencyMs) : null;
+  }
+
+  function waitReady(timeoutMs = 280) {
+    if (firstSampleEmittedAtMs !== null || stopped) {
+      return Promise.resolve(firstSampleEmittedAtMs);
+    }
+    return Promise.race([
+      firstSamplePromise,
+      new Promise((resolve) => {
+        const t = setTimeout(() => resolve(firstSampleEmittedAtMs), timeoutMs);
+        if (t.unref) t.unref();
+      }),
+    ]);
+  }
+
   function flushProgress() {
     if (stopped) return;
     if (pendingFlushTimer) {
@@ -336,6 +372,7 @@ function startDiscreteCaptureSession(
       if (usableLen <= 0 || st.fd === null) return;
 
       const slice = buf.subarray(0, usableLen);
+      recordFirstSampleTimestamp(slice.length / 2);
       queueAsyncPcmWrite(st, slice);
 
       ingestMonoPcmBuffer(st, slice, sliceSamples);
@@ -381,6 +418,7 @@ function startDiscreteCaptureSession(
       remainder = usableLen < buf.length ? buf.subarray(usableLen) : Buffer.alloc(0);
       if (!markStreamLive(streamId)) return; // Discard early pre-roll until all devices start!
       if (frames <= 0) return;
+      recordFirstSampleTimestamp(frames);
 
       for (const st of group.members) {
         if (st.fd === null || st.channelIndex >= group.totalChannels) continue;
@@ -439,6 +477,11 @@ function startDiscreteCaptureSession(
   async function stop() {
     if (stopped) return trackStates;
     stopped = true;
+    if (resolveFirstSample) {
+      const fn = resolveFirstSample;
+      resolveFirstSample = null;
+      fn(firstSampleEmittedAtMs);
+    }
     clearInterval(meterTimer);
     if (pendingFlushTimer) {
       clearTimeout(pendingFlushTimer);
@@ -478,6 +521,8 @@ function startDiscreteCaptureSession(
     startedAtMs,
     sliceDurationSec: actualSliceDurationSec,
     trackStates,
+    waitReady,
+    getFirstSampleMicWallMs,
     stop,
   };
 }
