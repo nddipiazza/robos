@@ -51,6 +51,9 @@ const {
 const {
   generateAlignedClickTrackForProject,
 } = require('./lib/click-track-generator');
+const {
+  removeDrumsFromTrackInProject,
+} = require('./lib/drum-remover');
 
 // Ensure user CLI bin directories (where `agy`, `gemini`, `claude`, `copilot` live) are in PATH
 for (const extraBin of [
@@ -1160,6 +1163,34 @@ ipcMain.handle('daw:generate-click-track', async (_e, payload) => {
       aiAgentModule: aiAgent,
       takesDir,
       onProgress: (p) => sendToRenderer('daw:click-track-progress', p),
+    });
+    currentProject = res.project;
+    return res;
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('daw:remove-drums-from-track', async (_e, payload) => {
+  try {
+    const snap = audioDevices?.getAudioDevicesSnapshot?.() || null;
+    if (payload?.project && Array.isArray(payload.project.tracks)) {
+      currentProject = payload.project;
+    }
+    const proj = ensureCurrentProject(snap);
+    const trackId = payload?.trackId;
+    if (!trackId) throw new Error('Missing source trackId for drum removal.');
+
+    const projDir = proj.projectDir || path.join(getProjectsRoot(), proj.id);
+    const takesDir = path.join(projDir, 'takes');
+    fs.mkdirSync(takesDir, { recursive: true });
+    proj.projectDir = projDir;
+
+    const res = await removeDrumsFromTrackInProject(proj, trackId, {
+      preferredProvider: payload?.preferredProvider || 'antigravity',
+      aiAgentModule: aiAgent,
+      takesDir,
+      onProgress: (p) => sendToRenderer('daw:remove-drums-progress', p),
     });
     currentProject = res.project;
     return res;

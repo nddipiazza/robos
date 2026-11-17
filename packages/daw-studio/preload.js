@@ -64,6 +64,8 @@ contextBridge.exposeInMainWorld('robos', {
   importAudioFiles: (payload) => ipcRenderer.invoke('daw:import-audio-files', payload),
   generateClickTrack: (payload) => ipcRenderer.invoke('daw:generate-click-track', payload),
   onClickTrackProgress: (cb) => subscribe('daw:click-track-progress', cb),
+  removeDrumsFromTrack: (payload) => ipcRenderer.invoke('daw:remove-drums-from-track', payload),
+  onRemoveDrumsProgress: (cb) => subscribe('daw:remove-drums-progress', cb),
   getPathForFile: (file) => {
     try {
       if (webUtils && typeof webUtils.getPathForFile === 'function') {

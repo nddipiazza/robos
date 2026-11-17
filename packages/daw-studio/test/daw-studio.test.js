@@ -1341,4 +1341,81 @@ describe('DAW Editing Engine: Multi-Select, Track/Take Gain, Split/Trim, Copy/Pa
       fs.rmSync(tmpClickDir, { recursive: true, force: true });
     }
   });
+
+  it('removes drums via Gemini-preferred agent + separator into a new track directly below with exact matching startSec & duration', async () => {
+    const { removeDrumsFromTrackInProject } = require('../lib/drum-remover');
+    const tmpRmDir = fs.mkdtempSync(path.join(os.tmpdir(), 'daw-rm-drums-'));
+    try {
+      const wavFile = path.join(tmpRmDir, 'full-song.wav');
+      fs.writeFileSync(wavFile, synthesizeDrumTakeWav({
+        profileId: 'snare-top',
+        durationSec: 2.5,
+        sampleRate: 48000,
+      }));
+
+      const proj = createEmptyProject({ name: 'Remove Drums Test', bpm: 120 });
+      const songTrack = buildTrackFromWizard({ profileId: 'acoustic-inst', name: 'Master Song', armed: false });
+      songTrack.soloed = true;
+      songTrack.clips.push({
+        id: 'c-master',
+        name: 'Master Song [MP3]',
+        wavFile,
+        startSec: 7.425,
+        offsetSec: 0.15,
+        durationSec: 2.1,
+        sourceDurationSec: 2.5,
+        gainDb: -1.5,
+        fadeInSec: 0.02,
+        fadeOutSec: 0.08,
+      });
+      const kickTrack = buildTrackFromWizard({ profileId: 'kick-in', name: 'Kick In', armed: true });
+      proj.tracks.push(songTrack, kickTrack);
+
+      const calledProviders = [];
+      const mockAgent = {
+        PROVIDERS: [{ id: 'copilot' }, { id: 'antigravity' }],
+        PROVIDER_MAP: {
+          antigravity: { id: 'antigravity', name: 'Gemini (Antigravity)' },
+          copilot: { id: 'copilot', name: 'GitHub Copilot' },
+        },
+        getActiveProviderId: () => 'copilot',
+        ask: async (_prompt, opts) => {
+          calledProviders.push(opts.providerId);
+          assert.ok(fs.existsSync(path.join(opts.cwd, 'stem-drum-telemetry.json')));
+          return {
+            ok: true,
+            provider: opts.providerId,
+            text: JSON.stringify({
+              compensation: 1.035,
+              suggestedTrackName: 'Master Song (No Drums)',
+              reasoning: 'Aggressive rock drum kit subtracted cleanly.',
+            }),
+          };
+        },
+      };
+
+      const res = await removeDrumsFromTrackInProject(proj, songTrack.id, {
+        takesDir: tmpRmDir,
+        aiAgentModule: mockAgent,
+        forceHpss: true,
+      });
+
+      assert.strictEqual(res.ok, true);
+      assert.strictEqual(calledProviders[0], 'antigravity', 'Must prefer Gemini (antigravity) first');
+      assert.strictEqual(proj.tracks[0].id, songTrack.id);
+      assert.strictEqual(proj.tracks[0].muted, true, 'Original drum-containing stem muted automatically');
+      assert.strictEqual(proj.tracks[1].id, res.drumlessTrack.id, 'Inserted directly underneath source track');
+      assert.strictEqual(proj.tracks[2].id, kickTrack.id);
+
+      const newClip = res.drumlessTrack.clips[0];
+      assert.strictEqual(newClip.startSec, 7.425, 'Exact startSec match');
+      assert.strictEqual(newClip.offsetSec, 0.15, 'Exact offsetSec match');
+      assert.strictEqual(newClip.durationSec, 2.1, 'Exact durationSec match');
+      assert.strictEqual(newClip.fadeInSec, 0.02);
+      assert.strictEqual(newClip.fadeOutSec, 0.08);
+      assert.ok(fs.existsSync(newClip.wavFile));
+    } finally {
+      fs.rmSync(tmpRmDir, { recursive: true, force: true });
+    }
+  });
 });

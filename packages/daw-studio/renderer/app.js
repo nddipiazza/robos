@@ -3400,6 +3400,66 @@ async function editTrimToPlayhead(edge /* 'left' | 'right' */) {
 }
 
 let isGeneratingClickTrack = false;
+let isRemovingDrums = false;
+
+async function removeDrumsUnderTrack(track) {
+  if (!track || !currentProject) return;
+  if (isRemovingDrums) {
+    showStatus('Already removing drums from stem — please wait for separation to finish...');
+    return;
+  }
+  const activeClips = (track.clips || []).filter(c => !c.muted && c.wavFile);
+  if (!activeClips.length) {
+    showStatus(`Track "${track.name}" has no audible audio regions to remove drums from.`, true);
+    return;
+  }
+
+  stopPlayback();
+  isRemovingDrums = true;
+  const prevSnap = DE.cloneDeep(currentProject);
+  showStatus(`Analyzing "${track.name}" with Gemini RobOS Agent & separating drumless stem...`);
+
+  let progressUnsub = null;
+  if (typeof window.robos?.onRemoveDrumsProgress === 'function') {
+    progressUnsub = window.robos.onRemoveDrumsProgress((p) => {
+      if (p?.message) showStatus(p.message);
+    });
+  }
+
+  try {
+    const res = await window.robos.removeDrumsFromTrack({
+      trackId: track.id,
+      preferredProvider: 'antigravity',
+      project: currentProject,
+    });
+    if (!res?.ok || !res.project) {
+      showStatus(`Remove Drums failed: ${res?.error || 'Unknown error'}`, true);
+      return;
+    }
+
+    historyStack.pushSnapshot(prevSnap, `Remove Drums (${track.name})`);
+    currentProject = res.project;
+    for (const c of (res.drumlessTrack?.clips || [])) {
+      if (c.wavFile) decodedBufferCache.delete(c.wavFile);
+    }
+    if (res.drumlessTrack?.id) {
+      selectedTrackIds = new Set([res.drumlessTrack.id]);
+      anchorTrackId = res.drumlessTrack.id;
+    }
+    selectedClipIds = new Set(res.createdClipIds || []);
+
+    markDirty(true);
+    renderStudio();
+    showStatus(
+      `Created "${res.drumlessTrack?.name || 'No Drums'}" directly below "${track.name}" (muted original stem · ${res.provider}) — press Space to play!`
+    );
+  } finally {
+    if (typeof progressUnsub === 'function') {
+      try { progressUnsub(); } catch {}
+    }
+    isRemovingDrums = false;
+  }
+}
 
 async function generateClickTrackUnderTrack(track) {
   if (!track || !currentProject) return;
@@ -3874,6 +3934,7 @@ function buildMenubarItems(key) {
       { icon: 'mic-wizard', label: 'Add Mic via Studio Wizard...', kbd: '', run: () => openAddMicWizard() },
       { icon: 'drumset-ai', label: 'DrumSet AI All-Mic Soundcheck...', kbd: '', run: () => openDrumsetWizard() },
       { icon: 'metronome', label: 'Generate Click Track Below Selected (Gemini AI)...', kbd: '', disabled: !primaryTrack || !(primaryTrack.clips || []).some(c => !c.muted), run: () => primaryTrack && generateClickTrackUnderTrack(primaryTrack) },
+      { icon: 'drum-replace', label: 'Remove Drums to New Track Below (Gemini AI)...', kbd: '', disabled: !primaryTrack || !(primaryTrack.clips || []).some(c => !c.muted), run: () => primaryTrack && removeDrumsUnderTrack(primaryTrack) },
       { sep: true },
       { icon: 'record', label: `Arm Selected Track(s)${tCnt ? ` (${tCnt})` : ''}`, kbd: 'Shift+R', disabled: tCnt === 0, run: () => armSelectedTracks() },
       { icon: 'stop', label: `Disarm Selected Track(s)${tCnt ? ` (${tCnt})` : ''}`, kbd: '', disabled: tCnt === 0, run: () => disarmSelectedTracks() },
@@ -4251,6 +4312,7 @@ function openTimelineSpaceContextMenu(ev, track, clickTimeSec) {
     ${ctxRow('data-tl-ctx', 'paste-here', 'paste', 'Paste Region(s) Here', 'Ctrl+V', { disabled: !clipClipboard })}
     ${ctxRow('data-tl-ctx', 'import-here', 'import-wav', 'Import Audio / Video Here...', 'Ctrl+Shift+I')}
     ${track ? ctxRow('data-tl-ctx', 'gen-click', 'metronome', 'Generate Click Track', 'Gemini AI', { disabled: !(track.clips || []).some(c => !c.muted) }) : ''}
+    ${track ? ctxRow('data-tl-ctx', 'remove-drums', 'drum-replace', 'Remove Drums', 'Gemini AI', { disabled: !(track.clips || []).some(c => !c.muted) }) : ''}
     ${ctxRow('data-tl-ctx', 'split-all-here', 'scissors', `Split All Regions Crossing ${formatTimecode(safeTime)}`)}
     <div class="ctx-sep"></div>
     ${ctxRow('data-tl-ctx', 'toggle-snap', snapToGrid ? 'check' : 'magnet', `Snap to Beat Grid (${snapToGrid ? 'ON' : 'OFF'})`, 'G')}
@@ -4285,6 +4347,8 @@ function openTimelineSpaceContextMenu(ev, track, clickTimeSec) {
         await importAudioWavFiles({ startSec: safeTime, targetTrackId: track?.id || null });
       } else if (cmd === 'gen-click' && track) {
         await generateClickTrackUnderTrack(track);
+      } else if (cmd === 'remove-drums' && track) {
+        await removeDrumsUnderTrack(track);
       } else if (cmd === 'split-all-here') {
         let cnt = 0;
         await commitEdit('Split All Takes at Cursor', () => {
@@ -4334,6 +4398,7 @@ function openTrackContextMenu(ev, track, clickTimeSec = null) {
       <span class="mono" style="color:#94a3b8;font-size:10px;">${DE.formatDb(Number(track.gainDb) || 0)}</span>
     </div>
     ${ctxRow('data-ctx', 'gen-click', 'metronome', 'Generate Click Track', 'Gemini AI', { disabled: !(track.clips || []).some(c => !c.muted) })}
+    ${ctxRow('data-ctx', 'remove-drums', 'drum-replace', 'Remove Drums', 'Gemini AI', { disabled: !(track.clips || []).some(c => !c.muted) })}
     ${ctxRow('data-ctx', 'add-below', 'plus', 'Add Blank Audio Track Below', 'Ctrl+T')}
     ${ctxRow('data-ctx', 'rename-track', 'edit', 'Rename Track...', 'F2')}
     ${ctxRow('data-ctx', 'reset-gain', 'faders', 'Reset Input Trim (0.0 dB)', 'DblClick')}
@@ -4386,6 +4451,8 @@ function openTrackContextMenu(ev, track, clickTimeSec = null) {
 
       if (cmd === 'gen-click') {
         await generateClickTrackUnderTrack(track);
+      } else if (cmd === 'remove-drums') {
+        await removeDrumsUnderTrack(track);
       } else if (cmd === 'add-below') {
         await addBlankAudioTracks(1, { afterTrackId: track.id });
       } else if (cmd === 'rename-track') {
@@ -4490,6 +4557,7 @@ function openTakeContextMenu(ev, track, clip, clickTimeSec) {
     </div>
     ${ctxRow('data-take-ctx', 'play-solo', 'play', 'Play Solo From This Region')}
     ${ctxRow('data-take-ctx', 'gen-click', 'metronome', 'Generate Click Track', 'Gemini AI')}
+    ${ctxRow('data-take-ctx', 'remove-drums', 'drum-replace', 'Remove Drums', 'Gemini AI')}
     ${ctxRow('data-take-ctx', 'split-here', 'scissors', `Split Region${targetClipIds.size > 1 ? 's' : ''} Here (${formatTimecode(clickTimeSec)})`, '', { disabled: !canSplitHere })}
     ${ctxRow('data-take-ctx', 'trim-start-here', 'trim-left', `Trim Start${targetClipIds.size > 1 ? 's' : ''} Here (${formatTimecode(clickTimeSec)})`, '[', { disabled: !canSplitHere })}
     ${ctxRow('data-take-ctx', 'trim-end-here', 'trim-right', `Trim End${targetClipIds.size > 1 ? 's' : ''} Here (${formatTimecode(clickTimeSec)})`, ']', { disabled: !canSplitHere })}
@@ -4582,6 +4650,8 @@ function openTakeContextMenu(ev, track, clip, clickTimeSec) {
         startPlayback();
       } else if (cmd === 'gen-click') {
         await generateClickTrackUnderTrack(track);
+      } else if (cmd === 'remove-drums') {
+        await removeDrumsUnderTrack(track);
       } else if (cmd === 'split-here') {
         await commitEdit('Split Take', () => {
           const out = DE.splitClipsInProject(currentProject, {
