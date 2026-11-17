@@ -1266,4 +1266,79 @@ describe('DAW Editing Engine: Multi-Select, Track/Take Gain, Split/Trim, Copy/Pa
     });
     assert.strictEqual(lateAligned.clipStartSec, 4.04);
   });
+
+  it('generates a Gemini-preferred beat-locked click track directly below the target track with a 1-measure count-off', async () => {
+    const { generateAlignedClickTrackForProject } = require('../lib/click-track-generator');
+    const tmpClickDir = fs.mkdtempSync(path.join(os.tmpdir(), 'daw-click-unit-'));
+    try {
+      const bpm = 128;
+      const beatSec = 60 / bpm; // 0.46875s -> 1 bar (4/4) = 1.875s
+      const hits = [];
+      for (let b = 0; b < 32; b++) hits.push(0.35 + b * beatSec);
+      const wavFile = path.join(tmpClickDir, 'backing-groove.wav');
+      fs.writeFileSync(wavFile, synthesizeDrumTakeWav({
+        profileId: 'kick-in',
+        durationSec: 16.5,
+        sampleRate: 48000,
+        hitTimesSec: hits,
+      }));
+
+      const proj = createEmptyProject({ name: 'Click Generator Test', bpm: 120 });
+      const backingTrack = buildTrackFromWizard({ profileId: 'acoustic-inst', name: 'Backing Song', armed: false });
+      backingTrack.soloed = true;
+      backingTrack.clips.push({ id: 'c-song', name: 'Backing Song', wavFile, startSec: 0, durationSec: 16.5 });
+      const drumTrack = buildTrackFromWizard({ profileId: 'snare-top', name: 'Snare Top', armed: true });
+      proj.tracks.push(backingTrack, drumTrack);
+
+      const calledProviders = [];
+      const mockAgent = {
+        PROVIDERS: [{ id: 'copilot' }, { id: 'antigravity' }],
+        PROVIDER_MAP: {
+          antigravity: { id: 'antigravity', name: 'Gemini (Antigravity)' },
+          copilot: { id: 'copilot', name: 'GitHub Copilot' },
+        },
+        getActiveProviderId: () => 'copilot',
+        ask: async (_prompt, opts) => {
+          calledProviders.push(opts.providerId);
+          assert.ok(fs.existsSync(path.join(opts.cwd, 'beat-analysis.json')));
+          assert.ok(fs.existsSync(path.join(opts.cwd, 'track-excerpt.wav')));
+          return {
+            ok: true,
+            provider: opts.providerId,
+            text: JSON.stringify({
+              bpm: 128,
+              beatsPerBar: 4,
+              noteValue: 4,
+              subdivision: 'quarter',
+              reasoning: 'Tight 128 BPM 4/4 rock groove.',
+            }),
+          };
+        },
+      };
+
+      const res = await generateAlignedClickTrackForProject(proj, backingTrack.id, {
+        takesDir: tmpClickDir,
+        aiAgentModule: mockAgent,
+      });
+
+      assert.strictEqual(res.ok, true);
+      assert.strictEqual(calledProviders[0], 'antigravity', 'Must prefer Gemini (antigravity) provider first');
+      assert.strictEqual(res.bpm, 128);
+      assert.strictEqual(res.timeSignature, '4/4');
+      // Inserted directly under Backing Song (index 1, pushing Snare Top to index 2)
+      assert.strictEqual(proj.tracks[0].id, backingTrack.id);
+      assert.strictEqual(proj.tracks[1].id, res.clickTrack.id);
+      assert.strictEqual(proj.tracks[2].id, drumTrack.id);
+      assert.strictEqual(res.clickTrack.armed, false);
+      assert.strictEqual(res.clickTrack.soloed, true, 'Inherits solo visibility when session has soloed tracks');
+
+      // Song originally started at 0.35s (< 1.875s measure), so session shifted forward cleanly to fit 1-bar count-in at 0.10s
+      const expectedDownbeat = Number((backingTrack.clips[0].startSec + 0.35).toFixed(4));
+      assert.ok(Math.abs(res.firstDownbeatSec - expectedDownbeat) <= 0.005, `Expected downbeat ~${expectedDownbeat}s, got ${res.firstDownbeatSec}s`);
+      assert.ok(Math.abs((res.firstDownbeatSec - res.countInStartSec) - (4 * beatSec)) <= 0.002, '1-measure count-off must precede Beat 1 by exactly 4 beats');
+      assert.ok(fs.existsSync(res.clickClip.wavFile));
+    } finally {
+      fs.rmSync(tmpClickDir, { recursive: true, force: true });
+    }
+  });
 });

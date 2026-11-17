@@ -3399,6 +3399,75 @@ async function editTrimToPlayhead(edge /* 'left' | 'right' */) {
   }
 }
 
+let isGeneratingClickTrack = false;
+
+async function generateClickTrackUnderTrack(track) {
+  if (!track || !currentProject) return;
+  if (isGeneratingClickTrack) {
+    showStatus('Already analyzing track and generating AI click track — please wait a moment...');
+    return;
+  }
+  const activeClips = (track.clips || []).filter(c => !c.muted && c.wavFile);
+  if (!activeClips.length) {
+    showStatus(`Track "${track.name}" has no audible audio regions to align a click track to.`, true);
+    return;
+  }
+
+  stopPlayback();
+  isGeneratingClickTrack = true;
+  const prevSnap = DE.cloneDeep(currentProject);
+  showStatus(`Analyzing "${track.name}" with Gemini RobOS Agent & generating aligned click track + 1-measure count-off...`);
+
+  let progressUnsub = null;
+  if (typeof window.robos?.onClickTrackProgress === 'function') {
+    progressUnsub = window.robos.onClickTrackProgress((p) => {
+      if (p?.message) showStatus(p.message);
+    });
+  }
+
+  try {
+    const res = await window.robos.generateClickTrack({
+      trackId: track.id,
+      preferredProvider: 'antigravity',
+      project: currentProject,
+    });
+    if (!res?.ok || !res.project) {
+      showStatus(`Generate Click Track failed: ${res?.error || 'Unknown error'}`, true);
+      return;
+    }
+
+    historyStack.pushSnapshot(prevSnap, `Generate Click Track (${track.name})`);
+    currentProject = res.project;
+    if (res.clickClip?.wavFile) {
+      decodedBufferCache.delete(res.clickClip.wavFile);
+    }
+    if (res.clickTrack?.id) {
+      selectedTrackIds = new Set([res.clickTrack.id]);
+      anchorTrackId = res.clickTrack.id;
+    }
+    selectedClipIds = res.clickClip?.id ? new Set([res.clickClip.id]) : new Set();
+
+    playheadSec = Number(res.countInStartSec) || 0;
+    const tcEl = document.getElementById('transport-timecode');
+    if (tcEl) tcEl.textContent = formatTimecode(playheadSec);
+    ensurePlayheadInViewport(playheadSec);
+
+    markDirty(true);
+    renderStudio();
+    const shiftNote = res.timelineShiftSec > 0
+      ? ` (shifted session +${res.timelineShiftSec.toFixed(2)}s to fit 1-bar count-in)`
+      : '';
+    showStatus(
+      `Generated Click Track under "${track.name}" (${res.bpm} BPM · ${res.timeSignature}, 1-bar count-in @ ${formatTimecode(playheadSec)}) via ${res.provider}${shiftNote} — press Space to play!`
+    );
+  } finally {
+    if (typeof progressUnsub === 'function') {
+      try { progressUnsub(); } catch {}
+    }
+    isGeneratingClickTrack = false;
+  }
+}
+
 async function importAudioWavFiles({ startSec = playheadSec, targetTrackId = null, filePaths = undefined } = {}) {
   const prevSnap = currentProject ? DE.cloneDeep(currentProject) : null;
   let chosenTrackId = targetTrackId;
@@ -3804,6 +3873,7 @@ function buildMenubarItems(key) {
       { icon: 'layers', label: 'Add 8 Audio Tracks (8-Preamp Bank)', kbd: '', run: () => addBlankAudioTracks(8) },
       { icon: 'mic-wizard', label: 'Add Mic via Studio Wizard...', kbd: '', run: () => openAddMicWizard() },
       { icon: 'drumset-ai', label: 'DrumSet AI All-Mic Soundcheck...', kbd: '', run: () => openDrumsetWizard() },
+      { icon: 'metronome', label: 'Generate Click Track Below Selected (Gemini AI)...', kbd: '', disabled: !primaryTrack || !(primaryTrack.clips || []).some(c => !c.muted), run: () => primaryTrack && generateClickTrackUnderTrack(primaryTrack) },
       { sep: true },
       { icon: 'record', label: `Arm Selected Track(s)${tCnt ? ` (${tCnt})` : ''}`, kbd: 'Shift+R', disabled: tCnt === 0, run: () => armSelectedTracks() },
       { icon: 'stop', label: `Disarm Selected Track(s)${tCnt ? ` (${tCnt})` : ''}`, kbd: '', disabled: tCnt === 0, run: () => disarmSelectedTracks() },
@@ -4180,6 +4250,7 @@ function openTimelineSpaceContextMenu(ev, track, clickTimeSec) {
     <div class="ctx-sep"></div>
     ${ctxRow('data-tl-ctx', 'paste-here', 'paste', 'Paste Region(s) Here', 'Ctrl+V', { disabled: !clipClipboard })}
     ${ctxRow('data-tl-ctx', 'import-here', 'import-wav', 'Import Audio / Video Here...', 'Ctrl+Shift+I')}
+    ${track ? ctxRow('data-tl-ctx', 'gen-click', 'metronome', 'Generate Click Track', 'Gemini AI', { disabled: !(track.clips || []).some(c => !c.muted) }) : ''}
     ${ctxRow('data-tl-ctx', 'split-all-here', 'scissors', `Split All Regions Crossing ${formatTimecode(safeTime)}`)}
     <div class="ctx-sep"></div>
     ${ctxRow('data-tl-ctx', 'toggle-snap', snapToGrid ? 'check' : 'magnet', `Snap to Beat Grid (${snapToGrid ? 'ON' : 'OFF'})`, 'G')}
@@ -4212,6 +4283,8 @@ function openTimelineSpaceContextMenu(ev, track, clickTimeSec) {
         }, { statusMsg: `Pasted region(s) at ${formatTimecode(safeTime)}` });
       } else if (cmd === 'import-here') {
         await importAudioWavFiles({ startSec: safeTime, targetTrackId: track?.id || null });
+      } else if (cmd === 'gen-click' && track) {
+        await generateClickTrackUnderTrack(track);
       } else if (cmd === 'split-all-here') {
         let cnt = 0;
         await commitEdit('Split All Takes at Cursor', () => {
@@ -4260,6 +4333,7 @@ function openTrackContextMenu(ev, track, clickTimeSec = null) {
       <span class="ctx-item-left">${DI.badge('mic-wizard', 15)}<span>${esc(multiLabel)}</span></span>
       <span class="mono" style="color:#94a3b8;font-size:10px;">${DE.formatDb(Number(track.gainDb) || 0)}</span>
     </div>
+    ${ctxRow('data-ctx', 'gen-click', 'metronome', 'Generate Click Track', 'Gemini AI', { disabled: !(track.clips || []).some(c => !c.muted) })}
     ${ctxRow('data-ctx', 'add-below', 'plus', 'Add Blank Audio Track Below', 'Ctrl+T')}
     ${ctxRow('data-ctx', 'rename-track', 'edit', 'Rename Track...', 'F2')}
     ${ctxRow('data-ctx', 'reset-gain', 'faders', 'Reset Input Trim (0.0 dB)', 'DblClick')}
@@ -4310,7 +4384,9 @@ function openTrackContextMenu(ev, track, clickTimeSec = null) {
       const cmd = btn.dataset.ctx;
       closeContextMenu();
 
-      if (cmd === 'add-below') {
+      if (cmd === 'gen-click') {
+        await generateClickTrackUnderTrack(track);
+      } else if (cmd === 'add-below') {
         await addBlankAudioTracks(1, { afterTrackId: track.id });
       } else if (cmd === 'rename-track') {
         inlineRenamingTrackId = track.id;
@@ -4413,6 +4489,7 @@ function openTakeContextMenu(ev, track, clip, clickTimeSec) {
       <span class="mono" style="color:#94a3b8;font-size:10px;">${DE.formatDb(Number(clip.gainDb) || 0)}</span>
     </div>
     ${ctxRow('data-take-ctx', 'play-solo', 'play', 'Play Solo From This Region')}
+    ${ctxRow('data-take-ctx', 'gen-click', 'metronome', 'Generate Click Track', 'Gemini AI')}
     ${ctxRow('data-take-ctx', 'split-here', 'scissors', `Split Region${targetClipIds.size > 1 ? 's' : ''} Here (${formatTimecode(clickTimeSec)})`, '', { disabled: !canSplitHere })}
     ${ctxRow('data-take-ctx', 'trim-start-here', 'trim-left', `Trim Start${targetClipIds.size > 1 ? 's' : ''} Here (${formatTimecode(clickTimeSec)})`, '[', { disabled: !canSplitHere })}
     ${ctxRow('data-take-ctx', 'trim-end-here', 'trim-right', `Trim End${targetClipIds.size > 1 ? 's' : ''} Here (${formatTimecode(clickTimeSec)})`, ']', { disabled: !canSplitHere })}
@@ -4503,6 +4580,8 @@ function openTakeContextMenu(ev, track, clip, clickTimeSec) {
         renderStudio();
         await syncProjectToMain();
         startPlayback();
+      } else if (cmd === 'gen-click') {
+        await generateClickTrackUnderTrack(track);
       } else if (cmd === 'split-here') {
         await commitEdit('Split Take', () => {
           const out = DE.splitClipsInProject(currentProject, {
