@@ -101,6 +101,10 @@
                   <span>Save</span>
                 </button>
                 <button type="button" class="btn btn-sm btn-bevel" id="btn-project-save-as" title="Save Session As (Ctrl+Shift+S)">Save As</button>
+                <button type="button" class="btn btn-sm btn-bevel" id="btn-project-export" title="Export Audio Mixdown — MP3, WAV, FLAC, M4A, OGG, Opus, AIFF (Ctrl+Shift+E)">
+                  <img src="assets/icons/mixdown-export.webp" class="daw-ai-badge" width="13.5" height="13.5" alt="" />
+                  <span>Export</span>
+                </button>
               </div>
             </div>
 
@@ -247,6 +251,10 @@
                 </div>
 
                 <span class="selection-status-pill mono" id="selection-status-pill">0 selected</span>
+                <span class="time-selection-pill mono hidden" id="time-selection-pill" title="Click to open Export Mixdown for this range">
+                  <span id="time-selection-pill-text">FROM 00:00.000 -&gt; TO 00:10.000</span>
+                  <button type="button" class="time-sel-clear-btn" id="btn-clear-time-selection" title="Clear Timeline From/To Selection (Double-click Ruler)">&times;</button>
+                </span>
               </div>
 
               <div class="edit-tools-right">
@@ -852,6 +860,132 @@
       <div class="modal-footer">
         <span class="hint">Press Ctrl+R (or R) to record, Alt+Backspace to discard a botched pass, or Ctrl+Shift+R / F4 for instant hands-free Retake.</span>
         <button type="button" class="btn btn-primary" id="btn-shortcuts-done">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL 7: EXPORT AUDIO MIXDOWN DIALOG ==================== -->
+  <div id="export-mixdown-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="export-modal-title">
+    <div class="modal-window" style="width:min(640px, 95vw);">
+      <div class="modal-header">
+        <div class="modal-title-row">
+          <img src="assets/icons/mixdown-export.webp" class="daw-ai-badge" width="24" height="24" alt="" />
+          <div>
+            <h2 id="export-modal-title">Export Audio Mixdown</h2>
+            <p class="modal-subtitle">Render stereo master with EQ, compression, reverb, and drum sound replacement to MP3, WAV, FLAC, M4A, OGG, Opus, or AIFF</p>
+          </div>
+        </div>
+        <button type="button" class="modal-close" id="btn-export-modal-close">&times;</button>
+      </div>
+      <div class="modal-body export-modal-body">
+        <!-- Section 1: Export Timeline Range ('From' -> 'To') -->
+        <div class="export-section-card">
+          <div class="export-sec-head">
+            <span class="mini-heading" style="margin:0;">1. TIMELINE SELECTION RANGE (FROM -&gt; TO)</span>
+            <span class="export-duration-badge mono" id="export-duration-badge">Duration: 00:00.000</span>
+          </div>
+          <div class="export-scope-row">
+            <label class="export-scope-opt" id="export-scope-sel-card">
+              <input type="radio" name="export-scope" id="export-scope-selection" value="selection" />
+              <div>
+                <strong>Time Selection ('From' -&gt; 'To')</strong>
+                <span>Export only the highlighted timeline range</span>
+              </div>
+            </label>
+            <label class="export-scope-opt" id="export-scope-full-card">
+              <input type="radio" name="export-scope" id="export-scope-full" value="full" checked />
+              <div>
+                <strong>Entire Session</strong>
+                <span>Export from 00:00.000 through end of session</span>
+              </div>
+            </label>
+          </div>
+
+          <div class="export-bounds-grid">
+            <div class="form-row" style="margin-bottom:0;">
+              <label for="export-from-input">From (MM:SS.mmm or sec)</label>
+              <input type="text" id="export-from-input" class="text-input mono" value="00:00.000" />
+            </div>
+            <div class="form-row" style="margin-bottom:0;">
+              <label for="export-to-input">To (MM:SS.mmm or sec)</label>
+              <input type="text" id="export-to-input" class="text-input mono" value="00:16.000" />
+            </div>
+          </div>
+
+          <div class="export-quick-range-bar">
+            <span class="hint">Quick Bounds:</span>
+            <button type="button" class="btn btn-sm btn-bevel" id="btn-export-use-ruler">Use Ruler Selection</button>
+            <button type="button" class="btn btn-sm btn-bevel" id="btn-export-use-clips">Selected Region Bounds</button>
+            <button type="button" class="btn btn-sm btn-bevel" id="btn-export-use-full">Full Session</button>
+          </div>
+        </div>
+
+        <!-- Section 2: Audio Format, Codec Quality & Sample Rate -->
+        <div class="export-section-card">
+          <div class="export-sec-head">
+            <span class="mini-heading" style="margin:0;">2. AUDIO FORMAT &amp; ENCODING SETTINGS</span>
+          </div>
+          <div class="export-format-grid">
+            <div class="form-row" style="margin-bottom:0;">
+              <label for="export-format-select">File Format</label>
+              <select id="export-format-select" class="select">
+                <option value="mp3">MP3 (.mp3) — Universal Audio</option>
+                <option value="wav">WAV (.wav) — Lossless PCM</option>
+                <option value="flac">FLAC (.flac) — Lossless Compressed</option>
+                <option value="m4a">M4A / AAC (.m4a) — Apple &amp; Streaming</option>
+                <option value="ogg">OGG Vorbis (.ogg) — Open Web Audio</option>
+                <option value="opus">Opus (.opus) — High-Efficiency Audio</option>
+                <option value="aiff">AIFF (.aiff) — Apple Studio PCM</option>
+              </select>
+            </div>
+            <div class="form-row" style="margin-bottom:0;">
+              <label for="export-quality-select">Bitrate / Bit Depth</label>
+              <select id="export-quality-select" class="select"></select>
+            </div>
+            <div class="form-row" style="margin-bottom:0;">
+              <label for="export-samplerate-select">Sample Rate</label>
+              <select id="export-samplerate-select" class="select">
+                <option value="48000" selected>48,000 Hz (Studio Native)</option>
+                <option value="44100">44,100 Hz (CD / Streaming)</option>
+                <option value="96000">96,000 Hz (Hi-Res Master)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row" style="margin-top:10px;margin-bottom:0;">
+            <label for="export-filename-input">Default Output Filename</label>
+            <input type="text" id="export-filename-input" class="text-input mono" value="session-mixdown.mp3" />
+          </div>
+        </div>
+
+        <!-- Section 3: Master Bus & Channel Options -->
+        <div class="export-section-card">
+          <div class="export-sec-head">
+            <span class="mini-heading" style="margin:0;">3. MASTERING &amp; MIX OPTIONS</span>
+            <span class="hint mono" id="export-tracks-summary">0 audible tracks</span>
+          </div>
+          <div class="export-checks-list">
+            <label class="export-chk-row">
+              <input type="checkbox" id="export-chk-normalize" checked />
+              <span>Normalize Stereo Master Peak to <strong>-0.3 dBFS</strong> (prevents clipping &amp; optimizes loudness)</span>
+            </label>
+            <label class="export-chk-row">
+              <input type="checkbox" id="export-chk-edge-fade" checked />
+              <span>Apply Smooth <strong>15 ms De-Click Fades</strong> at 'From' / 'To' Selection Boundaries</span>
+            </label>
+            <label class="export-chk-row">
+              <input type="checkbox" id="export-chk-exclude-click" checked />
+              <span>Exclude Generated <strong>Click Track</strong> Channels from Exported Mixdown</span>
+            </label>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <span class="hint" id="export-modal-status">Ready to render stereo mixdown.</span>
+        <div class="modal-footer-right">
+          <button type="button" class="btn btn-bevel" id="btn-export-modal-cancel">Cancel</button>
+          <button type="button" class="btn btn-primary" id="btn-export-confirm">Export Audio Mixdown...</button>
+        </div>
       </div>
     </div>
   </div>

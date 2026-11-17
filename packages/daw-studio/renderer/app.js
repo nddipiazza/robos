@@ -25,6 +25,24 @@ let timelineZoom = 1.0;
 let timelineOffsetSec = 0.0;
 let middlePanDragState = null;
 let rulerScrubState = null;
+let timeSelection = null; // null | { fromSec: number, toSec: number }
+let exportPrefs = {
+  format: 'mp3',
+  qualityByFormat: {
+    mp3: '320k',
+    wav: 'pcm_s24le',
+    flac: '24bit',
+    m4a: '256k',
+    ogg: 'q8',
+    opus: '192k',
+    aiff: 'pcm_s24be',
+  },
+  sampleRate: 48000,
+  normalize: true,
+  edgeFade: true,
+  excludeClick: true,
+};
+let isExportingMixdown = false;
 let inlineRenamingTrackId = null;
 let timelineDragState = null;
 let hoverLinkedPreview = null; // { key: string, zone: string, clipIds: Set<string> }
@@ -100,6 +118,90 @@ function formatTimecode(sec) {
   const secs = Math.floor((totalMs % 60000) / 1000);
   const ms = totalMs % 1000;
   return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}.${String(ms).padStart(3, '0')}`;
+}
+
+function parseTimecodeInput(raw) {
+  const s = String(raw ?? '').trim();
+  if (!s) return null;
+  if (/^\d+(\.\d+)?$/.test(s)) {
+    return Math.max(0, Number(s));
+  }
+  const parts = s.split(':').map(p => p.trim());
+  if (parts.length === 2) {
+    const mins = Number(parts[0]);
+    const secs = Number(parts[1]);
+    if (Number.isFinite(mins) && Number.isFinite(secs) && mins >= 0 && secs >= 0) {
+      return Math.max(0, mins * 60 + secs);
+    }
+  } else if (parts.length === 3) {
+    const hrs = Number(parts[0]);
+    const mins = Number(parts[1]);
+    const secs = Number(parts[2]);
+    if (Number.isFinite(hrs) && Number.isFinite(mins) && Number.isFinite(secs)) {
+      return Math.max(0, hrs * 3600 + mins * 60 + secs);
+    }
+  }
+  return null;
+}
+
+function hasActiveTimeSelection() {
+  return Boolean(
+    timeSelection &&
+    Number.isFinite(timeSelection.fromSec) &&
+    Number.isFinite(timeSelection.toSec) &&
+    (timeSelection.toSec - timeSelection.fromSec) >= 0.02
+  );
+}
+
+function updateTimeSelectionPillUi() {
+  const pill = document.getElementById('time-selection-pill');
+  const txt = document.getElementById('time-selection-pill-text');
+  if (!pill || !txt) return;
+  if (hasActiveTimeSelection()) {
+    const dur = Math.max(0, timeSelection.toSec - timeSelection.fromSec);
+    txt.textContent = `FROM ${formatTimecode(timeSelection.fromSec)} -> TO ${formatTimecode(timeSelection.toSec)} (${dur.toFixed(2)}s)`;
+    pill.classList.remove('hidden');
+  } else {
+    pill.classList.add('hidden');
+  }
+}
+
+function setTimeSelectionRange(aSec, bSec, { redraw = true } = {}) {
+  const a = Math.max(0, Number(aSec) || 0);
+  const b = Math.max(0, Number(bSec) || 0);
+  const lo = Number(Math.min(a, b).toFixed(4));
+  const hi = Number(Math.max(lo + 0.02, Math.max(a, b)).toFixed(4));
+  timeSelection = { fromSec: lo, toSec: hi };
+  updateTimeSelectionPillUi();
+  if (redraw) drawAllTimelineCanvases();
+  return timeSelection;
+}
+
+function setTimeSelectionFrom(fromSec) {
+  const f = Math.max(0, Number((Number(fromSec) || 0).toFixed(4)));
+  const curTo = hasActiveTimeSelection() ? timeSelection.toSec : null;
+  const projEnd = Math.max(4, DE.getProjectEndSec(currentProject) || getBaseProjectSpanSec());
+  const nextTo = (curTo !== null && curTo > f + 0.02) ? curTo : Math.max(projEnd, f + 4);
+  const sel = setTimeSelectionRange(f, nextTo);
+  showStatus(`Set 'From' -> ${formatTimecode(sel.fromSec)} (Range: ${formatTimecode(sel.fromSec)} -> ${formatTimecode(sel.toSec)})`);
+  return sel;
+}
+
+function setTimeSelectionTo(toSec) {
+  const t = Math.max(0.05, Number((Number(toSec) || 0).toFixed(4)));
+  const curFrom = hasActiveTimeSelection() ? timeSelection.fromSec : 0;
+  const nextFrom = curFrom < t - 0.02 ? curFrom : 0;
+  const sel = setTimeSelectionRange(nextFrom, t);
+  showStatus(`Set 'To' -> ${formatTimecode(sel.toSec)} (Range: ${formatTimecode(sel.fromSec)} -> ${formatTimecode(sel.toSec)})`);
+  return sel;
+}
+
+function clearTimeSelection({ silent = false } = {}) {
+  if (!timeSelection) return;
+  timeSelection = null;
+  updateTimeSelectionPillUi();
+  drawAllTimelineCanvases();
+  if (!silent) showStatus('Cleared timeline From -> To selection.');
 }
 
 function formatPan(pan) {
@@ -1296,11 +1398,17 @@ async function startPlayback() {
     if (tcEl) tcEl.textContent = formatTimecode(playheadSec);
     if (!middlePanDragState) ensurePlayheadInViewport(playheadSec);
     drawAllTimelineCanvases();
+    if (loopPlayback && hasActiveTimeSelection() && playheadSec >= timeSelection.toSec) {
+      seekPlayheadTo(timeSelection.fromSec, { updateReturnAnchor: false });
+      transportRafId = requestAnimationFrame(tick);
+      return;
+    }
     if (playheadSec >= playMaxDurationSec) {
       if (loopPlayback) {
+        const loopStart = hasActiveTimeSelection() ? timeSelection.fromSec : 0;
         stopPlayback({ returnToStart: false });
-        playheadSec = 0;
-        document.getElementById('transport-timecode').textContent = formatTimecode(0);
+        playheadSec = loopStart;
+        document.getElementById('transport-timecode').textContent = formatTimecode(loopStart);
         startPlayback();
         return;
       }
@@ -2437,19 +2545,15 @@ function handleGlobalTimelineMouseMove(ev) {
     const rulerEl = document.getElementById('timeline-ruler-wrap');
     const rect = rulerEl ? rulerEl.getBoundingClientRect() : rulerScrubState.rect;
     if (rect && rect.width > 10) {
-      const ratio = Math.max(0, Math.min(1, (ev.clientX - rect.left) / rect.width));
-      const rawSec = timelineOffsetSec + ratio * getTimelineDurationSec();
-      const scrubSec = DE.snapTimeToBeatGrid(rawSec, currentProject?.bpm || 120, snapToGrid && !ev.altKey);
-      const nowMs = performance.now();
-      if (!isPlaying || nowMs - rulerScrubState.lastSeekMs >= 45) {
-        rulerScrubState.lastSeekMs = nowMs;
-        seekPlayheadTo(scrubSec);
-      } else {
-        playheadSec = Math.max(0, Number(scrubSec.toFixed(4)));
-        playReturnAnchorSec = playheadSec;
-        const tcEl = document.getElementById('transport-timecode');
-        if (tcEl) tcEl.textContent = formatTimecode(playheadSec);
-        drawAllTimelineCanvases();
+      const dx = ev.clientX - rulerScrubState.startX;
+      if (!rulerScrubState.moved && Math.abs(dx) >= 4) {
+        rulerScrubState.moved = true;
+      }
+      if (rulerScrubState.moved) {
+        const ratio = Math.max(0, Math.min(1, (ev.clientX - rect.left) / rect.width));
+        const rawSec = timelineOffsetSec + ratio * getTimelineDurationSec();
+        const curSec = DE.snapTimeToBeatGrid(rawSec, currentProject?.bpm || 120, snapToGrid && !ev.altKey);
+        setTimeSelectionRange(rulerScrubState.anchorSec, curSec);
       }
     }
     return;
@@ -2515,14 +2619,23 @@ function handleGlobalTimelineMouseMove(ev) {
 
 async function handleGlobalTimelineMouseUp(ev) {
   if (rulerScrubState) {
+    const snap = rulerScrubState;
     const rulerEl = document.getElementById('timeline-ruler-wrap');
-    const rect = rulerEl ? rulerEl.getBoundingClientRect() : rulerScrubState.rect;
+    const rect = rulerEl ? rulerEl.getBoundingClientRect() : snap.rect;
     rulerScrubState = null;
     if (ev && rect && rect.width > 10) {
       const ratio = Math.max(0, Math.min(1, (ev.clientX - rect.left) / rect.width));
       const rawSec = timelineOffsetSec + ratio * getTimelineDurationSec();
-      const scrubSec = DE.snapTimeToBeatGrid(rawSec, currentProject?.bpm || 120, snapToGrid && !ev.altKey);
-      seekPlayheadTo(scrubSec);
+      const curSec = DE.snapTimeToBeatGrid(rawSec, currentProject?.bpm || 120, snapToGrid && !ev.altKey);
+      if (snap.moved) {
+        const sel = setTimeSelectionRange(snap.anchorSec, curSec);
+        seekPlayheadTo(sel.fromSec);
+        showStatus(
+          `Selected timeline range: From ${formatTimecode(sel.fromSec)} -> To ${formatTimecode(sel.toSec)} (${(sel.toSec - sel.fromSec).toFixed(2)}s)`
+        );
+      } else {
+        seekPlayheadTo(curSec);
+      }
     }
   }
   if (middlePanDragState && (!ev || ev.button === 1 || (typeof ev.buttons === 'number' && (ev.buttons & 4) === 0))) {
@@ -2771,6 +2884,53 @@ function drawAllTimelineCanvases() {
     const staticRuler = renderStaticRulerLayer(w, h, totalSec, secPerBeat, viewStart, beatsPerBar);
     ctx.clearRect(0, 0, w, h);
     ctx.drawImage(staticRuler, 0, 0);
+
+    // Timeline From -> To Range Selection Locator Bar & Handles
+    if (hasActiveTimeSelection()) {
+      const sx0 = ((timeSelection.fromSec - viewStart) / totalSec) * w;
+      const sx1 = ((timeSelection.toSec - viewStart) / totalSec) * w;
+      if (sx1 >= -4 && sx0 <= w + 4) {
+        const cx0 = Math.max(0, sx0);
+        const cx1 = Math.min(w, sx1);
+        ctx.fillStyle = 'rgba(0, 212, 255, 0.20)';
+        ctx.fillRect(cx0, 0, Math.max(1, cx1 - cx0), h);
+        ctx.fillStyle = '#00d4ff';
+        ctx.fillRect(cx0, 0, Math.max(1, cx1 - cx0), 3);
+
+        // Left 'FROM' locator bracket & flag
+        if (sx0 >= -8 && sx0 <= w + 8) {
+          ctx.strokeStyle = '#38bdf8';
+          ctx.lineWidth = 1.6;
+          ctx.beginPath();
+          ctx.moveTo(sx0, 0);
+          ctx.lineTo(sx0, h);
+          ctx.stroke();
+          ctx.fillStyle = '#00d4ff';
+          ctx.beginPath();
+          ctx.moveTo(sx0, 0);
+          ctx.lineTo(sx0 + 8, 0);
+          ctx.lineTo(sx0, 9);
+          ctx.closePath();
+          ctx.fill();
+        }
+        // Right 'TO' locator bracket & flag
+        if (sx1 >= -8 && sx1 <= w + 8) {
+          ctx.strokeStyle = '#38bdf8';
+          ctx.lineWidth = 1.6;
+          ctx.beginPath();
+          ctx.moveTo(sx1, 0);
+          ctx.lineTo(sx1, h);
+          ctx.stroke();
+          ctx.fillStyle = '#00d4ff';
+          ctx.beginPath();
+          ctx.moveTo(sx1, 0);
+          ctx.lineTo(sx1 - 8, 0);
+          ctx.lineTo(sx1, 9);
+          ctx.closePath();
+          ctx.fill();
+        }
+      }
+    }
 
     // Sub-pixel anti-aliased Playhead cap polygon + stem (no Math.round staircase judder)
     const px = ((playheadSec - viewStart) / totalSec) * w;
@@ -3053,6 +3213,32 @@ function drawAllTimelineCanvases() {
     destCtx.clearRect(0, 0, w, h);
     destCtx.drawImage(cachedEntry.canvas, 0, 0);
     const ctx = destCtx;
+
+    // Translucent From -> To Time Selection Highlight Band across Track Lane
+    if (hasActiveTimeSelection()) {
+      const sx0 = ((timeSelection.fromSec - viewStart) / totalSec) * w;
+      const sx1 = ((timeSelection.toSec - viewStart) / totalSec) * w;
+      if (sx1 >= -2 && sx0 <= w + 2) {
+        const cx0 = Math.max(0, sx0);
+        const cx1 = Math.min(w, sx1);
+        ctx.fillStyle = 'rgba(0, 212, 255, 0.085)';
+        ctx.fillRect(cx0, 0, Math.max(1, cx1 - cx0), h);
+        ctx.strokeStyle = 'rgba(56, 189, 248, 0.55)';
+        ctx.lineWidth = 1.1;
+        if (sx0 >= 0 && sx0 <= w) {
+          ctx.beginPath();
+          ctx.moveTo(sx0, 0);
+          ctx.lineTo(sx0, h);
+          ctx.stroke();
+        }
+        if (sx1 >= 0 && sx1 <= w) {
+          ctx.beginPath();
+          ctx.moveTo(sx1, 0);
+          ctx.lineTo(sx1, h);
+          ctx.stroke();
+        }
+      }
+    }
 
     // Live Low-Latency Sub-Pixel Growing Waveform Region + Fluid MS Timer on Armed Tracks
     if ((isRecording || isStoppingRecording) && track.armed && liveRecSession) {
@@ -4241,12 +4427,126 @@ function uint8ToBase64(bytes) {
   return btoa(binary);
 }
 
-async function exportSessionMixdownWav({ targetFile = undefined } = {}) {
+const EXPORT_FORMAT_CATALOG = {
+  mp3: {
+    ext: 'mp3',
+    defaultQuality: '320k',
+    qualities: [
+      { id: '320k', label: '320 kbps CBR (Studio Max)' },
+      { id: '256k', label: '256 kbps CBR (High)' },
+      { id: '192k', label: '192 kbps CBR (Standard)' },
+      { id: 'v0', label: 'V0 VBR (~245 kbps Variable)' },
+    ],
+  },
+  wav: {
+    ext: 'wav',
+    defaultQuality: 'pcm_s24le',
+    qualities: [
+      { id: 'pcm_s24le', label: '24-bit PCM (Studio Master)' },
+      { id: 'pcm_s16le', label: '16-bit PCM (CD Standard)' },
+      { id: 'pcm_f32le', label: '32-bit IEEE Float' },
+    ],
+  },
+  flac: {
+    ext: 'flac',
+    defaultQuality: '24bit',
+    qualities: [
+      { id: '24bit', label: '24-bit Lossless (Level 8)' },
+      { id: '16bit', label: '16-bit Lossless (CD Compatible)' },
+    ],
+  },
+  m4a: {
+    ext: 'm4a',
+    defaultQuality: '256k',
+    qualities: [
+      { id: '320k', label: '320 kbps AAC (Max)' },
+      { id: '256k', label: '256 kbps AAC (iTunes Plus)' },
+      { id: '192k', label: '192 kbps AAC (Streaming)' },
+    ],
+  },
+  ogg: {
+    ext: 'ogg',
+    defaultQuality: 'q8',
+    qualities: [
+      { id: 'q8', label: 'Quality 8 (~256 kbps)' },
+      { id: 'q6', label: 'Quality 6 (~192 kbps)' },
+      { id: 'q4', label: 'Quality 4 (~128 kbps)' },
+    ],
+  },
+  opus: {
+    ext: 'opus',
+    defaultQuality: '192k',
+    qualities: [
+      { id: '256k', label: '256 kbps Opus (Transparent Master)' },
+      { id: '192k', label: '192 kbps Opus (High)' },
+      { id: '128k', label: '128 kbps Opus (Compact)' },
+    ],
+  },
+  aiff: {
+    ext: 'aiff',
+    defaultQuality: 'pcm_s24be',
+    qualities: [
+      { id: 'pcm_s24be', label: '24-bit PCM Big-Endian' },
+      { id: 'pcm_s16be', label: '16-bit PCM Big-Endian' },
+    ],
+  },
+};
+
+/**
+ * Encode stereo Float32Arrays into a lossless 32-bit IEEE Float RIFF WAV Uint8Array
+ * so FFmpeg receives un-quantized 32-bit float studio dynamic range for MP3 / 24-bit WAV / FLAC / M4A.
+ */
+function encodeStereoFloat32IeeeWavBytes(left, right, sampleRate = 48000) {
+  const numFrames = left.length;
+  const numChannels = 2;
+  const bytesPerSample = 4;
+  const dataBytes = numFrames * numChannels * bytesPerSample;
+  const buf = new ArrayBuffer(44 + dataBytes);
+  const view = new DataView(buf);
+  const writeStr = (off, str) => {
+    for (let i = 0; i < str.length; i++) view.setUint8(off + i, str.charCodeAt(i));
+  };
+  writeStr(0, 'RIFF');
+  view.setUint32(4, 36 + dataBytes, true);
+  writeStr(8, 'WAVE');
+  writeStr(12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 3, true); // WAVE_FORMAT_IEEE_FLOAT = 3
+  view.setUint16(22, numChannels, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * numChannels * bytesPerSample, true);
+  view.setUint16(32, numChannels * bytesPerSample, true);
+  view.setUint16(34, 32, true);
+  writeStr(36, 'data');
+  view.setUint32(40, dataBytes, true);
+
+  let pos = 44;
+  for (let i = 0; i < numFrames; i++) {
+    view.setFloat32(pos, DE.clamp(-1.0, 1.0, left[i] || 0), true);
+    view.setFloat32(pos + 4, DE.clamp(-1.0, 1.0, right[i] || 0), true);
+    pos += 8;
+  }
+  return new Uint8Array(buf);
+}
+
+function getExportPlayableTracks({ excludeClick = false } = {}) {
   const tracks = currentProject?.tracks || [];
   const anySolo = tracks.some(t => t.soloed);
-  const playableTracks = tracks.filter(t => anySolo ? t.soloed : !t.muted);
+  return tracks.filter((t) => {
+    if (anySolo ? !t.soloed : t.muted) return false;
+    if (excludeClick) {
+      const isClickTrack = /^click\b/i.test(String(t.name || ''))
+        || ((t.clips || []).length > 0 && (t.clips || []).every(c => c.mediaKind === 'click'));
+      if (isClickTrack) return false;
+    }
+    return true;
+  });
+}
+
+function getFullSessionExportBounds(excludeClick = false) {
+  const playable = getExportPlayableTracks({ excludeClick });
   let maxEndSec = 0;
-  for (const t of playableTracks) {
+  for (const t of playable) {
     for (const c of (t.clips || [])) {
       if (c.muted) continue;
       const e = (Number(c.startSec) || 0) + (Number(c.durationSec) || 0);
@@ -4254,108 +4554,402 @@ async function exportSessionMixdownWav({ targetFile = undefined } = {}) {
     }
   }
   if (maxEndSec <= 0.05) {
-    showStatus('No audible recorded takes to export — record or import audio first.', true);
+    maxEndSec = DE.getProjectEndSec(currentProject) || 0;
+  }
+  return { startSec: 0, endSec: Number(Math.max(0, maxEndSec).toFixed(4)), playableTracks: playable };
+}
+
+function populateExportQualityOptions(formatId) {
+  const spec = EXPORT_FORMAT_CATALOG[formatId] || EXPORT_FORMAT_CATALOG.mp3;
+  const qSel = document.getElementById('export-quality-select');
+  if (!qSel) return;
+  const savedQ = exportPrefs.qualityByFormat[formatId] || spec.defaultQuality;
+  qSel.innerHTML = spec.qualities
+    .map(q => `<option value="${esc(q.id)}"${q.id === savedQ ? ' selected' : ''}>${esc(q.label)}</option>`)
+    .join('');
+
+  const fnInp = document.getElementById('export-filename-input');
+  if (fnInp && fnInp.value.trim()) {
+    const stem = fnInp.value.trim().replace(/\.(mp3|wav|flac|m4a|ogg|opus|aiff)$/i, '');
+    fnInp.value = `${stem}.${spec.ext}`;
+  }
+}
+
+function refreshExportModalSummary() {
+  const scopeSel = document.getElementById('export-scope-selection');
+  const scopeFull = document.getElementById('export-scope-full');
+  const fromInp = document.getElementById('export-from-input');
+  const toInp = document.getElementById('export-to-input');
+  const durBadge = document.getElementById('export-duration-badge');
+  const summaryEl = document.getElementById('export-tracks-summary');
+  const excludeClick = Boolean(document.getElementById('export-chk-exclude-click')?.checked);
+
+  const isSelMode = Boolean(scopeSel?.checked);
+  document.getElementById('export-scope-sel-card')?.classList.toggle('active', isSelMode);
+  document.getElementById('export-scope-full-card')?.classList.toggle('active', Boolean(scopeFull?.checked));
+
+  if (fromInp) fromInp.disabled = !isSelMode;
+  if (toInp) toInp.disabled = !isSelMode;
+
+  const fullBounds = getFullSessionExportBounds(excludeClick);
+  const fSec = isSelMode ? (parseTimecodeInput(fromInp?.value) ?? 0) : 0;
+  const tSec = isSelMode ? (parseTimecodeInput(toInp?.value) ?? fullBounds.endSec) : fullBounds.endSec;
+  const span = Math.max(0, tSec - fSec);
+
+  if (durBadge) {
+    durBadge.textContent = `Duration: ${formatTimecode(span)} (${span.toFixed(2)}s)`;
+  }
+  if (summaryEl) {
+    summaryEl.textContent = `${fullBounds.playableTracks.length} audible channel(s) included`;
+  }
+}
+
+function openExportMixdownModal() {
+  const modal = document.getElementById('export-mixdown-modal');
+  if (!modal || !currentProject) return;
+  closeContextMenu();
+  closeMenubarDropdown();
+
+  const excludeClickChk = document.getElementById('export-chk-exclude-click');
+  if (excludeClickChk) excludeClickChk.checked = Boolean(exportPrefs.excludeClick);
+  const normChk = document.getElementById('export-chk-normalize');
+  if (normChk) normChk.checked = Boolean(exportPrefs.normalize);
+  const fadeChk = document.getElementById('export-chk-edge-fade');
+  if (fadeChk) fadeChk.checked = Boolean(exportPrefs.edgeFade);
+
+  const fullBounds = getFullSessionExportBounds(Boolean(excludeClickChk?.checked));
+  if (fullBounds.endSec <= 0.05 && !hasActiveTimeSelection()) {
+    showStatus('No audible audio regions to export — record or import audio first.', true);
     return;
   }
 
-  showStatus('Rendering stereo mixdown WAV (EQ + Compressor + Drum Sound Replacement)...');
-  try {
-    for (const track of playableTracks) {
-      for (const clip of (track.clips || [])) {
-        if (clip.muted) continue;
-        if (clip.wavFile) {
-          try { await loadDecodedAudio(clip.wavFile); } catch {}
-        }
-        if (track.soundReplacement?.enabled && Array.isArray(clip.transients)) {
-          for (const hit of clip.transients) {
-            const sp = resolveDrumSamplePath(track.soundReplacement.kitId, track.soundReplacement.pieceId, hit.velocity);
-            if (sp) {
-              try { await loadDecodedAudio(sp); } catch {}
-            }
+  const useSel = hasActiveTimeSelection();
+  const scopeSel = document.getElementById('export-scope-selection');
+  const scopeFull = document.getElementById('export-scope-full');
+  if (scopeSel) scopeSel.checked = useSel;
+  if (scopeFull) scopeFull.checked = !useSel;
+
+  const fromInp = document.getElementById('export-from-input');
+  const toInp = document.getElementById('export-to-input');
+  if (fromInp) {
+    fromInp.value = formatTimecode(useSel ? timeSelection.fromSec : 0);
+  }
+  if (toInp) {
+    toInp.value = formatTimecode(useSel ? timeSelection.toSec : fullBounds.endSec);
+  }
+
+  const fmtSel = document.getElementById('export-format-select');
+  if (fmtSel) fmtSel.value = exportPrefs.format || 'mp3';
+  const srSel = document.getElementById('export-samplerate-select');
+  if (srSel) srSel.value = String(exportPrefs.sampleRate || 48000);
+
+  const spec = EXPORT_FORMAT_CATALOG[exportPrefs.format || 'mp3'] || EXPORT_FORMAT_CATALOG.mp3;
+  const safeTitle = String(currentProject?.name || 'session').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'session';
+  const fnInp = document.getElementById('export-filename-input');
+  if (fnInp) {
+    fnInp.value = useSel
+      ? `${safeTitle}-selection.${spec.ext}`
+      : `${safeTitle}-mixdown.${spec.ext}`;
+  }
+  populateExportQualityOptions(exportPrefs.format || 'mp3');
+  refreshExportModalSummary();
+
+  const statusEl = document.getElementById('export-modal-status');
+  if (statusEl) {
+    statusEl.textContent = useSel
+      ? `Exporting selected range ${formatTimecode(timeSelection.fromSec)} -> ${formatTimecode(timeSelection.toSec)}`
+      : `Exporting full session (00:00.000 -> ${formatTimecode(fullBounds.endSec)})`;
+  }
+
+  modal.classList.remove('hidden');
+}
+
+function closeExportMixdownModal() {
+  if (isExportingMixdown) return;
+  document.getElementById('export-mixdown-modal')?.classList.add('hidden');
+}
+
+async function renderAndExportMixdown({
+  startSec = 0,
+  endSec = null,
+  format = 'mp3',
+  quality = '',
+  sampleRate = 48000,
+  normalize = true,
+  edgeFade = true,
+  excludeClick = false,
+  defaultName = '',
+  targetFile = undefined,
+} = {}) {
+  const playableTracks = getExportPlayableTracks({ excludeClick });
+  const fullBounds = getFullSessionExportBounds(excludeClick);
+  const renderStartSec = Math.max(0, Number(startSec) || 0);
+  const rawEndSec = endSec !== null && endSec !== undefined ? Number(endSec) : fullBounds.endSec;
+  const isSubRange = renderStartSec > 0.01 || (fullBounds.endSec > 0 && rawEndSec < fullBounds.endSec - 0.05);
+  const tailPadSec = isSubRange ? 0 : 1.0;
+  const renderEndSec = Math.min(renderStartSec + 900, Math.max(renderStartSec + 0.05, rawEndSec + tailPadSec));
+  const sliceSpanSec = renderEndSec - renderStartSec;
+
+  if (!playableTracks.length || sliceSpanSec <= 0.04) {
+    showStatus('No audible tracks or valid time range to export.', true);
+    return { ok: false };
+  }
+
+  const renderRate = 48000;
+  const statusEl = document.getElementById('export-modal-status');
+  const setProg = (msg) => {
+    showStatus(msg);
+    if (statusEl) statusEl.textContent = msg;
+  };
+
+  setProg(`Decoding stems & rendering stereo mixdown (${formatTimecode(renderStartSec)} -> ${formatTimecode(rawEndSec)})...`);
+
+  for (const track of playableTracks) {
+    for (const clip of (track.clips || [])) {
+      if (clip.muted) continue;
+      const cStart = Number(clip.startSec) || 0;
+      const cEnd = cStart + (Number(clip.durationSec) || 0);
+      if (cEnd <= renderStartSec || cStart >= renderEndSec) continue;
+      if (clip.wavFile) {
+        try { await loadDecodedAudio(clip.wavFile); } catch {}
+      }
+      if (track.soundReplacement?.enabled && Array.isArray(clip.transients)) {
+        for (const hit of clip.transients) {
+          const sp = resolveDrumSamplePath(track.soundReplacement.kitId, track.soundReplacement.pieceId, hit.velocity);
+          if (sp) {
+            try { await loadDecodedAudio(sp); } catch {}
           }
         }
       }
     }
+  }
 
-    const sampleRate = 48000;
-    const renderSpanSec = Math.min(900, maxEndSec + 1.6);
-    const offlineCtx = new OfflineAudioContext(2, Math.ceil(renderSpanSec * sampleRate), sampleRate);
-    const offlineMasterBus = createMasterDrumBus(offlineCtx);
+  const totalFrames = Math.max(256, Math.ceil(sliceSpanSec * renderRate));
+  const offlineCtx = new OfflineAudioContext(2, totalFrames, renderRate);
+  const offlineMasterBus = createMasterDrumBus(offlineCtx);
 
-    for (const track of playableTracks) {
-      const { inputGain, trackMixBus, srActive, blend } = buildTrackWebAudioChain(offlineCtx, track, offlineMasterBus);
-      for (const clip of (track.clips || [])) {
-        if (clip.muted) continue;
-        const clipStart = Math.max(0, Number(clip.startSec) || 0);
-        const clipOff = Math.max(0, Number(clip.offsetSec) || 0);
-        const buf = decodedBufferCache.get(clip.wavFile);
-        const clipDur = Math.max(0.04, Number(clip.durationSec) || (buf ? Math.max(0.04, buf.duration - clipOff) : 0));
+  for (const track of playableTracks) {
+    const { inputGain, trackMixBus, srActive, blend } = buildTrackWebAudioChain(offlineCtx, track, offlineMasterBus);
+    for (const clip of (track.clips || [])) {
+      if (clip.muted) continue;
+      const clipStart = Math.max(0, Number(clip.startSec) || 0);
+      const clipOff = Math.max(0, Number(clip.offsetSec) || 0);
+      const buf = decodedBufferCache.get(clip.wavFile);
+      const clipDur = Math.max(0.04, Number(clip.durationSec) || (buf ? Math.max(0.04, buf.duration - clipOff) : 0));
+      const clipEnd = clipStart + clipDur;
 
-        if (buf && clipOff < buf.duration) {
+      if (buf && clipOff < buf.duration && clipEnd > renderStartSec + 0.002 && clipStart < renderEndSec - 0.002) {
+        const segStart = Math.max(clipStart, renderStartSec);
+        const segEnd = Math.min(clipEnd, renderEndSec);
+        const intoClip = segStart - clipStart;
+        const srcOffset = clipOff + intoClip;
+        const playDur = Math.min(segEnd - segStart, Math.max(0.01, buf.duration - srcOffset));
+
+        if (playDur > 0.008 && srcOffset < buf.duration) {
+          const ctxStart = Math.max(0, segStart - renderStartSec);
+          const ctxEnd = ctxStart + playDur;
           const src = offlineCtx.createBufferSource();
           src.buffer = buf;
           const clipGainNode = offlineCtx.createGain();
           const clipGainLin = DE.dbToGain(Number(clip.gainDb) || 0);
-          const playDur = Math.min(clipDur, Math.max(0.01, buf.duration - clipOff));
           const fadeIn = Math.max(0, Number(clip.fadeInSec) || 0);
           const fadeOut = Math.max(0, Number(clip.fadeOutSec) || 0);
-          const tEnd = clipStart + playDur;
 
-          if (fadeIn > 0.002) {
-            clipGainNode.gain.setValueAtTime(0.0001, clipStart);
-            clipGainNode.gain.linearRampToValueAtTime(clipGainLin, clipStart + Math.min(fadeIn, playDur));
+          if (intoClip < 0.002 && fadeIn > 0.002) {
+            clipGainNode.gain.setValueAtTime(0.0001, ctxStart);
+            clipGainNode.gain.linearRampToValueAtTime(clipGainLin, ctxStart + Math.min(fadeIn, playDur));
           } else {
-            clipGainNode.gain.setValueAtTime(clipGainLin, clipStart);
+            clipGainNode.gain.setValueAtTime(clipGainLin, ctxStart);
           }
-          if (fadeOut > 0.002 && playDur > fadeOut) {
-            clipGainNode.gain.setValueAtTime(clipGainLin, Math.max(clipStart + Math.min(fadeIn, playDur), tEnd - fadeOut));
-            clipGainNode.gain.linearRampToValueAtTime(0.0001, tEnd);
+          if ((clipEnd - segEnd) < 0.002 && fadeOut > 0.002 && playDur > fadeOut) {
+            clipGainNode.gain.setValueAtTime(clipGainLin, Math.max(ctxStart, ctxEnd - fadeOut));
+            clipGainNode.gain.linearRampToValueAtTime(0.0001, ctxEnd);
           }
-          src.connect(clipGainNode).connect(inputGain);
-          src.start(clipStart, clipOff, playDur);
-        }
 
-        if (srActive && Array.isArray(clip.transients)) {
-          const clipVelScale = DE.clamp(0.15, 2.0, DE.dbToGain((Number(clip.gainDb) || 0) * 0.5));
-          for (const hit of clip.transients) {
-            const absHitSec = clipStart + (Number(hit.timeSec) || 0);
-            if (absHitSec > clipStart + clipDur + 0.005) continue;
-            const sp = resolveDrumSamplePath(track.soundReplacement.kitId, track.soundReplacement.pieceId, hit.velocity);
-            const srBuf = sp ? decodedBufferCache.get(sp) : null;
-            if (!srBuf) continue;
-            const hitSrc = offlineCtx.createBufferSource();
-            hitSrc.buffer = srBuf;
-            const hitGain = offlineCtx.createGain();
-            hitGain.gain.value = blend * Math.max(0.25, Math.min(1.3, (Number(hit.velocity) || 0.8) * clipVelScale));
-            hitSrc.connect(hitGain).connect(trackMixBus);
-            hitSrc.start(absHitSec);
-          }
+          src.connect(clipGainNode).connect(inputGain);
+          src.start(ctxStart, srcOffset, playDur);
+        }
+      }
+
+      if (srActive && Array.isArray(clip.transients)) {
+        const clipVelScale = clip.autoGainStaged ? 1.0 : DE.clamp(0.15, 1.4, DE.dbToGain((Number(clip.gainDb) || 0) * 0.25));
+        for (const hit of clip.transients) {
+          const absHitSec = clipStart + (Number(hit.timeSec) || 0);
+          if (absHitSec < renderStartSec || absHitSec > Math.min(clipEnd + 0.005, renderEndSec)) continue;
+          const sp = resolveDrumSamplePath(track.soundReplacement.kitId, track.soundReplacement.pieceId, hit.velocity);
+          const srBuf = sp ? decodedBufferCache.get(sp) : null;
+          if (!srBuf) continue;
+          const hitSrc = offlineCtx.createBufferSource();
+          hitSrc.buffer = srBuf;
+          const hitGain = offlineCtx.createGain();
+          hitGain.gain.value = blend * Math.max(0.25, Math.min(1.3, (Number(hit.velocity) || 0.8) * clipVelScale));
+          hitSrc.connect(hitGain).connect(trackMixBus);
+          hitSrc.start(Math.max(0, absHitSec - renderStartSec));
         }
       }
     }
+  }
 
-    const rendered = await offlineCtx.startRendering();
-    const left = rendered.getChannelData(0);
-    const right = rendered.numberOfChannels > 1 ? rendered.getChannelData(1) : left;
-    const wavBytes = DE.encodeStereoFloat32ToWavBytes(left, right, sampleRate);
-    const safeTitle = String(currentProject?.name || 'mixdown').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-    const res = await window.robos.exportMixdownWav({
-      wavBase64: uint8ToBase64(wavBytes),
-      defaultName: `${safeTitle || 'session'}-mixdown.wav`,
-      targetFile,
-    });
-    if (res?.canceled) {
-      showStatus('Mixdown export canceled.');
+  const rendered = await offlineCtx.startRendering();
+  const left = new Float32Array(rendered.getChannelData(0));
+  const right = new Float32Array(rendered.numberOfChannels > 1 ? rendered.getChannelData(1) : left);
+  const n = left.length;
+
+  // Apply smooth 15ms half-cosine edge fades on From -> To slices so mid-song cuts never click!
+  if (edgeFade && n > 64) {
+    const fadeSamples = Math.min(Math.round(0.015 * renderRate), Math.floor(n * 0.25));
+    if (renderStartSec > 0.005) {
+      for (let i = 0; i < fadeSamples; i++) {
+        const w = 0.5 - 0.5 * Math.cos((Math.PI * i) / fadeSamples);
+        left[i] *= w;
+        right[i] *= w;
+      }
+    }
+    for (let i = 0; i < fadeSamples; i++) {
+      const idx = n - 1 - i;
+      const w = 0.5 - 0.5 * Math.cos((Math.PI * i) / fadeSamples);
+      left[idx] *= w;
+      right[idx] *= w;
+    }
+  }
+
+  // Optional Peak Normalization to -0.3 dBFS (0.96605 linear)
+  if (normalize) {
+    let peak = 0;
+    for (let i = 0; i < n; i++) {
+      const al = Math.abs(left[i]);
+      const ar = Math.abs(right[i]);
+      if (al > peak) peak = al;
+      if (ar > peak) peak = ar;
+    }
+    if (peak > 0.0002) {
+      const scale = DE.dbToGain(-0.3) / peak;
+      for (let i = 0; i < n; i++) {
+        left[i] = DE.clamp(-0.999, 0.999, left[i] * scale);
+        right[i] = DE.clamp(-0.999, 0.999, right[i] * scale);
+      }
+    }
+  }
+
+  const spec = EXPORT_FORMAT_CATALOG[format] || EXPORT_FORMAT_CATALOG.mp3;
+  setProg(`Encoding .${spec.ext.toUpperCase()} (${quality || spec.defaultQuality} @ ${sampleRate} Hz)...`);
+
+  const wavBytes = (format === 'wav' && quality === 'pcm_s16le' && Number(sampleRate) === 48000)
+    ? DE.encodeStereoFloat32ToWavBytes(left, right, renderRate)
+    : encodeStereoFloat32IeeeWavBytes(left, right, renderRate);
+
+  const safeTitle = String(currentProject?.name || 'mixdown').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'session';
+  const res = await window.robos.exportMixdown({
+    wavBase64: uint8ToBase64(wavBytes),
+    format,
+    quality: quality || spec.defaultQuality,
+    sampleRate: Number(sampleRate) || 48000,
+    title: currentProject?.name || 'RobOS DAW Mixdown',
+    defaultName: defaultName || `${safeTitle}-mixdown.${spec.ext}`,
+    targetFile,
+  });
+
+  if (res?.canceled) {
+    setProg('Mixdown export canceled.');
+    return res;
+  }
+  if (res?.ok) {
+    showStatus(`Exported .${(res.ext || spec.ext).toUpperCase()} mixdown (${sliceSpanSec.toFixed(1)}s) -> ${res.filePath}`);
+    return res;
+  }
+  showStatus(`Export failed: ${res?.error || 'Unknown error'}`, true);
+  if (statusEl) statusEl.textContent = `Export failed: ${res?.error || 'Unknown error'}`;
+  return res;
+}
+
+async function executeExportMixdownFromModal() {
+  if (isExportingMixdown || !currentProject) return;
+  const isSelMode = Boolean(document.getElementById('export-scope-selection')?.checked);
+  const excludeClick = Boolean(document.getElementById('export-chk-exclude-click')?.checked);
+  const normalize = Boolean(document.getElementById('export-chk-normalize')?.checked);
+  const edgeFade = Boolean(document.getElementById('export-chk-edge-fade')?.checked);
+  const format = document.getElementById('export-format-select')?.value || 'mp3';
+  const quality = document.getElementById('export-quality-select')?.value || '';
+  const sampleRate = Number(document.getElementById('export-samplerate-select')?.value) || 48000;
+  const defaultName = document.getElementById('export-filename-input')?.value?.trim() || '';
+
+  const fullBounds = getFullSessionExportBounds(excludeClick);
+  let startSec = 0;
+  let endSec = fullBounds.endSec;
+
+  if (isSelMode) {
+    const parsedFrom = parseTimecodeInput(document.getElementById('export-from-input')?.value);
+    const parsedTo = parseTimecodeInput(document.getElementById('export-to-input')?.value);
+    if (parsedFrom === null || parsedTo === null || parsedTo <= parsedFrom + 0.02) {
+      showStatus('Enter a valid From -> To range where To is greater than From (e.g. 00:05.000 -> 01:30.000).', true);
+      const statusEl = document.getElementById('export-modal-status');
+      if (statusEl) statusEl.textContent = 'Invalid From -> To range: "To" must be greater than "From".';
       return;
     }
+    startSec = parsedFrom;
+    endSec = parsedTo;
+    setTimeSelectionRange(startSec, endSec);
+  }
+
+  exportPrefs.format = format;
+  exportPrefs.qualityByFormat[format] = quality;
+  exportPrefs.sampleRate = sampleRate;
+  exportPrefs.normalize = normalize;
+  exportPrefs.edgeFade = edgeFade;
+  exportPrefs.excludeClick = excludeClick;
+
+  const btn = document.getElementById('btn-export-confirm');
+  isExportingMixdown = true;
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = 'Rendering & Encoding...';
+  }
+  try {
+    const res = await renderAndExportMixdown({
+      startSec,
+      endSec,
+      format,
+      quality,
+      sampleRate,
+      normalize,
+      edgeFade,
+      excludeClick,
+      defaultName,
+    });
     if (res?.ok) {
-      showStatus(`Exported stereo 48kHz 16-bit WAV mixdown (${renderSpanSec.toFixed(1)}s) → ${res.filePath}`);
-    } else {
-      showStatus(`Export failed: ${res?.error || 'Unknown error'}`, true);
+      isExportingMixdown = false;
+      closeExportMixdownModal();
     }
   } catch (err) {
     showStatus(`Mixdown render error: ${err.message}`, true);
+    const statusEl = document.getElementById('export-modal-status');
+    if (statusEl) statusEl.textContent = `Error: ${err.message}`;
+  } finally {
+    isExportingMixdown = false;
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = 'Export Audio Mixdown...';
+    }
   }
+}
+
+async function exportSessionMixdownWav({ targetFile = undefined, format = 'wav', quality = 'pcm_s16le', startSec = 0, endSec = null } = {}) {
+  // Interactive UI invocations open the full Export Audio Mixdown dialog; headless targetFile calls export directly
+  if (!targetFile) {
+    openExportMixdownModal();
+    return;
+  }
+  return renderAndExportMixdown({
+    startSec,
+    endSec,
+    format,
+    quality,
+    sampleRate: 48000,
+    normalize: false,
+    edgeFade: false,
+    excludeClick: false,
+    targetFile,
+  });
 }
 
 // ─── Top Application Menu Bar (File, Edit, Track, Clip, Transport, Mix, View, Help) ───
@@ -4380,7 +4974,7 @@ function buildMenubarItems(key) {
       { icon: 'save', label: 'Save Session As...', kbd: 'Ctrl+Shift+S', run: () => saveCurrentSession(true) },
       { sep: true },
       { icon: 'import-wav', label: 'Import Audio / Video File(s)...', kbd: 'Ctrl+Shift+I', run: () => importAudioWavFiles() },
-      { icon: 'mixdown-export', label: 'Export Stereo Mixdown (.wav)...', kbd: 'Ctrl+Shift+E', disabled: !hasClips, run: () => exportSessionMixdownWav() },
+      { icon: 'mixdown-export', label: 'Export Audio Mixdown (MP3, WAV, FLAC, M4A...)', kbd: 'Ctrl+Shift+E', disabled: !hasClips, run: () => openExportMixdownModal() },
       { icon: 'folder', label: 'Reveal Session Audio Folder', kbd: '', run: async () => {
         const res = await window.robos.openSessionFolder();
         if (res?.ok) showStatus(`Opened ${res.folder || res.projectDir}`);
@@ -4806,6 +5400,11 @@ function openTimelineSpaceContextMenu(ev, track, clickTimeSec) {
     ${ctxRow('data-tl-ctx', 'move-ph', 'trim-right', `Move Playhead Here (${formatTimecode(safeTime)})`, 'Click')}
     ${ctxRow('data-tl-ctx', 'play-here', 'play', 'Play From Here')}
     <div class="ctx-sep"></div>
+    ${ctxRow('data-tl-ctx', 'set-from', 'trim-left', `Set 'From' (${formatTimecode(safeTime)})`, 'Drag Ruler')}
+    ${ctxRow('data-tl-ctx', 'set-to', 'trim-right', `Set 'To' (${formatTimecode(safeTime)})`, 'Drag Ruler')}
+    ${hasActiveTimeSelection() ? ctxRow('data-tl-ctx', 'clear-range', 'close', `Clear Time Selection (${formatTimecode(timeSelection.fromSec)} -> ${formatTimecode(timeSelection.toSec)})`, 'DblClick') : ''}
+    ${ctxRow('data-tl-ctx', 'export-mixdown', 'mixdown-export', hasActiveTimeSelection() ? 'Export Selected Range...' : 'Export Audio Mixdown...', 'Ctrl+Shift+E')}
+    <div class="ctx-sep"></div>
     ${ctxRow('data-tl-ctx', 'paste-here', 'paste', 'Paste Region(s) Here', 'Ctrl+V', { disabled: !clipClipboard })}
     ${ctxRow('data-tl-ctx', 'import-here', 'import-wav', 'Import Audio / Video Here...', 'Ctrl+Shift+I')}
     ${track ? ctxRow('data-tl-ctx', 'gen-click', 'metronome', 'Generate Click Track', 'Gemini AI', { disabled: !(track.clips || []).some(c => !c.muted) }) : ''}
@@ -4827,6 +5426,14 @@ function openTimelineSpaceContextMenu(ev, track, clickTimeSec) {
       closeContextMenu();
       if (cmd === 'move-ph') {
         seekPlayheadTo(safeTime);
+      } else if (cmd === 'set-from') {
+        setTimeSelectionFrom(safeTime);
+      } else if (cmd === 'set-to') {
+        setTimeSelectionTo(safeTime);
+      } else if (cmd === 'clear-range') {
+        clearTimeSelection();
+      } else if (cmd === 'export-mixdown') {
+        openExportMixdownModal();
       } else if (cmd === 'play-here') {
         stopPlayback({ returnToStart: false });
         playheadSec = safeTime;
@@ -5051,6 +5658,12 @@ function openTakeContextMenu(ev, track, clip, clickTimeSec) {
       <span class="mono" style="color:#94a3b8;font-size:10px;">${DE.formatDb(Number(clip.gainDb) || 0)}</span>
     </div>
     ${ctxRow('data-take-ctx', 'play-solo', 'play', 'Play Solo From This Region')}
+    ${ctxRow('data-take-ctx', 'set-from', 'trim-left', `Set 'From' (${formatTimecode(clickTimeSec)})`, 'Drag Ruler')}
+    ${ctxRow('data-take-ctx', 'set-to', 'trim-right', `Set 'To' (${formatTimecode(clickTimeSec)})`, 'Drag Ruler')}
+    ${ctxRow('data-take-ctx', 'select-bounds', 'select-all', `Select Region Bounds (${formatTimecode(clipStart)} -> ${formatTimecode(clipEnd)})`)}
+    ${hasActiveTimeSelection() ? ctxRow('data-take-ctx', 'clear-range', 'close', 'Clear Time Selection') : ''}
+    ${ctxRow('data-take-ctx', 'export-mixdown', 'mixdown-export', 'Export Audio Mixdown...', 'Ctrl+Shift+E')}
+    <div class="ctx-sep"></div>
     ${ctxRow('data-take-ctx', 'gen-click', 'metronome', 'Generate Click Track', 'Gemini AI')}
     ${ctxRow('data-take-ctx', 'remove-drums', 'drum-replace', 'Remove Drums', 'Gemini AI')}
     ${ctxRow('data-take-ctx', 'split-here', 'scissors', `Split Region${targetClipIds.size > 1 ? 's' : ''} Here (${formatTimecode(clickTimeSec)})`, '', { disabled: !canSplitHere })}
@@ -5143,6 +5756,29 @@ function openTakeContextMenu(ev, track, clip, clickTimeSec) {
         renderStudio();
         await syncProjectToMain();
         startPlayback();
+      } else if (cmd === 'set-from') {
+        const snapT = DE.snapTimeToBeatGrid(clickTimeSec, currentProject?.bpm || 120, snapToGrid);
+        setTimeSelectionFrom(snapT);
+      } else if (cmd === 'set-to') {
+        const snapT = DE.snapTimeToBeatGrid(clickTimeSec, currentProject?.bpm || 120, snapToGrid);
+        setTimeSelectionTo(snapT);
+      } else if (cmd === 'select-bounds') {
+        let lo = Infinity;
+        let hi = 0;
+        forEachSelectedClip((c) => {
+          const s = Number(c.startSec) || 0;
+          const e = s + (Number(c.durationSec) || 0);
+          if (s < lo) lo = s;
+          if (e > hi) hi = e;
+        });
+        if (Number.isFinite(lo) && hi > lo + 0.02) {
+          setTimeSelectionRange(lo, hi);
+          showStatus(`Selected region bounds: From ${formatTimecode(lo)} -> To ${formatTimecode(hi)}`);
+        }
+      } else if (cmd === 'clear-range') {
+        clearTimeSelection();
+      } else if (cmd === 'export-mixdown') {
+        openExportMixdownModal();
       } else if (cmd === 'gen-click') {
         await generateClickTrackUnderTrack(track);
       } else if (cmd === 'remove-drums') {
@@ -6662,10 +7298,88 @@ async function init() {
   document.getElementById('btn-project-new')?.addEventListener('click', createNewSession);
   document.getElementById('btn-project-save')?.addEventListener('click', () => saveCurrentSession(false));
   document.getElementById('btn-project-save-as')?.addEventListener('click', () => saveCurrentSession(true));
+  document.getElementById('btn-project-export')?.addEventListener('click', () => openExportMixdownModal());
   document.getElementById('btn-project-open')?.addEventListener('click', openProjectModal);
   document.getElementById('btn-open-modal-close')?.addEventListener('click', () => document.getElementById('open-project-modal')?.classList.add('hidden'));
   document.getElementById('btn-open-modal-cancel')?.addEventListener('click', () => document.getElementById('open-project-modal')?.classList.add('hidden'));
   document.getElementById('btn-browse-project-file')?.addEventListener('click', () => loadProjectByIdOrDialog({ openDialog: true }));
+
+  // Time Selection Toolbar Pill & Export Audio Mixdown Modal Controls
+  document.getElementById('time-selection-pill')?.addEventListener('click', (ev) => {
+    if (ev.target.closest('#btn-clear-time-selection')) return;
+    openExportMixdownModal();
+  });
+  document.getElementById('btn-clear-time-selection')?.addEventListener('click', (ev) => {
+    ev.stopPropagation();
+    clearTimeSelection();
+  });
+  document.getElementById('btn-export-modal-close')?.addEventListener('click', closeExportMixdownModal);
+  document.getElementById('btn-export-modal-cancel')?.addEventListener('click', closeExportMixdownModal);
+  document.getElementById('btn-export-confirm')?.addEventListener('click', executeExportMixdownFromModal);
+  document.getElementById('export-scope-selection')?.addEventListener('change', refreshExportModalSummary);
+  document.getElementById('export-scope-full')?.addEventListener('change', refreshExportModalSummary);
+  document.getElementById('export-from-input')?.addEventListener('input', refreshExportModalSummary);
+  document.getElementById('export-to-input')?.addEventListener('input', refreshExportModalSummary);
+  document.getElementById('export-from-input')?.addEventListener('change', () => {
+    const f = parseTimecodeInput(document.getElementById('export-from-input')?.value);
+    const t = parseTimecodeInput(document.getElementById('export-to-input')?.value);
+    if (f !== null && t !== null && t > f + 0.02) setTimeSelectionRange(f, t);
+    refreshExportModalSummary();
+  });
+  document.getElementById('export-to-input')?.addEventListener('change', () => {
+    const f = parseTimecodeInput(document.getElementById('export-from-input')?.value);
+    const t = parseTimecodeInput(document.getElementById('export-to-input')?.value);
+    if (f !== null && t !== null && t > f + 0.02) setTimeSelectionRange(f, t);
+    refreshExportModalSummary();
+  });
+  document.getElementById('export-format-select')?.addEventListener('change', (e) => {
+    populateExportQualityOptions(e.target.value);
+  });
+  document.getElementById('export-chk-exclude-click')?.addEventListener('change', refreshExportModalSummary);
+  document.getElementById('btn-export-use-ruler')?.addEventListener('click', () => {
+    if (!hasActiveTimeSelection()) {
+      showStatus('Click-drag across the timeline header (or right-click Set From / Set To) first.', true);
+      return;
+    }
+    const selRadio = document.getElementById('export-scope-selection');
+    if (selRadio) selRadio.checked = true;
+    document.getElementById('export-from-input').value = formatTimecode(timeSelection.fromSec);
+    document.getElementById('export-to-input').value = formatTimecode(timeSelection.toSec);
+    refreshExportModalSummary();
+  });
+  document.getElementById('btn-export-use-clips')?.addEventListener('click', () => {
+    const effIds = DE.getEffectiveSelectedClipIds(currentProject, selectedClipIds, selectedTrackIds);
+    let lo = Infinity;
+    let hi = 0;
+    for (const tr of (currentProject?.tracks || [])) {
+      for (const c of (tr.clips || [])) {
+        if (effIds.has(c.id)) {
+          const s = Number(c.startSec) || 0;
+          const e = s + (Number(c.durationSec) || 0);
+          if (s < lo) lo = s;
+          if (e > hi) hi = e;
+        }
+      }
+    }
+    if (!Number.isFinite(lo) || hi <= lo + 0.02) {
+      showStatus('Select one or more regions/tracks first to use their bounds.', true);
+      return;
+    }
+    setTimeSelectionRange(lo, hi);
+    const selRadio = document.getElementById('export-scope-selection');
+    if (selRadio) selRadio.checked = true;
+    document.getElementById('export-from-input').value = formatTimecode(lo);
+    document.getElementById('export-to-input').value = formatTimecode(hi);
+    refreshExportModalSummary();
+  });
+  document.getElementById('btn-export-use-full')?.addEventListener('click', () => {
+    const fullRadio = document.getElementById('export-scope-full');
+    if (fullRadio) fullRadio.checked = true;
+    const fb = getFullSessionExportBounds(Boolean(document.getElementById('export-chk-exclude-click')?.checked));
+    document.getElementById('export-from-input').value = formatTimecode(0);
+    document.getElementById('export-to-input').value = formatTimecode(fb.endSec);
+    refreshExportModalSummary();
+  });
 
   // DAW Edit Toolbar & Zoom Controls
   document.getElementById('btn-edit-undo')?.addEventListener('click', performUndo);
@@ -6814,16 +7528,55 @@ async function init() {
     toggleRecording();
   });
 
+  document.getElementById('timeline-ruler-wrap')?.addEventListener('mousemove', (ev) => {
+    if (rulerScrubState || isRecording) return;
+    const wrap = ev.currentTarget;
+    if (!hasActiveTimeSelection()) {
+      wrap.style.cursor = 'crosshair';
+      return;
+    }
+    const rect = wrap.getBoundingClientRect();
+    const totalSec = getTimelineDurationSec();
+    const sx0 = ((timeSelection.fromSec - timelineOffsetSec) / totalSec) * rect.width;
+    const sx1 = ((timeSelection.toSec - timelineOffsetSec) / totalSec) * rect.width;
+    const localX = ev.clientX - rect.left;
+    if (Math.abs(localX - sx0) <= 7 || Math.abs(localX - sx1) <= 7) {
+      wrap.style.cursor = 'ew-resize';
+    } else {
+      wrap.style.cursor = 'crosshair';
+    }
+  });
+
   document.getElementById('timeline-ruler-wrap')?.addEventListener('mousedown', (ev) => {
     if (ev.button !== 0 || isRecording) return;
     ev.preventDefault();
     closeContextMenu();
     closeMenubarDropdown();
     const rect = ev.currentTarget.getBoundingClientRect();
-    const ratio = Math.max(0, Math.min(1, (ev.clientX - rect.left) / Math.max(1, rect.width)));
-    const clickedSec = DE.snapTimeToBeatGrid(timelineOffsetSec + ratio * getTimelineDurationSec(), currentProject?.bpm || 120, snapToGrid && !ev.altKey);
-    rulerScrubState = { rect, lastSeekMs: performance.now() };
-    seekPlayheadTo(clickedSec);
+    const totalSec = getTimelineDurationSec();
+    const localX = ev.clientX - rect.left;
+    const ratio = Math.max(0, Math.min(1, localX / Math.max(1, rect.width)));
+    const clickedSec = DE.snapTimeToBeatGrid(timelineOffsetSec + ratio * totalSec, currentProject?.bpm || 120, snapToGrid && !ev.altKey);
+
+    if (hasActiveTimeSelection()) {
+      const sx0 = ((timeSelection.fromSec - timelineOffsetSec) / totalSec) * rect.width;
+      const sx1 = ((timeSelection.toSec - timelineOffsetSec) / totalSec) * rect.width;
+      if (Math.abs(localX - sx0) <= 7) {
+        rulerScrubState = { rect, startX: ev.clientX, anchorSec: timeSelection.toSec, moved: true };
+        return;
+      }
+      if (Math.abs(localX - sx1) <= 7) {
+        rulerScrubState = { rect, startX: ev.clientX, anchorSec: timeSelection.fromSec, moved: true };
+        return;
+      }
+    }
+    rulerScrubState = { rect, startX: ev.clientX, anchorSec: clickedSec, moved: false };
+  });
+
+  document.getElementById('timeline-ruler-wrap')?.addEventListener('dblclick', (ev) => {
+    if (isRecording) return;
+    ev.preventDefault();
+    clearTimeSelection();
   });
   document.getElementById('timeline-ruler-wrap')?.addEventListener('contextmenu', (ev) => {
     ev.preventDefault();
@@ -6853,7 +7606,7 @@ async function init() {
 
     // Fast-path Spacebar transport stop/start (even if a slider/button/select is focused when recording or playing!)
     if (!isTextTyping && !isMod && !ev.altKey && ev.code === 'Space') {
-      const anyModalOpen = ['add-mic-wizard-modal', 'open-project-modal', 'drumkits-modal', 'drumset-wizard-modal', 'rename-item-modal', 'shortcuts-modal']
+      const anyModalOpen = ['add-mic-wizard-modal', 'open-project-modal', 'drumkits-modal', 'drumset-wizard-modal', 'rename-item-modal', 'shortcuts-modal', 'export-mixdown-modal']
         .some(id => {
           const el = document.getElementById(id);
           return el && !el.classList.contains('hidden');
@@ -6883,6 +7636,11 @@ async function init() {
         closeContextMenu();
         return;
       }
+      const expModal = document.getElementById('export-mixdown-modal');
+      if (expModal && !expModal.classList.contains('hidden')) {
+        closeExportMixdownModal();
+        return;
+      }
       const scModal = document.getElementById('shortcuts-modal');
       if (scModal && !scModal.classList.contains('hidden')) {
         scModal.classList.add('hidden');
@@ -6893,12 +7651,16 @@ async function init() {
         selectedTrackIds.clear();
         renderStudio();
         showStatus('Deselected all tracks and takes.');
+        return;
+      }
+      if (hasActiveTimeSelection()) {
+        clearTimeSelection();
       }
       return;
     }
 
     // Do not intercept studio shortcuts if a modal dialog is open
-    const anyModalOpen = ['add-mic-wizard-modal', 'open-project-modal', 'drumkits-modal', 'drumset-wizard-modal', 'rename-item-modal', 'shortcuts-modal']
+    const anyModalOpen = ['add-mic-wizard-modal', 'open-project-modal', 'drumkits-modal', 'drumset-wizard-modal', 'rename-item-modal', 'shortcuts-modal', 'export-mixdown-modal']
       .some(id => {
         const el = document.getElementById(id);
         return el && !el.classList.contains('hidden');
@@ -7716,6 +8478,8 @@ window.__dawStudioState = () => ({
   playheadSec,
   playReturnAnchorSec,
   playbackHotSwapSeq,
+  timeSelection: hasActiveTimeSelection() ? { ...timeSelection } : null,
+  exportModalOpen: !document.getElementById('export-mixdown-modal')?.classList.contains('hidden'),
   timelineZoom,
   timelineOffsetSec,
   waveformZoomDb,

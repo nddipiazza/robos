@@ -76,6 +76,7 @@ contextBridge.exposeInMainWorld('robos', {
       return file?.path || '';
     }
   },
+  exportMixdown: (payload) => ipcRenderer.invoke('daw:export-mixdown', payload),
   exportMixdownWav: (payload) => ipcRenderer.invoke('daw:export-mixdown-wav', payload),
   openSessionFolder: () => ipcRenderer.invoke('daw:open-session-folder'),
 });

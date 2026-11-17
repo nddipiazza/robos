@@ -1441,4 +1441,47 @@ describe('DAW Editing Engine: Multi-Select, Track/Take Gain, Split/Trim, Copy/Pa
       fs.rmSync(tmpRmDir, { recursive: true, force: true });
     }
   });
+
+  it('exports stereo mixdowns to MP3, WAV (24-bit), FLAC, M4A, OGG, Opus, and AIFF via FFmpeg', async () => {
+    const {
+      MIXDOWN_FORMATS,
+      ensureFormatExtension,
+      transcodeMixdownBuffer,
+    } = require('../lib/mixdown-exporter');
+    const { probeMediaStreams } = require('../lib/media-importer');
+
+    assert.ok(MIXDOWN_FORMATS.length >= 7);
+    assert.strictEqual(ensureFormatExtension('/tmp/song-mixdown.wav', 'mp3'), '/tmp/song-mixdown.mp3');
+    assert.strictEqual(ensureFormatExtension('/tmp/song-mixdown', 'flac'), '/tmp/song-mixdown.flac');
+
+    const tmpExpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'daw-mixdown-formats-'));
+    try {
+      const srcWav = synthesizeDrumTakeWav({ profileId: 'snare-top', durationSec: 1.25, sampleRate: 48000 });
+      for (const [format, quality, expectedCodecRe] of [
+        ['mp3', '320k', /mp3/i],
+        ['wav', 'pcm_s24le', /pcm_s24le/i],
+        ['flac', '24bit', /flac/i],
+        ['m4a', '256k', /aac/i],
+        ['ogg', 'q8', /vorbis/i],
+        ['opus', '192k', /opus/i],
+        ['aiff', 'pcm_s24be', /pcm_s24be/i],
+      ]) {
+        const out = await transcodeMixdownBuffer(srcWav, {
+          outPath: path.join(tmpExpDir, `master.${format}`),
+          format,
+          quality,
+          sampleRate: 48000,
+          title: 'RobOS Mixdown Test',
+        });
+        assert.strictEqual(out.ok, true);
+        assert.ok(fs.existsSync(out.filePath), `Expected ${out.filePath} to exist`);
+        assert.ok(out.bytes > 1000, `Expected non-empty ${format} output`);
+        const probe = await probeMediaStreams(out.filePath);
+        assert.match(probe.audioCodec, expectedCodecRe);
+        assert.ok(Math.abs(probe.durationSec - 1.25) < 0.15, `Expected ~1.25s duration for ${format}, got ${probe.durationSec}s`);
+      }
+    } finally {
+      fs.rmSync(tmpExpDir, { recursive: true, force: true });
+    }
+  });
 });

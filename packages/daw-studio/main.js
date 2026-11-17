@@ -54,6 +54,12 @@ const {
 const {
   removeDrumsFromTrackInProject,
 } = require('./lib/drum-remover');
+const {
+  MIXDOWN_FORMATS,
+  getMixdownFormatSpec,
+  ensureFormatExtension,
+  transcodeMixdownBuffer,
+} = require('./lib/mixdown-exporter');
 
 // Ensure user CLI bin directories (where `agy`, `gemini`, `claude`, `copilot` live) are in PATH
 for (const extraBin of [
@@ -1201,30 +1207,81 @@ ipcMain.handle('daw:remove-drums-from-track', async (_e, payload) => {
   }
 });
 
-ipcMain.handle('daw:export-mixdown-wav', async (_e, payload) => {
-  try {
-    const { wavBase64, defaultName = 'mixdown.wav', targetFile } = payload || {};
-    if (!wavBase64) throw new Error('Missing mixdown WAV buffer');
+async function handleMixdownExport(payload = {}) {
+  delete require.cache[require.resolve('./lib/mixdown-exporter')];
+  const exporter = require('./lib/mixdown-exporter');
+  const {
+    wavBase64,
+    format = 'wav',
+    quality = '',
+    sampleRate = 48000,
+    title = '',
+    defaultName = '',
+    targetFile,
+  } = payload || {};
+  if (!wavBase64) throw new Error('Missing mixdown WAV buffer');
 
-    let outPath = targetFile || '';
-    if (!outPath && mainWindow && !mainWindow.isDestroyed()) {
-      const home = process.env.HOME || os.homedir();
-      const res = await dialog.showSaveDialog(mainWindow, {
-        title: 'Export Stereo Mixdown (.wav)',
-        defaultPath: path.join(home, defaultName),
-        filters: [{ name: 'WAV Audio', extensions: ['wav'] }],
-      });
-      if (res.canceled || !res.filePath) {
-        return { ok: false, canceled: true };
-      }
-      outPath = res.filePath.endsWith('.wav') ? res.filePath : `${res.filePath}.wav`;
+  const spec = exporter.getMixdownFormatSpec(format);
+  const fallbackName = exporter.ensureFormatExtension(defaultName || `mixdown.${spec.ext}`, spec.ext);
+
+  let outPath = targetFile || '';
+  if (!outPath && mainWindow && !mainWindow.isDestroyed()) {
+    const home = process.env.HOME || os.homedir();
+    const otherFilters = exporter.MIXDOWN_FORMATS
+      .filter(f => f.id !== spec.id)
+      .map(f => ({ name: f.dialogName, extensions: [f.ext] }));
+    const res = await dialog.showSaveDialog(mainWindow, {
+      title: `Export Audio Mixdown (.${spec.ext})`,
+      defaultPath: path.join(home, fallbackName),
+      filters: [
+        { name: spec.dialogName, extensions: [spec.ext] },
+        ...otherFilters,
+      ],
+    });
+    if (res.canceled || !res.filePath) {
+      return { ok: false, canceled: true };
     }
-    if (!outPath) return { ok: false, canceled: true };
+    outPath = res.filePath;
+    // If user typed a different extension explicitly in Save Dialog (e.g. .mp3 or .flac), honor it!
+    const userTypedExt = path.extname(outPath).replace(/^\./, '').toLowerCase();
+    const matchedTypedSpec = exporter.MIXDOWN_FORMATS.find(f => f.ext === userTypedExt);
+    const effectiveFormat = matchedTypedSpec ? matchedTypedSpec.id : spec.id;
+    const effectiveQuality = matchedTypedSpec && matchedTypedSpec.id !== spec.id
+      ? matchedTypedSpec.defaultQuality
+      : quality;
 
     const bytes = Buffer.from(wavBase64, 'base64');
-    fs.mkdirSync(path.dirname(outPath), { recursive: true });
-    fs.writeFileSync(outPath, bytes);
-    return { ok: true, filePath: outPath, bytes: bytes.length };
+    return exporter.transcodeMixdownBuffer(bytes, {
+      outPath,
+      format: effectiveFormat,
+      quality: effectiveQuality,
+      sampleRate,
+      title,
+    });
+  }
+  if (!outPath) return { ok: false, canceled: true };
+
+  const bytes = Buffer.from(wavBase64, 'base64');
+  return exporter.transcodeMixdownBuffer(bytes, {
+    outPath,
+    format: spec.id,
+    quality,
+    sampleRate,
+    title,
+  });
+}
+
+ipcMain.handle('daw:export-mixdown', async (_e, payload) => {
+  try {
+    return await handleMixdownExport(payload);
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('daw:export-mixdown-wav', async (_e, payload) => {
+  try {
+    return await handleMixdownExport({ format: 'wav', quality: 'pcm_s16le', ...(payload || {}) });
   } catch (err) {
     return { ok: false, error: err.message };
   }

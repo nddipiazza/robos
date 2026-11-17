@@ -2331,3 +2331,130 @@ kbd {
   outline-offset: -1.5px;
   background: rgba(0, 212, 255, 0.08) !important;
 }
+
+/* ─── Timeline From -> To Selection Pill & Export Audio Mixdown Modal ────── */
+.time-selection-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #7ee7f5;
+  background: rgba(0, 212, 255, 0.14);
+  border: 1px solid rgba(0, 212, 255, 0.42);
+  cursor: pointer;
+  user-select: none;
+}
+.time-selection-pill:hover {
+  background: rgba(0, 212, 255, 0.22);
+}
+.time-sel-clear-btn {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  font-size: 13px;
+  line-height: 1;
+  padding: 0 2px;
+  cursor: pointer;
+}
+.time-sel-clear-btn:hover {
+  color: #f87171;
+}
+
+.export-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+.export-section-card {
+  background: #0b1018;
+  border: 1px solid #223044;
+  border-radius: 6px;
+  padding: 10px 12px;
+}
+.export-sec-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 9px;
+}
+.export-duration-badge {
+  font-size: 11px;
+  font-weight: 700;
+  color: #7ee7f5;
+  background: rgba(0, 212, 255, 0.14);
+  border: 1px solid rgba(0, 212, 255, 0.36);
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+.export-scope-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 9px;
+}
+.export-scope-opt {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 5px;
+  background: #101723;
+  border: 1px solid #253449;
+  cursor: pointer;
+}
+.export-scope-opt input[type="radio"] {
+  margin-top: 2px;
+  accent-color: var(--accent);
+}
+.export-scope-opt.active {
+  border-color: var(--accent);
+  background: rgba(0, 212, 255, 0.10);
+}
+.export-scope-opt strong {
+  display: block;
+  font-size: 12px;
+  color: #f1f5f9;
+}
+.export-scope-opt span {
+  display: block;
+  font-size: 10.5px;
+  color: #94a3b8;
+  margin-top: 1px;
+}
+.export-bounds-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.export-quick-range-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 9px;
+}
+.export-format-grid {
+  display: grid;
+  grid-template-columns: 1.35fr 1.15fr 1fr;
+  gap: 9px;
+}
+.export-checks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.export-chk-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #cbd5e1;
+  cursor: pointer;
+}
+.export-chk-row input[type="checkbox"] {
+  accent-color: var(--accent);
+}
