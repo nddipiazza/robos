@@ -1158,7 +1158,9 @@ ipcMain.handle('daw:generate-click-track', async (_e, payload) => {
     fs.mkdirSync(takesDir, { recursive: true });
     proj.projectDir = projDir;
 
-    const res = await generateAlignedClickTrackForProject(proj, trackId, {
+    delete require.cache[require.resolve('./lib/click-track-generator')];
+    const { generateAlignedClickTrackForProject: runClickGen } = require('./lib/click-track-generator');
+    const res = await runClickGen(proj, trackId, {
       preferredProvider: payload?.preferredProvider || 'antigravity',
       aiAgentModule: aiAgent,
       takesDir,

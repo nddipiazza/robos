@@ -1337,6 +1337,29 @@ describe('DAW Editing Engine: Multi-Select, Track/Take Gain, Split/Trim, Copy/Pa
       assert.ok(Math.abs(res.firstDownbeatSec - expectedDownbeat) <= 0.005, `Expected downbeat ~${expectedDownbeat}s, got ${res.firstDownbeatSec}s`);
       assert.ok(Math.abs((res.firstDownbeatSec - res.countInStartSec) - (4 * beatSec)) <= 0.002, '1-measure count-off must precede Beat 1 by exactly 4 beats');
       assert.ok(fs.existsSync(res.clickClip.wavFile));
+
+      // Verify multi-tempo arrangement tracking (120 BPM for 20s -> 150 BPM for 20s)
+      const { analyzeAudioBeatGrid } = require('../lib/click-track-generator');
+      const sr16 = 16000;
+      const multiMono = new Float32Array(sr16 * 40);
+      const stampHit = (sec, freq) => {
+        const s0 = Math.round(sec * sr16);
+        for (let i = 0; i < Math.min(800, multiMono.length - s0); i++) {
+          const t = i / sr16;
+          multiMono[s0 + i] += 0.85 * Math.sin(2 * Math.PI * freq * t) * Math.exp(-55 * t);
+        }
+      };
+      for (let b = 0; b < 38; b++) {
+        stampHit(1.0 + b * 0.5, (b % 4 === 0) ? 75 : 420); // 120 BPM (0.5s beat) across 1s..20s
+      }
+      for (let b = 0; b < 46; b++) {
+        stampHit(20.0 + b * 0.4, (b % 4 === 0) ? 75 : 420); // 150 BPM (0.4s beat) across 20s..38.4s
+      }
+      const multiGrid = analyzeAudioBeatGrid(multiMono, { earliestStartSec: 0 });
+      assert.strictEqual(multiGrid.isMultiTempo, true, 'Must detect multi-tempo section change');
+      assert.strictEqual(multiGrid.segments.length, 2);
+      assert.ok(Math.abs(multiGrid.segments[0].bpm - 120) <= 0.5, `Expected Seg 0 ~120 BPM, got ${multiGrid.segments[0].bpm}`);
+      assert.ok(Math.abs(multiGrid.segments[1].bpm - 150) <= 0.5, `Expected Seg 1 ~150 BPM, got ${multiGrid.segments[1].bpm}`);
     } finally {
       fs.rmSync(tmpClickDir, { recursive: true, force: true });
     }

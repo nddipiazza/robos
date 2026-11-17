@@ -3998,6 +3998,7 @@ async function generateClickTrackUnderTrack(track) {
     selectedClipIds = res.clickClip?.id ? new Set([res.clickClip.id]) : new Set();
 
     playheadSec = Number(res.countInStartSec) || 0;
+    playReturnAnchorSec = playheadSec;
     const tcEl = document.getElementById('transport-timecode');
     if (tcEl) tcEl.textContent = formatTimecode(playheadSec);
     ensurePlayheadInViewport(playheadSec);
@@ -4007,8 +4008,11 @@ async function generateClickTrackUnderTrack(track) {
     const shiftNote = res.timelineShiftSec > 0
       ? ` (shifted session +${res.timelineShiftSec.toFixed(2)}s to fit 1-bar count-in)`
       : '';
+    const tempoDesc = Array.isArray(res.tempoSegments) && res.tempoSegments.length >= 2
+      ? `${res.tempoSegments.map(s => Math.round(s.bpm)).join(' -> ')} BPM (${res.tempoSegments.length} sections)`
+      : `${res.bpm} BPM`;
     showStatus(
-      `Generated Click Track under "${track.name}" (${res.bpm} BPM · ${res.timeSignature}, 1-bar count-in @ ${formatTimecode(playheadSec)}) via ${res.provider}${shiftNote} — press Space to play!`
+      `Generated Click Track under "${track.name}" (${tempoDesc} · ${res.timeSignature}, 1-bar count-in @ ${formatTimecode(playheadSec)}) via ${res.provider}${shiftNote} — press Space to play!`
     );
   } finally {
     if (typeof progressUnsub === 'function') {
