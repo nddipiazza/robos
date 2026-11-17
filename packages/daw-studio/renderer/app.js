@@ -24,6 +24,7 @@ let clipClipboard = null;
 let timelineZoom = 1.0;
 let timelineOffsetSec = 0.0;
 let middlePanDragState = null;
+let rulerScrubState = null;
 let inlineRenamingTrackId = null;
 let timelineDragState = null;
 let hoverLinkedPreview = null; // { key: string, zone: string, clipIds: Set<string> }
@@ -1155,7 +1156,8 @@ async function seamlessRefreshLiveAudio() {
   const fadeDur = 0.008;
   const tSplice = ctx.currentTime + 0.006;
   const exactResumeSec = playStartOffsetSec + Math.max(0, tSplice - playStartWallSec);
-  const maxDuration = getBaseProjectSpanSec();
+  const baseSpan = getBaseProjectSpanSec();
+  const maxDuration = exactResumeSec >= baseSpan - 0.05 ? exactResumeSec + 8 : baseSpan;
 
   const prevPass = activePlaybackPass;
   const nextPass = buildAndSchedulePlaybackPass(ctx, playableTracks, exactResumeSec, tSplice, maxDuration, {
@@ -1176,6 +1178,34 @@ async function seamlessRefreshLiveAudio() {
   playStartWallSec = tSplice;
   playStartOffsetSec = exactResumeSec;
   playMaxDurationSec = maxDuration;
+}
+
+function seekPlayheadTo(targetSec, { updateReturnAnchor = true, ensureVisible = false } = {}) {
+  if (isRecording) return;
+  const clamped = Math.max(0, Number((Number(targetSec) || 0).toFixed(4)));
+  playheadSec = clamped;
+  if (updateReturnAnchor) {
+    playReturnAnchorSec = clamped;
+  }
+  if (ensureVisible) {
+    if (clamped === 0) timelineOffsetSec = 0;
+    else ensurePlayheadInViewport(clamped);
+  }
+  const tcEl = document.getElementById('transport-timecode');
+  if (tcEl) tcEl.textContent = formatTimecode(playheadSec);
+
+  if (isPlaying) {
+    const baseSpan = getBaseProjectSpanSec();
+    playMaxDurationSec = clamped >= baseSpan - 0.05 ? clamped + 8 : baseSpan;
+    if (studioAudioCtx && studioAudioCtx.state !== 'closed') {
+      playStartWallSec = studioAudioCtx.currentTime;
+      playStartOffsetSec = clamped;
+    }
+    drawAllTimelineCanvases();
+    seamlessRefreshLiveAudio();
+  } else {
+    drawAllTimelineCanvases();
+  }
 }
 
 function stopPlayback({ returnToStart = true } = {}) {
@@ -2243,6 +2273,12 @@ function bindTrackRowEvents() {
         if (selectedTrackId !== null) selectedTrackId = track.id;
 
         if (hit.zone === 'body') {
+          if (!isRecording && !isModifier) {
+            const ratio = Math.max(0, Math.min(1, (ev.clientX - rect.left) / Math.max(1, rect.width)));
+            const rawSec = timelineOffsetSec + ratio * totalSec;
+            const clickedSec = DE.snapTimeToBeatGrid(rawSec, currentProject?.bpm || 120, snapToGrid && !ev.altKey);
+            seekPlayheadTo(clickedSec);
+          }
           const targetClipIds = new Set(selectedClipIds);
           const initialStarts = new Map();
           for (const tr of tracks) {
@@ -2308,15 +2344,9 @@ function bindTrackRowEvents() {
 
       const ratio = Math.max(0, Math.min(1, (ev.clientX - rect.left) / Math.max(1, rect.width)));
       const rawSec = timelineOffsetSec + ratio * totalSec;
-      playheadSec = DE.snapTimeToBeatGrid(rawSec, currentProject?.bpm || 120, snapToGrid && !ev.altKey);
-      document.getElementById('transport-timecode').textContent = formatTimecode(playheadSec);
-      if (isPlaying) {
-        stopPlayback({ returnToStart: false });
-        renderStudio();
-        startPlayback();
-      } else {
-        renderStudio();
-      }
+      const clickedSec = DE.snapTimeToBeatGrid(rawSec, currentProject?.bpm || 120, snapToGrid && !ev.altKey);
+      renderStudio();
+      seekPlayheadTo(clickedSec);
     });
 
     lane.addEventListener('dblclick', (ev) => {
@@ -2399,6 +2429,31 @@ function hitTestLaneClip(track, laneEl, clientX) {
 }
 
 function handleGlobalTimelineMouseMove(ev) {
+  if (rulerScrubState) {
+    if (typeof ev.buttons === 'number' && (ev.buttons & 1) === 0) {
+      rulerScrubState = null;
+      return;
+    }
+    const rulerEl = document.getElementById('timeline-ruler-wrap');
+    const rect = rulerEl ? rulerEl.getBoundingClientRect() : rulerScrubState.rect;
+    if (rect && rect.width > 10) {
+      const ratio = Math.max(0, Math.min(1, (ev.clientX - rect.left) / rect.width));
+      const rawSec = timelineOffsetSec + ratio * getTimelineDurationSec();
+      const scrubSec = DE.snapTimeToBeatGrid(rawSec, currentProject?.bpm || 120, snapToGrid && !ev.altKey);
+      const nowMs = performance.now();
+      if (!isPlaying || nowMs - rulerScrubState.lastSeekMs >= 45) {
+        rulerScrubState.lastSeekMs = nowMs;
+        seekPlayheadTo(scrubSec);
+      } else {
+        playheadSec = Math.max(0, Number(scrubSec.toFixed(4)));
+        playReturnAnchorSec = playheadSec;
+        const tcEl = document.getElementById('transport-timecode');
+        if (tcEl) tcEl.textContent = formatTimecode(playheadSec);
+        drawAllTimelineCanvases();
+      }
+    }
+    return;
+  }
   if (middlePanDragState) {
     if (typeof ev.buttons === 'number' && ev.buttons > 0 && (ev.buttons & 4) === 0) {
       endMiddlePanDrag();
@@ -2459,6 +2514,17 @@ function handleGlobalTimelineMouseMove(ev) {
 }
 
 async function handleGlobalTimelineMouseUp(ev) {
+  if (rulerScrubState) {
+    const rulerEl = document.getElementById('timeline-ruler-wrap');
+    const rect = rulerEl ? rulerEl.getBoundingClientRect() : rulerScrubState.rect;
+    rulerScrubState = null;
+    if (ev && rect && rect.width > 10) {
+      const ratio = Math.max(0, Math.min(1, (ev.clientX - rect.left) / rect.width));
+      const rawSec = timelineOffsetSec + ratio * getTimelineDurationSec();
+      const scrubSec = DE.snapTimeToBeatGrid(rawSec, currentProject?.bpm || 120, snapToGrid && !ev.altKey);
+      seekPlayheadTo(scrubSec);
+    }
+  }
   if (middlePanDragState && (!ev || ev.button === 1 || (typeof ev.buttons === 'number' && (ev.buttons & 4) === 0))) {
     endMiddlePanDrag();
   }
@@ -4756,10 +4822,7 @@ function openTimelineSpaceContextMenu(ev, track, clickTimeSec) {
       const cmd = btn.dataset.tlCtx;
       closeContextMenu();
       if (cmd === 'move-ph') {
-        playheadSec = safeTime;
-        document.getElementById('transport-timecode').textContent = formatTimecode(playheadSec);
-        if (isPlaying) { stopPlayback({ returnToStart: false }); startPlayback(); }
-        else drawAllTimelineCanvases();
+        seekPlayheadTo(safeTime);
       } else if (cmd === 'play-here') {
         stopPlayback({ returnToStart: false });
         playheadSec = safeTime;
@@ -6713,15 +6776,25 @@ async function init() {
       openEmptyRackContextMenu(ev);
     }
   });
+  document.getElementById('timeline-scroll-area')?.addEventListener('mousedown', (ev) => {
+    if (ev.button !== 0 || isRecording) return;
+    if (ev.target.closest('.track-row') || ev.target.closest('.timeline-header-row')) return;
+    const rulerEl = document.getElementById('timeline-ruler-wrap');
+    const rect = rulerEl ? rulerEl.getBoundingClientRect() : null;
+    if (rect && rect.width > 10 && ev.clientX >= rect.left && ev.clientX <= rect.right) {
+      ev.preventDefault();
+      closeContextMenu();
+      const ratio = Math.max(0, Math.min(1, (ev.clientX - rect.left) / rect.width));
+      const clickedSec = DE.snapTimeToBeatGrid(timelineOffsetSec + ratio * getTimelineDurationSec(), currentProject?.bpm || 120, snapToGrid && !ev.altKey);
+      seekPlayheadTo(clickedSec);
+    }
+  });
 
   // Transport Controls
   document.getElementById('btn-transport-rewind')?.addEventListener('click', () => {
     if (isRecording) return;
-    playheadSec = 0;
     timelineOffsetSec = 0;
-    document.getElementById('transport-timecode').textContent = formatTimecode(0);
-    if (isPlaying) { stopPlayback({ returnToStart: false }); startPlayback(); }
-    else drawAllTimelineCanvases();
+    seekPlayheadTo(0, { ensureVisible: true });
   });
   document.getElementById('btn-transport-play')?.addEventListener('click', (ev) => {
     ev.currentTarget?.blur?.();
@@ -6737,14 +6810,16 @@ async function init() {
     toggleRecording();
   });
 
-  document.getElementById('timeline-ruler-wrap')?.addEventListener('click', (ev) => {
-    if (isRecording) return;
+  document.getElementById('timeline-ruler-wrap')?.addEventListener('mousedown', (ev) => {
+    if (ev.button !== 0 || isRecording) return;
+    ev.preventDefault();
+    closeContextMenu();
+    closeMenubarDropdown();
     const rect = ev.currentTarget.getBoundingClientRect();
     const ratio = Math.max(0, Math.min(1, (ev.clientX - rect.left) / Math.max(1, rect.width)));
-    playheadSec = DE.snapTimeToBeatGrid(timelineOffsetSec + ratio * getTimelineDurationSec(), currentProject?.bpm || 120, snapToGrid && !ev.altKey);
-    document.getElementById('transport-timecode').textContent = formatTimecode(playheadSec);
-    if (isPlaying) { stopPlayback({ returnToStart: false }); startPlayback(); }
-    else drawAllTimelineCanvases();
+    const clickedSec = DE.snapTimeToBeatGrid(timelineOffsetSec + ratio * getTimelineDurationSec(), currentProject?.bpm || 120, snapToGrid && !ev.altKey);
+    rulerScrubState = { rect, lastSeekMs: performance.now() };
+    seekPlayheadTo(clickedSec);
   });
   document.getElementById('timeline-ruler-wrap')?.addEventListener('contextmenu', (ev) => {
     ev.preventDefault();
@@ -6829,18 +6904,7 @@ async function init() {
     // ─── REAPER Tracking, Recording, Comping, Marker & Workstation Shortcuts ───
 
     const setCursorSec = (nextSec) => {
-      if (isRecording) return;
-      playheadSec = Math.max(0, Number((Number(nextSec) || 0).toFixed(4)));
-      if (playheadSec === 0) timelineOffsetSec = 0;
-      else ensurePlayheadInViewport(playheadSec);
-      const tcEl = document.getElementById('transport-timecode');
-      if (tcEl) tcEl.textContent = formatTimecode(playheadSec);
-      if (isPlaying) {
-        stopPlayback({ returnToStart: false });
-        startPlayback();
-      } else {
-        drawAllTimelineCanvases();
-      }
+      seekPlayheadTo(nextSec, { ensureVisible: true });
     };
 
     // 1. REAPER Abort Recording & Delete Incomplete Pass: Alt+Backspace or Ctrl+.
