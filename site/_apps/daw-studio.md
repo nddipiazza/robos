@@ -11,7 +11,10 @@ description: "Multi-track Digital Audio Workstation, Focusrite & PipeWire Pro-Au
 icon: daw-studio.svg
 ---
 
-Multi-track Linux Digital Audio Workstation with native **Focusrite Scarlett / Clarett+** USB hardware control (`snd_usb_audio` + PipeWire Pro-Audio quantum scheduling), an interactive **Add Mic Wizard**, automatic open-source LV2/VST EQ & dynamics chains, non-destructive **Drum Sound Replacement**, and full project session Save / Open persistence.
+Multi-track Linux Digital Audio Workstation with native **Focusrite Scarlett / Clarett+ + Behringer ADA8200 ADAT** 20-channel USB hardware control (`snd_usb_audio` + PipeWire Pro-Audio quantum scheduling), **DrumSet AI** multi-mic soundcheck, an interactive **Add Mic Wizard**, real-time 6 ms hot-swapped parametric EQ & dynamics chains, non-destructive **Drum Sound Replacement**, and **`From -> To` Multi-Format Mixdowns** (`MP3`, `FLAC`, `WAV 24-bit`, `M4A`, `OGG`, `Opus`, `AIFF`).
+
+- **[Full RobOS DAW Studio Landing Page & Live Session Audio Exports (`/daw/`)](/daw/)**
+- **[Engineering Blog: 20-Channel Linux Drum Tracking & Metal Kick Mid-Punch DSP](/blog/robos-daw-studio-linux-multitrack-drum-workstation/)**
 
 ## Key features
 

@@ -55,6 +55,7 @@ const seoCheckedPages = [
   'future/index.html',
   'future/whitepaper/index.html',
   'family-finances/index.html',
+  'daw/index.html',
   'point-of-sale/index.html',
   'point-of-sale/retail/index.html',
   'point-of-sale/coffee/index.html',

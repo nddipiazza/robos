@@ -1,0 +1,167 @@
+---
+title: "RobOS DAW Studio: 20-Channel Linux Drum Tracking with Focusrite Scarlett 18i20 + Behringer ADA8200 ADAT, Dual-Band Metal Kick Mid-Punch & Multi-Format Range Mixdowns"
+nav_label: "RobOS DAW Studio"
+date: 2026-11-18 14:00:00 +0000
+date_label: "Nov 18, 2026"
+tags:
+  - "RobOS DAW Studio"
+  - "PipeWire Pro-Audio &amp; ADAT"
+  - "Metal Drum DSP &amp; EQ"
+  - "Multi-Format Mixdown"
+summary: "<strong>RobOS DAW Studio</strong> (<code>packages/daw-studio</code>, <a href=\"/daw/\">rowbose.com/daw</a>) brings zero-drift multi-track drum and band recording to Linux over native <strong>PipeWire Pro-Audio</strong> and mainline <strong>ALSA <code>snd_usb_audio</code></strong>. Tested live on a 12-microphone acoustic drum kit wired into a <strong>Behringer Ultragain Digital ADA8200</strong> (8 MIDAS preamps over ADAT Optical) + <strong>Focusrite Scarlett 18i20 (3rd Gen)</strong>, DAW Studio unifies Analog and ADAT capture onto a single 20-channel <code>hw:USB,0</code> clock, hot-swaps EQ/mixer changes in 6 ms without stopping playback, sculpts articulate metal bass-drum notes with a dual-band <code>1.0 kHz</code> + <code>1.95 kHz</code> mid-punch chain, generates multi-tempo Viterbi click tracks, reclaims the full <code>1920px</code> viewport with a skinny <code>24px</code> bottom telemetry bar, and exports <code>From -&gt; To</code> timeline selections to MP3, FLAC, WAV 24-bit, M4A, OGG, Opus, and AIFF."
+description: "Track and mix 20-channel acoustic drums on Linux in RobOS DAW Studio with Focusrite Scarlett 18i20 + Behringer ADA8200 ADAT, live 6ms DSP hot-swap, dual-band metal kick mid-punch EQ, and multi-format range mixdown exports."
+seo_title: "20-Channel Linux Drum Tracking & Metal Mixdown · RobOS DAW Studio"
+og_image: /assets/daw/01-full-width-arrangement.png
+og_image_alt: "RobOS DAW Studio full-width 1920px multi-track drum arrangement with Focusrite Scarlett 18i20 + Behringer ADA8200 ADAT inputs, active From -> To range selection, and skinny bottom telemetry bar"
+---
+<style>
+  .blog-audio-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 12px;
+    margin: 18px 0 24px;
+  }
+  .blog-audio-card {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--card);
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .blog-audio-card strong {
+    font-size: 0.94rem;
+  }
+  .blog-audio-sub {
+    font-size: 0.82rem;
+    color: var(--muted);
+  }
+  .blog-audio-card audio {
+    width: 100%;
+    height: 34px;
+    margin-top: 2px;
+  }
+  .blog-audio-full {
+    grid-column: 1 / -1;
+    border-color: var(--accent);
+  }
+</style>
+
+<div class="blog-body">
+  <figure class="blog-fig">
+    <img src="{{ '/assets/daw/01-full-width-arrangement.png' | relative_url }}" alt="RobOS DAW Studio full-width 1920px multi-track arrangement showing Kick In, Snare Top, Hi-Hat, and Rack/Floor Toms recorded across Focusrite Scarlett 18i20 + Behringer ADA8200 ADAT inputs with active 00:26.00 -> 00:46.00 selection and skinny bottom grey status toolbar" loading="lazy">
+    <figcaption><strong>RobOS DAW Studio</strong> (<a href="{{ '/daw/' | relative_url }}"><code>rowbose.com/daw</code></a>) during a live 16-channel drum &amp; band session: full-width <code>1920px</code> arrangement with color-coded waveforms and transient markers (<code>Kick In TRIG 196</code>, <code>Snare Top TRIG 117</code>, <code>Hi-Hat</code>, 6 Toms, 3 Room mics), active <code>00:26.00 -&gt; 00:46.00</code> range selection, and the skinny <code>24px</code> bottom grey telemetry bar.</figcaption>
+  </figure>
+
+  <p><strong>Listen first — real multi-track exports straight from our Linux drum session.</strong> Before diving into the kernel clocking and WebAudio DSP details, press play on the stereo MP3 snippets below. Every clip was rendered directly out of <strong>RobOS DAW Studio</strong>'s mixdown exporter (<a href="https://github.com/nddipiazza/robos/blob/main/packages/daw-studio/renderer/app.js"><code>renderAndExportMixdown</code></a>) from our live 12-mic acoustic drum session tracked over a Gemini drum-removed metal backing stem (with the raw reference MP4 track and multi-tempo click track muted on the mixer, <code>-0.3 dBFS</code> true-peak normalized, and <code>15 ms</code> half-cosine edge fades applied):</p>
+
+  <div class="blog-audio-grid">
+    <div class="blog-audio-card">
+      <strong>1. Opening Drum Entrance &amp; Metal Groove (<code>00:05.5 -&gt; 00:23.5</code>)</strong>
+      <span class="blog-audio-sub">Guitar build into the 12-mic acoustic kit entrance at <code>00:07.5</code> (<code>18.0s</code> · 192k MP3)</span>
+      <audio controls preload="metadata" src="{{ '/assets/daw/audio/01-drum-entrance-groove.mp3' | relative_url }}"></audio>
+    </div>
+    <div class="blog-audio-card">
+      <strong>2. Rack-Tom Fill &amp; Heavy Chorus Drop (<code>00:26.0 -&gt; 00:46.0</code>)</strong>
+      <span class="blog-audio-sub">Exact <code>20.0s</code> range highlighted in the timeline selection above</span>
+      <audio controls preload="metadata" src="{{ '/assets/daw/audio/02-tom-fill-chorus-drop.mp3' | relative_url }}"></audio>
+    </div>
+    <div class="blog-audio-card">
+      <strong>3. Dual-Band Metal Kick Mid-Punch Climax (<code>00:47.0 -&gt; 01:06.8</code>)</strong>
+      <span class="blog-audio-sub">Rapid bass-drum articulation (<code>+14 dB @ 1.0 kHz</code> + <code>+15.5 dB @ 1.95 kHz</code>)</span>
+      <audio controls preload="metadata" src="{{ '/assets/daw/audio/03-kick-mid-punch-climax.mp3' | relative_url }}"></audio>
+    </div>
+    <div class="blog-audio-card blog-audio-full">
+      <strong>4. Complete 62-Second Session Pass (<code>00:05.0 -&gt; 01:07.0</code> · All 13 Unmuted Channels)</strong>
+      <span class="blog-audio-sub"><code>Kick In</code>, <code>Snare Top</code>, <code>Hi-Hat</code>, 6 Rack/Floor Toms, 3 Stereo Room Mics + Drumless Backing Stem through the SSL-style Master Drum Glue Bus</span>
+      <audio controls preload="metadata" src="{{ '/assets/daw/audio/04-full-session-take.mp3' | relative_url }}"></audio>
+    </div>
+  </div>
+
+  <p><strong>Hardware rack: Behringer Ultragain Digital ADA8200 (MIDAS ADAT) + Focusrite Scarlett 18i20 (3rd Gen) on a single ALSA clock.</strong> Miking a full acoustic metal drum kit takes more than 8 preamps. Our rack pairs a <strong>Behringer Ultragain Digital ADA8200</strong> (8 MIDAS mic preamps feeding ADAT Optical Toslink into <code>Ch 9–16</code> for <code>Kick In</code>, <code>Snare Top</code>, and the Rack Toms) with a <strong>Focusrite Scarlett 18i20 (3rd Gen)</strong> (<code>Ch 1–8</code> analog inputs for <code>Hi-Hat</code>, <code>Floor Toms</code>, and 3 <code>Drum Room</code> mics). Under PipeWire's default UCM split profile, Analog and <code>Direct2</code> ADAT appear as separate virtual sources; recording them in separate processes introduces startup offset and phase comb-filtering between close mics and room mics. DAW Studio (<a href="https://github.com/nddipiazza/robos/blob/main/packages/robos-lib/audio-devices.js"><code>robos-lib/audio-devices.js</code></a>) unifies all 20 channels onto a single sample-locked <code>hw:USB,0</code> capture clock, exposes all 437 Scarlett kernel mixer controls (<code>Air</code>, <code>Pad</code>, <code>Line/Inst</code>, <code>+48V</code>), and aligns overdubs to headphone presentation timestamps with sub-millisecond accuracy.</p>
+
+  <div class="blog-fig-grid">
+    <figure class="blog-fig"><img src="{{ '/assets/daw/05-studio-rack-scarlett-ada8200.jpg' | relative_url }}" alt="Live studio hardware rack with Behringer Ultragain Digital ADA8200 8-channel MIDAS ADAT preamplifier above Focusrite Scarlett 18i20 3rd Gen wired with color-coded XLR drum mic cables" loading="lazy"><figcaption><strong>The Live Studio Rack</strong>: <strong>Behringer ADA8200</strong> (8 MIDAS mic preamps over ADAT Optical) stacked above the <strong>Focusrite Scarlett 18i20 (3rd Gen)</strong> USB interface.</figcaption></figure>
+    <figure class="blog-fig"><img src="{{ '/assets/daw/04-focusrite-hardware-io.png' | relative_url }}" alt="RobOS DAW Studio Hardware I/O — Audio Devices view showing Focusrite Scarlett 18i20 3rd Gen with 20 Inputs / 20 Outputs, ADAT LOCK, Scarlett preamp controls, and PipeWire latency settings" loading="lazy"><figcaption><strong>Hardware I/O — Audio Devices</strong>: 20-channel ALSA <code>snd_usb_audio</code> + PipeWire Pro-Audio status with <code>ADAT LOCK</code>, per-preamp <code>Air</code> / <code>Pad</code> / <code>+48V</code> toggles, and one-click return to Arrangement.</figcaption></figure>
+  </div>
+
+  <p><strong>Why our acoustic kick sounded too low at first — and fixing it with spectral measurement &amp; dual-band mid-punch DSP.</strong> When we first dialed in <code>Kick In</code> against dense metal guitars, individual 16th-note kick strokes blurred into low rumble. Measuring the recorded <code>Kick In</code> WAVs band-by-band revealed why: an un-triggered felt beater inside an acoustic shell puts <strong>22–26 dB more energy at <code>60–110 Hz</code> (<code>-35 dB</code>) than at <code>900 Hz – 2.2 kHz</code> (<code>-58 to -64 dB</code>)</strong>, even though the microphone's hit-to-bleed SNR across <code>800 Hz – 3 kHz</code> was a clean <code>+20 to +24 dB</code>. Boosting a <code>72 Hz</code> low shelf only drove sub-bass harder into the broadband VCA compressor, ducking the midrange further! Meanwhile, aggressive waveshaper saturation on room mics amplified <code>0 dBFS</code> cymbal fizz, so we disabled waveshaper exciters by default (<code>3367f766</code>) and re-engineered the console insert chain (<a href="https://github.com/nddipiazza/robos/blob/main/packages/daw-studio/renderer/app.js"><code>buildTrackWebAudioChain</code></a>, <code>5da853ac</code>):</p>
+
+  <ul>
+    <li><strong>Sub-Boom Cleanup Pre-Compressor:</strong> <code>65 Hz</code> <code>24 dB/oct</code> cascaded Butterworth HPF + <code>-8.5 dB @ 115 Hz</code> low shelf + <code>-7.0 dB @ 275 Hz</code> (<code>Q = 1.9</code>) box-mud cut removes low-end bloat before the signal reaches the VCA detector.</li>
+    <li><strong>Dual-Band Articulate Mid-Punch + Smooth High Cut:</strong> Added a dedicated chest-knock peaking stage (<code>+14.0 dB @ 1.0 kHz</code>, <code>Q = 0.82</code>) paired with a live-sweepable <strong>Mid Punch</strong> Inspector fader (<code>+15.5 dB @ 1.95 kHz</code>, <code>Q = 0.92</code>) and a <code>4.6 kHz</code> Butterworth LPF + high-shelf cut so every bass-drum note punches cleanly through rhythm guitars with zero brittle high-end click.</li>
+    <li><strong>6 ms Live Hot-Swap, Click-to-Seek &amp; Transport Startup Lock:</strong> Dragging faders or EQ ramps live <code>AudioParam</code> nodes in place (`8–12 ms`), Solo/Mute/Trigger toggles crossfade in <code>6 ms</code> (`d2b7d8c3`), clicking anywhere on waveforms or the ruler seeks live without stopping (`5778f262`), and clicking Play synchronously locks <code>isStartingPlayback</code> and disables <code>#btn-transport-play</code> while decoding large WAVs so pressing <code>Space</code> early can never spawn a second overlapping audio channel (`beccdd9d`).</li>
+    <li><strong>Full-Width <code>1920px</code> Layout, Skinny <code>24px</code> Telemetry Footer &amp; <code>From -&gt; To</code> Range Mixdowns:</strong> Removed the redundant <code>192px</code> left rail (`98483670`), anchored save state + <code>SELECTION LENGTH</code> + <code>TRACK LENGTH</code> + <code>SESSION LENGTH</code> in a non-shifting <code>24px</code> bottom grey status bar (`1fa17222`), added Viterbi multi-tempo click-track segmentation (`4499aa98`), and built the <strong>Export Audio Mixdown</strong> modal supporting ruler-drag / right-click <code>From -&gt; To</code> ranges across MP3, WAV 24-bit, FLAC, M4A, OGG, Opus, and AIFF (`97dbf0ab`).</li>
+  </ul>
+
+  <div class="blog-fig-grid">
+    <figure class="blog-fig"><img src="{{ '/assets/daw/02-kick-mid-punch-inspector.png' | relative_url }}" alt="RobOS DAW Studio Channel Insert and Trigger Rack on Kick In showing +15.5 dB Mid Punch @ 1.95kHz, -8.5 dB Low Shelf @ 115Hz, LPF 4.6k, 4.5:1 VCA Compressor, and Drum Transient Sound Replacement" loading="lazy"><figcaption><strong>Kick In Channel Insert &amp; Trigger Rack</strong>: live-sweepable <code>Mid Punch (15.5 dB @ 1.95kHz)</code>, <code>-8.5 dB @ 115Hz</code> low trim, <code>LPF 4.6k</code> fizz roll-off, and optional velocity-layered Drum Sound Replacement.</figcaption></figure>
+    <figure class="blog-fig"><img src="{{ '/assets/daw/03-export-mixdown-dialog.png' | relative_url }}" alt="RobOS DAW Studio Export Audio Mixdown modal configured for Time Selection 00:26.000 -> 00:46.000 to 320 kbps CBR MP3 at 48 kHz with -0.3 dBFS peak normalization and 15 ms edge fades" loading="lazy"><figcaption><strong>Export Audio Mixdown Dialog</strong>: drag across the ruler or right-click to set <code>From</code> / <code>To</code>, then export stereo mixdowns to MP3, FLAC, WAV, M4A, OGG, Opus, or AIFF.</figcaption></figure>
+  </div>
+
+  <figure class="blog-fig">
+    <img src="{{ '/assets/daw/daw-studio-architecture.jpg' | relative_url }}" alt="RobOS DAW Studio Linux Pro-Audio Multi-Track Workstation Architecture schematic showing Hardware & Linux Kernel Bus, Multi-Track Capture & AI Setup, Real-Time Console & WebAudio DSP, and Master Bus & Mixdown Engine" loading="lazy">
+    <figcaption><strong>RobOS DAW Studio End-to-End Architecture</strong>: unified 20-channel ALSA/PipeWire capture -> 20 ms live peak streaming &amp; optional Gemini soundcheck/Viterbi tempo tools -> per-channel dual-band mid-punch DSP &amp; transient triggers -> SSL-style Master Drum Bus &amp; FFmpeg range exporter.</figcaption>
+  </figure>
+
+  <pre class="mermaid">
+flowchart LR
+  subgraph HW["1. Hardware &amp; Linux Kernel Bus"]
+    Rack["Scarlett 18i20 + Behringer ADA8200<br/>(20ch ALSA hw:USB,0 Unified Clock)"]
+    PW["PipeWire Pro-Audio Graph<br/>(48-192 kHz · Low-Latency Quantum)"]
+    Rack --> PW
+  end
+
+  subgraph Cap["2. Multi-Track Capture &amp; AI Setup"]
+    Stream["20ms Live Waveform Streamer<br/>(5-Decimal -68 dBFS Peaks · Latency Sync)"]
+    AI["DrumSet AI &amp; Viterbi Tempo Map<br/>(18 Mic Presets · Stem Separation)"]
+  end
+
+  subgraph Console["3. Real-Time Console &amp; WebAudio DSP"]
+    EQ["Per-Channel Insert Rack<br/>(24dB HPF · Dual Mid-Punch EQ · VCA Comp)"]
+    Trig["Velocity Drum Sound Replacement<br/>(15 Open-Source Kits + Custom VST/Samples)"]
+  end
+
+  subgraph Out["4. Master Bus &amp; Range Exporter"]
+    Master["SSL-Style Drum Glue &amp; -0.31 dBFS Ceiling<br/>(6ms De-Clicked Live Hot-Swap)"]
+    FF["From -> To Range &amp; FFmpeg Mixdown<br/>(MP3, FLAC, WAV 24-bit, M4A, OGG, Opus, AIFF)"]
+    Master --> FF
+  end
+
+  Rack -->|"20ch PCM"| Stream
+  PW -->|"Sync Clock"| AI
+  Stream -->|"WAV Takes"| EQ
+  AI -->|"Profiles &amp; Click"| EQ
+  AI -->|"Transients"| Trig
+  EQ --> Master
+  Trig --> Master
+  </pre>
+
+  <div class="blog-log"># Launch RobOS DAW Studio from source (DOM Snapshot server on :19232)
+scripts/source-shortcuts/node_modules/.bin/electron --no-sandbox \
+  scripts/source-shortcuts/source-host.cjs --app=daw-studio
+
+# Run the 26-test hardware parser, Viterbi tempo map, DSP &amp; 7-format FFmpeg mixdown suite
+node --test packages/daw-studio/test/daw-studio.test.js
+
+# Inspect live session state or render a headless range mixdown via port 19232
+curl -s -X POST http://127.0.0.1:19232/eval -d 'window.__dawStudioState()'</div>
+</div>
+<div class="blog-links">
+  <a href="{{ '/daw/' | relative_url }}">RobOS DAW Studio landing page (/daw) →</a>
+  <a href="{{ '/daw-studio/' | relative_url }}">DAW Studio package reference →</a>
+  <a href="https://github.com/nddipiazza/robos/tree/main/packages/daw-studio">packages/daw-studio source →</a>
+  <a href="https://github.com/nddipiazza/robos/blob/main/packages/daw-studio/test/daw-studio.test.js">26-test verification suite →</a>
+  <span class="blog-commits">Commits:
+    <a href="https://github.com/nddipiazza/robos/commit/d2b7d8c3">d2b7d8c3</a> ·
+    <a href="https://github.com/nddipiazza/robos/commit/5778f262">5778f262</a> ·
+    <a href="https://github.com/nddipiazza/robos/commit/4499aa98">4499aa98</a> ·
+    <a href="https://github.com/nddipiazza/robos/commit/97dbf0ab">97dbf0ab</a> ·
+    <a href="https://github.com/nddipiazza/robos/commit/beccdd9d">beccdd9d</a> ·
+    <a href="https://github.com/nddipiazza/robos/commit/5da853ac">5da853ac</a> ·
+    <a href="https://github.com/nddipiazza/robos/commit/98483670">98483670</a> ·
+    <a href="https://github.com/nddipiazza/robos/commit/1fa17222">1fa17222</a>
+  </span>
+</div>
+{% include mermaid.html %}

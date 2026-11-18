@@ -1,0 +1,260 @@
+---
+layout: default
+title: "RobOS DAW Studio — Linux Pro-Audio Multi-Track Workstation, Focusrite + ADAT & Drum Studio"
+permalink: /daw/
+body_class: guide
+extra_css: /assets/code-review.css
+description: "RobOS DAW Studio (packages/daw-studio): native Linux PipeWire Pro-Audio & ALSA snd_usb_audio multi-track workstation with 20-channel Focusrite Scarlett + ADAT capture, DrumSet AI soundcheck, dual-band metal kick mid-punch EQ, drum sound replacement, and From -> To multi-format mixdown export."
+og_image: /assets/daw/01-full-width-arrangement.png
+og_image_alt: "RobOS DAW Studio full-width 1920px multi-track drum and guitar arrangement with Focusrite Scarlett 18i20 + ADAT inputs, active From -> To selection, and skinny bottom grey status toolbar"
+og_type: article
+schema_type: TechArticle
+keywords: "RobOS DAW Studio, Linux DAW, PipeWire Pro-Audio, Focusrite Scarlett 18i20 Linux, ADAT multi-track recording, metal drum EQ, drum sound replacement, open-source DAW, LV2 VST3 CLAP Linux"
+---
+{%- assign dw = '/assets/daw/' | relative_url -%}
+<style>
+  .daw-audio-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 14px;
+    margin: 22px 0 30px;
+  }
+  .daw-audio-card {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--card);
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .daw-audio-card-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .daw-audio-card h3 {
+    margin: 0;
+    font-size: 1rem;
+    line-height: 1.3;
+  }
+  .daw-audio-range {
+    font-family: 'Fira Code', ui-monospace, monospace;
+    font-size: 0.76rem;
+    padding: 2px 7px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    color: var(--muted);
+    white-space: nowrap;
+  }
+  .daw-audio-card p {
+    margin: 0;
+    font-size: 0.88rem;
+    color: var(--muted);
+    line-height: 1.45;
+  }
+  .daw-audio-card audio {
+    width: 100%;
+    height: 36px;
+    margin-top: 4px;
+  }
+  .daw-audio-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 0.78rem;
+    color: var(--muted);
+    font-family: 'Fira Code', ui-monospace, monospace;
+  }
+  .daw-audio-featured {
+    grid-column: 1 / -1;
+    border-color: var(--accent);
+  }
+</style>
+
+<section class="cr-page"><div class="wrap">
+<article class="guide-body cr-body">
+
+<header class="cr-hero">
+<p class="eyebrow">RobOS Pro-Audio &amp; Media Suite · Native Linux Multi-Track Workstation</p>
+<h1>RobOS DAW Studio</h1>
+<p class="lead">A zero-bloat Linux multi-track Digital Audio Workstation built directly on <strong>PipeWire Pro-Audio</strong> and mainline <strong>ALSA <code>snd_usb_audio</code></strong>: 20-channel <strong>Focusrite Scarlett / Clarett+ + ADAT Optical</strong> hardware capture on a single sample-locked USB clock, <strong>DrumSet AI</strong> multi-mic soundcheck, real-time 6 ms hot-swapped parametric EQ &amp; VCA dynamics, velocity-layered open-source <strong>Drum Sound Replacement</strong>, <code>From -&gt; To</code> timeline range selection, and multi-format FFmpeg mixdown export.</p>
+<div class="cta" style="margin-top:6px">
+  <a class="btn" href="#session-audio">1. Listen to Live Session Exports</a>
+  <a class="btn btn-ghost" href="#hardware-io">2. Focusrite + ADAT Hardware I/O</a>
+  <a class="btn btn-ghost" href="#console-dsp">3. Metal Kick EQ &amp; Live Console DSP</a>
+  <a class="btn btn-ghost" href="#range-mixdown">4. Timeline Selection &amp; Mixdown</a>
+  <a class="btn btn-ghost" href="{{ '/daw-studio/' | relative_url }}">Package reference</a>
+  <a class="btn btn-ghost" href="{{ '/blog/robos-daw-studio-linux-multitrack-drum-workstation/' | relative_url }}">Engineering blog →</a>
+</div>
+</header>
+
+<figure class="guide-shot"><a href="{{ dw }}01-full-width-arrangement.png"><img src="{{ dw }}01-full-width-arrangement.png" alt="RobOS DAW Studio full-width 1920px multi-track arrangement showing 12 live acoustic drum mic takes on Focusrite Scarlett 18i20 + ADAT inputs, cyan From -> To timeline selection (00:26.00 -> 00:46.00), and skinny bottom grey status toolbar" width="1920" height="972"></a><figcaption><strong>RobOS DAW Studio</strong> full-width edge-to-edge arrangement (<code>1920px</code>): 12 simultaneous acoustic drum mics (<code>Kick In</code>, <code>Snare Top</code>, <code>Hi-Hat</code>, 6 Rack/Floor Toms, 3 Room mics) recorded through a <strong>Focusrite Scarlett 18i20 (3rd Gen) + 8-ch ADAT</strong>, active <code>00:26.00 -&gt; 00:46.00</code> range selection, and the skinny <code>24px</code> bottom telemetry bar showing save state, <code>SELECTION LENGTH</code>, <code>TRACK LENGTH</code>, <code>SESSION LENGTH</code>, and PipeWire latency.</figcaption></figure>
+
+<ul class="cr-nav">
+<li><a href="#session-audio"><b>1. Live Session Audio</b><span>Real MP3 snippets &amp; full 62s pass exported directly from our 12-mic drum session</span></a></li>
+<li><a href="#hardware-io"><b>2. Focusrite + ADAT I/O</b><span>Unified 20ch ALSA <code>hw:USB,0</code> clock, +48V / Air / Pad, and DrumSet AI soundcheck</span></a></li>
+<li><a href="#console-dsp"><b>3. Console EQ &amp; Triggers</b><span>Dual-band metal kick mid-punch EQ, 6 ms live hot-swap, and 15 open-source drum kits</span></a></li>
+<li><a href="#range-mixdown"><b>4. Range &amp; Mixdown</b><span>Ruler drag <code>From -&gt; To</code>, skinny bottom telemetry bar, and MP3/FLAC/WAV/Opus export</span></a></li>
+<li><a href="#architecture"><b>5. Architecture &amp; CLI</b><span>End-to-end audio pipeline, Mermaid schematic, and 26-test verification suite</span></a></li>
+</ul>
+
+<blockquote><p><strong>100% Functional Offline — Optional AI Helpers When You Want Them.</strong> Recording, hardware preamp switching, real-time parametric EQ, VCA compression, REAPER-style take comping, transient drum replacement, and multi-format FFmpeg mixdowns run natively with zero cloud or AI dependency. When desired, optional RobOS Agent workflows provide <strong>DrumSet AI All-Mic Soundcheck</strong>, <strong>Multi-Tempo Viterbi Click-Track Generation</strong>, and <strong>Drumless Backing-Stem Separation</strong>.</p></blockquote>
+
+<h2 id="session-audio">1. Real Session Audio Exports — 12-Mic Acoustic Kit + Metal Stem</h2>
+<p>Every audio clip below was rendered straight out of <strong>RobOS DAW Studio</strong>'s offline mixdown engine (<a href="https://github.com/nddipiazza/robos/blob/main/packages/daw-studio/renderer/app.js"><code>renderAndExportMixdown</code></a>) from our live <strong>Studio Drum &amp; Band Session</strong>: 12 physical drum microphones tracked simultaneously at <code>48 kHz</code> over a drum-removed metal backing stem (with the original reference video track and multi-tempo click track muted on the console, <code>-0.3 dBFS</code> true-peak normalized, and <code>15 ms</code> half-cosine de-click edge fades applied automatically at range boundaries):</p>
+
+<div class="daw-audio-grid">
+  <div class="daw-audio-card">
+    <div class="daw-audio-card-head">
+      <h3>Snippet 1 — Opening Drum Entrance &amp; Groove</h3>
+      <span class="daw-audio-range">00:05.50 -&gt; 00:23.50 · 18.0s</span>
+    </div>
+    <p>Guitar intro build into the full 12-mic acoustic drum entrance at <code>00:07.5</code> — tight gated snare crack, panned hi-hat/toms, and controlled stereo room mics.</p>
+    <audio controls preload="metadata" src="{{ dw }}audio/01-drum-entrance-groove.mp3"></audio>
+    <div class="daw-audio-meta">
+      <span>MP3 · 192 kbps · 48 kHz · -0.4 dBFS pk</span>
+      <a href="{{ dw }}audio/01-drum-entrance-groove.mp3" download>Download MP3</a>
+    </div>
+  </div>
+
+  <div class="daw-audio-card">
+    <div class="daw-audio-card-head">
+      <h3>Snippet 2 — Cascading Rack-Tom Fill &amp; Chorus Drop</h3>
+      <span class="daw-audio-range">00:26.00 -&gt; 00:46.00 · 20.0s</span>
+    </div>
+    <p>Exported directly from the highlighted <code>00:26.00 -&gt; 00:46.00</code> timeline selection shown in the screenshots above: rack-to-floor tom fill into the heavy 145 BPM chorus.</p>
+    <audio controls preload="metadata" src="{{ dw }}audio/02-tom-fill-chorus-drop.mp3"></audio>
+    <div class="daw-audio-meta">
+      <span>MP3 · 192 kbps · 48 kHz · -0.0 dBFS pk</span>
+      <a href="{{ dw }}audio/02-tom-fill-chorus-drop.mp3" download>Download MP3</a>
+    </div>
+  </div>
+
+  <div class="daw-audio-card">
+    <div class="daw-audio-card-head">
+      <h3>Snippet 3 — Articulate Metal Kick Mid-Punch Climax</h3>
+      <span class="daw-audio-range">00:47.00 -&gt; 01:06.80 · 19.8s</span>
+    </div>
+    <p>Dense bass-drum runs showcasing the dual-band <code>+14 dB @ 1.0 kHz</code> chest knock + <code>+15.5 dB @ 1.95 kHz</code> beater articulation cutting cleanly through rhythm guitars with zero shrill top fizz.</p>
+    <audio controls preload="metadata" src="{{ dw }}audio/03-kick-mid-punch-climax.mp3"></audio>
+    <div class="daw-audio-meta">
+      <span>MP3 · 192 kbps · 48 kHz · -0.2 dBFS pk</span>
+      <a href="{{ dw }}audio/03-kick-mid-punch-climax.mp3" download>Download MP3</a>
+    </div>
+  </div>
+
+  <div class="daw-audio-card daw-audio-featured">
+    <div class="daw-audio-card-head">
+      <h3>Full Recorded Session Pass — Complete 62-Second Multi-Track Mixdown</h3>
+      <span class="daw-audio-range">00:05.00 -&gt; 01:07.00 · 01:02.00</span>
+    </div>
+    <p>Complete end-to-end mixdown of the 13 audible channels (<code>Kick In</code>, <code>Snare Top</code>, <code>Hi-Hat</code>, <code>Rack Tom highest</code>, <code>Rack Tom hi</code>, <code>Rack Tom 2</code>, <code>Floor Tom 1</code>, <code>Floor Tom 2</code>, <code>Floor Tom 2 2</code>, <code>Drum Room 1–3</code>, and drumless backing stem) summed through the SSL-style Master Drum Glue Bus.</p>
+    <audio controls preload="metadata" src="{{ dw }}audio/04-full-session-take.mp3"></audio>
+    <div class="daw-audio-meta">
+      <span>MP3 · 192 kbps · 48 kHz · 1.5 MB · Full Pass</span>
+      <a href="{{ dw }}audio/04-full-session-take.mp3" download>Download Full Take MP3</a>
+    </div>
+  </div>
+</div>
+
+<h2 id="hardware-io">2. Native Linux PipeWire Pro-Audio &amp; 20-Channel Scarlett 18i20 + Behringer ADA8200 ADAT Capture</h2>
+<p>Our live studio rack pairs a <strong>Focusrite Scarlett 18i20 (3rd Gen)</strong> (8 Scarlett analog mic/line preamps, <code>Ch 1–8</code>) with a <strong>Behringer Ultragain Digital ADA8200</strong> (8 MIDAS mic preamplifiers over ADAT Optical Toslink, <code>Ch 9–16</code>) to capture 12+ drum microphones simultaneously. On Linux, PipeWire's default UCM profile splits an 18-input USB interface into separate virtual nodes (<code>Analog 1–8</code> vs <code>Direct2 ADAT 9–16</code>); spawning independent capture processes per node introduces inter-process start skew and phase comb-filtering across close mics and overheads. <strong>RobOS DAW Studio</strong> (<a href="https://github.com/nddipiazza/robos/blob/main/packages/robos-lib/audio-devices.js"><code>robos-lib/audio-devices.js</code></a>, <a href="https://github.com/nddipiazza/robos/blob/main/packages/daw-studio/lib/daw-engine.js"><code>lib/daw-engine.js</code></a>) solves this directly at the kernel hardware bus:</p>
+
+<div class="cr-pair">
+<figure class="guide-shot"><a href="{{ dw }}05-studio-rack-scarlett-ada8200.jpg"><img src="{{ dw }}05-studio-rack-scarlett-ada8200.jpg" alt="Live studio hardware rack showing Behringer Ultragain Digital ADA8200 8-channel MIDAS ADAT mic preamplifier wired with color-coded XLR drum mic cables above a Focusrite Scarlett 18i20 3rd Gen USB interface" loading="lazy" width="1080" height="1440"></a><figcaption><strong>Live Studio Rack</strong>: <strong>Behringer Ultragain Digital ADA8200</strong> (8 MIDAS mic preamps feeding ADAT Optical <code>Ch 9–16</code>: <code>Kick In</code>, <code>Snare Top</code>, <code>Rack Toms</code>) stacked above the <strong>Focusrite Scarlett 18i20 (3rd Gen)</strong> (<code>Ch 1–8</code>: <code>Hi-Hat</code>, <code>Floor Tom</code>, 3 <code>Drum Room</code> mics).</figcaption></figure>
+<figure class="guide-shot"><a href="{{ dw }}04-focusrite-hardware-io.png"><img src="{{ dw }}04-focusrite-hardware-io.png" alt="RobOS DAW Studio Hardware I/O — Audio Devices view showing Focusrite Scarlett 18i20 (3rd Gen) USB 1235:8215 with 20 Inputs / 20 Outputs, 437 active ALSA kernel controls, Air / Pad / +48V switches, and PipeWire quantum settings" loading="lazy" width="1920" height="972"></a><figcaption><strong>Hardware I/O — Audio Devices</strong>: mainline ALSA <code>snd_usb_audio</code> discovers all 20 inputs/outputs and 437 Scarlett hardware controls (<code>Line</code>, <code>Air</code>, <code>Pad</code>, <code>+48V</code> phantom banks, ADAT Optical sync lock) alongside PipeWire sample-rate &amp; quantum tuning.</figcaption></figure>
+</div>
+
+<ul>
+  <li><strong>Zero-Drift Unified 20-Channel Clock (<code>hw:USB,0</code>):</strong> Unifies Focusrite Analog UCM split sources and discrete 8-channel ADAT Optical expansion (<code>Ch 9..Ch 16</code>) onto a single sample-locked 20-channel ALSA capture stream with sub-sample phase coherence across overheads, close mics, and room mics.</li>
+  <li><strong>Real-Time <code>20 ms</code> Waveform Streaming &amp; 5-Decimal Quiet Transient Precision:</strong> Armed tracks stream live peaks every <code>20 ms</code> while recording, preserving 5-decimal linear precision down to <code>-68 dBFS</code> so quiet ghost notes and un-boosted dynamic mics visibly register on the timeline while preamp silence stays 1-pixel flat.</li>
+  <li><strong>Sub-Millisecond Overdub Headphone Latency Compensation:</strong> Measures PipeWire + WebAudio output presentation timestamps so overdubbed drum or guitar passes align automatically to backing tracks without manual nudging.</li>
+  <li><strong>DrumSet AI Soundcheck &amp; 18-Profile Add Mic Wizard:</strong> Arm all Focusrite + ADAT inputs at once, play a short check around the kit, and let Gemini classify each channel's spectral/transient signature — or add individual mics with tap-to-detect channel discovery.</li>
+</ul>
+
+<h2 id="console-dsp">3. Real-Time Console DSP, Articulate Metal Kick Mid-Punch &amp; Sound Replacement</h2>
+<p>Un-triggered acoustic bass drum mics recorded with a felt beater naturally concentrate 20–26 dB more energy at <code>60–110 Hz</code> than in the <code>900 Hz – 2.2 kHz</code> midrange where the human ear distinguishes rapid 16th-note double-kick strokes. Boosting a low shelf only swamps the VCA compressor and turns fast patterns into low rumble.</p>
+
+<figure class="guide-shot"><a href="{{ dw }}02-kick-mid-punch-inspector.png"><img src="{{ dw }}02-kick-mid-punch-inspector.png" alt="RobOS DAW Studio Channel Insert and Trigger Rack open on Kick In showing 65 Hz 24dB HPF, -8.5 dB Low Shelf @ 115Hz, -7 dB Low-Mid @ 275Hz, +15.5 dB Mid Punch @ 1.95kHz, LPF 4.6k, 4.5:1 VCA Compressor, and Muldjord Triggered Metal Sound Replacement" loading="lazy" width="1920" height="972"></a><figcaption><strong>Channel Insert &amp; Trigger Rack (<code>Kick In</code>)</strong>: <code>65 Hz · 24dB/oct</code> Butterworth HPF, <code>-8.5 dB @ 115 Hz</code> low-boom trim, <code>-7 dB @ 275 Hz</code> box-mud cut, live-sweepable <strong>Mid Punch (<code>+15.5 dB @ 1.95 kHz</code> + coupled <code>+14 dB @ 1.0 kHz</code> chest knock)</strong>, <code>4.6 kHz</code> high-cut LPF, <code>4.5:1</code> VCA snap compressor, and velocity-layered Drum Transient Sound Replacement.</figcaption></figure>
+
+<table class="wide">
+<thead><tr><th>Console / Studio Capability</th><th>DSP &amp; Workflow Implementation</th><th>Musical Result</th></tr></thead>
+<tbody>
+<tr><td><strong>Dual-Band Metal Kick Mid-Punch</strong></td><td><code>65 Hz</code> 24 dB/oct HPF · <code>-8.5 dB @ 115 Hz</code> shelf · <code>-7 dB @ 275 Hz</code> mud cut · <code>+14 dB @ 1.0 kHz</code> + <code>+15.5 dB @ 1.95 kHz</code> mid-punch · <code>4.6 kHz</code> LPF</td><td>Every individual kick stroke cuts cleanly through dense distorted guitars with chest punch and zero brittle 6–10 kHz click.</td></tr>
+<tr><td><strong>Click-Free Live Parameter Ramp &amp; 6 ms Hot-Swap</strong></td><td><code>AudioParam.setTargetAtTime</code> (8–12 ms constants) for Trim, Fader, Pan, HPF, Low, Low-Mid, Mid Punch, High &amp; Comp; 8 ms micro-crossfade for Solo/Mute/Clip/Trigger edits</td><td>Tweak EQ, faders, solos, mutes, or click-to-seek anywhere on waveforms/ruler during playback with zero audio dropouts.</td></tr>
+<tr><td><strong>15 Open-Source Metal &amp; Rock Drum Kits + Custom VST/Samples</strong></td><td>On-demand download to <code>~/.local/share/robos/daw-studio/instruments/</code> (Muldjord, Wilkinson, SM Drums, Salamander, AVL) + custom VST3/LV2/CLAP &amp; WAV folder scanner</td><td>Blend or replace acoustic hits non-destructively across 196+ detected transients without committing binary WAVs to Git.</td></tr>
+<tr><td><strong>Multi-Tempo Viterbi Click Map &amp; Stem Separation</strong></td><td>Harmonic-suppressed percussive onset autocorrelation + dynamic-programming tempo change-point segmentation (e.g. <code>128.9 -&gt; 145 -&gt; 100 BPM</code>)</td><td>Generates a beat-locked click track with a 1-bar count-in or separates a drumless backing stem directly below any track.</td></tr>
+</tbody>
+</table>
+
+<h2 id="range-mixdown">4. Full-Width Workspace, Skinny Telemetry Bar &amp; Multi-Format Range Mixdown</h2>
+<p>Every pixel of horizontal and vertical space is dedicated to your tracks: navigation moved into the topbar (<strong>Audio I/O</strong>, <strong>Keymap</strong>, <strong>VST &amp; Samples</strong>, <strong>Rescan</strong>), transport startup locks <code>#btn-transport-play</code> synchronously during WAV decoding so rapid <code>Space</code> presses can never spawn duplicate audio passes, and a skinny <strong><code>24px</code> bottom grey status toolbar</strong> keeps live session metrics visible without ever shifting the timeline:</p>
+
+<figure class="guide-shot"><a href="{{ dw }}03-export-mixdown-dialog.png"><img src="{{ dw }}03-export-mixdown-dialog.png" alt="RobOS DAW Studio Export Audio Mixdown dialog showing Time Selection 00:26.000 -> 00:46.000 (20.00s), MP3 320 kbps CBR at 48,000 Hz, -0.3 dBFS peak normalization, 15 ms de-click edge fades, and 14 audible channels" loading="lazy" width="1920" height="972"></a><figcaption><strong>Export Audio Mixdown Dialog</strong> (<code>Ctrl+Shift+E</code> or click the highlighted <code>SELECTION LENGTH</code> pill): inspect exact <code>From -&gt; To</code> bounds or switch to <strong>Entire Session</strong>, pick format/bitrate/sample rate, and render through the full console &amp; Master Drum Bus.</figcaption></figure>
+
+<ul>
+  <li><strong>Click-Drag &amp; Right-Click Timeline Selection:</strong> Drag across the timeline ruler to highlight any <code>From -&gt; To</code> range (with draggable left/right edge handles and double-click to clear), or right-click anywhere on the ruler/lanes and choose <strong>Set Selection 'From' Here</strong> / <strong>Set Selection 'To' Here</strong>.</li>
+  <li><strong>Skinny <code>24px</code> Bottom Grey Telemetry Toolbar:</strong> Segmented panels display <code>SAVED</code> / <code>MODIFIED</code> + single-line status logs, live <strong><code>SELECTION LENGTH</code></strong> (duration, timestamps, and bar count), <strong><code>TRACK LENGTH</code></strong> for the focused channel, <strong><code>SESSION LENGTH</code></strong> (total time &amp; bars at current BPM), <strong><code>TRACKS</code></strong> (channels, armed inputs, takes), and <strong><code>ENGINE</code></strong> (sample rate &amp; PipeWire block latency).</li>
+  <li><strong>7 Studio Mixdown Formats via FFmpeg:</strong> Export stereo masters to <strong>MP3</strong> (<code>320k</code> / <code>256k</code> / <code>192k</code> CBR or VBR V0), <strong>WAV</strong> (24-bit Studio PCM, 32-bit Float, 16-bit CD), <strong>FLAC</strong> (24-bit lossless), <strong>M4A / AAC</strong>, <strong>OGG Vorbis</strong>, <strong>Opus</strong>, and <strong>AIFF</strong> at <code>44.1</code>, <code>48</code>, or <code>96 kHz</code>.</li>
+</ul>
+
+<h2 id="architecture">5. Technical Architecture &amp; Reproducible CLI Verification</h2>
+
+<figure class="guide-shot"><a href="{{ dw }}daw-studio-architecture.jpg"><img src="{{ dw }}daw-studio-architecture.jpg" alt="RobOS DAW Studio Linux Pro-Audio Multi-Track Workstation Architecture diagram showing Hardware & Linux Kernel Bus, Multi-Track Capture & AI Setup, Real-Time Console & WebAudio DSP, and Master Bus & Mixdown Engine" loading="lazy" width="1600" height="896"></a><figcaption><strong>RobOS DAW Studio Architecture</strong>: Unified 20-channel ALSA/PipeWire hardware capture feeds 20 ms live waveform streaming and optional Gemini soundcheck/tempo tools, routed through per-channel parametric EQ, VCA dynamics, and transient drum replacement into the SSL-style Master Drum Bus and FFmpeg multi-format exporter.</figcaption></figure>
+
+<pre class="mermaid">
+flowchart LR
+  subgraph HW["1. Hardware &amp; Linux Kernel Bus"]
+    Scarlett["Focusrite Scarlett 18i20 + ADAT<br/>(20ch ALSA hw:USB,0 Unified Clock)"]
+    PipeWire["PipeWire Pro-Audio Graph<br/>(48-192 kHz · Low-Latency Quantum)"]
+    Scarlett --> PipeWire
+  end
+
+  subgraph Capture["2. Multi-Track Capture &amp; AI Setup"]
+    Streamer["Real-Time 20ms Waveform Streamer<br/>(5-Decimal -68 dBFS Peaks · Latency Sync)"]
+    Wizards["DrumSet AI &amp; Add Mic Wizard<br/>(18 Mic Presets · Viterbi Click · Stem Split)"]
+  end
+
+  subgraph DSP["3. Real-Time Console &amp; WebAudio DSP"]
+    InsertRack["Per-Channel Insert Rack<br/>(24dB HPF · Dual Mid-Punch EQ · VCA Comp)"]
+    DrumTrig["Drum Transient Sound Replacement<br/>(15 Open-Source Kits + Custom VST/Samples)"]
+  end
+
+  subgraph Master["4. Master Bus &amp; Mixdown Engine"]
+    GlueBus["SSL-Style Drum Glue &amp; -0.31 dBFS Ceiling<br/>(6ms De-Clicked Live Hot-Swap)"]
+    Exporter["From -> To Range &amp; FFmpeg Exporter<br/>(MP3, FLAC, WAV 24-bit, M4A, OGG, Opus, AIFF)"]
+    GlueBus --> Exporter
+  end
+
+  Scarlett -->|"20ch PCM"| Streamer
+  PipeWire -->|"Sync Clock"| Wizards
+  Streamer -->|"WAV Takes"| InsertRack
+  Wizards -->|"Channel Profiles"| InsertRack
+  Wizards -->|"196+ Transients"| DrumTrig
+  InsertRack -->|"Dry + EQ Bus"| GlueBus
+  DrumTrig -->|"Velocity Layers"| GlueBus
+</pre>
+
+<pre><code># Launch RobOS DAW Studio from source (DOM Snapshot server on :19232)
+scripts/source-shortcuts/node_modules/.bin/electron --no-sandbox \
+  scripts/source-shortcuts/source-host.cjs --app=daw-studio
+
+# Optional: pre-install open-source velocity-layered drum kits to ~/.local/share/robos/daw-studio/instruments
+node packages/daw-studio/bin/daw-instruments.js install all
+
+# Inspect live DAW state or capture a screenshot via port 19232
+curl -s -X POST http://127.0.0.1:19232/eval -d 'window.__dawStudioState()'
+curl -s http://127.0.0.1:19232/screenshot &gt; /tmp/daw-studio.png
+
+# Run the full 26-test hardware parser, DSP, Viterbi tempo, and multi-format FFmpeg mixdown suite
+node --test packages/daw-studio/test/daw-studio.test.js</code></pre>
+
+<p>See the <a href="{{ '/daw-studio/' | relative_url }}">RobOS DAW Studio Package Reference</a>, <a href="{{ '/audio-player/' | relative_url }}">RobOS Audio Player</a>, <a href="{{ '/movie-player/' | relative_url }}">RobOS Movie Player</a>, and the <a href="{{ '/blog/robos-daw-studio-linux-multitrack-drum-workstation/' | relative_url }}">Engineering Blog deep dive</a>.</p>
+
+</article>
+</div></section>
+{% include mermaid.html %}
