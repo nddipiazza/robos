@@ -36,7 +36,10 @@ keywords: "AI code review, agent pull request review, Code Review Theater, PR Re
 <li><a href="#publish"><b>Pull request and CI</b><span>Create as draft, get green, ask for review</span></a></li>
 <li><a href="#reviewer"><b>Reviewer mode</b><span>Team policy and approval</span></a></li>
 <li><a href="#reference"><b>Where things live</b><span>Files, settings, tests</span></a></li>
+<li><a href="{{ '/code-review/evidence-based/' | relative_url }}"><b>Evidence-based review →</b><span>The process: stop reading every line, safely</span></a></li>
 </ul>
+
+<p><strong>This page is the tool. For the process behind it</strong>, how tech leads write the test scenarios during planning so reviewers can stop reading every line without hurting stability, see <a href="{{ '/code-review/evidence-based/' | relative_url }}">Evidence-Based Code Review</a>.</p>
 
 <blockquote><p><strong>About the screenshots.</strong> They are the real RobOS apps, captured by <code>packages/robos-test/demos/code-review-guide-shots.js</code> on a sample project, <code>acme-corp/pawfinder-api</code>: a pet search site with a real git repository, real tests and a real dev server. Issue #42 asks for a species filter and better ranking. The before-and-after screenshots in the evidence are captured in a real browser from <code>main</code> and from the branch. The agents' replies, GitHub and CI results are scripted stand-ins, so the run is repeatable; the commands the agents run, the commits they make and the pages they open are real.</p></blockquote>
 
@@ -233,7 +236,7 @@ ROBOS_REVIEW_URL=https://github.com/OWNER/REPO/pull/NUMBER ~/robos/scripts/dev-l
 <tr><td>The app</td><td><a href="https://github.com/nddipiazza/robos/tree/main/packages/pr-review"><code>packages/pr-review</code></a></td></tr>
 </tbody>
 </table>
-<p>The manifest keys, the demo process format and the IDE buttons are in the <a href="{{ '/pr-review-theater/' | relative_url }}">PR Review Theater reference</a>. The whole loop, from plan to merge, is in <a href="{{ '/build-apps/' | relative_url }}">Build apps</a>.</p>
+<p>How to use these steps as a team process, so reviewers can stop reading every line, is in <a href="{{ '/code-review/evidence-based/' | relative_url }}">Evidence-Based Code Review</a>. The manifest keys, the demo process format and the IDE buttons are in the <a href="{{ '/pr-review-theater/' | relative_url }}">PR Review Theater reference</a>. The whole loop, from plan to merge, is in <a href="{{ '/build-apps/' | relative_url }}">Build apps</a>.</p>
 <h3>Run the tests, or make these screenshots yourself</h3>
 <pre><code>node --test packages/robos-test/tests/pr-review/review-steps.test.js \
   packages/robos-test/tests/pr-review/local-review.test.js \

@@ -1,0 +1,299 @@
+---
+layout: default
+title: Evidence-Based Code Review
+permalink: /code-review/evidence-based/
+body_class: guide
+extra_css: /assets/code-review.css
+description: "How to stop reading every line of a pull request without hurting stability: tech leads write the assertions and test scenarios during planning, agents work from engineered context, every merge and deploy needs evidence bound to the commit, and reviewers spend their time on concepts, modules, tests and risky code."
+og_image: /assets/code-review/evidence-species.jpg
+og_image_alt: "Before-and-after evidence in the RobOS Code Review Theater: the Pawfinder page on main without a species filter, and on the branch with Cats chosen and two cats shown"
+og_type: article
+schema_type: TechArticle
+keywords: "evidence-based code review, context engineering, AI SDLC, test scenario repository, acceptance tests in planning, review without reading every line, evidence-based deployment, risk-tiered review, RobOS"
+---
+{%- assign cr = '/assets/code-review/' | relative_url -%}
+<section class="cr-page"><div class="wrap">
+<article class="guide-body cr-body">
+
+<header class="cr-hero">
+<p class="eyebrow">Guide · <a href="{{ '/code-review/' | relative_url }}">Code review</a> · the process</p>
+<h1>Evidence-Based Code Review</h1>
+<p class="lead">Reading every line of every pull request was never what kept an app stable. Tests, contracts and fast rollback did that. This page shows how to move a reviewer's judgment to the start of the work, where it becomes executable, so that people can stop reading getters and setters and still sleep at night.</p>
+</header>
+
+<div class="eb-thesis">
+<p><strong>The short version.</strong> Tech leads and reviewers write the assertions and test scenarios while the work is planned. The agent writes the code against those scenarios, with the project's context in front of it. A change merges when there is evidence, captured on that exact commit, that every scenario holds and nothing else broke. A person still reviews the change, but conceptually: what moved, which modules, why, and whether the tests ask the right questions. Nobody comments on tabs.</p>
+</div>
+
+<ul class="cr-nav">
+<li><a href="#why"><b>Why line review stopped paying</b><span>What it cost, what it caught</span></a></li>
+<li><a href="#shift"><b>The shift</b><span>Reviewers write assertions, not comments</span></a></li>
+<li><a href="#context"><b>Context engineering</b><span>What the agent knows before it writes</span></a></li>
+<li><a href="#scenarios"><b>The test scenario repository</b><span>Written in planning, owned by leads</span></a></li>
+<li><a href="#evidence"><b>Evidence gates</b><span>What has to be true to merge and deploy</span></a></li>
+<li><a href="#human"><b>What the human reviews</b><span>Read, skim, skip</span></a></li>
+<li><a href="#size"><b>Change size</b><span>Small by default, big when it's coherent</span></a></li>
+<li><a href="#tiers"><b>When you can opt out</b><span>Risk tiers and tripwires</span></a></li>
+<li><a href="#measure"><b>Prove it's not hurting</b><span>Stability metrics and the escape loop</span></a></li>
+<li><a href="#rollout"><b>Roll it out</b><span>Four steps, in RobOS</span></a></li>
+</ul>
+
+<h2 id="why">Why line-by-line review stopped paying</h2>
+<p>The classic pull request review asks one or two people to read a diff and find what is wrong with it. In practice that process is:</p>
+<ul>
+<li><strong>Slow.</strong> Most of a PR's life is spent waiting in a queue for a reviewer, not being reviewed. Every round of comments restarts the wait.</li>
+<li><strong>Subjective.</strong> A large share of comments are about naming, formatting, ordering and personal taste. They create rework and arguments, and almost none of them change what the software does.</li>
+<li><strong>Shallow on the changes that matter.</strong> Attention drops as diffs grow. A 30-line change gets ten comments; a 1,500-line change gets “LGTM”. The biggest, riskiest changes get the least real review.</li>
+<li><strong>Rarely the thing that catches the bug.</strong> Now and then a reviewer finds something valid, and that occasional find is used to justify the whole ritual. Most defects that reach production were in code somebody approved.</li>
+<li><strong>Outrun by agents.</strong> An agent can produce more correct-looking code in an hour than a person can carefully read in a day. If every line still needs human eyes, the reviewer becomes the bottleneck of the whole team, or starts rubber-stamping.</li>
+</ul>
+<p>None of this means people are bad at reviewing. It means they were given the wrong job. People are good at judging intent, design and risk, and bad at exhaustively checking hundreds of lines for mistakes. Machines are the opposite. Evidence-based review gives each side the job it is good at.</p>
+
+<h3>Where each thing a line review was meant to catch gets caught now</h3>
+<table class="wide">
+<thead><tr><th>A line review was supposed to catch…</th><th>Now it's caught by</th><th>Written by, and when</th></tr></thead>
+<tbody>
+<tr><td>It doesn't do what the ticket asked</td><td>Scenario tests with exact assertions, and before-and-after evidence of each one</td><td>Tech lead and reviewers, in planning</td></tr>
+<tr><td>It broke something else</td><td>The existing test suite, regression guards in the scenarios, and a blast-radius check of what depends on the changed modules</td><td>Accumulated, plus the lead in planning</td></tr>
+<tr><td>Edge cases and bad input</td><td>Negative and edge-case scenarios (empty, unknown, too large, unauthorized)</td><td>Planning; the agent may add more, never remove</td></tr>
+<tr><td>Style, formatting, naming conventions</td><td>Formatter and linter in CI; conventions written once in <code>AGENTS.md</code></td><td>Once, by whoever cared enough to comment about it twice</td></tr>
+<tr><td>Security slips (secrets, injection, auth bypass)</td><td>Secret scanning, static analysis, dependency audit, and mandatory human review of security-sensitive paths</td><td>CI config, plus a code owner for those paths</td></tr>
+<tr><td>Wrong design, wrong module, wrong abstraction</td><td>A person, reviewing the change conceptually</td><td>The reviewer, at review time. Still human.</td></tr>
+<tr><td>It works on the author's machine only</td><td>Evidence captured in a real browser or container, bound to the commit; CI</td><td>The agent, checked by RobOS</td></tr>
+<tr><td>It fails under real traffic</td><td>Staged rollout, feature flags, health checks and rollback</td><td>Your deploy pipeline</td></tr>
+</tbody>
+</table>
+
+<h2 id="shift">The shift: reviewers write assertions, not comments</h2>
+<p>In the old process, a senior engineer's knowledge reached the code as review comments, after the code was written, one PR at a time, and was lost when the PR merged. In the new process, the same knowledge is written down before any code exists, as tests that every future change must pass, and as context every future agent reads.</p>
+<ol class="eb-flow">
+<li><b>Plan</b><span>Epics and tasks with acceptance criteria. Leads and reviewers write the scenarios as tests.</span><em>human</em></li>
+<li><b>Approve the scenarios</b><span>This is where the review rigor goes. Small, readable, argued over.</span><em>human</em></li>
+<li><b>Implement</b><span>The agent works from the task, the scenarios and the project's context, and makes the tests pass without editing them.</span><em>agent</em></li>
+<li><b>Prove</b><span>Tests, before-and-after evidence, walkthrough, impact check, CI. All bound to the commit.</span><em>machine</em></li>
+<li><b>Concept review</b><span>Minutes, not hours: what changed, which modules, do the tests still ask the right questions.</span><em>human</em></li>
+<li><b>Deploy on evidence</b><span>Staged rollout, health checks, automatic rollback. Escapes become new scenarios.</span><em>machine</em></li>
+</ol>
+<p>The total amount of human judgment doesn't go down. It moves to the steps where it is cheapest and most reusable. A scenario written once protects every later change to that feature. A review comment protects one PR.</p>
+
+<h2 id="context">Context engineering: decide what the agent knows before it writes</h2>
+<p>“Context engineering” means treating everything an agent reads before and during a task as a designed part of the system, versioned and reviewed like code. The more the agent knows about your conventions, architecture and expectations, the less its diff surprises anyone, and the less there is for a person to catch. In RobOS, the context comes in layers:</p>
+<table class="wide">
+<thead><tr><th>Layer</th><th>Where it lives</th><th>What it prevents</th></tr></thead>
+<tbody>
+<tr><td>Project conventions</td><td><code>AGENTS.md</code> at the repository root (with <code>CLAUDE.md</code> and <code>GEMINI.md</code> pointing to it)</td><td>Style comments, “we don't do it that way here”, wrong test framework, wrong folder</td></tr>
+<tr><td>Repeatable procedures</td><td>Skills, such as <code>create-test</code>, <code>e2e-driven-dev</code> and <code>plan-before-implement</code></td><td>Guessed selectors, missing tests, skipped verification steps</td></tr>
+<tr><td>Architecture and dependencies</td><td>The knowledge graph; <code>kgraph-impact-analysis</code> lists who depends on what you change</td><td>“I didn't know the billing service called this”</td></tr>
+<tr><td>The task itself</td><td>The issue from <a href="{{ '/task-planner/' | relative_url }}">Task Planner</a>: scope, acceptance criteria, happy-path, negative and edge cases</td><td>Building the wrong thing, or half of it</td></tr>
+<tr><td>The role</td><td>The task's developer persona (Software Architect, Backend Systems Developer, …)</td><td>A backend task done with front-end habits, and the reverse</td></tr>
+<tr><td>The contract</td><td>The scenario tests (next section), which the agent must make pass and may not edit</td><td>Code that passes because the test was weakened</td></tr>
+</tbody>
+</table>
+<p>The rule that makes this a process rather than a pile of documents: <strong>when a review finds something, fix the context, not just the code.</strong> If a reviewer has to say the same thing twice, it belongs in <code>AGENTS.md</code>, a skill, a lint rule or a scenario, so that no reviewer ever has to say it again.</p>
+
+<h2 id="scenarios">The test scenario repository</h2>
+<p>The scenario repository is where the team's expectations of the software are written as executable tests. It can be a folder in the app's repository (simplest: <code>scenarios/</code>) or a separate repository shared by several services. Three rules make it work:</p>
+<ol>
+<li><strong>Scenarios are written in planning, before implementation.</strong> The tech lead or the reviewers who would have reviewed the PR write them, from the task's acceptance criteria. They start out failing, which is the point.</li>
+<li><strong>Scenarios are owned by people, not agents.</strong> Code owners on the folder mean any change to a scenario needs a lead's approval. An agent may add scenarios; it may not edit or delete one to make its code pass.</li>
+<li><strong>Scenarios assert exact outcomes.</strong> “The page loads” proves nothing. “Choosing Cats shows exactly Mochi and Pepper” does.</li>
+</ol>
+
+<h3>What a scenario looks like</h3>
+<p>Using the same sample project as the <a href="{{ '/code-review/' | relative_url }}">Code Review Theater guide</a>: issue #42 asks Pawfinder for a species filter and better ranking. Before anyone implements it, the tech lead writes this file and gets it approved:</p>
+<pre><code>// scenarios/search/species-filter.test.js
+// Issue #42 · written in planning · owned by @acme-corp/tech-leads
+// Agents: make these pass. Do not edit or delete them; add new tests in a new file.
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const { search } = require('../../src/pets');
+const { get } = require('../helpers/http');
+
+const names = (pets) =&gt; pets.map((p) =&gt; p.name);
+
+test('a species filter returns only that species', () =&gt; {
+  assert.deepEqual(names(search({ species: 'cat' })), ['Mochi', 'Pepper']);
+});
+
+test('species and text search combine', () =&gt; {
+  assert.deepEqual(names(search({ species: 'rabbit', q: 'a' })), ['Waffles']);
+});
+
+test('prefix matches rank before matches inside a word', () =&gt; {
+  assert.deepEqual(names(search({ q: 'b' })), ['Biscuit', 'Juniper', 'Scout', 'Pepper']);
+});
+
+test('an unknown species is rejected and lists the valid ones', async () =&gt; {
+  const res = await get('/api/pets?species=dragon');
+  assert.equal(res.status, 400);
+  assert.deepEqual(res.body.valid, ['cat', 'dog', 'rabbit']);
+});
+
+// Regression guard: callers that never send a species see today's behavior.
+test('no species keeps every pet', () =&gt; {
+  assert.equal(search({}).length, 6);
+});</code></pre>
+<p>Reviewing these 30 lines carefully is a better use of a senior engineer's time than reading the 300 lines of implementation that will make them pass. They say exactly what “done” means, they include the negative case and the regression guard, and they keep protecting the feature after the PR is long merged.</p>
+<p>Behavior that only shows up in the running app gets the same treatment in the walkthrough format, which the agent runs and you watch:</p>
+<pre><code>{ "title": "Filter by species in the UI",
+  "given": "The app is running with the sample pets.",
+  "when":  "Choose Cats, then type pep in the search box.",
+  "then":  "Exactly Mochi and Pepper show after choosing Cats; only Pepper after typing pep." }</code></pre>
+
+<h3>Strong and weak assertions</h3>
+<table class="wide">
+<thead><tr><th>Weak (proves little)</th><th>Strong (fails when it should)</th></tr></thead>
+<tbody>
+<tr><td>The search endpoint returns 200</td><td>Searching for <code>cat</code> returns exactly Mochi and Pepper, in that order</td></tr>
+<tr><td>An error is shown for bad input</td><td><code>species=dragon</code> returns 400 with <code>valid: ["cat","dog","rabbit"]</code></td></tr>
+<tr><td>The list is sorted</td><td>For “b”, prefix matches come before matches inside a word, with the expected order spelled out</td></tr>
+<tr><td>Snapshot matches (updated by whoever changed it)</td><td>Specific fields of the response, with a reason when one changes</td></tr>
+<tr><td>Nothing about what must stay the same</td><td>Regression guards: existing callers, response shapes and limits that must not change</td></tr>
+<tr><td>Happy path only</td><td>Happy path, negative cases, edges (empty, max size, unauthorized, concurrent)</td></tr>
+</tbody>
+</table>
+<p>Non-functional expectations belong here too, where you can measure them: a latency budget for the search endpoint, a maximum bundle size, “this page makes no more than two API calls”, “this migration runs in under a minute on a copy of production-sized data”.</p>
+
+<h3>Wire it into the agent's context</h3>
+<p>RobOS doesn't read a <code>scenarios/</code> folder on its own. A few lines of context tie it in. In <code>AGENTS.md</code>:</p>
+<pre><code>## Scenarios
+- Tests under scenarios/ are written by tech leads during planning. They define "done".
+- Make the scenarios named in the task pass. Never edit, skip, or delete a file under
+  scenarios/ or weaken an assertion in test/. If one looks wrong, stop and say why.
+- New cases go in a new file. Capture before-and-after evidence for every scenario
+  named in the task, on the final commit.</code></pre>
+<p>In each task (Task Planner's acceptance criteria are the natural place), name the scenario files that define it. Then protect them with code owners so the rule is enforced by GitHub, not by trust:</p>
+<pre><code># .github/CODEOWNERS
+/scenarios/      @acme-corp/tech-leads
+/test/           @acme-corp/tech-leads
+/src/auth/       @acme-corp/security
+/migrations/     @acme-corp/data-owners</code></pre>
+
+<h2 id="evidence">Evidence gates: what has to be true to merge and deploy</h2>
+<p>“Evidence-based” means a change is allowed forward because of things that can be checked, not because someone felt good about it. Each gate below produces a record. If a record is missing, stale or failing, the change stops.</p>
+<table class="wide">
+<thead><tr><th>Gate</th><th>The evidence</th><th>Produced by</th><th>In RobOS today</th></tr></thead>
+<tbody>
+<tr><td>Scenarios pass</td><td>The task's scenario tests, green, unmodified</td><td>The test runner in CI</td><td>Your CI; the agent runs them before it commits</td></tr>
+<tr><td>Behavior is visible</td><td>Before-and-after captures of each scenario, from <code>main</code> and the branch</td><td>The agent, in a real browser or container</td><td><a href="{{ '/code-review/' | relative_url }}#evidence">Evidence tab</a>, with templates for UI, command output, MCP/API and task checks</td></tr>
+<tr><td>Evidence is current</td><td>Every capture records the commit and a checksum</td><td>RobOS</td><td>Stale evidence is <a href="{{ '/code-review/' | relative_url }}#stale">marked and refused</a> when the PR is created or moved to ready</td></tr>
+<tr><td>Someone saw it work</td><td>Walkthrough checkpoints, each observed in the running app</td><td>The agent drives, a person watches</td><td><a href="{{ '/code-review/' | relative_url }}#walkthrough">Walkthrough tab</a>; an unverifiable checkpoint is recorded as unverified</td></tr>
+<tr><td>Blast radius is known</td><td>The list of modules and services that depend on what changed</td><td>The knowledge graph</td><td><code>kgraph-cli.js impact</code> (the <code>kgraph-impact-analysis</code> skill)</td></tr>
+<tr><td>Nothing else broke</td><td>Full test suite, lint, type check, secret scan, dependency audit</td><td>CI</td><td>Your CI; the PR tab shows its state and <strong>Get CI back to green</strong></td></tr>
+<tr><td>Required steps are done</td><td>Changes viewed / evidence fresh / walkthrough finished, as the repository requires</td><td>RobOS</td><td><a href="{{ '/code-review/' | relative_url }}#customize">Review steps</a>: Required, Optional or Hidden per repository</td></tr>
+<tr><td>It holds in production</td><td>Health checks and error rates during a staged rollout, with automatic rollback</td><td>Your deploy platform</td><td>Not in RobOS. <a href="{{ '/deploy-tracker/' | relative_url }}">Deploy Tracker</a> shows deployments and merged PRs but has no rollout or rollback controls</td></tr>
+</tbody>
+</table>
+<p>The last row is what makes it safe to review less up front. A change that ships behind a feature flag to a small slice of traffic, with error rates watched and rollback automatic, has a much smaller worst case than a change someone read carefully and shipped to everyone at once. If you skip line review, don't skip this.</p>
+
+<h2 id="human">What the human still reviews</h2>
+<p>The review doesn't go away. It changes focus from the characters on the screen to the change as an idea. The goal is that, after a review, you understand the system well enough to explain the change to someone else, and to debug it at 2 a.m. if you had to.</p>
+<div class="eb-cols">
+<section><h4><span class="mode req">Read</span> carefully</h4><ul>
+<li>Changes to scenarios and tests, line by line. A weakened assertion is the most dangerous line in any diff.</li>
+<li>Code on risky surfaces: authentication and permissions, money, deleting or migrating data, concurrency, public APIs and contracts, secrets, infrastructure and deploy config.</li>
+<li>New dependencies: what they are, who maintains them, what they can reach.</li>
+<li>The evidence: does each capture show what its scenario says?</li>
+</ul></section>
+<section><h4><span class="mode opt">Skim</span> for shape</h4><ul>
+<li>Which modules changed, and whether that's where this logic belongs.</li>
+<li>New boundaries: new files, classes, services, endpoints, tables.</li>
+<li>Data flow: where input enters, where it's stored, where it leaves.</li>
+<li>Anything the blast-radius check says depends on the changed code.</li>
+</ul></section>
+<section><h4><span class="mode hid">Skip</span></h4><ul>
+<li>Getters, setters, boilerplate and generated code.</li>
+<li>Formatting, whitespace, tabs versus spaces, import order. The formatter owns these.</li>
+<li>Naming preferences that aren't actually misleading.</li>
+<li>Re-checking what a passing scenario already proves.</li>
+</ul></section>
+</div>
+<p>If a skipped item really bothers you, don't leave a comment. Encode it once: a lint rule, a formatter setting, a line in <code>AGENTS.md</code>. Then it's enforced on every change, by a machine, without a debate.</p>
+
+<h3>Learn the change, not the lines</h3>
+<p>The Code Review Theater is built for this kind of review. A good order:</p>
+<ol>
+<li><strong>Description and walkthrough checkpoint 1</strong> (<em>Understand the change</em>): the agent summarizes the diff by module and says what to try. Ask it questions until you could explain the change yourself.</li>
+<li><strong>Evidence</strong>: look at every before-and-after pair. This is the part users will see.</li>
+<li><strong>Changes</strong>: open the test and scenario files first and read them fully. Then go module by module through the rest, reading the risky files and skimming the others. Mark files <strong>Viewed</strong> as you go; <strong>Hide viewed</strong> keeps the rest in front of you.</li>
+<li><strong>Walkthrough</strong>: watch the agent use the change in the running app, and try it yourself.</li>
+<li><strong>Ask, don't comment.</strong> If something should be different, ask the agent in the chat; it edits, tests, commits and regenerates the evidence.</li>
+</ol>
+
+<h2 id="size">Change size: small by default, big when it's coherent</h2>
+<p>Keep changes reasonably small. Small changes have small blast radii, fast evidence runs and easy rollbacks. But don't treat a line count as a rule. With scenarios carrying the correctness load, a big change is fine when it's one coherent idea:</p>
+<table class="wide">
+<thead><tr><th>Big and fine</th><th>Big and worth splitting</th></tr></thead>
+<tbody>
+<tr><td>A mechanical change across many files: a rename, a new required argument, an API version bump at every call site</td><td>A refactor mixed with a behavior change: split them, so the refactor can be proven to change nothing</td></tr>
+<tr><td>Generated code, lockfiles, migrations produced by a tool</td><td>Two unrelated features on one branch</td></tr>
+<tr><td>A new feature that only makes sense whole, fully covered by its scenarios</td><td>A change touching several risky surfaces at once (auth and billing and a migration)</td></tr>
+<tr><td>Deleting dead code</td><td>A change whose scenarios don't cover most of what it touches</td></tr>
+</tbody>
+</table>
+<p>Ask for a split when concerns are mixed, not when the number is large. For a big but coherent change, review by module map: let the agent explain it module by module, read the scenarios and the risky files, and let the evidence carry the rest.</p>
+
+<h2 id="tiers">When it's safe to opt out of line review</h2>
+<p>Opting out isn't all or nothing. Decide by risk, and make the decision visible in the repository's review settings rather than in each reviewer's mood.</p>
+<table class="wide">
+<thead><tr><th>Tier</th><th>Typical changes</th><th>What's required</th><th>Review steps in RobOS</th></tr></thead>
+<tbody>
+<tr><td><b>Low</b></td><td>Docs, copy, styling, internal tools, well-covered modules with no risky paths</td><td>Green CI and fresh evidence. Concept review only.</td><td>Changes <span class="mode opt">Optional</span><br>Evidence <span class="mode req">Required</span><br>Walkthrough <span class="mode opt">Optional</span></td></tr>
+<tr><td><b>Normal</b></td><td>Most features and fixes</td><td>Approved scenarios, unmodified and green; fresh evidence; finished walkthrough; test diffs read. Concept review of the rest.</td><td>Changes <span class="mode opt">Optional</span><br>Evidence <span class="mode req">Required</span><br>Walkthrough <span class="mode req">Required</span></td></tr>
+<tr><td><b>High</b></td><td>Auth, permissions, payments, data deletion or migration, public contracts, infrastructure</td><td>All of the above, plus a code owner reads the risky files line by line.</td><td>Changes <span class="mode req">Required</span><br>Evidence <span class="mode req">Required</span><br>Walkthrough <span class="mode req">Required</span></td></tr>
+</tbody>
+</table>
+<p>Set the repository's default tier in <strong>Git Projects › PR review › Review steps</strong>. For one review, a launch manifest can raise it, for example <code>"reviewSteps": { "changes": "required" }</code>. RobOS sets steps per repository and per review; it doesn't pick a tier from the changed paths by itself, so code owners on the risky folders are what force the line review there. Keeping high-risk code in its own repository, with its own stricter defaults, also works.</p>
+
+<h3>Tripwires: what pulls a change back into line review</h3>
+<p>Whatever the tier, any of these means a person reads the relevant lines:</p>
+<ul>
+<li>A file under <code>scenarios/</code> or <code>test/</code> was edited or deleted, a test was skipped, or the number of assertions went down.</li>
+<li>Coverage of the changed lines is low, or a changed module has no scenario at all.</li>
+<li>Evidence is stale, a scenario is blocked, or a walkthrough checkpoint was continued as unverified.</li>
+<li>The change touches a code-owned risky path, adds a dependency, or changes a public contract.</li>
+<li>The blast-radius check shows dependents nobody expected.</li>
+<li>The agent said it was unsure, or worked around something instead of fixing it.</li>
+</ul>
+<p>The first one is cheap to automate in CI. A sketch to adapt:</p>
+<pre><code>changed=$(git diff --name-only origin/main...HEAD)
+if echo "$changed" | grep -qE '^(scenarios|test)/'; then
+  echo "Tests or scenarios changed: a code owner must read them line by line."
+  # Fail outright if a test or assertion line was removed.
+  git diff origin/main...HEAD -- scenarios test | grep -E '^-\s*(test|it|assert)' &amp;&amp; exit 1
+fi</code></pre>
+
+<h2 id="measure">Prove it isn't hurting stability</h2>
+<p>“We stopped reading every line” is a claim. Back it with numbers you track before and after the switch:</p>
+<table>
+<thead><tr><th>Metric</th><th>What it tells you</th></tr></thead>
+<tbody>
+<tr><td>Change failure rate</td><td>Share of deploys that cause an incident or rollback. It should not go up.</td></tr>
+<tr><td>Time to restore</td><td>How fast a bad change is undone. Staged rollouts should bring it down.</td></tr>
+<tr><td>Escaped defects, by area</td><td>Bugs found in production, grouped by feature. An area that keeps leaking needs better scenarios.</td></tr>
+<tr><td>Review lead time</td><td>From “ready for review” to merged. This is what you gain.</td></tr>
+<tr><td>Scenario coverage</td><td>Share of tasks that named scenarios before implementation started.</td></tr>
+</tbody>
+</table>
+<p><strong>When something escapes, the fix is never “review harder”.</strong> Write the scenario that would have caught it, add it to the scenario repository, and, if the agent lacked something it needed to know, add that to the context. Each escape makes every future change safer. That loop, more than any single review, is what keeps the app stable.</p>
+
+<h2 id="rollout">Roll it out in four steps</h2>
+<ol>
+<li><strong>Plan with scenarios.</strong> In <a href="{{ '/task-planner/' | relative_url }}">Task Planner</a>, keep the acceptance criteria and test cases on every task, and have the lead turn them into scenario files before the task is picked up. Add the scenario rules to <code>AGENTS.md</code> and code owners on <code>scenarios/</code>.</li>
+<li><strong>Implement against them.</strong> <a href="{{ '/task-implementer/' | relative_url }}">Task Implementer</a> hands the issue, with its scenarios and persona, to the agent. The <code>e2e-driven-dev</code> skill follows the same order: failing test first, then code.</li>
+<li><strong>Require evidence, not reading.</strong> In Git Projects, set the repository's review steps to the tier that fits it. Start with <em>Normal</em> on one repository with good tests.</li>
+<li><strong>Measure, then widen.</strong> Watch change failure rate and escapes for a few weeks. Turn every escape into a scenario. Move more repositories over as the numbers hold.</li>
+</ol>
+
+<h2 id="limits">What this doesn't solve</h2>
+<ul>
+<li><strong>Scenarios only test what someone thought of.</strong> That's why the concept review, the blast-radius check and the staged rollout stay. They catch what nobody wrote down.</li>
+<li><strong>Specialist review still matters.</strong> Security-sensitive code and anything with legal or regulatory weight keeps a qualified person reading it. If your compliance rules require two-person review of every change, this process reduces what that review has to cover; it doesn't replace it.</li>
+<li><strong>Evidence uses sample data.</strong> Before-and-after captures prove behavior on the data in the test environment, not on production data. Each evidence bundle lists what remains unverified.</li>
+<li><strong>Reviewer mode doesn't read the author's evidence yet.</strong> In the Code Review Theater today, the evidence and walkthrough are the author's, in their local review. Link the evidence in the PR description (<strong>Edit with agent</strong> embeds the screenshots) until reviewer mode reads it; see <a href="{{ '/code-review/' | relative_url }}#reviewer">Reviewer mode</a>.</li>
+<li><strong>Production gates are yours to build.</strong> RobOS has no rollout or rollback controls. Use your deploy platform's feature flags, canaries and health checks.</li>
+</ul>
+
+<div class="guide-pager"><a href="{{ '/code-review/' | relative_url }}"><small>Guide</small>← Code Review Theater, tab by tab</a><a class="next" href="{{ '/build-apps/teams/' | relative_url }}"><small>Guide</small>Build apps as a team →</a></div>
+</article>
+</div></section>

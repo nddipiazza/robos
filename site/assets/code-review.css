@@ -24,3 +24,16 @@
 .mode.req{color:#b7791f;border-color:#e4c38e}.mode.opt{color:var(--muted)}.mode.hid{color:var(--muted);border-style:dashed}
 @media(max-width:760px){.cr-pair{grid-template-columns:1fr}.side-legend{display:none}}
 .cr-body>ul.cr-nav{max-width:none;padding-left:0}
+/* /code-review/evidence-based/: the process page */
+.eb-thesis{border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:10px;background:var(--card);padding:14px 18px;margin:0 0 28px;max-width:78ch}
+.eb-thesis p{margin:0}
+.cr-body>ol.eb-flow{max-width:none;list-style:none;padding:0;margin:22px 0 26px;display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;counter-reset:eb}
+.eb-flow li{counter-increment:eb;position:relative;border:1px solid var(--line);border-radius:10px;background:var(--card);padding:12px 14px 30px;margin:0}
+.eb-flow li::before{content:counter(eb);display:inline-block;width:1.5em;height:1.5em;line-height:1.5em;text-align:center;border-radius:50%;background:var(--accent);color:#fff;font-size:.78rem;font-weight:700;margin-bottom:6px}
+.eb-flow b{display:block;font-size:.95rem}.eb-flow span{display:block;color:var(--muted);font-size:.84rem;margin-top:4px}
+.eb-flow em{position:absolute;left:14px;bottom:10px;font-style:normal;font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.eb-cols{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:18px 0 26px}
+.eb-cols section{border:1px solid var(--line);border-radius:10px;background:var(--card);padding:12px 16px}
+.eb-cols h4{margin:2px 0 8px;font-size:.95rem}.eb-cols ul{margin:0;padding-left:18px}.eb-cols li{font-size:.9rem;margin:4px 0}
+@media(max-width:760px){.eb-cols{grid-template-columns:1fr}}
+@media(max-width:760px){.cr-body>table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch}}
