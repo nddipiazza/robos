@@ -176,3 +176,17 @@ node scripts/build-recruitment-poster.mjs
 Needs `node` (20+), `qrencode` and headless Chrome (`CHROME_BIN` overrides `/usr/bin/google-chrome`). Commit the
 regenerated `site/assets/contribute/**` assets and `site/contribute/poster/robos-recruitment-poster.pdf`.
 
+## Web analytics
+
+All pages using the shared site layout load `assets/analytics.js`. It installs
+Cloudflare Web Analytics only on `rowbose.com` and `www.rowbose.com`; local previews
+do not send analytics. The token is a public site identifier, not an API key.
+
+View visits, page views and referrers in [Cloudflare Web Analytics](https://dash.cloudflare.com/?to=/:account/web-analytics).
+Select `rowbose.com`. New traffic can take a few minutes to appear; traffic from
+before installation is not recovered.
+
+To replace the token, open **Manage site**, copy the `token` value from the JS
+snippet into `assets/analytics.js`, and deploy. An empty token disables tracking.
+Use manual JavaScript installation if the domain is proxied through Cloudflare
+to avoid counting visits twice through automatic injection.
