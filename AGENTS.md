@@ -136,6 +136,7 @@ All apps are Electron + vanilla JavaScript (no React/Vue/Angular framework overh
 | **Security Setup** | First-run GPG + SSH key initialization |
 | **Search Index** | File system indexer for @-search in AI textareas |
 | **RobOS Preferences** | System-wide settings (credentials, AI model prefs) |
+| **RobOS Services** | Install and control local and SSH-hosted services; status, startup, logs and app-owned listener inventory (`packages/robos-services`) |
 | **RobOS cRPG Editor** | Unified cRPG game editor for campaign management, character sheets, party inventory, and 5-ft blockmap level design |
 | **Tabletop Blockmap Creator** | Visual calibration tool for dungeon board images: tile size, offset X/Y, static corridor draw tool, and room boundary authoring |
 | **Tabletop Quest Map Editor** | Layer 2 quest scenario designer on blockmaps: doors, monsters, furniture, traps, stairs, and playable cartridge export |
@@ -219,6 +220,7 @@ Port range: 19100–19121 (e.g., app-launcher=19100, dev-central=19101). See `PO
 RobOS includes a cross-agent plugin marketplace and standard skills under `plugins/robos/skills/` (and `.agents/skills/`).
 
 ### Available Skills
+- `install-robos-services`, `manage-robos-services` — Install the server locally or on a Linux SSH host, configure key authentication, and control registered services and logs.
 - `view-task-plan`, `update-project-plan`, `remove-project-plan` — Read, edit/refresh/restore, or remove saved plans without deleting tracker issues.
 - `plan-before-implement` — Create a reviewed GitHub-linked project plan in Task Planner and view it by task from KGraph Explorer.
 - `add-ai-text-area-to-app` — Add `<robos-ai-textarea>` widget to a RobOS app

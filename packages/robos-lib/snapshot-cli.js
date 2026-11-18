@@ -34,6 +34,7 @@ const https = require('https');
 const PORT_REGISTRY = {
   'app-launcher':      19100,
   'app-manager':       19207,
+  'robos-services':    19208,
   'dev-central':       19101,
   'git-projects':      19138,
   'issue-manager':     19103,

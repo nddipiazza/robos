@@ -1,0 +1,959 @@
+[
+  {
+    "appId": "crpg-realm",
+    "name": "crpg-realm: GameControlServer.gd",
+    "source": "games/crpg-realm/scripts/GameControlServer.gd",
+    "group": "Games",
+    "description": "Source-audited listener. Runtime records show active Node listeners in apps using robos-lib/dom-snapshot. Game listeners run with the game."
+  },
+  {
+    "appId": "quest-warrior-dragon",
+    "name": "quest-warrior-dragon: GameControlServer.gd",
+    "source": "games/quest-warrior-dragon/src/systems/GameControlServer.gd",
+    "group": "Games",
+    "description": "Source-audited listener. Runtime records show active Node listeners in apps using robos-lib/dom-snapshot. Game listeners run with the game."
+  },
+  {
+    "appId": "quest-warrior-dragon",
+    "name": "quest-warrior-dragon: server.js",
+    "source": "games/quest-warrior-dragon/tools/report-server/server.js",
+    "group": "Games",
+    "description": "Source-audited listener. Runtime records show active Node listeners in apps using robos-lib/dom-snapshot. Game listeners run with the game."
+  },
+  {
+    "appId": "robos-rts",
+    "name": "robos-rts: GameControlServer.gd",
+    "source": "games/robos-rts/scripts/GameControlServer.gd",
+    "group": "Games",
+    "description": "Source-audited listener. Runtime records show active Node listeners in apps using robos-lib/dom-snapshot. Game listeners run with the game."
+  },
+  {
+    "appId": "tabletop-rpg",
+    "name": "tabletop-rpg: GameControlServer.gd",
+    "source": "games/tabletop-rpg/scripts/GameControlServer.gd",
+    "group": "Games",
+    "description": "Source-audited listener. Runtime records show active Node listeners in apps using robos-lib/dom-snapshot. Game listeners run with the game."
+  },
+  {
+    "appId": "agents-manager",
+    "name": "agents-manager: app.js",
+    "source": "packages/agents-manager/renderer/app.js",
+    "group": "Existing servers",
+    "description": "Source-audited listener. Runtime records show active Node listeners in apps using robos-lib/dom-snapshot. Game listeners run with the game."
+  },
+  {
+    "appId": "audio-player",
+    "name": "audio-player: cast-service.js",
+    "source": "packages/audio-player/lib/cast-service.js",
+    "group": "Existing servers",
+    "description": "Source-audited listener. Runtime records show active Node listeners in apps using robos-lib/dom-snapshot. Game listeners run with the game."
+  },
+  {
+    "appId": "barista-order-api",
+    "name": "barista-order-api: server.js",
+    "source": "packages/barista-order-api/server.js",
+    "group": "Existing servers",
+    "description": "Source-audited listener. Runtime records show active Node listeners in apps using robos-lib/dom-snapshot. Game listeners run with the game."
+  },
+  {
+    "appId": "data-sources",
+    "name": "data-sources: main.js",
+    "source": "packages/data-sources/main.js",
+    "group": "Existing servers",
+    "description": "Source-audited listener. Runtime records show active Node listeners in apps using robos-lib/dom-snapshot. Game listeners run with the game."
+  },
+  {
+    "appId": "desktop-manager",
+    "name": "desktop-manager: main.js",
+    "source": "packages/desktop-manager/main.js",
+    "group": "Existing servers",
+    "description": "Source-audited listener. Runtime records show active Node listeners in apps using robos-lib/dom-snapshot. Game listeners run with the game."
+  },
+  {
+    "appId": "game-playthrough",
+    "name": "game-playthrough: main.js",
+    "source": "packages/game-playthrough/main.js",
+    "group": "Existing servers",
+    "description": "Source-audited listener. Runtime records show active Node listeners in apps using robos-lib/dom-snapshot. Game listeners run with the game."
+  },
+  {
+    "appId": "household",
+    "name": "household: server.js",
+    "source": "packages/household/server.js",
+    "group": "Existing servers",
+    "description": "Source-audited listener. Runtime records show active Node listeners in apps using robos-lib/dom-snapshot. Game listeners run with the game."
+  },
+  {
+    "appId": "intellij-idea",
+    "name": "intellij-idea: main.js",
+    "source": "packages/intellij-idea/main.js",
+    "group": "Existing servers",
+    "description": "Source-audited listener. Runtime records show active Node listeners in apps using robos-lib/dom-snapshot. Game listeners run with the game."
+  },
+  {
+    "appId": "kgraph-parse-portal",
+    "name": "kgraph-parse-portal: server.js",
+    "source": "packages/kgraph-parse-portal/server.js",
+    "group": "Existing servers",
+    "description": "Source-audited listener. Runtime records show active Node listeners in apps using robos-lib/dom-snapshot. Game listeners run with the game."
+  },
+  {
+    "appId": "point-of-sale",
+    "name": "point-of-sale: server.js",
+    "source": "packages/point-of-sale/lib/server.js",
+    "group": "Existing servers",
+    "description": "Source-audited listener. Runtime records show active Node listeners in apps using robos-lib/dom-snapshot. Game listeners run with the game."
+  },
+  {
+    "appId": "point-of-sale",
+    "name": "point-of-sale: main.js",
+    "source": "packages/point-of-sale/main.js",
+    "group": "Existing servers",
+    "description": "Source-audited listener. Runtime records show active Node listeners in apps using robos-lib/dom-snapshot. Game listeners run with the game."
+  },
+  {
+    "appId": "point-of-sale",
+    "name": "point-of-sale: serve.js",
+    "source": "packages/point-of-sale/serve.js",
+    "group": "Existing servers",
+    "description": "Source-audited listener. Runtime records show active Node listeners in apps using robos-lib/dom-snapshot. Game listeners run with the game."
+  },
+  {
+    "appId": "robos-agentd",
+    "name": "robos-agentd: daemon.js",
+    "source": "packages/robos-agentd/daemon.js",
+    "group": "Existing servers",
+    "description": "Source-audited listener. Runtime records show active Node listeners in apps using robos-lib/dom-snapshot. Game listeners run with the game."
+  },
+  {
+    "appId": "robos-documentation",
+    "name": "robos-documentation: main.js",
+    "source": "packages/robos-documentation/main.js",
+    "group": "Existing servers",
+    "description": "Source-audited listener. Runtime records show active Node listeners in apps using robos-lib/dom-snapshot. Game listeners run with the game."
+  },
+  {
+    "appId": "robos-event-bus",
+    "name": "robos-event-bus: event-bus.js",
+    "source": "packages/robos-event-bus/event-bus.js",
+    "group": "Existing servers",
+    "description": "Source-audited listener. Runtime records show active Node listeners in apps using robos-lib/dom-snapshot. Game listeners run with the game."
+  },
+  {
+    "appId": "robos-lib",
+    "name": "robos-lib: dom-snapshot.js",
+    "source": "packages/robos-lib/dom-snapshot.js",
+    "group": "Existing servers",
+    "description": "Source-audited listener. Runtime records show active Node listeners in apps using robos-lib/dom-snapshot. Game listeners run with the game."
+  },
+  {
+    "appId": "app-launcher",
+    "name": "app-launcher: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19100,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "app-manager",
+    "name": "app-manager: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19207,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "robos-services",
+    "name": "robos-services: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19208,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "dev-central",
+    "name": "dev-central: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19101,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "git-projects",
+    "name": "git-projects: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19138,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "issue-manager",
+    "name": "issue-manager: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19103,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "agents-manager",
+    "name": "agents-manager: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19104,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "agent-scheduler",
+    "name": "agent-scheduler: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19105,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "context-manager",
+    "name": "context-manager: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19106,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "tech-workbench",
+    "name": "tech-workbench: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19107,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "work-journal",
+    "name": "work-journal: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19108,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "ide-manager",
+    "name": "ide-manager: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19109,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "workspace-manager",
+    "name": "workspace-manager: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19110,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "lang-manager",
+    "name": "lang-manager: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19111,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "task-servers",
+    "name": "task-servers: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19112,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "pass-manager",
+    "name": "pass-manager: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19113,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "security-setup",
+    "name": "security-setup: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19114,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "notifications",
+    "name": "notifications: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19115,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "robos-preferences",
+    "name": "robos-preferences: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19116,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "file-explorer",
+    "name": "file-explorer: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19117,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "claude-console",
+    "name": "claude-console: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19118,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "search-index",
+    "name": "search-index: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19119,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "workflow-studio",
+    "name": "workflow-studio: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19120,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "desktop-dashboard",
+    "name": "desktop-dashboard: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19121,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "pass-unlock",
+    "name": "pass-unlock: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19122,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "git-login-manager",
+    "name": "git-login-manager: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19123,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "task-board",
+    "name": "task-board: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19124,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "desktop-manager",
+    "name": "desktop-manager: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19125,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "robos-toast",
+    "name": "robos-toast: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19126,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "desktop-widgets",
+    "name": "desktop-widgets: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19127,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "automation-studio",
+    "name": "automation-studio: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19128,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "pr-review",
+    "name": "pr-review: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19129,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "ci-monitor",
+    "name": "ci-monitor: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19130,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "stage-demo",
+    "name": "stage-demo: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19131,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "group-manager",
+    "name": "group-manager: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19132,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "people-directory",
+    "name": "people-directory: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19133,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "task-planner",
+    "name": "task-planner: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19134,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "task-implementer",
+    "name": "task-implementer: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19135,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "robos-logs",
+    "name": "robos-logs: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19136,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "skills-manager",
+    "name": "skills-manager: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19139,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "ai-prompt",
+    "name": "ai-prompt: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19140,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "robos-desktop",
+    "name": "robos-desktop: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19141,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "robos-onboarding",
+    "name": "robos-onboarding: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19142,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "robos-cli",
+    "name": "robos-cli: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19143,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "robos-profiled",
+    "name": "robos-profiled: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19144,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "robos-agentd",
+    "name": "robos-agentd: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19145,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "agent-sidebar",
+    "name": "agent-sidebar: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19146,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "desktop-agents",
+    "name": "desktop-agents: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19147,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "robos-agent-session",
+    "name": "robos-agent-session: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19148,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "robos-mcp-lib",
+    "name": "robos-mcp-lib: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19149,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "mcp-manager",
+    "name": "mcp-manager: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19150,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "robos-mcp-router",
+    "name": "robos-mcp-router: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19151,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "task-manager-mcp",
+    "name": "task-manager-mcp: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19152,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "workspace-manager-mcp",
+    "name": "workspace-manager-mcp: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19153,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "ekgraph-mcp",
+    "name": "ekgraph-mcp: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19154,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "ci-monitor-mcp",
+    "name": "ci-monitor-mcp: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19155,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "ide-bridge-mcp",
+    "name": "ide-bridge-mcp: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19156,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "intellij-idea",
+    "name": "intellij-idea: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19157,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "system-mcp",
+    "name": "system-mcp: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19158,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "agent-autoconfig",
+    "name": "agent-autoconfig: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19159,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "dev-tools-mcp",
+    "name": "dev-tools-mcp: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19160,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "robos-graph",
+    "name": "robos-graph: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19161,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "adapter-studio",
+    "name": "adapter-studio: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19167,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "auto-center",
+    "name": "auto-center: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19231,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "gitea-browser",
+    "name": "gitea-browser: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19175,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "kube-studio",
+    "name": "kube-studio: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19176,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "rest-client",
+    "name": "rest-client: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19177,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "data-sources",
+    "name": "data-sources: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19178,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "db-manager",
+    "name": "db-manager: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19179,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "nosql-manager",
+    "name": "nosql-manager: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19180,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "grpc-client",
+    "name": "grpc-client: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19181,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "graphql-client",
+    "name": "graphql-client: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19182,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "app-wizard",
+    "name": "app-wizard: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19183,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "remote-execution-studio",
+    "name": "remote-execution-studio: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19184,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "robos-elearning",
+    "name": "robos-elearning: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19185,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "agent-chat",
+    "name": "agent-chat: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19186,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "dev-discussions",
+    "name": "dev-discussions: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19187,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "voice-prompt",
+    "name": "voice-prompt: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19188,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "kgraph-parse-portal",
+    "name": "kgraph-parse-portal: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19192,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "crpg-editor",
+    "name": "crpg-editor: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19194,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "crpg-maker",
+    "name": "crpg-maker: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19194,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "crpg-campaign",
+    "name": "crpg-campaign: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19194,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "crpg-scene-studio",
+    "name": "crpg-scene-studio: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19194,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "tabletop-quest-editor",
+    "name": "tabletop-quest-editor: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19195,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "audio-player",
+    "name": "audio-player: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19196,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "robos-documentation",
+    "name": "robos-documentation: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19197,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "robos-tabletop",
+    "name": "robos-tabletop: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19198,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "tabletop-editor",
+    "name": "tabletop-editor: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19198,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "tabletop-blockmap-creator",
+    "name": "tabletop-blockmap-creator: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19199,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "home-speaker",
+    "name": "home-speaker: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19200,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "gnome-desktop-installer",
+    "name": "gnome-desktop-installer: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19201,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "point-of-sale",
+    "name": "point-of-sale: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19202,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "game-playthrough",
+    "name": "game-playthrough: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19203,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "vpn-sandbox",
+    "name": "vpn-sandbox: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19204,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "vpn-servers",
+    "name": "vpn-servers: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19205,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "robos-tv",
+    "name": "robos-tv: debug server",
+    "source": "packages/robos-lib/snapshot-cli.js",
+    "port": 19206,
+    "group": "App diagnostics",
+    "description": "Registered debug port; starts with the owning app. A port assignment does not mean it is running."
+  },
+  {
+    "appId": "robos-lib",
+    "name": "robos-lib: tv-engine.js",
+    "source": "packages/robos-lib/tv-engine.js",
+    "group": "Existing servers",
+    "description": "Source-audited listener. Runtime records show active Node listeners in apps using robos-lib/dom-snapshot. Game listeners run with the game."
+  },
+  {
+    "appId": "robos-mcp-lib",
+    "name": "robos-mcp-lib: server.js",
+    "source": "packages/robos-mcp-lib/server.js",
+    "group": "Existing servers",
+    "description": "Source-audited listener. Runtime records show active Node listeners in apps using robos-lib/dom-snapshot. Game listeners run with the game."
+  },
+  {
+    "appId": "robos-mcp-router",
+    "name": "robos-mcp-router: router.js",
+    "source": "packages/robos-mcp-router/router.js",
+    "group": "Existing servers",
+    "description": "Source-audited listener. Runtime records show active Node listeners in apps using robos-lib/dom-snapshot. Game listeners run with the game."
+  },
+  {
+    "appId": "robos-profiled",
+    "name": "robos-profiled: daemon.js",
+    "source": "packages/robos-profiled/daemon.js",
+    "group": "Existing servers",
+    "description": "Source-audited listener. Runtime records show active Node listeners in apps using robos-lib/dom-snapshot. Game listeners run with the game."
+  },
+  {
+    "appId": "voice-prompt",
+    "name": "voice-prompt: main.js",
+    "source": "packages/voice-prompt/main.js",
+    "group": "Existing servers",
+    "description": "Source-audited listener. Runtime records show active Node listeners in apps using robos-lib/dom-snapshot. Game listeners run with the game."
+  },
+  {
+    "appId": "workspace-manager",
+    "name": "workspace-manager: main.js",
+    "source": "packages/workspace-manager/main.js",
+    "group": "Existing servers",
+    "description": "Source-audited listener. Runtime records show active Node listeners in apps using robos-lib/dom-snapshot. Game listeners run with the game."
+  }
+]

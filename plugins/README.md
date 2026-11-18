@@ -161,6 +161,8 @@ plugins/
 | **`import-company-kgraph`** | `/import-company-kgraph` | Import tracked local sources with provenance into an explicit workspace; review and refine revisions iteratively |
 | **`ide-java`** | `/ide-java` | Automate Java in IntelliJ IDEA via port 63343 IPC & MCP: secret run configs, breakpoints, thread inspection, ephemeral workspaces |
 | **`install-desktop-app`** | `/install-desktop-app` | Install .desktop entries, icons, desktop shortcuts, and GNOME Shell favorites |
+| **`install-robos-services`** | `/install-robos-services` | Install the service suite locally or on a Linux SSH host and add its GNOME app |
+| **`manage-robos-services`** | `/manage-robos-services` | Inspect hosts, control registered services, set startup and read logs |
 | **`install-dev-deps`** | `/install-dev-deps` | Audit and install host dev dependencies (QEMU, Electron, Java, Node) |
 | **`manage-robos-skill`** | `/manage-robos-skill` | Add, update, or remove a RobOS skill in the marketplace |
 | **`manage-agent-personas`** | `/manage-agent-personas` | Add, customize, and configure Developer Agent Personas, execution modes (Xvfb ephemeral GUI vs desktop session), and token-saving IDE refactoring suites |

@@ -1,0 +1,12 @@
+[Desktop Entry]
+X-RobOS-App=true
+Version=1.0
+Type=Application
+Name=RobOS Services
+Comment=Install and control RobOS servers on this computer or over SSH
+Exec=/usr/bin/electron /usr/local/share/robos/robos-services/main.js --no-sandbox --disable-gpu --disable-dev-shm-usage
+Icon=/usr/local/share/robos/robos-services/icon.svg
+Terminal=false
+Categories=System;Settings;
+X-RobOS-Category=System
+StartupWMClass=robos-services

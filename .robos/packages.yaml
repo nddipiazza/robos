@@ -1,5 +1,10 @@
 kind: PackagesCatalog
 packages:
+  - id: "urn:robos:desktop-app:robos-services"
+    title: "RobOS Services"
+    type: "robos:DesktopApp"
+    repository: "packages/robos-services"
+    technology: "Electron / Vanilla JavaScript / Node.js / systemd / Windows Task Scheduler"
   - id: "urn:robos:desktop-app:app-manager"
     title: "RobOS App Manager"
     type: "robos:DesktopApp"

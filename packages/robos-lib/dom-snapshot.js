@@ -334,7 +334,10 @@ function readBody(req) {
  *
  *   GET  /health         — { ok, appId, title }
  */
-function startDebugServer(win, port, appId) {
+// Register app-owned listeners (including dynamically assigned ports) with Services.
+try { require('./service-registry.cjs').instrumentListeners(); } catch {}
+
+function startDebugServer(win, port, appId, options = {}) {
   const server = http.createServer(async (req, res) => {
     const url = req.url.split('?')[0];
     try {
@@ -447,12 +450,15 @@ function startDebugServer(win, port, appId) {
     }
   });
 
-  server.listen(port, '0.0.0.0', () => {
-    console.log(`[robos-debug] ${appId} debug server on http://0.0.0.0:${port}`);
+  const host = options.host || '0.0.0.0';
+  server.listen(port, host, () => {
+    console.log(`[robos-debug] ${appId} debug server on http://${host}:${port}`);
   });
 
   return server;
 }
+
+startDebugServer.supportsHostBinding = true;
 
 module.exports = {
   registerSnapshotIPC,

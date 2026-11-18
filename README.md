@@ -36,6 +36,8 @@ Separately, AI-powered features inside the apps are optional extras you switch o
 
 The [RobOS App Manager](packages/app-manager) provides the same app selection and launcher on Windows, Ubuntu GNOME and macOS. Open its Windows EXE, Linux AppImage or macOS DMG, choose apps in the grouped checkbox tree, and download only those apps and their shared components. Apps get individual native launchers. The manager can add or remove apps later, and uninstalling RobOS removes its managed apps. See the [distribution build guide](scripts/app-manager/README.md). The separate USB flasher installs the optional Linux GNOME distro.
 
+[RobOS Services](packages/robos-services) installs and manages the server side of the app suite, locally or on a Linux SSH host. Its desktop app shows service status, startup settings and logs, with controls for installed RobOS services and an inventory of app-owned listeners. The authenticated service suite stores grocery lists, home device definitions, game saves and eLearning progress without requiring an AI agent. See the [Services guide](docs/_apps/robos-services.md).
+
 ```sh
 git clone https://github.com/nddipiazza/robos.git
 cd robos

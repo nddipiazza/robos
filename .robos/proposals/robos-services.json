@@ -1,0 +1,183 @@
+{
+  "status": "pending-existing-graph-repair",
+  "reason": "Package files and compatibility aggregate disagree; regenerate the aggregate explicitly",
+  "prompt": "Register the Services app and its authenticated persistent service suite. Update living docs to match.",
+  "edits": [
+    {
+      "op": "add",
+      "node": {
+        "@id": "urn:robos:desktop-app:robos-services",
+        "@type": [
+          "robos:DesktopApp"
+        ],
+        "dcterms:title": "RobOS Services",
+        "robos:package": "applications",
+        "robos:repository": "packages/robos-services/main.js",
+        "robos:technology": "Node.js 20+ / vanilla JavaScript",
+        "robos:refersFrom": "https://schema.org/SoftwareApplication",
+        "robos:evidence": [
+          {
+            "repository": "https://github.com/nddipiazza/robos",
+            "path": "packages/robos-services/main.js",
+            "line": 1,
+            "sha256": "72ca9b3e12ad4169d32dc911f4626895781f2cbae3448f63289ed3372666c219"
+          }
+        ],
+        "robos:desktopFramework": "Electron",
+        "robos:dependsOn": [
+          "urn:robos:service:robos-services-gateway"
+        ]
+      }
+    },
+    {
+      "op": "add",
+      "node": {
+        "@id": "urn:robos:service:robos-services-gateway",
+        "@type": [
+          "robos:Microservice"
+        ],
+        "dcterms:title": "RobOS Services Gateway",
+        "robos:package": "services",
+        "robos:repository": "packages/robos-services/server.cjs",
+        "robos:technology": "Node.js 20+ / vanilla JavaScript",
+        "robos:refersFrom": "https://w3id.org/c4/Container",
+        "robos:evidence": [
+          {
+            "repository": "https://github.com/nddipiazza/robos",
+            "path": "packages/robos-services/server.cjs",
+            "line": 1,
+            "sha256": "c5125c05701cb089b2dadf130a2cdae5d7567fd638b4ea08f7f8a5546aa5e65c"
+          }
+        ],
+        "dcterms:description": "Authenticated routing to the enabled services on this host.",
+        "robos:ports": [
+          19400
+        ]
+      }
+    },
+    {
+      "op": "add",
+      "node": {
+        "@id": "urn:robos:service:robos-services-grocery-lists",
+        "@type": [
+          "robos:Microservice"
+        ],
+        "dcterms:title": "Grocery Lists",
+        "robos:package": "services",
+        "robos:repository": "packages/robos-services/server.cjs",
+        "robos:technology": "Node.js 20+ / vanilla JavaScript",
+        "robos:refersFrom": "https://w3id.org/c4/Container",
+        "robos:evidence": [
+          {
+            "repository": "https://github.com/nddipiazza/robos",
+            "path": "packages/robos-services/server.cjs",
+            "line": 1,
+            "sha256": "c5125c05701cb089b2dadf130a2cdae5d7567fd638b4ea08f7f8a5546aa5e65c"
+          }
+        ],
+        "dcterms:description": "Shared persistent shopping lists and checked items.",
+        "robos:ports": [
+          19401
+        ]
+      }
+    },
+    {
+      "op": "add",
+      "node": {
+        "@id": "urn:robos:service:robos-services-home-services",
+        "@type": [
+          "robos:Microservice"
+        ],
+        "dcterms:title": "Home Services",
+        "robos:package": "services",
+        "robos:repository": "packages/robos-services/server.cjs",
+        "robos:technology": "Node.js 20+ / vanilla JavaScript",
+        "robos:refersFrom": "https://w3id.org/c4/Container",
+        "robos:evidence": [
+          {
+            "repository": "https://github.com/nddipiazza/robos",
+            "path": "packages/robos-services/server.cjs",
+            "line": 1,
+            "sha256": "c5125c05701cb089b2dadf130a2cdae5d7567fd638b4ea08f7f8a5546aa5e65c"
+          }
+        ],
+        "dcterms:description": "Household devices, scenes and automation definitions. Device drivers are configured separately.",
+        "robos:ports": [
+          19402
+        ]
+      }
+    },
+    {
+      "op": "add",
+      "node": {
+        "@id": "urn:robos:service:robos-services-games",
+        "@type": [
+          "robos:Microservice"
+        ],
+        "dcterms:title": "Game Library & Saves",
+        "robos:package": "services",
+        "robos:repository": "packages/robos-services/server.cjs",
+        "robos:technology": "Node.js 20+ / vanilla JavaScript",
+        "robos:refersFrom": "https://w3id.org/c4/Container",
+        "robos:evidence": [
+          {
+            "repository": "https://github.com/nddipiazza/robos",
+            "path": "packages/robos-services/server.cjs",
+            "line": 1,
+            "sha256": "c5125c05701cb089b2dadf130a2cdae5d7567fd638b4ea08f7f8a5546aa5e65c"
+          }
+        ],
+        "dcterms:description": "Persistent game library, saved games and play sessions.",
+        "robos:ports": [
+          19403
+        ]
+      }
+    },
+    {
+      "op": "add",
+      "node": {
+        "@id": "urn:robos:service:robos-services-elearning",
+        "@type": [
+          "robos:Microservice"
+        ],
+        "dcterms:title": "eLearning Library & Progress",
+        "robos:package": "services",
+        "robos:repository": "packages/robos-services/server.cjs",
+        "robos:technology": "Node.js 20+ / vanilla JavaScript",
+        "robos:refersFrom": "https://w3id.org/c4/Container",
+        "robos:evidence": [
+          {
+            "repository": "https://github.com/nddipiazza/robos",
+            "path": "packages/robos-services/server.cjs",
+            "line": 1,
+            "sha256": "c5125c05701cb089b2dadf130a2cdae5d7567fd638b4ea08f7f8a5546aa5e65c"
+          }
+        ],
+        "dcterms:description": "Course library and learner progress shared between clients.",
+        "robos:ports": [
+          19404
+        ]
+      }
+    }
+  ],
+  "validation": {
+    "conforms": true,
+    "nodesEvaluated": 6,
+    "errors": [],
+    "warnings": [
+      "urn:robos:service:robos-services-gateway: ownership unresolved",
+      "urn:robos:service:robos-services-grocery-lists: ownership unresolved",
+      "urn:robos:service:robos-services-home-services: ownership unresolved",
+      "urn:robos:service:robos-services-games: ownership unresolved",
+      "urn:robos:service:robos-services-elearning: ownership unresolved"
+    ],
+    "constraints": [
+      "structure",
+      "unique IDs",
+      "internal references",
+      "package names",
+      "source locations",
+      "built-in shape cardinality"
+    ]
+  }
+}
