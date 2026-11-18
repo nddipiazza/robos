@@ -13,6 +13,14 @@ h1,h2,h3{line-height:1.1;letter-spacing:-.03em;margin:0}
 @media(max-width:1120px){.links{gap:14px;font-size:.88rem}}
 @media(max-width:960px){.links{gap:10px;font-size:.85rem}}
 .nav-r{display:flex;align-items:center;gap:10px}
+/* menu button: shown on portrait phones, or when nav.js finds the links don't fit; opens them as a panel */
+.nav .menu-btn{display:none}
+.nav.nav-collapsed .links{display:none}
+.nav.nav-collapsed .menu-btn{display:inline-flex}
+.nav.nav-open .links{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:2px 12px;position:absolute;left:0;right:0;top:100%;padding:10px max(20px,calc((100% - 1120px)/2 + 20px)) 16px;background:var(--bg);border-bottom:1px solid var(--line);box-shadow:0 14px 30px rgba(0,0,0,.14);max-height:calc(100vh - 60px);overflow-y:auto;font-size:1rem}
+.nav.nav-open .links a{display:block;padding:10px 12px;border-radius:8px;color:var(--fg)}
+.nav.nav-open .links a:hover{background:var(--card);color:var(--accent)}
+.nav.nav-open .menu-btn{border-color:var(--accent)}
 /* phones in landscape: the menu tabs become a swipeable strip between the logo and the buttons */
 @media (orientation:landscape) and (max-height:540px) and (max-width:1120px){
 .nav .nav-in{height:52px;gap:10px}
@@ -23,6 +31,7 @@ h1,h2,h3{line-height:1.1;letter-spacing:-.03em;margin:0}
 .nav .links a[aria-current=page]{border-color:var(--accent);color:var(--accent)}
 .nav .brand span{display:none}
 .nav .nav-r{flex:none;gap:6px}
+.nav .menu-btn{display:none !important}
 }
 .icon-btn{display:inline-flex;align-items:center;justify-content:center;background:none;border:1px solid var(--line);color:var(--fg);border-radius:8px;width:34px;height:34px;cursor:pointer;transition:border-color .15s}.icon-btn:hover{border-color:var(--accent)}.icon-btn img{display:block;width:18px;height:18px}
 /* buttons */
@@ -86,7 +95,7 @@ details{border-bottom:1px solid var(--line);padding:16px 0}summary{cursor:pointe
 /* footer */
 .foot{border-top:1px solid var(--line);padding:56px 0 30px}.foot-in{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:30px;margin-bottom:34px}
 .foot h4{margin:0 0 12px;font-size:.84rem;color:var(--muted);font-weight:600}.foot-in a:not(.brand){display:block;color:var(--fg);opacity:.85;font-size:.92rem;margin:6px 0}
-@media(max-width:860px){.links{display:none}.grid3,.grid2,.os-grid,.app-grid,.stats,.doc-list{grid-template-columns:1fr}.split{grid-template-columns:1fr;gap:28px}.split.rev .split-t{order:0}.foot-in{grid-template-columns:1fr 1fr}.hero{padding-top:64px}section{padding:60px 0}}
+@media(max-width:860px){.links{display:none}.nav .menu-btn{display:inline-flex}.nav-r{gap:8px}.grid3,.grid2,.os-grid,.app-grid,.stats,.doc-list{grid-template-columns:1fr}.split{grid-template-columns:1fr;gap:28px}.split.rev .split-t{order:0}.foot-in{grid-template-columns:1fr 1fr}.hero{padding-top:64px}section{padding:60px 0}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
 .brand img{height:30px;width:auto;background:#f5f5f0;border-radius:8px;padding:3px 6px;display:block}
 .foot .brand img{height:26px}
