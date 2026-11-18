@@ -54,3 +54,19 @@ The figures are drawn by `scripts/future/figures.mjs` (a dark palette for the si
 Playwright Chromium. Commit the regenerated SVGs and PDF (`.gitignore` allows this one PDF). When a figure
 changes, update its `robos:FlowDiagram` Mermaid text in the `documentation` KGraph package as well.
 
+## Web analytics
+
+The front site and classic `/v1/` docs load `assets/analytics.js`, which installs
+Cloudflare Web Analytics only on `rowbose.com` and `www.rowbose.com`. Local previews
+do not send analytics. Tracking stays disabled while the token is empty.
+
+To activate it, add `rowbose.com` in [Cloudflare Web Analytics](https://dash.cloudflare.com/?to=/:account/web-analytics)
+and select **Manage site**. Copy the `token` value from the JavaScript snippet
+into `assets/analytics.js`, then deploy the site. This is a public site token,
+not a Cloudflare API token. Both Jekyll builds use this one configuration.
+Use manual JavaScript installation if the domain is proxied through Cloudflare,
+so automatic injection does not count visits twice.
+
+View visits, page views and referrers in that site's Cloudflare Web Analytics
+dashboard. New traffic can take a few minutes to appear; traffic from before
+installation is not recovered.
