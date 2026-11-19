@@ -66,6 +66,9 @@ contextBridge.exposeInMainWorld('robos', {
   onClickTrackProgress: (cb) => subscribe('daw:click-track-progress', cb),
   removeDrumsFromTrack: (payload) => ipcRenderer.invoke('daw:remove-drums-from-track', payload),
   onRemoveDrumsProgress: (cb) => subscribe('daw:remove-drums-progress', cb),
+  createLyricsTrack: (payload) => ipcRenderer.invoke('daw:create-lyrics-track', payload),
+  updateLyricsClip: (payload) => ipcRenderer.invoke('daw:update-lyrics-clip', payload),
+  onLyricsProgress: (cb) => subscribe('daw:lyrics-progress', cb),
   getPathForFile: (file) => {
     try {
       if (webUtils && typeof webUtils.getPathForFile === 'function') {

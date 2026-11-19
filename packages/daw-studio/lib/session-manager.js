@@ -134,6 +134,35 @@ function ensureProjectDir(project) {
   return { projectDir: project.projectDir, takesDir };
 }
 
+function persistLyricsSidecars(clip, takesDir, projectDir, prevDir) {
+  const out = {};
+  const copySidecar = (absField, relField) => {
+    let rel = clip[relField] || null;
+    let abs = clip[absField] || null;
+    if (abs && fs.existsSync(abs)) {
+      const fn = path.basename(abs);
+      rel = path.join('takes', fn);
+      const dest = path.join(takesDir, fn);
+      if (path.resolve(abs) !== path.resolve(dest)) {
+        fs.copyFileSync(abs, dest);
+      }
+      abs = dest;
+    } else if (prevDir && rel) {
+      const oldAbs = path.join(prevDir, rel);
+      const nextAbs = path.join(projectDir, rel);
+      if (fs.existsSync(oldAbs) && path.resolve(oldAbs) !== path.resolve(nextAbs)) {
+        fs.copyFileSync(oldAbs, nextAbs);
+      }
+      abs = nextAbs;
+    }
+    if (abs) out[absField] = abs;
+    if (rel) out[relField] = rel;
+  };
+  copySidecar('karFile', 'relativeKarPath');
+  copySidecar('lrcFile', 'relativeLrcPath');
+  return out;
+}
+
 function saveProject(project, { targetDir } = {}) {
   if (!project || typeof project !== 'object') throw new Error('Invalid project payload');
   const prevDir = project.projectDir;
@@ -191,6 +220,7 @@ function saveProject(project, { targetDir } = {}) {
         relativeWavPath: relWav,
         wavFile: destAbs,
         ...(destVidAbs ? { videoFile: destVidAbs, relativeVideoPath: relVid } : {}),
+        ...persistLyricsSidecars(clip, takesDir, projectDir, prevDir),
       };
     });
     return { ...track, clips };
@@ -255,6 +285,27 @@ function loadProject(idOrPath) {
         clip.videoFile = clip.sourceFile;
       }
       clip.videoFileExists = Boolean(clip.videoFile && fs.existsSync(clip.videoFile));
+
+      // Hydrate MIDI Karaoke (.kar) & Enhanced Lyrics (.lrc) sidecars
+      if (clip.relativeKarPath) clip.karFile = path.join(projectDir, clip.relativeKarPath);
+      if (clip.relativeLrcPath) clip.lrcFile = path.join(projectDir, clip.relativeLrcPath);
+      if ((!clip.lyricsData || !Array.isArray(clip.lyricsData.lines)) && clip.karFile && fs.existsSync(clip.karFile)) {
+        try {
+          const { parseMidiKaraokeSmf } = require('./lyrics-generator');
+          const parsedKar = parseMidiKaraokeSmf(fs.readFileSync(clip.karFile), {
+            clipStartSec: Number(clip.startSec) || 0,
+          });
+          clip.lyricsData = {
+            format: 'smf-kar-v1',
+            ppq: parsedKar.ppq,
+            bpm: parsedKar.bpm,
+            title: parsedKar.title,
+            artist: parsedKar.artist,
+            clipBaseStartSec: Number(clip.startSec) || 0,
+            lines: parsedKar.lines,
+          };
+        } catch {}
+      }
       if (clip.offsetSec === undefined) clip.offsetSec = 0;
       if (clip.gainDb === undefined) clip.gainDb = 0;
       if (clip.fadeInSec === undefined) clip.fadeInSec = 0;
@@ -520,7 +571,7 @@ class MultiTrackRecorder {
     const allArmed = (project.tracks || []).filter(t => t.armed);
     const armedVideoTracks = allArmed.filter(t => t.trackKind === 'video');
     const audioCandidateArmed = allArmed.filter(
-      t => t.trackKind !== 'video' || t.videoConfig?.audioMode === 'interface'
+      t => t.trackKind !== 'lyrics' && (t.trackKind !== 'video' || t.videoConfig?.audioMode === 'interface')
     );
     // Do not overwrite pure imported backing-media tracks (no hardware input assigned) when mic tracks are armed
     const hasHardwareArmed = audioCandidateArmed.some(t => Boolean(t.inputNodeName));

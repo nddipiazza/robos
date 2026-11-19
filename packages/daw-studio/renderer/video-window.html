@@ -83,6 +83,177 @@
       border-color: rgba(239, 68, 68, 0.48);
       color: #fca5a5;
     }
+    .vw-mode-pill.karaoke {
+      background: rgba(245, 158, 11, 0.18);
+      border-color: rgba(245, 158, 11, 0.52);
+      color: #fde68a;
+    }
+    .rk-stage-bg {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse at 50% 36%, rgba(0, 212, 255, 0.18) 0%, rgba(245, 158, 11, 0.09) 40%, rgba(6, 10, 17, 0.99) 80%),
+        linear-gradient(180deg, #0b1220 0%, #05080f 100%);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 18px 24px 28px;
+      pointer-events: none;
+      z-index: 1;
+    }
+    .rk-grid-glow {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(56, 189, 248, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(56, 189, 248, 0.05) 1px, transparent 1px);
+      background-size: 36px 36px;
+      mask-image: radial-gradient(circle at center, rgba(0, 0, 0, 0.85), transparent 82%);
+    }
+    .rk-brand-row {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .rk-crest {
+      border-radius: 6px;
+      box-shadow: 0 0 16px rgba(0, 212, 255, 0.35);
+    }
+    .rk-brand-lbl {
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 1.4px;
+      color: #dbeafe;
+    }
+    .rk-midi-tag {
+      margin-left: auto;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 9px;
+      border-radius: 4px;
+      background: rgba(245, 158, 11, 0.16);
+      border: 1px solid rgba(245, 158, 11, 0.45);
+      color: #fde68a;
+    }
+    .rk-eq-strip {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 6px;
+      height: 32px;
+      opacity: 0.45;
+    }
+    .rk-eq-strip span {
+      width: 6px;
+      height: 8px;
+      border-radius: 3px;
+      background: linear-gradient(180deg, #00d4ff 0%, #f59e0b 100%);
+    }
+    .rk-stage-bg.playing .rk-eq-strip span:nth-child(odd) {
+      animation: vwEqA 0.7s ease-in-out infinite alternate;
+    }
+    .rk-stage-bg.playing .rk-eq-strip span:nth-child(even) {
+      animation: vwEqB 0.54s ease-in-out infinite alternate;
+    }
+    @keyframes vwEqA { from { height: 7px; } to { height: 30px; } }
+    @keyframes vwEqB { from { height: 26px; } to { height: 8px; } }
+    .rk-overlay {
+      position: absolute;
+      left: 0;
+      right: 0;
+      z-index: 4;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      pointer-events: none;
+      padding: 18px 28px;
+    }
+    .rk-overlay.stage-mode {
+      top: 52px;
+      bottom: 48px;
+      justify-content: center;
+      gap: 14px;
+    }
+    .rk-overlay.over-video {
+      bottom: 0;
+      padding: 24px 28px 30px;
+      gap: 8px;
+      background: linear-gradient(180deg, rgba(4, 7, 13, 0) 0%, rgba(4, 7, 13, 0.8) 38%, rgba(4, 7, 13, 0.94) 100%);
+    }
+    .rk-song-title {
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      color: #94a3b8;
+    }
+    .rk-overlay.over-video .rk-song-title { display: none; }
+    .rk-dots {
+      display: inline-flex;
+      gap: 8px;
+    }
+    .rk-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: rgba(148, 163, 184, 0.26);
+      border: 1px solid rgba(148, 163, 184, 0.45);
+    }
+    .rk-dot.lit {
+      background: #fbbf24;
+      border-color: #fde68a;
+      box-shadow: 0 0 10px rgba(251, 191, 36, 0.85);
+    }
+    .rk-line-active {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.3em;
+      font-size: clamp(22px, 3.8vw, 42px);
+      font-weight: 850;
+      line-height: 1.24;
+      text-shadow: 0 3px 12px rgba(0, 0, 0, 0.92);
+    }
+    .rk-word {
+      display: inline-block;
+      background-image: linear-gradient(90deg, #38bdf8 0%, #fbbf24 var(--kw-fill, 0%), #f1f5f9 var(--kw-fill, 0%), #f1f5f9 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.88));
+      transition: transform 80ms ease;
+    }
+    .rk-word.sung {
+      background-image: linear-gradient(90deg, #38bdf8 0%, #fbbf24 100%);
+    }
+    .rk-word.active {
+      transform: translateY(-2px) scale(1.05);
+    }
+    .rk-line-next {
+      font-size: clamp(14px, 2.1vw, 22px);
+      font-weight: 650;
+      color: rgba(203, 213, 225, 0.68);
+      min-height: 24px;
+      text-shadow: 0 2px 6px rgba(0, 0, 0, 0.9);
+    }
+    .rk-pitch-hud {
+      position: absolute;
+      bottom: 14px;
+      left: 18px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 11.5px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(7, 11, 18, 0.85);
+      border: 1px solid rgba(245, 158, 11, 0.45);
+      color: #fde68a;
+    }
     .vw-spacer { flex: 1; }
     .vw-btn {
       height: 26px;
@@ -159,6 +330,26 @@
   <main class="vw-stage" id="vw-stage">
     <video id="vw-video" muted playsinline preload="auto" class="hidden"></video>
     <img id="vw-live-img" alt="" class="hidden" />
+    <div id="vw-karaoke-bg" class="rk-stage-bg hidden">
+      <div class="rk-grid-glow"></div>
+      <div class="rk-brand-row">
+        <img src="assets/icons/daw-crest.webp" class="rk-crest" width="28" height="28" alt="" />
+        <span class="rk-brand-lbl">ROBOS STUDIO KARAOKE STAGE</span>
+        <span class="rk-midi-tag">SMF .KAR · MIDI 0xFF 05</span>
+      </div>
+      <div class="rk-eq-strip" aria-hidden="true">
+        <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+      </div>
+    </div>
+    <div id="vw-karaoke-overlay" class="rk-overlay hidden">
+      <div id="vw-karaoke-song" class="rk-song-title"></div>
+      <div id="vw-karaoke-dots" class="rk-dots hidden">
+        <span class="rk-dot"></span><span class="rk-dot"></span><span class="rk-dot"></span><span class="rk-dot"></span>
+      </div>
+      <div id="vw-karaoke-current" class="rk-line-active"></div>
+      <div id="vw-karaoke-next" class="rk-line-next"></div>
+      <div id="vw-karaoke-pitch" class="rk-pitch-hud hidden"></div>
+    </div>
     <div id="vw-empty-slate" class="vw-slate">
       <strong id="vw-slate-title">No Video Region at Playhead</strong>
       <span id="vw-slate-sub">Play or scrub over a recorded/imported video region, or enable Live Cam preview.</span>

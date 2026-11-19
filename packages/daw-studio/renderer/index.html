@@ -311,6 +311,28 @@
                 <div class="vmon-stage" id="vmon-stage">
                   <video id="embedded-video-el" muted playsinline preload="auto" class="hidden"></video>
                   <img id="embedded-live-img" alt="" class="hidden" />
+                  <!-- RobOS Branded Dark Karaoke Stage (shown when Lyrics Track is active & no other video is playing) -->
+                  <div id="embedded-karaoke-bg" class="robos-karaoke-stage-bg hidden">
+                    <div class="rk-stage-glow"></div>
+                    <div class="rk-brand-header">
+                      <img src="assets/icons/daw-crest.webp" class="rk-brand-crest" width="22" height="22" alt="" />
+                      <span class="rk-brand-title">ROBOS STUDIO KARAOKE</span>
+                      <span class="rk-midi-pill mono">MIDI 0xFF 05</span>
+                    </div>
+                    <div class="rk-eq-bars" aria-hidden="true">
+                      <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+                    </div>
+                  </div>
+                  <!-- Synchronized MIDI-Mapped Karaoke Word Wipe Layer (renders over video OR centered on RobOS Dark Stage) -->
+                  <div id="embedded-karaoke-overlay" class="robos-karaoke-overlay hidden">
+                    <div id="vmon-karaoke-song" class="rk-song-banner"></div>
+                    <div id="vmon-karaoke-dots" class="rk-leadin-dots hidden">
+                      <span class="rk-dot"></span><span class="rk-dot"></span><span class="rk-dot"></span><span class="rk-dot"></span>
+                    </div>
+                    <div id="vmon-karaoke-current" class="rk-current-line"></div>
+                    <div id="vmon-karaoke-next" class="rk-next-line"></div>
+                    <div id="vmon-karaoke-pitch" class="rk-pitch-pill mono hidden"></div>
+                  </div>
                   <div id="embedded-video-slate" class="vmon-slate">
                     <strong id="vmon-slate-title">No Video Region at Playhead</strong>
                     <span id="vmon-slate-sub">Play/scrub a video track, click "+ Add Video", or toggle Live Cam.</span>

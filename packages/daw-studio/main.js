@@ -1253,6 +1253,80 @@ ipcMain.handle('daw:remove-drums-from-track', async (_e, payload) => {
   }
 });
 
+ipcMain.handle('daw:create-lyrics-track', async (_e, payload) => {
+  try {
+    const snap = audioDevices?.getAudioDevicesSnapshot?.() || null;
+    if (payload?.project && Array.isArray(payload.project.tracks)) {
+      currentProject = payload.project;
+    }
+    const proj = ensureCurrentProject(snap);
+    const trackId = payload?.trackId;
+    if (!trackId) throw new Error('Missing source trackId for lyrics track creation.');
+
+    const projDir = proj.projectDir || path.join(getProjectsRoot(), proj.id);
+    const takesDir = path.join(projDir, 'takes');
+    fs.mkdirSync(takesDir, { recursive: true });
+    proj.projectDir = projDir;
+
+    delete require.cache[require.resolve('./lib/lyrics-generator')];
+    const { createLyricsTrackForProject } = require('./lib/lyrics-generator');
+    const res = await createLyricsTrackForProject(proj, trackId, {
+      clipId: payload?.clipId || null,
+      customLyricsText: payload?.customLyricsText || '',
+      takesDir,
+      onProgress: (p) => sendToRenderer('daw:lyrics-progress', p),
+    });
+    currentProject = res.project;
+    return res;
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('daw:update-lyrics-clip', async (_e, payload) => {
+  try {
+    const snap = audioDevices?.getAudioDevicesSnapshot?.() || null;
+    if (payload?.project && Array.isArray(payload.project.tracks)) {
+      currentProject = payload.project;
+    }
+    const proj = ensureCurrentProject(snap);
+    const projDir = proj.projectDir || path.join(getProjectsRoot(), proj.id);
+    const takesDir = path.join(projDir, 'takes');
+    fs.mkdirSync(takesDir, { recursive: true });
+    proj.projectDir = projDir;
+
+    let importFilePath = payload?.importFilePath || '';
+    if (payload?.browseFile && !importFilePath && mainWindow && !mainWindow.isDestroyed()) {
+      const pick = await dialog.showOpenDialog(mainWindow, {
+        title: 'Import MIDI Karaoke (.KAR / .MID) or Synced Lyrics (.LRC)',
+        properties: ['openFile'],
+        filters: [
+          { name: 'Karaoke & Lyrics (.kar, .mid, .lrc, .txt)', extensions: ['kar', 'mid', 'midi', 'lrc', 'txt'] },
+          { name: 'All Files', extensions: ['*'] },
+        ],
+      });
+      if (pick.canceled || !pick.filePaths?.length) {
+        return { ok: false, canceled: true };
+      }
+      importFilePath = pick.filePaths[0];
+    }
+
+    delete require.cache[require.resolve('./lib/lyrics-generator')];
+    const { updateLyricsClipData } = require('./lib/lyrics-generator');
+    const res = updateLyricsClipData(proj, {
+      trackId: payload?.trackId,
+      clipId: payload?.clipId || null,
+      lyricsText: payload?.lyricsText || '',
+      importFilePath,
+      takesDir,
+    });
+    currentProject = res.project;
+    return res;
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
 async function handleMixdownExport(payload = {}) {
   delete require.cache[require.resolve('./lib/mixdown-exporter')];
   const exporter = require('./lib/mixdown-exporter');

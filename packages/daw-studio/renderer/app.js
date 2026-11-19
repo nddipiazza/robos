@@ -121,6 +121,8 @@ let isSeekingEmbeddedVideo = false;
 let pendingEmbeddedSeekSec = null;
 let lastPopoutSyncAtMs = 0;
 let lastPopoutClipKey = '';
+let isCreatingLyricsTrack = false;
+let embeddedKaraokeLineSig = '';
 
 function esc(str) {
   return String(str ?? '')
@@ -1562,6 +1564,12 @@ async function seamlessRefreshLiveAudio() {
   playMaxDurationSec = maxDuration;
 }
 
+function isTrackLyrics(track) {
+  if (!track) return false;
+  if (track.trackKind === 'lyrics' || track.category === 'lyrics') return true;
+  return (track.clips || []).some(c => c.mediaKind === 'lyrics' || Boolean(c.lyricsData?.lines?.length));
+}
+
 function isTrackVideoCapable(track) {
   if (!track) return false;
   if (track.trackKind === 'video' || track.category === 'video') return true;
@@ -1569,7 +1577,193 @@ function isTrackVideoCapable(track) {
 }
 
 function getVideoCapableTracks() {
-  return (currentProject?.tracks || []).filter(isTrackVideoCapable);
+  return (currentProject?.tracks || []).filter(t => isTrackVideoCapable(t) || isTrackLyrics(t));
+}
+
+const KARAOKE_NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+function midiNoteToLabel(midi) {
+  const m = Math.max(0, Math.min(127, Math.round(Number(midi) || 60)));
+  return `${KARAOKE_NOTE_NAMES[m % 12]}${Math.floor(m / 12) - 1}`;
+}
+
+function findActiveLyricsClipPayloadAtSec(sec, preferredTrackId = '') {
+  const tracks = (currentProject?.tracks || []).filter(t => isTrackLyrics(t) && !t.muted);
+  if (!tracks.length) return null;
+
+  // Prefer explicitly selected lyrics track if chosen in VIEW TRACK, else bottom-most unmuted lyrics track
+  const ordered = preferredTrackId
+    ? [...tracks.filter(t => t.id === preferredTrackId), ...tracks.filter(t => t.id !== preferredTrackId)]
+    : [...tracks].reverse();
+
+  for (const tr of ordered) {
+    const clips = (tr.clips || []).filter(c => !c.muted && Array.isArray(c.lyricsData?.lines) && c.lyricsData.lines.length > 0);
+    for (let i = clips.length - 1; i >= 0; i--) {
+      const c = clips[i];
+      const start = Number(c.startSec) || 0;
+      const dur = Math.max(0.1, Number(c.durationSec) || 0);
+      if (sec >= start - 2.5 && sec <= start + dur + 0.5) {
+        const baseStart = Number(c.lyricsData?.clipBaseStartSec);
+        const timelineShiftSec = Number.isFinite(baseStart) ? (start - baseStart) : 0;
+        return {
+          id: c.id,
+          trackId: tr.id,
+          trackName: tr.name,
+          title: c.songTitle || c.lyricsData?.title || tr.name.replace(/^Lyrics\s*[-—:]\s*/i, ''),
+          artist: c.songArtist || c.lyricsData?.artist || '',
+          startSec: start,
+          durationSec: dur,
+          timelineShiftSec,
+          lines: c.lyricsData.lines,
+        };
+      }
+    }
+  }
+
+  // If playhead is outside a lyrics clip region, still return the first lyrics clip on a Lyrics-only stage so the branded stage stays visible!
+  const fallbackTr = ordered[0];
+  const fallbackClip = (fallbackTr?.clips || []).find(c => !c.muted && Array.isArray(c.lyricsData?.lines) && c.lyricsData.lines.length > 0);
+  if (fallbackClip) {
+    const start = Number(fallbackClip.startSec) || 0;
+    const baseStart = Number(fallbackClip.lyricsData?.clipBaseStartSec);
+    return {
+      id: fallbackClip.id,
+      trackId: fallbackTr.id,
+      trackName: fallbackTr.name,
+      title: fallbackClip.songTitle || fallbackClip.lyricsData?.title || fallbackTr.name,
+      artist: fallbackClip.songArtist || fallbackClip.lyricsData?.artist || '',
+      startSec: start,
+      durationSec: Math.max(0.1, Number(fallbackClip.durationSec) || 0),
+      timelineShiftSec: Number.isFinite(baseStart) ? (start - baseStart) : 0,
+      lines: fallbackClip.lyricsData.lines,
+    };
+  }
+  return null;
+}
+
+function renderEmbeddedKaraokeFrame(lyrClip, curSec, hasOtherVideoVisual) {
+  const bgEl = document.getElementById('embedded-karaoke-bg');
+  const ovEl = document.getElementById('embedded-karaoke-overlay');
+  const songEl = document.getElementById('vmon-karaoke-song');
+  const dotsEl = document.getElementById('vmon-karaoke-dots');
+  const curLineEl = document.getElementById('vmon-karaoke-current');
+  const nextLineEl = document.getElementById('vmon-karaoke-next');
+  const pitchEl = document.getElementById('vmon-karaoke-pitch');
+
+  if (!lyrClip || !Array.isArray(lyrClip.lines) || !lyrClip.lines.length) {
+    bgEl?.classList.add('hidden');
+    ovEl?.classList.add('hidden');
+    embeddedKaraokeLineSig = '';
+    return false;
+  }
+
+  if (hasOtherVideoVisual) {
+    bgEl?.classList.add('hidden');
+    ovEl?.classList.remove('hidden', 'stage-mode');
+    ovEl?.classList.add('over-video');
+  } else {
+    bgEl?.classList.remove('hidden');
+    bgEl?.classList.toggle('playing', Boolean(isPlaying));
+    ovEl?.classList.remove('hidden', 'over-video');
+    ovEl?.classList.add('stage-mode');
+  }
+
+  const shift = Number(lyrClip.timelineShiftSec) || 0;
+  const lines = lyrClip.lines;
+  let activeIdx = -1;
+
+  for (let i = 0; i < lines.length; i++) {
+    const lStart = (Number(lines[i].startSec) || 0) + shift;
+    const lEnd = (Number(lines[i].endSec) || (lStart + 2)) + shift;
+    const nextStart = i + 1 < lines.length ? ((Number(lines[i + 1].startSec) || 0) + shift) : Infinity;
+    const holdUntil = Math.min(lEnd + 0.65, nextStart - 0.05);
+    if (curSec >= lStart - 2.2 && curSec <= Math.max(lEnd, holdUntil)) {
+      activeIdx = i;
+      if (curSec >= lStart - 0.15) break;
+    }
+  }
+  if (activeIdx === -1) {
+    activeIdx = lines.findIndex(l => ((Number(l.startSec) || 0) + shift) > curSec);
+    if (activeIdx === -1) activeIdx = lines.length - 1;
+  }
+
+  const curLine = lines[activeIdx] || null;
+  const nextLine = lines[activeIdx + 1] || null;
+  if (songEl) {
+    const hdr = lyrClip.artist ? `${lyrClip.title} — ${lyrClip.artist}` : (lyrClip.title || lyrClip.trackName || 'Karaoke');
+    if (songEl.textContent !== hdr) songEl.textContent = hdr;
+  }
+
+  if (!curLine) {
+    if (curLineEl) curLineEl.innerHTML = '';
+    if (nextLineEl) nextLineEl.textContent = '';
+    dotsEl?.classList.add('hidden');
+    pitchEl?.classList.add('hidden');
+    return !hasOtherVideoVisual;
+  }
+
+  const lineStart = (Number(curLine.startSec) || 0) + shift;
+  const preSec = lineStart - curSec;
+  if (dotsEl) {
+    if (preSec > 0.05 && preSec <= 2.2) {
+      dotsEl.classList.remove('hidden');
+      const litCount = Math.min(4, Math.max(1, Math.ceil(((2.2 - preSec) / 2.2) * 4)));
+      dotsEl.querySelectorAll('.rk-dot').forEach((d, idx) => d.classList.toggle('lit', idx < litCount));
+    } else {
+      dotsEl.classList.add('hidden');
+    }
+  }
+
+  const words = Array.isArray(curLine.words) && curLine.words.length
+    ? curLine.words
+    : [{ text: curLine.text || '', startSec: curLine.startSec, endSec: curLine.endSec, midiNote: 60 }];
+
+  const sig = `${lyrClip.id}:${activeIdx}:${words.length}`;
+  if (embeddedKaraokeLineSig !== sig && curLineEl) {
+    embeddedKaraokeLineSig = sig;
+    curLineEl.innerHTML = words.map((w, wi) => `<span class="rk-word" data-wi="${wi}">${esc(w.text)}</span>`).join(' ');
+  }
+
+  let activeMidi = null;
+  if (curLineEl) {
+    const spans = curLineEl.querySelectorAll('.rk-word');
+    for (let wi = 0; wi < words.length; wi++) {
+      const w = words[wi];
+      const ws = (Number(w.startSec) || 0) + shift;
+      const we = Math.max(ws + 0.05, (Number(w.endSec) || (ws + 0.25)) + shift);
+      const sp = spans[wi];
+      if (!sp) continue;
+      if (curSec >= we) {
+        sp.classList.add('sung');
+        sp.classList.remove('active');
+        sp.style.setProperty('--kw-fill', '100%');
+      } else if (curSec >= ws) {
+        const pct = Math.max(0, Math.min(100, ((curSec - ws) / (we - ws)) * 100));
+        sp.classList.remove('sung');
+        sp.classList.add('active');
+        sp.style.setProperty('--kw-fill', `${pct.toFixed(1)}%`);
+        activeMidi = w.midiNote || 60;
+      } else {
+        sp.classList.remove('sung', 'active');
+        sp.style.setProperty('--kw-fill', '0%');
+      }
+    }
+  }
+
+  if (nextLineEl) {
+    const nextTxt = nextLine?.text || '';
+    if (nextLineEl.textContent !== nextTxt) nextLineEl.textContent = nextTxt;
+  }
+
+  if (pitchEl) {
+    if (activeMidi !== null) {
+      pitchEl.classList.remove('hidden');
+      pitchEl.textContent = `${midiNoteToLabel(activeMidi)} · MIDI ${activeMidi}`;
+    } else {
+      pitchEl.classList.add('hidden');
+    }
+  }
+
+  return !hasOtherVideoVisual;
 }
 
 function resolveClipVideoFilePath(clip) {
@@ -1695,7 +1889,14 @@ function syncVideoOutputMonitor({ forcePush = false } = {}) {
     }
   }
 
-  const activeClipRaw = (!isRecording && activeTrack) ? findActiveVideoClipAtSec(activeTrack, playheadSec) : null;
+  const selectedIsLyricsOnly = Boolean(activeTrack && isTrackLyrics(activeTrack) && !isTrackVideoCapable(activeTrack));
+  // If user selected a Lyrics track in VIEW TRACK, or if another video track is selected, resolve video clip (if any) + active karaoke lyrics!
+  let videoSourceTrack = (!selectedIsLyricsOnly && activeTrack) ? activeTrack : null;
+  if (!videoSourceTrack && !selectedIsLyricsOnly) {
+    videoSourceTrack = (currentProject?.tracks || []).find(t => isTrackVideoCapable(t) && !t.muted) || null;
+  }
+
+  const activeClipRaw = (!isRecording && videoSourceTrack) ? findActiveVideoClipAtSec(videoSourceTrack, playheadSec) : null;
   const activeClipVideoFile = resolveClipVideoFilePath(activeClipRaw);
   const activeClipPayload = (activeClipRaw && activeClipVideoFile)
     ? {
@@ -1707,14 +1908,19 @@ function syncVideoOutputMonitor({ forcePush = false } = {}) {
     }
     : null;
 
-  const wantLiveFeed = Boolean(
-    activeTrack?.videoConfig &&
-    !activeClipPayload &&
-    (videoLiveCamEnabled || (isRecording && activeTrack.armed))
+  const activeLyricsPayload = findActiveLyricsClipPayloadAtSec(
+    playheadSec,
+    selectedIsLyricsOnly ? activeTrack.id : ''
   );
-  const directMjpegUrl = wantLiveFeed ? getLiveStreamDirectMjpegUrl(activeTrack) : '';
+
+  const wantLiveFeed = Boolean(
+    videoSourceTrack?.videoConfig &&
+    !activeClipPayload &&
+    (videoLiveCamEnabled || (isRecording && videoSourceTrack.armed))
+  );
+  const directMjpegUrl = wantLiveFeed ? getLiveStreamDirectMjpegUrl(videoSourceTrack) : '';
   if (wantLiveFeed && !directMjpegUrl && (videoDockOpen || videoPopoutOpen)) {
-    ensureLiveCamSnapshotPolling(activeTrack);
+    ensureLiveCamSnapshotPolling(videoSourceTrack);
   } else {
     stopLiveCamSnapshotPolling();
   }
@@ -1750,18 +1956,19 @@ function syncVideoOutputMonitor({ forcePush = false } = {}) {
 
       const targetVidSec = activeClipPayload.offsetSec + Math.max(0, playheadSec - activeClipPayload.startSec);
       if (isPlaying) {
-        if (modePill) { modePill.textContent = 'PLAYING'; modePill.className = 'vmon-mode-pill playing'; }
+        if (modePill) { modePill.textContent = activeLyricsPayload ? 'VIDEO + KARAOKE' : 'PLAYING'; modePill.className = 'vmon-mode-pill playing'; }
         if (Math.abs((videoEl.currentTime || 0) - targetVidSec) > 0.085) {
           safeSeekEmbeddedVideo(videoEl, targetVidSec);
         }
         if (videoEl.paused) videoEl.play().catch(() => {});
       } else {
-        if (modePill) { modePill.textContent = 'SCRUB'; modePill.className = 'vmon-mode-pill'; }
+        if (modePill) { modePill.textContent = activeLyricsPayload ? 'SCRUB · KARAOKE' : 'SCRUB'; modePill.className = 'vmon-mode-pill'; }
         if (!videoEl.paused) videoEl.pause();
         if (Math.abs((videoEl.currentTime || 0) - targetVidSec) > 0.02) {
           safeSeekEmbeddedVideo(videoEl, targetVidSec);
         }
       }
+      renderEmbeddedKaraokeFrame(activeLyricsPayload, playheadSec, true);
     } else if (wantLiveFeed && (directMjpegUrl || videoLiveSnapshotDataUrl)) {
       if (!videoEl.paused) videoEl.pause();
       videoEl.classList.add('hidden');
@@ -1775,23 +1982,35 @@ function syncVideoOutputMonitor({ forcePush = false } = {}) {
         modePill.textContent = isRecording ? 'REC CAM' : 'LIVE CAM';
         modePill.className = 'vmon-mode-pill live';
       }
+      renderEmbeddedKaraokeFrame(activeLyricsPayload, playheadSec, true);
     } else {
       if (!videoEl.paused) videoEl.pause();
       videoEl.classList.add('hidden');
       liveImgEl.classList.add('hidden');
       if (liveImgEl.getAttribute('src')) liveImgEl.removeAttribute('src');
-      slateEl.classList.remove('hidden');
-      if (modePill) {
-        modePill.textContent = vTracks.length ? 'STANDBY' : 'NO VIDEO';
-        modePill.className = 'vmon-mode-pill';
-      }
-      if (slateTitleEl) {
-        slateTitleEl.textContent = vTracks.length ? 'No Video Region at Playhead' : 'No Video Tracks in Session';
-      }
-      if (slateSubEl) {
-        slateSubEl.textContent = vTracks.length
-          ? (activeTrack?.videoConfig ? 'Move playhead onto a video take or click Live Cam to monitor camera.' : 'Move playhead over a video region to preview.')
-          : 'Click "Add Video" to record a RobOS Android IP Cam, ONVIF cam, or USB webcam.';
+
+      // No other video playing: if a Lyrics Track is active, display RobOS Branded Dark Karaoke Stage!
+      const showingKaraokeStage = renderEmbeddedKaraokeFrame(activeLyricsPayload, playheadSec, false);
+      if (showingKaraokeStage) {
+        slateEl.classList.add('hidden');
+        if (modePill) {
+          modePill.textContent = isPlaying ? 'KARAOKE LIVE' : 'KARAOKE STAGE';
+          modePill.className = 'vmon-mode-pill karaoke';
+        }
+      } else {
+        slateEl.classList.remove('hidden');
+        if (modePill) {
+          modePill.textContent = vTracks.length ? 'STANDBY' : 'NO VIDEO';
+          modePill.className = 'vmon-mode-pill';
+        }
+        if (slateTitleEl) {
+          slateTitleEl.textContent = vTracks.length ? 'No Video or Lyrics Region at Playhead' : 'No Video or Lyrics Tracks in Session';
+        }
+        if (slateSubEl) {
+          slateSubEl.textContent = vTracks.length
+            ? (videoSourceTrack?.videoConfig ? 'Move playhead onto a video take or click Live Cam to monitor camera.' : 'Move playhead over a video or lyrics region to preview.')
+            : 'Click "Add Video" or right-click any music track -> "Create Lyrics Track".';
+        }
       }
     }
   }
@@ -1799,7 +2018,7 @@ function syncVideoOutputMonitor({ forcePush = false } = {}) {
   // 2. Sync Standalone Pop-Out Video Output Window (throttled to 4 Hz during steady playback, 0ms on seeks/clip changes!)
   if (videoPopoutOpen && typeof window.robos?.syncVideoOutputWindow === 'function') {
     const nowMs = Date.now();
-    const clipKey = `${selectedVideoOutputTrackId}:${activeClipPayload?.id || 'none'}:${isPlaying ? '1' : '0'}:${isRecording ? '1' : '0'}`;
+    const clipKey = `${selectedVideoOutputTrackId}:${activeClipPayload?.id || 'none'}:${activeLyricsPayload?.id || 'nolyr'}:${activeLyricsPayload?.timelineShiftSec || 0}:${isPlaying ? '1' : '0'}:${isRecording ? '1' : '0'}`;
     if (forcePush || clipKey !== lastPopoutClipKey || !isPlaying || (nowMs - lastPopoutSyncAtMs) >= 240) {
       lastPopoutClipKey = clipKey;
       lastPopoutSyncAtMs = nowMs;
@@ -1809,8 +2028,9 @@ function syncVideoOutputMonitor({ forcePush = false } = {}) {
         playheadSec,
         syncWallMs: nowMs,
         selectedVideoTrackId: selectedVideoOutputTrackId,
-        videoTracks: vTracks.map(t => ({ id: t.id, name: t.name })),
+        videoTracks: vTracks.map(t => ({ id: t.id, name: isTrackLyrics(t) ? `[KARAOKE] ${t.name}` : t.name })),
         activeClip: activeClipPayload,
+        activeLyricsClip: activeLyricsPayload,
         livePreviewUrl: directMjpegUrl,
         liveSnapshotDataUrl: wantLiveFeed ? videoLiveSnapshotDataUrl : '',
       });
@@ -2705,30 +2925,45 @@ function renderStudio() {
     ).join('');
 
     const isVideoTrk = isTrackVideoCapable(t);
-    const isActiveVidOut = isVideoTrk && selectedVideoOutputTrackId === t.id && (videoDockOpen || videoPopoutOpen);
-    const trackIconKey = isVideoTrk
-      ? 'video'
-      : (t.category === 'drums'
-        ? 'drum'
-        : (/guitar|bass/i.test(`${t.category || ''} ${t.profileId || ''}`) ? 'guitar' : 'mic'));
+    const isLyricsTrk = isTrackLyrics(t);
+    const isVisualOutTrk = isVideoTrk || isLyricsTrk;
+    const isActiveVidOut = isVisualOutTrk && selectedVideoOutputTrackId === t.id && (videoDockOpen || videoPopoutOpen);
+    const trackIconKey = isLyricsTrk
+      ? 'lyrics'
+      : isVideoTrk
+        ? 'video'
+        : (t.category === 'drums'
+          ? 'drum'
+          : (/guitar|bass/i.test(`${t.category || ''} ${t.profileId || ''}`) ? 'guitar' : 'mic'));
+    const kindPillHtml = isLyricsTrk
+      ? '<span class="lyrics-track-pill">LYRICS</span>'
+      : (isVideoTrk ? '<span class="video-track-pill">VIDEO</span>' : '');
     const nameHtml = inlineRenamingTrackId === t.id
       ? `<input type="text" class="inline-rename-input" data-inline-rename="${esc(t.id)}" value="${esc(t.name)}" aria-label="Rename Track" />`
-      : `<span class="track-name-label" data-name-dbl="${esc(t.id)}" title="${esc(t.name)} — Double-click to rename · Right-click for Track Menu">${esc(t.name)}</span>${isVideoTrk ? '<span class="video-track-pill">VIDEO</span>' : ''}`;
+      : `<span class="track-name-label" data-name-dbl="${esc(t.id)}" title="${esc(t.name)} — Double-click to rename · Right-click for Track Menu">${esc(t.name)}</span>${kindPillHtml}`;
 
-    const rightActionBtnHtml = isVideoTrk
-      ? `<button type="button" class="trk-mini-btn strip-btn vid-view-btn ${isActiveVidOut ? 'active' : ''}" data-act="view-video" data-id="${esc(t.id)}" title="Route This Video Track to Video Output Monitor">${DI.svg('eye', 11)}<span>VIEW</span></button>`
+    const rightActionBtnHtml = isVisualOutTrk
+      ? `<button type="button" class="trk-mini-btn strip-btn vid-view-btn ${isActiveVidOut ? 'active' : ''}" data-act="view-video" data-id="${esc(t.id)}" title="Open Karaoke / Video Output Monitor">${DI.svg('eye', 11)}<span>VIEW</span></button>`
       : `<button type="button" class="trk-mini-btn hw-trig ${srOn ? 'sr-on' : ''}" data-act="toggle-sr" data-id="${esc(t.id)}" title="Toggle Open-Source Drum Sound Replacement">${DI.badge('drum-replace', 12)}<span>${srOn ? esc(srPiece) : 'TRIG'}</span></button>`;
 
     const usesCameraOnlyInput = t.trackKind === 'video' && t.videoConfig?.audioMode !== 'interface';
-    const midLineHtml = usesCameraOnlyInput
+    const midLineHtml = isLyricsTrk
       ? `
+            <div class="track-mid-line">
+              <span class="io-micro-tag">MIDI</span>
+              <select class="track-input-select" disabled aria-label="MIDI Karaoke Lyrics Source">
+                <option>${esc(t.clips?.[0]?.lyricsSource || t.inputLabel || 'SMF Format 1 Karaoke (.KAR)')}</option>
+              </select>
+            </div>`
+      : usesCameraOnlyInput
+        ? `
             <div class="track-mid-line">
               <span class="io-micro-tag">CAM</span>
               <select class="track-input-select" disabled aria-label="Video Camera Input">
                 <option>${esc(t.inputLabel || t.videoConfig?.label || 'Video Camera')}</option>
               </select>
             </div>`
-      : `
+        : `
             <div class="track-mid-line">
               <span class="io-micro-tag">IN</span>
               <select class="track-input-select" data-act="input-change" data-id="${esc(t.id)}" aria-label="Track Hardware Input">
@@ -3707,7 +3942,7 @@ function computeTrackStaticCacheKey(track, tIdx, w, h, totalSec, secPerBeat, vie
     const sel = selectedClipIds.has(c.id) ? 1 : 0;
     const hov = hoverLinkedPreview?.clipIds?.has(c.id) ? hoverLinkedPreview.zone : '';
     const drg = timelineDragState?.targetClipIds?.has(c.id) ? timelineDragState.mode : '';
-    clipsSig += `|${c.id}:${c.startSec}:${c.durationSec}:${c.gainDb || 0}:${c.fadeInSec || 0}:${c.fadeOutSec || 0}:${c.muted ? 1 : 0}:${c.peaks?.length || 0}:${c.transients?.length || 0}:${sel}:${hov}:${drg}`;
+    clipsSig += `|${c.id}:${c.startSec}:${c.durationSec}:${c.gainDb || 0}:${c.fadeInSec || 0}:${c.fadeOutSec || 0}:${c.muted ? 1 : 0}:${c.peaks?.length || 0}:${c.transients?.length || 0}:${c.wordCount || 0}:${c.lyricsData?.lines?.length || 0}:${sel}:${hov}:${drg}`;
   }
   return `${w}x${h}:${tIdx}:${viewStart.toFixed(4)}:${totalSec}:${secPerBeat.toFixed(4)}:${track.gainDb || 0}:${waveformZoomDb}:${track.color || ''}:${isTrackSel}:${srOn}${clipsSig}`;
 }
@@ -3926,6 +4161,54 @@ function drawAllTimelineCanvases() {
 
         const peaks = Array.isArray(clip.peaks) ? clip.peaks : [];
         const isVideoRegion = Boolean(clip.videoFile || clip.mediaKind === 'video' || track.trackKind === 'video');
+        const isLyricsRegion = Boolean(clip.mediaKind === 'lyrics' || track.trackKind === 'lyrics' || clip.lyricsData?.lines?.length);
+        if (isLyricsRegion && Array.isArray(clip.lyricsData?.lines)) {
+          // Industry-standard DAW MIDI Lyric Piano-Roll Lane (0xFF 0x05 Word Events + Vocal MIDI Pitch Guide Bars)
+          const bodyTop = regionTop + 19;
+          const bodyH = Math.max(20, regionH - 22);
+          const baseStart = Number(clip.lyricsData.clipBaseStartSec);
+          const shift = Number.isFinite(baseStart) ? ((Number(clip.startSec) || 0) - baseStart) : 0;
+
+          // Subtle horizontal pitch-staff reference lines
+          ctx.strokeStyle = 'rgba(245, 158, 11, 0.11)';
+          ctx.lineWidth = 1;
+          for (let r = 1; r <= 3; r++) {
+            const ry = Math.round(bodyTop + (bodyH * r) / 4) + 0.5;
+            ctx.beginPath();
+            ctx.moveTo(startX, ry);
+            ctx.lineTo(startX + clipW, ry);
+            ctx.stroke();
+          }
+
+          ctx.font = '600 9.5px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+          let lastLabelEndX = -999;
+          for (const line of clip.lyricsData.lines) {
+            const words = Array.isArray(line.words) ? line.words : [];
+            for (const wObj of words) {
+              const ws = (Number(wObj.startSec) || 0) + shift;
+              const we = Math.max(ws + 0.06, (Number(wObj.endSec) || (ws + 0.25)) + shift);
+              const wx = ((ws - viewStart) / totalSec) * w;
+              const ww = Math.max(3, ((we - ws) / totalSec) * w);
+              if (wx + ww < -2 || wx > w + 2) continue;
+
+              const midi = DE.clamp(43, 81, Number(wObj.midiNote) || 60);
+              const normPitch = (midi - 43) / (81 - 43);
+              const noteY = bodyTop + (1 - normPitch) * (bodyH - 9);
+
+              ctx.fillStyle = isMuted ? 'rgba(148, 163, 184, 0.35)' : 'rgba(245, 158, 11, 0.78)';
+              ctx.fillRect(wx, noteY, Math.max(2.5, ww - 1), 6.5);
+              ctx.fillStyle = isMuted ? '#94a3b8' : '#38bdf8';
+              ctx.fillRect(wx, noteY, Math.min(3, ww), 6.5);
+
+              if (wx > lastLabelEndX + 4 && ww >= 9) {
+                const txt = String(wObj.text || '');
+                ctx.fillStyle = isMuted ? '#94a3b8' : '#fef3c7';
+                ctx.fillText(txt, wx + 1, Math.max(bodyTop + 8, noteY - 2.5));
+                lastLabelEndX = wx + ctx.measureText(txt).width + 5;
+              }
+            }
+          }
+        }
         if (isVideoRegion) {
           // Cinema filmstrip sprocket holes along top and bottom rails of video region
           ctx.fillStyle = isMuted ? 'rgba(148, 163, 184, 0.25)' : 'rgba(192, 132, 252, 0.42)';
@@ -4363,6 +4646,92 @@ function renderInspectorDrawer() {
   const gangedBadge = gangedTargets.length > 1
     ? `<span class="selection-status-pill mono" style="margin-left:8px;">GANGED: ${gangedTargets.length} CHANNELS</span>`
     : '';
+
+  if (isTrackLyrics(track)) {
+    const primaryClip = track.clips?.[0] || null;
+    const editorVal = primaryClip?.lrcText || (primaryClip?.lyricsData?.lines || []).map(l => l.text).join('\n') || '';
+    const karPathText = primaryClip?.karFile || 'Generated on save (.kar + .lrc)';
+    drawer.innerHTML = `
+      <div class="inspector-top">
+        <div class="inspector-title-row">
+          ${DI.svg('lyrics', 20)}
+          <div>
+            <strong>MIDI KARAOKE LYRICS INSPECTOR — ${esc(track.name)}</strong>
+            <span class="hint" style="margin-left:10px;">Standard MIDI File Format 1 (<code>0xFF 0x05</code> Lyric Meta-Events) · ${primaryClip?.lineCount || 0} lines · ${primaryClip?.wordCount || 0} synced words</span>
+          </div>
+        </div>
+        <div class="btn-cluster">
+          <button type="button" class="btn btn-sm btn-primary" id="btn-insp-open-karaoke-stage">${DI.svg('eye', 12)}<span>Open Karaoke Video Display</span></button>
+          <button type="button" class="btn btn-sm btn-bevel" id="btn-insp-import-lyrics-file">${DI.svg('folder-open', 12)}<span>Import .KAR / .MID / .LRC...</span></button>
+          <button type="button" class="btn btn-sm btn-bevel" id="btn-insp-close">${DI.svg('close', 12)}<span>Close</span></button>
+        </div>
+      </div>
+      <div class="lyrics-inspector-card">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">
+          <span class="hint">Edit synced Enhanced LRC (<code>[mm:ss.xx] &lt;mm:ss.xx&gt;Word</code>) or paste plain multi-line lyrics to re-align to vocal phrases &amp; write <code>.kar</code>:</span>
+          <span class="mono" style="font-size:10.5px;color:#fcd34d;">${esc(karPathText)}</span>
+        </div>
+        <textarea id="insp-lyrics-textarea" class="lyrics-editor-textarea" spellcheck="false" placeholder="[00:04.00] First karaoke line&#10;[00:08.00] Second karaoke line">${esc(editorVal)}</textarea>
+        <div style="display:flex;justify-content:flex-end;gap:8px;">
+          <button type="button" class="btn btn-sm btn-primary" id="btn-insp-save-lyrics">${DI.svg('check', 12)}<span>Sync &amp; Write MIDI .KAR</span></button>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('btn-insp-close')?.addEventListener('click', () => {
+      selectedTrackId = null;
+      renderStudio();
+    });
+    document.getElementById('btn-insp-open-karaoke-stage')?.addEventListener('click', () => {
+      toggleVideoOutputMonitor(track.id);
+    });
+    document.getElementById('btn-insp-import-lyrics-file')?.addEventListener('click', async () => {
+      const prevSnap = DE.cloneDeep(currentProject);
+      const res = await window.robos.updateLyricsClip({
+        trackId: track.id,
+        clipId: primaryClip?.id || null,
+        browseFile: true,
+        project: currentProject,
+      });
+      if (res?.canceled) return;
+      if (!res?.ok || !res.project) {
+        showStatus(`Import .KAR / .LRC failed: ${res?.error || 'Unknown error'}`, true);
+        return;
+      }
+      historyStack.pushSnapshot(prevSnap, 'Import MIDI Karaoke Lyrics');
+      currentProject = res.project;
+      invalidateStaticTimelineCaches();
+      markDirty(true);
+      renderStudio();
+      syncVideoOutputMonitor({ forcePush: true });
+      showStatus(`Imported karaoke lyrics (${res.clip?.lineCount || 0} lines · ${res.clip?.wordCount || 0} MIDI words) into "${track.name}"`);
+    });
+    document.getElementById('btn-insp-save-lyrics')?.addEventListener('click', async () => {
+      const rawTxt = document.getElementById('insp-lyrics-textarea')?.value || '';
+      const prevSnap = DE.cloneDeep(currentProject);
+      const res = await window.robos.updateLyricsClip({
+        trackId: track.id,
+        clipId: primaryClip?.id || null,
+        lyricsText: rawTxt,
+        project: currentProject,
+      });
+      if (!res?.ok || !res.project) {
+        showStatus(`Failed to rebuild MIDI .KAR lyrics: ${res?.error || 'Unknown error'}`, true);
+        return;
+      }
+      historyStack.pushSnapshot(prevSnap, 'Edit MIDI Karaoke Lyrics');
+      currentProject = res.project;
+      invalidateStaticTimelineCaches();
+      markDirty(true);
+      renderStudio();
+      syncVideoOutputMonitor({ forcePush: true });
+      showStatus(`Updated MIDI .KAR & .LRC lyrics on "${track.name}" (${res.clip?.wordCount || 0} synced words)`);
+    });
+    if (justOpened) {
+      drawer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+    return;
+  }
 
   drawer.innerHTML = `
     <div class="inspector-top">
@@ -5161,6 +5530,72 @@ async function generateClickTrackUnderTrack(track) {
       try { progressUnsub(); } catch {}
     }
     isGeneratingClickTrack = false;
+  }
+}
+
+async function createLyricsTrackUnderTrack(track, { clipId = null } = {}) {
+  if (!track || !currentProject) return;
+  if (isCreatingLyricsTrack) {
+    showStatus('Already creating MIDI-mapped Karaoke Lyrics track — please wait a moment...');
+    return;
+  }
+  const activeClips = (track.clips || []).filter(c => !c.muted && (!clipId || c.id === clipId));
+  if (!activeClips.length) {
+    showStatus(`Track "${track.name}" has no active music/audio regions to map lyrics to.`, true);
+    return;
+  }
+
+  stopPlayback();
+  isCreatingLyricsTrack = true;
+  const prevSnap = DE.cloneDeep(currentProject);
+  showStatus(`Creating MIDI-mapped Karaoke Lyrics (.KAR 0xFF 05) for "${track.name}"...`);
+
+  let progressUnsub = null;
+  if (typeof window.robos?.onLyricsProgress === 'function') {
+    progressUnsub = window.robos.onLyricsProgress((p) => {
+      if (p?.message) showStatus(p.message);
+    });
+  }
+
+  try {
+    const res = await window.robos.createLyricsTrack({
+      trackId: track.id,
+      clipId,
+      project: currentProject,
+    });
+    if (!res?.ok || !res.project) {
+      showStatus(`Create Lyrics Track failed: ${res?.error || 'Unknown error'}`, true);
+      return;
+    }
+
+    historyStack.pushSnapshot(prevSnap, `Create Lyrics Track (${track.name})`);
+    currentProject = res.project;
+    if (res.lyricsTrack?.id) {
+      selectedTrackIds = new Set([res.lyricsTrack.id]);
+      anchorTrackId = res.lyricsTrack.id;
+      // If no video track was already selected, point Video Output to the Karaoke stage and open the Video Display!
+      if (!selectedVideoOutputTrackId || !getVideoCapableTracks().some(t => t.id === selectedVideoOutputTrackId && isTrackVideoCapable(t))) {
+        selectedVideoOutputTrackId = res.lyricsTrack.id;
+      }
+    }
+    selectedClipIds = res.lyricsClip?.id ? new Set([res.lyricsClip.id]) : new Set();
+
+    if (!videoDockOpen && !videoPopoutOpen) {
+      videoDockOpen = true;
+    }
+
+    invalidateStaticTimelineCaches();
+    markDirty(true);
+    renderStudio();
+    syncVideoOutputMonitor({ forcePush: true });
+    showStatus(
+      `Created MIDI Karaoke Track "${res.lyricsTrack?.name}" (${res.lineCount} lines · ${res.wordCount} MIDI 0xFF 05 words via ${res.source}) — press Space to play Karaoke on Video Output!`
+    );
+  } finally {
+    if (typeof progressUnsub === 'function') {
+      try { progressUnsub(); } catch {}
+    }
+    isCreatingLyricsTrack = false;
   }
 }
 
@@ -5983,6 +6418,7 @@ function buildMenubarItems(key) {
       { icon: 'drumset-ai', label: 'DrumSet AI All-Mic Soundcheck...', kbd: '', run: () => openDrumsetWizard() },
       { icon: 'metronome', label: 'Generate Click Track Below Selected (Gemini AI)...', kbd: '', disabled: !primaryTrack || !(primaryTrack.clips || []).some(c => !c.muted), run: () => primaryTrack && generateClickTrackUnderTrack(primaryTrack) },
       { icon: 'drum-replace', label: 'Remove Drums to New Track Below (Gemini AI)...', kbd: '', disabled: !primaryTrack || !(primaryTrack.clips || []).some(c => !c.muted), run: () => primaryTrack && removeDrumsUnderTrack(primaryTrack) },
+      { icon: 'lyrics', label: 'Create Lyrics Track (MIDI Karaoke .KAR)...', kbd: '', disabled: !primaryTrack || !(primaryTrack.clips || []).some(c => !c.muted), run: () => primaryTrack && createLyricsTrackUnderTrack(primaryTrack) },
       { sep: true },
       { icon: 'record', label: `Arm Selected Track(s)${tCnt ? ` (${tCnt})` : ''}`, kbd: 'Shift+R', disabled: tCnt === 0, run: () => armSelectedTracks() },
       { icon: 'stop', label: `Disarm Selected Track(s)${tCnt ? ` (${tCnt})` : ''}`, kbd: '', disabled: tCnt === 0, run: () => disarmSelectedTracks() },
@@ -6369,6 +6805,7 @@ function openTimelineSpaceContextMenu(ev, track, clickTimeSec) {
     ${ctxRow('data-tl-ctx', 'import-here', 'import-wav', 'Import Audio / Video Here...', 'Ctrl+Shift+I')}
     ${track ? ctxRow('data-tl-ctx', 'gen-click', 'metronome', 'Generate Click Track', 'Gemini AI', { disabled: !(track.clips || []).some(c => !c.muted) }) : ''}
     ${track ? ctxRow('data-tl-ctx', 'remove-drums', 'drum-replace', 'Remove Drums', 'Gemini AI', { disabled: !(track.clips || []).some(c => !c.muted) }) : ''}
+    ${track ? ctxRow('data-tl-ctx', 'create-lyrics', 'lyrics', 'Create Lyrics Track', 'MIDI .KAR', { disabled: !(track.clips || []).some(c => !c.muted) }) : ''}
     ${ctxRow('data-tl-ctx', 'split-all-here', 'scissors', `Split All Regions Crossing ${formatTimecode(safeTime)}`)}
     <div class="ctx-sep"></div>
     ${ctxRow('data-tl-ctx', 'toggle-snap', snapToGrid ? 'check' : 'magnet', `Snap to Beat Grid (${snapToGrid ? 'ON' : 'OFF'})`, 'G')}
@@ -6411,6 +6848,8 @@ function openTimelineSpaceContextMenu(ev, track, clickTimeSec) {
         await generateClickTrackUnderTrack(track);
       } else if (cmd === 'remove-drums' && track) {
         await removeDrumsUnderTrack(track);
+      } else if (cmd === 'create-lyrics' && track) {
+        await createLyricsTrackUnderTrack(track);
       } else if (cmd === 'split-all-here') {
         let cnt = 0;
         await commitEdit('Split All Takes at Cursor', () => {
@@ -6461,6 +6900,7 @@ function openTrackContextMenu(ev, track, clickTimeSec = null) {
     </div>
     ${ctxRow('data-ctx', 'gen-click', 'metronome', 'Generate Click Track', 'Gemini AI', { disabled: !(track.clips || []).some(c => !c.muted) })}
     ${ctxRow('data-ctx', 'remove-drums', 'drum-replace', 'Remove Drums', 'Gemini AI', { disabled: !(track.clips || []).some(c => !c.muted) })}
+    ${ctxRow('data-ctx', 'create-lyrics', 'lyrics', 'Create Lyrics Track', 'MIDI .KAR', { disabled: !(track.clips || []).some(c => !c.muted) })}
     ${ctxRow('data-ctx', 'add-below', 'plus', 'Add Blank Audio Track Below', 'Ctrl+T')}
     ${ctxRow('data-ctx', 'rename-track', 'edit', 'Rename Track...', 'F2')}
     ${ctxRow('data-ctx', 'reset-gain', 'faders', 'Reset Input Trim (0.0 dB)', 'DblClick')}
@@ -6515,6 +6955,8 @@ function openTrackContextMenu(ev, track, clickTimeSec = null) {
         await generateClickTrackUnderTrack(track);
       } else if (cmd === 'remove-drums') {
         await removeDrumsUnderTrack(track);
+      } else if (cmd === 'create-lyrics') {
+        await createLyricsTrackUnderTrack(track);
       } else if (cmd === 'add-below') {
         await addBlankAudioTracks(1, { afterTrackId: track.id });
       } else if (cmd === 'rename-track') {
@@ -6626,6 +7068,7 @@ function openTakeContextMenu(ev, track, clip, clickTimeSec) {
     <div class="ctx-sep"></div>
     ${ctxRow('data-take-ctx', 'gen-click', 'metronome', 'Generate Click Track', 'Gemini AI')}
     ${ctxRow('data-take-ctx', 'remove-drums', 'drum-replace', 'Remove Drums', 'Gemini AI')}
+    ${ctxRow('data-take-ctx', 'create-lyrics', 'lyrics', 'Create Lyrics Track', 'MIDI .KAR')}
     ${ctxRow('data-take-ctx', 'split-here', 'scissors', `Split Region${targetClipIds.size > 1 ? 's' : ''} Here (${formatTimecode(clickTimeSec)})`, '', { disabled: !canSplitHere })}
     ${ctxRow('data-take-ctx', 'trim-start-here', 'trim-left', `Trim Start${targetClipIds.size > 1 ? 's' : ''} Here (${formatTimecode(clickTimeSec)})`, '[', { disabled: !canSplitHere })}
     ${ctxRow('data-take-ctx', 'trim-end-here', 'trim-right', `Trim End${targetClipIds.size > 1 ? 's' : ''} Here (${formatTimecode(clickTimeSec)})`, ']', { disabled: !canSplitHere })}
@@ -6743,6 +7186,8 @@ function openTakeContextMenu(ev, track, clip, clickTimeSec) {
         await generateClickTrackUnderTrack(track);
       } else if (cmd === 'remove-drums') {
         await removeDrumsUnderTrack(track);
+      } else if (cmd === 'create-lyrics') {
+        await createLyricsTrackUnderTrack(track, { clipId: targetClipIds.size === 1 ? clip.id : null });
       } else if (cmd === 'split-here') {
         await commitEdit('Split Take', () => {
           const out = DE.splitClipsInProject(currentProject, {

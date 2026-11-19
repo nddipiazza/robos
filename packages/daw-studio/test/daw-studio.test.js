@@ -1603,4 +1603,140 @@ describe('DAW Editing Engine: Multi-Select, Track/Take Gain, Split/Trim, Copy/Pa
       fs.rmSync(tmpVidDir, { recursive: true, force: true });
     }
   });
+
+  it('encodes & parses Standard MIDI Karaoke (.kar SMF Format 1 0xFF 0x05) and creates persistent Karaoke Lyrics tracks', async () => {
+    const prevTestEnv = process.env.ROBOS_TEST;
+    process.env.ROBOS_TEST = '1';
+    const tmpLyrDir = fs.mkdtempSync(path.join(os.tmpdir(), 'robos-daw-lyrics-'));
+    try {
+      const {
+        parseSongArtistAndTitle,
+        encodeMidiKaraokeSmf,
+        parseMidiKaraokeSmf,
+        createLyricsTrackForProject,
+        updateLyricsClipData,
+      } = require('../lib/lyrics-generator');
+
+      // 1. Song title / artist cleaning from imported cover filenames
+      const metaA = parseSongArtistAndTitle('Somebody That I Used To Know by Gotye Meets Metal_mixed [M4A]');
+      assert.strictEqual(metaA.title, 'Somebody That I Used To Know');
+      assert.strictEqual(metaA.artist, 'Gotye');
+
+      const metaB = parseSongArtistAndTitle('Dream Theater - Metropolis Pt. 1 (guitar cover with tabs & chords) [MP4]');
+      assert.strictEqual(metaB.artist, 'Dream Theater');
+      assert.strictEqual(metaB.title, 'Metropolis Pt. 1');
+
+      // 2. Binary SMF Format 1 Karaoke (.kar) 0xFF 0x05 Lyric Meta-Event + MIDI pitch roundtrip
+      const sampleLines = [
+        {
+          startSec: 2.0,
+          endSec: 4.4,
+          text: 'Now and then I think',
+          words: [
+            { text: 'Now', startSec: 2.0, endSec: 2.45, midiNote: 62 },
+            { text: 'and', startSec: 2.45, endSec: 2.85, midiNote: 64 },
+            { text: 'then', startSec: 2.85, endSec: 3.35, midiNote: 65 },
+            { text: 'I', startSec: 3.35, endSec: 3.7, midiNote: 67 },
+            { text: 'think', startSec: 3.7, endSec: 4.4, midiNote: 69 },
+          ],
+        },
+        {
+          startSec: 5.0,
+          endSec: 7.2,
+          text: 'Of when we were together',
+          words: [
+            { text: 'Of', startSec: 5.0, endSec: 5.35, midiNote: 64 },
+            { text: 'when', startSec: 5.35, endSec: 5.75, midiNote: 65 },
+            { text: 'we', startSec: 5.75, endSec: 6.1, midiNote: 67 },
+            { text: 'were', startSec: 6.1, endSec: 6.5, midiNote: 65 },
+            { text: 'together', startSec: 6.5, endSec: 7.2, midiNote: 62 },
+          ],
+        },
+      ];
+
+      const karBuf = encodeMidiKaraokeSmf({
+        lines: sampleLines,
+        bpm: 129,
+        timeSignature: '4/4',
+        title: 'Somebody That I Used To Know',
+        artist: 'Gotye',
+        clipStartSec: 1.5,
+      });
+      assert.strictEqual(karBuf.toString('ascii', 0, 4), 'MThd');
+      assert.strictEqual(karBuf.readUInt16BE(8), 1); // SMF Format 1
+      assert.strictEqual(karBuf.readUInt16BE(10), 2); // Track 0 Conductor + Track 1 Words
+
+      const decodedKar = parseMidiKaraokeSmf(karBuf, { clipStartSec: 1.5 });
+      assert.strictEqual(decodedKar.title, 'Somebody That I Used To Know');
+      assert.strictEqual(decodedKar.artist, 'Gotye');
+      assert.ok(Math.abs(decodedKar.bpm - 129) < 0.25);
+      assert.strictEqual(decodedKar.lines.length, 2);
+      assert.strictEqual(decodedKar.lines[0].text, 'Now and then I think');
+      assert.strictEqual(decodedKar.lines[1].text, 'Of when we were together');
+      assert.strictEqual(decodedKar.lines[0].words[0].midiNote, 62);
+      assert.strictEqual(decodedKar.lines[0].words[4].midiNote, 69);
+      assert.ok(Math.abs(decodedKar.lines[0].words[0].startSec - 2.0) < 0.02);
+
+      // 3. Create Lyrics Track directly below a music track + persist across saveProject -> loadProject
+      const projDir = path.join(tmpLyrDir, 'kar-session');
+      fs.mkdirSync(path.join(projDir, 'takes'), { recursive: true });
+      const wavFile = path.join(projDir, 'takes', 'backing.wav');
+      fs.writeFileSync(wavFile, synthesizeDrumTakeWav({ profileId: 'vocal-condenser', durationSec: 10.0 }));
+
+      const proj = createEmptyProject({ name: 'Karaoke Session', bpm: 128, sampleRate: 48000 });
+      proj.projectDir = projDir;
+      proj.tracks.push({
+        id: 'trk-music-1',
+        name: 'Somebody That I Used To Know by Gotye [MP4]',
+        trackKind: 'audio',
+        color: '#38bdf8',
+        clips: [{
+          id: 'clip-music-1',
+          name: 'Somebody That I Used To Know by Gotye [MP4]',
+          wavFile,
+          startSec: 1.0,
+          offsetSec: 0,
+          durationSec: 10.0,
+          muted: false,
+        }],
+      });
+
+      const created = await createLyricsTrackForProject(proj, 'trk-music-1', {
+        customLyricsText: '[00:01.00] First studio line\n[00:04.50] Second metal chorus line',
+      });
+      assert.strictEqual(created.ok, true);
+      assert.strictEqual(proj.tracks.length, 2);
+      assert.strictEqual(proj.tracks[1].trackKind, 'lyrics');
+      assert.ok(fs.existsSync(created.karFile));
+      assert.ok(fs.existsSync(created.lrcFile));
+      assert.strictEqual(created.lineCount, 2);
+      assert.strictEqual(created.wordCount, 7);
+
+      // Update lyrics via Inspector API and verify .kar rewrites cleanly
+      const updated = updateLyricsClipData(proj, {
+        trackId: created.lyricsTrack.id,
+        lyricsText: '[00:01.20] <00:01.20>Updated <00:01.80>karaoke <00:02.50>words',
+      });
+      assert.strictEqual(updated.ok, true);
+      assert.strictEqual(updated.clip.wordCount, 3);
+
+      // Save to a fresh target directory and reload with lyricsData stripped to prove .kar binary re-hydration!
+      const savedCopyDir = path.join(tmpLyrDir, 'saved-kar-copy');
+      saveProject(proj, { targetDir: savedCopyDir });
+      const mfPath = path.join(savedCopyDir, 'project.json');
+      const rawJson = JSON.parse(fs.readFileSync(mfPath, 'utf8'));
+      delete rawJson.tracks[1].clips[0].lyricsData;
+      fs.writeFileSync(mfPath, JSON.stringify(rawJson, null, 2), 'utf8');
+
+      const reloaded = loadProject(savedCopyDir);
+      const rehydratedClip = reloaded.project.tracks[1].clips[0];
+      assert.ok(rehydratedClip.karFile && fs.existsSync(rehydratedClip.karFile));
+      assert.strictEqual(rehydratedClip.lyricsData.lines.length, 1);
+      assert.strictEqual(rehydratedClip.lyricsData.lines[0].text, 'Updated karaoke words');
+    } finally {
+      if (prevTestEnv === undefined) delete process.env.ROBOS_TEST;
+      else process.env.ROBOS_TEST = prevTestEnv;
+      fs.rmSync(tmpLyrDir, { recursive: true, force: true });
+    }
+  });
 });

@@ -2729,3 +2729,232 @@ kbd {
   border-color: rgba(168, 85, 247, 0.7);
   color: #f3e8ff;
 }
+
+/* ── MIDI-Mapped Karaoke Lyrics Track & RobOS Branded Video Stage ── */
+.lyrics-track-pill {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: rgba(245, 158, 11, 0.18);
+  border: 1px solid rgba(245, 158, 11, 0.52);
+  color: #fde68a;
+  margin-left: 5px;
+}
+.vmon-mode-pill.karaoke {
+  background: rgba(245, 158, 11, 0.18);
+  border-color: rgba(245, 158, 11, 0.52);
+  color: #fde68a;
+}
+.robos-karaoke-stage-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 50% 34%, rgba(0, 212, 255, 0.16) 0%, rgba(245, 158, 11, 0.08) 38%, rgba(7, 11, 18, 0.98) 78%),
+    linear-gradient(180deg, #0b1220 0%, #05080f 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 10px 12px 26px;
+  pointer-events: none;
+  z-index: 1;
+}
+.rk-stage-glow {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(56, 189, 248, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(56, 189, 248, 0.045) 1px, transparent 1px);
+  background-size: 26px 26px;
+  mask-image: radial-gradient(circle at center, rgba(0, 0, 0, 0.85), transparent 82%);
+}
+.rk-brand-header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  z-index: 2;
+}
+.rk-brand-crest {
+  border-radius: 4px;
+  box-shadow: 0 0 10px rgba(0, 212, 255, 0.32);
+}
+.rk-brand-title {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.1px;
+  color: #cbd5e1;
+}
+.rk-midi-pill {
+  margin-left: auto;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 3px;
+  background: rgba(245, 158, 11, 0.16);
+  border: 1px solid rgba(245, 158, 11, 0.44);
+  color: #fcd34d;
+}
+.rk-eq-bars {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 4px;
+  height: 22px;
+  opacity: 0.42;
+  z-index: 2;
+}
+.rk-eq-bars span {
+  width: 4px;
+  height: 6px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, #00d4ff 0%, #f59e0b 100%);
+  transition: height 140ms ease;
+}
+.robos-karaoke-stage-bg.playing .rk-eq-bars span:nth-child(odd) {
+  animation: rkPulseA 0.72s ease-in-out infinite alternate;
+}
+.robos-karaoke-stage-bg.playing .rk-eq-bars span:nth-child(even) {
+  animation: rkPulseB 0.56s ease-in-out infinite alternate;
+}
+@keyframes rkPulseA {
+  from { height: 5px; }
+  to { height: 20px; }
+}
+@keyframes rkPulseB {
+  from { height: 18px; }
+  to { height: 6px; }
+}
+.robos-karaoke-overlay {
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  pointer-events: none;
+  padding: 10px 14px;
+}
+.robos-karaoke-overlay.stage-mode {
+  top: 28px;
+  bottom: 26px;
+  justify-content: center;
+  gap: 7px;
+}
+.robos-karaoke-overlay.over-video {
+  bottom: 0;
+  padding: 14px 14px 26px;
+  gap: 4px;
+  background: linear-gradient(180deg, rgba(4, 7, 13, 0) 0%, rgba(4, 7, 13, 0.78) 38%, rgba(4, 7, 13, 0.93) 100%);
+}
+.rk-song-banner {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  color: #94a3b8;
+  max-width: 92%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.robos-karaoke-overlay.over-video .rk-song-banner {
+  display: none;
+}
+.rk-leadin-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 2px;
+}
+.rk-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(148, 163, 184, 0.28);
+  border: 1px solid rgba(148, 163, 184, 0.45);
+}
+.rk-dot.lit {
+  background: #fbbf24;
+  border-color: #fde68a;
+  box-shadow: 0 0 8px rgba(251, 191, 36, 0.85);
+}
+.rk-current-line {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.28em;
+  font-size: 16.5px;
+  font-weight: 850;
+  line-height: 1.25;
+  letter-spacing: 0.15px;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.92);
+}
+.embedded-video-dock.wide .rk-current-line {
+  font-size: 20px;
+}
+.rk-word {
+  display: inline-block;
+  background-image: linear-gradient(90deg, #38bdf8 0%, #fbbf24 var(--kw-fill, 0%), #e2e8f0 var(--kw-fill, 0%), #e2e8f0 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.85));
+  transition: transform 80ms ease;
+}
+.rk-word.sung {
+  background-image: linear-gradient(90deg, #38bdf8 0%, #fbbf24 100%);
+}
+.rk-word.active {
+  transform: translateY(-1px) scale(1.04);
+}
+.rk-next-line {
+  font-size: 12px;
+  font-weight: 650;
+  color: rgba(203, 213, 225, 0.68);
+  min-height: 15px;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
+}
+.rk-pitch-pill {
+  position: absolute;
+  bottom: 7px;
+  left: 8px;
+  font-size: 9.5px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(8, 13, 22, 0.82);
+  border: 1px solid rgba(245, 158, 11, 0.42);
+  color: #fde68a;
+}
+.lyrics-inspector-card {
+  background: linear-gradient(180deg, #111824 0%, #0b1019 100%);
+  border: 1px solid rgba(245, 158, 11, 0.38);
+  border-radius: 6px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.lyrics-editor-textarea {
+  width: 100%;
+  min-height: 112px;
+  max-height: 220px;
+  resize: vertical;
+  background: #070a10;
+  color: #f1f5f9;
+  border: 1px solid #283548;
+  border-radius: 5px;
+  padding: 8px 10px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11.5px;
+  line-height: 1.45;
+}
+.lyrics-editor-textarea:focus {
+  outline: none;
+  border-color: #f59e0b;
+}

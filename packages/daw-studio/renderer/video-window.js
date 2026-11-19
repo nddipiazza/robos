@@ -11,6 +11,16 @@
   const trackSelEl = document.getElementById('vw-track-select');
   const aotBtn = document.getElementById('vw-btn-aot');
 
+  const karaokeBgEl = document.getElementById('vw-karaoke-bg');
+  const karaokeOverlayEl = document.getElementById('vw-karaoke-overlay');
+  const karaokeSongEl = document.getElementById('vw-karaoke-song');
+  const karaokeDotsEl = document.getElementById('vw-karaoke-dots');
+  const karaokeCurrentEl = document.getElementById('vw-karaoke-current');
+  const karaokeNextEl = document.getElementById('vw-karaoke-next');
+  const karaokePitchEl = document.getElementById('vw-karaoke-pitch');
+
+  const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+
   let state = {
     isPlaying: false,
     isRecording: false,
@@ -19,6 +29,8 @@
     selectedVideoTrackId: '',
     videoTracks: [],
     activeClip: null,
+    activeLyricsClip: null,
+    hasLyricsTrack: false,
     livePreviewUrl: '',
     liveSnapshotDataUrl: '',
     alwaysOnTop: false,
@@ -27,6 +39,7 @@
   let loadedVideoSrc = '';
   let isSeekingVideo = false;
   let pendingSeekSec = null;
+  let renderedLineSig = '';
 
   videoEl.addEventListener('seeking', () => { isSeekingVideo = true; });
   videoEl.addEventListener('seeked', () => {
@@ -37,6 +50,19 @@
       safeSeekVideo(next);
     }
   });
+
+  function escHtml(s) {
+    return String(s ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function midiToNoteName(midi) {
+    const m = Math.max(0, Math.min(127, Math.round(Number(midi) || 60)));
+    return `${NOTE_NAMES[m % 12]}${Math.floor(m / 12) - 1}`;
+  }
 
   function formatTimecode(sec) {
     const safe = Math.max(0, Number(sec) || 0);
@@ -76,8 +102,8 @@
   function renderTrackDropdown() {
     const list = Array.isArray(state.videoTracks) ? state.videoTracks : [];
     const html = list.length
-      ? list.map(t => `<option value="${t.id}" ${t.id === state.selectedVideoTrackId ? 'selected' : ''}>${t.name}</option>`).join('')
-      : '<option value="">No Video Tracks</option>';
+      ? list.map(t => `<option value="${escHtml(t.id)}" ${t.id === state.selectedVideoTrackId ? 'selected' : ''}>${escHtml(t.name)}</option>`).join('')
+      : '<option value="">No Video / Lyrics Tracks</option>';
     if (trackSelEl.innerHTML !== html) {
       trackSelEl.innerHTML = html;
     }
@@ -85,6 +111,130 @@
       trackSelEl.value = state.selectedVideoTrackId;
     }
     aotBtn.classList.toggle('active', Boolean(state.alwaysOnTop));
+  }
+
+  function renderKaraokeFrame(curSec, hasOtherVideoVisual) {
+    const lyrClip = state.activeLyricsClip;
+    if (!lyrClip || !Array.isArray(lyrClip.lines) || !lyrClip.lines.length) {
+      karaokeBgEl?.classList.add('hidden');
+      karaokeOverlayEl?.classList.add('hidden');
+      renderedLineSig = '';
+      return false;
+    }
+
+    if (hasOtherVideoVisual) {
+      karaokeBgEl?.classList.add('hidden');
+      karaokeOverlayEl?.classList.remove('hidden', 'stage-mode');
+      karaokeOverlayEl?.classList.add('over-video');
+    } else {
+      karaokeBgEl?.classList.remove('hidden');
+      karaokeBgEl?.classList.toggle('playing', Boolean(state.isPlaying));
+      karaokeOverlayEl?.classList.remove('hidden', 'over-video');
+      karaokeOverlayEl?.classList.add('stage-mode');
+    }
+
+    const shift = Number(lyrClip.timelineShiftSec) || 0;
+    const lines = lyrClip.lines;
+    let activeIdx = -1;
+
+    for (let i = 0; i < lines.length; i++) {
+      const lStart = (Number(lines[i].startSec) || 0) + shift;
+      const lEnd = (Number(lines[i].endSec) || (lStart + 2)) + shift;
+      const nextStart = i + 1 < lines.length ? ((Number(lines[i + 1].startSec) || 0) + shift) : Infinity;
+      const holdUntil = Math.min(lEnd + 0.65, nextStart - 0.05);
+      if (curSec >= lStart - 2.2 && curSec <= Math.max(lEnd, holdUntil)) {
+        activeIdx = i;
+        if (curSec >= lStart - 0.15) break;
+      }
+    }
+    if (activeIdx === -1) {
+      activeIdx = lines.findIndex(l => ((Number(l.startSec) || 0) + shift) > curSec);
+      if (activeIdx === -1) activeIdx = lines.length - 1;
+    }
+
+    const curLine = lines[activeIdx] || null;
+    const nextLine = lines[activeIdx + 1] || null;
+    if (karaokeSongEl) {
+      const headerTxt = lyrClip.artist ? `${lyrClip.title} — ${lyrClip.artist}` : (lyrClip.title || lyrClip.trackName || 'Karaoke Track');
+      if (karaokeSongEl.textContent !== headerTxt) karaokeSongEl.textContent = headerTxt;
+    }
+
+    if (!curLine) {
+      if (karaokeCurrentEl) karaokeCurrentEl.innerHTML = '';
+      if (karaokeNextEl) karaokeNextEl.textContent = '';
+      karaokeDotsEl?.classList.add('hidden');
+      karaokePitchEl?.classList.add('hidden');
+      return !hasOtherVideoVisual;
+    }
+
+    const lineStart = (Number(curLine.startSec) || 0) + shift;
+    const preSec = lineStart - curSec;
+
+    // 4-dot pre-phrase karaoke lead-in countdown (2.0s -> 0.0s before line starts)
+    if (karaokeDotsEl) {
+      if (preSec > 0.05 && preSec <= 2.2) {
+        karaokeDotsEl.classList.remove('hidden');
+        const litCount = Math.min(4, Math.max(1, Math.ceil(((2.2 - preSec) / 2.2) * 4)));
+        const dots = karaokeDotsEl.querySelectorAll('.rk-dot');
+        dots.forEach((d, idx) => d.classList.toggle('lit', idx < litCount));
+      } else {
+        karaokeDotsEl.classList.add('hidden');
+      }
+    }
+
+    const words = Array.isArray(curLine.words) && curLine.words.length
+      ? curLine.words
+      : [{ text: curLine.text || '', startSec: curLine.startSec, endSec: curLine.endSec, midiNote: 60 }];
+
+    const sig = `${lyrClip.id}:${activeIdx}:${words.length}`;
+    if (renderedLineSig !== sig && karaokeCurrentEl) {
+      renderedLineSig = sig;
+      karaokeCurrentEl.innerHTML = words
+        .map((w, wi) => `<span class="rk-word" data-wi="${wi}">${escHtml(w.text)}</span>`)
+        .join(' ');
+    }
+
+    let activeMidi = null;
+    if (karaokeCurrentEl) {
+      const spans = karaokeCurrentEl.querySelectorAll('.rk-word');
+      for (let wi = 0; wi < words.length; wi++) {
+        const w = words[wi];
+        const ws = (Number(w.startSec) || 0) + shift;
+        const we = Math.max(ws + 0.05, (Number(w.endSec) || (ws + 0.25)) + shift);
+        const sp = spans[wi];
+        if (!sp) continue;
+        if (curSec >= we) {
+          sp.classList.add('sung');
+          sp.classList.remove('active');
+          sp.style.setProperty('--kw-fill', '100%');
+        } else if (curSec >= ws) {
+          const pct = Math.max(0, Math.min(100, ((curSec - ws) / (we - ws)) * 100));
+          sp.classList.remove('sung');
+          sp.classList.add('active');
+          sp.style.setProperty('--kw-fill', `${pct.toFixed(1)}%`);
+          activeMidi = w.midiNote || 60;
+        } else {
+          sp.classList.remove('sung', 'active');
+          sp.style.setProperty('--kw-fill', '0%');
+        }
+      }
+    }
+
+    if (karaokeNextEl) {
+      const nextTxt = nextLine?.text || '';
+      if (karaokeNextEl.textContent !== nextTxt) karaokeNextEl.textContent = nextTxt;
+    }
+
+    if (karaokePitchEl) {
+      if (activeMidi !== null) {
+        karaokePitchEl.classList.remove('hidden');
+        karaokePitchEl.textContent = `${midiToNoteName(activeMidi)} · MIDI ${activeMidi}`;
+      } else {
+        karaokePitchEl.classList.add('hidden');
+      }
+    }
+
+    return !hasOtherVideoVisual;
   }
 
   function applySync(incoming) {
@@ -112,7 +262,7 @@
       const targetSec = (Number(clip.offsetSec) || 0) + intoClip;
 
       if (state.isPlaying) {
-        modePillEl.textContent = 'PLAYING';
+        modePillEl.textContent = state.activeLyricsClip ? 'VIDEO + KARAOKE' : 'PLAYING';
         modePillEl.className = 'vw-mode-pill playing';
         if (Math.abs((videoEl.currentTime || 0) - targetSec) > 0.09) {
           safeSeekVideo(targetSec);
@@ -121,17 +271,17 @@
           videoEl.play().catch(() => {});
         }
       } else {
-        modePillEl.textContent = 'SCRUB';
+        modePillEl.textContent = state.activeLyricsClip ? 'SCRUB · KARAOKE' : 'SCRUB';
         modePillEl.className = 'vw-mode-pill';
         if (!videoEl.paused) videoEl.pause();
         if (Math.abs((videoEl.currentTime || 0) - targetSec) > 0.02) {
           safeSeekVideo(targetSec);
         }
       }
+      renderKaraokeFrame(nowPlayhead, true);
       return;
     }
 
-    // No active clip at playhead — show Live Camera stream/snapshot if available!
     if (!videoEl.paused) videoEl.pause();
     videoEl.classList.add('hidden');
 
@@ -144,27 +294,40 @@
       }
       modePillEl.textContent = state.isRecording ? 'RECORDING CAM' : 'LIVE CAM';
       modePillEl.className = 'vw-mode-pill live';
+      renderKaraokeFrame(nowPlayhead, true);
       return;
     }
 
     liveImgEl.classList.add('hidden');
     if (liveImgEl.src) liveImgEl.removeAttribute('src');
+
+    // No other video playing: if a Lyrics Track is active, show the RobOS Branded Dark Karaoke Stage!
+    const showingKaraokeStage = renderKaraokeFrame(nowPlayhead, false);
+    if (showingKaraokeStage) {
+      slateEl.classList.add('hidden');
+      modePillEl.textContent = state.isPlaying ? 'KARAOKE LIVE' : 'KARAOKE STAGE';
+      modePillEl.className = 'vw-mode-pill karaoke';
+      return;
+    }
+
     slateEl.classList.remove('hidden');
     modePillEl.textContent = state.videoTracks?.length ? 'STANDBY' : 'NO TRACK';
     modePillEl.className = 'vw-mode-pill';
     slateTitleEl.textContent = state.videoTracks?.length
-      ? 'No Video Region at Current Playhead'
-      : 'No Video Tracks in Session';
+      ? 'No Video or Lyrics Region at Current Playhead'
+      : 'No Video or Lyrics Tracks in Session';
     slateSubEl.textContent = state.videoTracks?.length
-      ? 'Move playhead over a video clip or toggle Live Cam in DAW Studio.'
-      : 'Click "+ Add Video" in RobOS DAW Studio to add a RobOS Android IP Cam, ONVIF cam, or USB webcam.';
+      ? 'Move playhead over a video/lyrics clip or toggle Live Cam in DAW Studio.'
+      : 'Click "+ Add Video" or right-click a music track -> "Create Lyrics Track".';
   }
 
   function rafLoop() {
     if (state.isPlaying) {
       const cur = getInterpolatedPlayheadSec();
       tcEl.textContent = formatTimecode(cur);
-      if (state.activeClip && state.activeClip.videoFile && !videoEl.classList.contains('hidden')) {
+      const hasVideo = Boolean(state.activeClip && state.activeClip.videoFile && !videoEl.classList.contains('hidden'));
+      const hasLive = !liveImgEl.classList.contains('hidden');
+      if (hasVideo) {
         const into = cur - (Number(state.activeClip.startSec) || 0);
         const clipDur = Number(state.activeClip.durationSec) || 0;
         if (into >= 0 && (clipDur <= 0 || into <= clipDur + 0.05)) {
@@ -173,6 +336,9 @@
             safeSeekVideo(target);
           }
         }
+      }
+      if (state.activeLyricsClip) {
+        renderKaraokeFrame(cur, hasVideo || hasLive);
       }
     }
     requestAnimationFrame(rafLoop);
