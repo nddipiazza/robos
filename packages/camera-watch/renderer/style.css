@@ -133,6 +133,8 @@ input[type="range"] { width: 100%; accent-color: var(--accent); }
 .pill.motion { color: #fecaca; border-color: var(--danger); background: rgba(239, 68, 68, 0.25); }
 .pill.rec { color: #fff; border-color: var(--danger); background: var(--danger); }
 .pill.error { color: #fca5a5; border-color: rgba(239, 68, 68, 0.5); }
+.pill.batt { color: #fcd34d; border-color: rgba(245, 158, 11, 0.65); background: rgba(245, 158, 11, 0.2); }
+.pill.batt-low { color: #fca5a5; border-color: var(--danger); background: rgba(239, 68, 68, 0.25); }
 
 .empty { text-align: center; padding: 70px 20px; color: var(--text-muted); }
 .empty h2 { color: var(--text); }

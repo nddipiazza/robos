@@ -270,6 +270,9 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     suspend fun fetchCameraFrame(camera: SmartCamera): ByteArray? =
         app.cameras.fetchSnapshot(camera)
 
+    suspend fun fetchCameraPower(camera: SmartCamera) =
+        app.cameras.fetchPowerState(camera)
+
     fun controlCamera(camera: SmartCamera, jsonPayload: String, label: String) {
         viewModelScope.launch {
             val ok = app.cameras.sendRobosControl(camera, jsonPayload)

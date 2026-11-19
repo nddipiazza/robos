@@ -46,6 +46,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.robos.smarthome.core.CameraPowerState
 import com.robos.smarthome.core.HomeState
 import com.robos.smarthome.core.SmartCamera
 import com.robos.smarthome.core.UNASSIGNED_ROOM_ID
@@ -173,6 +174,15 @@ private fun CameraTileCard(
 ) {
     var frame by remember(camera.id) { mutableStateOf<ImageBitmap?>(null) }
     var online by remember(camera.id) { mutableStateOf<Boolean?>(null) }
+    var power by remember(camera.id) { mutableStateOf<CameraPowerState?>(null) }
+
+    LaunchedEffect(camera.id, camera.isRobosIpCamera) {
+        if (!camera.isRobosIpCamera) return@LaunchedEffect
+        while (isActive) {
+            power = vm.fetchCameraPower(camera)
+            delay(4000L)
+        }
+    }
 
     LaunchedEffect(camera.snapshotUrl, fastRefresh) {
         val intervalMs = if (fastRefresh) 350L else 1200L
@@ -236,6 +246,27 @@ private fun CameraTileCard(
                 )
             } else {
                 MutedText(if (online == false) "Camera offline (${camera.host}:${camera.port})" else "Connecting to camera…")
+            }
+
+            if (online == true && power?.isOnBattery == true) {
+                val pct = power?.batteryPercent ?: 0
+                val low = pct <= 20
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .padding(8.dp)
+                        .clip(RoundedCornerShape(999.dp))
+                        .background(if (low) Color(0xDD7F1D1D) else Color(0xDD451A03))
+                        .border(1.dp, if (low) Danger else Color(0xFFF59E0B), RoundedCornerShape(999.dp))
+                        .padding(horizontal = 8.dp, vertical = 3.dp),
+                ) {
+                    Text(
+                        "${if (low) "🪫 Low Battery" else "🔋 On Battery"} · $pct%",
+                        color = if (low) Color(0xFFFCA5A5) else Color(0xFFFCD34D),
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
             }
 
             if (online == true) {

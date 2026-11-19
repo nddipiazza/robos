@@ -45,6 +45,13 @@ data class SavedCameras(
     val cameras: List<SmartCamera> = emptyList(),
 )
 
+data class CameraPowerState(
+    val batteryPercent: Int = -1,
+    val charging: Boolean = false,
+) {
+    val isOnBattery: Boolean get() = batteryPercent in 0..100 && !charging
+}
+
 data class DiscoveredCamera(
     val urn: String,
     val name: String,
@@ -281,6 +288,27 @@ class CameraService(
                 useCaches = false
             }
             if (conn.responseCode == 200) conn.inputStream.use { it.readBytes() } else null
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    suspend fun fetchPowerState(camera: SmartCamera, timeoutMs: Int = 2000): CameraPowerState? = withContext(Dispatchers.IO) {
+        if (!camera.isRobosIpCamera) return@withContext null
+        try {
+            val url = URL("${camera.baseUrl}/api/status")
+            val conn = (binder?.open(url) ?: url.openConnection() as HttpURLConnection).apply {
+                connectTimeout = timeoutMs
+                readTimeout = timeoutMs
+                useCaches = false
+            }
+            if (conn.responseCode != 200) return@withContext null
+            val body = conn.inputStream.use { it.readBytes().toString(StandardCharsets.UTF_8) }
+            val obj = Json.parseToJsonElement(body).jsonObject
+            CameraPowerState(
+                batteryPercent = obj["batteryPercent"]?.jsonPrimitive?.intOrNull ?: -1,
+                charging = obj["charging"]?.jsonPrimitive?.booleanOrNull ?: false,
+            )
         } catch (_: Exception) {
             null
         }

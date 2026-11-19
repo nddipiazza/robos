@@ -117,9 +117,13 @@ function createCameraManager({ configDir, homeDir, spawnFn = spawn, loadMesh = n
     return t;
   }
 
-  function getJson(url, timeoutMs = 10000) {
+  function getJson(url, timeoutMs = 10000, { username = '', password = '' } = {}) {
     return new Promise((resolve, reject) => {
-      const req = http.get(url, (res) => {
+      const headers = {};
+      if (username) {
+        headers.Authorization = `Basic ${Buffer.from(`${username}:${password}`).toString('base64')}`;
+      }
+      const req = http.get(url, { headers }, (res) => {
         let body = '';
         res.on('data', (c) => { body += c; });
         res.on('end', () => {
@@ -131,6 +135,18 @@ function createCameraManager({ configDir, homeDir, spawnFn = spawn, loadMesh = n
       req.setTimeout(timeoutMs, () => req.destroy(new Error('timed out')));
       req.on('error', reject);
     });
+  }
+
+  function resolveRobosStatusUrl(cam) {
+    if (cam.onvif?.hostname) {
+      return `http://${cam.onvif.hostname}:${cam.onvif.port || 8080}/api/status`;
+    }
+    for (const raw of [cam.snapshotUrl, cam.streamUrl]) {
+      if (/^https?:\/\//i.test(raw || '')) {
+        try { return `${new URL(raw).origin}/api/status`; } catch {}
+      }
+    }
+    return '';
   }
 
   async function resolveRemoteInput(cam, attempt) {
@@ -265,7 +281,8 @@ function createCameraManager({ configDir, homeDir, spawnFn = spawn, loadMesh = n
       resolveInput,
       spawnFn,
     });
-    runner.on('status', (s) => emitter.emit('status', s));
+    runner.telemetry = { batteryPercent: -1, charging: false };
+    runner.on('status', (s) => emitter.emit('status', { ...runner.telemetry, ...s }));
     runner.on('score', (s) => emitter.emit('score', s));
     runner.on('log', (line) => emitter.emit('log', line));
     runner.on('motion', (evt) => onMotion(runner.camera, evt));
@@ -295,6 +312,30 @@ function createCameraManager({ configDir, homeDir, spawnFn = spawn, loadMesh = n
     runners.set(cam.id, runner);
     runner.start();
     startCameraEvents(cam);
+
+    const statusUrl = resolveRobosStatusUrl(cam);
+    if (statusUrl) {
+      const pollTelemetry = async () => {
+        if (!runners.has(cam.id)) return;
+        try {
+          const curCam = runner.camera || cam;
+          const res = await getJson(statusUrl, 1500, { username: curCam.username, password: curCam.password });
+          if (res.status === 200 && res.data?.app === 'robos-ip-camera') {
+            const nextBatt = typeof res.data.batteryPercent === 'number' ? res.data.batteryPercent : -1;
+            const nextCharging = Boolean(res.data.charging);
+            if (runner.telemetry.batteryPercent !== nextBatt || runner.telemetry.charging !== nextCharging) {
+              runner.telemetry = { batteryPercent: nextBatt, charging: nextCharging };
+              emitter.emit('status', { ...runner.telemetry, ...runner.status() });
+            }
+          }
+        } catch {}
+      };
+      const initT = setTimeout(pollTelemetry, 400);
+      initT.unref?.();
+      runner._telemetryTimer = setInterval(pollTelemetry, 5000);
+      runner._telemetryTimer.unref?.();
+    }
+
     return runner;
   }
 
@@ -302,7 +343,11 @@ function createCameraManager({ configDir, homeDir, spawnFn = spawn, loadMesh = n
     const r = runners.get(id);
     runners.delete(id);
     motionState.delete(id);
-    if (r) { r.stop(); r.removeAllListeners(); }
+    if (r) {
+      if (r._telemetryTimer) clearInterval(r._telemetryTimer);
+      r.stop();
+      r.removeAllListeners();
+    }
     await closeSession(id);
   }
 
@@ -310,7 +355,7 @@ function createCameraManager({ configDir, homeDir, spawnFn = spawn, loadMesh = n
     const runner = runners.get(cam.id);
     return {
       ...publicCamera(cam),
-      status: runner ? runner.status() : { cameraId: cam.id, state: cam.enabled ? 'connecting' : 'disabled', error: '' },
+      status: runner ? { ...runner.telemetry, ...runner.status() } : { cameraId: cam.id, state: cam.enabled ? 'connecting' : 'disabled', error: '' },
       shareViewers: cam.share?.enabled ? shareServer.viewerCount(cam.id) : 0,
       // g changes when the camera is restarted, which closes open live streams.
       liveUrl: `${server.baseUrl}/live/${cam.id}?t=${server.token}&g=${runner?.generation || 0}`,

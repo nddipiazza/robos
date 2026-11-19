@@ -324,6 +324,11 @@ function renderBrowserViewerHtml({ cameras, initialCameraId }) {
     .pills { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
     .pill { background: #1f2630; border: 1px solid #30363d; border-radius: 999px; padding: 4px 10px; font-size: 12px; color: #c9d1d9; }
     .pill.motion { background: rgba(239,68,68,0.2); border-color: #ef4444; color: #fca5a5; font-weight: 700; }
+    .pill.battery { background: rgba(245,158,11,0.18); border-color: rgba(245,158,11,0.65); color: #fcd34d; font-weight: 700; }
+    .pill.battery-low { background: rgba(239,68,68,0.22); border-color: #ef4444; color: #fca5a5; font-weight: 700; }
+    .stage-hud { position: absolute; top: 12px; right: 12px; display: flex; gap: 8px; align-items: center; pointer-events: none; z-index: 4; }
+    .stage-badge { backdrop-filter: blur(6px); background: rgba(13,17,23,0.84); border: 1px solid rgba(245,158,11,0.75); color: #fcd34d; border-radius: 999px; padding: 5px 12px; font-size: 12.5px; font-weight: 700; box-shadow: 0 4px 14px rgba(0,0,0,0.45); }
+    .stage-badge.low { border-color: #ef4444; color: #fca5a5; background: rgba(127,29,29,0.82); }
     .cam-tabs { display: flex; gap: 8px; padding: 10px 18px 0; flex-wrap: wrap; }
     .cam-tab { background: #161b22; color: #c9d1d9; border: 1px solid #30363d; border-radius: 999px; padding: 6px 14px; font-size: 13px; font-weight: 600; cursor: pointer; }
     .cam-tab.active { background: #00bcd4; color: #04222a; border-color: #00bcd4; }
@@ -389,6 +394,9 @@ function renderBrowserViewerHtml({ cameras, initialCameraId }) {
   <main>
     <div class="stage" id="stage">
       <img id="live-img" alt="Live surveillance feed" />
+      <div class="stage-hud">
+        <span class="stage-badge" id="stage-battery" style="display:none"></span>
+      </div>
       <div class="overlay-msg" id="overlay-msg">Connecting to live camera…</div>
     </div>
 
@@ -525,9 +533,22 @@ function renderBrowserViewerHtml({ cameras, initialCameraId }) {
           document.getElementById('cam-sub').textContent = cam.room + ' · RobOS Live Camera';
         }
         const pwr = document.getElementById('p-power');
-        if (typeof cam.batteryPercent === 'number' && cam.batteryPercent >= 0) {
+        const stageBatt = document.getElementById('stage-battery');
+        const onBattery = typeof cam.batteryPercent === 'number' && cam.batteryPercent >= 0 && !cam.charging;
+        if (onBattery) {
+          const isLow = cam.batteryPercent <= 20;
+          const label = (isLow ? '🪫 Low Battery · ' : '🔋 On Battery · ') + cam.batteryPercent + '%';
           pwr.style.display = '';
-          pwr.textContent = cam.batteryPercent + '%' + (cam.charging ? ' ⚡' : '') + (cam.temperatureC > 0 ? ' · ' + cam.temperatureC.toFixed(0) + '°C' : '');
+          pwr.className = 'pill ' + (isLow ? 'battery-low' : 'battery');
+          pwr.textContent = label;
+          if (stageBatt) {
+            stageBatt.style.display = '';
+            stageBatt.className = 'stage-badge' + (isLow ? ' low' : '');
+            stageBatt.textContent = label;
+          }
+        } else {
+          pwr.style.display = 'none';
+          if (stageBatt) stageBatt.style.display = 'none';
         }
         document.getElementById('p-motion').style.display = cam.motion ? '' : 'none';
         const torchBtn = document.getElementById('btn-torch');

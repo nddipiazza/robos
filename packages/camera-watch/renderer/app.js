@@ -128,7 +128,7 @@ function renderLive() {
       tile.innerHTML = `
         <img alt="" />
         <div class="tile-msg"></div>
-        <div class="tile-label"><span class="t-name"></span><span class="spacer"></span><span class="pill t-rec hidden rec">REC</span><span class="pill t-motion hidden motion">MOTION</span><span class="pill t-state"></span></div>
+        <div class="tile-label"><span class="t-name"></span><span class="spacer"></span><span class="pill t-batt hidden batt"></span><span class="pill t-rec hidden rec">REC</span><span class="pill t-motion hidden motion">MOTION</span><span class="pill t-state"></span></div>
         <div class="tile-foot"><span class="t-fps"></span><div class="tile-meter"><div></div></div></div>`;
       tile.addEventListener('click', () => openFocus(cam.id));
       tile.addEventListener('dblclick', (e) => { e.stopPropagation(); tile.requestFullscreen?.(); });
@@ -156,6 +156,17 @@ function updateTile(cam) {
   pill.className = `pill t-state ${lbl.cls}`;
   tile.querySelector('.t-motion').classList.toggle('hidden', !st.motion);
   tile.querySelector('.t-rec').classList.toggle('hidden', !st.recording);
+  const battEl = tile.querySelector('.t-batt');
+  if (battEl) {
+    const onBatt = typeof st.batteryPercent === 'number' && st.batteryPercent >= 0 && !st.charging;
+    battEl.classList.toggle('hidden', !onBatt);
+    if (onBatt) {
+      const low = st.batteryPercent <= 20;
+      battEl.className = `pill t-batt ${low ? 'batt-low' : 'batt'}`;
+      battEl.textContent = `${low ? '🪫' : '🔋'} ${st.batteryPercent}%`;
+      battEl.title = `Running on battery power (${st.batteryPercent}%)`;
+    }
+  }
   tile.classList.toggle('motion', Boolean(st.motion));
   tile.querySelector('.t-fps').textContent = st.state === 'live' && st.fps ? `${st.fps} fps` : '';
   const msg = tile.querySelector('.tile-msg');
@@ -220,6 +231,16 @@ function updateFocus() {
   const pill = $('focus-state');
   pill.textContent = st.motion ? 'MOTION' : lbl.text;
   pill.className = `pill ${st.motion ? 'motion' : lbl.cls}`;
+  const focusBatt = $('focus-battery');
+  if (focusBatt) {
+    const onBatt = typeof st.batteryPercent === 'number' && st.batteryPercent >= 0 && !st.charging;
+    focusBatt.classList.toggle('hidden', !onBatt);
+    if (onBatt) {
+      const low = st.batteryPercent <= 20;
+      focusBatt.className = `pill ${low ? 'batt-low' : 'batt'}`;
+      focusBatt.textContent = `${low ? '🪫 Low Battery' : '🔋 On Battery'} · ${st.batteryPercent}%`;
+    }
+  }
   const rec = $('focus-record');
   rec.textContent = st.recording ? 'Stop recording' : 'Record';
   rec.classList.toggle('recording', Boolean(st.recording));

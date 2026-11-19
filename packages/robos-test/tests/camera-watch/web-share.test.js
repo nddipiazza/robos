@@ -115,8 +115,12 @@ describe('Camera Watch Google-Gated Web Browser Mode & Cloudflare Capability Gat
       const authedHeaders = { ...cfHeaders, cookie: sessionPair };
       const page = await httpRequest(`${info.localUrl}/`, { headers: authedHeaders });
       assert.strictEqual(page.status, 200);
-      assert.match(page.body.toString('utf8'), /XT2125-4 Camera/);
-      assert.match(page.body.toString('utf8'), /pumpFrames/);
+      const pageHtml = page.body.toString('utf8');
+      assert.match(pageHtml, /XT2125-4 Camera/);
+      assert.match(pageHtml, /pumpFrames/);
+      assert.match(pageHtml, /stage-battery/);
+      assert.match(pageHtml, /On Battery/);
+      assert.match(pageHtml, /!cam\.charging/);
 
       const camsRes = await httpRequest(`${info.localUrl}/api/cameras`, { headers: authedHeaders });
       assert.strictEqual(camsRes.status, 200);

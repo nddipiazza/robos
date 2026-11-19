@@ -715,9 +715,13 @@ class HttpOnvifServer(
     .pills { display: flex; flex-wrap: wrap; gap: 8px; }
     .pill { background: #1f2630; border: 1px solid #30363d; padding: 4px 10px; border-radius: 999px; font-size: 12px; color: #e6edf3; }
     .pill.motion { border-color: #ef4444; color: #fca5a5; }
+    .pill.batt { background: rgba(245,158,11,0.18); border-color: rgba(245,158,11,0.65); color: #fcd34d; font-weight: 700; }
+    .pill.batt-low { background: rgba(239,68,68,0.22); border-color: #ef4444; color: #fca5a5; font-weight: 700; }
     main { max-width: 1120px; margin: 20px auto; padding: 0 16px; }
-    .stage { background: #05070a; border: 1px solid #30363d; border-radius: 12px; overflow: hidden; display: flex; justify-content: center; align-items: center; min-height: 280px; }
+    .stage { position: relative; background: #05070a; border: 1px solid #30363d; border-radius: 12px; overflow: hidden; display: flex; justify-content: center; align-items: center; min-height: 280px; }
     .stage img { width: 100%; height: auto; max-height: 76vh; object-fit: contain; display: block; }
+    .stage-batt { position: absolute; top: 12px; right: 12px; backdrop-filter: blur(6px); background: rgba(13,17,23,0.84); border: 1px solid rgba(245,158,11,0.75); color: #fcd34d; border-radius: 999px; padding: 5px 12px; font-size: 12.5px; font-weight: 700; pointer-events: none; }
+    .stage-batt.low { border-color: #ef4444; color: #fca5a5; background: rgba(127,29,29,0.82); }
     .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
     a.btn, button.btn { background: #161b22; color: #e6edf3; border: 1px solid #30363d; padding: 8px 14px; border-radius: 8px; text-decoration: none; font-size: 13px; cursor: pointer; }
     a.btn.primary { background: #00bcd4; color: #04222a; border-color: #00bcd4; font-weight: 600; }
@@ -738,11 +742,14 @@ class HttpOnvifServer(
       <span class="pill" id="p-res">${st.width}×${st.height}</span>
       <span class="pill" id="p-fps">${st.measuredFps} fps</span>
       <span class="pill" id="p-viewers">${st.activeViewers} watching</span>
-      <span class="pill" id="p-batt">${if (st.batteryPercent >= 0) "${st.batteryPercent}%${if (st.charging) " ⚡" else ""}" else "Power OK"}</span>
+      <span class="pill ${if (st.batteryPercent in 0..20) "batt-low" else "batt"}" id="p-batt" style="${if (st.batteryPercent >= 0 && !st.charging) "" else "display:none"}">${if (st.batteryPercent >= 0 && !st.charging) "${if (st.batteryPercent <= 20) "🪫 Low Battery" else "🔋 On Battery"} · ${st.batteryPercent}%" else ""}</span>
     </div>
   </header>
   <main>
-    <div class="stage"><img src="/video" alt="Live camera stream" /></div>
+    <div class="stage">
+      <img src="/video" alt="Live camera stream" />
+      <span class="stage-batt${if (st.batteryPercent in 0..20) " low" else ""}" id="stage-batt" style="${if (st.batteryPercent >= 0 && !st.charging) "" else "display:none"}">${if (st.batteryPercent >= 0 && !st.charging) "${if (st.batteryPercent <= 20) "🪫 Low Battery" else "🔋 On Battery"} · ${st.batteryPercent}%" else ""}</span>
+    </div>
     <div class="actions">
       <a class="btn primary" href="/snapshot.jpg" download="snapshot.jpg">Save Snapshot</a>
       <button class="btn" onclick="act({toggleTorch:true})">Toggle Flashlight</button>
@@ -768,8 +775,20 @@ class HttpOnvifServer(
         document.getElementById('p-res').textContent = s.width + '×' + s.height + (s.zoomRatio > 1.05 ? ' · ' + s.zoomRatio.toFixed(1) + 'x' : '');
         document.getElementById('p-fps').textContent = s.fps.toFixed(1) + ' fps';
         document.getElementById('p-viewers').textContent = s.activeViewers + ' watching';
-        if (s.batteryPercent >= 0) {
-          document.getElementById('p-batt').textContent = s.batteryPercent + '%' + (s.charging ? ' ⚡' : '') + (s.temperatureC > 0 ? ' · ' + s.temperatureC.toFixed(0) + '°C' : '');
+        const battEl = document.getElementById('p-batt');
+        const stageBattEl = document.getElementById('stage-batt');
+        if (s.batteryPercent >= 0 && !s.charging) {
+          const low = s.batteryPercent <= 20;
+          const txt = (low ? '🪫 Low Battery · ' : '🔋 On Battery · ') + s.batteryPercent + '%';
+          battEl.style.display = '';
+          battEl.className = 'pill ' + (low ? 'batt-low' : 'batt');
+          battEl.textContent = txt;
+          stageBattEl.style.display = '';
+          stageBattEl.className = 'stage-batt' + (low ? ' low' : '');
+          stageBattEl.textContent = txt;
+        } else {
+          battEl.style.display = 'none';
+          stageBattEl.style.display = 'none';
         }
       } catch {}
     }, 2500);

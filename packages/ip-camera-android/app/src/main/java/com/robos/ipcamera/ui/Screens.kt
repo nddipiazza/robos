@@ -188,6 +188,26 @@ fun LiveScreen(
                         )
                     }
 
+                    if (status.batteryPercent in 0..100 && !status.charging) {
+                        val isLow = status.batteryPercent <= 20
+                        Row(
+                            modifier = Modifier
+                                .align(Alignment.TopStart)
+                                .padding(8.dp)
+                                .clip(RoundedCornerShape(999.dp))
+                                .background(if (isLow) Color(0xDD7F1D1D) else Color(0xDD451A03))
+                                .border(1.dp, if (isLow) Danger else Warning, RoundedCornerShape(999.dp))
+                                .padding(horizontal = 10.dp, vertical = 4.dp),
+                        ) {
+                            Text(
+                                "${if (isLow) "🪫 Low Battery" else "🔋 On Battery"} · ${status.batteryPercent}%",
+                                color = if (isLow) Color(0xFFFCA5A5) else Color(0xFFFCD34D),
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                            )
+                        }
+                    }
+
                     if (status.motionActive) {
                         Row(
                             modifier = Modifier
@@ -888,9 +908,10 @@ fun BlackoutOverlay(
                 fontWeight = FontWeight.Light,
             )
             Spacer(Modifier.height(4.dp))
+            val battNote = if (status.batteryPercent in 0..100 && !status.charging) " · 🔋 ${status.batteryPercent}% Battery" else ""
             Text(
-                "● ${config.cameraName} · ${status.wifiIp.ifBlank { "No Wi-Fi" }}:${status.port} · ${status.activeViewers} watching",
-                color = Color(0xFF1E5560),
+                "● ${config.cameraName} · ${status.wifiIp.ifBlank { "No Wi-Fi" }}:${status.port} · ${status.activeViewers} watching$battNote",
+                color = if (status.batteryPercent in 0..20 && !status.charging) Color(0xFF991B1B) else Color(0xFF1E5560),
                 fontSize = 12.sp,
             )
             Spacer(Modifier.height(6.dp))
