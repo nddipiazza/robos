@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline'; img-src 'self' data: blob: file: http: https:; media-src 'self' data: blob: file: http: https:;" />
+  <title>RobOS DAW Studio — Video Output</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background: #07090d;
+      color: #e2e8f0;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      user-select: none;
+    }
+    .vw-bar {
+      height: 38px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 10px;
+      background: linear-gradient(180deg, #161c26 0%, #0e131b 100%);
+      border-bottom: 1px solid #263143;
+    }
+    .vw-badge {
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.7px;
+      padding: 3px 7px;
+      border-radius: 4px;
+      background: rgba(168, 85, 247, 0.18);
+      border: 1px solid rgba(168, 85, 247, 0.45);
+      color: #e9d5ff;
+      white-space: nowrap;
+    }
+    .vw-select {
+      height: 26px;
+      min-width: 170px;
+      max-width: 280px;
+      background: #090d14;
+      color: #f1f5f9;
+      border: 1px solid #2b3648;
+      border-radius: 4px;
+      padding: 0 8px;
+      font-size: 11.5px;
+      font-weight: 600;
+    }
+    .vw-tc {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 13px;
+      font-weight: 700;
+      color: #00d4ff;
+      background: #05070b;
+      border: 1px solid #1e293b;
+      border-radius: 4px;
+      padding: 2px 8px;
+      letter-spacing: 0.4px;
+    }
+    .vw-mode-pill {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 4px;
+      background: rgba(148, 163, 184, 0.14);
+      border: 1px solid rgba(148, 163, 184, 0.28);
+      color: #cbd5e1;
+    }
+    .vw-mode-pill.playing {
+      background: rgba(34, 197, 94, 0.16);
+      border-color: rgba(34, 197, 94, 0.45);
+      color: #86efac;
+    }
+    .vw-mode-pill.live {
+      background: rgba(239, 68, 68, 0.18);
+      border-color: rgba(239, 68, 68, 0.48);
+      color: #fca5a5;
+    }
+    .vw-spacer { flex: 1; }
+    .vw-btn {
+      height: 26px;
+      padding: 0 9px;
+      border-radius: 4px;
+      border: 1px solid #2f3b4e;
+      background: linear-gradient(180deg, #222b3a 0%, #171e29 100%);
+      color: #dbe4f0;
+      font-size: 11px;
+      font-weight: 650;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      white-space: nowrap;
+    }
+    .vw-btn:hover {
+      border-color: #4b5d7a;
+      color: #ffffff;
+    }
+    .vw-btn.active {
+      border-color: rgba(0, 212, 255, 0.6);
+      background: rgba(0, 212, 255, 0.16);
+      color: #67e8f9;
+    }
+    .vw-stage {
+      flex: 1;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at center, #0e131c 0%, #05070a 100%);
+      min-height: 0;
+    }
+    #vw-video, #vw-live-img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      background: #000;
+    }
+    .hidden { display: none !important; }
+    .vw-slate {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      color: #64748b;
+      font-size: 12.5px;
+      text-align: center;
+      padding: 20px;
+      pointer-events: none;
+    }
+    .vw-slate strong {
+      color: #cbd5e1;
+      font-size: 13.5px;
+    }
+  </style>
+</head>
+<body>
+  <header class="vw-bar">
+    <span class="vw-badge">VIDEO OUT</span>
+    <select id="vw-track-select" class="vw-select" aria-label="Active Video Output Track"></select>
+    <span id="vw-timecode" class="vw-tc">00:00.000</span>
+    <span id="vw-mode-pill" class="vw-mode-pill">READY</span>
+    <div class="vw-spacer"></div>
+    <button type="button" class="vw-btn" id="vw-btn-aot" title="Keep Video Output Window Always on Top">Pin Top</button>
+    <button type="button" class="vw-btn" id="vw-btn-fullscreen" title="Toggle Fullscreen Video (F11)">Fullscreen</button>
+    <button type="button" class="vw-btn" id="vw-btn-dock" title="Close Pop-Out Window and Dock Video Back into DAW">Dock in DAW</button>
+  </header>
+
+  <main class="vw-stage" id="vw-stage">
+    <video id="vw-video" muted playsinline preload="auto" class="hidden"></video>
+    <img id="vw-live-img" alt="" class="hidden" />
+    <div id="vw-empty-slate" class="vw-slate">
+      <strong id="vw-slate-title">No Video Region at Playhead</strong>
+      <span id="vw-slate-sub">Play or scrub over a recorded/imported video region, or enable Live Cam preview.</span>
+    </div>
+  </main>
+
+  <script src="video-window.js"></script>
+</body>
+</html>

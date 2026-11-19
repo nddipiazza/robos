@@ -60,6 +60,12 @@ const {
   ensureFormatExtension,
   transcodeMixdownBuffer,
 } = require('./lib/mixdown-exporter');
+const {
+  discoverAllVideoSources,
+  captureVideoSourceSnapshot,
+  buildVideoTrack,
+  VideoTrackRecorder,
+} = require('./lib/video-devices');
 
 // Ensure user CLI bin directories (where `agy`, `gemini`, `claude`, `copilot` live) are in PATH
 for (const extraBin of [
@@ -115,6 +121,8 @@ if (process.env.ROBOS_TEST !== '1' && !app.requestSingleInstanceLock()) {
 }
 
 let mainWindow = null;
+let videoOutputWindow = null;
+let latestVideoSyncPayload = null;
 let hotplugTimer = null;
 let lastUsbSignature = '';
 let lastProcCardsSignature = '';
@@ -130,6 +138,7 @@ function readProcCardsSignature() {
 
 const tapDetector = new MultiChannelTapDetector();
 const recorder = new MultiTrackRecorder();
+const videoRecorder = new VideoTrackRecorder();
 const soundcheckRecorder = new SoundcheckSessionRecorder();
 let lastSoundcheckSession = null;
 
@@ -249,9 +258,16 @@ function createWindow() {
     if (recorder.isRecording()) {
       recorder.stop().catch(() => {});
     }
+    if (videoRecorder.isRecording()) {
+      videoRecorder.cancel().catch(() => {});
+    }
     if (soundcheckRecorder.isRecording()) {
       soundcheckRecorder.cancel().catch(() => {});
     }
+    if (videoOutputWindow && !videoOutputWindow.isDestroyed()) {
+      try { videoOutputWindow.close(); } catch {}
+    }
+    videoOutputWindow = null;
     mainWindow = null;
   });
 }
@@ -323,9 +339,11 @@ ipcMain.handle('daw:get-studio-init', async () => {
     lastUsbSignature = computeSignature(audioSnapshot);
     const project = ensureCurrentProject(audioSnapshot);
     const providers = (aiAgent?.PROVIDERS || []).map(p => ({ id: p.id, name: p.name }));
+    const videoSources = await discoverAllVideoSources({ scanLan: false }).catch(() => []);
     return {
       ok: true,
       audioSnapshot,
+      videoSources,
       micProfiles: MIC_PROFILES,
       drumkitsStatus: inspectInstalledKits(),
       vstDirsStatus: getVstDirectoriesSnapshot(),
@@ -792,11 +810,17 @@ ipcMain.handle('daw:record-start', async (_e, payload) => {
       injectTestSignal,
       onMeter: (m) => sendToRenderer('daw:record-progress', m),
     });
+    const vidStarted = videoRecorder.start(proj, {
+      startSec,
+      injectTestSignal,
+    });
     if (!injectTestSignal) {
       await recorder.waitCaptureReady(280);
     }
     return {
       ...started,
+      armedVideoCount: vidStarted.armedVideoCount || 0,
+      videoEntries: vidStarted.entries || [],
       firstSampleMicWallMs: recorder.getFirstSampleMicWallMs(),
     };
   } catch (err) {
@@ -810,14 +834,25 @@ ipcMain.handle('daw:record-stop', async (_e, payload) => {
     const earsStartWallMs = rawEars !== null && rawEars !== undefined && Number.isFinite(Number(rawEars))
       ? Number(rawEars)
       : null;
+    const injectTestSignal = Boolean(payload?.injectTestSignal);
     const res = await recorder.stop({
-      injectTestSignal: Boolean(payload?.injectTestSignal),
+      injectTestSignal,
       earsStartWallMs,
+    });
+    const vidRes = await videoRecorder.stop({
+      injectTestSignal,
+      earsStartWallMs,
+      audioRecordedClips: res.recordedClips || [],
+      importMediaFileToWavFn: importMediaFileToWav,
+      computeWaveformPeaksFn: computeWaveformPeaks,
     });
     if (res.ok && res.project) {
       currentProject = res.project;
     }
-    return res;
+    return {
+      ...res,
+      recordedVideoClips: vidRes.recordedVideoClips || [],
+    };
   } catch (err) {
     return { ok: false, error: err.message };
   }
@@ -825,8 +860,14 @@ ipcMain.handle('daw:record-stop', async (_e, payload) => {
 
 ipcMain.handle('daw:record-cancel', async () => {
   try {
-    const res = await recorder.cancel();
-    return res;
+    const [res, vidCancel] = await Promise.all([
+      recorder.cancel(),
+      videoRecorder.cancel(),
+    ]);
+    return {
+      ...res,
+      deletedVideoFiles: vidCancel?.deletedFiles || 0,
+    };
   } catch (err) {
     return { ok: false, error: err.message };
   }
@@ -1076,6 +1117,10 @@ ipcMain.handle('daw:import-audio-files', async (_e, payload) => {
           armed: false,
         });
         // Flat full-range 20 Hz–20 kHz strip so imported backing MP3/MP4 songs retain full sub-bass & dynamics
+        if (importRes.mediaKind === 'video') {
+          destTrack.trackKind = 'video';
+          destTrack.category = 'video';
+        }
         destTrack.color = importRes.mediaKind === 'video' ? '#8b5cf6' : '#06b6d4';
         destTrack.volume = 0.88;
         if ((proj.tracks || []).some(t => t.soloed)) {
@@ -1105,6 +1150,7 @@ ipcMain.handle('daw:import-audio-files', async (_e, payload) => {
         name: rawExt && rawExt.toLowerCase() !== '.wav' ? `${baseTitle} [${fmtTag}]` : baseTitle,
         sourceFile: srcPath,
         mediaKind: importRes.mediaKind,
+        ...(importRes.mediaKind === 'video' ? { videoFile: srcPath, videoFileExists: true } : {}),
         wavFile: destPath,
         relativeWavPath: path.join('takes', destFileName),
         fileExists: true,
@@ -1296,6 +1342,159 @@ ipcMain.handle('daw:open-session-folder', async () => {
     return { ok: true, projectDir: projDir };
   } catch (err) {
     return { ok: false, error: err.message };
+  }
+});
+
+// ─── Video Mode: Video Input Discovery, Track Creation & Pop-Out Video Output Window ───
+
+ipcMain.handle('daw:video-discover', async (_e, payload) => {
+  try {
+    const sources = await discoverAllVideoSources({
+      scanLan: Boolean(payload?.scanLan),
+      timeoutMs: Number(payload?.timeoutMs) || 1500,
+    });
+    return { ok: true, sources };
+  } catch (err) {
+    return { ok: false, error: err.message, sources: [] };
+  }
+});
+
+ipcMain.handle('daw:video-snapshot', async (_e, payload) => {
+  try {
+    return await captureVideoSourceSnapshot(payload?.videoConfig || payload || {});
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('daw:add-video-track', async (_e, payload) => {
+  try {
+    const snap = audioDevices?.getAudioDevicesSnapshot?.() || null;
+    const proj = ensureCurrentProject(snap);
+    const track = buildVideoTrack(payload || {});
+    proj.tracks.push(track);
+    return { ok: true, track, project: proj };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+function createOrFocusVideoOutputWindow(initialPayload) {
+  if (initialPayload && typeof initialPayload === 'object') {
+    latestVideoSyncPayload = { ...(latestVideoSyncPayload || {}), ...initialPayload };
+  }
+
+  if (videoOutputWindow && !videoOutputWindow.isDestroyed()) {
+    if (videoOutputWindow.isMinimized()) videoOutputWindow.restore();
+    videoOutputWindow.focus();
+    if (latestVideoSyncPayload) {
+      try { videoOutputWindow.webContents.send('daw:video-sync-state', latestVideoSyncPayload); } catch {}
+    }
+    return videoOutputWindow;
+  }
+
+  const iconPng = path.join(__dirname, 'icon.png');
+  videoOutputWindow = new BrowserWindow({
+    width: 860,
+    height: 540,
+    minWidth: 420,
+    minHeight: 280,
+    title: 'RobOS DAW Studio — Video Output',
+    backgroundColor: '#07090d',
+    icon: fs.existsSync(iconPng) ? iconPng : path.join(__dirname, 'icon.svg'),
+    webPreferences: {
+      preload: path.join(__dirname, 'video-preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+    },
+  });
+
+  videoOutputWindow.setMenuBarVisibility(false);
+  videoOutputWindow.loadFile(path.join(__dirname, 'renderer', 'video-window.html'));
+
+  videoOutputWindow.webContents.on('did-finish-load', () => {
+    if (latestVideoSyncPayload && videoOutputWindow && !videoOutputWindow.isDestroyed()) {
+      try {
+        videoOutputWindow.webContents.send('daw:video-sync-state', {
+          ...latestVideoSyncPayload,
+          alwaysOnTop: videoOutputWindow.isAlwaysOnTop(),
+        });
+      } catch {}
+    }
+  });
+
+  videoOutputWindow.on('closed', () => {
+    const dockRequested = Boolean(videoOutputWindow?._dockBackRequested);
+    videoOutputWindow = null;
+    sendToRenderer('daw:video-window-state', { open: false, dockToEmbedded: dockRequested });
+  });
+
+  sendToRenderer('daw:video-window-state', {
+    open: true,
+    alwaysOnTop: videoOutputWindow.isAlwaysOnTop(),
+  });
+  return videoOutputWindow;
+}
+
+ipcMain.handle('daw:video-window-open', async (_e, payload) => {
+  try {
+    const win = createOrFocusVideoOutputWindow(payload);
+    return { ok: true, open: true, alwaysOnTop: win.isAlwaysOnTop() };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('daw:video-window-close', async () => {
+  if (videoOutputWindow && !videoOutputWindow.isDestroyed()) {
+    videoOutputWindow._dockBackRequested = false;
+    videoOutputWindow.close();
+  }
+  return { ok: true, open: false };
+});
+
+ipcMain.handle('daw:video-window-dock', async () => {
+  if (videoOutputWindow && !videoOutputWindow.isDestroyed()) {
+    videoOutputWindow._dockBackRequested = true;
+    videoOutputWindow.close();
+  } else {
+    sendToRenderer('daw:video-window-state', { open: false, dockToEmbedded: true });
+  }
+  return { ok: true };
+});
+
+ipcMain.handle('daw:video-window-get-state', async () => {
+  return {
+    ...(latestVideoSyncPayload || {}),
+    alwaysOnTop: Boolean(videoOutputWindow && !videoOutputWindow.isDestroyed() && videoOutputWindow.isAlwaysOnTop()),
+  };
+});
+
+ipcMain.handle('daw:video-window-toggle-aot', async () => {
+  if (!videoOutputWindow || videoOutputWindow.isDestroyed()) {
+    return { ok: false, alwaysOnTop: false };
+  }
+  const next = !videoOutputWindow.isAlwaysOnTop();
+  videoOutputWindow.setAlwaysOnTop(next);
+  return { ok: true, alwaysOnTop: next };
+});
+
+ipcMain.handle('daw:video-window-select-track', async (_e, payload) => {
+  if (payload?.trackId) {
+    sendToRenderer('daw:video-select-track-from-popout', { trackId: payload.trackId });
+  }
+  return { ok: true };
+});
+
+ipcMain.on('daw:video-window-sync', (_e, payload) => {
+  latestVideoSyncPayload = payload || null;
+  if (videoOutputWindow && !videoOutputWindow.isDestroyed() && latestVideoSyncPayload) {
+    try {
+      videoOutputWindow.webContents.send('daw:video-sync-state', {
+        ...latestVideoSyncPayload,
+        alwaysOnTop: videoOutputWindow.isAlwaysOnTop(),
+      });
+    } catch {}
   }
 });
 

@@ -2544,3 +2544,188 @@ kbd {
   background: rgba(239, 68, 68, 0.35);
   color: #ffffff;
 }
+
+/* ── Video Mode: Embedded Video Output Dock, Video Tracks & Add Video Modal ── */
+.arrangement-stage-split {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  gap: 8px;
+}
+.timeline-scroll-area {
+  min-width: 0;
+}
+#btn-topbar-video-monitor.active {
+  border-color: rgba(168, 85, 247, 0.65);
+  background: linear-gradient(180deg, rgba(168, 85, 247, 0.24) 0%, rgba(168, 85, 247, 0.09) 100%);
+  color: #f3e8ff;
+}
+.embedded-video-dock {
+  width: 368px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 9px;
+  background: linear-gradient(180deg, #131823 0%, #0b0e15 100%);
+  border: 1px solid #293548;
+  border-radius: 7px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+  min-height: 0;
+}
+.embedded-video-dock.wide {
+  width: 520px;
+}
+.vmon-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.vmon-title-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.vmon-badge {
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.65px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(168, 85, 247, 0.2);
+  border: 1px solid rgba(168, 85, 247, 0.48);
+  color: #e9d5ff;
+}
+.vmon-mode-pill {
+  font-size: 9.5px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(148, 163, 184, 0.14);
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  color: #cbd5e1;
+}
+.vmon-mode-pill.playing {
+  background: rgba(34, 197, 94, 0.16);
+  border-color: rgba(34, 197, 94, 0.45);
+  color: #86efac;
+}
+.vmon-mode-pill.live {
+  background: rgba(239, 68, 68, 0.18);
+  border-color: rgba(239, 68, 68, 0.48);
+  color: #fca5a5;
+}
+.vmon-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.vmon-track-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.vmon-select {
+  flex: 1;
+  height: 26px;
+  font-size: 11.5px;
+  padding: 2px 7px;
+}
+.vmon-stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #05070b;
+  border: 1px solid #222c3c;
+  border-radius: 6px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#embedded-video-el,
+#embedded-live-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #000;
+}
+.vmon-slate {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 14px;
+  text-align: center;
+  color: #64748b;
+  font-size: 11px;
+  pointer-events: none;
+}
+.vmon-slate strong {
+  color: #cbd5e1;
+  font-size: 12px;
+}
+.vmon-hud-tc {
+  position: absolute;
+  bottom: 7px;
+  right: 8px;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: rgba(5, 7, 11, 0.82);
+  border: 1px solid rgba(0, 212, 255, 0.35);
+  color: #67e8f9;
+  font-size: 11px;
+  font-weight: 700;
+  pointer-events: none;
+}
+.vid-preview-box {
+  position: relative;
+  margin-top: 9px;
+  width: 100%;
+  height: 168px;
+  border-radius: 6px;
+  border: 1px solid #263244;
+  background: #06080d;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#vid-modal-preview-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.vid-preview-placeholder {
+  color: #64748b;
+  font-size: 11.5px;
+  text-align: center;
+  padding: 12px;
+}
+.vid-preview-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+}
+.video-track-pill {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: rgba(168, 85, 247, 0.2);
+  border: 1px solid rgba(168, 85, 247, 0.45);
+  color: #e9d5ff;
+  margin-left: 5px;
+}
+.strip-btn.vid-view-btn.active {
+  background: rgba(168, 85, 247, 0.28);
+  border-color: rgba(168, 85, 247, 0.7);
+  color: #f3e8ff;
+}

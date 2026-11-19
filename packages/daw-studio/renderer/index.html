@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' data: blob: file:;" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline'; img-src 'self' data: blob: file: http: https:; media-src 'self' data: blob: file: http: https:;" />
   <title>RobOS DAW Studio</title>
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -30,6 +30,10 @@
       <div class="topbar-right">
         <span class="crumb" id="header-crumb" style="display:none;">Workstation / Arrangement</span>
         <div class="hw-pill" id="header-hw-pill" role="button" tabindex="0" title="Hardware I/O &amp; Audio Device Settings (Ctrl+,)">Scanning audio bus...</div>
+        <button type="button" class="btn btn-sm btn-bevel" id="btn-topbar-video-monitor" title="Toggle Video Output Monitor — Embedded Dock or Standalone App Window (V)">
+          <svg class="daw-svg-icon" width="13.5" height="13.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+          <span>Video Out</span>
+        </button>
         <button type="button" class="btn btn-sm btn-bevel" id="btn-topbar-audio-devices" title="Hardware I/O &amp; Audio Device Preferences (Ctrl+, or 2)">
           <img src="assets/icons/audio-interface.webp" class="daw-ai-badge" width="15" height="15" alt="" />
           <span>Audio I/O</span>
@@ -131,6 +135,10 @@
             </div>
 
             <div class="studio-cta-group">
+              <button type="button" class="btn btn-bevel btn-wizard-cta" id="btn-open-add-video-modal" title="Add a Video Input Track — RobOS Android IP Camera, ONVIF LAN Camera, or USB Webcam (+ Optional Audio)">
+                <svg class="daw-svg-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+                <span>Add Video</span>
+              </button>
               <button type="button" class="btn btn-accent-outline btn-wizard-cta" id="btn-open-drumset-wizard" title="Arm all Focusrite + ADAT mics, play your drum set, and auto-classify every channel with Gemini">
                 <img src="assets/icons/drumset-ai.webp" class="daw-ai-badge" width="17" height="17" alt="" />
                 <span>DrumSet AI</span>
@@ -180,6 +188,10 @@
                   <button type="button" class="btn btn-sm btn-primary" id="btn-quick-add-track" title="Add Blank Audio Track on Next Hardware Input (Ctrl+T)">
                     <svg class="daw-svg-icon" width="12.5" height="12.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                     <span>Track</span>
+                  </button>
+                  <button type="button" class="btn btn-sm btn-bevel" id="btn-quick-add-video" title="Add Video Input Track — RobOS Android IP Cam, ONVIF, or USB Webcam">
+                    <svg class="daw-svg-icon" width="12.5" height="12.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+                    <span>Video</span>
                   </button>
                   <button type="button" class="btn btn-sm btn-bevel" id="btn-quick-import-media" title="Import or Drag &amp; Drop Audio/Video Files — MP3, MP4, WAV, FLAC, M4A, MKV, MOV, OGG, WebM... (Ctrl+Shift+I)">
                     <svg class="daw-svg-icon" width="12.5" height="12.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -255,21 +267,57 @@
               </div>
             </div>
 
-            <div class="timeline-scroll-area" id="timeline-scroll-area">
-              <div class="timeline-header-row">
-                <div class="track-header-col-title" id="track-header-col-title" title="Right-click for Track Rack Menu">
-                  <label class="select-all-tracks-lbl" title="Select / Deselect All Tracks (Ctrl+Shift+A)">
-                    <input type="checkbox" id="chk-select-all-tracks" />
-                    <span>CHANNELS (<span id="tracks-header-count">0</span>)</span>
-                  </label>
-                  <span class="rack-subhint">Multi-Select · Right-Click</span>
+            <div class="arrangement-stage-split">
+              <div class="timeline-scroll-area" id="timeline-scroll-area">
+                <div class="timeline-header-row">
+                  <div class="track-header-col-title" id="track-header-col-title" title="Right-click for Track Rack Menu">
+                    <label class="select-all-tracks-lbl" title="Select / Deselect All Tracks (Ctrl+Shift+A)">
+                      <input type="checkbox" id="chk-select-all-tracks" />
+                      <span>CHANNELS (<span id="tracks-header-count">0</span>)</span>
+                    </label>
+                    <span class="rack-subhint">Multi-Select · Right-Click</span>
+                  </div>
+                  <div class="timeline-ruler-wrap" id="timeline-ruler-wrap">
+                    <canvas id="timeline-ruler-canvas" height="32"></canvas>
+                  </div>
                 </div>
-                <div class="timeline-ruler-wrap" id="timeline-ruler-wrap">
-                  <canvas id="timeline-ruler-canvas" height="32"></canvas>
-                </div>
+
+                <div id="tracks-list" class="tracks-list"></div>
               </div>
 
-              <div id="tracks-list" class="tracks-list"></div>
+              <!-- Embedded Video Output Monitor Dock (can pop out into standalone App Window!) -->
+              <aside id="embedded-video-dock" class="embedded-video-dock hidden" aria-label="Video Output Monitor">
+                <div class="vmon-head">
+                  <div class="vmon-title-row">
+                    <span class="vmon-badge">VIDEO OUTPUT</span>
+                    <span class="vmon-mode-pill mono" id="vmon-mode-pill">READY</span>
+                  </div>
+                  <div class="vmon-actions">
+                    <button type="button" class="btn btn-sm btn-bevel" id="btn-vmon-live-cam" title="Preview Live Camera Feed When Stopped or Armed">Live Cam</button>
+                    <button type="button" class="btn btn-sm btn-bevel" id="btn-vmon-wide" title="Toggle Compact / Wide Embedded Video Size">Wide</button>
+                    <button type="button" class="btn btn-sm btn-primary" id="btn-vmon-popout" title="Detach Video Output into Its Own Standalone App Window">
+                      <svg class="daw-svg-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                      <span>Pop Out</span>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-bevel" id="btn-vmon-close" title="Hide Video Output Monitor (V)">&times;</button>
+                  </div>
+                </div>
+
+                <div class="vmon-track-row">
+                  <label for="vmon-track-select" class="lcd-micro-lbl">VIEW TRACK</label>
+                  <select id="vmon-track-select" class="select vmon-select"></select>
+                </div>
+
+                <div class="vmon-stage" id="vmon-stage">
+                  <video id="embedded-video-el" muted playsinline preload="auto" class="hidden"></video>
+                  <img id="embedded-live-img" alt="" class="hidden" />
+                  <div id="embedded-video-slate" class="vmon-slate">
+                    <strong id="vmon-slate-title">No Video Region at Playhead</strong>
+                    <span id="vmon-slate-sub">Play/scrub a video track, click "+ Add Video", or toggle Live Cam.</span>
+                  </div>
+                  <div class="vmon-hud-tc mono" id="vmon-timecode">00:00.000</div>
+                </div>
+              </aside>
             </div>
           </div>
 
@@ -998,6 +1046,93 @@
         <div class="modal-footer-right">
           <button type="button" class="btn btn-bevel" id="btn-export-modal-cancel">Cancel</button>
           <button type="button" class="btn btn-primary" id="btn-export-confirm">Export Audio Mixdown...</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL 7: ADD VIDEO INPUT TRACK ==================== -->
+  <div id="add-video-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="add-video-modal-title">
+    <div class="modal-window export-modal-window">
+      <div class="modal-header">
+        <div class="modal-title-row">
+          <svg class="daw-svg-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+          <div>
+            <h2 id="add-video-modal-title">Add Video Input Track</h2>
+            <p class="modal-subtitle">Record a RobOS Android IP Camera, ONVIF network camera, or local USB webcam + optional audio</p>
+          </div>
+        </div>
+        <button type="button" class="modal-close" id="btn-vid-modal-close" aria-label="Close Add Video Dialog">&times;</button>
+      </div>
+
+      <div class="modal-body export-modal-body">
+        <div class="export-section-card">
+          <div class="export-sec-head">
+            <span class="mini-heading" style="margin:0;">1. VIDEO DEVICE / IP CAMERA SOURCE</span>
+            <button type="button" class="btn btn-sm btn-bevel" id="btn-vid-scan-lan">Scan LAN (ONVIF / RobOS Android Cam)</button>
+          </div>
+
+          <div class="form-row">
+            <label for="vid-source-select">Discovered Cameras &amp; Webcams</label>
+            <select id="vid-source-select" class="select"></select>
+          </div>
+
+          <div id="vid-custom-url-fields" class="hidden">
+            <div class="form-row">
+              <label for="vid-custom-url-input">Stream URL or Device Path (<code>http://ip:8080/video</code>, <code>rtsp://...</code>, or <code>/dev/video0</code>)</label>
+              <input type="text" id="vid-custom-url-input" class="text-input mono" placeholder="http://192.168.1.65:8080/video" />
+            </div>
+            <div class="export-range-inputs-row">
+              <div class="form-row" style="flex:1;margin-bottom:0;">
+                <label for="vid-auth-user">Camera Username (Optional)</label>
+                <input type="text" id="vid-auth-user" class="text-input" placeholder="Optional" />
+              </div>
+              <div class="form-row" style="flex:1;margin-bottom:0;">
+                <label for="vid-auth-pass">Camera Password (Optional)</label>
+                <input type="password" id="vid-auth-pass" class="text-input" placeholder="Optional" />
+              </div>
+            </div>
+          </div>
+
+          <div class="vid-preview-box">
+            <img id="vid-modal-preview-img" alt="" class="hidden" />
+            <div id="vid-modal-preview-placeholder" class="vid-preview-placeholder">Select a camera and click Preview Frame to verify feed</div>
+            <button type="button" class="btn btn-sm btn-bevel vid-preview-btn" id="btn-vid-refresh-preview">Preview Frame</button>
+          </div>
+        </div>
+
+        <div class="export-section-card">
+          <div class="export-sec-head">
+            <span class="mini-heading" style="margin:0;">2. TRACK LABEL &amp; OPTIONAL AUDIO PAIRING</span>
+          </div>
+
+          <div class="export-range-inputs-row">
+            <div class="form-row" style="flex:1;margin-bottom:0;">
+              <label for="vid-track-name-input">Video Track Name</label>
+              <input type="text" id="vid-track-name-input" class="text-input" value="Drum Cam 1" />
+            </div>
+            <div class="form-row" style="flex:1.25;margin-bottom:0;">
+              <label for="vid-audio-mode-select">Audio Capture (Optional)</label>
+              <select id="vid-audio-mode-select" class="select">
+                <option value="none" selected>Video Only (No Audio — Use Studio Mic Tracks)</option>
+                <option value="interface">Record Paired Audio Interface Input (+ DAW Mixer)</option>
+                <option value="stream">Record Camera Stream Audio (RTSP / Stream Mic)</option>
+              </select>
+            </div>
+          </div>
+
+          <div id="vid-audio-interface-row" class="form-row hidden" style="margin-top:9px;margin-bottom:0;">
+            <label for="vid-audio-input-select">Paired PipeWire / Focusrite Audio Input</label>
+            <select id="vid-audio-input-select" class="select"></select>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <span class="hint" id="vid-modal-status">Ready to add video input channel.</span>
+        <div class="modal-footer-right">
+          <button type="button" class="btn btn-bevel" id="btn-vid-modal-cancel">Cancel</button>
+          <button type="button" class="btn btn-primary" id="btn-vid-confirm-add">+ Add Armed Video Track</button>
         </div>
       </div>
     </div>

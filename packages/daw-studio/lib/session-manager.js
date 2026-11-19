@@ -146,7 +146,7 @@ function saveProject(project, { targetDir } = {}) {
 
   const { projectDir, takesDir } = ensureProjectDir(project);
 
-  // Ensure every clip's `.wav` lives inside `<projectDir>/takes/<fileName>`
+  // Ensure every clip's `.wav` (and optional `.mp4` / video file) lives inside `<projectDir>/takes/<fileName>`
   const normalizedTracks = (project.tracks || []).map(track => {
     const clips = (track.clips || []).map(clip => {
       let relWav = clip.relativeWavPath || (clip.wavFile ? path.join('takes', path.basename(clip.wavFile)) : null);
@@ -164,10 +164,33 @@ function saveProject(project, { targetDir } = {}) {
           fs.copyFileSync(oldAbs, destAbs);
         }
       }
+
+      let relVid = clip.relativeVideoPath || null;
+      let destVidAbs = clip.videoFile || null;
+      if (clip.videoFile && fs.existsSync(clip.videoFile)) {
+        const vidInsideAnyTakes = path.basename(path.dirname(clip.videoFile)) === 'takes';
+        if (relVid || vidInsideAnyTakes) {
+          const vidFileName = path.basename(clip.videoFile);
+          relVid = path.join('takes', vidFileName);
+          destVidAbs = path.join(takesDir, vidFileName);
+          if (path.resolve(clip.videoFile) !== path.resolve(destVidAbs)) {
+            fs.copyFileSync(clip.videoFile, destVidAbs);
+          }
+        }
+      } else if (prevDir && relVid) {
+        const oldVidAbs = path.join(prevDir, relVid);
+        const nextVidAbs = path.join(projectDir, relVid);
+        if (fs.existsSync(oldVidAbs) && path.resolve(oldVidAbs) !== path.resolve(nextVidAbs)) {
+          fs.copyFileSync(oldVidAbs, nextVidAbs);
+        }
+        destVidAbs = nextVidAbs;
+      }
+
       return {
         ...clip,
         relativeWavPath: relWav,
         wavFile: destAbs,
+        ...(destVidAbs ? { videoFile: destVidAbs, relativeVideoPath: relVid } : {}),
       };
     });
     return { ...track, clips };
@@ -220,10 +243,18 @@ function loadProject(idOrPath) {
     if (track.gainDb === undefined) track.gainDb = 0;
     for (const clip of (track.clips || [])) {
       const rel = clip.relativeWavPath || (clip.wavFile ? path.join('takes', path.basename(clip.wavFile)) : null);
-      const abs = rel ? path.join(projectDir, rel) : clip.wavFile;
+      const abs = rel ? path.join(projectDir, rel) : (clip.wavFile || null);
       clip.relativeWavPath = rel;
       clip.wavFile = abs;
       clip.fileExists = Boolean(abs && fs.existsSync(abs));
+
+      // Hydrate recorded or imported video clip paths
+      if (clip.relativeVideoPath) {
+        clip.videoFile = path.join(projectDir, clip.relativeVideoPath);
+      } else if (!clip.videoFile && clip.mediaKind === 'video' && clip.sourceFile && fs.existsSync(clip.sourceFile)) {
+        clip.videoFile = clip.sourceFile;
+      }
+      clip.videoFileExists = Boolean(clip.videoFile && fs.existsSync(clip.videoFile));
       if (clip.offsetSec === undefined) clip.offsetSec = 0;
       if (clip.gainDb === undefined) clip.gainDb = 0;
       if (clip.fadeInSec === undefined) clip.fadeInSec = 0;
@@ -487,17 +518,57 @@ class MultiTrackRecorder {
   start(project, { startSec = 0, injectTestSignal = false, onMeter } = {}) {
     if (this.active) throw new Error('Recording is already in progress');
     const allArmed = (project.tracks || []).filter(t => t.armed);
+    const armedVideoTracks = allArmed.filter(t => t.trackKind === 'video');
+    const audioCandidateArmed = allArmed.filter(
+      t => t.trackKind !== 'video' || t.videoConfig?.audioMode === 'interface'
+    );
     // Do not overwrite pure imported backing-media tracks (no hardware input assigned) when mic tracks are armed
-    const hasHardwareArmed = allArmed.some(t => Boolean(t.inputNodeName));
+    const hasHardwareArmed = audioCandidateArmed.some(t => Boolean(t.inputNodeName));
     const armedTracks = hasHardwareArmed
-      ? allArmed.filter(t => Boolean(t.inputNodeName) || !(t.clips || []).some(c => c.sourceFile || c.mediaKind))
-      : allArmed;
-    if (!armedTracks.length) {
-      throw new Error('No tracks are armed for recording. Arm at least one mic track [R] first.');
+      ? audioCandidateArmed.filter(t => Boolean(t.inputNodeName) || !(t.clips || []).some(c => c.sourceFile || c.mediaKind))
+      : audioCandidateArmed;
+    if (!armedTracks.length && !armedVideoTracks.length) {
+      throw new Error('No tracks are armed for recording. Arm at least one mic or video track [R] first.');
     }
 
     const { takesDir } = ensureProjectDir(project);
     const sampleRate = Number(project.sampleRate) || 48000;
+
+    // Video-only recording pass (0 PipeWire audio channels armed, >= 1 video track armed)
+    if (!armedTracks.length) {
+      const startedAtMs = Date.now();
+      const sliceDurationSec = 0.02;
+      const timer = setInterval(() => {
+        if (!onMeter) return;
+        const elapsedSec = (Date.now() - startedAtMs) / 1000;
+        try {
+          onMeter({ elapsedSec, startSec, sliceDurationSec, tracks: [] });
+        } catch {}
+      }, 40);
+      this.active = {
+        project,
+        startSec: Number(startSec) || 0,
+        sampleRate,
+        startedAtMs,
+        sliceDurationSec,
+        injectTestSignal: Boolean(injectTestSignal),
+        entries: [],
+        capture: {
+          startedAtMs,
+          sliceDurationSec,
+          waitReady: () => Promise.resolve(null),
+          getFirstSampleMicWallMs: () => null,
+          stop: async () => { clearInterval(timer); },
+        },
+      };
+      return {
+        ok: true,
+        armedCount: armedVideoTracks.length,
+        startSec: this.active.startSec,
+        sliceDurationSec,
+        tracks: [],
+      };
+    }
 
     const entries = armedTracks.map(track => {
       const clipId = makeId('take');

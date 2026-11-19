@@ -1484,4 +1484,123 @@ describe('DAW Editing Engine: Multi-Select, Track/Take Gain, Split/Trim, Copy/Pa
       fs.rmSync(tmpExpDir, { recursive: true, force: true });
     }
   });
+
+  it('discovers RobOS Android IP Cameras & V4L2 devices, records Video-Only & Video+Audio takes, and persists MP4 clips', async () => {
+    const {
+      readCameraWatchSavedSources,
+      listLocalV4l2VideoDevices,
+      buildVideoTrack,
+      probeVideoFileInfo,
+      VideoTrackRecorder,
+    } = require('../lib/video-devices');
+    const { importMediaFileToWav } = require('../lib/media-importer');
+
+    const tmpVidDir = fs.mkdtempSync(path.join(os.tmpdir(), 'daw-video-mode-'));
+    try {
+      // 1. Verify Camera Watch + RobOS Android IP Camera discovery & V4L2 metadata sub-node filtering
+      const mockCwJson = path.join(tmpVidDir, 'cameras.json');
+      fs.writeFileSync(mockCwJson, JSON.stringify({
+        version: 1,
+        cameras: [
+          {
+            id: 'cam-android',
+            name: 'XT2125-4 Drum Cam',
+            kind: 'onvif',
+            enabled: true,
+            streamUrl: 'http://192.168.1.65:8080/video',
+            snapshotUrl: 'http://192.168.1.65:8080/snapshot.jpg',
+            onvif: { hostname: '192.168.1.65', port: 8080, manufacturer: 'RobOS', model: 'motorola XT2125-4' },
+          },
+          {
+            id: 'cam-win-only',
+            name: 'Windows DShow Cam',
+            kind: 'device',
+            enabled: true,
+            device: { format: 'dshow', name: 'OBSBOT' },
+          },
+        ],
+      }));
+      const cwSources = readCameraWatchSavedSources(mockCwJson);
+      assert.strictEqual(cwSources.length, 1);
+      assert.strictEqual(cwSources[0].isRobosAndroidCam, true);
+      assert.strictEqual(cwSources[0].streamUrl, 'http://192.168.1.65:8080/video');
+
+      const fakeDev = path.join(tmpVidDir, 'dev');
+      const fakeSys = path.join(tmpVidDir, 'sys');
+      fs.mkdirSync(path.join(fakeSys, 'video0'), { recursive: true });
+      fs.mkdirSync(path.join(fakeSys, 'video1'), { recursive: true });
+      fs.mkdirSync(fakeDev, { recursive: true });
+      fs.writeFileSync(path.join(fakeDev, 'video0'), '');
+      fs.writeFileSync(path.join(fakeDev, 'video1'), '');
+      fs.writeFileSync(path.join(fakeSys, 'video0', 'name'), 'Studio Overhead UVC');
+      fs.writeFileSync(path.join(fakeSys, 'video0', 'index'), '0\n');
+      fs.writeFileSync(path.join(fakeSys, 'video1', 'name'), 'Studio Overhead UVC');
+      fs.writeFileSync(path.join(fakeSys, 'video1', 'index'), '1\n');
+      const v4lList = listLocalV4l2VideoDevices(fakeDev, fakeSys);
+      assert.strictEqual(v4lList.length, 1);
+      assert.strictEqual(v4lList[0].shortName, 'Studio Overhead UVC');
+
+      // 2. Test Video-Only Recording (`audioMode: 'none'`, 0 audio tracks armed!)
+      const projDir = path.join(tmpVidDir, 'vid-proj');
+      const proj = createEmptyProject({ name: 'Drum Cam Video Session', sampleRate: 48000 });
+      proj.projectDir = projDir;
+      const vidOnlyTrack = buildVideoTrack({
+        name: 'Moto G100 Drum Cam',
+        videoConfig: cwSources[0],
+        audioMode: 'none',
+        armed: true,
+      });
+      const vidStreamAudioTrack = buildVideoTrack({
+        name: 'Overhead Cam + Stream Mic',
+        videoConfig: cwSources[0],
+        audioMode: 'stream',
+        armed: true,
+      });
+      proj.tracks.push(vidOnlyTrack, vidStreamAudioTrack);
+
+      const audioRec = new MultiTrackRecorder();
+      const vidRec = new VideoTrackRecorder();
+      const startAudio = audioRec.start(proj, { startSec: 2.0, injectTestSignal: true });
+      const startVid = vidRec.start(proj, { startSec: 2.0, injectTestSignal: true });
+      assert.strictEqual(startAudio.ok, true);
+      assert.strictEqual(startVid.armedVideoCount, 2);
+
+      await new Promise(r => setTimeout(r, 420));
+      const stopAudio = await audioRec.stop({ injectTestSignal: true });
+      const stopVid = await vidRec.stop({
+        injectTestSignal: true,
+        audioRecordedClips: stopAudio.recordedClips || [],
+        importMediaFileToWavFn: importMediaFileToWav,
+        computeWaveformPeaksFn: computeWaveformPeaks,
+      });
+      assert.strictEqual(stopVid.recordedVideoClips.length, 2);
+
+      const clipNoAudio = proj.tracks[0].clips[0];
+      assert.strictEqual(clipNoAudio.mediaKind, 'video');
+      assert.strictEqual(clipNoAudio.hasAudio, false);
+      assert.strictEqual(clipNoAudio.wavFile, null);
+      assert.ok(fs.existsSync(clipNoAudio.videoFile));
+      const pNoAudio = await probeVideoFileInfo(clipNoAudio.videoFile);
+      assert.strictEqual(pNoAudio.hasVideo, true);
+      assert.strictEqual(pNoAudio.hasAudio, false);
+
+      const clipWithStreamAudio = proj.tracks[1].clips[0];
+      assert.strictEqual(clipWithStreamAudio.mediaKind, 'video');
+      assert.strictEqual(clipWithStreamAudio.hasAudio, true);
+      assert.ok(clipWithStreamAudio.wavFile && fs.existsSync(clipWithStreamAudio.wavFile));
+      assert.ok(clipWithStreamAudio.peaks.length > 0);
+
+      // 3. Persist & reload project to verify MP4 video paths survive saveProject -> loadProject
+      const savedDir = path.join(tmpVidDir, 'saved-vid-proj');
+      saveProject(proj, { targetDir: savedDir });
+      const reloaded = loadProject(savedDir);
+      assert.strictEqual(reloaded.ok, true);
+      const reloadedClip = reloaded.project.tracks[0].clips[0];
+      assert.strictEqual(reloadedClip.videoFileExists, true);
+      assert.ok(reloadedClip.videoFile.startsWith(savedDir));
+      assert.ok(fs.existsSync(reloadedClip.videoFile));
+    } finally {
+      fs.rmSync(tmpVidDir, { recursive: true, force: true });
+    }
+  });
 });

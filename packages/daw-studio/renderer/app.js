@@ -107,6 +107,21 @@ let scArmedInputsList = [];
 let scClassifications = [];
 let scLastProviderLabel = '';
 
+// Video Mode State (Video Inputs + Embedded / Standalone Pop-Out Video Output Monitor)
+let discoveredVideoSources = [];
+let selectedVideoOutputTrackId = '';
+let videoDockOpen = false;
+let videoDockWide = false;
+let videoPopoutOpen = false;
+let videoLiveCamEnabled = false;
+let videoLiveSnapshotDataUrl = '';
+let videoLiveSnapshotTimer = null;
+let loadedEmbeddedVideoSrc = '';
+let isSeekingEmbeddedVideo = false;
+let pendingEmbeddedSeekSec = null;
+let lastPopoutSyncAtMs = 0;
+let lastPopoutClipKey = '';
+
 function esc(str) {
   return String(str ?? '')
     .replace(/&/g, '&amp;')
@@ -1547,6 +1562,478 @@ async function seamlessRefreshLiveAudio() {
   playMaxDurationSec = maxDuration;
 }
 
+function isTrackVideoCapable(track) {
+  if (!track) return false;
+  if (track.trackKind === 'video' || track.category === 'video') return true;
+  return (track.clips || []).some(c => Boolean(c.videoFile || (c.mediaKind === 'video' && c.sourceFile)));
+}
+
+function getVideoCapableTracks() {
+  return (currentProject?.tracks || []).filter(isTrackVideoCapable);
+}
+
+function resolveClipVideoFilePath(clip) {
+  if (!clip) return '';
+  return clip.videoFile || (clip.mediaKind === 'video' ? clip.sourceFile : '') || '';
+}
+
+function toLocalMediaUrl(filePath) {
+  if (!filePath) return '';
+  if (/^(file|https?|blob|data):/i.test(filePath)) return filePath;
+  return `file://${encodeURI(filePath).replace(/#/g, '%23').replace(/\?/g, '%3F')}`;
+}
+
+function ensureSelectedVideoOutputTrack() {
+  const vTracks = getVideoCapableTracks();
+  if (!vTracks.length) {
+    selectedVideoOutputTrackId = '';
+    return null;
+  }
+  const found = vTracks.find(t => t.id === selectedVideoOutputTrackId);
+  if (found) return found;
+  selectedVideoOutputTrackId = vTracks[0].id;
+  return vTracks[0];
+}
+
+function findActiveVideoClipAtSec(track, sec) {
+  if (!track || track.muted) return null;
+  const anySolo = (currentProject?.tracks || []).some(t => t.soloed);
+  if (anySolo && !track.soloed && track.trackKind !== 'video') return null;
+  const clips = (track.clips || []).filter(c => !c.muted && Boolean(resolveClipVideoFilePath(c)));
+  // Prefer top/latest overlapping take (REAPER comping order)
+  for (let i = clips.length - 1; i >= 0; i--) {
+    const c = clips[i];
+    const start = Number(c.startSec) || 0;
+    const dur = Math.max(0.04, Number(c.durationSec) || 0);
+    if (sec >= start - 0.005 && sec < start + dur + 0.015) {
+      return c;
+    }
+  }
+  return null;
+}
+
+function getLiveStreamDirectMjpegUrl(track) {
+  const vcfg = track?.videoConfig;
+  if (!vcfg || !vcfg.streamUrl) return '';
+  if (/^https?:/i.test(vcfg.streamUrl) && !vcfg.username) {
+    return vcfg.streamUrl;
+  }
+  return '';
+}
+
+function stopLiveCamSnapshotPolling() {
+  if (videoLiveSnapshotTimer) {
+    clearInterval(videoLiveSnapshotTimer);
+    videoLiveSnapshotTimer = null;
+  }
+}
+
+function ensureLiveCamSnapshotPolling(track) {
+  const vcfg = track?.videoConfig;
+  if (!vcfg || getLiveStreamDirectMjpegUrl(track)) {
+    stopLiveCamSnapshotPolling();
+    return;
+  }
+  if (videoLiveSnapshotTimer) return;
+  const pullOnce = async () => {
+    const activeTrk = ensureSelectedVideoOutputTrack();
+    if (!activeTrk?.videoConfig || (!videoLiveCamEnabled && !isRecording) || (!videoDockOpen && !videoPopoutOpen)) {
+      stopLiveCamSnapshotPolling();
+      return;
+    }
+    try {
+      const res = await window.robos?.captureVideoSnapshot?.({ videoConfig: activeTrk.videoConfig });
+      if (res?.ok && res.dataUrl) {
+        videoLiveSnapshotDataUrl = res.dataUrl;
+        syncVideoOutputMonitor({ forcePush: true });
+      }
+    } catch {}
+  };
+  pullOnce();
+  videoLiveSnapshotTimer = setInterval(pullOnce, 450);
+}
+
+function safeSeekEmbeddedVideo(videoEl, targetSec) {
+  if (!videoEl) return;
+  const clamped = Math.max(0, Number(targetSec) || 0);
+  if (isSeekingEmbeddedVideo) {
+    pendingEmbeddedSeekSec = clamped;
+    return;
+  }
+  try {
+    if (Number.isFinite(videoEl.duration) && videoEl.duration > 0) {
+      videoEl.currentTime = Math.min(Math.max(0, videoEl.duration - 0.01), clamped);
+    } else {
+      videoEl.currentTime = clamped;
+    }
+  } catch {}
+}
+
+function syncVideoOutputMonitor({ forcePush = false } = {}) {
+  const dockEl = document.getElementById('embedded-video-dock');
+  const topBtn = document.getElementById('btn-topbar-video-monitor');
+  const vTracks = getVideoCapableTracks();
+  const activeTrack = ensureSelectedVideoOutputTrack();
+
+  topBtn?.classList.toggle('active', Boolean(videoDockOpen || videoPopoutOpen));
+  if (dockEl) {
+    dockEl.classList.toggle('hidden', !videoDockOpen || videoPopoutOpen);
+    dockEl.classList.toggle('wide', Boolean(videoDockWide));
+  }
+  document.getElementById('btn-vmon-wide')?.classList.toggle('active', Boolean(videoDockWide));
+  document.getElementById('btn-vmon-live-cam')?.classList.toggle('active', Boolean(videoLiveCamEnabled));
+
+  // Populate embedded track dropdown
+  const trackSel = document.getElementById('vmon-track-select');
+  if (trackSel) {
+    const optsHtml = vTracks.length
+      ? vTracks.map(t => `<option value="${esc(t.id)}"${t.id === selectedVideoOutputTrackId ? ' selected' : ''}>${esc(t.name)}</option>`).join('')
+      : '<option value="">No Video Tracks in Session</option>';
+    if (trackSel.innerHTML !== optsHtml) trackSel.innerHTML = optsHtml;
+    if (selectedVideoOutputTrackId && trackSel.value !== selectedVideoOutputTrackId) {
+      trackSel.value = selectedVideoOutputTrackId;
+    }
+  }
+
+  const activeClipRaw = (!isRecording && activeTrack) ? findActiveVideoClipAtSec(activeTrack, playheadSec) : null;
+  const activeClipVideoFile = resolveClipVideoFilePath(activeClipRaw);
+  const activeClipPayload = (activeClipRaw && activeClipVideoFile)
+    ? {
+      id: activeClipRaw.id,
+      videoFile: activeClipVideoFile,
+      startSec: Number(activeClipRaw.startSec) || 0,
+      offsetSec: Number(activeClipRaw.offsetSec) || 0,
+      durationSec: Number(activeClipRaw.durationSec) || 0,
+    }
+    : null;
+
+  const wantLiveFeed = Boolean(
+    activeTrack?.videoConfig &&
+    !activeClipPayload &&
+    (videoLiveCamEnabled || (isRecording && activeTrack.armed))
+  );
+  const directMjpegUrl = wantLiveFeed ? getLiveStreamDirectMjpegUrl(activeTrack) : '';
+  if (wantLiveFeed && !directMjpegUrl && (videoDockOpen || videoPopoutOpen)) {
+    ensureLiveCamSnapshotPolling(activeTrack);
+  } else {
+    stopLiveCamSnapshotPolling();
+  }
+
+  // 1. Update Embedded Video Dock (when visible)
+  const videoEl = document.getElementById('embedded-video-el');
+  const liveImgEl = document.getElementById('embedded-live-img');
+  const slateEl = document.getElementById('embedded-video-slate');
+  const slateTitleEl = document.getElementById('vmon-slate-title');
+  const slateSubEl = document.getElementById('vmon-slate-sub');
+  const tcHudEl = document.getElementById('vmon-timecode');
+  const modePill = document.getElementById('vmon-mode-pill');
+
+  if (tcHudEl && (videoDockOpen && !videoPopoutOpen)) {
+    tcHudEl.textContent = formatTimecode(playheadSec);
+  }
+
+  if (videoEl && liveImgEl && slateEl) {
+    if (!videoDockOpen || videoPopoutOpen) {
+      if (!videoEl.paused) videoEl.pause();
+      if (liveImgEl.getAttribute('src')) liveImgEl.removeAttribute('src');
+    } else if (activeClipPayload) {
+      const srcUrl = toLocalMediaUrl(activeClipPayload.videoFile);
+      if (loadedEmbeddedVideoSrc !== srcUrl) {
+        loadedEmbeddedVideoSrc = srcUrl;
+        videoEl.src = srcUrl;
+        videoEl.load();
+      }
+      liveImgEl.classList.add('hidden');
+      if (liveImgEl.getAttribute('src')) liveImgEl.removeAttribute('src');
+      slateEl.classList.add('hidden');
+      videoEl.classList.remove('hidden');
+
+      const targetVidSec = activeClipPayload.offsetSec + Math.max(0, playheadSec - activeClipPayload.startSec);
+      if (isPlaying) {
+        if (modePill) { modePill.textContent = 'PLAYING'; modePill.className = 'vmon-mode-pill playing'; }
+        if (Math.abs((videoEl.currentTime || 0) - targetVidSec) > 0.085) {
+          safeSeekEmbeddedVideo(videoEl, targetVidSec);
+        }
+        if (videoEl.paused) videoEl.play().catch(() => {});
+      } else {
+        if (modePill) { modePill.textContent = 'SCRUB'; modePill.className = 'vmon-mode-pill'; }
+        if (!videoEl.paused) videoEl.pause();
+        if (Math.abs((videoEl.currentTime || 0) - targetVidSec) > 0.02) {
+          safeSeekEmbeddedVideo(videoEl, targetVidSec);
+        }
+      }
+    } else if (wantLiveFeed && (directMjpegUrl || videoLiveSnapshotDataUrl)) {
+      if (!videoEl.paused) videoEl.pause();
+      videoEl.classList.add('hidden');
+      slateEl.classList.add('hidden');
+      liveImgEl.classList.remove('hidden');
+      const liveSrc = directMjpegUrl || videoLiveSnapshotDataUrl;
+      if (liveImgEl.getAttribute('src') !== liveSrc) {
+        liveImgEl.setAttribute('src', liveSrc);
+      }
+      if (modePill) {
+        modePill.textContent = isRecording ? 'REC CAM' : 'LIVE CAM';
+        modePill.className = 'vmon-mode-pill live';
+      }
+    } else {
+      if (!videoEl.paused) videoEl.pause();
+      videoEl.classList.add('hidden');
+      liveImgEl.classList.add('hidden');
+      if (liveImgEl.getAttribute('src')) liveImgEl.removeAttribute('src');
+      slateEl.classList.remove('hidden');
+      if (modePill) {
+        modePill.textContent = vTracks.length ? 'STANDBY' : 'NO VIDEO';
+        modePill.className = 'vmon-mode-pill';
+      }
+      if (slateTitleEl) {
+        slateTitleEl.textContent = vTracks.length ? 'No Video Region at Playhead' : 'No Video Tracks in Session';
+      }
+      if (slateSubEl) {
+        slateSubEl.textContent = vTracks.length
+          ? (activeTrack?.videoConfig ? 'Move playhead onto a video take or click Live Cam to monitor camera.' : 'Move playhead over a video region to preview.')
+          : 'Click "Add Video" to record a RobOS Android IP Cam, ONVIF cam, or USB webcam.';
+      }
+    }
+  }
+
+  // 2. Sync Standalone Pop-Out Video Output Window (throttled to 4 Hz during steady playback, 0ms on seeks/clip changes!)
+  if (videoPopoutOpen && typeof window.robos?.syncVideoOutputWindow === 'function') {
+    const nowMs = Date.now();
+    const clipKey = `${selectedVideoOutputTrackId}:${activeClipPayload?.id || 'none'}:${isPlaying ? '1' : '0'}:${isRecording ? '1' : '0'}`;
+    if (forcePush || clipKey !== lastPopoutClipKey || !isPlaying || (nowMs - lastPopoutSyncAtMs) >= 240) {
+      lastPopoutClipKey = clipKey;
+      lastPopoutSyncAtMs = nowMs;
+      window.robos.syncVideoOutputWindow({
+        isPlaying,
+        isRecording,
+        playheadSec,
+        syncWallMs: nowMs,
+        selectedVideoTrackId: selectedVideoOutputTrackId,
+        videoTracks: vTracks.map(t => ({ id: t.id, name: t.name })),
+        activeClip: activeClipPayload,
+        livePreviewUrl: directMjpegUrl,
+        liveSnapshotDataUrl: wantLiveFeed ? videoLiveSnapshotDataUrl : '',
+      });
+    }
+  }
+}
+
+async function toggleVideoOutputMonitor(forceTrackId = '') {
+  if (forceTrackId) {
+    selectedVideoOutputTrackId = forceTrackId;
+    if (!videoDockOpen && !videoPopoutOpen) {
+      videoDockOpen = true;
+    }
+    renderStudio();
+    syncVideoOutputMonitor({ forcePush: true });
+    return;
+  }
+
+  if (videoPopoutOpen) {
+    await window.robos?.closeVideoOutputWindow?.();
+    videoPopoutOpen = false;
+    videoDockOpen = false;
+  } else {
+    videoDockOpen = !videoDockOpen;
+  }
+  renderStudio();
+  syncVideoOutputMonitor({ forcePush: true });
+}
+
+async function popOutVideoOutputToAppWindow() {
+  ensureSelectedVideoOutputTrack();
+  videoPopoutOpen = true;
+  videoDockOpen = false;
+  syncVideoOutputMonitor({ forcePush: true });
+  const vTracks = getVideoCapableTracks();
+  const activeTrack = ensureSelectedVideoOutputTrack();
+  const activeClipRaw = (!isRecording && activeTrack) ? findActiveVideoClipAtSec(activeTrack, playheadSec) : null;
+  const activeClipVideoFile = resolveClipVideoFilePath(activeClipRaw);
+  await window.robos?.openVideoOutputWindow?.({
+    isPlaying,
+    isRecording,
+    playheadSec,
+    syncWallMs: Date.now(),
+    selectedVideoTrackId: selectedVideoOutputTrackId,
+    videoTracks: vTracks.map(t => ({ id: t.id, name: t.name })),
+    activeClip: (activeClipRaw && activeClipVideoFile) ? {
+      id: activeClipRaw.id,
+      videoFile: activeClipVideoFile,
+      startSec: Number(activeClipRaw.startSec) || 0,
+      offsetSec: Number(activeClipRaw.offsetSec) || 0,
+      durationSec: Number(activeClipRaw.durationSec) || 0,
+    } : null,
+    livePreviewUrl: (videoLiveCamEnabled && activeTrack) ? getLiveStreamDirectMjpegUrl(activeTrack) : '',
+    liveSnapshotDataUrl: videoLiveSnapshotDataUrl,
+  });
+  renderStudio();
+}
+
+function buildSelectedModalVideoConfig() {
+  const srcSel = document.getElementById('vid-source-select');
+  const val = srcSel?.value || '__custom__';
+  if (val !== '__custom__') {
+    const found = discoveredVideoSources.find(s => s.id === val);
+    if (found) return { ...found };
+  }
+  const raw = String(document.getElementById('vid-custom-url-input')?.value || '').trim();
+  const username = String(document.getElementById('vid-auth-user')?.value || '').trim();
+  const password = String(document.getElementById('vid-auth-pass')?.value || '');
+  const isDev = raw.startsWith('/dev/video');
+  return {
+    id: `custom:${raw}`,
+    sourceType: isDev ? 'v4l2' : 'ip-camera',
+    protocol: isDev ? 'v4l2' : (/^rtsps?:/i.test(raw) ? 'rtsp' : 'mjpeg'),
+    label: raw || 'Custom Camera',
+    shortName: isDev ? 'USB Webcam' : 'IP Camera',
+    streamUrl: isDev ? '' : raw,
+    snapshotUrl: (!isDev && /^https?:/i.test(raw) && /\/(video|sub)\b/i.test(raw))
+      ? raw.replace(/\/(video|sub)(\?.*)?$/i, '/snapshot.jpg$2')
+      : '',
+    devicePath: isDev ? raw : '',
+    username,
+    password,
+    isRobosAndroidCam: /:8080\/(video|sub)\b/i.test(raw),
+  };
+}
+
+function populateVideoModalSourcesDropdown() {
+  const srcSel = document.getElementById('vid-source-select');
+  if (!srcSel) return;
+  const opts = discoveredVideoSources.map(s =>
+    `<option value="${esc(s.id)}">${esc(s.label)}</option>`
+  );
+  opts.push('<option value="__custom__">Custom Stream URL / Device Path (RTSP, MJPEG, /dev/video*)</option>');
+  srcSel.innerHTML = opts.join('');
+
+  const customRow = document.getElementById('vid-custom-url-fields');
+  const isCustom = srcSel.value === '__custom__';
+  customRow?.classList.toggle('hidden', !isCustom);
+
+  const firstSrc = discoveredVideoSources.find(s => s.id === srcSel.value);
+  const nameInp = document.getElementById('vid-track-name-input');
+  if (nameInp && firstSrc?.shortName) {
+    nameInp.value = firstSrc.shortName;
+  }
+}
+
+function populateVideoModalAudioInputsDropdown() {
+  const audSel = document.getElementById('vid-audio-input-select');
+  if (!audSel) return;
+  const ordered = getOrderedInputs();
+  audSel.innerHTML = ordered.length
+    ? ordered.map(inp => `<option value="${esc(inp.name)}">${esc(inp.description)}</option>`).join('')
+    : '<option value="">Default PipeWire Input</option>';
+}
+
+async function refreshAddVideoModalPreview() {
+  const statusEl = document.getElementById('vid-modal-status');
+  const imgEl = document.getElementById('vid-modal-preview-img');
+  const phEl = document.getElementById('vid-modal-preview-placeholder');
+  const vcfg = buildSelectedModalVideoConfig();
+  if (!vcfg.streamUrl && !vcfg.devicePath) {
+    if (statusEl) statusEl.textContent = 'Enter a camera Stream URL or /dev/video* path first.';
+    return;
+  }
+  if (statusEl) statusEl.textContent = `Grabbing preview frame from ${vcfg.shortName || vcfg.label}...`;
+  const res = await window.robos?.captureVideoSnapshot?.({ videoConfig: vcfg });
+  if (res?.ok && res.dataUrl && imgEl) {
+    imgEl.src = res.dataUrl;
+    imgEl.classList.remove('hidden');
+    phEl?.classList.add('hidden');
+    if (statusEl) statusEl.textContent = `Live preview connected: ${vcfg.label}`;
+  } else {
+    imgEl?.classList.add('hidden');
+    if (phEl) {
+      phEl.classList.remove('hidden');
+      phEl.textContent = res?.error || 'Could not grab preview frame — verify camera is streaming.';
+    }
+    if (statusEl) statusEl.textContent = res?.error || 'Camera preview unavailable.';
+  }
+}
+
+async function openAddVideoModal({ scanLan = false } = {}) {
+  closeContextMenu();
+  closeMenubarDropdown();
+  const modal = document.getElementById('add-video-modal');
+  if (!modal) return;
+
+  populateVideoModalAudioInputsDropdown();
+  document.getElementById('vid-modal-preview-img')?.classList.add('hidden');
+  const phEl = document.getElementById('vid-modal-preview-placeholder');
+  if (phEl) {
+    phEl.classList.remove('hidden');
+    phEl.textContent = 'Select a camera and click Preview Frame to verify feed';
+  }
+  const modeSel = document.getElementById('vid-audio-mode-select');
+  if (modeSel) modeSel.value = 'none';
+  document.getElementById('vid-audio-interface-row')?.classList.add('hidden');
+  modal.classList.remove('hidden');
+
+  const statusEl = document.getElementById('vid-modal-status');
+  if (statusEl) statusEl.textContent = scanLan ? 'Scanning LAN for ONVIF & RobOS Android IP Cameras...' : 'Loading cameras & webcams...';
+  const res = await window.robos?.discoverVideoSources?.({ scanLan });
+  if (res?.ok && Array.isArray(res.sources)) {
+    discoveredVideoSources = res.sources;
+  }
+  populateVideoModalSourcesDropdown();
+  if (statusEl) {
+    statusEl.textContent = discoveredVideoSources.length
+      ? `Found ${discoveredVideoSources.length} video input source(s).`
+      : 'Enter a RobOS Android IP Camera URL (e.g. http://ip:8080/video) or click Scan LAN.';
+  }
+  if (discoveredVideoSources.length > 0) {
+    refreshAddVideoModalPreview().catch(() => {});
+  }
+}
+
+function closeAddVideoModal() {
+  document.getElementById('add-video-modal')?.classList.add('hidden');
+}
+
+async function confirmAddVideoTrackFromModal() {
+  const vcfg = buildSelectedModalVideoConfig();
+  if (!vcfg.streamUrl && !vcfg.devicePath) {
+    showStatus('Specify a camera Stream URL or V4L2 device path.', true);
+    return;
+  }
+  const name = String(document.getElementById('vid-track-name-input')?.value || vcfg.shortName || 'Video Cam').trim();
+  const audioMode = document.getElementById('vid-audio-mode-select')?.value || 'none';
+  const audSel = document.getElementById('vid-audio-input-select');
+  const inputNodeName = audioMode === 'interface' ? (audSel?.value || '') : '';
+  const inputLabel = audioMode === 'interface' ? (audSel?.selectedOptions?.[0]?.textContent || '') : '';
+
+  const prevSnap = currentProject ? DE.cloneDeep(currentProject) : null;
+  await syncProjectToMain();
+  const res = await window.robos?.addVideoTrack?.({
+    name,
+    videoConfig: vcfg,
+    audioMode,
+    inputNodeName,
+    inputLabel,
+    armed: true,
+  });
+  if (!res?.ok || !res.project) {
+    showStatus(`Failed to add video track: ${res?.error || 'Unknown error'}`, true);
+    return;
+  }
+
+  if (prevSnap) historyStack.pushSnapshot(prevSnap, `Add Video Track (${name})`);
+  currentProject = res.project;
+  selectedTrackIds = new Set([res.track.id]);
+  anchorTrackId = res.track.id;
+  selectedVideoOutputTrackId = res.track.id;
+  videoLiveCamEnabled = true;
+  if (!videoPopoutOpen) videoDockOpen = true;
+
+  closeAddVideoModal();
+  markDirty(true);
+  switchView('studio-stage');
+  renderStudio();
+  syncVideoOutputMonitor({ forcePush: true });
+  showStatus(`Added armed Video Track "${res.track.name}" (${audioMode === 'none' ? 'Video Only' : `Audio: ${audioMode}`}) — Live Cam active in Video Output!`);
+}
+
 function seekPlayheadTo(targetSec, { updateReturnAnchor = true, ensureVisible = false } = {}) {
   if (isRecording) return;
   const clamped = Math.max(0, Number((Number(targetSec) || 0).toFixed(4)));
@@ -1573,6 +2060,7 @@ function seekPlayheadTo(targetSec, { updateReturnAnchor = true, ensureVisible = 
   } else {
     drawAllTimelineCanvases();
   }
+  syncVideoOutputMonitor({ forcePush: true });
 }
 
 function stopPlayback({ returnToStart = true } = {}) {
@@ -1609,6 +2097,7 @@ function stopPlayback({ returnToStart = true } = {}) {
     if (sub) sub.textContent = returnToStart ? 'READY' : 'PAUSED';
   }
   drawAllTimelineCanvases();
+  syncVideoOutputMonitor({ forcePush: true });
 }
 
 async function startPlayback() {
@@ -1693,12 +2182,14 @@ async function startPlayback() {
     if (sub) sub.textContent = 'PLAYING';
 
     const tcEl = document.getElementById('transport-timecode');
+    syncVideoOutputMonitor({ forcePush: true });
     const tick = () => {
       if (!isPlaying) return;
       playheadSec = playStartOffsetSec + Math.max(0, ctx.currentTime - playStartWallSec);
       if (tcEl) tcEl.textContent = formatTimecode(playheadSec);
       if (!middlePanDragState) ensurePlayheadInViewport(playheadSec);
       drawAllTimelineCanvases();
+      syncVideoOutputMonitor();
       if (loopPlayback && hasActiveTimeSelection() && playheadSec >= timeSelection.toSec) {
         seekPlayheadTo(timeSelection.fromSec, { updateReturnAnchor: false });
         transportRafId = requestAnimationFrame(tick);
@@ -2045,15 +2536,25 @@ async function toggleRecording({ keepCursorAtStop = false } = {}) {
     if (res?.ok && res.project) {
       if (currentProject) historyStack.pushSnapshot(currentProject, 'Record Multi-Track Take');
       currentProject = res.project;
-      selectedClipIds = new Set((res.recordedClips || []).map(x => x.clip?.id).filter(Boolean));
+      const vidRecorded = res.recordedVideoClips || [];
+      selectedClipIds = new Set([
+        ...(res.recordedClips || []).map(x => x.clip?.id),
+        ...vidRecorded.map(x => x.clip?.id),
+      ].filter(Boolean));
+      if (vidRecorded.length > 0 && vidRecorded[0].trackId) {
+        selectedVideoOutputTrackId = vidRecorded[0].trackId;
+        if (!videoPopoutOpen) videoDockOpen = true;
+      }
       // Invalidate any stale decoded cache for newly written takes
       for (const item of (res.recordedClips || [])) {
         if (item.clip?.wavFile) decodedBufferCache.delete(item.clip.wavFile);
       }
       markDirty(true);
       renderStudio();
+      syncVideoOutputMonitor({ forcePush: true });
       const totalHits = (res.recordedClips || []).reduce((n, x) => n + (x.clip?.transients?.length || 0), 0);
-      showStatus(`Recorded ${res.recordedClips.length} armed mic track(s)${totalHits ? ` — ${totalHits} drum transient(s) detected for Sound Replacement` : ''}.`);
+      const vidSuffix = vidRecorded.length ? ` + ${vidRecorded.length} video track(s)` : '';
+      showStatus(`Recorded ${res.recordedClips.length} armed mic track(s)${vidSuffix}${totalHits ? ` — ${totalHits} drum transient(s) detected` : ''}.`);
     } else {
       drawAllTimelineCanvases();
       showStatus(`Recording stop error: ${res?.error || 'Unknown error'}`, true);
@@ -2141,6 +2642,7 @@ async function toggleRecording({ keepCursorAtStop = false } = {}) {
       ? `REC (${res.armedCount} CH + PLAY)`
       : `REC (${res.armedCount} CH)`;
     drawAllTimelineCanvases();
+    syncVideoOutputMonitor({ forcePush: true });
     startRecordingRafLoop();
     showStatus(
       overdubMonitor.backingTrackCount > 0
@@ -2202,12 +2704,37 @@ function renderStudio() {
       `<option value="${esc(inp.name)}"${inp.name === t.inputNodeName ? ' selected' : ''}>${esc(inp.description)}</option>`
     ).join('');
 
-    const trackIconKey = t.category === 'drums'
-      ? 'drum'
-      : (/guitar|bass/i.test(`${t.category || ''} ${t.profileId || ''}`) ? 'guitar' : 'mic');
+    const isVideoTrk = isTrackVideoCapable(t);
+    const isActiveVidOut = isVideoTrk && selectedVideoOutputTrackId === t.id && (videoDockOpen || videoPopoutOpen);
+    const trackIconKey = isVideoTrk
+      ? 'video'
+      : (t.category === 'drums'
+        ? 'drum'
+        : (/guitar|bass/i.test(`${t.category || ''} ${t.profileId || ''}`) ? 'guitar' : 'mic'));
     const nameHtml = inlineRenamingTrackId === t.id
       ? `<input type="text" class="inline-rename-input" data-inline-rename="${esc(t.id)}" value="${esc(t.name)}" aria-label="Rename Track" />`
-      : `<span class="track-name-label" data-name-dbl="${esc(t.id)}" title="${esc(t.name)} — Double-click to rename · Right-click for Track Menu">${esc(t.name)}</span>`;
+      : `<span class="track-name-label" data-name-dbl="${esc(t.id)}" title="${esc(t.name)} — Double-click to rename · Right-click for Track Menu">${esc(t.name)}</span>${isVideoTrk ? '<span class="video-track-pill">VIDEO</span>' : ''}`;
+
+    const rightActionBtnHtml = isVideoTrk
+      ? `<button type="button" class="trk-mini-btn strip-btn vid-view-btn ${isActiveVidOut ? 'active' : ''}" data-act="view-video" data-id="${esc(t.id)}" title="Route This Video Track to Video Output Monitor">${DI.svg('eye', 11)}<span>VIEW</span></button>`
+      : `<button type="button" class="trk-mini-btn hw-trig ${srOn ? 'sr-on' : ''}" data-act="toggle-sr" data-id="${esc(t.id)}" title="Toggle Open-Source Drum Sound Replacement">${DI.badge('drum-replace', 12)}<span>${srOn ? esc(srPiece) : 'TRIG'}</span></button>`;
+
+    const usesCameraOnlyInput = t.trackKind === 'video' && t.videoConfig?.audioMode !== 'interface';
+    const midLineHtml = usesCameraOnlyInput
+      ? `
+            <div class="track-mid-line">
+              <span class="io-micro-tag">CAM</span>
+              <select class="track-input-select" disabled aria-label="Video Camera Input">
+                <option>${esc(t.inputLabel || t.videoConfig?.label || 'Video Camera')}</option>
+              </select>
+            </div>`
+      : `
+            <div class="track-mid-line">
+              <span class="io-micro-tag">IN</span>
+              <select class="track-input-select" data-act="input-change" data-id="${esc(t.id)}" aria-label="Track Hardware Input">
+                ${inputOptions || `<option value="${esc(t.inputNodeName)}">${esc(t.inputLabel || 'Default Input')}</option>`}
+              </select>
+            </div>`;
 
     return `
       <div class="track-row ${isSel ? 'selected' : ''}" data-track-id="${esc(t.id)}">
@@ -2230,16 +2757,11 @@ function renderStudio() {
                 <button type="button" class="trk-mini-btn hw-solo ${t.soloed ? 'solo-on' : ''}" data-act="solo" data-id="${esc(t.id)}" title="Solo Track (F6 / Shift+S · Ctrl+Click = Selected · Alt+Click = Exclusive Solo)">S</button>
                 <button type="button" class="trk-mini-btn hw-phase ${phaseOn ? 'phase-on' : ''}" data-act="phase" data-id="${esc(t.id)}" title="180° Phase Invert Ø (Alt+P · Drum Top/Bottom &amp; Overhead Polarity)">Ø</button>
                 <button type="button" class="trk-mini-btn hw-fx ${selectedTrackId === t.id ? 'fx-on' : ''}" data-act="inspect" data-id="${esc(t.id)}" title="Open Channel Strip EQ / LV2 / Drum Replace Inspector">${DI.svg('faders', 10.5)}<span>FX</span></button>
-                <button type="button" class="trk-mini-btn hw-trig ${srOn ? 'sr-on' : ''}" data-act="toggle-sr" data-id="${esc(t.id)}" title="Toggle Open-Source Drum Sound Replacement">${DI.badge('drum-replace', 12)}<span>${srOn ? esc(srPiece) : 'TRIG'}</span></button>
+                ${rightActionBtnHtml}
                 <button type="button" class="trk-mini-btn hw-del" data-act="delete" data-id="${esc(t.id)}" title="Remove Track">&times;</button>
               </div>
             </div>
-            <div class="track-mid-line">
-              <span class="io-micro-tag">IN</span>
-              <select class="track-input-select" data-act="input-change" data-id="${esc(t.id)}" aria-label="Track Hardware Input">
-                ${inputOptions || `<option value="${esc(t.inputNodeName)}">${esc(t.inputLabel || 'Default Input')}</option>`}
-              </select>
-            </div>
+            ${midLineHtml}
             <div class="track-gain-line">
               <span class="fader-lbl">TRIM</span>
               <input type="range" class="track-gain-slider daw-fader" min="-24" max="36" step="0.5" value="${gainDb.toFixed(1)}" data-act="gain" data-id="${esc(t.id)}" title="Pre-FX Input Gain (-24 to +36 dB) · Double-click to reset 0.0 dB · Hold Ctrl to gang selected tracks" />
@@ -2273,6 +2795,7 @@ function renderStudio() {
 
   bindTrackRowEvents();
   renderInspectorDrawer();
+  syncVideoOutputMonitor();
   requestAnimationFrame(drawAllTimelineCanvases);
 }
 
@@ -2603,6 +3126,8 @@ function bindTrackRowEvents() {
             if (nextEnabled) reanalyzeIds.push(t.id);
           }
         }, { reanalyzeTrackIds: reanalyzeIds });
+      } else if (act === 'view-video') {
+        await toggleVideoOutputMonitor(trackId);
       } else if (act === 'inspect') {
         selectedTrackId = selectedTrackId === trackId ? null : trackId;
         if (!selectedTrackIds.has(trackId)) {
@@ -3400,6 +3925,30 @@ function drawAllTimelineCanvases() {
         ctx.globalAlpha = isMuted ? 0.4 : 1.0;
 
         const peaks = Array.isArray(clip.peaks) ? clip.peaks : [];
+        const isVideoRegion = Boolean(clip.videoFile || clip.mediaKind === 'video' || track.trackKind === 'video');
+        if (isVideoRegion) {
+          // Cinema filmstrip sprocket holes along top and bottom rails of video region
+          ctx.fillStyle = isMuted ? 'rgba(148, 163, 184, 0.25)' : 'rgba(192, 132, 252, 0.42)';
+          const holeStep = 14;
+          for (let sx = Math.max(0, startX) + 4; sx < Math.min(w, startX + clipW - 6); sx += holeStep) {
+            ctx.fillRect(sx, regionTop + 19, 6, 3.5);
+            ctx.fillRect(sx, regionTop + regionH - 6.5, 6, 3.5);
+          }
+          if (!peaks.length) {
+            const midY = regionTop + 17 + (regionH - 19) / 2;
+            ctx.fillStyle = isMuted ? 'rgba(100, 116, 139, 0.18)' : 'rgba(168, 85, 247, 0.14)';
+            ctx.fillRect(startX, midY - 12, clipW, 24);
+            const frameStep = 28;
+            ctx.strokeStyle = isMuted ? 'rgba(148, 163, 184, 0.25)' : 'rgba(192, 132, 252, 0.35)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            for (let fx = Math.max(0, startX) + frameStep; fx < Math.min(w, startX + clipW - 4); fx += frameStep) {
+              ctx.moveTo(fx + 0.5, midY - 12);
+              ctx.lineTo(fx + 0.5, midY + 12);
+            }
+            ctx.stroke();
+          }
+        }
         if (peaks.length) {
           const stepX = clipW / peaks.length;
           const barW = Math.max(1, stepX - (stepX > 2.2 ? 0.45 : 0.15));
@@ -5430,6 +5979,7 @@ function buildMenubarItems(key) {
       { icon: 'layers', label: 'Add 4 Audio Tracks (Sequential Inputs)', kbd: 'Ctrl+Shift+T', run: () => addBlankAudioTracks(4) },
       { icon: 'layers', label: 'Add 8 Audio Tracks (8-Preamp Bank)', kbd: '', run: () => addBlankAudioTracks(8) },
       { icon: 'mic-wizard', label: 'Add Mic via Studio Wizard...', kbd: '', run: () => openAddMicWizard() },
+      { icon: 'video', label: 'Add Video Input Track (RobOS IP Cam / Webcam)...', kbd: '', run: () => openAddVideoModal() },
       { icon: 'drumset-ai', label: 'DrumSet AI All-Mic Soundcheck...', kbd: '', run: () => openDrumsetWizard() },
       { icon: 'metronome', label: 'Generate Click Track Below Selected (Gemini AI)...', kbd: '', disabled: !primaryTrack || !(primaryTrack.clips || []).some(c => !c.muted), run: () => primaryTrack && generateClickTrackUnderTrack(primaryTrack) },
       { icon: 'drum-replace', label: 'Remove Drums to New Track Below (Gemini AI)...', kbd: '', disabled: !primaryTrack || !(primaryTrack.clips || []).some(c => !c.muted), run: () => primaryTrack && removeDrumsUnderTrack(primaryTrack) },
@@ -5669,6 +6219,9 @@ function buildMenubarItems(key) {
         selectedTrackId = selectedTrackId ? null : (primaryTrack?.id || null);
         renderStudio();
       } },
+      { sep: true },
+      { icon: 'video', label: `${(videoDockOpen || videoPopoutOpen) ? 'Hide' : 'Show'} Video Output Monitor`, kbd: 'V', run: () => toggleVideoOutputMonitor() },
+      { icon: 'popout', label: 'Pop Out Video Output to Standalone Window', kbd: '', run: () => popOutVideoOutputToAppWindow() },
     ];
   }
 
@@ -8045,7 +8598,7 @@ async function init() {
 
     // Fast-path Spacebar transport stop/start (even if a slider/button/select is focused when recording or playing!)
     if (!isTextTyping && !isMod && !ev.altKey && ev.code === 'Space') {
-      const anyModalOpen = ['add-mic-wizard-modal', 'open-project-modal', 'drumkits-modal', 'drumset-wizard-modal', 'rename-item-modal', 'shortcuts-modal', 'export-mixdown-modal']
+      const anyModalOpen = ['add-mic-wizard-modal', 'open-project-modal', 'drumkits-modal', 'drumset-wizard-modal', 'rename-item-modal', 'shortcuts-modal', 'export-mixdown-modal', 'add-video-modal']
         .some(id => {
           const el = document.getElementById(id);
           return el && !el.classList.contains('hidden');
@@ -8080,6 +8633,11 @@ async function init() {
         closeExportMixdownModal();
         return;
       }
+      const vidModal = document.getElementById('add-video-modal');
+      if (vidModal && !vidModal.classList.contains('hidden')) {
+        closeAddVideoModal();
+        return;
+      }
       const scModal = document.getElementById('shortcuts-modal');
       if (scModal && !scModal.classList.contains('hidden')) {
         scModal.classList.add('hidden');
@@ -8104,12 +8662,18 @@ async function init() {
     }
 
     // Do not intercept studio shortcuts if a modal dialog is open
-    const anyModalOpen = ['add-mic-wizard-modal', 'open-project-modal', 'drumkits-modal', 'drumset-wizard-modal', 'rename-item-modal', 'shortcuts-modal', 'export-mixdown-modal']
+    const anyModalOpen = ['add-mic-wizard-modal', 'open-project-modal', 'drumkits-modal', 'drumset-wizard-modal', 'rename-item-modal', 'shortcuts-modal', 'export-mixdown-modal', 'add-video-modal']
       .some(id => {
         const el = document.getElementById(id);
         return el && !el.classList.contains('hidden');
       });
     if (anyModalOpen) return;
+
+    if (!isMod && !ev.altKey && !ev.shiftKey && keyLower === 'v') {
+      ev.preventDefault();
+      await toggleVideoOutputMonitor();
+      return;
+    }
 
     // ─── REAPER Tracking, Recording, Comping, Marker & Workstation Shortcuts ───
 
@@ -8880,10 +9444,92 @@ async function init() {
 
   window.addEventListener('resize', () => requestAnimationFrame(drawAllTimelineCanvases));
 
+  // Video Mode: Add Video Input Modal & Embedded / Pop-Out Video Output Monitor Controls
+  const embVid = document.getElementById('embedded-video-el');
+  if (embVid) {
+    embVid.addEventListener('seeking', () => { isSeekingEmbeddedVideo = true; });
+    embVid.addEventListener('seeked', () => {
+      isSeekingEmbeddedVideo = false;
+      if (pendingEmbeddedSeekSec !== null) {
+        const next = pendingEmbeddedSeekSec;
+        pendingEmbeddedSeekSec = null;
+        safeSeekEmbeddedVideo(embVid, next);
+      }
+    });
+  }
+
+  document.getElementById('btn-topbar-video-monitor')?.addEventListener('click', () => toggleVideoOutputMonitor());
+  document.getElementById('btn-open-add-video-modal')?.addEventListener('click', () => openAddVideoModal());
+  document.getElementById('btn-quick-add-video')?.addEventListener('click', () => openAddVideoModal());
+  document.getElementById('btn-vid-modal-close')?.addEventListener('click', closeAddVideoModal);
+  document.getElementById('btn-vid-modal-cancel')?.addEventListener('click', closeAddVideoModal);
+  document.getElementById('btn-vid-scan-lan')?.addEventListener('click', () => openAddVideoModal({ scanLan: true }));
+  document.getElementById('btn-vid-refresh-preview')?.addEventListener('click', () => refreshAddVideoModalPreview());
+  document.getElementById('btn-vid-confirm-add')?.addEventListener('click', () => confirmAddVideoTrackFromModal());
+
+  document.getElementById('vid-source-select')?.addEventListener('change', (ev) => {
+    const val = ev.target.value;
+    document.getElementById('vid-custom-url-fields')?.classList.toggle('hidden', val !== '__custom__');
+    const found = discoveredVideoSources.find(s => s.id === val);
+    const nameInp = document.getElementById('vid-track-name-input');
+    if (nameInp && found?.shortName) {
+      nameInp.value = found.shortName;
+    }
+    if (found) {
+      refreshAddVideoModalPreview().catch(() => {});
+    }
+  });
+
+  document.getElementById('vid-audio-mode-select')?.addEventListener('change', (ev) => {
+    document.getElementById('vid-audio-interface-row')?.classList.toggle('hidden', ev.target.value !== 'interface');
+  });
+
+  document.getElementById('vmon-track-select')?.addEventListener('change', (ev) => {
+    selectedVideoOutputTrackId = ev.target.value || '';
+    renderStudio();
+    syncVideoOutputMonitor({ forcePush: true });
+  });
+  document.getElementById('btn-vmon-live-cam')?.addEventListener('click', () => {
+    videoLiveCamEnabled = !videoLiveCamEnabled;
+    syncVideoOutputMonitor({ forcePush: true });
+  });
+  document.getElementById('btn-vmon-wide')?.addEventListener('click', () => {
+    videoDockWide = !videoDockWide;
+    syncVideoOutputMonitor();
+    requestAnimationFrame(drawAllTimelineCanvases);
+  });
+  document.getElementById('btn-vmon-popout')?.addEventListener('click', () => popOutVideoOutputToAppWindow());
+  document.getElementById('btn-vmon-close')?.addEventListener('click', () => {
+    videoDockOpen = false;
+    renderStudio();
+    syncVideoOutputMonitor({ forcePush: true });
+  });
+
+  if (typeof window.robos?.onVideoWindowState === 'function') {
+    window.robos.onVideoWindowState((st) => {
+      videoPopoutOpen = Boolean(st?.open);
+      if (!videoPopoutOpen && st?.dockToEmbedded) {
+        videoDockOpen = true;
+      }
+      renderStudio();
+      syncVideoOutputMonitor({ forcePush: true });
+    });
+  }
+  if (typeof window.robos?.onVideoSelectTrackFromPopout === 'function') {
+    window.robos.onVideoSelectTrackFromPopout((payload) => {
+      if (payload?.trackId) {
+        selectedVideoOutputTrackId = payload.trackId;
+        renderStudio();
+        syncVideoOutputMonitor({ forcePush: true });
+      }
+    });
+  }
+
   // Initial Studio Boot
   const boot = await window.robos.getStudioInit();
   if (boot?.ok) {
     micProfiles = boot.micProfiles || [];
+    discoveredVideoSources = Array.isArray(boot.videoSources) ? boot.videoSources : [];
     drumkitsStatus = boot.drumkitsStatus || { kits: [] };
     vstDirsStatus = boot.vstDirsStatus || vstDirsStatus;
     systemPlugins = boot.systemPlugins || [];
@@ -8924,6 +9570,15 @@ window.__dawStudioState = () => ({
   playbackHotSwapSeq,
   timeSelection: hasActiveTimeSelection() ? { ...timeSelection } : null,
   exportModalOpen: !document.getElementById('export-mixdown-modal')?.classList.contains('hidden'),
+  videoMode: {
+    discoveredSourcesCount: discoveredVideoSources.length,
+    videoTrackIds: getVideoCapableTracks().map(t => t.id),
+    selectedVideoOutputTrackId,
+    videoDockOpen,
+    videoDockWide,
+    videoPopoutOpen,
+    videoLiveCamEnabled,
+  },
   timelineZoom,
   timelineOffsetSec,
   waveformZoomDb,

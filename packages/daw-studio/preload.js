@@ -79,4 +79,14 @@ contextBridge.exposeInMainWorld('robos', {
   exportMixdown: (payload) => ipcRenderer.invoke('daw:export-mixdown', payload),
   exportMixdownWav: (payload) => ipcRenderer.invoke('daw:export-mixdown-wav', payload),
   openSessionFolder: () => ipcRenderer.invoke('daw:open-session-folder'),
+
+  // Video Mode: Video Inputs (RobOS Android IP Cam, ONVIF, V4L2) & Video Output Monitor Window
+  discoverVideoSources: (payload) => ipcRenderer.invoke('daw:video-discover', payload),
+  captureVideoSnapshot: (payload) => ipcRenderer.invoke('daw:video-snapshot', payload),
+  addVideoTrack: (payload) => ipcRenderer.invoke('daw:add-video-track', payload),
+  openVideoOutputWindow: (payload) => ipcRenderer.invoke('daw:video-window-open', payload),
+  closeVideoOutputWindow: () => ipcRenderer.invoke('daw:video-window-close'),
+  syncVideoOutputWindow: (payload) => ipcRenderer.send('daw:video-window-sync', payload),
+  onVideoWindowState: (cb) => subscribe('daw:video-window-state', cb),
+  onVideoSelectTrackFromPopout: (cb) => subscribe('daw:video-select-track-from-popout', cb),
 });
