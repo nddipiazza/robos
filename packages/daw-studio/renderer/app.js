@@ -123,6 +123,8 @@ let lastPopoutSyncAtMs = 0;
 let lastPopoutClipKey = '';
 let isCreatingLyricsTrack = false;
 let embeddedKaraokeLineSig = '';
+let activeVideoModalType = 'robos-ip-camera'; // 'robos-ip-camera' | 'v4l2' | 'custom'
+let activeRobosProbedStatus = null;
 
 function esc(str) {
   return String(str ?? '')
@@ -2089,23 +2091,71 @@ async function popOutVideoOutputToAppWindow() {
   renderStudio();
 }
 
+function getRobosStreamPathForQuality(qualityPreset = 'hd-1080p') {
+  return qualityPreset === 'low-360p' ? '/sub' : '/video';
+}
+
 function buildSelectedModalVideoConfig() {
-  const srcSel = document.getElementById('vid-source-select');
-  const val = srcSel?.value || '__custom__';
-  if (val !== '__custom__') {
-    const found = discoveredVideoSources.find(s => s.id === val);
-    if (found) return { ...found };
-  }
-  const raw = String(document.getElementById('vid-custom-url-input')?.value || '').trim();
+  const qualityPreset = document.getElementById('vid-quality-select')?.value || 'hd-1080p';
   const username = String(document.getElementById('vid-auth-user')?.value || '').trim();
   const password = String(document.getElementById('vid-auth-pass')?.value || '');
+  const srcSel = document.getElementById('vid-source-select');
+  const val = srcSel?.value || '';
+
+  if (activeVideoModalType === 'robos-ip-camera') {
+    const found = val && val !== '__manual_robos__'
+      ? discoveredVideoSources.find(s => s.id === val)
+      : null;
+    const rawHost = String(document.getElementById('vid-robos-host-input')?.value || found?.host || '').trim()
+      .replace(/^https?:\/\//i, '').replace(/\/.*$/, '').replace(/:\d+$/, '');
+    const port = Math.max(1, Math.min(65535, Number(document.getElementById('vid-robos-port-input')?.value || found?.port || 8080)));
+    const baseUrl = rawHost ? `http://${rawHost}:${port}` : (found?.baseUrl || '');
+    const streamPath = getRobosStreamPathForQuality(qualityPreset);
+    const streamUrl = baseUrl ? `${baseUrl}${streamPath}` : (found?.streamUrl || '');
+    const snapshotUrl = baseUrl ? `${baseUrl}/snapshot.jpg` : (found?.snapshotUrl || '');
+    const shortName = activeRobosProbedStatus?.name || found?.shortName || (rawHost ? `RobOS IP Cam (${rawHost})` : 'RobOS IP Camera');
+
+    return {
+      ...(found || {}),
+      id: found?.id || (rawHost ? `robos-cam:${rawHost}:${port}` : 'robos-cam:manual'),
+      sourceType: 'robos-ip-camera',
+      protocol: 'mjpeg',
+      label: `${shortName} (RobOS IP Camera · ${rawHost ? `${rawHost}:${port}` : 'Wi-Fi HD'})`,
+      shortName,
+      host: rawHost,
+      port,
+      baseUrl,
+      streamUrl,
+      snapshotUrl,
+      devicePath: '',
+      username: username || found?.username || '',
+      password: password || found?.password || '',
+      isRobosAndroidCam: true,
+      qualityPreset,
+    };
+  }
+
+  if (val && val !== '__custom__') {
+    const found = discoveredVideoSources.find(s => s.id === val);
+    if (found) {
+      return {
+        ...found,
+        qualityPreset,
+        username: username || found.username || '',
+        password: password || found.password || '',
+      };
+    }
+  }
+
+  const raw = String(document.getElementById('vid-custom-url-input')?.value || '').trim();
   const isDev = raw.startsWith('/dev/video');
+  const isRobos = /:8080\/(video|sub)\b/i.test(raw);
   return {
     id: `custom:${raw}`,
-    sourceType: isDev ? 'v4l2' : 'ip-camera',
+    sourceType: isDev ? 'v4l2' : (isRobos ? 'robos-ip-camera' : 'ip-camera'),
     protocol: isDev ? 'v4l2' : (/^rtsps?:/i.test(raw) ? 'rtsp' : 'mjpeg'),
     label: raw || 'Custom Camera',
-    shortName: isDev ? 'USB Webcam' : 'IP Camera',
+    shortName: isDev ? 'USB Webcam' : (isRobos ? 'RobOS IP Camera' : 'IP Camera'),
     streamUrl: isDev ? '' : raw,
     snapshotUrl: (!isDev && /^https?:/i.test(raw) && /\/(video|sub)\b/i.test(raw))
       ? raw.replace(/\/(video|sub)(\?.*)?$/i, '/snapshot.jpg$2')
@@ -2113,28 +2163,102 @@ function buildSelectedModalVideoConfig() {
     devicePath: isDev ? raw : '',
     username,
     password,
-    isRobosAndroidCam: /:8080\/(video|sub)\b/i.test(raw),
+    isRobosAndroidCam: isRobos,
+    qualityPreset,
   };
+}
+
+function renderRobosTelemetryBar(statusObj) {
+  const bar = document.getElementById('vid-robos-telemetry-bar');
+  const txt = document.getElementById('vid-robos-telemetry-text');
+  if (!bar || !txt) return;
+  if (!statusObj) {
+    bar.classList.add('hidden');
+    return;
+  }
+  bar.classList.remove('hidden');
+  const resStr = (statusObj.width && statusObj.height) ? `${statusObj.width}x${statusObj.height}` : 'HD';
+  const battStr = (typeof statusObj.batteryPercent === 'number' && statusObj.batteryPercent >= 0)
+    ? ` · Batt ${statusObj.batteryPercent}%${statusObj.charging ? ' (Chg)' : ''}`
+    : '';
+  const lensStr = statusObj.lensFacing ? ` · ${statusObj.lensFacing} Lens` : '';
+  txt.textContent = `${statusObj.live ? 'LIVE' : 'STANDBY'} · ${statusObj.name || 'RobOS IP Cam'}${statusObj.model ? ` (${statusObj.model})` : ''} · ${resStr}${lensStr}${battStr}`;
+}
+
+function setVideoModalType(nextType) {
+  activeVideoModalType = ['robos-ip-camera', 'v4l2', 'custom'].includes(nextType) ? nextType : 'robos-ip-camera';
+  document.querySelectorAll('[data-vid-type]').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.vidType === activeVideoModalType);
+  });
+  populateVideoModalSourcesDropdown();
 }
 
 function populateVideoModalSourcesDropdown() {
   const srcSel = document.getElementById('vid-source-select');
-  if (!srcSel) return;
-  const opts = discoveredVideoSources.map(s =>
-    `<option value="${esc(s.id)}">${esc(s.label)}</option>`
-  );
-  opts.push('<option value="__custom__">Custom Stream URL / Device Path (RTSP, MJPEG, /dev/video*)</option>');
-  srcSel.innerHTML = opts.join('');
-
+  const srcLbl = document.getElementById('vid-source-select-label');
+  const robosPanel = document.getElementById('vid-robos-cam-panel');
   const customRow = document.getElementById('vid-custom-url-fields');
-  const isCustom = srcSel.value === '__custom__';
-  customRow?.classList.toggle('hidden', !isCustom);
+  const authRow = document.getElementById('vid-auth-fields');
+  if (!srcSel) return;
 
-  const firstSrc = discoveredVideoSources.find(s => s.id === srcSel.value);
-  const nameInp = document.getElementById('vid-track-name-input');
-  if (nameInp && firstSrc?.shortName) {
-    nameInp.value = firstSrc.shortName;
+  const robosCams = discoveredVideoSources.filter(s => s.isRobosAndroidCam || s.sourceType === 'robos-ip-camera');
+  const v4l2Cams = discoveredVideoSources.filter(s => s.sourceType === 'v4l2' || Boolean(s.devicePath));
+  const otherIpCams = discoveredVideoSources.filter(s => !s.isRobosAndroidCam && s.sourceType !== 'robos-ip-camera' && s.sourceType !== 'v4l2' && !s.devicePath);
+
+  if (activeVideoModalType === 'robos-ip-camera') {
+    if (srcLbl) srcLbl.textContent = 'Discovered RobOS IP Cameras (Android Wi-Fi / ONVIF :8080)';
+    const opts = robosCams.map(s => `<option value="${esc(s.id)}">${esc(s.label)}</option>`);
+    opts.push('<option value="__manual_robos__">Enter RobOS IP Camera Host / IP Address Manually...</option>');
+    srcSel.innerHTML = opts.join('');
+
+    robosPanel?.classList.remove('hidden');
+    customRow?.classList.add('hidden');
+    authRow?.classList.remove('hidden');
+
+    const firstRobos = robosCams.find(s => s.id === srcSel.value) || null;
+    const hostInp = document.getElementById('vid-robos-host-input');
+    const portInp = document.getElementById('vid-robos-port-input');
+    if (firstRobos) {
+      if (hostInp) hostInp.value = firstRobos.host || '';
+      if (portInp) portInp.value = String(firstRobos.port || 8080);
+      activeRobosProbedStatus = firstRobos.robosStatus || null;
+      renderRobosTelemetryBar(activeRobosProbedStatus);
+      const nameInp = document.getElementById('vid-track-name-input');
+      if (nameInp && firstRobos.shortName) nameInp.value = firstRobos.shortName;
+    } else {
+      renderRobosTelemetryBar(activeRobosProbedStatus);
+      const nameInp = document.getElementById('vid-track-name-input');
+      if (nameInp && (!nameInp.value || nameInp.value === 'Integrated Camera')) {
+        nameInp.value = 'RobOS IP Cam 1';
+      }
+    }
+    return;
   }
+
+  robosPanel?.classList.add('hidden');
+
+  if (activeVideoModalType === 'v4l2') {
+    if (srcLbl) srcLbl.textContent = 'Local USB / V4L2 Capture Devices (/dev/video*)';
+    srcSel.innerHTML = v4l2Cams.length
+      ? v4l2Cams.map(s => `<option value="${esc(s.id)}">${esc(s.label)}</option>`).join('')
+      : '<option value="__custom__">No /dev/video* webcam detected — enter device path below</option>';
+    customRow?.classList.toggle('hidden', srcSel.value !== '__custom__');
+    authRow?.classList.add('hidden');
+    const firstV4l = v4l2Cams.find(s => s.id === srcSel.value);
+    const nameInp = document.getElementById('vid-track-name-input');
+    if (nameInp && firstV4l?.shortName) nameInp.value = firstV4l.shortName;
+    return;
+  }
+
+  if (srcLbl) srcLbl.textContent = 'ONVIF LAN Cameras & Custom RTSP / HTTP Streams';
+  const opts = otherIpCams.map(s => `<option value="${esc(s.id)}">${esc(s.label)}</option>`);
+  opts.push('<option value="__custom__">Custom Stream URL (rtsp://, http://, or /dev/video*)</option>');
+  srcSel.innerHTML = opts.join('');
+  customRow?.classList.toggle('hidden', srcSel.value !== '__custom__');
+  authRow?.classList.remove('hidden');
+  const firstOther = otherIpCams.find(s => s.id === srcSel.value);
+  const nameInp = document.getElementById('vid-track-name-input');
+  if (nameInp && firstOther?.shortName) nameInp.value = firstOther.shortName;
 }
 
 function populateVideoModalAudioInputsDropdown() {
@@ -2146,22 +2270,66 @@ function populateVideoModalAudioInputsDropdown() {
     : '<option value="">Default PipeWire Input</option>';
 }
 
+async function connectAndVerifyRobosIpCameraInModal() {
+  const statusEl = document.getElementById('vid-modal-status');
+  const host = String(document.getElementById('vid-robos-host-input')?.value || '').trim();
+  const port = Number(document.getElementById('vid-robos-port-input')?.value) || 8080;
+  const username = String(document.getElementById('vid-auth-user')?.value || '').trim();
+  const password = String(document.getElementById('vid-auth-pass')?.value || '');
+  if (!host) {
+    if (statusEl) statusEl.textContent = 'Enter your RobOS IP Camera Wi-Fi IP address (e.g. 192.168.1.65) or click Scan Wi-Fi / LAN.';
+    return;
+  }
+  if (statusEl) statusEl.textContent = `Connecting to RobOS IP Camera at ${host}:${port}...`;
+  const res = await window.robos?.probeRobosIpCamera?.({ host, port, username, password });
+  if (!res?.ok || !res.status) {
+    renderRobosTelemetryBar(null);
+    if (statusEl) statusEl.textContent = res?.error || `Could not reach RobOS IP Camera at ${host}:${port}`;
+    return;
+  }
+  activeRobosProbedStatus = res.status;
+  renderRobosTelemetryBar(res.status);
+  if (res.source && !discoveredVideoSources.some(s => s.host === res.source.host && s.port === res.source.port)) {
+    discoveredVideoSources = [res.source, ...discoveredVideoSources];
+    populateVideoModalSourcesDropdown();
+  }
+  const nameInp = document.getElementById('vid-track-name-input');
+  if (nameInp && res.status.name) nameInp.value = res.status.name;
+  await refreshAddVideoModalPreview();
+}
+
+async function sendModalRobosCamControl(commandObj) {
+  const vcfg = buildSelectedModalVideoConfig();
+  if (!vcfg.host && !vcfg.baseUrl && !vcfg.streamUrl) return;
+  const statusEl = document.getElementById('vid-modal-status');
+  const res = await window.robos?.controlRobosIpCamera?.({ videoConfig: vcfg, command: commandObj });
+  if (res?.ok) {
+    if (res.status) {
+      activeRobosProbedStatus = res.status;
+      renderRobosTelemetryBar(res.status);
+    }
+    setTimeout(() => refreshAddVideoModalPreview().catch(() => {}), 320);
+  } else if (statusEl) {
+    statusEl.textContent = res?.error || 'Could not send remote camera command.';
+  }
+}
+
 async function refreshAddVideoModalPreview() {
   const statusEl = document.getElementById('vid-modal-status');
   const imgEl = document.getElementById('vid-modal-preview-img');
   const phEl = document.getElementById('vid-modal-preview-placeholder');
   const vcfg = buildSelectedModalVideoConfig();
   if (!vcfg.streamUrl && !vcfg.devicePath) {
-    if (statusEl) statusEl.textContent = 'Enter a camera Stream URL or /dev/video* path first.';
+    if (statusEl) statusEl.textContent = 'Enter a RobOS IP Camera IP/Host or select a camera first.';
     return;
   }
-  if (statusEl) statusEl.textContent = `Grabbing preview frame from ${vcfg.shortName || vcfg.label}...`;
+  if (statusEl) statusEl.textContent = `Grabbing HD preview frame from ${vcfg.shortName || vcfg.label}...`;
   const res = await window.robos?.captureVideoSnapshot?.({ videoConfig: vcfg });
   if (res?.ok && res.dataUrl && imgEl) {
     imgEl.src = res.dataUrl;
     imgEl.classList.remove('hidden');
     phEl?.classList.add('hidden');
-    if (statusEl) statusEl.textContent = `Live preview connected: ${vcfg.label}`;
+    if (statusEl) statusEl.textContent = `HD preview connected: ${vcfg.label}`;
   } else {
     imgEl?.classList.add('hidden');
     if (phEl) {
@@ -2172,7 +2340,7 @@ async function refreshAddVideoModalPreview() {
   }
 }
 
-async function openAddVideoModal({ scanLan = false } = {}) {
+async function openAddVideoModal({ scanLan = true, includeSubnetSweep = false, preferredType = 'robos-ip-camera' } = {}) {
   closeContextMenu();
   closeMenubarDropdown();
   const modal = document.getElementById('add-video-modal');
@@ -2183,26 +2351,46 @@ async function openAddVideoModal({ scanLan = false } = {}) {
   const phEl = document.getElementById('vid-modal-preview-placeholder');
   if (phEl) {
     phEl.classList.remove('hidden');
-    phEl.textContent = 'Select a camera and click Preview Frame to verify feed';
+    phEl.textContent = 'Discovering RobOS IP Cameras & HD video inputs...';
   }
+  // Always default to HD Quality (`hd-1080p`) and Optional Audio (`none` = Video Only)
+  const qualSel = document.getElementById('vid-quality-select');
+  if (qualSel && !includeSubnetSweep) qualSel.value = 'hd-1080p';
   const modeSel = document.getElementById('vid-audio-mode-select');
-  if (modeSel) modeSel.value = 'none';
+  if (modeSel && !includeSubnetSweep) modeSel.value = 'none';
   document.getElementById('vid-audio-interface-row')?.classList.add('hidden');
   modal.classList.remove('hidden');
 
+  if (!includeSubnetSweep) {
+    activeVideoModalType = preferredType || 'robos-ip-camera';
+    document.querySelectorAll('[data-vid-type]').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.vidType === activeVideoModalType);
+    });
+  }
+
   const statusEl = document.getElementById('vid-modal-status');
-  if (statusEl) statusEl.textContent = scanLan ? 'Scanning LAN for ONVIF & RobOS Android IP Cameras...' : 'Loading cameras & webcams...';
-  const res = await window.robos?.discoverVideoSources?.({ scanLan });
+  if (statusEl) {
+    statusEl.textContent = includeSubnetSweep
+      ? 'Scanning Wi-Fi subnet & ONVIF for RobOS IP Cameras...'
+      : 'Discovering RobOS IP Cameras & local webcams (HD Quality default)...';
+  }
+  const res = await window.robos?.discoverVideoSources?.({ scanLan, includeSubnetSweep });
   if (res?.ok && Array.isArray(res.sources)) {
     discoveredVideoSources = res.sources;
   }
   populateVideoModalSourcesDropdown();
+
+  const robosCount = discoveredVideoSources.filter(s => s.isRobosAndroidCam || s.sourceType === 'robos-ip-camera').length;
   if (statusEl) {
-    statusEl.textContent = discoveredVideoSources.length
-      ? `Found ${discoveredVideoSources.length} video input source(s).`
-      : 'Enter a RobOS Android IP Camera URL (e.g. http://ip:8080/video) or click Scan LAN.';
+    statusEl.textContent = robosCount > 0
+      ? `Connected ${robosCount} RobOS IP Camera(s) on Wi-Fi (${discoveredVideoSources.length} total video sources · HD Quality default).`
+      : `Found ${discoveredVideoSources.length} video source(s). Enter your phone's IP:8080 above or click Scan Wi-Fi / LAN.`;
   }
-  if (discoveredVideoSources.length > 0) {
+  if (phEl && !discoveredVideoSources.length) {
+    phEl.textContent = 'Enter RobOS IP Camera IP (e.g. 192.168.1.65) and click Connect / Verify';
+  }
+  const vcfg = buildSelectedModalVideoConfig();
+  if (vcfg.streamUrl || vcfg.devicePath) {
     refreshAddVideoModalPreview().catch(() => {});
   }
 }
@@ -2212,12 +2400,13 @@ function closeAddVideoModal() {
 }
 
 async function confirmAddVideoTrackFromModal() {
+  const qualityPreset = document.getElementById('vid-quality-select')?.value || 'hd-1080p';
   const vcfg = buildSelectedModalVideoConfig();
   if (!vcfg.streamUrl && !vcfg.devicePath) {
-    showStatus('Specify a camera Stream URL or V4L2 device path.', true);
+    showStatus('Specify a RobOS IP Camera host/URL or V4L2 device path.', true);
     return;
   }
-  const name = String(document.getElementById('vid-track-name-input')?.value || vcfg.shortName || 'Video Cam').trim();
+  const name = String(document.getElementById('vid-track-name-input')?.value || vcfg.shortName || 'RobOS IP Cam 1').trim();
   const audioMode = document.getElementById('vid-audio-mode-select')?.value || 'none';
   const audSel = document.getElementById('vid-audio-input-select');
   const inputNodeName = audioMode === 'interface' ? (audSel?.value || '') : '';
@@ -2228,6 +2417,7 @@ async function confirmAddVideoTrackFromModal() {
   const res = await window.robos?.addVideoTrack?.({
     name,
     videoConfig: vcfg,
+    qualityPreset,
     audioMode,
     inputNodeName,
     inputLabel,
@@ -2251,7 +2441,8 @@ async function confirmAddVideoTrackFromModal() {
   switchView('studio-stage');
   renderStudio();
   syncVideoOutputMonitor({ forcePush: true });
-  showStatus(`Added armed Video Track "${res.track.name}" (${audioMode === 'none' ? 'Video Only' : `Audio: ${audioMode}`}) — Live Cam active in Video Output!`);
+  const qBadge = res.track?.videoConfig?.qualityPreset === 'hd-720p' ? '720p HD' : (res.track?.videoConfig?.qualityPreset === 'hd-1080p' ? '1080p Full HD' : res.track?.videoConfig?.qualityPreset || 'HD');
+  showStatus(`Added armed Video Track "${res.track.name}" (${qBadge} · ${audioMode === 'none' ? 'Video Only' : `Optional Audio: ${audioMode}`}) — Live Cam active in Video Output!`);
 }
 
 function seekPlayheadTo(targetSec, { updateReturnAnchor = true, ensureVisible = false } = {}) {
@@ -4733,6 +4924,40 @@ function renderInspectorDrawer() {
     return;
   }
 
+  const vcfgInsp = track.trackKind === 'video' ? (track.videoConfig || {}) : null;
+  const curVidQual = vcfgInsp?.qualityPreset || 'hd-1080p';
+  const curVidAudio = vcfgInsp?.audioMode || 'none';
+  const isRobosVid = Boolean(vcfgInsp && (vcfgInsp.isRobosAndroidCam || vcfgInsp.sourceType === 'robos-ip-camera'));
+  const videoInspectorBarHtml = vcfgInsp ? `
+    <div class="lyrics-inspector-card" style="border-color:rgba(168, 85, 247, 0.42);">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <span class="video-track-pill" style="margin:0;">${isRobosVid ? 'ROBOS IP CAMERA' : 'VIDEO INPUT'}</span>
+          <span class="mono" style="font-size:11px;color:#cbd5e1;">${esc(vcfgInsp.streamUrl || vcfgInsp.devicePath || vcfgInsp.label || '')}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+          <label class="hint" for="insp-vid-quality">Quality:</label>
+          <select id="insp-vid-quality" class="select" style="height:26px;font-size:11px;padding:1px 7px;width:auto;">
+            <option value="hd-1080p" ${curVidQual === 'hd-1080p' ? 'selected' : ''}>1080p Full HD (Default)</option>
+            <option value="hd-720p" ${curVidQual === 'hd-720p' ? 'selected' : ''}>720p HD</option>
+            <option value="sd-480p" ${curVidQual === 'sd-480p' ? 'selected' : ''}>480p SD</option>
+            <option value="low-360p" ${curVidQual === 'low-360p' ? 'selected' : ''}>360p Low (/sub)</option>
+          </select>
+          <label class="hint" for="insp-vid-audio">Audio (Optional):</label>
+          <select id="insp-vid-audio" class="select" style="height:26px;font-size:11px;padding:1px 7px;width:auto;">
+            <option value="none" ${curVidAudio === 'none' ? 'selected' : ''}>Video Only (No Audio)</option>
+            <option value="interface" ${curVidAudio === 'interface' ? 'selected' : ''}>Paired Audio Interface Input</option>
+            <option value="stream" ${curVidAudio === 'stream' ? 'selected' : ''}>Camera Stream Audio</option>
+          </select>
+          ${isRobosVid ? `
+            <button type="button" class="btn btn-sm btn-bevel" id="btn-insp-robos-flip" title="Flip RobOS IP Camera Back / Front Lens">Flip Lens</button>
+            <button type="button" class="btn btn-sm btn-bevel" id="btn-insp-robos-torch" title="Toggle Phone Flashlight">Light</button>
+          ` : ''}
+        </div>
+      </div>
+    </div>
+  ` : '';
+
   drawer.innerHTML = `
     <div class="inspector-top">
       <div class="inspector-title-row">
@@ -4748,6 +4973,7 @@ function renderInspectorDrawer() {
         <button type="button" class="btn btn-sm btn-bevel" id="btn-insp-close">${DI.svg('close', 12)}<span>Close</span></button>
       </div>
     </div>
+    ${videoInspectorBarHtml}
 
     <div class="inspector-grid">
       <div class="rack-module">
@@ -4870,6 +5096,59 @@ function renderInspectorDrawer() {
     selectedTrackId = null;
     drawer.classList.add('hidden');
     renderStudio();
+  });
+  document.getElementById('insp-vid-quality')?.addEventListener('change', (e) => {
+    const nextQ = e.target.value || 'hd-1080p';
+    saveInspectorPatch('Change Video Quality', (t) => {
+      if (!t.videoConfig) return;
+      t.videoConfig.qualityPreset = nextQ;
+      if (t.videoConfig.isRobosAndroidCam || t.videoConfig.sourceType === 'robos-ip-camera') {
+        const pathPart = getRobosStreamPathForQuality(nextQ);
+        if (t.videoConfig.streamUrl) {
+          t.videoConfig.streamUrl = t.videoConfig.streamUrl.replace(/\/(video|sub)(\?.*)?$/i, `${pathPart}$2`);
+        }
+      }
+      const qShort = nextQ === 'hd-1080p' ? '1080p Full HD' : (nextQ === 'hd-720p' ? '720p HD' : (nextQ === 'sd-480p' ? '480p SD' : '360p Low'));
+      const camLbl = t.videoConfig.shortName || 'Video Cam';
+      t.inputLabel = t.videoConfig.audioMode === 'interface'
+        ? `${camLbl} (${qShort}) + Audio Input`
+        : (t.videoConfig.audioMode === 'stream' ? `${camLbl} (${qShort}) + Stream Audio` : `${camLbl} (${qShort}) · Video Only`);
+    });
+  });
+  document.getElementById('insp-vid-audio')?.addEventListener('change', (e) => {
+    const nextAudio = e.target.value || 'none';
+    const ordered = getOrderedInputs();
+    saveInspectorPatch('Change Video Optional Audio Mode', (t) => {
+      if (!t.videoConfig) return;
+      t.videoConfig.audioMode = nextAudio;
+      if (nextAudio === 'interface' && !t.inputNodeName && ordered[0]) {
+        t.inputNodeName = ordered[0].name;
+      } else if (nextAudio !== 'interface') {
+        t.inputNodeName = '';
+      }
+      const qShort = t.videoConfig.qualityPreset === 'hd-720p' ? '720p HD' : '1080p Full HD';
+      const camLbl = t.videoConfig.shortName || 'Video Cam';
+      t.inputLabel = nextAudio === 'interface'
+        ? `${camLbl} (${qShort}) + Audio Input`
+        : (nextAudio === 'stream' ? `${camLbl} (${qShort}) + Stream Audio` : `${camLbl} (${qShort}) · Video Only`);
+    });
+  });
+  document.getElementById('btn-insp-robos-flip')?.addEventListener('click', async () => {
+    if (!track.videoConfig) return;
+    const probed = await window.robos?.probeRobosIpCamera?.({
+      hostOrUrl: track.videoConfig.baseUrl || track.videoConfig.streamUrl || track.videoConfig.host,
+      port: track.videoConfig.port || 8080,
+      username: track.videoConfig.username,
+      password: track.videoConfig.password,
+    });
+    const nextLens = probed?.status?.lensFacing === 'FRONT' ? 'BACK' : 'FRONT';
+    const res = await window.robos?.controlRobosIpCamera?.({ videoConfig: track.videoConfig, command: { lens: nextLens } });
+    if (res?.ok) showStatus(`Switched "${track.name}" to ${nextLens} camera lens`);
+  });
+  document.getElementById('btn-insp-robos-torch')?.addEventListener('click', async () => {
+    if (!track.videoConfig) return;
+    const res = await window.robos?.controlRobosIpCamera?.({ videoConfig: track.videoConfig, command: { toggleTorch: true } });
+    if (res?.ok) showStatus(`Toggled LED flashlight on "${track.name}"`);
   });
   document.getElementById('btn-insp-norm-gain')?.addEventListener('click', async () => {
     await commitEdit('Auto-Normalize Track Gain', () => {
@@ -6743,6 +7022,7 @@ function openEmptyRackContextMenu(ev) {
     ${ctxRow('data-rack-ctx', 'add-4', 'layers', 'Add 4 Sequential Audio Tracks', 'Ctrl+Shift+T')}
     ${ctxRow('data-rack-ctx', 'add-8', 'layers', 'Add 8 Sequential Audio Tracks')}
     ${ctxRow('data-rack-ctx', 'wiz-mic', 'mic-wizard', 'Add Mic via Studio Wizard...')}
+    ${ctxRow('data-rack-ctx', 'add-video', 'video', 'Add RobOS IP Camera / Video Track (HD)...')}
     ${ctxRow('data-rack-ctx', 'wiz-drumset', 'drumset-ai', 'DrumSet AI Soundcheck (Gemini)...')}
     ${ctxRow('data-rack-ctx', 'import-wav', 'import-wav', 'Import Audio / Video File(s)...', 'Ctrl+Shift+I')}
     <div class="ctx-sep"></div>
@@ -6766,6 +7046,7 @@ function openEmptyRackContextMenu(ev) {
       else if (cmd === 'add-4') await addBlankAudioTracks(4);
       else if (cmd === 'add-8') await addBlankAudioTracks(8);
       else if (cmd === 'wiz-mic') openAddMicWizard();
+      else if (cmd === 'add-video') openAddVideoModal({ scanLan: true, preferredType: 'robos-ip-camera' });
       else if (cmd === 'wiz-drumset') openDrumsetWizard();
       else if (cmd === 'import-wav') await importAudioWavFiles();
       else if (cmd === 'sel-all-tracks') editSelectAllTracksOnly();
@@ -9904,16 +10185,60 @@ async function init() {
   }
 
   document.getElementById('btn-topbar-video-monitor')?.addEventListener('click', () => toggleVideoOutputMonitor());
-  document.getElementById('btn-open-add-video-modal')?.addEventListener('click', () => openAddVideoModal());
-  document.getElementById('btn-quick-add-video')?.addEventListener('click', () => openAddVideoModal());
+  document.getElementById('btn-open-add-video-modal')?.addEventListener('click', () => openAddVideoModal({ scanLan: true }));
+  document.getElementById('btn-quick-add-video')?.addEventListener('click', () => openAddVideoModal({ scanLan: true }));
+  document.getElementById('btn-empty-add-video')?.addEventListener('click', () => openAddVideoModal({ scanLan: true, preferredType: 'robos-ip-camera' }));
   document.getElementById('btn-vid-modal-close')?.addEventListener('click', closeAddVideoModal);
   document.getElementById('btn-vid-modal-cancel')?.addEventListener('click', closeAddVideoModal);
-  document.getElementById('btn-vid-scan-lan')?.addEventListener('click', () => openAddVideoModal({ scanLan: true }));
+  document.getElementById('btn-vid-scan-lan')?.addEventListener('click', () => openAddVideoModal({ scanLan: true, includeSubnetSweep: true }));
   document.getElementById('btn-vid-refresh-preview')?.addEventListener('click', () => refreshAddVideoModalPreview());
   document.getElementById('btn-vid-confirm-add')?.addEventListener('click', () => confirmAddVideoTrackFromModal());
+  document.getElementById('btn-vid-robos-connect')?.addEventListener('click', () => connectAndVerifyRobosIpCameraInModal());
+
+  document.querySelectorAll('[data-vid-type]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      setVideoModalType(btn.dataset.vidType);
+      const vcfg = buildSelectedModalVideoConfig();
+      if (vcfg.streamUrl || vcfg.devicePath) {
+        refreshAddVideoModalPreview().catch(() => {});
+      }
+    });
+  });
+
+  document.getElementById('btn-robos-cam-flip')?.addEventListener('click', () => {
+    const nextLens = activeRobosProbedStatus?.lensFacing === 'FRONT' ? 'BACK' : 'FRONT';
+    sendModalRobosCamControl({ lens: nextLens });
+  });
+  document.getElementById('btn-robos-cam-torch')?.addEventListener('click', () => {
+    sendModalRobosCamControl({ toggleTorch: true });
+  });
+  document.getElementById('btn-robos-cam-zoom1')?.addEventListener('click', () => {
+    sendModalRobosCamControl({ zoom: 1.0 });
+  });
+  document.getElementById('btn-robos-cam-zoom2')?.addEventListener('click', () => {
+    sendModalRobosCamControl({ zoom: 2.0 });
+  });
 
   document.getElementById('vid-source-select')?.addEventListener('change', (ev) => {
     const val = ev.target.value;
+    if (activeVideoModalType === 'robos-ip-camera') {
+      const found = discoveredVideoSources.find(s => s.id === val);
+      const hostInp = document.getElementById('vid-robos-host-input');
+      const portInp = document.getElementById('vid-robos-port-input');
+      if (found) {
+        if (hostInp) hostInp.value = found.host || '';
+        if (portInp) portInp.value = String(found.port || 8080);
+        activeRobosProbedStatus = found.robosStatus || null;
+        renderRobosTelemetryBar(activeRobosProbedStatus);
+        const nameInp = document.getElementById('vid-track-name-input');
+        if (nameInp && found.shortName) nameInp.value = found.shortName;
+        refreshAddVideoModalPreview().catch(() => {});
+      } else {
+        if (hostInp) { hostInp.value = ''; hostInp.focus(); }
+        renderRobosTelemetryBar(null);
+      }
+      return;
+    }
     document.getElementById('vid-custom-url-fields')?.classList.toggle('hidden', val !== '__custom__');
     const found = discoveredVideoSources.find(s => s.id === val);
     const nameInp = document.getElementById('vid-track-name-input');
@@ -9921,6 +10246,13 @@ async function init() {
       nameInp.value = found.shortName;
     }
     if (found) {
+      refreshAddVideoModalPreview().catch(() => {});
+    }
+  });
+
+  document.getElementById('vid-quality-select')?.addEventListener('change', () => {
+    const vcfg = buildSelectedModalVideoConfig();
+    if (vcfg.streamUrl || vcfg.devicePath) {
       refreshAddVideoModalPreview().catch(() => {});
     }
   });

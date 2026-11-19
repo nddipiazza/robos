@@ -85,6 +85,8 @@ contextBridge.exposeInMainWorld('robos', {
 
   // Video Mode: Video Inputs (RobOS Android IP Cam, ONVIF, V4L2) & Video Output Monitor Window
   discoverVideoSources: (payload) => ipcRenderer.invoke('daw:video-discover', payload),
+  probeRobosIpCamera: (payload) => ipcRenderer.invoke('daw:robos-cam-probe', payload),
+  controlRobosIpCamera: (payload) => ipcRenderer.invoke('daw:robos-cam-control', payload),
   captureVideoSnapshot: (payload) => ipcRenderer.invoke('daw:video-snapshot', payload),
   addVideoTrack: (payload) => ipcRenderer.invoke('daw:add-video-track', payload),
   openVideoOutputWindow: (payload) => ipcRenderer.invoke('daw:video-window-open', payload),

@@ -169,6 +169,10 @@
                 <svg class="daw-svg-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 <span>Import / Drop Audio &amp; Video (MP3, MP4, WAV...)</span>
               </button>
+              <button type="button" class="btn btn-lg btn-bevel" id="btn-empty-add-video">
+                <svg class="daw-svg-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#c084fc" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+                <span>Add RobOS IP Camera / Video (HD)</span>
+              </button>
               <button type="button" class="btn btn-primary btn-lg" id="btn-empty-open-drumset-wizard">
                 <img src="assets/icons/drumset-ai.webp" class="daw-ai-badge" width="20" height="20" alt="" />
                 <span>DrumSet AI Soundcheck (All Mics to Gemini)</span>
@@ -1081,7 +1085,7 @@
           <svg class="daw-svg-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
           <div>
             <h2 id="add-video-modal-title">Add Video Input Track</h2>
-            <p class="modal-subtitle">Record a RobOS Android IP Camera, ONVIF network camera, or local USB webcam + optional audio</p>
+            <p class="modal-subtitle">Record a RobOS IP Camera, local USB webcam, or ONVIF/RTSP stream in HD quality (+ optional audio)</p>
           </div>
         </div>
         <button type="button" class="modal-close" id="btn-vid-modal-close" aria-label="Close Add Video Dialog">&times;</button>
@@ -1090,54 +1094,99 @@
       <div class="modal-body export-modal-body">
         <div class="export-section-card">
           <div class="export-sec-head">
-            <span class="mini-heading" style="margin:0;">1. VIDEO DEVICE / IP CAMERA SOURCE</span>
-            <button type="button" class="btn btn-sm btn-bevel" id="btn-vid-scan-lan">Scan LAN (ONVIF / RobOS Android Cam)</button>
+            <span class="mini-heading" style="margin:0;">1. VIDEO INPUT SOURCE</span>
+            <button type="button" class="btn btn-sm btn-bevel" id="btn-vid-scan-lan">Scan Wi-Fi / LAN for Cameras</button>
           </div>
 
-          <div class="form-row">
-            <label for="vid-source-select">Discovered Cameras &amp; Webcams</label>
+          <div class="vid-input-type-pills" id="vid-input-type-bar" role="tablist" aria-label="Video Input Type">
+            <button type="button" class="vid-type-pill active" data-vid-type="robos-ip-camera">RobOS IP Camera (Wi-Fi HD)</button>
+            <button type="button" class="vid-type-pill" data-vid-type="v4l2">USB / V4L2 Webcam</button>
+            <button type="button" class="vid-type-pill" data-vid-type="custom">ONVIF / RTSP / Custom URL</button>
+          </div>
+
+          <div class="form-row" style="margin-top:8px;">
+            <label for="vid-source-select" id="vid-source-select-label">RobOS IP Cameras on Network</label>
             <select id="vid-source-select" class="select"></select>
+          </div>
+
+          <!-- Dedicated RobOS IP Camera Direct Host/IP + Live Telemetry + Remote Lens/Light Controls -->
+          <div id="vid-robos-cam-panel" class="robos-cam-config-panel">
+            <div class="export-range-inputs-row">
+              <div class="form-row" style="flex:1.6;margin-bottom:0;">
+                <label for="vid-robos-host-input">RobOS IP Camera Host / IP</label>
+                <input type="text" id="vid-robos-host-input" class="text-input mono" placeholder="192.168.1.65" />
+              </div>
+              <div class="form-row" style="flex:0.7;margin-bottom:0;">
+                <label for="vid-robos-port-input">Port</label>
+                <input type="number" id="vid-robos-port-input" class="text-input mono" value="8080" min="1" max="65535" />
+              </div>
+              <div class="form-row" style="flex:0.85;margin-bottom:0;display:flex;flex-direction:column;justify-content:flex-end;">
+                <button type="button" class="btn btn-bevel" id="btn-vid-robos-connect" style="height:32px;">Connect / Verify</button>
+              </div>
+            </div>
+
+            <div id="vid-robos-telemetry-bar" class="robos-cam-telemetry-bar hidden">
+              <span id="vid-robos-telemetry-text" class="mono">LIVE</span>
+              <div class="robos-cam-remote-btns">
+                <button type="button" class="btn btn-sm btn-bevel" id="btn-robos-cam-flip" title="Switch Phone Back / Front Lens">Flip Lens</button>
+                <button type="button" class="btn btn-sm btn-bevel" id="btn-robos-cam-torch" title="Toggle Phone LED Flashlight">Light</button>
+                <button type="button" class="btn btn-sm btn-bevel" id="btn-robos-cam-zoom1" title="1x Wide Sensor Zoom">1x</button>
+                <button type="button" class="btn btn-sm btn-bevel" id="btn-robos-cam-zoom2" title="2x Sensor Crop Zoom">2x</button>
+              </div>
+            </div>
           </div>
 
           <div id="vid-custom-url-fields" class="hidden">
             <div class="form-row">
               <label for="vid-custom-url-input">Stream URL or Device Path (<code>http://ip:8080/video</code>, <code>rtsp://...</code>, or <code>/dev/video0</code>)</label>
-              <input type="text" id="vid-custom-url-input" class="text-input mono" placeholder="http://192.168.1.65:8080/video" />
+              <input type="text" id="vid-custom-url-input" class="text-input mono" placeholder="rtsp://192.168.1.100:554/stream1" />
             </div>
-            <div class="export-range-inputs-row">
-              <div class="form-row" style="flex:1;margin-bottom:0;">
-                <label for="vid-auth-user">Camera Username (Optional)</label>
-                <input type="text" id="vid-auth-user" class="text-input" placeholder="Optional" />
-              </div>
-              <div class="form-row" style="flex:1;margin-bottom:0;">
-                <label for="vid-auth-pass">Camera Password (Optional)</label>
-                <input type="password" id="vid-auth-pass" class="text-input" placeholder="Optional" />
-              </div>
+          </div>
+
+          <div id="vid-auth-fields" class="export-range-inputs-row hidden" style="margin-top:8px;">
+            <div class="form-row" style="flex:1;margin-bottom:0;">
+              <label for="vid-auth-user">Camera Username (Optional)</label>
+              <input type="text" id="vid-auth-user" class="text-input" placeholder="Optional (e.g. admin)" />
+            </div>
+            <div class="form-row" style="flex:1;margin-bottom:0;">
+              <label for="vid-auth-pass">Camera Password (Optional)</label>
+              <input type="password" id="vid-auth-pass" class="text-input" placeholder="Optional" />
             </div>
           </div>
 
           <div class="vid-preview-box">
             <img id="vid-modal-preview-img" alt="" class="hidden" />
-            <div id="vid-modal-preview-placeholder" class="vid-preview-placeholder">Select a camera and click Preview Frame to verify feed</div>
+            <div id="vid-modal-preview-placeholder" class="vid-preview-placeholder">Select a camera and click Preview Frame to verify HD feed</div>
             <button type="button" class="btn btn-sm btn-bevel vid-preview-btn" id="btn-vid-refresh-preview">Preview Frame</button>
           </div>
         </div>
 
         <div class="export-section-card">
           <div class="export-sec-head">
-            <span class="mini-heading" style="margin:0;">2. TRACK LABEL &amp; OPTIONAL AUDIO PAIRING</span>
+            <span class="mini-heading" style="margin:0;">2. HD VIDEO QUALITY, TRACK LABEL &amp; OPTIONAL AUDIO</span>
+            <span class="lyrics-track-pill" style="margin:0;">DEFAULT: HD QUALITY</span>
+          </div>
+
+          <div class="form-row">
+            <label for="vid-quality-select">Video Capture Quality &amp; Resolution</label>
+            <select id="vid-quality-select" class="select">
+              <option value="hd-1080p" selected>HD Quality — 1080p Full HD (Up to 1920x1080 · 30 fps · Studio HQ) [Default]</option>
+              <option value="hd-720p">HD Quality — 720p HD (1280x720 · 30 fps · Standard HD)</option>
+              <option value="sd-480p">SD 480p (854x480 · 24 fps · Balanced Size)</option>
+              <option value="low-360p">Low Bandwidth 360p (640x360 · 15 fps · RobOS /sub Stream)</option>
+            </select>
           </div>
 
           <div class="export-range-inputs-row">
             <div class="form-row" style="flex:1;margin-bottom:0;">
               <label for="vid-track-name-input">Video Track Name</label>
-              <input type="text" id="vid-track-name-input" class="text-input" value="Drum Cam 1" />
+              <input type="text" id="vid-track-name-input" class="text-input" value="RobOS IP Cam 1" />
             </div>
-            <div class="form-row" style="flex:1.25;margin-bottom:0;">
+            <div class="form-row" style="flex:1.3;margin-bottom:0;">
               <label for="vid-audio-mode-select">Audio Capture (Optional)</label>
               <select id="vid-audio-mode-select" class="select">
-                <option value="none" selected>Video Only (No Audio — Use Studio Mic Tracks)</option>
-                <option value="interface">Record Paired Audio Interface Input (+ DAW Mixer)</option>
+                <option value="none" selected>No Audio — Video Only (Use Studio Mic Tracks)</option>
+                <option value="interface">Record Paired Audio Interface / Mic Input (+ DAW Mixer)</option>
                 <option value="stream">Record Camera Stream Audio (RTSP / Stream Mic)</option>
               </select>
             </div>

@@ -1485,8 +1485,13 @@ describe('DAW Editing Engine: Multi-Select, Track/Take Gain, Split/Trim, Copy/Pa
     }
   });
 
-  it('discovers RobOS Android IP Cameras & V4L2 devices, records Video-Only & Video+Audio takes, and persists MP4 clips', async () => {
+  it('discovers RobOS Android IP Cameras & V4L2 devices, defaults to HD quality with optional audio, and persists MP4 clips', async () => {
+    const http = require('http');
     const {
+      DEFAULT_VIDEO_QUALITY,
+      VIDEO_QUALITY_PRESETS,
+      probeRobosIpCameraStatus,
+      controlRobosIpCamera,
       readCameraWatchSavedSources,
       listLocalV4l2VideoDevices,
       buildVideoTrack,
@@ -1495,9 +1500,72 @@ describe('DAW Editing Engine: Multi-Select, Track/Take Gain, Split/Trim, Copy/Pa
     } = require('../lib/video-devices');
     const { importMediaFileToWav } = require('../lib/media-importer');
 
+    assert.strictEqual(DEFAULT_VIDEO_QUALITY, 'hd-1080p');
+    assert.ok(VIDEO_QUALITY_PRESETS.some(p => p.id === 'hd-1080p' && p.isHd === true));
+    assert.ok(VIDEO_QUALITY_PRESETS.some(p => p.id === 'hd-720p' && p.isHd === true));
+
     const tmpVidDir = fs.mkdtempSync(path.join(os.tmpdir(), 'daw-video-mode-'));
+    let mockCamSrv = null;
     try {
-      // 1. Verify Camera Watch + RobOS Android IP Camera discovery & V4L2 metadata sub-node filtering
+      // 0. Verify live RobOS IP Camera /api/ping, /api/status, and /api/control protocol
+      let lastControlCmd = null;
+      mockCamSrv = http.createServer((req, res) => {
+        if (req.url === '/api/ping') {
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ app: 'robos-ip-camera', name: 'Studio Phone Cam', room: 'Drum Room', authRequired: false }));
+          return;
+        }
+        if (req.url === '/api/status') {
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({
+            app: 'robos-ip-camera',
+            name: 'Studio Phone Cam',
+            room: 'Drum Room',
+            manufacturer: 'RobOS',
+            model: 'motorola XT2125-4',
+            live: true,
+            state: 'live',
+            width: 1920,
+            height: 1080,
+            fps: 30,
+            targetFps: 30,
+            lensFacing: lastControlCmd?.lens || 'BACK',
+            torchEnabled: Boolean(lastControlCmd?.toggleTorch),
+            batteryPercent: 84,
+            charging: true,
+          }));
+          return;
+        }
+        if (req.url === '/api/control' && req.method === 'POST') {
+          let body = '';
+          req.on('data', c => { body += c; });
+          req.on('end', () => {
+            lastControlCmd = JSON.parse(body || '{}');
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ ok: true }));
+          });
+          return;
+        }
+        res.writeHead(404);
+        res.end();
+      });
+      await new Promise(resolve => mockCamSrv.listen(0, '127.0.0.1', resolve));
+      const mockPort = mockCamSrv.address().port;
+
+      const probed = await probeRobosIpCameraStatus('127.0.0.1', { port: mockPort });
+      assert.strictEqual(probed.ok, true);
+      assert.strictEqual(probed.source.sourceType, 'robos-ip-camera');
+      assert.strictEqual(probed.source.qualityPreset, 'hd-1080p');
+      assert.strictEqual(probed.source.streamUrl, `http://127.0.0.1:${mockPort}/video`);
+      assert.strictEqual(probed.status.width, 1920);
+      assert.strictEqual(probed.status.batteryPercent, 84);
+
+      const ctrlRes = await controlRobosIpCamera(probed.source, { lens: 'FRONT', toggleTorch: true, resolution: 'FHD_1080P' });
+      assert.strictEqual(ctrlRes.ok, true);
+      assert.strictEqual(ctrlRes.status.lensFacing, 'FRONT');
+      assert.strictEqual(lastControlCmd.resolution, 'FHD_1080P');
+
+      // 1. Verify Camera Watch + RobOS Android IP Camera discovery upgrades /sub to HD /video by default
       const mockCwJson = path.join(tmpVidDir, 'cameras.json');
       fs.writeFileSync(mockCwJson, JSON.stringify({
         version: 1,
@@ -1507,7 +1575,7 @@ describe('DAW Editing Engine: Multi-Select, Track/Take Gain, Split/Trim, Copy/Pa
             name: 'XT2125-4 Drum Cam',
             kind: 'onvif',
             enabled: true,
-            streamUrl: 'http://192.168.1.65:8080/video',
+            streamUrl: 'http://192.168.1.65:8080/sub',
             snapshotUrl: 'http://192.168.1.65:8080/snapshot.jpg',
             onvif: { hostname: '192.168.1.65', port: 8080, manufacturer: 'RobOS', model: 'motorola XT2125-4' },
           },
@@ -1522,7 +1590,9 @@ describe('DAW Editing Engine: Multi-Select, Track/Take Gain, Split/Trim, Copy/Pa
       }));
       const cwSources = readCameraWatchSavedSources(mockCwJson);
       assert.strictEqual(cwSources.length, 1);
+      assert.strictEqual(cwSources[0].sourceType, 'robos-ip-camera');
       assert.strictEqual(cwSources[0].isRobosAndroidCam, true);
+      assert.strictEqual(cwSources[0].qualityPreset, 'hd-1080p');
       assert.strictEqual(cwSources[0].streamUrl, 'http://192.168.1.65:8080/video');
 
       const fakeDev = path.join(tmpVidDir, 'dev');
@@ -1583,6 +1653,10 @@ describe('DAW Editing Engine: Multi-Select, Track/Take Gain, Split/Trim, Copy/Pa
       const pNoAudio = await probeVideoFileInfo(clipNoAudio.videoFile);
       assert.strictEqual(pNoAudio.hasVideo, true);
       assert.strictEqual(pNoAudio.hasAudio, false);
+      assert.strictEqual(pNoAudio.width, 1280);
+      assert.strictEqual(pNoAudio.height, 720);
+      assert.strictEqual(vidOnlyTrack.videoConfig.qualityPreset, 'hd-1080p');
+      assert.strictEqual(vidOnlyTrack.videoConfig.sourceType, 'robos-ip-camera');
 
       const clipWithStreamAudio = proj.tracks[1].clips[0];
       assert.strictEqual(clipWithStreamAudio.mediaKind, 'video');
@@ -1600,6 +1674,7 @@ describe('DAW Editing Engine: Multi-Select, Track/Take Gain, Split/Trim, Copy/Pa
       assert.ok(reloadedClip.videoFile.startsWith(savedDir));
       assert.ok(fs.existsSync(reloadedClip.videoFile));
     } finally {
+      if (mockCamSrv) await new Promise(r => mockCamSrv.close(r));
       fs.rmSync(tmpVidDir, { recursive: true, force: true });
     }
   });

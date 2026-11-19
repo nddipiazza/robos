@@ -1,8 +1,8 @@
 'use strict';
 
 /**
- * RobOS DAW Studio — Video Inputs (RobOS Android IP Camera, ONVIF, Camera Watch, V4L2 Webcams)
- * & Synchronized Multi-Track Video Recorder (`ffmpeg` Fragmented MP4 + Faststart).
+ * RobOS DAW Studio — Video Inputs (RobOS IP Camera, ONVIF, Camera Watch, V4L2 Webcams),
+ * HD Video Quality Presets, & Synchronized Multi-Track Video Recorder (`ffmpeg` Fragmented MP4 + Faststart).
  */
 
 const fs = require('fs');
@@ -12,7 +12,68 @@ const http = require('http');
 const https = require('https');
 const dgram = require('dgram');
 const crypto = require('crypto');
-const { spawn, execFile } = require('child_process');
+const { spawn, execFile, execFileSync } = require('child_process');
+
+const DEFAULT_VIDEO_QUALITY = 'hd-1080p';
+
+const VIDEO_QUALITY_PRESETS = [
+  {
+    id: 'hd-1080p',
+    label: 'HD Quality — 1080p Full HD (Up to 1920x1080 · 30 fps · Studio HQ)',
+    shortLabel: '1080p Full HD',
+    width: 1920,
+    height: 1080,
+    fps: 30,
+    crf: 18,
+    jpegQuality: 88,
+    robosResolution: 'FHD_1080P',
+    robosStreamPath: '/video',
+    isHd: true,
+  },
+  {
+    id: 'hd-720p',
+    label: 'HD Quality — 720p HD (1280x720 · 30 fps · Standard HD)',
+    shortLabel: '720p HD',
+    width: 1280,
+    height: 720,
+    fps: 30,
+    crf: 19,
+    jpegQuality: 85,
+    robosResolution: 'HD_720P',
+    robosStreamPath: '/video',
+    isHd: true,
+  },
+  {
+    id: 'sd-480p',
+    label: 'SD 480p (854x480 · 24 fps · Balanced Size)',
+    shortLabel: '480p SD',
+    width: 854,
+    height: 480,
+    fps: 24,
+    crf: 22,
+    jpegQuality: 78,
+    robosResolution: 'SD_480P',
+    robosStreamPath: '/video',
+    isHd: false,
+  },
+  {
+    id: 'low-360p',
+    label: 'Low Bandwidth 360p (640x360 · 15 fps · RobOS /sub Stream)',
+    shortLabel: '360p Low',
+    width: 640,
+    height: 360,
+    fps: 15,
+    crf: 24,
+    jpegQuality: 72,
+    robosResolution: 'QHD_360P',
+    robosStreamPath: '/sub',
+    isHd: false,
+  },
+];
+
+function getVideoQualitySpec(presetId) {
+  return VIDEO_QUALITY_PRESETS.find(p => p.id === presetId) || VIDEO_QUALITY_PRESETS[0];
+}
 
 function makeVideoId(prefix = 'vid') {
   return `${prefix}-${crypto.randomBytes(4).toString('hex')}`;
@@ -44,6 +105,291 @@ function redactVideoUrl(rawUrl) {
   return String(rawUrl || '').replace(/(\b[a-z][a-z0-9+.-]*:\/\/[^:/@\s]+:)([^@/\s]+)@/gi, '$1***@');
 }
 
+function parseRobosBaseUrl(hostOrUrl, defaultPort = 8080) {
+  const raw = String(hostOrUrl || '').trim();
+  if (!raw) return null;
+  try {
+    if (/^https?:\/\//i.test(raw)) {
+      const u = new URL(raw);
+      const port = Number(u.port) || (u.protocol === 'https:' ? 443 : defaultPort);
+      return {
+        protocol: u.protocol,
+        host: u.hostname,
+        port,
+        baseUrl: `${u.protocol}//${u.hostname}:${port}`,
+      };
+    }
+    // Plain host or host:port (e.g. "192.168.1.65" or "192.168.1.65:8080")
+    const cleaned = raw.replace(/\/.*$/, '');
+    const colonIdx = cleaned.lastIndexOf(':');
+    let host = cleaned;
+    let port = Number(defaultPort) || 8080;
+    if (colonIdx > 0) {
+      const maybePort = Number(cleaned.slice(colonIdx + 1));
+      if (Number.isFinite(maybePort) && maybePort > 0 && maybePort <= 65535) {
+        host = cleaned.slice(0, colonIdx);
+        port = maybePort;
+      }
+    }
+    if (!host) return null;
+    return {
+      protocol: 'http:',
+      host,
+      port,
+      baseUrl: `http://${host}:${port}`,
+    };
+  } catch {
+    return null;
+  }
+}
+
+function resolveRobosStreamUrlForQuality(streamUrl, qualityPreset = DEFAULT_VIDEO_QUALITY) {
+  const spec = getVideoQualitySpec(qualityPreset);
+  const raw = String(streamUrl || '').trim();
+  if (!raw) return '';
+  if (/\/(video|sub|mjpeg|live)(\?.*)?$/i.test(raw)) {
+    return raw.replace(/\/(video|sub|mjpeg|live)(\?.*)?$/i, `${spec.robosStreamPath}$2`);
+  }
+  return raw;
+}
+
+function buildRobosIpCameraSource({
+  id = '',
+  host = '',
+  port = 8080,
+  baseUrl = '',
+  name = '',
+  username = '',
+  password = '',
+  qualityPreset = DEFAULT_VIDEO_QUALITY,
+  origin = 'robos-ip-camera',
+  status = null,
+} = {}) {
+  const parsed = parseRobosBaseUrl(baseUrl || host, port);
+  const resolvedHost = parsed?.host || String(host || '').trim();
+  const resolvedPort = parsed?.port || Number(port) || 8080;
+  const resolvedBase = parsed?.baseUrl || (resolvedHost ? `http://${resolvedHost}:${resolvedPort}` : '');
+  const spec = getVideoQualitySpec(qualityPreset);
+
+  const camName = String(status?.name || name || (resolvedHost ? `RobOS IP Camera (${resolvedHost})` : 'RobOS IP Camera')).trim();
+  const resTag = (status?.width && status?.height) ? `${status.width}x${status.height}` : spec.shortLabel;
+  const battTag = (typeof status?.batteryPercent === 'number' && status.batteryPercent >= 0)
+    ? ` · ${status.batteryPercent}%`
+    : '';
+  const streamUrl = resolvedBase ? `${resolvedBase}${spec.robosStreamPath}` : '';
+  const snapshotUrl = resolvedBase ? `${resolvedBase}/snapshot.jpg` : '';
+
+  return {
+    id: id || (resolvedHost ? `robos-cam:${resolvedHost}:${resolvedPort}` : 'robos-cam:manual'),
+    sourceType: 'robos-ip-camera',
+    protocol: 'mjpeg',
+    label: `${camName} (RobOS IP Camera · ${resolvedHost ? `${resolvedHost}:${resolvedPort} · ` : ''}${resTag}${battTag})`,
+    shortName: camName,
+    host: resolvedHost,
+    port: resolvedPort,
+    baseUrl: resolvedBase,
+    streamUrl,
+    subStreamUrl: resolvedBase ? `${resolvedBase}/sub` : '',
+    snapshotUrl,
+    controlUrl: resolvedBase ? `${resolvedBase}/api/control` : '',
+    statusUrl: resolvedBase ? `${resolvedBase}/api/status` : '',
+    devicePath: '',
+    username: String(username || ''),
+    password: String(password || ''),
+    isRobosAndroidCam: true,
+    qualityPreset: spec.id,
+    fps: spec.fps,
+    origin,
+    robosStatus: status || null,
+  };
+}
+
+// ─── RobOS IP Camera HTTP Status Probe, Remote Control & Subnet Discovery ───
+
+function httpJsonRequest(targetUrl, { method = 'GET', bodyObj = null, username = '', password = '', timeoutMs = 1200 } = {}) {
+  return new Promise((resolve) => {
+    let parsed;
+    try {
+      parsed = new URL(targetUrl);
+    } catch {
+      resolve(null);
+      return;
+    }
+    const mod = parsed.protocol === 'https:' ? https : http;
+    const headers = { Accept: 'application/json' };
+    const user = username || (parsed.username ? decodeURIComponent(parsed.username) : '');
+    const pass = password || (parsed.password ? decodeURIComponent(parsed.password) : '');
+    if (user) {
+      headers.Authorization = `Basic ${Buffer.from(`${user}:${pass}`).toString('base64')}`;
+    }
+    let payloadBuf = null;
+    if (bodyObj !== null) {
+      payloadBuf = Buffer.from(JSON.stringify(bodyObj), 'utf8');
+      headers['Content-Type'] = 'application/json';
+      headers['Content-Length'] = String(payloadBuf.length);
+    }
+
+    const req = mod.request({
+      method,
+      hostname: parsed.hostname,
+      port: parsed.port || (parsed.protocol === 'https:' ? 443 : 80),
+      path: `${parsed.pathname}${parsed.search}`,
+      headers,
+      timeout: timeoutMs,
+      rejectUnauthorized: false,
+    }, (res) => {
+      if (!res.statusCode || res.statusCode < 200 || res.statusCode >= 300) {
+        res.resume();
+        resolve(null);
+        return;
+      }
+      const chunks = [];
+      let total = 0;
+      res.on('data', c => {
+        total += c.length;
+        if (total <= 256 * 1024) chunks.push(c);
+      });
+      res.on('end', () => {
+        try {
+          resolve(JSON.parse(Buffer.concat(chunks).toString('utf8')));
+        } catch {
+          resolve(null);
+        }
+      });
+    });
+    req.on('error', () => resolve(null));
+    req.on('timeout', () => { req.destroy(); resolve(null); });
+    if (payloadBuf) req.write(payloadBuf);
+    req.end();
+  });
+}
+
+async function probeRobosIpCameraStatus(hostOrUrl, { port = 8080, username = '', password = '', timeoutMs = 1100 } = {}) {
+  const parsed = parseRobosBaseUrl(hostOrUrl, port);
+  if (!parsed) return { ok: false, error: 'Invalid RobOS IP Camera address' };
+
+  const ping = await httpJsonRequest(`${parsed.baseUrl}/api/ping`, { timeoutMs });
+  const status = await httpJsonRequest(`${parsed.baseUrl}/api/status`, { username, password, timeoutMs });
+
+  if (!ping && !status) {
+    return { ok: false, host: parsed.host, port: parsed.port, baseUrl: parsed.baseUrl, error: `No RobOS IP Camera reachable at ${parsed.baseUrl}` };
+  }
+  const isRobos = (ping?.app === 'robos-ip-camera') || (status?.app === 'robos-ip-camera') || (status?.manufacturer === 'RobOS');
+  if (!isRobos) {
+    return { ok: false, host: parsed.host, port: parsed.port, baseUrl: parsed.baseUrl, error: `Endpoint at ${parsed.baseUrl} is not a RobOS IP Camera` };
+  }
+
+  const mergedStatus = {
+    app: 'robos-ip-camera',
+    name: status?.name || ping?.name || 'RobOS IP Camera',
+    room: status?.room || ping?.room || '',
+    urn: status?.urn || ping?.urn || '',
+    model: status?.model || 'Android Phone',
+    live: status ? Boolean(status.live) : true,
+    state: status?.state || 'live',
+    width: Number(status?.width) || 1280,
+    height: Number(status?.height) || 720,
+    fps: Number(status?.fps) || Number(status?.targetFps) || 30,
+    targetFps: Number(status?.targetFps) || 30,
+    lensFacing: status?.lensFacing || 'BACK',
+    zoomRatio: Number(status?.zoomRatio) || 1.0,
+    torchEnabled: Boolean(status?.torchEnabled),
+    batteryPercent: typeof status?.batteryPercent === 'number' ? status.batteryPercent : -1,
+    charging: Boolean(status?.charging),
+    temperatureC: Number(status?.temperatureC) || 0,
+    authRequired: Boolean(ping?.authRequired),
+    authNeedsCredentials: Boolean(ping?.authRequired && !status),
+  };
+
+  const source = buildRobosIpCameraSource({
+    host: parsed.host,
+    port: parsed.port,
+    baseUrl: parsed.baseUrl,
+    name: mergedStatus.name,
+    username,
+    password,
+    status: mergedStatus,
+  });
+
+  return { ok: true, status: mergedStatus, source };
+}
+
+async function controlRobosIpCamera(videoConfig = {}, commandPayload = {}) {
+  const parsed = parseRobosBaseUrl(videoConfig.baseUrl || videoConfig.streamUrl || videoConfig.host, videoConfig.port || 8080);
+  if (!parsed) return { ok: false, error: 'Missing RobOS IP Camera host/URL' };
+  const res = await httpJsonRequest(`${parsed.baseUrl}/api/control`, {
+    method: 'POST',
+    bodyObj: commandPayload || {},
+    username: videoConfig.username || '',
+    password: videoConfig.password || '',
+    timeoutMs: 1800,
+  });
+  if (!res?.ok) {
+    return { ok: false, error: `Camera control request failed at ${parsed.baseUrl}` };
+  }
+  const refreshed = await probeRobosIpCameraStatus(parsed.baseUrl, {
+    port: parsed.port,
+    username: videoConfig.username || '',
+    password: videoConfig.password || '',
+    timeoutMs: 1100,
+  });
+  return { ok: true, status: refreshed.status || null, source: refreshed.source || null };
+}
+
+function getLocalLanPrefixes() {
+  const ifaces = os.networkInterfaces() || {};
+  const prefixes = [];
+  for (const [ifName, addrs] of Object.entries(ifaces)) {
+    if (/^(lo|docker|br-|veth|virbr|tailscale|tun|tap|wg)/i.test(ifName)) continue;
+    for (const a of (addrs || [])) {
+      if (a.family !== 'IPv4' || a.internal) continue;
+      const parts = String(a.address || '').split('.');
+      if (parts.length === 4 && (parts[0] === '192' || parts[0] === '10' || parts[0] === '172')) {
+        const prefix = `${parts[0]}.${parts[1]}.${parts[2]}`;
+        if (!prefixes.includes(prefix)) prefixes.push({ prefix, selfIp: a.address });
+      }
+    }
+  }
+  return prefixes;
+}
+
+/**
+ * Fast bounded `/api/ping` LAN sweep on `:8080` so RobOS IP Cameras are discovered even
+ * on Wi-Fi routers with multicast isolation. Completes a `/24` subnet in ~450 ms.
+ */
+async function discoverRobosIpCamerasOnSubnet({ port = 8080, timeoutMs = 550 } = {}) {
+  const subnets = getLocalLanPrefixes().slice(0, 2);
+  if (!subnets.length) return [];
+
+  const targets = [];
+  for (const { prefix, selfIp } of subnets) {
+    for (let hostOctet = 2; hostOctet <= 254; hostOctet++) {
+      const ip = `${prefix}.${hostOctet}`;
+      if (ip !== selfIp) targets.push(ip);
+    }
+  }
+
+  const hits = [];
+  const concurrency = 64;
+  let cursor = 0;
+
+  const worker = async () => {
+    while (cursor < targets.length) {
+      const ip = targets[cursor++];
+      const ping = await httpJsonRequest(`http://${ip}:${port}/api/ping`, { timeoutMs });
+      if (ping && ping.app === 'robos-ip-camera') {
+        const probed = await probeRobosIpCameraStatus(ip, { port, timeoutMs: 800 });
+        if (probed?.ok && probed.source) {
+          hits.push({ ...probed.source, origin: 'robos-lan-sweep' });
+        }
+      }
+    }
+  };
+
+  await Promise.all(Array.from({ length: Math.min(concurrency, targets.length) }, () => worker()));
+  return hits;
+}
+
 function getCameraWatchConfigPath() {
   if (process.env.ROBOS_CAMERA_WATCH_CONFIG) return process.env.ROBOS_CAMERA_WATCH_CONFIG;
   const home = process.env.HOME || os.homedir();
@@ -52,7 +398,7 @@ function getCameraWatchConfigPath() {
 
 /**
  * Read cameras configured in RobOS Camera Watch (`~/.config/robos/camera-watch/cameras.json`),
- * automatically recognizing RobOS IP Camera for Android (`:8080/video`, `manufacturer: "RobOS"`).
+ * automatically recognizing RobOS IP Camera (`:8080/video`, `manufacturer: "RobOS"`) and defaulting to HD `/video`.
  */
 function readCameraWatchSavedSources(configPath = getCameraWatchConfigPath()) {
   try {
@@ -81,6 +427,8 @@ function readCameraWatchSavedSources(configPath = getCameraWatchConfigPath()) {
           username: '',
           password: '',
           isRobosAndroidCam: false,
+          qualityPreset: DEFAULT_VIDEO_QUALITY,
+          fps: 30,
           origin: 'camera-watch',
         });
         continue;
@@ -100,9 +448,27 @@ function readCameraWatchSavedSources(configPath = getCameraWatchConfigPath()) {
         cam.onvif?.manufacturer === 'RobOS' ||
         /:8080\/(video|sub)\b/i.test(streamUrl)
       );
+
+      if (isRobosAndroid) {
+        // Always upgrade RobOS IP Camera saved sources to HD `/video` by default
+        const parsed = parseRobosBaseUrl(streamUrl, cam.onvif?.port || 8080);
+        out.push(buildRobosIpCameraSource({
+          id: `cw:${cam.id}`,
+          host: parsed?.host || cam.onvif?.hostname || '',
+          port: parsed?.port || Number(cam.onvif?.port) || 8080,
+          baseUrl: parsed?.baseUrl || '',
+          name: cam.name || 'RobOS IP Camera',
+          username: cam.username || '',
+          password: cam.password || '',
+          qualityPreset: DEFAULT_VIDEO_QUALITY,
+          origin: 'camera-watch',
+        }));
+        continue;
+      }
+
       let hostHint = '';
       try { hostHint = new URL(streamUrl).host; } catch {}
-      const badge = isRobosAndroid ? 'RobOS Android IP Cam' : (isRtsp ? 'RTSP IP Cam' : 'HTTP MJPEG Cam');
+      const badge = isRtsp ? 'RTSP IP Cam' : 'HTTP MJPEG Cam';
 
       out.push({
         id: `cw:${cam.id}`,
@@ -111,12 +477,14 @@ function readCameraWatchSavedSources(configPath = getCameraWatchConfigPath()) {
         label: `${cam.name || 'IP Camera'} (${badge}${hostHint ? ` · ${hostHint}` : ''})`,
         shortName: cam.name || 'IP Camera',
         streamUrl,
-        snapshotUrl: snapshotUrl || (isRobosAndroid && hostHint ? `http://${hostHint}/snapshot.jpg` : ''),
+        snapshotUrl,
         devicePath: '',
         username: cam.username || '',
         password: cam.password || '',
         rtspTransport: cam.rtspTransport || 'tcp',
-        isRobosAndroidCam: isRobosAndroid,
+        isRobosAndroidCam: false,
+        qualityPreset: DEFAULT_VIDEO_QUALITY,
+        fps: 30,
         origin: 'camera-watch',
       });
     }
@@ -157,7 +525,6 @@ function listLocalV4l2VideoDevices(devDir = '/dev', sysDir = '/sys/class/video4l
       try {
         rawName = fs.readFileSync(path.join(sysDir, n, 'name'), 'utf8').trim() || n;
       } catch {}
-      // Clean repeated USB UVC strings like "Integrated Camera: Integrated C"
       const parts = rawName.split(':').map(s => s.trim()).filter(Boolean);
       const cleanName = (parts.length >= 2 && parts[0].toLowerCase().startsWith(parts[1].toLowerCase().slice(0, 8)))
         ? parts[0]
@@ -174,6 +541,8 @@ function listLocalV4l2VideoDevices(devDir = '/dev', sysDir = '/sys/class/video4l
         username: '',
         password: '',
         isRobosAndroidCam: false,
+        qualityPreset: DEFAULT_VIDEO_QUALITY,
+        fps: 30,
         origin: 'local-v4l2',
       };
     });
@@ -198,9 +567,9 @@ function extractOnvifScope(scopes, key) {
 
 /**
  * Lightweight zero-dependency UDP WS-Discovery probe (`239.255.255.250:3702`)
- * to discover RobOS IP Camera for Android and ONVIF cameras on the LAN.
+ * to discover RobOS IP Camera and ONVIF cameras on the LAN.
  */
-function discoverOnvifLanCameras({ timeoutMs = 1500 } = {}) {
+function discoverOnvifLanCameras({ timeoutMs = 1200 } = {}) {
   return new Promise((resolve) => {
     const found = new Map();
     let sock = null;
@@ -254,23 +623,34 @@ function discoverOnvifLanCameras({ timeoutMs = 1500 } = {}) {
 
         const name = extractOnvifScope(scopesRaw, 'name') || extractOnvifScope(scopesRaw, 'hardware') || `ONVIF Camera ${host}`;
         const isRobos = /robos/i.test(scopesRaw) || /robos/i.test(xml) || port === 8080;
-        const streamUrl = `http://${host}:${port}/video`;
-        const snapshotUrl = `http://${host}:${port}/snapshot.jpg`;
 
-        found.set(key, {
-          id: `onvif:${host}:${port}`,
-          sourceType: 'ip-camera',
-          protocol: 'mjpeg',
-          label: `${name} (${isRobos ? 'RobOS Android IP Cam' : 'ONVIF LAN'} · ${host}:${port})`,
-          shortName: name,
-          streamUrl,
-          snapshotUrl,
-          devicePath: '',
-          username: '',
-          password: '',
-          isRobosAndroidCam: isRobos,
-          origin: 'onvif-lan',
-        });
+        if (isRobos) {
+          found.set(key, buildRobosIpCameraSource({
+            id: `onvif:${host}:${port}`,
+            host,
+            port,
+            name,
+            qualityPreset: DEFAULT_VIDEO_QUALITY,
+            origin: 'onvif-lan',
+          }));
+        } else {
+          found.set(key, {
+            id: `onvif:${host}:${port}`,
+            sourceType: 'ip-camera',
+            protocol: 'mjpeg',
+            label: `${name} (ONVIF LAN · ${host}:${port})`,
+            shortName: name,
+            streamUrl: `http://${host}:${port}/video`,
+            snapshotUrl: `http://${host}:${port}/snapshot.jpg`,
+            devicePath: '',
+            username: '',
+            password: '',
+            isRobosAndroidCam: false,
+            qualityPreset: DEFAULT_VIDEO_QUALITY,
+            fps: 30,
+            origin: 'onvif-lan',
+          });
+        }
       } catch {}
     });
 
@@ -286,35 +666,154 @@ function discoverOnvifLanCameras({ timeoutMs = 1500 } = {}) {
       return;
     }
 
-    setTimeout(finish, Math.max(300, Math.min(5000, Number(timeoutMs) || 1500)));
+    setTimeout(finish, Math.max(250, Math.min(5000, Number(timeoutMs) || 1200)));
   });
 }
 
 /**
- * Discover all available video input sources (Camera Watch + RobOS Android IP Cam + optional LAN scan + local V4L2).
+ * Discover all available video input sources (RobOS IP Cameras + Camera Watch + ONVIF LAN + local V4L2),
+ * enriching RobOS IP Cameras with live `/api/status` HD resolution & battery telemetry.
  */
-async function discoverAllVideoSources({ scanLan = false, timeoutMs = 1400 } = {}) {
+async function discoverAllVideoSources({ scanLan = true, includeSubnetSweep = false, timeoutMs = 950 } = {}) {
+  const isTest = process.env.ROBOS_TEST === '1';
   const saved = readCameraWatchSavedSources();
   const local = listLocalV4l2VideoDevices();
-  const lan = scanLan ? await discoverOnvifLanCameras({ timeoutMs }) : [];
+  const lan = (scanLan && !isTest) ? await discoverOnvifLanCameras({ timeoutMs }) : [];
+
+  let candidates = [...saved, ...lan, ...local];
+  const hasRobosAlready = candidates.some(c => c.isRobosAndroidCam || c.sourceType === 'robos-ip-camera');
+
+  if (!isTest && (includeSubnetSweep || (scanLan && !hasRobosAlready))) {
+    const swept = await discoverRobosIpCamerasOnSubnet({ timeoutMs: 500 });
+    candidates = [...swept, ...candidates];
+  }
 
   const seenStreams = new Set();
   const seenDevs = new Set();
   const merged = [];
 
-  for (const item of [...saved, ...lan, ...local]) {
+  for (const item of candidates) {
     if (item.devicePath) {
       if (seenDevs.has(item.devicePath)) continue;
       seenDevs.add(item.devicePath);
     } else if (item.streamUrl) {
-      const normUrl = item.streamUrl.replace(/\/+$/, '').toLowerCase();
-      if (seenStreams.has(normUrl)) continue;
-      seenStreams.add(normUrl);
+      const normKey = (item.baseUrl || item.streamUrl).replace(/\/(video|sub)\b.*$/i, '').replace(/\/+$/, '').toLowerCase();
+      if (seenStreams.has(normKey)) continue;
+      seenStreams.add(normKey);
     }
     merged.push(item);
   }
 
+  // Enrich RobOS IP Cameras with live /api/status telemetry in parallel
+  if (!isTest) {
+    await Promise.all(merged.map(async (item, idx) => {
+      if (!item.isRobosAndroidCam && item.sourceType !== 'robos-ip-camera') return;
+      const probed = await probeRobosIpCameraStatus(item.baseUrl || item.streamUrl || item.host, {
+        port: item.port || 8080,
+        username: item.username || '',
+        password: item.password || '',
+        timeoutMs: 750,
+      });
+      if (probed?.ok && probed.source) {
+        merged[idx] = {
+          ...probed.source,
+          id: item.id,
+          origin: item.origin,
+          username: item.username || '',
+          password: item.password || '',
+          qualityPreset: item.qualityPreset || DEFAULT_VIDEO_QUALITY,
+        };
+      }
+    }));
+  }
+
+  // Sort RobOS IP Cameras first so they appear at the top of Video Inputs
+  merged.sort((a, b) => {
+    const aRobos = (a.sourceType === 'robos-ip-camera' || a.isRobosAndroidCam) ? 0 : 1;
+    const bRobos = (b.sourceType === 'robos-ip-camera' || b.isRobosAndroidCam) ? 0 : 1;
+    return aRobos - bRobos;
+  });
+
   return merged;
+}
+
+// ─── V4L2 HD Format Negotiation & FFmpeg Input Builder ──────────────────────
+
+const v4l2FormatCache = new Map();
+
+function negotiateV4l2CaptureFormat(devPath, targetWidth = 1920, targetHeight = 1080) {
+  const cacheKey = `${devPath}:${targetWidth}x${targetHeight}`;
+  if (v4l2FormatCache.has(cacheKey)) return v4l2FormatCache.get(cacheKey);
+
+  let rawOut = '';
+  try {
+    execFileSync('ffmpeg', ['-hide_banner', '-f', 'v4l2', '-list_formats', 'all', '-i', devPath], {
+      encoding: 'utf8',
+      timeout: 1500,
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+  } catch (err) {
+    rawOut = String(err?.stderr || err?.stdout || '');
+  }
+
+  const pickBestSize = (lineText) => {
+    const matches = [...String(lineText || '').matchAll(/\b(\d{3,4})x(\d{3,4})\b/g)];
+    if (!matches.length) return null;
+    const parsed = matches.map(m => ({ w: Number(m[1]), h: Number(m[2]) }));
+    const fitting = parsed
+      .filter(s => s.w <= targetWidth && s.h <= targetHeight)
+      .sort((a, b) => (b.w * b.h) - (a.w * a.h));
+    if (fitting.length) return `${fitting[0].w}x${fitting[0].h}`;
+    parsed.sort((a, b) => (a.w * a.h) - (b.w * b.h));
+    return `${parsed[0].w}x${parsed[0].h}`;
+  };
+
+  const lines = rawOut.split('\n');
+  const mjpegLine = lines.find(l => /\bmjpeg\b/i.test(l));
+  if (mjpegLine) {
+    const size = pickBestSize(mjpegLine);
+    const res = { inputFormat: 'mjpeg', videoSize: size || '1280x720' };
+    v4l2FormatCache.set(cacheKey, res);
+    return res;
+  }
+
+  const yuyvLine = lines.find(l => /\byuyv/i.test(l));
+  if (yuyvLine) {
+    const size = pickBestSize(yuyvLine);
+    const res = { inputFormat: '', videoSize: size || '' };
+    v4l2FormatCache.set(cacheKey, res);
+    return res;
+  }
+
+  const fallback = { inputFormat: '', videoSize: '' };
+  v4l2FormatCache.set(cacheKey, fallback);
+  return fallback;
+}
+
+function buildFfmpegVideoInputArgs(videoConfig = {}) {
+  const spec = getVideoQualitySpec(videoConfig.qualityPreset || DEFAULT_VIDEO_QUALITY);
+  const srcType = videoConfig.sourceType || (videoConfig.devicePath ? 'v4l2' : 'ip-camera');
+
+  if (srcType === 'v4l2' || videoConfig.devicePath) {
+    const dev = videoConfig.devicePath || '/dev/video0';
+    const neg = negotiateV4l2CaptureFormat(dev, spec.width, spec.height);
+    const args = ['-use_wallclock_as_timestamps', '1', '-f', 'v4l2'];
+    if (neg.inputFormat) args.push('-input_format', neg.inputFormat);
+    if (neg.videoSize) args.push('-video_size', neg.videoSize);
+    args.push('-framerate', String(Number(videoConfig.fps) || spec.fps || 30), '-i', dev);
+    return args;
+  }
+
+  const isRobos = Boolean(videoConfig.isRobosAndroidCam || srcType === 'robos-ip-camera');
+  const rawStream = isRobos
+    ? resolveRobosStreamUrlForQuality(videoConfig.streamUrl, spec.id)
+    : videoConfig.streamUrl;
+  const authedUrl = withVideoCredentials(rawStream, videoConfig.username, videoConfig.password);
+
+  if (/^rtsps?:/i.test(authedUrl)) {
+    return ['-rtsp_transport', videoConfig.rtspTransport || 'tcp', '-use_wallclock_as_timestamps', '1', '-i', authedUrl];
+  }
+  return ['-use_wallclock_as_timestamps', '1', '-f', 'mpjpeg', '-i', authedUrl];
 }
 
 function fetchHttpBytes(targetUrl, { username = '', password = '', timeoutMs = 3500 } = {}) {
@@ -351,7 +850,7 @@ function fetchHttpBytes(targetUrl, { username = '', password = '', timeoutMs = 3
       let total = 0;
       res.on('data', chunk => {
         total += chunk.length;
-        if (total <= 6 * 1024 * 1024) chunks.push(chunk);
+        if (total <= 8 * 1024 * 1024) chunks.push(chunk);
       });
       res.on('end', () => resolve(Buffer.concat(chunks)));
     });
@@ -368,13 +867,13 @@ function grabSingleFrameWithFfmpeg(inputArgsList, timeoutMs = 5000) {
       '-hide_banner', '-loglevel', 'error', '-nostdin',
       ...inputArgsList,
       '-frames:v', '1',
-      '-vf', "scale='min(960,iw)':-2",
-      '-q:v', '5',
+      '-vf', "scale='min(1280,iw)':-2",
+      '-q:v', '3',
       '-f', 'image2pipe',
       '-vcodec', 'mjpeg',
       'pipe:1',
     ];
-    execFile('ffmpeg', args, { encoding: 'buffer', timeout: timeoutMs, maxBuffer: 6 * 1024 * 1024 }, (err, stdout, stderr) => {
+    execFile('ffmpeg', args, { encoding: 'buffer', timeout: timeoutMs, maxBuffer: 8 * 1024 * 1024 }, (err, stdout, stderr) => {
       if (err || !stdout || stdout.length < 64) {
         const msg = String(stderr || err?.message || 'Could not capture preview frame').trim().split('\n').pop();
         reject(new Error(msg));
@@ -385,21 +884,8 @@ function grabSingleFrameWithFfmpeg(inputArgsList, timeoutMs = 5000) {
   });
 }
 
-function buildFfmpegVideoInputArgs(videoConfig = {}) {
-  const srcType = videoConfig.sourceType || (videoConfig.devicePath ? 'v4l2' : 'ip-camera');
-  if (srcType === 'v4l2' || videoConfig.devicePath) {
-    const dev = videoConfig.devicePath || '/dev/video0';
-    return ['-use_wallclock_as_timestamps', '1', '-f', 'v4l2', '-framerate', String(Number(videoConfig.fps) || 30), '-i', dev];
-  }
-  const authedUrl = withVideoCredentials(videoConfig.streamUrl, videoConfig.username, videoConfig.password);
-  if (/^rtsps?:/i.test(authedUrl)) {
-    return ['-rtsp_transport', videoConfig.rtspTransport || 'tcp', '-use_wallclock_as_timestamps', '1', '-i', authedUrl];
-  }
-  return ['-use_wallclock_as_timestamps', '1', '-f', 'mpjpeg', '-i', authedUrl];
-}
-
 /**
- * Grab a single JPEG preview frame (`data:image/jpeg;base64,...`) from any configured video source.
+ * Grab a single HD JPEG preview frame (`data:image/jpeg;base64,...`) from any configured video source.
  */
 async function captureVideoSourceSnapshot(videoConfig = {}) {
   if (videoConfig.snapshotUrl && /^https?:/i.test(videoConfig.snapshotUrl)) {
@@ -415,7 +901,6 @@ async function captureVideoSourceSnapshot(videoConfig = {}) {
     } catch {}
   }
 
-  // Fallback: derive /snapshot.jpg if streamUrl ends with /video or /sub
   if (videoConfig.streamUrl && /^https?:/i.test(videoConfig.streamUrl) && /\/(video|sub)\b/i.test(videoConfig.streamUrl)) {
     const derivedSnap = videoConfig.streamUrl.replace(/\/(video|sub)(\?.*)?$/i, '/snapshot.jpg$2');
     try {
@@ -435,35 +920,44 @@ async function captureVideoSourceSnapshot(videoConfig = {}) {
 }
 
 /**
- * Construct a DAW Studio Video Track (`trackKind === 'video'`).
- * `audioMode`:
- *   - `'none'`      : Video only (no track audio — ideal alongside multi-mic Focusrite/ADAT setup)
- *   - `'interface'` : Record paired PipeWire / Focusrite audio input channel alongside video
- *   - `'stream'`    : Record embedded camera stream audio (RTSP / webcam stream audio if present)
+ * Construct a DAW Studio Video Track (`trackKind === 'video'`) defaulting to HD quality (`hd-1080p`)
+ * and optional audio (`audioMode: 'none' | 'interface' | 'stream'`).
  */
 function buildVideoTrack({
   name,
   videoConfig = {},
+  qualityPreset = DEFAULT_VIDEO_QUALITY,
   audioMode = 'none',
   inputNodeName = '',
   inputLabel = '',
   armed = true,
 } = {}) {
   const cleanAudioMode = ['none', 'interface', 'stream'].includes(audioMode) ? audioMode : 'none';
-  const camName = videoConfig.shortName || videoConfig.label || 'Camera';
-  const trackName = String(name || camName).trim() || 'Video Cam 1';
+  const spec = getVideoQualitySpec(qualityPreset || videoConfig.qualityPreset || DEFAULT_VIDEO_QUALITY);
+  const isRobos = Boolean(
+    videoConfig.isRobosAndroidCam ||
+    videoConfig.sourceType === 'robos-ip-camera' ||
+    /:8080\/(video|sub)\b/i.test(videoConfig.streamUrl || '')
+  );
 
-  let subtitle = `${camName} · Video Only`;
+  const camName = videoConfig.shortName || videoConfig.label || (isRobos ? 'RobOS IP Camera' : 'Camera');
+  const trackName = String(name || camName).trim() || 'Video Cam 1';
+  const rawStream = isRobos
+    ? resolveRobosStreamUrlForQuality(videoConfig.streamUrl, spec.id)
+    : String(videoConfig.streamUrl || '').trim();
+  const parsedRobos = isRobos ? parseRobosBaseUrl(videoConfig.baseUrl || rawStream || videoConfig.host, videoConfig.port || 8080) : null;
+
+  let subtitle = `${camName} (${spec.shortLabel}) · Video Only`;
   if (cleanAudioMode === 'interface') {
-    subtitle = `${camName} + ${inputLabel || 'Audio Input'}`;
+    subtitle = `${camName} (${spec.shortLabel}) + ${inputLabel || 'Audio Input'}`;
   } else if (cleanAudioMode === 'stream') {
-    subtitle = `${camName} + Camera Stream Audio`;
+    subtitle = `${camName} (${spec.shortLabel}) + Stream Audio`;
   }
 
   return {
     id: makeVideoId('trk'),
     trackKind: 'video',
-    profileId: 'video-cam',
+    profileId: isRobos ? 'robos-ip-camera' : 'video-cam',
     name: trackName,
     shortLabel: trackName.slice(0, 12),
     category: 'video',
@@ -480,19 +974,26 @@ function buildVideoTrack({
     pan: 0,
     videoConfig: {
       sourceId: videoConfig.id || videoConfig.sourceId || '',
-      sourceType: videoConfig.sourceType || (videoConfig.devicePath ? 'v4l2' : 'ip-camera'),
-      protocol: videoConfig.protocol || (videoConfig.devicePath ? 'v4l2' : (/^rtsps?:/i.test(videoConfig.streamUrl || '') ? 'rtsp' : 'mjpeg')),
+      sourceType: isRobos ? 'robos-ip-camera' : (videoConfig.sourceType || (videoConfig.devicePath ? 'v4l2' : 'ip-camera')),
+      protocol: videoConfig.protocol || (videoConfig.devicePath ? 'v4l2' : (/^rtsps?:/i.test(rawStream) ? 'rtsp' : 'mjpeg')),
       label: videoConfig.label || camName,
       shortName: camName,
-      streamUrl: String(videoConfig.streamUrl || '').trim(),
-      snapshotUrl: String(videoConfig.snapshotUrl || '').trim(),
+      host: parsedRobos?.host || videoConfig.host || '',
+      port: parsedRobos?.port || Number(videoConfig.port) || (isRobos ? 8080 : 0),
+      baseUrl: parsedRobos?.baseUrl || videoConfig.baseUrl || '',
+      streamUrl: rawStream,
+      snapshotUrl: String(videoConfig.snapshotUrl || (parsedRobos ? `${parsedRobos.baseUrl}/snapshot.jpg` : '')).trim(),
       devicePath: String(videoConfig.devicePath || '').trim(),
       username: String(videoConfig.username || ''),
       password: String(videoConfig.password || ''),
       rtspTransport: videoConfig.rtspTransport || 'tcp',
-      isRobosAndroidCam: Boolean(videoConfig.isRobosAndroidCam),
+      isRobosAndroidCam: isRobos,
+      qualityPreset: spec.id,
+      targetWidth: spec.width,
+      targetHeight: spec.height,
+      crf: spec.crf,
       audioMode: cleanAudioMode,
-      fps: Number(videoConfig.fps) || 30,
+      fps: Number(videoConfig.fps) || spec.fps || 30,
     },
     fx: {
       openSourcePlugins: ['x42 Parametric EQ4 (LV2)', 'Calf Bus Glue (LV2)'],
@@ -571,19 +1072,21 @@ function remuxFaststartMp4(rawFile, finalFile) {
   });
 }
 
-function synthesizeTestPatternMp4(destMp4, durationSec = 2.5, withAudio = false) {
+function synthesizeTestPatternMp4(destMp4, durationSec = 2.5, withAudio = false, { width = 1280, height = 720, crf = 20 } = {}) {
   return new Promise((resolve, reject) => {
     const dur = Math.max(0.5, Math.min(60, Number(durationSec) || 2.5));
+    const safeW = Math.max(320, Math.min(1920, Math.floor((Number(width) || 1280) / 2) * 2));
+    const safeH = Math.max(180, Math.min(1080, Math.floor((Number(height) || 720) / 2) * 2));
     const args = [
       '-nostdin', '-y', '-v', 'error',
-      '-f', 'lavfi', '-i', `testsrc=size=640x360:rate=30:duration=${dur.toFixed(3)}`,
+      '-f', 'lavfi', '-i', `testsrc=size=${safeW}x${safeH}:rate=30:duration=${dur.toFixed(3)}`,
     ];
     if (withAudio) {
       args.push('-f', 'lavfi', '-i', `sine=frequency=330:sample_rate=48000:duration=${dur.toFixed(3)}`);
     }
     args.push(
-      '-c:v', 'libx264', '-preset', 'ultrafast', '-crf', '24', '-pix_fmt', 'yuv420p',
-      ...(withAudio ? ['-c:a', 'aac', '-b:a', '128k'] : ['-an']),
+      '-c:v', 'libx264', '-preset', 'ultrafast', '-crf', String(crf), '-pix_fmt', 'yuv420p',
+      ...(withAudio ? ['-c:a', 'aac', '-b:a', '160k'] : ['-an']),
       '-movflags', '+faststart',
       destMp4
     );
@@ -595,7 +1098,7 @@ function synthesizeTestPatternMp4(destMp4, durationSec = 2.5, withAudio = false)
 }
 
 /**
- * Synchronized Multi-Camera Video Recorder (`ffmpeg` -> Fragmented H.264 `.mp4` -> Faststart `.mp4`)
+ * Synchronized Multi-Camera HD Video Recorder (`ffmpeg` -> Fragmented H.264 `.mp4` -> Faststart `.mp4`)
  */
 class VideoTrackRecorder {
   constructor() {
@@ -626,6 +1129,7 @@ class VideoTrackRecorder {
       const videoFile = path.join(takesDir, finalFileName);
       const partFile = path.join(takesDir, partFileName);
       const vcfg = track.videoConfig || {};
+      const spec = getVideoQualitySpec(vcfg.qualityPreset || DEFAULT_VIDEO_QUALITY);
       const audioMode = vcfg.audioMode || 'none';
 
       const entry = {
@@ -637,6 +1141,7 @@ class VideoTrackRecorder {
         partFile,
         relativeVideoPath: path.join('takes', finalFileName),
         audioMode,
+        qualitySpec: spec,
         videoConfig: vcfg,
         proc: null,
         firstPacketWallMs: null,
@@ -645,21 +1150,32 @@ class VideoTrackRecorder {
       };
 
       if (!injectTestSignal) {
+        // Best-effort remote quality sync for RobOS IP Cameras before/as stream opens
+        if ((vcfg.isRobosAndroidCam || vcfg.sourceType === 'robos-ip-camera') && process.env.ROBOS_TEST !== '1') {
+          controlRobosIpCamera(vcfg, {
+            resolution: spec.robosResolution,
+            fps: spec.fps,
+            jpegQuality: spec.jpegQuality,
+          }).catch(() => {});
+        }
+
         const inArgs = buildFfmpegVideoInputArgs(vcfg);
         const wantStreamAudio = audioMode === 'stream';
+        const vfScale = `scale='min(${spec.width},iw)':'min(${spec.height},ih)':force_original_aspect_ratio=decrease,scale=trunc(iw/2)*2:trunc(ih/2)*2`;
         const ffArgs = [
           '-hide_banner',
           '-loglevel', 'warning',
           ...inArgs,
           '-map', '0:v:0',
           ...(wantStreamAudio ? ['-map', '0:a?'] : ['-an']),
+          '-vf', vfScale,
           '-c:v', 'libx264',
           '-preset', 'ultrafast',
           '-tune', 'zerolatency',
-          '-crf', '22',
+          '-crf', String(spec.crf),
           '-pix_fmt', 'yuv420p',
           '-g', '30',
-          ...(wantStreamAudio ? ['-c:a', 'aac', '-b:a', '128k'] : []),
+          ...(wantStreamAudio ? ['-c:a', 'aac', '-b:a', '160k'] : []),
           '-movflags', '+frag_keyframe+empty_moov+default_base_moof',
           '-f', 'mp4',
           '-y',
@@ -713,6 +1229,7 @@ class VideoTrackRecorder {
         clipId: e.clipId,
         videoFile: e.videoFile,
         audioMode: e.audioMode,
+        qualityPreset: e.qualitySpec.id,
       })),
     };
   }
@@ -775,13 +1292,18 @@ class VideoTrackRecorder {
         await remuxFaststartMp4(entry.partFile, entry.videoFile);
       } else {
         try { if (fs.existsSync(entry.partFile)) fs.unlinkSync(entry.partFile); } catch {}
-        await synthesizeTestPatternMp4(entry.videoFile, wallDurationSec, entry.audioMode === 'stream');
+        const synthW = Math.min(1280, entry.qualitySpec?.width || 1280);
+        const synthH = Math.min(720, entry.qualitySpec?.height || 720);
+        await synthesizeTestPatternMp4(entry.videoFile, wallDurationSec, entry.audioMode === 'stream', {
+          width: synthW,
+          height: synthH,
+          crf: entry.qualitySpec?.crf || 19,
+        });
       }
 
       const probe = await probeVideoFileInfo(entry.videoFile);
       const vidDur = Number((probe.durationSec || wallDurationSec).toFixed(3));
 
-      // Align camera startup latency against headphone overdub clock (`earsStartWallMs`)
       let alignedStartSec = session.startSec;
       let alignedOffsetSec = 0;
       const camStartMs = entry.firstPacketWallMs || session.startedAtMs;
@@ -799,19 +1321,18 @@ class VideoTrackRecorder {
       const targetTrack = (session.project.tracks || []).find(t => t.id === entry.trackId);
       const pairedAudioRec = audioRecordedClips.find(r => r.trackId === entry.trackId);
 
-      // Case A: `audioMode === 'interface'` — MultiTrackRecorder already created the aligned `.wav` clip on this track!
       if (pairedAudioRec && pairedAudioRec.clip) {
         pairedAudioRec.clip.mediaKind = 'video';
         pairedAudioRec.clip.videoFile = entry.videoFile;
         pairedAudioRec.clip.relativeVideoPath = entry.relativeVideoPath;
         pairedAudioRec.clip.videoFileExists = true;
-        pairedAudioRec.clip.videoWidth = probe.width || 1280;
-        pairedAudioRec.clip.videoHeight = probe.height || 720;
+        pairedAudioRec.clip.videoWidth = probe.width || entry.qualitySpec?.width || 1280;
+        pairedAudioRec.clip.videoHeight = probe.height || entry.qualitySpec?.height || 720;
+        pairedAudioRec.clip.qualityPreset = entry.qualitySpec?.id || DEFAULT_VIDEO_QUALITY;
         recordedVideoClips.push({ trackId: entry.trackId, clip: pairedAudioRec.clip });
         continue;
       }
 
-      // Case B: `audioMode === 'stream'` — extract camera audio to `.wav` if stream carried audio
       let wavFile = null;
       let relativeWavPath = null;
       let peaks = [];
@@ -833,7 +1354,6 @@ class VideoTrackRecorder {
         } catch {}
       }
 
-      // Case C: Video-only (`audioMode === 'none'`) or stream clip
       const playDur = Math.max(0.1, Number((vidDur - alignedOffsetSec).toFixed(3)));
       const clip = {
         id: entry.clipId,
@@ -846,8 +1366,9 @@ class VideoTrackRecorder {
         videoFile: entry.videoFile,
         relativeVideoPath: entry.relativeVideoPath,
         videoFileExists: fs.existsSync(entry.videoFile),
-        videoWidth: probe.width || 1280,
-        videoHeight: probe.height || 720,
+        videoWidth: probe.width || entry.qualitySpec?.width || 1280,
+        videoHeight: probe.height || entry.qualitySpec?.height || 720,
+        qualityPreset: entry.qualitySpec?.id || DEFAULT_VIDEO_QUALITY,
         startSec: alignedStartSec,
         offsetSec: alignedOffsetSec,
         durationSec: playDur,
@@ -874,6 +1395,15 @@ class VideoTrackRecorder {
 }
 
 module.exports = {
+  DEFAULT_VIDEO_QUALITY,
+  VIDEO_QUALITY_PRESETS,
+  getVideoQualitySpec,
+  parseRobosBaseUrl,
+  resolveRobosStreamUrlForQuality,
+  buildRobosIpCameraSource,
+  probeRobosIpCameraStatus,
+  controlRobosIpCamera,
+  discoverRobosIpCamerasOnSubnet,
   withVideoCredentials,
   redactVideoUrl,
   readCameraWatchSavedSources,

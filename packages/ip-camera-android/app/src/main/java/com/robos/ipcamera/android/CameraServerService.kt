@@ -33,6 +33,7 @@ import com.robos.ipcamera.core.HttpOnvifServer
 import com.robos.ipcamera.core.IpCameraConfig
 import com.robos.ipcamera.core.LensFacing
 import com.robos.ipcamera.core.PtzCommand
+import com.robos.ipcamera.core.ResolutionPreset
 import com.robos.ipcamera.core.StreamState
 import com.robos.ipcamera.core.WsDiscoveryResponder
 import com.robos.ipcamera.ui.MainActivity
@@ -571,6 +572,16 @@ class CameraServerService : Service(), CameraController {
         app.updateConfig { cur ->
             val next = facing ?: if (cur.lensFacing == LensFacing.BACK) LensFacing.FRONT else LensFacing.BACK
             cur.copy(lensFacing = next, torchEnabled = if (next == LensFacing.FRONT) false else cur.torchEnabled)
+        }
+    }
+
+    override fun onUpdateStreamQuality(resolution: ResolutionPreset?, fps: Int?, jpegQuality: Int?) {
+        app.updateConfig { cur ->
+            cur.copy(
+                resolution = resolution ?: cur.resolution,
+                fps = fps?.coerceIn(1, 30) ?: cur.fps,
+                jpegQuality = jpegQuality?.coerceIn(30, 95) ?: cur.jpegQuality,
+            )
         }
     }
 

@@ -61,6 +61,10 @@ const {
   transcodeMixdownBuffer,
 } = require('./lib/mixdown-exporter');
 const {
+  DEFAULT_VIDEO_QUALITY,
+  VIDEO_QUALITY_PRESETS,
+  probeRobosIpCameraStatus,
+  controlRobosIpCamera,
   discoverAllVideoSources,
   captureVideoSourceSnapshot,
   buildVideoTrack,
@@ -1424,12 +1428,45 @@ ipcMain.handle('daw:open-session-folder', async () => {
 ipcMain.handle('daw:video-discover', async (_e, payload) => {
   try {
     const sources = await discoverAllVideoSources({
-      scanLan: Boolean(payload?.scanLan),
-      timeoutMs: Number(payload?.timeoutMs) || 1500,
+      scanLan: payload?.scanLan !== undefined ? Boolean(payload.scanLan) : true,
+      includeSubnetSweep: Boolean(payload?.includeSubnetSweep),
+      timeoutMs: Number(payload?.timeoutMs) || 1100,
     });
-    return { ok: true, sources };
+    return {
+      ok: true,
+      sources,
+      qualityPresets: VIDEO_QUALITY_PRESETS,
+      defaultQualityPreset: DEFAULT_VIDEO_QUALITY,
+    };
   } catch (err) {
-    return { ok: false, error: err.message, sources: [] };
+    return {
+      ok: false,
+      error: err.message,
+      sources: [],
+      qualityPresets: VIDEO_QUALITY_PRESETS,
+      defaultQualityPreset: DEFAULT_VIDEO_QUALITY,
+    };
+  }
+});
+
+ipcMain.handle('daw:robos-cam-probe', async (_e, payload) => {
+  try {
+    return await probeRobosIpCameraStatus(payload?.hostOrUrl || payload?.host || '', {
+      port: Number(payload?.port) || 8080,
+      username: payload?.username || '',
+      password: payload?.password || '',
+      timeoutMs: Number(payload?.timeoutMs) || 1400,
+    });
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('daw:robos-cam-control', async (_e, payload) => {
+  try {
+    return await controlRobosIpCamera(payload?.videoConfig || {}, payload?.command || {});
+  } catch (err) {
+    return { ok: false, error: err.message };
   }
 });
 

@@ -2958,3 +2958,58 @@ kbd {
   outline: none;
   border-color: #f59e0b;
 }
+
+/* ── RobOS IP Camera Input Mode Pills, Telemetry & HD Quality Controls ── */
+.vid-input-type-pills {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+.vid-type-pill {
+  flex: 1;
+  height: 30px;
+  border-radius: 5px;
+  border: 1px solid #2b384d;
+  background: linear-gradient(180deg, #18202d 0%, #101620 100%);
+  color: #cbd5e1;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 120ms ease;
+}
+.vid-type-pill:hover {
+  border-color: #475d7c;
+  color: #ffffff;
+}
+.vid-type-pill.active {
+  border-color: rgba(168, 85, 247, 0.72);
+  background: linear-gradient(180deg, rgba(168, 85, 247, 0.28) 0%, rgba(168, 85, 247, 0.12) 100%);
+  color: #f3e8ff;
+  box-shadow: 0 0 12px rgba(168, 85, 247, 0.2);
+}
+.robos-cam-config-panel {
+  margin-top: 8px;
+  padding: 9px 10px;
+  border-radius: 6px;
+  background: rgba(11, 16, 26, 0.85);
+  border: 1px solid rgba(56, 189, 248, 0.26);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.robos-cam-telemetry-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding-top: 6px;
+  border-top: 1px solid rgba(56, 189, 248, 0.16);
+  font-size: 11px;
+  color: #7dd3fc;
+}
+.robos-cam-remote-btns {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}

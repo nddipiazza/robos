@@ -13,6 +13,7 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.floatOrNull
+import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonPrimitive
 import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
@@ -50,6 +51,7 @@ interface CameraController {
     fun onPtzPreset(token: String) {}
     fun onToggleTorch(enabled: Boolean? = null) {}
     fun onSwitchLens(facing: LensFacing? = null) {}
+    fun onUpdateStreamQuality(resolution: ResolutionPreset? = null, fps: Int? = null, jpegQuality: Int? = null) {}
 }
 
 /**
@@ -343,6 +345,20 @@ class HttpOnvifServer(
                 if (targetZoom != cur) {
                     controller.onPtzPreset("zoom:$targetZoom")
                 }
+            }
+            val reqRes = obj?.get("resolution")?.jsonPrimitive?.content?.let { resStr ->
+                ResolutionPreset.entries.firstOrNull {
+                    it.name.equals(resStr, ignoreCase = true) ||
+                        (resStr.contains("1080") && it == ResolutionPreset.FHD_1080P) ||
+                        (resStr.contains("720") && it == ResolutionPreset.HD_720P) ||
+                        (resStr.contains("480") && it == ResolutionPreset.SD_480P) ||
+                        (resStr.contains("360") && it == ResolutionPreset.QHD_360P)
+                }
+            }
+            val reqFps = obj?.get("fps")?.jsonPrimitive?.intOrNull
+            val reqQ = obj?.get("jpegQuality")?.jsonPrimitive?.intOrNull
+            if (reqRes != null || reqFps != null || reqQ != null) {
+                controller.onUpdateStreamQuality(resolution = reqRes, fps = reqFps, jpegQuality = reqQ)
             }
             writeResponse(output, 200, "OK", "application/json; charset=utf-8", "{\"ok\":true}".toByteArray())
         } catch (e: Exception) {
