@@ -336,6 +336,22 @@
       "robos:technology": "Electron 28 / onvif (agsh/onvif, MIT) / ffmpeg (RTSP, MJPEG) / WS-Discovery"
     },
     {
+      "@id": "urn:robos:mobile-app:ip-camera-android",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:MobileApp",
+        "schema:MobileApplication"
+      ],
+      "dcterms:title": "RobOS IP Camera for Android",
+      "dcterms:description": "Always-on Android 11+ surveillance camera for RobOS Camera Watch and Smart Home: off-screen Camera2 foreground service with CPU, low-latency Wi-Fi and multicast locks, ONVIF WS-Discovery and Profile S/T SOAP, solid-state sensor PTZ + flashlight presets, main/sub MJPEG streams, snapshots, on-camera luma motion detection, Keystore-encrypted auth, and OLED Blackout wall-mount mode.",
+      "robos:namespace": "robos.applications",
+      "robos:package": "applications",
+      "robos:platform": "Android",
+      "robos:repository": "packages/ip-camera-android",
+      "robos:schemaOrgType": "https://schema.org/MobileApplication",
+      "robos:technology": "Kotlin / Jetpack Compose / Android Camera2 / ONVIF WS-Discovery & SOAP / MJPEG / Android Keystore"
+    },
+    {
       "@id": "urn:robos:desktop-app:personality",
       "@type": [
         "oslc_am:Resource",
@@ -965,6 +981,22 @@
       "robos:repository": "packages/camera-watch",
       "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
       "robos:technology": "Electron 28 / onvif (agsh/onvif, MIT) / ffmpeg (RTSP, MJPEG) / WS-Discovery"
+    },
+    {
+      "@id": "urn:robos:mobile-app:ip-camera-android",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:MobileApp",
+        "schema:MobileApplication"
+      ],
+      "dcterms:title": "RobOS IP Camera for Android",
+      "dcterms:description": "Always-on Android 11+ surveillance camera for RobOS Camera Watch and Smart Home: off-screen Camera2 foreground service with CPU, low-latency Wi-Fi and multicast locks, ONVIF WS-Discovery and Profile S/T SOAP, solid-state sensor PTZ + flashlight presets, main/sub MJPEG streams, snapshots, on-camera luma motion detection, Keystore-encrypted auth, and OLED Blackout wall-mount mode.",
+      "robos:namespace": "robos.applications",
+      "robos:package": "applications",
+      "robos:platform": "Android",
+      "robos:repository": "packages/ip-camera-android",
+      "robos:schemaOrgType": "https://schema.org/MobileApplication",
+      "robos:technology": "Kotlin / Jetpack Compose / Android Camera2 / ONVIF WS-Discovery & SOAP / MJPEG / Android Keystore"
     },
     {
       "@id": "urn:robos:desktop-app:personality",

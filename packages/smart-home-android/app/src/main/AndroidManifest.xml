@@ -21,6 +21,10 @@
         android:name="com.robos.permission.MANAGE_SETTINGS"
         android:protectionLevel="signature" />
 
+    <queries>
+        <package android:name="com.robos.ipcamera" />
+    </queries>
+
     <application
         android:name=".android.HomeApp"
         android:allowBackup="false"

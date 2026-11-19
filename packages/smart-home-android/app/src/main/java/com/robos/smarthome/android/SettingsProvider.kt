@@ -19,15 +19,22 @@ class SettingsProvider : ContentProvider() {
 
     override fun call(method: String, arg: String?, extras: Bundle?): Bundle {
         if (method != "import") return Bundle().apply { putString("error", "Unknown request: $method") }
-        if (arg != "config/smart-lights.json") return Bundle().apply { putString("error", "Smart Home does not use $arg.") }
+        if (arg != "config/smart-lights.json" && arg != "config/camera-watch/cameras.json") {
+            return Bundle().apply { putString("error", "Smart Home does not use $arg.") }
+        }
         val json = extras?.getString("json") ?: return Bundle().apply { putString("error", "Nothing to restore.") }
         val app = context!!.applicationContext as HomeApp
         if (!app.ready.await(15, TimeUnit.SECONDS)) {
             return Bundle().apply { putString("error", "Smart Home is still starting. Try again in a moment.") }
         }
         return try {
-            val summary = runBlocking { app.engine.importDesktopHome(json) }
-            Bundle().apply { putString("summary", "Smart Home: ${summary.describe()}") }
+            if (arg == "config/camera-watch/cameras.json") {
+                val added = runBlocking { app.cameras.importDesktopCameras(json) }
+                Bundle().apply { putString("summary", "Smart Home: $added camera${if (added == 1) "" else "s"} added.") }
+            } else {
+                val summary = runBlocking { app.engine.importDesktopHome(json) }
+                Bundle().apply { putString("summary", "Smart Home: ${summary.describe()}") }
+            }
         } catch (e: Exception) {
             Bundle().apply { putString("error", "Smart Home could not read the backed-up settings: ${e.message}") }
         }

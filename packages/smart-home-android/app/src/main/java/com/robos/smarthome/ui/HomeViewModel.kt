@@ -17,6 +17,7 @@ import com.robos.smarthome.core.LightPatch
 import com.robos.smarthome.core.SCAN_WINDOW_MS
 import com.robos.smarthome.core.ScanTargets
 import com.robos.smarthome.core.Schedule
+import com.robos.smarthome.core.SmartCamera
 import com.robos.smarthome.core.UdpDiscovery
 import com.robos.smarthome.core.computeCircadianTarget
 import com.robos.smarthome.core.TuyaFindResult
@@ -35,7 +36,9 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     val state = engine.state
     val wifi = app.wifi.status
     val appliances = app.thinq.overview
+    val cameras = app.cameras.cameras
     val scanning = MutableStateFlow(false)
+    val scanningCameras = MutableStateFlow(false)
     val hueBridge = MutableStateFlow<String?>(null)
 
     private val messages = Channel<String>(Channel.BUFFERED)
@@ -226,5 +229,51 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
     fun forgetAppliances() {
         viewModelScope.launch { app.thinq.disconnect() }
+    }
+
+    // ── Surveillance Cameras ─────────────────────────────────────────────────
+
+    fun scanCameras() {
+        if (scanningCameras.value) return
+        scanningCameras.value = true
+        viewModelScope.launch {
+            try {
+                val found = withMulticast(app) { app.cameras.discoverOnLan() }
+                val added = app.cameras.mergeDiscovered(found, engine.state.value.rooms)
+                say(
+                    when {
+                        added > 0 -> "Added $added camera${if (added == 1) "" else "s"} from Wi-Fi."
+                        found.isNotEmpty() -> "No new cameras. ${found.size} known camera${if (found.size == 1) "" else "s"} online."
+                        else -> "No ONVIF or RobOS IP cameras answered. Start RobOS IP Camera on a phone or add by IP."
+                    },
+                )
+            } finally {
+                scanningCameras.value = false
+            }
+        }
+    }
+
+    fun saveCamera(id: String?, name: String, roomId: String, address: String) {
+        viewModelScope.launch {
+            val saved = app.cameras.saveCamera(id, name, roomId, address)
+            say("Saved ${saved.name}.")
+        }
+    }
+
+    fun removeCamera(camera: SmartCamera) {
+        viewModelScope.launch {
+            app.cameras.removeCamera(camera.id)
+            say("Removed ${camera.name}.")
+        }
+    }
+
+    suspend fun fetchCameraFrame(camera: SmartCamera): ByteArray? =
+        app.cameras.fetchSnapshot(camera)
+
+    fun controlCamera(camera: SmartCamera, jsonPayload: String, label: String) {
+        viewModelScope.launch {
+            val ok = app.cameras.sendRobosControl(camera, jsonPayload)
+            say(if (ok) "${camera.name}: $label" else "${camera.name} did not accept that command.")
+        }
     }
 }

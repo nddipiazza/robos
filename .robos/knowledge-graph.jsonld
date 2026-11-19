@@ -4209,6 +4209,60 @@
       "robos:zoneType": "wilderness"
     },
     {
+      "@id": "urn:robos:dashboard-card:game-theater-leaderboard",
+      "@type": "robos:DashboardCard",
+      "dcterms:title": "Live Standings & Seated Players",
+      "robos:cardId": "game-theater-leaderboard",
+      "robos:componentTag": "robos-widget-game-theater",
+      "robos:dashboard": {
+        "@id": "urn:robos:dashboard:game-theater-spectator"
+      },
+      "robos:package": "dashboards",
+      "robos:slotId": "bottom-left",
+      "robos:widget": {
+        "@id": "urn:robos:dashboard-widget:game-theater"
+      },
+      "robos:widgetConfig": {
+        "mode": "leaderboard"
+      }
+    },
+    {
+      "@id": "urn:robos:dashboard-card:game-theater-live-stage",
+      "@type": "robos:DashboardCard",
+      "dcterms:title": "Live Multiplayer Stage (Secret-Safe Spectator View)",
+      "robos:cardId": "game-theater-live-stage",
+      "robos:componentTag": "robos-widget-game-theater",
+      "robos:dashboard": {
+        "@id": "urn:robos:dashboard:game-theater-spectator"
+      },
+      "robos:package": "dashboards",
+      "robos:slotId": "hero-top",
+      "robos:widget": {
+        "@id": "urn:robos:dashboard-widget:game-theater"
+      },
+      "robos:widgetConfig": {
+        "mode": "stage"
+      }
+    },
+    {
+      "@id": "urn:robos:dashboard-card:game-theater-lobby-feed",
+      "@type": "robos:DashboardCard",
+      "dcterms:title": "Lobby Presence, Chat & AI Game Builder",
+      "robos:cardId": "game-theater-lobby-feed",
+      "robos:componentTag": "robos-widget-game-theater",
+      "robos:dashboard": {
+        "@id": "urn:robos:dashboard:game-theater-spectator"
+      },
+      "robos:package": "dashboards",
+      "robos:slotId": "bottom-right",
+      "robos:widget": {
+        "@id": "urn:robos:dashboard-widget:game-theater"
+      },
+      "robos:widgetConfig": {
+        "mode": "lobby"
+      }
+    },
+    {
       "@id": "urn:robos:dashboard-card:github-ci-main-status",
       "@type": "robos:DashboardCard",
       "dcterms:title": "CI Status in main & Release Pipeline",
@@ -4635,6 +4689,15 @@
       "robos:widgetType": "calendar-today"
     },
     {
+      "@id": "urn:robos:dashboard-widget:game-theater",
+      "@type": "robos:DashboardWidget",
+      "dcterms:title": "RobOS AI Multiplayer Game Theater (Live Spectator)",
+      "robos:componentTag": "robos-widget-game-theater",
+      "robos:description": "Live secret-safe spectator view of RobOS AI Multiplayer Game Theater matches with real-time countdowns, boards, leaderboards, lobby presence, and AI studio status.",
+      "robos:package": "dashboards",
+      "robos:widgetType": "game-theater"
+    },
+    {
       "@id": "urn:robos:dashboard-widget:git-commits",
       "@type": "robos:DashboardWidget",
       "dcterms:title": "Latest Git Commit Messages",
@@ -4761,6 +4824,29 @@
       "robos:description": "Primary operational dashboard featuring GitHub repo activity (nddipiazza/robos commits, main CI status, latest release # & running status), live JavaScript <canvas> clock, 10 latest commit messages, dual Google Calendar events for the day, and running RobOS agent sessions with status lines tailed.",
       "robos:layout": {
         "@id": "urn:robos:dashboard-layout:mission-control-3col"
+      },
+      "robos:package": "dashboards",
+      "robos:tvCompatible": true
+    },
+    {
+      "@id": "urn:robos:dashboard:game-theater-spectator",
+      "@type": "robos:Dashboard",
+      "dcterms:title": "Game Theater — Live Spectator Dashboard",
+      "robos:cards": [
+        {
+          "@id": "urn:robos:dashboard-card:game-theater-live-stage"
+        },
+        {
+          "@id": "urn:robos:dashboard-card:game-theater-leaderboard"
+        },
+        {
+          "@id": "urn:robos:dashboard-card:game-theater-lobby-feed"
+        }
+      ],
+      "robos:dashboardId": "game-theater-spectator",
+      "robos:description": "10-foot Smart TV and desktop spectator dashboard for RobOS AI Multiplayer Game Theater: live secret-safe stage view, countdowns, multiple-choice & word boards, ranked player leaderboard, lobby presence, and live RobOS Agent game studio status.",
+      "robos:layout": {
+        "@id": "urn:robos:dashboard-layout:hero-top-split"
       },
       "robos:package": "dashboards",
       "robos:tvCompatible": true
@@ -12358,6 +12444,22 @@
         "validate_shacl"
       ],
       "robos:transport": "stdio"
+    },
+    {
+      "@id": "urn:robos:mobile-app:ip-camera-android",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:MobileApp",
+        "schema:MobileApplication"
+      ],
+      "dcterms:description": "Always-on Android 11+ surveillance camera for RobOS Camera Watch and Smart Home: off-screen Camera2 foreground service with CPU, low-latency Wi-Fi and multicast locks, ONVIF WS-Discovery and Profile S/T SOAP, solid-state sensor PTZ + flashlight presets, main/sub MJPEG streams, snapshots, on-camera luma motion detection, Keystore-encrypted auth, and OLED Blackout wall-mount mode.",
+      "dcterms:title": "RobOS IP Camera for Android",
+      "robos:namespace": "robos.applications",
+      "robos:package": "applications",
+      "robos:platform": "Android",
+      "robos:repository": "packages/ip-camera-android",
+      "robos:schemaOrgType": "https://schema.org/MobileApplication",
+      "robos:technology": "Kotlin / Jetpack Compose / Android Camera2 / ONVIF WS-Discovery & SOAP / MJPEG / Android Keystore"
     },
     {
       "@id": "urn:robos:organization:acme-global",
@@ -24301,6 +24403,60 @@
       "robos:zoneType": "wilderness"
     },
     {
+      "@id": "urn:robos:dashboard-card:game-theater-leaderboard",
+      "@type": "robos:DashboardCard",
+      "dcterms:title": "Live Standings & Seated Players",
+      "robos:cardId": "game-theater-leaderboard",
+      "robos:componentTag": "robos-widget-game-theater",
+      "robos:dashboard": {
+        "@id": "urn:robos:dashboard:game-theater-spectator"
+      },
+      "robos:package": "dashboards",
+      "robos:slotId": "bottom-left",
+      "robos:widget": {
+        "@id": "urn:robos:dashboard-widget:game-theater"
+      },
+      "robos:widgetConfig": {
+        "mode": "leaderboard"
+      }
+    },
+    {
+      "@id": "urn:robos:dashboard-card:game-theater-live-stage",
+      "@type": "robos:DashboardCard",
+      "dcterms:title": "Live Multiplayer Stage (Secret-Safe Spectator View)",
+      "robos:cardId": "game-theater-live-stage",
+      "robos:componentTag": "robos-widget-game-theater",
+      "robos:dashboard": {
+        "@id": "urn:robos:dashboard:game-theater-spectator"
+      },
+      "robos:package": "dashboards",
+      "robos:slotId": "hero-top",
+      "robos:widget": {
+        "@id": "urn:robos:dashboard-widget:game-theater"
+      },
+      "robos:widgetConfig": {
+        "mode": "stage"
+      }
+    },
+    {
+      "@id": "urn:robos:dashboard-card:game-theater-lobby-feed",
+      "@type": "robos:DashboardCard",
+      "dcterms:title": "Lobby Presence, Chat & AI Game Builder",
+      "robos:cardId": "game-theater-lobby-feed",
+      "robos:componentTag": "robos-widget-game-theater",
+      "robos:dashboard": {
+        "@id": "urn:robos:dashboard:game-theater-spectator"
+      },
+      "robos:package": "dashboards",
+      "robos:slotId": "bottom-right",
+      "robos:widget": {
+        "@id": "urn:robos:dashboard-widget:game-theater"
+      },
+      "robos:widgetConfig": {
+        "mode": "lobby"
+      }
+    },
+    {
       "@id": "urn:robos:dashboard-card:github-ci-main-status",
       "@type": "robos:DashboardCard",
       "dcterms:title": "CI Status in main & Release Pipeline",
@@ -24727,6 +24883,15 @@
       "robos:widgetType": "calendar-today"
     },
     {
+      "@id": "urn:robos:dashboard-widget:game-theater",
+      "@type": "robos:DashboardWidget",
+      "dcterms:title": "RobOS AI Multiplayer Game Theater (Live Spectator)",
+      "robos:componentTag": "robos-widget-game-theater",
+      "robos:description": "Live secret-safe spectator view of RobOS AI Multiplayer Game Theater matches with real-time countdowns, boards, leaderboards, lobby presence, and AI studio status.",
+      "robos:package": "dashboards",
+      "robos:widgetType": "game-theater"
+    },
+    {
       "@id": "urn:robos:dashboard-widget:git-commits",
       "@type": "robos:DashboardWidget",
       "dcterms:title": "Latest Git Commit Messages",
@@ -24853,6 +25018,29 @@
       "robos:description": "Primary operational dashboard featuring GitHub repo activity (nddipiazza/robos commits, main CI status, latest release # & running status), live JavaScript <canvas> clock, 10 latest commit messages, dual Google Calendar events for the day, and running RobOS agent sessions with status lines tailed.",
       "robos:layout": {
         "@id": "urn:robos:dashboard-layout:mission-control-3col"
+      },
+      "robos:package": "dashboards",
+      "robos:tvCompatible": true
+    },
+    {
+      "@id": "urn:robos:dashboard:game-theater-spectator",
+      "@type": "robos:Dashboard",
+      "dcterms:title": "Game Theater — Live Spectator Dashboard",
+      "robos:cards": [
+        {
+          "@id": "urn:robos:dashboard-card:game-theater-live-stage"
+        },
+        {
+          "@id": "urn:robos:dashboard-card:game-theater-leaderboard"
+        },
+        {
+          "@id": "urn:robos:dashboard-card:game-theater-lobby-feed"
+        }
+      ],
+      "robos:dashboardId": "game-theater-spectator",
+      "robos:description": "10-foot Smart TV and desktop spectator dashboard for RobOS AI Multiplayer Game Theater: live secret-safe stage view, countdowns, multiple-choice & word boards, ranked player leaderboard, lobby presence, and live RobOS Agent game studio status.",
+      "robos:layout": {
+        "@id": "urn:robos:dashboard-layout:hero-top-split"
       },
       "robos:package": "dashboards",
       "robos:tvCompatible": true
@@ -32450,6 +32638,22 @@
         "validate_shacl"
       ],
       "robos:transport": "stdio"
+    },
+    {
+      "@id": "urn:robos:mobile-app:ip-camera-android",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:MobileApp",
+        "schema:MobileApplication"
+      ],
+      "dcterms:description": "Always-on Android 11+ surveillance camera for RobOS Camera Watch and Smart Home: off-screen Camera2 foreground service with CPU, low-latency Wi-Fi and multicast locks, ONVIF WS-Discovery and Profile S/T SOAP, solid-state sensor PTZ + flashlight presets, main/sub MJPEG streams, snapshots, on-camera luma motion detection, Keystore-encrypted auth, and OLED Blackout wall-mount mode.",
+      "dcterms:title": "RobOS IP Camera for Android",
+      "robos:namespace": "robos.applications",
+      "robos:package": "applications",
+      "robos:platform": "Android",
+      "robos:repository": "packages/ip-camera-android",
+      "robos:schemaOrgType": "https://schema.org/MobileApplication",
+      "robos:technology": "Kotlin / Jetpack Compose / Android Camera2 / ONVIF WS-Discovery & SOAP / MJPEG / Android Keystore"
     },
     {
       "@id": "urn:robos:organization:acme-global",

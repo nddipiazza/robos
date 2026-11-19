@@ -40,6 +40,7 @@ import kotlinx.coroutines.flow.collectLatest
 
 private enum class Tab(val label: String, val icon: Int) {
     Lights("Lights", R.drawable.ic_tab_lights),
+    Cameras("Cameras", R.drawable.ic_tab_cameras),
     Scenes("Scenes", R.drawable.ic_tab_scenes),
     Schedules("Schedules", R.drawable.ic_tab_schedules),
     Appliances("Appliances", R.drawable.ic_tab_appliances),
@@ -66,6 +67,8 @@ private fun SmartHomeApp(vm: HomeViewModel) {
     val home by vm.state.collectAsStateWithLifecycle()
     val wifi by vm.wifi.collectAsStateWithLifecycle()
     val scanning by vm.scanning.collectAsStateWithLifecycle()
+    val scanningCameras by vm.scanningCameras.collectAsStateWithLifecycle()
+    val cameras by vm.cameras.collectAsStateWithLifecycle()
     val hueBridge by vm.hueBridge.collectAsStateWithLifecycle()
     val appliances by vm.appliances.collectAsStateWithLifecycle()
     var tab by rememberSaveable { mutableStateOf(Tab.Lights) }
@@ -119,6 +122,7 @@ private fun SmartHomeApp(vm: HomeViewModel) {
     ) { padding: PaddingValues ->
         when (tab) {
             Tab.Lights -> LightsScreen(vm, home, hueBridge, scanning, padding)
+            Tab.Cameras -> CamerasScreen(vm, home, cameras, scanningCameras, padding)
             Tab.Scenes -> ScenesScreen(vm, home, padding)
             Tab.Schedules -> SchedulesScreen(vm, home, padding)
             Tab.Appliances -> AppliancesScreen(vm, appliances, padding)

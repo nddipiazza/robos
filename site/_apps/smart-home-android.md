@@ -18,6 +18,7 @@ RobOS Smart Home for Android is the mobile prototype of [Smart Home](/smart-home
 - **Lights:** switch, dim and color lights, together or one at a time. **Scan** finds WiZ, WLED, Kasa, LIFX, Govee, Elgato, Yeelight and Shelly lights on your network. **Pair Hue Bridge** pairs a Philips Hue bridge with its button. Home Assistant uses a long-lived access token.
 - **Feit Electric and Smart Life (Tuya) lights:** tap **Add Feit or Smart Life lights** and follow the steps. You create a free Tuya cloud project once (about 20 minutes), enter its Access ID and Access Secret, and the app fetches each light's key. After that it controls the lights locally.
 - **Rooms and scenes:** group lights by room and save scenes.
+- **Cameras:** discover [RobOS IP Camera](/ip-camera-android/) phones and ONVIF cameras on your Wi-Fi, view live camera feeds by room, and toggle zoom, lens or flashlight on RobOS phone cameras.
 - **Schedules:** turn lights on or off, or fade them, at set times. Schedules run while the app is closed.
 - **Appliances:** LG ThinQ appliance status, read only.
 

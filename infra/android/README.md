@@ -13,6 +13,8 @@ The RobOS parts are built and tested on an emulator. The full image has not been
 | Boot animation | `tools/make-bootanimation.py`, from the RobOS logo |
 | Home screen | `packages/robos-launcher-android`. It shows only `com.robos.*` apps and Settings |
 | Smart Home | `packages/smart-home-android` |
+| Preferences | `packages/robos-preferences-android` |
+| IP Camera | `packages/ip-camera-android` |
 | Stock apps removed | The `overrides` list in `vendor/robos/Android.bp`. It includes `Updater`, which would otherwise replace RobOS with stock LineageOS |
 | Everything else | LineageOS `lineage-24.0`, the current official branch for this phone |
 

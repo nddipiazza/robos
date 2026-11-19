@@ -1,6 +1,7 @@
 package com.robos.smarthome.android
 
 import android.app.Application
+import com.robos.smarthome.core.CameraService
 import com.robos.smarthome.core.FileStateStore
 import com.robos.smarthome.core.LightEngine
 import com.robos.smarthome.core.SocketTransport
@@ -29,6 +30,8 @@ class HomeApp : Application() {
         private set
     lateinit var tuya: TuyaService
         private set
+    lateinit var cameras: CameraService
+        private set
 
     /**
      * Opens once onCreate has run. Android creates content providers, and can hand them
@@ -47,6 +50,7 @@ class HomeApp : Application() {
         transport = SocketTransport(wifi, tuyaKey = { tuya.keyFor(it) })
         engine = LightEngine(FileStateStore(File(filesDir, "smart-lights.json")), transport, scope)
         thinq = ThinqService(KeystoreThinqVault(File(noBackupFilesDir, "lg-thinq.bin")))
+        cameras = CameraService(File(filesDir, "smart-cameras.json"), wifi)
 
         scope.launch {
             engine.state.map { it.schedules }.distinctUntilChanged().collect {

@@ -4,7 +4,8 @@ PRODUCT_SOONG_NAMESPACES += vendor/robos
 PRODUCT_PACKAGES += \
     RobOSHome \
     RobOSSmartHome \
-    RobOSPreferences
+    RobOSPreferences \
+    RobOSIPCamera
 
 # The stock launcher provides gesture navigation, so RobOS uses the three-button bar.
 PRODUCT_PRODUCT_PROPERTIES += \
