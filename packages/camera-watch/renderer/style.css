@@ -61,6 +61,10 @@ h3 { font-size: 12px; font-weight: 650; text-transform: uppercase; letter-spacin
 .btn:disabled { opacity: 0.5; cursor: default; }
 .btn-primary { background: var(--accent); border-color: var(--accent); color: #001417; font-weight: 600; }
 .btn-primary:hover { background: var(--accent-hover); }
+.btn-accent-outline { background: rgba(0, 188, 212, 0.14); border-color: rgba(0, 188, 212, 0.55); color: var(--accent); font-weight: 600; }
+.btn-accent-outline:hover { background: var(--accent); color: #001417; }
+.robos-user-avatar { width: 32px; height: 32px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 16px; background: var(--bg-elevated); border: 1px solid var(--border); flex-shrink: 0; }
+.pill.owner { color: var(--accent); border-color: rgba(0, 188, 212, 0.45); background: rgba(0, 188, 212, 0.12); }
 .btn-danger { color: var(--danger); }
 .btn-danger:hover { border-color: var(--danger); }
 .btn-small { padding: 3px 9px; font-size: 12px; }

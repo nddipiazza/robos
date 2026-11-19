@@ -162,13 +162,31 @@ function createGoogleDocsDriveApi({ accountId, homeDir, tokens, fetchImpl }) {
     });
   }
 
-  async function sharePermission(fileId, email, role = 'reader', message = '') {
-    const params = new URLSearchParams({ sendNotificationEmail: 'true', supportsAllDrives: 'true', fields: 'id,emailAddress,role' });
-    if (message) params.set('emailMessage', message);
+  async function sharePermission(fileId, email, role = 'reader', message = '', { sendNotificationEmail = true } = {}) {
+    const params = new URLSearchParams({
+      sendNotificationEmail: sendNotificationEmail ? 'true' : 'false',
+      supportsAllDrives: 'true',
+      fields: 'id,emailAddress,role,displayName',
+    });
+    if (message && sendNotificationEmail) params.set('emailMessage', message);
     return request('POST', `/drive/v3/files/${encodeURIComponent(fileId)}/permissions?${params}`, {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ type: 'user', role, emailAddress: email }),
     });
+  }
+
+  async function listPermissions(fileId) {
+    const params = new URLSearchParams({
+      supportsAllDrives: 'true',
+      fields: 'permissions(id,emailAddress,role,displayName,type)',
+    });
+    const res = await request('GET', `/drive/v3/files/${encodeURIComponent(fileId)}/permissions?${params}`);
+    return res.permissions || [];
+  }
+
+  async function deletePermission(fileId, permissionId) {
+    const params = new URLSearchParams({ supportsAllDrives: 'true' });
+    return request('DELETE', `/drive/v3/files/${encodeURIComponent(fileId)}/permissions/${encodeURIComponent(permissionId)}?${params}`);
   }
 
   return {
@@ -179,7 +197,44 @@ function createGoogleDocsDriveApi({ accountId, homeDir, tokens, fetchImpl }) {
     createMultipartFile,
     updateFileMedia,
     sharePermission,
+    listPermissions,
+    deletePermission,
   };
+}
+
+function maskEmailAddress(email = '') {
+  const s = String(email || '').trim();
+  const at = s.indexOf('@');
+  if (at <= 0) return s;
+  const local = s.slice(0, at);
+  const domain = s.slice(at + 1);
+  const prefix = local.slice(0, Math.min(2, local.length));
+  return `${prefix}***@${domain}`;
+}
+
+function isRoutableGoogleEmail(email = '') {
+  const s = String(email || '').trim().toLowerCase();
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s) && !s.endsWith('@robos.local');
+}
+
+function loadRobosPeople({ configDir } = {}) {
+  try {
+    const ps = requireRobosLib('people-store');
+    return ps.loadAllPeople({ configDir, includePhotoDataUrl: false });
+  } catch {
+    return [];
+  }
+}
+
+function resolveEffectiveGoogleAccount({ accountId = '', webConfig = {}, homeDir, tokens } = {}) {
+  const accounts = listGoogleAccounts({ homeDir });
+  let effectiveAccountId = accountId || webConfig.accountId || '';
+  if (!effectiveAccountId && !tokens) {
+    const chosen = accounts.find((a) => a.isDefault) || accounts[0];
+    if (chosen) effectiveAccountId = chosen.id;
+  }
+  const ownerEmail = accounts.find((a) => a.id === effectiveAccountId)?.email || webConfig.ownerEmail || '';
+  return { accounts, effectiveAccountId, ownerEmail };
 }
 
 /**
@@ -383,10 +438,266 @@ async function syncCameraGoogleDoc({
   };
 }
 
+/**
+ * Lists all RobOS users from `people-store` annotated with whether the camera's Google Drive Doc
+ * is currently shared with their Google account (`shared: true`, `permissionId`, `isOwner`).
+ */
+async function listRobosUsersWithShareStatus({
+  webConfig = {},
+  accountId = '',
+  configDir,
+  homeDir,
+  tokens,
+  fetchImpl,
+  maskEmails = false,
+} = {}) {
+  const people = loadRobosPeople({ configDir });
+  const { effectiveAccountId, ownerEmail } = resolveEffectiveGoogleAccount({ accountId, webConfig, homeDir, tokens });
+  const ownerLower = String(ownerEmail || '').trim().toLowerCase();
+  const docId = String(webConfig.docId || '').trim();
+
+  // Map lowercase email -> { permissionId, role, displayName }
+  const permByEmail = new Map();
+  if (Array.isArray(webConfig.sharedUsers)) {
+    for (const s of webConfig.sharedUsers) {
+      if (s && s.email) {
+        permByEmail.set(String(s.email).trim().toLowerCase(), {
+          permissionId: String(s.permissionId || ''),
+          role: String(s.role || 'reader'),
+          displayName: String(s.name || ''),
+        });
+      }
+    }
+  }
+
+  if (docId && (effectiveAccountId || tokens)) {
+    try {
+      const api = createGoogleDocsDriveApi({ accountId: effectiveAccountId, homeDir, tokens, fetchImpl });
+      const livePerms = await api.listPermissions(docId);
+      permByEmail.clear();
+      for (const p of livePerms) {
+        const em = String(p.emailAddress || '').trim().toLowerCase();
+        if (!em) continue;
+        permByEmail.set(em, {
+          permissionId: String(p.id || ''),
+          role: String(p.role || 'reader'),
+          displayName: String(p.displayName || ''),
+        });
+      }
+    } catch {
+      // Keep cached sharedUsers fallback if offline or token not needed yet
+    }
+  }
+
+  const matchedEmails = new Set();
+  const users = people.map((p) => {
+    const rawEmail = String(p.email || '').trim();
+    const lower = rawEmail.toLowerCase();
+    if (lower) matchedEmails.add(lower);
+    const perm = lower ? permByEmail.get(lower) : null;
+    const isOwner = Boolean((ownerLower && lower === ownerLower) || perm?.role === 'owner');
+    const canShare = isRoutableGoogleEmail(rawEmail) && !isOwner;
+    const shared = Boolean(!isOwner && perm && perm.role !== 'owner');
+    return {
+      uid: p.uid,
+      name: p.displayName || p.name || p.uid,
+      nickname: p.nickname || '',
+      avatar: p.avatar || p.gameProfile?.avatar || '👤',
+      color: p.color || '#00bcd4',
+      groups: Array.isArray(p.groups) ? p.groups.slice(0, 3) : [],
+      relationshipRole: p.relationshipRole || '',
+      email: maskEmails ? maskEmailAddress(rawEmail) : rawEmail,
+      hasGoogleEmail: isRoutableGoogleEmail(rawEmail),
+      canShare,
+      isOwner,
+      shared,
+      permissionId: shared ? (perm?.permissionId || '') : '',
+      role: isOwner ? 'owner' : (shared ? (perm?.role || 'reader') : ''),
+    };
+  });
+
+  // Sort: shareable RobOS users first (shared at top, then alphabetical), owner last
+  users.sort((a, b) => {
+    if (a.isOwner !== b.isOwner) return a.isOwner ? 1 : -1;
+    if (a.hasGoogleEmail !== b.hasGoogleEmail) return a.hasGoogleEmail ? -1 : 1;
+    if (a.shared !== b.shared) return a.shared ? -1 : 1;
+    return a.name.localeCompare(b.name);
+  });
+
+  const extraShares = [];
+  for (const [lower, perm] of permByEmail.entries()) {
+    if (matchedEmails.has(lower) || perm.role === 'owner' || lower === ownerLower) continue;
+    extraShares.push({
+      email: maskEmails ? maskEmailAddress(lower) : lower,
+      name: perm.displayName || (maskEmails ? maskEmailAddress(lower) : lower),
+      permissionId: perm.permissionId,
+      role: perm.role,
+    });
+  }
+
+  return {
+    docId,
+    docUrl: docId ? googleDocEditUrl(docId) : (webConfig.docUrl || ''),
+    docTitle: webConfig.docTitle || '',
+    folderUrl: webConfig.folderUrl || '',
+    publicTunnelUrl: webConfig.publicTunnelUrl || '',
+    ownerEmail: maskEmails ? maskEmailAddress(ownerEmail) : ownerEmail,
+    users,
+    extraShares,
+  };
+}
+
+/**
+ * Ensures the camera's Google Doc is up to date in Google Drive with the live Cloudflare HTTPS
+ * link, and grants Google Drive Viewer (`reader`) access to the selected RobOS user.
+ */
+async function shareWithRobosUser({
+  uid = '',
+  email = '',
+  cameras = [],
+  webConfig = {},
+  authedTunnelUrl = '',
+  publicTunnelUrl = '',
+  authedLanUrl = '',
+  accountId = '',
+  configDir,
+  homeDir,
+  tokens,
+  fetchImpl,
+  sendNotificationEmail = true,
+}) {
+  const people = loadRobosPeople({ configDir });
+  const person = uid ? people.find((p) => p.uid === uid) : null;
+  if (uid && !person && !email) {
+    throw new Error(`RobOS user "${uid}" was not found.`);
+  }
+  const targetEmail = String(email || person?.email || '').trim();
+  if (!isRoutableGoogleEmail(targetEmail)) {
+    const label = person ? (person.displayName || person.uid) : 'that RobOS user';
+    throw new Error(`Add a Google email address for ${label} first.`);
+  }
+
+  const synced = await syncCameraGoogleDoc({
+    cameras,
+    webConfig,
+    authedTunnelUrl,
+    publicTunnelUrl,
+    authedLanUrl,
+    accountId,
+    homeDir,
+    tokens,
+    fetchImpl,
+  });
+
+  const api = createGoogleDocsDriveApi({
+    accountId: synced.accountId,
+    homeDir,
+    tokens,
+    fetchImpl,
+  });
+
+  const recipientLabel = person?.displayName || targetEmail;
+  const perm = await api.sharePermission(
+    synced.docId,
+    targetEmail,
+    'reader',
+    `Shared live RobOS Camera access (${synced.docTitle}) with you. Open this Google Doc and tap "CLICK HERE TO WATCH LIVE CAMERA IN YOUR BROWSER" at the top.`,
+    { sendNotificationEmail },
+  );
+
+  return {
+    ...synced,
+    sharedWith: {
+      uid: person?.uid || '',
+      name: recipientLabel,
+      email: targetEmail,
+      permissionId: String(perm?.id || ''),
+      role: String(perm?.role || 'reader'),
+    },
+  };
+}
+
+/**
+ * Revokes a RobOS user's Google Drive permission on the camera Google Doc and optionally updates
+ * the Google Doc with a newly rotated 256-bit Cloudflare session token.
+ */
+async function revokeRobosUserShare({
+  uid = '',
+  email = '',
+  permissionId = '',
+  cameras = [],
+  webConfig = {},
+  authedTunnelUrl = '',
+  publicTunnelUrl = '',
+  authedLanUrl = '',
+  accountId = '',
+  configDir,
+  homeDir,
+  tokens,
+  fetchImpl,
+}) {
+  const docId = String(webConfig.docId || '').trim();
+  if (!docId) {
+    throw new Error('No camera Google Doc exists yet.');
+  }
+  const people = loadRobosPeople({ configDir });
+  const person = uid ? people.find((p) => p.uid === uid) : null;
+  const targetEmail = String(email || person?.email || '').trim().toLowerCase();
+
+  const { effectiveAccountId } = resolveEffectiveGoogleAccount({ accountId, webConfig, homeDir, tokens });
+  if (!effectiveAccountId && !tokens) {
+    throw new Error('Sign in with Google in RobOS Cloud Accounts or Preferences first.');
+  }
+  const api = createGoogleDocsDriveApi({ accountId: effectiveAccountId, homeDir, tokens, fetchImpl });
+
+  let resolvedPermId = String(permissionId || '').trim();
+  if (!resolvedPermId && targetEmail) {
+    const perms = await api.listPermissions(docId);
+    const hit = perms.find((p) => p.role !== 'owner' && String(p.emailAddress || '').trim().toLowerCase() === targetEmail);
+    if (hit?.id) resolvedPermId = String(hit.id);
+  }
+  if (!resolvedPermId && targetEmail && Array.isArray(webConfig.sharedUsers)) {
+    const cached = webConfig.sharedUsers.find((s) => String(s.email || '').trim().toLowerCase() === targetEmail);
+    if (cached?.permissionId) resolvedPermId = String(cached.permissionId);
+  }
+  if (resolvedPermId) {
+    await api.deletePermission(docId, resolvedPermId);
+  }
+
+  let synced = null;
+  if (authedTunnelUrl || authedLanUrl) {
+    synced = await syncCameraGoogleDoc({
+      cameras,
+      webConfig,
+      authedTunnelUrl,
+      publicTunnelUrl: publicTunnelUrl || webConfig.publicTunnelUrl || '',
+      authedLanUrl,
+      accountId: effectiveAccountId,
+      homeDir,
+      tokens,
+      fetchImpl,
+    });
+  }
+
+  return {
+    revoked: true,
+    uid: person?.uid || uid || '',
+    email: targetEmail,
+    permissionId: resolvedPermId,
+    ...(synced || {}),
+  };
+}
+
 module.exports = {
+  createGoogleDocsDriveApi,
   listGoogleAccounts,
+  loadRobosPeople,
+  listRobosUsersWithShareStatus,
+  shareWithRobosUser,
+  revokeRobosUserShare,
   renderCameraGoogleDocHtml,
   syncCameraGoogleDoc,
   googleDocEditUrl,
   googleDriveFolderUrl,
+  maskEmailAddress,
 };

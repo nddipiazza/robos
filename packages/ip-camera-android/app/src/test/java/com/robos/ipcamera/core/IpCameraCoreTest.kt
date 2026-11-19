@@ -1,5 +1,7 @@
 package com.robos.ipcamera.core
 
+import com.sun.net.httpserver.HttpServer
+import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -297,6 +299,51 @@ class IpCameraCoreTest {
             assertEquals("Garage Cam", store.load().cameraName)
         } finally {
             dir.deleteRecursively()
+        }
+    }
+
+    @Test
+    fun robosHubClientProbesListsAndSharesGoogleDocWithRobosUser() = runBlocking {
+        var capturedUrn = ""
+        var capturedShareBody = ""
+        val mockHub = HttpServer.create(java.net.InetSocketAddress("127.0.0.1", 0), 0)
+        mockHub.createContext("/api/robos-camera-hub") { ex ->
+            val resp = """{"ok":true,"app":"robos-camera-watch-web"}""".toByteArray(StandardCharsets.UTF_8)
+            ex.sendResponseHeaders(200, resp.size.toLong())
+            ex.responseBody.use { it.write(resp) }
+        }
+        mockHub.createContext("/api/robos-users") { ex ->
+            capturedUrn = ex.requestHeaders.getFirst("X-Robos-Camera-Urn").orEmpty()
+            if (ex.requestURI.path == "/api/robos-users/share") {
+                capturedShareBody = ex.requestBody.readBytes().toString(StandardCharsets.UTF_8)
+                val resp = """{"ok":true,"docUrl":"https://docs.google.com/document/d/doc123/edit","docTitle":"XT2125-4 Camera","sharedWith":{"uid":"diana-arrington","name":"Diana Arrington"},"users":[{"uid":"diana-arrington","name":"Diana Arrington","canShare":true,"shared":true,"permissionId":"perm-2"}]}""".toByteArray(StandardCharsets.UTF_8)
+                ex.sendResponseHeaders(200, resp.size.toLong())
+                ex.responseBody.use { it.write(resp) }
+            } else {
+                val resp = """{"ok":true,"docUrl":"https://docs.google.com/document/d/doc123/edit","users":[{"uid":"diana-arrington","name":"Diana Arrington","canShare":true,"shared":false}]}""".toByteArray(StandardCharsets.UTF_8)
+                ex.sendResponseHeaders(200, resp.size.toLong())
+                ex.responseBody.use { it.write(resp) }
+            }
+        }
+        mockHub.start()
+        try {
+            val client = RobosHubClient(hubPort = mockHub.address.port)
+            assertTrue(client.probeHub("127.0.0.1"))
+            val discovered = client.discoverHubHostIp(wifiIp = "127.0.0.2", cachedHostIp = "127.0.0.1")
+            assertEquals("127.0.0.1", discovered)
+
+            val listed = client.listUsers("127.0.0.1", "uuid-abc-1", 8080)
+            assertEquals("urn:uuid:uuid-abc-1", capturedUrn)
+            assertEquals(1, listed.users.size)
+            assertEquals("Diana Arrington", listed.users[0].name)
+            assertFalse(listed.users[0].shared)
+
+            val shared = client.shareWithUser("127.0.0.1", "uuid-abc-1", 8080, uid = "diana-arrington")
+            assertTrue(capturedShareBody.contains("diana-arrington"))
+            assertTrue(shared.users[0].shared)
+            assertEquals("Diana Arrington", shared.sharedWith?.name)
+        } finally {
+            mockHub.stop(0)
         }
     }
 

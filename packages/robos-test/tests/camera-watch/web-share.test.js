@@ -157,4 +157,191 @@ describe('Camera Watch Google-Gated Web Browser Mode & Cloudflare Capability Gat
     assert.match(html, /https:\/\/demo-camera\.trycloudflare\.com\/\?auth=abcdef123456/);
     assert.match(html, /XT2125-4 Camera/);
   });
+
+  it('lists RobOS users and shares & revokes Google Drive Camera Doc permissions via /api/robos-users', async () => {
+    const configDir = path.join(tmpHome, 'cfg-users');
+    const peopleDir = path.join(configDir, 'people');
+    fs.mkdirSync(peopleDir, { recursive: true });
+    fs.writeFileSync(path.join(peopleDir, 'nicholas-dipiazza.json'), JSON.stringify({
+      uid: 'nicholas-dipiazza',
+      displayName: 'Nicholas DiPiazza',
+      email: 'owner.test@gmail.com',
+      avatar: '🧙‍♂️',
+      groups: ['Household'],
+    }, null, 2));
+    fs.writeFileSync(path.join(peopleDir, 'diana-arrington.json'), JSON.stringify({
+      uid: 'diana-arrington',
+      displayName: 'Diana Arrington',
+      email: 'diana.test@gmail.com',
+      avatar: '🛡️',
+      groups: ['Family', 'Household'],
+    }, null, 2));
+
+    const cameraStore = createStore({ configDir, homeDir: tmpHome });
+    cameraStore.saveCamera({
+      name: 'XT2125-4 Camera',
+      kind: 'onvif',
+      streamUrl: 'http://192.168.1.65:8080/video',
+      snapshotUrl: 'http://192.168.1.65:8080/snapshot.jpg',
+      onvif: { hostname: '192.168.1.65', port: 8080, path: '/onvif/device_service' },
+    });
+
+    const webShareStore = createWebShareStore({ configDir });
+    webShareStore.save({
+      publicTunnelUrl: 'https://camera-demo.trycloudflare.com',
+      ownerEmail: 'owner.test@gmail.com',
+    });
+
+    // Mock Google Drive REST v3 endpoints completely in-memory (zero real emails or network calls)
+    const drivePermissions = [
+      { id: 'perm-owner', emailAddress: 'owner.test@gmail.com', role: 'owner', type: 'user' },
+    ];
+    const driveCalls = [];
+
+    const mockDriveFetch = async (rawUrl, init = {}) => {
+      const u = new URL(String(rawUrl));
+      const method = (init.method || 'GET').toUpperCase();
+      driveCalls.push({ method, pathname: u.pathname, search: u.search, body: init.body });
+
+      const jsonRes = (status, obj) => ({
+        ok: status >= 200 && status < 300,
+        status,
+        json: async () => obj,
+        text: async () => JSON.stringify(obj),
+      });
+
+      if (method === 'GET' && u.pathname === '/drive/v3/files') {
+        return jsonRes(200, { files: [] });
+      }
+      if (method === 'POST' && u.pathname === '/drive/v3/files') {
+        return jsonRes(200, { id: 'folder-123', name: 'RobOS Camera Watch' });
+      }
+      if (method === 'GET' && u.pathname.startsWith('/drive/v3/files/') && !u.pathname.endsWith('/permissions')) {
+        return jsonRes(200, { id: u.pathname.split('/').pop(), name: 'RobOS Camera Watch' });
+      }
+      if (method === 'POST' && u.pathname === '/upload/drive/v3/files') {
+        return jsonRes(200, { id: 'doc-xyz-789', name: 'XT2125-4 Camera — RobOS Live Camera' });
+      }
+      if (method === 'PATCH' && u.pathname.startsWith('/upload/drive/v3/files/')) {
+        return jsonRes(200, { id: 'doc-xyz-789', modifiedTime: new Date().toISOString() });
+      }
+      if (method === 'GET' && u.pathname === '/drive/v3/files/doc-xyz-789/permissions') {
+        return jsonRes(200, { permissions: [...drivePermissions] });
+      }
+      if (method === 'POST' && u.pathname === '/drive/v3/files/doc-xyz-789/permissions') {
+        const parsed = JSON.parse(String(init.body || '{}'));
+        const created = {
+          id: `perm-${drivePermissions.length + 1}`,
+          emailAddress: parsed.emailAddress,
+          role: parsed.role,
+          type: parsed.type,
+        };
+        drivePermissions.push(created);
+        return jsonRes(200, created);
+      }
+      if (method === 'DELETE' && u.pathname.startsWith('/drive/v3/files/doc-xyz-789/permissions/')) {
+        const permId = u.pathname.split('/').pop();
+        const idx = drivePermissions.findIndex((p) => p.id === permId);
+        if (idx >= 0) drivePermissions.splice(idx, 1);
+        return { ok: true, status: 204, json: async () => null, text: async () => '' };
+      }
+      return jsonRes(404, { error: { message: `Unhandled ${method} ${u.pathname}` } });
+    };
+
+    const web = createCameraWebServer({
+      cameraStore,
+      webShareStore,
+      googleDriveOptions: {
+        configDir,
+        homeDir: tmpHome,
+        tokens: { get: async () => 'fake-oauth-token' },
+        fetchImpl: mockDriveFetch,
+      },
+    });
+
+    const info = await web.listen(0, '127.0.0.1');
+    try {
+      // 1. Unproxied LAN hub discovery answers 200; Cloudflare-proxied probe gets 401
+      const hubOk = await httpRequest(`${info.localUrl}/api/robos-camera-hub`);
+      assert.strictEqual(hubOk.status, 200);
+      assert.strictEqual(JSON.parse(hubOk.body.toString('utf8')).app, 'robos-camera-watch-web');
+
+      const hubBlocked = await httpRequest(`${info.localUrl}/api/robos-camera-hub`, {
+        headers: { 'cf-connecting-ip': '198.51.100.7', 'cf-ray': 'abc' },
+      });
+      assert.strictEqual(hubBlocked.status, 401);
+
+      // 2. Web viewer HTML renders the prominent "Share with RobOS User" button
+      const viewerHtml = (await httpRequest(`${info.localUrl}/`)).body.toString('utf8');
+      assert.match(viewerHtml, /btn-share-robos-user/);
+      assert.match(viewerHtml, /Share with RobOS User/);
+
+      // 3. Authenticate a Cloudflare browser session (and a second guest cookie to verify key rotation on revoke)
+      const cfHeaders = { 'cf-connecting-ip': '198.51.100.9', 'cf-ray': 'def', 'x-forwarded-proto': 'https' };
+      const initialToken = webShareStore.load().authToken;
+      const exch = await httpRequest(`${info.localUrl}/?auth=${initialToken}`, { headers: cfHeaders });
+      const ownerCookie = (Array.isArray(exch.headers['set-cookie']) ? exch.headers['set-cookie'][0] : exch.headers['set-cookie']).split(';')[0];
+      const guestCookie = ownerCookie; // another browser holding the pre-revoke session cookie
+
+      // 4. GET /api/robos-users over Cloudflare masks emails while preserving uids
+      const listRes = await httpRequest(`${info.localUrl}/api/robos-users`, {
+        headers: { ...cfHeaders, cookie: ownerCookie },
+      });
+      assert.strictEqual(listRes.status, 200);
+      const listJson = JSON.parse(listRes.body.toString('utf8'));
+      const dianaBefore = listJson.users.find((u) => u.uid === 'diana-arrington');
+      assert.ok(dianaBefore);
+      assert.strictEqual(dianaBefore.email, 'di***@gmail.com');
+      assert.strictEqual(dianaBefore.canShare, true);
+      assert.strictEqual(dianaBefore.shared, false);
+
+      // 5. POST /api/robos-users/share with { uid: 'diana-arrington' } creates/updates Google Doc & grants Drive reader access
+      const shareRes = await httpRequest(`${info.localUrl}/api/robos-users/share`, {
+        method: 'POST',
+        headers: { ...cfHeaders, cookie: ownerCookie, 'content-type': 'application/json' },
+        body: JSON.stringify({ uid: 'diana-arrington' }),
+      });
+      assert.strictEqual(shareRes.status, 200);
+      const shareJson = JSON.parse(shareRes.body.toString('utf8'));
+      assert.strictEqual(shareJson.docId, 'doc-xyz-789');
+      assert.match(shareJson.docUrl, /docs\.google\.com\/document\/d\/doc-xyz-789\/edit/);
+      const dianaAfter = shareJson.users.find((u) => u.uid === 'diana-arrington');
+      assert.strictEqual(dianaAfter.shared, true);
+      assert.strictEqual(dianaAfter.permissionId, 'perm-2');
+
+      const permPost = driveCalls.find((c) => c.method === 'POST' && c.pathname === '/drive/v3/files/doc-xyz-789/permissions');
+      assert.ok(permPost);
+      assert.deepStrictEqual(JSON.parse(permPost.body), {
+        type: 'user',
+        role: 'reader',
+        emailAddress: 'diana.test@gmail.com',
+      });
+
+      // 6. POST /api/robos-users/revoke deletes the Google Drive permission, rotates the 256-bit key,
+      //    invalidates the revoked viewer's cookie, and refreshes the caller's own Set-Cookie!
+      const revokeRes = await httpRequest(`${info.localUrl}/api/robos-users/revoke`, {
+        method: 'POST',
+        headers: { ...cfHeaders, cookie: ownerCookie, 'content-type': 'application/json' },
+        body: JSON.stringify({ uid: 'diana-arrington', permissionId: 'perm-2' }),
+      });
+      assert.strictEqual(revokeRes.status, 200);
+      const revokeJson = JSON.parse(revokeRes.body.toString('utf8'));
+      assert.strictEqual(revokeJson.users.find((u) => u.uid === 'diana-arrington').shared, false);
+
+      // Old browser cookie is immediately rejected with 401
+      const oldSessionTry = await httpRequest(`${info.localUrl}/api/cameras`, {
+        headers: { ...cfHeaders, cookie: guestCookie },
+      });
+      assert.strictEqual(oldSessionTry.status, 401);
+
+      // Caller's refreshed Set-Cookie continues working seamlessly
+      const refreshedCookie = (Array.isArray(revokeRes.headers['set-cookie']) ? revokeRes.headers['set-cookie'][0] : revokeRes.headers['set-cookie']).split(';')[0];
+      const callerStillAuthed = await httpRequest(`${info.localUrl}/api/cameras`, {
+        headers: { ...cfHeaders, cookie: refreshedCookie },
+      });
+      assert.strictEqual(callerStillAuthed.status, 200);
+    } finally {
+      await web.close();
+    }
+  });
 });

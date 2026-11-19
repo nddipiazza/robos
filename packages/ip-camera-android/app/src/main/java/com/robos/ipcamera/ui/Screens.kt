@@ -22,12 +22,20 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -39,6 +47,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -59,6 +68,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -86,6 +96,11 @@ fun LiveScreen(
     onEnterBlackout: () -> Unit,
 ) {
     val context = LocalContext.current
+    val shareState by vm.shareState.collectAsState()
+
+    if (shareState.open) {
+        RobosUserShareDialog(vm = vm, shareState = shareState, context = context)
+    }
 
     LazyColumn(
         modifier = Modifier
@@ -213,6 +228,15 @@ fun LiveScreen(
                         )
                     }
                 }
+
+                Button(
+                    onClick = vm::openShareDialog,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("share-robos-user"),
+                ) {
+                    Text("Share with RobOS User (Google Drive Doc)", fontWeight = FontWeight.Bold)
+                }
             }
         }
 
@@ -286,6 +310,208 @@ fun LiveScreen(
             }
         }
     }
+}
+
+@Composable
+private fun RobosUserShareDialog(
+    vm: CameraViewModel,
+    shareState: RobosShareUiState,
+    context: Context,
+) {
+    var customEmail by rememberSaveable { mutableStateOf("") }
+
+    AlertDialog(
+        onDismissRequest = vm::closeShareDialog,
+        containerColor = CardColor,
+        titleContentColor = TextColor,
+        textContentColor = TextColor,
+        title = {
+            Text("Share with RobOS User", fontWeight = FontWeight.Bold)
+        },
+        text = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 460.dp)
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                MutedText("Shares your private Google Drive Camera Doc (protected by Google Login + Cloudflare HTTPS) with the chosen RobOS user's Google account.")
+
+                if (shareState.docUrl.isNotBlank()) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(Elevated)
+                            .padding(horizontal = 10.dp, vertical = 8.dp),
+                    ) {
+                        Column(Modifier.weight(1f)) {
+                            Text("Google Drive Doc", color = Muted, fontSize = 11.sp)
+                            Text(
+                                shareState.docTitle.ifBlank { "RobOS Live Camera Doc" },
+                                color = Accent,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+                        TextButton(
+                            onClick = {
+                                val cm = context.getSystemService(ClipboardManager::class.java)
+                                cm.setPrimaryClip(ClipData.newPlainText("Camera Google Doc", shareState.docUrl))
+                                vm.notifyMessage("Copied Google Doc link")
+                            },
+                        ) {
+                            Text("Copy")
+                        }
+                        TextButton(
+                            onClick = {
+                                try {
+                                    context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(shareState.docUrl)))
+                                } catch (_: Exception) {
+                                }
+                            },
+                        ) {
+                            Text("Open")
+                        }
+                    }
+                }
+
+                if (shareState.statusMessage.isNotBlank()) {
+                    Text(
+                        shareState.statusMessage,
+                        color = Success,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                }
+
+                if (shareState.errorMessage.isNotBlank()) {
+                    ErrorText(shareState.errorMessage)
+                }
+
+                if (shareState.loading) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        modifier = Modifier.padding(vertical = 8.dp),
+                    ) {
+                        CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp, color = Accent)
+                        MutedText("Finding RobOS users…")
+                    }
+                } else {
+                    shareState.users.forEach { user ->
+                        val isBusy = shareState.busyKey == user.uid && user.uid.isNotBlank()
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(Background)
+                                .border(1.dp, Border, RoundedCornerShape(10.dp))
+                                .padding(horizontal = 10.dp, vertical = 8.dp),
+                        ) {
+                            Box(
+                                contentAlignment = Alignment.Center,
+                                modifier = Modifier
+                                    .size(34.dp)
+                                    .clip(CircleShape)
+                                    .background(Elevated),
+                            ) {
+                                Text(user.avatar.ifBlank { "👤" }, fontSize = 16.sp)
+                            }
+                            Column(Modifier.weight(1f)) {
+                                Text(
+                                    user.name,
+                                    color = TextColor,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 14.sp,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                                val sub = buildString {
+                                    if (user.groups.isNotEmpty()) {
+                                        append(user.groups.take(2).joinToString(" · "))
+                                        if (user.email.isNotBlank()) append(" · ")
+                                    }
+                                    append(user.email)
+                                }
+                                if (sub.isNotBlank()) {
+                                    Text(
+                                        sub,
+                                        color = Muted,
+                                        fontSize = 11.sp,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                    )
+                                }
+                            }
+                            when {
+                                user.isOwner -> {
+                                    Text("Owner", color = Accent, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                }
+                                user.shared -> {
+                                    Column(horizontalAlignment = Alignment.End) {
+                                        Text("Shared ✓", color = Success, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                        TextButton(
+                                            enabled = !isBusy,
+                                            onClick = { vm.revokeRobosUser(user.uid, user.permissionId) },
+                                        ) {
+                                            Text(if (isBusy) "…" else "Revoke", color = Danger, fontSize = 12.sp)
+                                        }
+                                    }
+                                }
+                                user.canShare -> {
+                                    Button(
+                                        enabled = !isBusy,
+                                        onClick = { vm.shareWithRobosUser(uid = user.uid) },
+                                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                                    ) {
+                                        Text(if (isBusy) "Sharing…" else "Share", fontSize = 12.sp)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    OutlinedTextField(
+                        value = customEmail,
+                        onValueChange = { customEmail = it },
+                        label = { Text("Or another Google email") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                        singleLine = true,
+                        modifier = Modifier.weight(1f),
+                    )
+                    OutlinedButton(
+                        enabled = customEmail.contains("@") && shareState.busyKey.isBlank(),
+                        onClick = {
+                            val target = customEmail.trim()
+                            customEmail = ""
+                            vm.shareWithRobosUser(email = target)
+                        },
+                    ) {
+                        Text("Share")
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = vm::closeShareDialog) {
+                Text("Done")
+            }
+        },
+    )
 }
 
 @Composable

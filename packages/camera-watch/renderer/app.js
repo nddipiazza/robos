@@ -403,6 +403,7 @@ function renderCameraList() {
           ${st.state === 'error' && st.error ? `<div class="err">${esc(st.error)}</div>` : ''}
           <div class="actions">
             <button type="button" class="btn btn-small" data-act="view">View</button>
+            ${cam.kind !== 'remote' ? '<button type="button" class="btn btn-small btn-accent-outline" data-act="share-user">Share with RobOS User</button>' : ''}
             <button type="button" class="btn btn-small" data-act="edit">Edit</button>
             <button type="button" class="btn btn-small" data-act="toggle">${cam.enabled ? 'Turn off' : 'Turn on'}</button>
             <button type="button" class="btn btn-small btn-danger" data-act="remove">Remove</button>
@@ -423,6 +424,8 @@ $('cam-list').addEventListener('click', async (e) => {
       if (!cam.enabled) { toast('Turn the camera on first.'); return; }
       showTab('live');
       openFocus(id);
+    } else if (btn.dataset.act === 'share-user') {
+      openRobosUserShareDialog(id);
     } else if (btn.dataset.act === 'edit') {
       openCamDialog(cam);
     } else if (btn.dataset.act === 'toggle') {
@@ -811,6 +814,197 @@ api.onSharingChanged?.(() => {
   if (!$('share-dialog').classList.contains('hidden')) {
     renderShareStatus();
     renderWebShareStatus();
+  }
+  if (!$('robos-user-share-dialog').classList.contains('hidden')) {
+    refreshRobosUsersDialog();
+  }
+});
+
+// ── Share with RobOS User (Google Drive Doc + Cloudflare HTTPS) ──────────────
+function selectedRobosShareCameraIds() {
+  return [...document.querySelectorAll('#robos-share-camera-list input:checked')].map((i) => i.value);
+}
+
+function showRobosShareResult(message, isError = false) {
+  const el = $('robos-share-result');
+  if (!el) return;
+  if (!message) {
+    el.classList.add('hidden');
+    el.textContent = '';
+    return;
+  }
+  el.className = `test-result ${isError ? 'fail' : 'ok'}`;
+  el.textContent = message;
+}
+
+function renderRobosUsersPayload(data) {
+  const docBar = $('robos-share-doc-bar');
+  if (docBar) {
+    if (data?.docUrl) {
+      docBar.classList.remove('hidden');
+      docBar.innerHTML = `
+        <div class="row" style="align-items:center">
+          <div class="grow">
+            <strong>Google Drive Doc:</strong> <a href="#" id="robos-open-doc" style="color:#00bcd4">${esc(data.docTitle || 'Open Google Doc')}</a>
+            ${data.publicTunnelUrl ? `<div class="muted small">Cloudflare HTTPS: <code>${esc(data.publicTunnelUrl)}</code></div>` : ''}
+          </div>
+          <button type="button" class="btn btn-small btn-primary" id="robos-copy-doc">Copy Doc Link</button>
+        </div>`;
+      $('robos-open-doc')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        call(api.openExternal, data.docUrl);
+      });
+      $('robos-copy-doc')?.addEventListener('click', async () => {
+        await call(api.copyText, data.docUrl);
+        toast('Google Doc link copied.');
+      });
+    } else {
+      docBar.classList.add('hidden');
+    }
+  }
+
+  const listEl = $('robos-user-list');
+  if (!listEl) return;
+  const users = data?.users || [];
+  if (!users.length) {
+    listEl.innerHTML = '<div class="muted">No RobOS users found. Enter a Google email below.</div>';
+    return;
+  }
+
+  listEl.innerHTML = users.map((u) => {
+    const groups = (u.groups || []).slice(0, 2).map((g) => `<span class="pill">${esc(g)}</span>`).join(' ');
+    let actionHtml = '';
+    if (u.isOwner) {
+      actionHtml = '<span class="pill owner">Owner</span>';
+    } else if (u.shared) {
+      actionHtml = `<span class="pill live">Shared ✓</span>
+        <button type="button" class="btn btn-small btn-danger" data-revoke-uid="${esc(u.uid)}" data-perm="${esc(u.permissionId || '')}">Revoke</button>`;
+    } else if (u.canShare) {
+      actionHtml = `<button type="button" class="btn btn-small btn-primary" data-share-uid="${esc(u.uid)}">Share</button>`;
+    } else {
+      actionHtml = '<span class="muted small">No Google email</span>';
+    }
+    return `
+      <div class="share-row">
+        <span class="robos-user-avatar">${esc(u.avatar || '👤')}</span>
+        <div class="grow">
+          <div><strong>${esc(u.name)}</strong> ${groups}</div>
+          <div class="muted small">${esc(u.email || '')}</div>
+        </div>
+        ${actionHtml}
+      </div>`;
+  }).join('');
+
+  listEl.querySelectorAll('[data-share-uid]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const uid = btn.dataset.shareUid;
+      btn.disabled = true;
+      btn.textContent = 'Sharing…';
+      showRobosShareResult('');
+      try {
+        const res = await call(api.shareWithRobosUser, {
+          uid,
+          cameraIds: selectedRobosShareCameraIds(),
+        });
+        renderRobosUsersPayload(res);
+        showRobosShareResult(`Shared Google Doc with ${res.sharedWith?.name || uid}. Google Drive sent them access to watch live in their browser.`);
+        toast(`Shared camera Google Doc with ${res.sharedWith?.name || uid}.`);
+      } catch (err) {
+        showRobosShareResult(err.message, true);
+        btn.disabled = false;
+        btn.textContent = 'Share';
+      }
+    });
+  });
+
+  listEl.querySelectorAll('[data-revoke-uid]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const uid = btn.dataset.revokeUid;
+      const permissionId = btn.dataset.perm || '';
+      if (!window.confirm('Revoke Google Doc access for this RobOS user and rotate the browser session key?')) return;
+      btn.disabled = true;
+      btn.textContent = 'Revoking…';
+      showRobosShareResult('');
+      try {
+        const res = await call(api.revokeRobosUser, { uid, permissionId, rotateKey: true });
+        renderRobosUsersPayload(res);
+        showRobosShareResult('Revoked Google Doc access and rotated browser key.');
+        toast('Access revoked.');
+      } catch (err) {
+        showRobosShareResult(err.message, true);
+        btn.disabled = false;
+        btn.textContent = 'Revoke';
+      }
+    });
+  });
+}
+
+async function refreshRobosUsersDialog() {
+  if (!api.listRobosUsers) return;
+  try {
+    const res = await call(api.listRobosUsers);
+    renderRobosUsersPayload(res);
+  } catch (err) {
+    showRobosShareResult(err.message, true);
+  }
+}
+
+async function openRobosUserShareDialog(preferredCameraId = '') {
+  const own = state.cameras.filter((c) => c.kind !== 'remote' && c.enabled !== false);
+  const ws = api.webShareStatus ? await call(api.webShareStatus).catch(() => ({})) : {};
+  const savedIds = Array.isArray(ws.sharedCameraIds) ? ws.sharedCameraIds : [];
+  $('robos-share-camera-list').innerHTML = own.length
+    ? own.map((c) => {
+        const checked = preferredCameraId
+          ? c.id === preferredCameraId
+          : (savedIds.length ? savedIds.includes(c.id) : c.kind !== 'device');
+        return `<label class="check share-row"><input type="checkbox" value="${esc(c.id)}" ${checked ? 'checked' : ''} /> <span class="grow">${esc(c.name)}</span><span class="muted small">${esc(cameraAddress(c))}</span></label>`;
+      }).join('')
+    : '<div class="muted">Add a camera first.</div>';
+  showRobosShareResult('');
+  $('robos-user-share-dialog').classList.remove('hidden');
+  await refreshRobosUsersDialog();
+}
+
+$('btn-share-robos-user')?.addEventListener('click', () => openRobosUserShareDialog());
+$('focus-share-user')?.addEventListener('click', () => openRobosUserShareDialog(state.focusId || ''));
+$('webshare-pick-robos-user')?.addEventListener('click', () => {
+  $('share-dialog').classList.add('hidden');
+  openRobosUserShareDialog();
+});
+$('robos-share-close')?.addEventListener('click', () => $('robos-user-share-dialog').classList.add('hidden'));
+$('robos-share-email-btn')?.addEventListener('click', async () => {
+  const inp = $('robos-custom-email');
+  const email = inp?.value.trim() || '';
+  if (!email) return;
+  const btn = $('robos-share-email-btn');
+  btn.disabled = true;
+  btn.textContent = 'Sharing…';
+  showRobosShareResult('');
+  try {
+    const res = await call(api.shareWithRobosUser, {
+      email,
+      cameraIds: selectedRobosShareCameraIds(),
+    });
+    if (inp) inp.value = '';
+    renderRobosUsersPayload(res);
+    showRobosShareResult(`Shared Google Doc with ${email}.`);
+    toast(`Shared Google Doc with ${email}.`);
+  } catch (err) {
+    showRobosShareResult(err.message, true);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Share';
+  }
+});
+$('robos-rotate-key')?.addEventListener('click', async () => {
+  if (!window.confirm('Rotate the 256-bit browser key? Existing browser sessions are logged out and the Google Doc link updates.')) return;
+  try {
+    await call(api.webShareRotateKey);
+    await refreshRobosUsersDialog();
+    toast('Browser key rotated and Google Doc updated.');
+  } catch (err) {
+    toast(err.message, true);
   }
 });
 

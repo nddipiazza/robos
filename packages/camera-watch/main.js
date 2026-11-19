@@ -64,7 +64,12 @@ try {
 
 const { createCameraManager } = require('./lib/camera-manager');
 const { createWebShareStore, createCameraWebServer } = require('./lib/web-viewer');
-const { syncCameraGoogleDoc } = require('./lib/google-doc-share');
+const {
+  syncCameraGoogleDoc,
+  listRobosUsersWithShareStatus,
+  shareWithRobosUser,
+  revokeRobosUserShare,
+} = require('./lib/google-doc-share');
 const { startCloudflareTunnel } = require('./serve-web');
 
 const manager = createCameraManager({
@@ -296,6 +301,103 @@ handle('webShare:rotateKey', async () => {
 handle('webShare:openExternal', (url) => {
   if (/^https?:\/\//i.test(String(url || ''))) shell.openExternal?.(String(url));
   return true;
+});
+handle('robosUsers:list', () => listRobosUsersWithShareStatus({
+  webConfig: webShareStore.load(),
+  configDir: CONFIG_DIR,
+  homeDir: HOME_DIR,
+}));
+handle('robosUsers:share', async ({ uid = '', email = '', cameraIds = [] } = {}) => {
+  const info = await ensureWebShareRunning();
+  const chosenIds = Array.isArray(cameraIds) ? cameraIds.filter(Boolean) : [];
+  webShareStore.save({ enabled: true, ...(chosenIds.length ? { sharedCameraIds: chosenIds } : {}) });
+  for (let i = 0; i < 16 && !webShareStore.load().publicTunnelUrl; i++) {
+    await new Promise((r) => setTimeout(r, 500));
+  }
+  const latest = webShareStore.load();
+  const tunnelUrl = latest.publicTunnelUrl || '';
+  const authedTunnelUrl = tunnelUrl ? `${tunnelUrl}/?auth=${latest.authToken}` : '';
+  const authedLanUrl = `${info.lanUrl}/?auth=${latest.authToken}`;
+  const all = manager.store.listCameras().filter((c) => c.enabled !== false);
+  const cams = chosenIds.length ? all.filter((c) => chosenIds.includes(c.id)) : all.filter((c) => c.kind !== 'device');
+  const sharedRes = await shareWithRobosUser({
+    uid,
+    email,
+    cameras: cams.length ? cams : all,
+    webConfig: latest,
+    authedTunnelUrl,
+    publicTunnelUrl: tunnelUrl,
+    authedLanUrl,
+    configDir: CONFIG_DIR,
+    homeDir: HOME_DIR,
+  });
+  const prevUsers = Array.isArray(latest.sharedUsers) ? latest.sharedUsers : [];
+  const sw = sharedRes.sharedWith;
+  const nextSharedUsers = [
+    ...prevUsers.filter((u) => String(u?.email || '').toLowerCase() !== String(sw.email || '').toLowerCase()),
+    {
+      uid: sw.uid,
+      name: sw.name,
+      email: sw.email,
+      permissionId: sw.permissionId,
+      role: sw.role || 'reader',
+      sharedAt: new Date().toISOString(),
+    },
+  ];
+  const saved = webShareStore.save({
+    accountId: sharedRes.accountId,
+    ownerEmail: sharedRes.ownerEmail,
+    folderId: sharedRes.folderId,
+    folderUrl: sharedRes.folderUrl,
+    docId: sharedRes.docId,
+    docUrl: sharedRes.docUrl,
+    docTitle: sharedRes.docTitle,
+    syncedAt: sharedRes.syncedAt,
+    sharedUsers: nextSharedUsers,
+  });
+  const status = await listRobosUsersWithShareStatus({
+    webConfig: saved,
+    configDir: CONFIG_DIR,
+    homeDir: HOME_DIR,
+  });
+  return { sharedWith: sw, ...status };
+});
+handle('robosUsers:revoke', async ({ uid = '', email = '', permissionId = '', rotateKey = true } = {}) => {
+  const info = await ensureWebShareRunning();
+  const nextState = rotateKey ? webShareStore.rotateToken() : webShareStore.load();
+  const tunnelUrl = nextState.publicTunnelUrl || '';
+  const authedTunnelUrl = tunnelUrl ? `${tunnelUrl}/?auth=${nextState.authToken}` : '';
+  const authedLanUrl = `${info.lanUrl}/?auth=${nextState.authToken}`;
+  const cams = manager.store.listCameras().filter((c) => c.enabled !== false && c.kind !== 'device');
+  const rev = await revokeRobosUserShare({
+    uid,
+    email,
+    permissionId,
+    cameras: cams,
+    webConfig: nextState,
+    authedTunnelUrl,
+    publicTunnelUrl: tunnelUrl,
+    authedLanUrl,
+    configDir: CONFIG_DIR,
+    homeDir: HOME_DIR,
+  });
+  const prevUsers = Array.isArray(nextState.sharedUsers) ? nextState.sharedUsers : [];
+  const filteredUsers = prevUsers.filter((u) => {
+    if (rev.permissionId && u?.permissionId === rev.permissionId) return false;
+    if (rev.email && String(u?.email || '').toLowerCase() === rev.email) return false;
+    if (rev.uid && u?.uid === rev.uid) return false;
+    return true;
+  });
+  const saved = webShareStore.save({
+    ...(rev.docId ? { docId: rev.docId, docUrl: rev.docUrl, docTitle: rev.docTitle, syncedAt: rev.syncedAt } : {}),
+    sharedUsers: filteredUsers,
+  });
+  const status = await listRobosUsersWithShareStatus({
+    webConfig: saved,
+    configDir: CONFIG_DIR,
+    homeDir: HOME_DIR,
+  });
+  return { revoked: true, ...status };
 });
 handle('camera:ptzMove', (id, v) => manager.ptzMove(id, v));
 handle('camera:ptzStop', (id) => manager.ptzStop(id));

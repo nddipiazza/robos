@@ -21,6 +21,7 @@
           <div class="kpi-chip"><span class="kpi-label">Motion now</span><strong id="kpi-motion">0</strong></div>
           <div class="kpi-chip"><span class="kpi-label">Events today</span><strong id="kpi-events">0</strong></div>
         </div>
+        <button type="button" class="btn btn-accent-outline" id="btn-share-robos-user">Share with RobOS User</button>
         <button type="button" class="btn" id="btn-share">Share</button>
         <button type="button" class="btn" id="btn-discover">Find cameras</button>
         <button type="button" class="btn btn-primary" id="btn-add">Add camera</button>
@@ -131,6 +132,7 @@
           <strong id="focus-title"></strong>
           <span class="pill" id="focus-state"></span>
           <span class="spacer"></span>
+          <button type="button" class="btn btn-accent-outline" id="focus-share-user">Share with RobOS User</button>
           <button type="button" class="btn" id="focus-snapshot">Snapshot</button>
           <button type="button" class="btn" id="focus-record">Record</button>
           <button type="button" class="btn" id="focus-full">Full screen</button>
@@ -250,6 +252,7 @@
         <p class="muted small">Creates a private Google Doc in your Google Drive with a 1-tap Cloudflare HTTPS browser viewer link (protected by Google Login + 256-bit session cookie, zero router ports opened).</p>
         <label>Share Google Doc with email (optional)<input id="webshare-email" type="email" placeholder="family.member@gmail.com" /></label>
         <div class="form-actions">
+          <button type="button" class="btn btn-accent-outline" id="webshare-pick-robos-user">Share with RobOS User…</button>
           <button type="button" class="btn btn-primary" id="webshare-sync">Create / Update Google Doc</button>
           <button type="button" class="btn" id="webshare-rotate">Rotate Browser Key</button>
         </div>
@@ -257,6 +260,33 @@
         <div class="form-actions">
           <span class="spacer"></span>
           <button type="button" class="btn" id="share-close">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Share with RobOS User (Google Drive Doc) dialog -->
+    <div class="overlay hidden" id="robos-user-share-dialog">
+      <div class="dialog">
+        <h2>Share with RobOS User</h2>
+        <p class="muted">Shares your private Google Drive Camera Doc with the chosen RobOS user's Google account so they can watch in any browser over Cloudflare HTTPS (protected by Google Login, zero router ports opened).</p>
+        <h3>Cameras in Google Doc</h3>
+        <div id="robos-share-camera-list" class="share-list"></div>
+        <div id="robos-share-doc-bar" class="test-result ok invite hidden"></div>
+        <div id="robos-share-result" class="test-result hidden"></div>
+        <h3>RobOS Users</h3>
+        <div id="robos-user-list" class="share-list">
+          <div class="muted">Loading RobOS users…</div>
+        </div>
+        <label>Or share Google Doc with another Google email
+          <span class="row">
+            <input id="robos-custom-email" type="email" placeholder="guest@gmail.com" />
+            <button type="button" class="btn" id="robos-share-email-btn">Share</button>
+          </span>
+        </label>
+        <div class="form-actions">
+          <button type="button" class="btn" id="robos-rotate-key">Rotate Browser Key</button>
+          <span class="spacer"></span>
+          <button type="button" class="btn" id="robos-share-close">Close</button>
         </div>
       </div>
     </div>

@@ -137,6 +137,13 @@ class IpCameraApp : Application() {
         _previewBitmap.value = bitmap
     }
 
+    fun saveHubHostIp(ip: String) {
+        val clean = ip.trim()
+        if (clean.isBlank() || clean == _config.value.hubHostIp) return
+        val updated = configStore.save(_config.value.copy(hubHostIp = clean))
+        _config.value = updated
+    }
+
     fun updateConfig(transform: (IpCameraConfig) -> IpCameraConfig): IpCameraConfig {
         val updated = configStore.save(transform(_config.value))
         _config.value = updated

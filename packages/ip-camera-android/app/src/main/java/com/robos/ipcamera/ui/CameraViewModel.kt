@@ -3,22 +3,45 @@ package com.robos.ipcamera.ui
 import android.app.Application
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
 import com.robos.ipcamera.android.IpCameraApp
 import com.robos.ipcamera.core.CameraRuntimeStatus
 import com.robos.ipcamera.core.IpCameraConfig
 import com.robos.ipcamera.core.LensFacing
 import com.robos.ipcamera.core.ResolutionPreset
+import com.robos.ipcamera.core.RobosHubClient
+import com.robos.ipcamera.core.RobosUserItem
 import com.robos.ipcamera.core.RotationMode
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+
+data class RobosShareUiState(
+    val open: Boolean = false,
+    val loading: Boolean = false,
+    val busyKey: String = "",
+    val hubHostIp: String = "",
+    val docUrl: String = "",
+    val docTitle: String = "",
+    val publicTunnelUrl: String = "",
+    val users: List<RobosUserItem> = emptyList(),
+    val statusMessage: String = "",
+    val errorMessage: String = "",
+)
 
 class CameraViewModel(application: Application) : AndroidViewModel(application) {
     private val app = application as IpCameraApp
+    private val hubClient = RobosHubClient()
 
     val config: StateFlow<IpCameraConfig> = app.config
     val status: StateFlow<CameraRuntimeStatus> = app.status
     val previewBitmap: StateFlow<ImageBitmap?> = app.previewBitmap
+
+    private val _shareState = MutableStateFlow(RobosShareUiState())
+    val shareState: StateFlow<RobosShareUiState> = _shareState
 
     private val _messages = MutableSharedFlow<String>(extraBufferCapacity = 4)
     val messages: SharedFlow<String> = _messages
@@ -140,5 +163,131 @@ class CameraViewModel(application: Application) : AndroidViewModel(application) 
     fun refreshSystemState() {
         app.wifiMonitor.refreshNow()
         app.batteryMonitor.refresh()
+    }
+
+    fun openShareDialog() {
+        _shareState.update {
+            it.copy(open = true, loading = true, statusMessage = "", errorMessage = "")
+        }
+        viewModelScope.launch {
+            val wifiIp = status.value.wifiIp
+            if (wifiIp.isBlank()) {
+                _shareState.update {
+                    it.copy(loading = false, errorMessage = "Connect this phone to your home Wi-Fi to reach RobOS Camera Watch.")
+                }
+                return@launch
+            }
+            val hubIp = hubClient.discoverHubHostIp(wifiIp = wifiIp, cachedHostIp = config.value.hubHostIp)
+            if (hubIp.isNullOrBlank()) {
+                _shareState.update {
+                    it.copy(
+                        loading = false,
+                        errorMessage = "Could not find RobOS Camera Watch Web Server on Wi-Fi (:19227). Make sure Camera Watch is running on your RobOS computer.",
+                    )
+                }
+                return@launch
+            }
+            app.saveHubHostIp(hubIp)
+            try {
+                val res = hubClient.listUsers(hubIp, config.value.deviceUuid, config.value.port)
+                _shareState.update {
+                    it.copy(
+                        loading = false,
+                        hubHostIp = hubIp,
+                        docUrl = res.docUrl,
+                        docTitle = res.docTitle,
+                        publicTunnelUrl = res.publicTunnelUrl,
+                        users = res.users,
+                        errorMessage = "",
+                    )
+                }
+            } catch (e: Exception) {
+                _shareState.update {
+                    it.copy(loading = false, hubHostIp = hubIp, errorMessage = e.message ?: "Could not load RobOS users.")
+                }
+            }
+        }
+    }
+
+    fun closeShareDialog() {
+        _shareState.update { it.copy(open = false, busyKey = "", statusMessage = "", errorMessage = "") }
+    }
+
+    fun shareWithRobosUser(uid: String = "", email: String = "") {
+        val key = uid.ifBlank { email }
+        if (key.isBlank()) return
+        _shareState.update { it.copy(busyKey = key, statusMessage = "", errorMessage = "") }
+        viewModelScope.launch {
+            val hubIp = _shareState.value.hubHostIp.ifBlank {
+                hubClient.discoverHubHostIp(status.value.wifiIp, config.value.hubHostIp).orEmpty()
+            }
+            if (hubIp.isBlank()) {
+                _shareState.update { it.copy(busyKey = "", errorMessage = "RobOS Camera Watch host not reachable on Wi-Fi.") }
+                return@launch
+            }
+            app.saveHubHostIp(hubIp)
+            try {
+                val res = hubClient.shareWithUser(
+                    hostIp = hubIp,
+                    deviceUuid = config.value.deviceUuid,
+                    cameraPort = config.value.port,
+                    uid = uid,
+                    email = email,
+                )
+                val targetName = res.sharedWith?.name?.takeIf { it.isNotBlank() } ?: key
+                _shareState.update {
+                    it.copy(
+                        busyKey = "",
+                        hubHostIp = hubIp,
+                        docUrl = res.docUrl,
+                        docTitle = res.docTitle,
+                        publicTunnelUrl = res.publicTunnelUrl,
+                        users = res.users,
+                        statusMessage = "Shared Google Drive Doc with $targetName!",
+                        errorMessage = "",
+                    )
+                }
+                _messages.tryEmit("Shared Google Doc with $targetName")
+            } catch (e: Exception) {
+                _shareState.update {
+                    it.copy(busyKey = "", errorMessage = e.message ?: "Could not share Google Doc.")
+                }
+            }
+        }
+    }
+
+    fun revokeRobosUser(uid: String, permissionId: String) {
+        _shareState.update { it.copy(busyKey = uid, statusMessage = "", errorMessage = "") }
+        viewModelScope.launch {
+            val hubIp = _shareState.value.hubHostIp.ifBlank { config.value.hubHostIp }
+            if (hubIp.isBlank()) {
+                _shareState.update { it.copy(busyKey = "", errorMessage = "RobOS Camera Watch host not reachable.") }
+                return@launch
+            }
+            try {
+                val res = hubClient.revokeUser(
+                    hostIp = hubIp,
+                    deviceUuid = config.value.deviceUuid,
+                    cameraPort = config.value.port,
+                    uid = uid,
+                    permissionId = permissionId,
+                )
+                _shareState.update {
+                    it.copy(
+                        busyKey = "",
+                        docUrl = res.docUrl,
+                        docTitle = res.docTitle,
+                        users = res.users,
+                        statusMessage = "Revoked Google Doc access and rotated browser key.",
+                        errorMessage = "",
+                    )
+                }
+                _messages.tryEmit("Revoked Google Doc access")
+            } catch (e: Exception) {
+                _shareState.update {
+                    it.copy(busyKey = "", errorMessage = e.message ?: "Could not revoke access.")
+                }
+            }
+        }
     }
 }

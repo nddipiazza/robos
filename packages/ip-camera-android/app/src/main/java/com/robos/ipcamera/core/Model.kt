@@ -65,6 +65,7 @@ data class IpCameraConfig(
     val username: String = "admin",
     val autoStartOnBoot: Boolean = true,
     val keepScreenAwake: Boolean = false,
+    val hubHostIp: String = "",
 ) {
     fun sanitized(): IpCameraConfig = copy(
         deviceUuid = deviceUuid.ifBlank { UUID.randomUUID().toString() },
@@ -79,6 +80,7 @@ data class IpCameraConfig(
         motionSensitivity = motionSensitivity.coerceIn(1, 100),
         motionMinAreaPercent = motionMinAreaPercent.coerceIn(0.2f, 40.0f),
         username = username.trim().take(64).ifBlank { "admin" },
+        hubHostIp = hubHostIp.trim().take(64),
     )
 }
 

@@ -25,7 +25,13 @@ const path = require('node:path');
 const os = require('node:os');
 const crypto = require('node:crypto');
 const { spawn } = require('node:child_process');
-const { listGoogleAccounts } = require('./google-doc-share');
+const {
+  listGoogleAccounts,
+  listRobosUsersWithShareStatus,
+  shareWithRobosUser,
+  revokeRobosUserShare,
+  maskEmailAddress,
+} = require('./google-doc-share');
 
 const SESSION_COOKIE_NAME = 'robos_cam_session';
 const DEFAULT_WEB_PORT = 19227;
@@ -61,8 +67,22 @@ function safeEqualHex(a, b) {
   }
 }
 
+function isProxiedExternalRequest(req) {
+  return Boolean(
+    req.headers['cf-connecting-ip']
+    || req.headers['x-forwarded-for']
+    || req.headers['x-real-ip']
+    || req.headers['cf-ray']
+  );
+}
+
+function extractRemoteIp(req) {
+  const raw = String(req.socket?.remoteAddress || '');
+  return raw.startsWith('::ffff:') ? raw.slice(7) : raw;
+}
+
 function isLocalLoopbackRequest(req) {
-  if (req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || req.headers['cf-ray']) {
+  if (isProxiedExternalRequest(req)) {
     return false;
   }
   const host = String(req.headers.host || '').split(':')[0].toLowerCase();
@@ -106,6 +126,7 @@ function createWebShareStore({ configDir = process.env.ROBOS_CONFIG_DIR || path.
       webPort: Number(raw.webPort) || DEFAULT_WEB_PORT,
       authToken,
       sharedCameraIds: Array.isArray(raw.sharedCameraIds) ? raw.sharedCameraIds : [],
+      sharedUsers: Array.isArray(raw.sharedUsers) ? raw.sharedUsers : [],
       publicTunnelUrl: String(raw.publicTunnelUrl || ''),
       accountId: String(raw.accountId || ''),
       ownerEmail: String(raw.ownerEmail || ''),
@@ -143,7 +164,7 @@ function createWebShareStore({ configDir = process.env.ROBOS_CONFIG_DIR || path.
     return save({ authToken: crypto.randomBytes(32).toString('hex') });
   }
 
-  return { file, load, save, rotateToken };
+  return { file, configDir, load, save, rotateToken };
 }
 
 function httpGetBuffer(urlStr, { username = '', password = '', timeoutMs = 4500 } = {}) {
@@ -315,8 +336,35 @@ function renderBrowserViewerHtml({ cameras, initialCameraId }) {
     button.btn, a.btn { background: #21262d; color: #e6edf3; border: 1px solid #30363d; border-radius: 9px; padding: 9px 14px; font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
     button.btn:hover, a.btn:hover { border-color: #00bcd4; }
     button.btn.primary, a.btn.primary { background: #00bcd4; color: #04222a; border-color: #00bcd4; font-weight: 700; }
+    button.btn.share-btn { background: rgba(0,188,212,0.14); color: #00bcd4; border-color: rgba(0,188,212,0.55); font-weight: 700; }
+    button.btn.share-btn:hover { background: #00bcd4; color: #04222a; }
+    button.btn.danger-sm { padding: 6px 11px; font-size: 12px; color: #fca5a5; border-color: rgba(239,68,68,0.45); }
+    button.btn.danger-sm:hover { border-color: #ef4444; background: rgba(239,68,68,0.15); }
     button.btn.active { border-color: #00bcd4; color: #00bcd4; background: rgba(0,188,212,0.12); }
     .footer-note { font-size: 12px; color: #8b949e; text-align: center; }
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(1,4,9,0.8); display: none; align-items: center; justify-content: center; padding: 16px; z-index: 60; }
+    .modal-backdrop.open { display: flex; }
+    .modal { width: min(560px, 100%); max-height: 90vh; overflow-y: auto; background: #161b22; border: 1px solid #30363d; border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 24px 60px rgba(0,0,0,0.55); }
+    .modal-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .modal-head h2 { margin: 0; font-size: 17px; }
+    .modal-sub { font-size: 13px; color: #8b949e; line-height: 1.45; margin: 0; }
+    .doc-bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; background: #0d1117; border: 1px solid #30363d; border-radius: 10px; padding: 10px 12px; font-size: 12.5px; }
+    .user-list { display: flex; flex-direction: column; gap: 8px; }
+    .user-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: #0d1117; border: 1px solid #30363d; border-radius: 11px; padding: 10px 12px; }
+    .user-info { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; }
+    .user-avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; background: #1f2630; border: 1px solid #30363d; flex-shrink: 0; }
+    .user-meta { min-width: 0; }
+    .user-name { font-weight: 700; font-size: 14px; color: #f0f6fc; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .user-sub { font-size: 12px; color: #8b949e; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .u-badge { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; }
+    .u-badge.shared { background: rgba(34,197,94,0.16); color: #4ade80; border: 1px solid rgba(34,197,94,0.45); }
+    .u-badge.owner { background: rgba(0,188,212,0.14); color: #00bcd4; border: 1px solid rgba(0,188,212,0.4); }
+    .u-badge.group { background: #1f2630; color: #94a3b8; border: 1px solid #30363d; font-weight: 600; }
+    .custom-email-row { display: flex; gap: 8px; margin-top: 4px; }
+    .custom-email-row input { flex: 1; background: #0d1117; color: #e6edf3; border: 1px solid #30363d; border-radius: 9px; padding: 9px 12px; font-size: 13px; }
+    .share-msg { padding: 9px 12px; border-radius: 9px; font-size: 13px; display: none; }
+    .share-msg.ok { display: block; background: rgba(34,197,94,0.14); border: 1px solid rgba(34,197,94,0.45); color: #86efac; }
+    .share-msg.err { display: block; background: rgba(239,68,68,0.14); border: 1px solid rgba(239,68,68,0.45); color: #fca5a5; }
   </style>
 </head>
 <body>
@@ -353,6 +401,7 @@ function renderBrowserViewerHtml({ cameras, initialCameraId }) {
         <button type="button" class="btn" onclick="sendCtrl({preset:'4'})">🔄 Flip Lens</button>
       </div>
       <div class="btn-group">
+        <button type="button" class="btn share-btn" id="btn-share-robos-user" onclick="openShareModal()">👥 Share with RobOS User</button>
         <a class="btn primary" id="btn-snap" href="#" download="snapshot.jpg">📸 Snapshot</a>
         <button type="button" class="btn" onclick="toggleFullscreen()">⛶ Fullscreen</button>
       </div>
@@ -362,6 +411,23 @@ function renderBrowserViewerHtml({ cameras, initialCameraId }) {
       🔒 Authenticated via Google Doc Capability Session · Zero Inbound Router Ports · Outbound Cloudflare TLS 1.3
     </div>
   </main>
+
+  <div class="modal-backdrop" id="share-modal" onclick="if(event.target===this)closeShareModal()">
+    <div class="modal" role="dialog" aria-labelledby="share-modal-title">
+      <div class="modal-head">
+        <h2 id="share-modal-title">👥 Share with RobOS User</h2>
+        <button type="button" class="btn" onclick="closeShareModal()" style="padding:5px 10px;">✕</button>
+      </div>
+      <p class="modal-sub">Shares your private Google Drive Doc with the selected RobOS user's Google account so they can open this live camera over Cloudflare HTTPS in 1 tap.</p>
+      <div id="share-doc-bar" class="doc-bar" style="display:none"></div>
+      <div id="share-msg" class="share-msg"></div>
+      <div id="robos-users-list" class="user-list"><div class="user-sub">Loading RobOS users…</div></div>
+      <div class="custom-email-row">
+        <input id="custom-share-email" type="email" placeholder="Or share Google Doc with another email…" />
+        <button type="button" class="btn" id="btn-share-email" onclick="shareCustomEmail()">Share</button>
+      </div>
+    </div>
+  </div>
 
   <script>
     const INITIAL_CAMERAS = ${JSON.stringify(cameras.map((c) => ({ id: c.id, name: c.name, room: c.room || '' })))};
@@ -375,6 +441,10 @@ function renderBrowserViewerHtml({ cameras, initialCameraId }) {
     const msgEl = document.getElementById('overlay-msg');
     const dotEl = document.getElementById('live-dot');
     const tabsEl = document.getElementById('cam-tabs');
+
+    function escH(s) {
+      return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
 
     function renderTabs(list) {
       if (list.length <= 1) { tabsEl.style.display = 'none'; return; }
@@ -483,6 +553,152 @@ function renderBrowserViewerHtml({ cameras, initialCameraId }) {
       else document.exitFullscreen?.();
     }
 
+    function showShareMsg(text, isErr) {
+      const el = document.getElementById('share-msg');
+      if (!text) { el.className = 'share-msg'; el.textContent = ''; return; }
+      el.className = 'share-msg ' + (isErr ? 'err' : 'ok');
+      el.textContent = text;
+    }
+
+    function renderUsersPayload(data) {
+      const docBar = document.getElementById('share-doc-bar');
+      if (data.docUrl) {
+        docBar.style.display = 'flex';
+        docBar.innerHTML = '<span>📄 <strong>' + escH(data.docTitle || 'Google Drive Camera Doc') + '</strong></span>' +
+          '<span class="btn-group">' +
+          '<a class="btn" href="' + escH(data.docUrl) + '" target="_blank" rel="noopener">Open Google Doc</a>' +
+          '<button type="button" class="btn" id="copy-gdoc-btn">Copy Link</button>' +
+          '</span>';
+        const cp = document.getElementById('copy-gdoc-btn');
+        if (cp) cp.onclick = async () => {
+          try { await navigator.clipboard.writeText(data.docUrl); showShareMsg('Copied Google Doc link to clipboard!', false); } catch {}
+        };
+      } else {
+        docBar.style.display = 'none';
+      }
+
+      const listEl = document.getElementById('robos-users-list');
+      const users = data.users || [];
+      if (!users.length) {
+        listEl.innerHTML = '<div class="user-sub">No RobOS users configured yet. Enter a Google email below.</div>';
+        return;
+      }
+      listEl.innerHTML = users.map(u => {
+        const groups = (u.groups || []).slice(0, 2).map(g => '<span class="u-badge group">' + escH(g) + '</span>').join('');
+        let right = '';
+        if (u.isOwner) {
+          right = '<span class="u-badge owner">Owner</span>';
+        } else if (u.shared) {
+          right = '<span class="btn-group"><span class="u-badge shared">Shared ✓</span>' +
+            '<button type="button" class="btn danger-sm" data-revoke-uid="' + escH(u.uid) + '" data-perm="' + escH(u.permissionId || '') + '">Revoke</button></span>';
+        } else if (u.canShare) {
+          right = '<button type="button" class="btn primary" data-share-uid="' + escH(u.uid) + '">Share</button>';
+        } else {
+          right = '<span class="user-sub">No Google email</span>';
+        }
+        return '<div class="user-row">' +
+          '<div class="user-info">' +
+          '<div class="user-avatar">' + escH(u.avatar || '👤') + '</div>' +
+          '<div class="user-meta">' +
+          '<div class="user-name"><span>' + escH(u.name) + '</span>' + groups + '</div>' +
+          '<div class="user-sub">' + escH(u.email || '') + '</div>' +
+          '</div></div>' + right + '</div>';
+      }).join('');
+
+      listEl.querySelectorAll('[data-share-uid]').forEach(btn => {
+        btn.onclick = () => shareWithUid(btn.getAttribute('data-share-uid'), btn);
+      });
+      listEl.querySelectorAll('[data-revoke-uid]').forEach(btn => {
+        btn.onclick = () => revokeUid(btn.getAttribute('data-revoke-uid'), btn.getAttribute('data-perm'), btn);
+      });
+    }
+
+    async function loadRobosUsers() {
+      try {
+        const r = await fetch('/api/robos-users', { cache: 'no-store' });
+        const data = await r.json();
+        if (!r.ok) throw new Error(data.error || 'Could not load RobOS users');
+        renderUsersPayload(data);
+      } catch (err) {
+        showShareMsg(err.message, true);
+      }
+    }
+
+    function openShareModal() {
+      showShareMsg('', false);
+      document.getElementById('share-modal').classList.add('open');
+      loadRobosUsers();
+    }
+
+    function closeShareModal() {
+      document.getElementById('share-modal').classList.remove('open');
+    }
+
+    async function shareWithUid(uid, btn) {
+      if (btn) { btn.disabled = true; btn.textContent = 'Sharing…'; }
+      showShareMsg('', false);
+      try {
+        const r = await fetch('/api/robos-users/share', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ uid }),
+        });
+        const data = await r.json();
+        if (!r.ok) throw new Error(data.error || 'Share failed');
+        renderUsersPayload(data);
+        showShareMsg('Shared Google Doc with ' + (data.sharedWith?.name || uid) + '!', false);
+      } catch (err) {
+        showShareMsg(err.message, true);
+        if (btn) { btn.disabled = false; btn.textContent = 'Share'; }
+      }
+    }
+
+    async function shareCustomEmail() {
+      const inp = document.getElementById('custom-share-email');
+      const email = inp.value.trim();
+      if (!email) return;
+      const btn = document.getElementById('btn-share-email');
+      btn.disabled = true;
+      btn.textContent = 'Sharing…';
+      showShareMsg('', false);
+      try {
+        const r = await fetch('/api/robos-users/share', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email }),
+        });
+        const data = await r.json();
+        if (!r.ok) throw new Error(data.error || 'Share failed');
+        inp.value = '';
+        renderUsersPayload(data);
+        showShareMsg('Shared Google Doc with ' + email + '!', false);
+      } catch (err) {
+        showShareMsg(err.message, true);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Share';
+      }
+    }
+
+    async function revokeUid(uid, permissionId, btn) {
+      if (btn) { btn.disabled = true; btn.textContent = 'Revoking…'; }
+      showShareMsg('', false);
+      try {
+        const r = await fetch('/api/robos-users/revoke', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ uid, permissionId }),
+        });
+        const data = await r.json();
+        if (!r.ok) throw new Error(data.error || 'Revoke failed');
+        renderUsersPayload(data);
+        showShareMsg('Revoked Google Doc access and rotated browser session key.', false);
+      } catch (err) {
+        showShareMsg(err.message, true);
+        if (btn) { btn.disabled = false; btn.textContent = 'Revoke'; }
+      }
+    }
+
     pumpFrames();
     pollTelemetry();
     setInterval(pollTelemetry, 3000);
@@ -505,10 +721,19 @@ function createCameraWebServer({
   postFn = httpPostJson,
   spawnFn = spawn,
   requireAuthForRemote = true,
+  googleDriveOptions = {},
 }) {
   // Coalesce concurrent browser frame requests per camera (85ms cache) so multiple viewers
   // watching over Cloudflare never overload a Wi-Fi camera.
   const frameCache = new Map(); // cameraId -> { jpeg: Buffer, at: number, inflight: Promise<Buffer>|null }
+  let activePort = DEFAULT_WEB_PORT;
+
+  const effectiveConfigDir = googleDriveOptions.configDir || webShareStore.configDir || process.env.ROBOS_CONFIG_DIR || path.join(os.homedir(), '.config', 'robos');
+  const effectiveHomeDir = googleDriveOptions.homeDir || process.env.HOME || os.homedir();
+
+  function currentLanUrl() {
+    return `http://${detectLanIp()}:${activePort}`;
+  }
 
   function sharedCamerasList() {
     const all = cameraStore.listCameras();
@@ -519,6 +744,41 @@ function createCameraWebServer({
       ? all.filter((c) => chosenIds.includes(c.id) && c.enabled !== false)
       : all.filter((c) => c.enabled !== false && c.kind !== 'device');
     return filtered.length ? filtered : all.filter((c) => c.enabled !== false);
+  }
+
+  function cameraMatchesHostIp(cam, ip) {
+    if (!ip) return false;
+    if (cam.onvif?.hostname && cam.onvif.hostname === ip) return true;
+    for (const raw of [cam.streamUrl, cam.snapshotUrl]) {
+      if (/^https?:\/\//i.test(raw || '') || /^rtsps?:\/\//i.test(raw || '')) {
+        try {
+          if (new URL(raw).hostname === ip) return true;
+        } catch {}
+      }
+    }
+    return false;
+  }
+
+  async function isAuthorizedLanCameraRequest(req) {
+    if (isProxiedExternalRequest(req)) return false;
+    const urn = String(req.headers['x-robos-camera-urn'] || '').trim();
+    if (!urn.startsWith('urn:uuid:')) return false;
+    const senderIp = extractRemoteIp(req);
+    if (!senderIp) return false;
+    const allCams = cameraStore.listCameras().filter((c) => c.enabled !== false);
+    if (allCams.some((c) => cameraMatchesHostIp(c, senderIp))) {
+      return true;
+    }
+    // Live verification against the phone's `/api/status` endpoint on the LAN
+    const camPort = Number(req.headers['x-robos-camera-port']) || 8080;
+    try {
+      const raw = await fetchFn(`http://${senderIp}:${camPort}/api/status`, { timeoutMs: 1200 });
+      const st = JSON.parse(raw.toString('utf8'));
+      if (st && st.app === 'robos-ip-camera' && (st.urn === urn || st.deviceUrn === urn)) {
+        return true;
+      }
+    } catch {}
+    return false;
   }
 
   function resolveSnapshotEndpoint(cam) {
@@ -629,9 +889,14 @@ function createCameraWebServer({
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, no-transform');
     res.setHeader('X-Content-Type-Options', 'nosniff');
 
-    const sendJson = (status, obj) => {
-      res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8' });
-      res.end(JSON.stringify(obj));
+    const sendJson = (status, obj, extraHeaders = {}) => {
+      const payload = Buffer.from(JSON.stringify(obj), 'utf8');
+      res.writeHead(status, {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Content-Length': payload.length,
+        ...extraHeaders,
+      });
+      res.end(payload);
     };
 
     try {
@@ -640,6 +905,12 @@ function createCameraWebServer({
       const webState = webShareStore.load();
       const secretToken = webState.authToken;
       const expectedCookieVal = computeSessionCookieValue(secretToken);
+
+      // 0. Unproxied Home-LAN hub beacon so the RobOS IP Camera Android app discovers this host on Wi-Fi
+      if (req.method === 'GET' && pathname === '/api/robos-camera-hub' && !isProxiedExternalRequest(req)) {
+        sendJson(200, { ok: true, app: 'robos-camera-watch-web', docUrl: webState.docUrl || '' });
+        return;
+      }
 
       // 1. Exchange `?auth=<256-bit-token>` (from private Google Doc) for a 1-year HttpOnly cookie & 302 redirect
       const queryAuth = url.searchParams.get('auth') || url.searchParams.get('key') || '';
@@ -665,15 +936,17 @@ function createCameraWebServer({
       }
 
       // 2. Enforce Google-Doc Session Gate on all non-loopback / Cloudflare-proxied requests
-      if (requireAuthForRemote && !isLocalLoopbackRequest(req)) {
-        const cookies = parseCookies(req.headers.cookie || '');
-        const hasValidSession = safeEqualHex(cookies[SESSION_COOKIE_NAME] || '', expectedCookieVal);
-        if (!hasValidSession) {
+      //    (Verified RobOS IP Camera phones on unproxied LAN may access `/api/robos-users*` directly)
+      const cookies = parseCookies(req.headers.cookie || '');
+      const hasValidSession = safeEqualHex(cookies[SESSION_COOKIE_NAME] || '', expectedCookieVal);
+      if (requireAuthForRemote && !isLocalLoopbackRequest(req) && !hasValidSession) {
+        const allowLanPhone = pathname.startsWith('/api/robos-users') && await isAuthorizedLanCameraRequest(req);
+        if (!allowLanPhone) {
           if (pathname.startsWith('/api/')) {
             sendJson(401, { error: 'Authentication required. Open via your private RobOS Camera Google Doc.' });
             return;
           }
-          const accounts = listGoogleAccounts();
+          const accounts = listGoogleAccounts({ homeDir: effectiveHomeDir });
           const ownerEmail = webState.ownerEmail || accounts[0]?.email || '';
           const gateHtml = renderGoogleLoginGateHtml({ webState, ownerEmail });
           res.writeHead(401, { 'Content-Type': 'text/html; charset=utf-8' });
@@ -695,6 +968,159 @@ function createCameraWebServer({
       }
 
       const cams = sharedCamerasList();
+      const maskEmails = isProxiedExternalRequest(req);
+
+      // 3. RobOS User Discovery & Google Drive Doc Sharing API
+      if (req.method === 'GET' && pathname === '/api/robos-users') {
+        const status = await listRobosUsersWithShareStatus({
+          webConfig: webShareStore.load(),
+          configDir: effectiveConfigDir,
+          homeDir: effectiveHomeDir,
+          maskEmails,
+          ...googleDriveOptions,
+        });
+        sendJson(200, { ok: true, ...status });
+        return;
+      }
+
+      if (req.method === 'POST' && pathname === '/api/robos-users/share') {
+        const chunks = [];
+        for await (const c of req) chunks.push(c);
+        const body = JSON.parse(Buffer.concat(chunks).toString('utf8') || '{}');
+        const chosenIds = Array.isArray(body.cameraIds) ? body.cameraIds.filter(Boolean) : [];
+        const latest = webShareStore.save({
+          enabled: true,
+          ...(chosenIds.length ? { sharedCameraIds: chosenIds } : {}),
+        });
+        const tunnelUrl = latest.publicTunnelUrl || '';
+        const authedTunnelUrl = tunnelUrl ? `${tunnelUrl}/?auth=${latest.authToken}` : '';
+        const authedLanUrl = `${currentLanUrl()}/?auth=${latest.authToken}`;
+        const allEnabled = cameraStore.listCameras().filter((c) => c.enabled !== false);
+        const targetCams = chosenIds.length
+          ? allEnabled.filter((c) => chosenIds.includes(c.id))
+          : sharedCamerasList();
+
+        const sharedRes = await shareWithRobosUser({
+          uid: String(body.uid || '').trim(),
+          email: String(body.email || '').trim(),
+          cameras: targetCams.length ? targetCams : allEnabled,
+          webConfig: latest,
+          authedTunnelUrl,
+          publicTunnelUrl: tunnelUrl,
+          authedLanUrl,
+          configDir: effectiveConfigDir,
+          homeDir: effectiveHomeDir,
+          ...googleDriveOptions,
+        });
+
+        const prevUsers = Array.isArray(latest.sharedUsers) ? latest.sharedUsers : [];
+        const sw = sharedRes.sharedWith;
+        const nextSharedUsers = [
+          ...prevUsers.filter((u) => String(u?.email || '').toLowerCase() !== String(sw.email || '').toLowerCase()),
+          {
+            uid: sw.uid,
+            name: sw.name,
+            email: sw.email,
+            permissionId: sw.permissionId,
+            role: sw.role || 'reader',
+            sharedAt: new Date().toISOString(),
+          },
+        ];
+
+        const savedState = webShareStore.save({
+          accountId: sharedRes.accountId,
+          ownerEmail: sharedRes.ownerEmail,
+          folderId: sharedRes.folderId,
+          folderUrl: sharedRes.folderUrl,
+          docId: sharedRes.docId,
+          docUrl: sharedRes.docUrl,
+          docTitle: sharedRes.docTitle,
+          syncedAt: sharedRes.syncedAt,
+          sharedUsers: nextSharedUsers,
+        });
+
+        const updatedStatus = await listRobosUsersWithShareStatus({
+          webConfig: savedState,
+          configDir: effectiveConfigDir,
+          homeDir: effectiveHomeDir,
+          maskEmails,
+          ...googleDriveOptions,
+        });
+
+        sendJson(200, {
+          ok: true,
+          sharedWith: {
+            ...sw,
+            email: maskEmails ? maskEmailAddress(sw.email) : sw.email,
+          },
+          ...updatedStatus,
+        });
+        return;
+      }
+
+      if (req.method === 'POST' && pathname === '/api/robos-users/revoke') {
+        const chunks = [];
+        for await (const c of req) chunks.push(c);
+        const body = JSON.parse(Buffer.concat(chunks).toString('utf8') || '{}');
+        const shouldRotate = body.rotateKey !== false;
+        const nextState = shouldRotate ? webShareStore.rotateToken() : webShareStore.load();
+        const tunnelUrl = nextState.publicTunnelUrl || '';
+        const authedTunnelUrl = tunnelUrl ? `${tunnelUrl}/?auth=${nextState.authToken}` : '';
+        const authedLanUrl = `${currentLanUrl()}/?auth=${nextState.authToken}`;
+
+        const rev = await revokeRobosUserShare({
+          uid: String(body.uid || '').trim(),
+          email: String(body.email || '').trim(),
+          permissionId: String(body.permissionId || '').trim(),
+          cameras: sharedCamerasList(),
+          webConfig: nextState,
+          authedTunnelUrl,
+          publicTunnelUrl: tunnelUrl,
+          authedLanUrl,
+          configDir: effectiveConfigDir,
+          homeDir: effectiveHomeDir,
+          ...googleDriveOptions,
+        });
+
+        const prevUsers = Array.isArray(nextState.sharedUsers) ? nextState.sharedUsers : [];
+        const filteredUsers = prevUsers.filter((u) => {
+          if (rev.permissionId && u?.permissionId === rev.permissionId) return false;
+          if (rev.email && String(u?.email || '').toLowerCase() === rev.email) return false;
+          if (rev.uid && u?.uid === rev.uid) return false;
+          return true;
+        });
+
+        const savedState = webShareStore.save({
+          ...(rev.docId ? { docId: rev.docId, docUrl: rev.docUrl, docTitle: rev.docTitle, syncedAt: rev.syncedAt } : {}),
+          sharedUsers: filteredUsers,
+        });
+
+        const updatedStatus = await listRobosUsersWithShareStatus({
+          webConfig: savedState,
+          configDir: effectiveConfigDir,
+          homeDir: effectiveHomeDir,
+          maskEmails,
+          ...googleDriveOptions,
+        });
+
+        // Keep the caller's own browser cookie fresh if they initiated revoke from Web Browser Mode
+        const extraHeaders = {};
+        if (hasValidSession && shouldRotate) {
+          const isHttps = req.headers['x-forwarded-proto'] === 'https' || Boolean(req.headers['cf-ray']);
+          const refreshedCookie = [
+            `${SESSION_COOKIE_NAME}=${computeSessionCookieValue(savedState.authToken)}`,
+            'Path=/',
+            'Max-Age=31536000',
+            'HttpOnly',
+            'SameSite=Lax',
+            ...(isHttps ? ['Secure'] : []),
+          ].join('; ');
+          extraHeaders['Set-Cookie'] = refreshedCookie;
+        }
+
+        sendJson(200, { ok: true, revoked: true, ...updatedStatus }, extraHeaders);
+        return;
+      }
 
       if (req.method === 'GET' && (pathname === '/' || pathname === '/index.html')) {
         const wantedCamId = url.searchParams.get('camera') || '';
@@ -786,12 +1212,12 @@ function createCameraWebServer({
       return new Promise((resolve, reject) => {
         server.once('error', reject);
         server.listen(port, host, () => {
-          const actualPort = server.address().port;
+          activePort = server.address().port;
           const lanIp = detectLanIp();
           resolve({
-            port: actualPort,
-            localUrl: `http://127.0.0.1:${actualPort}`,
-            lanUrl: `http://${lanIp}:${actualPort}`,
+            port: activePort,
+            localUrl: `http://127.0.0.1:${activePort}`,
+            lanUrl: `http://${lanIp}:${activePort}`,
           });
         });
       });
