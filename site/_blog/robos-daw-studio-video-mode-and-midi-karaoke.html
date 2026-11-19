@@ -1,0 +1,113 @@
+---
+title: "RobOS DAW Studio Video Mode & MIDI Karaoke: Wireless HD RobOS IP Camera Inputs (+ Optional Audio), Dual-Window Video Output & SMF 0xFF 05 Lyrics Tracks"
+nav_label: "DAW Video & Karaoke"
+date: 2026-11-19 22:00:00 +0000
+date_label: "Nov 19, 2026"
+tags:
+  - "RobOS DAW Studio"
+  - "Video Mode &amp; RobOS IP Camera"
+  - "MIDI Karaoke (.KAR 0xFF 05)"
+  - "PipeWire &amp; FFmpeg HD"
+summary: "We expanded <strong>RobOS DAW Studio</strong> (<code>packages/daw-studio</code>, <a href=\"/daw/\">rowbose.com/daw</a>) with full <strong>HD Video Mode</strong> and <strong>Industry-Standard MIDI Karaoke Lyrics Tracks</strong>. Video Mode adds <a href=\"/blog/robos-ip-camera-android-surveillance/\"><strong>RobOS IP Camera</strong></a> as a first-class Wi-Fi HD video input alongside USB V4L2 webcams and ONVIF/RTSP streams—defaulting to <strong>1080p Full HD</strong> (<code>CRF 18</code>, <code>30 fps</code>) with <strong>optional audio</strong> (Video-Only alongside your Focusrite + ADAT mic tracks, Paired Audio Interface Input, or Camera Stream Audio) and remote phone lens/flashlight/zoom controls. Playback routes any video track to an <strong>Embedded Video Output Dock</strong> or a detachable <strong>Standalone App Window</strong>. Right-clicking any music track or clip now offers <strong>Create Lyrics Track</strong>, generating a spec-compliant <strong>Standard MIDI File Format 1 Karaoke (<code>.kar</code>)</strong> file with <code>0xFF 0x05</code> word lyric meta-events and vocal fundamental MIDI pitch notes that wipe karaoke-style over active video—or over a <strong>RobOS Studio Branded Dark Karaoke Stage</strong> when no other video is playing."
+description: "Record wireless HD video from RobOS IP Camera (+ optional audio), route playback to an embedded dock or standalone app window, and right-click any music track to generate SMF Format 1 (0xFF 0x05) MIDI-mapped Karaoke Lyrics in RobOS DAW Studio."
+seo_title: "DAW Studio HD Video Mode, RobOS IP Camera & MIDI Karaoke (.KAR) · RobOS"
+og_image: /assets/blog/robos-daw-studio-video-mode-and-midi-karaoke/02-karaoke-stage-and-midi-lyrics-lane.png
+og_image_alt: "RobOS DAW Studio showing a 17-track drum and metal session with a MIDI-mapped Lyrics piano-roll lane, inline SMF .KAR / .LRC Inspector, and the RobOS Studio Branded Dark Karaoke Stage in the Video Output Monitor"
+---
+<div class="blog-body">
+  <figure class="blog-fig">
+    <img src="{{ '/assets/blog/robos-daw-studio-video-mode-and-midi-karaoke/02-karaoke-stage-and-midi-lyrics-lane.png' | relative_url }}" alt="RobOS DAW Studio arrangement showing Lyrics — Somebody That I Used To Know MIDI piano-roll lane with 368 synced 0xFF 0x05 words, inline .KAR / .LRC Inspector, and the RobOS Studio Branded Dark Karaoke Stage in the Embedded Video Output Monitor" loading="lazy">
+    <figcaption><strong>MIDI-Mapped Karaoke Stage in RobOS DAW Studio</strong> (<a href="{{ '/daw/' | relative_url }}"><code>rowbose.com/daw</code></a>): right-clicking our metal backing stem (<code>Somebody That I Used To Know by Gotye Meets Metal</code>) -> <strong>Create Lyrics Track</strong> generates a 2-track SMF Format 1 <code>.kar</code> file (42 lines · 368 <code>0xFF 0x05</code> word meta-events + vocal MIDI pitch bars) and renders a 60 fps progressive karaoke wipe on the <strong>RobOS Studio Branded Dark Karaoke Stage</strong> whenever no camera video is playing.</figcaption>
+  </figure>
+
+  <p><strong>Bringing multi-camera drum video and word-synced karaoke into the same Linux workstation.</strong> Earlier this week we <a href="{{ '/blog/robos-daw-studio-linux-multitrack-drum-workstation/' | relative_url }}">wired a 12-mic acoustic drum kit into RobOS DAW Studio</a> over a unified 20-channel <strong>Focusrite Scarlett 18i20 + Behringer ADA8200 ADAT</strong> clock, and earlier today we <a href="{{ '/blog/robos-ip-camera-android-surveillance/' | relative_url }}">turned our LineageOS 24 Moto G100 Android phone into a 24/7 ONVIF Wi-Fi camera</a> (<code>packages/ip-camera-android</code>). Putting those two pieces together unlocked the next studio workflow: mounting the phone over the drum kit as a wireless HD drum cam, viewing synchronized video in an embedded dock or second-monitor window, and right-clicking any backing song to project MIDI-mapped karaoke lyrics onto that same display.</p>
+
+  <h2>1. Video Inputs: First-Class RobOS IP Camera (HD Default) + Optional Audio</h2>
+  <p>Clicking <strong>Add Video</strong> in the topbar, edit toolbar, empty-session launchpad, or channel-rack context menu opens the upgraded <strong>Add Video Input Track</strong> dialog (<a href="https://github.com/nddipiazza/robos/blob/main/packages/daw-studio/lib/video-devices.js"><code>packages/daw-studio/lib/video-devices.js</code></a>), with <strong>RobOS IP Camera (Wi-Fi HD)</strong> selected as the primary first-class input source alongside <strong>USB / V4L2 Webcam</strong> and <strong>ONVIF / RTSP / Custom URL</strong>:</p>
+
+  <figure class="blog-fig">
+    <img src="{{ '/assets/blog/robos-daw-studio-video-mode-and-midi-karaoke/01-add-robos-ip-camera-hd-modal.png' | relative_url }}" alt="Add Video Input Track modal in RobOS DAW Studio with RobOS IP Camera (Wi-Fi HD) active, live XT2125-4 Camera 192.168.1.65:8080 telemetry and preview frame, HD Quality 1080p Full HD selected by default, and Optional Audio set to Video Only" loading="lazy">
+    <figcaption><strong>Add Video Input Track — RobOS IP Camera (Wi-Fi HD)</strong>: auto-discovers our Moto G100 (<code>XT2125-4 Camera · 192.168.1.65:8080</code>) via ONVIF WS-Discovery and <code>/api/status</code>, shows live resolution/lens/battery telemetry + 1-click <strong>Flip Lens</strong> / <strong>Light</strong> / <strong>1x–2x Zoom</strong> controls, defaults to <strong>HD Quality — 1080p Full HD</strong>, and keeps audio capture strictly optional.</figcaption>
+  </figure>
+
+  <ul>
+    <li><strong>Triple-Path RobOS IP Camera Auto-Discovery + Remote Studio Control:</strong> <code>discoverAllVideoSources</code> merges saved <a href="{{ '/camera-watcher/' | relative_url }}">Camera Watch</a> devices, UDP <code>239.255.255.250:3702</code> ONVIF WS-Discovery, and a bounded 64-way concurrent <code>/api/ping</code> subnet sweep (~450 ms across a <code>/24</code> LAN so Wi-Fi AP multicast isolation never hides your phone), then queries <code>GET /api/status</code> for live resolution, lens, and battery percentage. Remote buttons in both the modal and track <code>FX</code> Inspector post to <code>/api/control</code> (<a href="https://github.com/nddipiazza/robos/blob/main/packages/ip-camera-android/app/src/main/java/com/robos/ipcamera/core/HttpOnvifServer.kt"><code>HttpOnvifServer.kt</code></a>) to flip Back/Front lenses, toggle the LED torch, zoom, or request HD sensor presets without walking across the drum room.</li>
+    <li><strong>HD Quality Video Default (<code>DEFAULT_VIDEO_QUALITY = 'hd-1080p'</code>):</strong> Video capture defaults to <strong>1080p Full HD</strong> (<code>Up to 1920x1080 · 30 fps · H.264 CRF 18</code>), with <code>720p HD</code> (<code>CRF 19</code>), <code>480p SD</code>, and <code>360p Low (/sub)</code> presets. RobOS IP Camera URLs automatically promote any saved <code>/sub</code> path to the HD <code>/video</code> main stream, while Linux V4L2 webcams negotiate compressed <code>-input_format mjpeg</code> at the highest supported HD resolution (<code>1920x1080</code> or <code>1280x720 @ 30 fps</code> instead of raw <code>640x480</code> YUYV).</li>
+    <li><strong>Optional Audio Pairing &amp; Headphone Latency Alignment:</strong> Every video track offers three audio modes—<strong>Video Only (No Audio — Default)</strong> so armed cameras record pure MP4 alongside your 20-channel Focusrite + ADAT mic tracks (or even with zero audio tracks armed), <strong>Paired Audio Interface Input</strong> (records a sample-locked <code>.wav</code> through the DAW console + <code>.mp4</code>), or <strong>Camera Stream Audio</strong> (extracts RTSP/stream audio into timeline waveform peaks). During overdubs, <code>VideoTrackRecorder</code> measures first-packet arrival against WebAudio headphone presentation timestamps (<code>earsStartWallMs</code>) to align camera startup latency automatically.</li>
+  </ul>
+
+  <h2>2. Video Output &amp; Right-Click "Create Lyrics Track" (SMF Format 1 <code>.KAR</code>)</h2>
+  <p>During playback, scrubbing, or live camera monitoring, <strong>Video Output</strong> renders your chosen visual track either inside the <strong>Embedded Video Output Dock</strong> (toggleable via <code>Video Out</code> or <code>V</code>, with compact/wide sizing) or detached into its own <strong>Standalone App Window</strong> (<code>Pop Out</code> -> independent Electron window with track selector, <code>Pin Top</code>, <code>Fullscreen</code>, and <code>Dock in DAW</code>).</p>
+
+  <figure class="blog-fig">
+    <img src="{{ '/assets/blog/robos-daw-studio-video-mode-and-midi-karaoke/03-robos-ip-cam-live-with-karaoke-overlay.png' | relative_url }}" alt="RobOS DAW Studio streaming live HD video from XT2125-4 Drum Cam in the Video Output Monitor with synchronized MIDI Karaoke lower-third word-wipe lyrics overlaid on the bottom of the video frame and RobOS IP Camera FX Inspector open" loading="lazy">
+    <figcaption><strong>Live RobOS IP Camera Feed + Karaoke Lower-Third Overlay</strong>: when a video clip or <code>Live Cam</code> feed is active on <strong>Video Output</strong>, the unmuted <code>LYRICS</code> track automatically switches from full-stage mode to a translucent cinema lower-third overlay at the bottom of the video, while the <code>XT2125-4 Drum Cam</code> <code>FX</code> Inspector exposes live <code>Quality</code>, <code>Audio (Optional)</code>, <code>Flip Lens</code>, and <code>Light</code> controls.</figcaption>
+  </figure>
+
+  <p><strong>Industry-standard MIDI Karaoke mapping (<a href="https://github.com/nddipiazza/robos/blob/main/packages/daw-studio/lib/lyrics-generator.js"><code>packages/daw-studio/lib/lyrics-generator.js</code></a>).</strong> Right-clicking any music track, clip region, or timeline lane and choosing <strong>Create Lyrics Track</strong> builds a dedicated <code>LYRICS</code> track directly below the source audio using standard <strong>SMF Format 1 Karaoke (<code>.kar</code>, <code>480 PPQ</code>)</strong>:</p>
+  <ol>
+    <li><strong>Binary SMF Format 1 <code>.kar</code> + Enhanced <code>.lrc</code> Sidecars:</strong> Track 0 writes the conductor map (<code>Soft Karaoke</code>, <code>@KMIDI KARAOKE FILE</code>, <code>@T&lt;title&gt;</code>, <code>0xFF 0x58</code> Time Signature, <code>0xFF 0x51</code> Tempo). Track 1 writes per-word <strong><code>0xFF 0x05</code> MIDI Lyric Meta-Events</strong> (with standard <code>\</code> / <code>/</code> line-break prefixes) paired with Channel 1 <code>NoteOn</code>/<code>NoteOff</code> vocal guide notes (<code>MIDI 43..81</code>), persisted inside <code>&lt;projectDir&gt;/takes/*.kar</code> alongside an Enhanced Word-Synced <code>.lrc</code> file (<code>[mm:ss.xx] &lt;mm:ss.xx&gt;Word ...</code>).</li>
+    <li><strong>4-Stage Lyric Discovery &amp; Vocal-Band Pitch Alignment:</strong> Cleans cover/stem filenames (e.g. <code>Somebody That I Used To Know by Gotye Meets Metal_mixed [M4A]</code> -> <code>Gotye — Somebody That I Used To Know</code>), checks local <code>.kar</code>/<code>.mid</code>/<code>.lrc</code> sidecars, queries open <strong>LRCLIB</strong> synced/plain lyrics, falls back to local <strong>Whisper</strong> word-timestamp ASR (<code>Xenova/whisper-tiny.en</code>) for custom vocals, and analyzes the clip's <code>300–3200 Hz</code> vocal-band RMS envelope + normalized autocorrelation fundamental frequency (<code>F0</code>) to assign each word its vocal MIDI pitch note.</li>
+    <li><strong>Adaptive Karaoke Stage:</strong> When another video or camera feed is playing, lyrics render as a lower-third overlay with a 4-dot pre-phrase lead-in countdown, 60 fps gold/cyan progressive word wipe, upcoming next line, and live MIDI note badge. When <strong>no other video is playing</strong>, Video Output automatically displays the <strong>RobOS Studio Branded Dark Karaoke Stage</strong> (<code>daw-crest</code> emblem, dark navy studio grid, animated EQ bars, and full-stage centered karaoke lyrics).</li>
+  </ol>
+
+  <h2>3. End-to-End Video &amp; MIDI Karaoke Architecture</h2>
+  <figure class="blog-fig">
+    <img src="{{ '/assets/blog/robos-daw-studio-video-mode-and-midi-karaoke/04-video-karaoke-architecture.jpg' | relative_url }}" alt="RobOS DAW Studio HD Video Mode, RobOS IP Camera and MIDI Karaoke Pipeline technical architecture diagram showing Video & Audio Capture Sources, Synchronized HD Recorder & MIDI Mapper, DAW Timeline & Inspector Lanes, and Dual-Mode Video & Karaoke Output" loading="lazy">
+    <figcaption><strong>RobOS DAW Studio Video &amp; Karaoke Pipeline</strong>: wireless HD MJPEG from RobOS IP Camera + negotiated MJPG V4L2 webcams feed the latency-aligned FFmpeg H.264 recorder, while the SMF <code>0xFF 0x05</code> <code>.kar</code> mapper drives 60 fps karaoke cues across both the Embedded Video Dock and Standalone Pop-Out Window.</figcaption>
+  </figure>
+
+  <pre class="mermaid">
+flowchart LR
+  subgraph Src["1. Video &amp; Audio Capture Sources"]
+    IPCam["RobOS IP Camera (Wi-Fi :8080)<br/>ONVIF :3702 · /video HD · /api/control"]
+    UVC["USB V4L2 Webcams &amp; Audio I/O<br/>MJPG 1080p/720p · Optional Paired Mic"]
+  end
+
+  subgraph Engine["2. Synchronized HD Recorder &amp; MIDI Mapper"]
+    FFRec["FFmpeg HD H.264 Recorder<br/>1080p CRF 18 Default · Latency Sync · .mp4"]
+    KarGen["MIDI Karaoke Generator (.KAR)<br/>LRCLIB / Whisper ASR · F0 Pitch · SMF 0xFF 05"]
+  end
+
+  subgraph Lanes["3. DAW Timeline &amp; Inspector Lanes"]
+    VidLane["VIDEO Filmstrip &amp; FX Inspector<br/>1080p/720p Switcher · Optional Audio"]
+    LyrLane["LYRICS MIDI Piano-Roll Lane<br/>Vocal Pitch Bars · Inline .KAR/.LRC Editor"]
+  end
+
+  subgraph Stage["4. Dual-Mode Video &amp; Karaoke Output"]
+    Win["Embedded Dock or Pop-Out Window<br/>60fps Sync · Live Cam · Pin Top · Fullscreen"]
+    KarOut["Karaoke Stage &amp; Video Lower-Third<br/>Over Active Video OR RobOS Dark Studio Stage"]
+    Win --> KarOut
+  end
+
+  IPCam -->|"HD MJPEG"| FFRec
+  UVC -->|"V4L2 + Optional WAV"| FFRec
+  UVC -->|"Music / Vocal Stem"| KarGen
+  FFRec -->|"Aligned .mp4"| VidLane
+  KarGen -->|".KAR + .LRC"| LyrLane
+  VidLane -->|"Video Track"| Win
+  LyrLane -->|"0xFF 05 Word Cues"| KarOut
+  </pre>
+
+  <div class="blog-log"># 1. Run the 28-test RobOS DAW Studio suite (Focusrite/ADAT, DSP, HD Video Mode &amp; SMF .KAR roundtrip)
+node --test packages/daw-studio/test/daw-studio.test.js
+
+# 2. Run RobOS IP Camera Android JVM unit tests (ONVIF + /api/control remote HD quality/lens/torch)
+(cd packages/ip-camera-android &amp;&amp; ./gradlew testDebugUnitTest)
+
+# 3. Discover live RobOS IP Cameras &amp; verify 1080p HD default via DAW Studio (:19232)
+curl -s -X POST http://127.0.0.1:19232/eval \
+  -d '(async () =&gt; JSON.stringify(await window.robos.discoverVideoSources({ scanLan: true })))()'</div>
+</div>
+<div class="blog-links">
+  <a href="{{ '/daw/' | relative_url }}">RobOS DAW Studio (/daw) →</a>
+  <a href="{{ '/ip-camera-android/' | relative_url }}">RobOS IP Camera for Android →</a>
+  <a href="{{ '/blog/robos-daw-studio-linux-multitrack-drum-workstation/' | relative_url }}">20-Ch Drum Tracking post →</a>
+  <a href="{{ '/blog/robos-ip-camera-android-surveillance/' | relative_url }}">Android ONVIF Camera post →</a>
+  <span class="blog-commits">Commits:
+    <a href="https://github.com/nddipiazza/robos/commit/d69e8e44">d69e8e44</a> ·
+    <a href="https://github.com/nddipiazza/robos/commit/01f2eb19">01f2eb19</a> ·
+    <a href="https://github.com/nddipiazza/robos/commit/247d557b">247d557b</a>
+  </span>
+</div>
+{% include mermaid.html %}
