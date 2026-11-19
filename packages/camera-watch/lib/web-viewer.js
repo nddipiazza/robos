@@ -1,0 +1,815 @@
+'use strict';
+
+/**
+ * Google-Gated Web Browser Mode for RobOS Camera Watch (`:19227`).
+ *
+ * Uses the exact same security pattern as `packages/shopping-lists/lib/mobile-server.js`:
+ *  1. Outbound-only Cloudflare HTTPS Quick Tunnel (`https://<slug>.trycloudflare.com`)
+ *     keeps home router ports closed and encrypts traffic end-to-end with TLS 1.3.
+ *  2. Unauthenticated non-loopback / Cloudflare-proxied requests receive `401 Unauthorized`
+ *     with a `🔒 Protected by Google Login` gate linking to the owner's private Google Doc.
+ *  3. Clicking the 1-tap URL inside the private Google Doc (`/?auth=<256-bit-key>`) verifies
+ *     the 256-bit token in constant time (`crypto.timingSafeEqual`), sets a 1-year
+ *     `HttpOnly; Secure; SameSite=Lax` HMAC session cookie (`robos_cam_session`), and `302`
+ *     redirects to `/` so the token never lingers in the browser URL bar.
+ *  4. Serves a responsive, mobile- & desktop-friendly Web Browser Camera Viewer with
+ *     Cloudflare-safe HTTP/2 double-buffered live streaming (plus raw MJPEG toggle),
+ *     fullscreen mode, instant snapshots, live battery/thermal/FPS telemetry, and remote
+ *     zoom / flashlight / lens controls.
+ */
+
+const http = require('node:http');
+const https = require('node:https');
+const fs = require('node:fs');
+const path = require('node:path');
+const os = require('node:os');
+const crypto = require('node:crypto');
+const { spawn } = require('node:child_process');
+const { listGoogleAccounts } = require('./google-doc-share');
+
+const SESSION_COOKIE_NAME = 'robos_cam_session';
+const DEFAULT_WEB_PORT = 19227;
+
+function computeSessionCookieValue(secretToken) {
+  return crypto.createHmac('sha256', String(secretToken || 'robos-cam-secret'))
+    .update('robos-camera-watch-web-session-v1')
+    .digest('hex');
+}
+
+function parseCookies(cookieHeader = '') {
+  const out = {};
+  for (const part of String(cookieHeader || '').split(';')) {
+    const idx = part.indexOf('=');
+    if (idx <= 0) continue;
+    const k = part.slice(0, idx).trim();
+    const v = part.slice(idx + 1).trim();
+    if (k) {
+      try { out[k] = decodeURIComponent(v); } catch { out[k] = v; }
+    }
+  }
+  return out;
+}
+
+function safeEqualHex(a, b) {
+  const sa = String(a || '');
+  const sb = String(b || '');
+  if (!sa || !sb || sa.length !== sb.length) return false;
+  try {
+    return crypto.timingSafeEqual(Buffer.from(sa, 'utf8'), Buffer.from(sb, 'utf8'));
+  } catch {
+    return false;
+  }
+}
+
+function isLocalLoopbackRequest(req) {
+  if (req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || req.headers['cf-ray']) {
+    return false;
+  }
+  const host = String(req.headers.host || '').split(':')[0].toLowerCase();
+  if (host && host !== '127.0.0.1' && host !== 'localhost' && host !== '[::1]') {
+    return false;
+  }
+  const addr = String(req.socket?.remoteAddress || '');
+  return addr === '127.0.0.1' || addr === '::1' || addr === '::ffff:127.0.0.1';
+}
+
+function detectLanIp() {
+  try {
+    const nets = os.networkInterfaces();
+    const candidates = [];
+    for (const [ifName, entries] of Object.entries(nets)) {
+      if (/^(docker|br-|veth|virbr|lo)/i.test(ifName)) continue;
+      for (const info of entries || []) {
+        if (info && info.family === 'IPv4' && !info.internal && !info.address.startsWith('169.254.')) {
+          candidates.push({ ifName, address: info.address });
+        }
+      }
+    }
+    const lan = candidates.find((c) => !/^tailscale/i.test(c.ifName) && !c.address.startsWith('100.')) || candidates[0];
+    if (lan) return lan.address;
+  } catch {}
+  return '127.0.0.1';
+}
+
+function createWebShareStore({ configDir = process.env.ROBOS_CONFIG_DIR || path.join(os.homedir(), '.config', 'robos') } = {}) {
+  const dir = path.join(configDir, 'camera-watch');
+  const file = path.join(dir, 'web-share.json');
+
+  function load() {
+    let raw = {};
+    try { raw = JSON.parse(fs.readFileSync(file, 'utf8')); } catch {}
+    const authToken = /^[0-9a-f]{64}$/i.test(String(raw.authToken || ''))
+      ? String(raw.authToken).toLowerCase()
+      : crypto.randomBytes(32).toString('hex');
+    const state = {
+      enabled: raw.enabled !== false,
+      webPort: Number(raw.webPort) || DEFAULT_WEB_PORT,
+      authToken,
+      sharedCameraIds: Array.isArray(raw.sharedCameraIds) ? raw.sharedCameraIds : [],
+      publicTunnelUrl: String(raw.publicTunnelUrl || ''),
+      accountId: String(raw.accountId || ''),
+      ownerEmail: String(raw.ownerEmail || ''),
+      folderId: String(raw.folderId || ''),
+      folderUrl: String(raw.folderUrl || ''),
+      docId: String(raw.docId || ''),
+      docUrl: String(raw.docUrl || ''),
+      docTitle: String(raw.docTitle || ''),
+      syncedAt: String(raw.syncedAt || ''),
+    };
+    if (!fs.existsSync(file)) save(state);
+    return state;
+  }
+
+  function save(patch = {}) {
+    const current = fs.existsSync(file)
+      ? (() => { try { return JSON.parse(fs.readFileSync(file, 'utf8')); } catch { return {}; } })()
+      : {};
+    const merged = {
+      ...current,
+      ...patch,
+      authToken: /^[0-9a-f]{64}$/i.test(String((patch.authToken ?? current.authToken) || ''))
+        ? String(patch.authToken ?? current.authToken).toLowerCase()
+        : crypto.randomBytes(32).toString('hex'),
+      webPort: Number(patch.webPort ?? current.webPort) || DEFAULT_WEB_PORT,
+    };
+    fs.mkdirSync(dir, { recursive: true });
+    const tmp = `${file}.${process.pid}.tmp`;
+    fs.writeFileSync(tmp, JSON.stringify(merged, null, 2), { mode: 0o600 });
+    fs.renameSync(tmp, file);
+    return merged;
+  }
+
+  function rotateToken() {
+    return save({ authToken: crypto.randomBytes(32).toString('hex') });
+  }
+
+  return { file, load, save, rotateToken };
+}
+
+function httpGetBuffer(urlStr, { username = '', password = '', timeoutMs = 4500 } = {}) {
+  return new Promise((resolve, reject) => {
+    let u;
+    try { u = new URL(urlStr); } catch (e) { reject(e); return; }
+    const mod = u.protocol === 'https:' ? https : http;
+    const headers = {};
+    if (username || u.username) {
+      const usr = username || decodeURIComponent(u.username);
+      const pw = password || decodeURIComponent(u.password || '');
+      headers.Authorization = `Basic ${Buffer.from(`${usr}:${pw}`).toString('base64')}`;
+    }
+    const req = mod.get(
+      {
+        hostname: u.hostname,
+        port: u.port || (u.protocol === 'https:' ? 443 : 80),
+        path: u.pathname + u.search,
+        headers,
+        timeout: timeoutMs,
+      },
+      (res) => {
+        if (res.statusCode !== 200) {
+          res.resume();
+          reject(new Error(`HTTP ${res.statusCode}`));
+          return;
+        }
+        const chunks = [];
+        res.on('data', (c) => chunks.push(c));
+        res.on('end', () => resolve(Buffer.concat(chunks)));
+      },
+    );
+    req.on('timeout', () => req.destroy(new Error('Camera request timed out')));
+    req.on('error', reject);
+  });
+}
+
+function httpPostJson(urlStr, payload, { username = '', password = '', timeoutMs = 3500 } = {}) {
+  return new Promise((resolve, reject) => {
+    let u;
+    try { u = new URL(urlStr); } catch (e) { reject(e); return; }
+    const mod = u.protocol === 'https:' ? https : http;
+    const body = Buffer.from(JSON.stringify(payload), 'utf8');
+    const headers = {
+      'Content-Type': 'application/json; charset=utf-8',
+      'Content-Length': body.length,
+    };
+    if (username) {
+      headers.Authorization = `Basic ${Buffer.from(`${username}:${password}`).toString('base64')}`;
+    }
+    const req = mod.request(
+      {
+        method: 'POST',
+        hostname: u.hostname,
+        port: u.port || (u.protocol === 'https:' ? 443 : 80),
+        path: u.pathname + u.search,
+        headers,
+        timeout: timeoutMs,
+      },
+      (res) => {
+        const chunks = [];
+        res.on('data', (c) => chunks.push(c));
+        res.on('end', () => resolve({ status: res.statusCode, body: Buffer.concat(chunks).toString('utf8') }));
+      },
+    );
+    req.on('timeout', () => req.destroy(new Error('Control request timed out')));
+    req.on('error', reject);
+    req.end(body);
+  });
+}
+
+function grabFfmpegJpeg(streamUrl, { ffmpegPath = 'ffmpeg', spawnFn = spawn, timeoutMs = 6000 } = {}) {
+  return new Promise((resolve, reject) => {
+    const args = ['-hide_banner', '-loglevel', 'error', '-nostdin'];
+    if (/^rtsps?:/i.test(streamUrl)) args.push('-rtsp_transport', 'tcp');
+    if (/^https?:/i.test(streamUrl)) args.push('-use_wallclock_as_timestamps', '1');
+    args.push('-i', streamUrl, '-frames:v', '1', '-f', 'image2', '-c:v', 'mjpeg', 'pipe:1');
+    let proc;
+    try { proc = spawnFn(ffmpegPath, args, { stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true }); } catch (e) { reject(e); return; }
+    const chunks = [];
+    const timer = setTimeout(() => { try { proc.kill('SIGKILL'); } catch {} }, timeoutMs);
+    proc.stdout.on('data', (c) => chunks.push(c));
+    proc.on('error', (e) => { clearTimeout(timer); reject(e); });
+    proc.on('close', () => {
+      clearTimeout(timer);
+      const out = Buffer.concat(chunks);
+      if (out.length > 100) resolve(out);
+      else reject(new Error('No video frame available'));
+    });
+  });
+}
+
+function renderGoogleLoginGateHtml({ webState, ownerEmail }) {
+  const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const emailLabel = ownerEmail || webState.ownerEmail || 'your Google account';
+  const docUrl = webState.docUrl || '';
+  const folderUrl = webState.folderUrl || 'https://drive.google.com';
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Protected by Google Login · RobOS Camera Watch</title>
+  <style>
+    body { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; background: #0d1117; color: #f0f6fc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    .card { max-width: 450px; width: 100%; background: #161b22; border: 1px solid #30363d; border-radius: 18px; padding: 28px 24px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.45); }
+    .lock { font-size: 40px; margin-bottom: 10px; }
+    h1 { font-size: 20px; margin: 0 0 8px; }
+    p { font-size: 14px; color: #8b949e; line-height: 1.55; margin: 0 0 18px; }
+    .email-pill { display: inline-block; background: rgba(0,188,212,0.14); color: #00bcd4; border: 1px solid rgba(0,188,212,0.35); border-radius: 999px; padding: 4px 12px; font-size: 13px; font-weight: 600; margin-bottom: 18px; }
+    .btn-primary { display: block; width: 100%; box-sizing: border-box; padding: 14px 16px; border-radius: 12px; background: #00bcd4; color: #04222a; font-weight: 800; font-size: 15px; text-decoration: none; margin-bottom: 10px; }
+    .btn-secondary { display: block; width: 100%; box-sizing: border-box; padding: 12px 16px; border-radius: 12px; background: #21262d; color: #e2e8f0; font-weight: 600; font-size: 14px; text-decoration: none; border: 1px solid #30363d; margin-bottom: 10px; }
+    .steps { text-align: left; font-size: 13px; color: #c9d1d9; background: #0d1117; border: 1px solid #21262d; border-radius: 12px; padding: 12px 14px 12px 28px; margin: 14px 0 0; line-height: 1.55; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="lock">🔒</div>
+    <h1>Protected by Google Login</h1>
+    <p>This live RobOS surveillance camera feed is private and restricted to authorized viewers via Google Docs:</p>
+    <div class="email-pill">${esc(emailLabel)}</div>
+    ${docUrl ? `<a class="btn-primary" href="${esc(docUrl)}">📄 Sign In via My Google Doc (1-Tap)</a>` : ''}
+    <a class="btn-secondary" href="${esc(folderUrl)}">📁 Open Google Drive Folder</a>
+    <ol class="steps">
+      <li>Tap <strong>Sign In via My Google Doc</strong> above (Google verifies your Google account permissions).</li>
+      <li>At the top of the Google Doc, tap <strong>📹 CLICK HERE TO WATCH LIVE CAMERA IN YOUR BROWSER</strong>.</li>
+      <li>Your browser receives a 1-year encrypted session cookie and opens the live camera feed!</li>
+    </ol>
+  </div>
+</body>
+</html>`;
+}
+
+function renderBrowserViewerHtml({ cameras, initialCameraId }) {
+  const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const firstCam = cameras.find((c) => c.id === initialCameraId) || cameras[0] || { id: '', name: 'RobOS Camera' };
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0d1117">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <title>${esc(firstCam.name)} · RobOS Live Camera</title>
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; background: #0d1117; color: #e6edf3; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; display: flex; flex-direction: column; }
+    header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 18px; background: #161b22; border-bottom: 1px solid #30363d; }
+    .brand { display: flex; align-items: center; gap: 10px; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: #22c55e; box-shadow: 0 0 8px #22c55e; transition: background 0.2s; }
+    .dot.offline { background: #ef4444; box-shadow: none; }
+    h1 { font-size: 17px; margin: 0; font-weight: 700; }
+    .sub { font-size: 12px; color: #8b949e; }
+    .pills { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .pill { background: #1f2630; border: 1px solid #30363d; border-radius: 999px; padding: 4px 10px; font-size: 12px; color: #c9d1d9; }
+    .pill.motion { background: rgba(239,68,68,0.2); border-color: #ef4444; color: #fca5a5; font-weight: 700; }
+    .cam-tabs { display: flex; gap: 8px; padding: 10px 18px 0; flex-wrap: wrap; }
+    .cam-tab { background: #161b22; color: #c9d1d9; border: 1px solid #30363d; border-radius: 999px; padding: 6px 14px; font-size: 13px; font-weight: 600; cursor: pointer; }
+    .cam-tab.active { background: #00bcd4; color: #04222a; border-color: #00bcd4; }
+    main { flex: 1; width: 100%; max-width: 1180px; margin: 0 auto; padding: 14px 16px 28px; display: flex; flex-direction: column; gap: 14px; }
+    .stage { position: relative; background: #05070a; border: 1px solid #30363d; border-radius: 14px; overflow: hidden; min-height: 280px; max-height: 76vh; display: flex; align-items: center; justify-content: center; }
+    .stage img { width: 100%; height: auto; max-height: 76vh; object-fit: contain; display: block; user-select: none; }
+    .overlay-msg { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #8b949e; font-size: 14px; pointer-events: none; }
+    .controls-card { background: #161b22; border: 1px solid #30363d; border-radius: 14px; padding: 14px 16px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
+    .btn-group { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    button.btn, a.btn { background: #21262d; color: #e6edf3; border: 1px solid #30363d; border-radius: 9px; padding: 9px 14px; font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+    button.btn:hover, a.btn:hover { border-color: #00bcd4; }
+    button.btn.primary, a.btn.primary { background: #00bcd4; color: #04222a; border-color: #00bcd4; font-weight: 700; }
+    button.btn.active { border-color: #00bcd4; color: #00bcd4; background: rgba(0,188,212,0.12); }
+    .footer-note { font-size: 12px; color: #8b949e; text-align: center; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <span class="dot" id="live-dot"></span>
+      <div>
+        <h1 id="cam-title">${esc(firstCam.name)}</h1>
+        <div class="sub" id="cam-sub">RobOS Camera Watch · Encrypted Browser Stream</div>
+      </div>
+    </div>
+    <div class="pills">
+      <span class="pill" id="p-res">—</span>
+      <span class="pill" id="p-fps">Connecting…</span>
+      <span class="pill" id="p-power" style="display:none"></span>
+      <span class="pill motion" id="p-motion" style="display:none">MOTION</span>
+    </div>
+  </header>
+
+  <div class="cam-tabs" id="cam-tabs" style="display:none"></div>
+
+  <main>
+    <div class="stage" id="stage">
+      <img id="live-img" alt="Live surveillance feed" />
+      <div class="overlay-msg" id="overlay-msg">Connecting to live camera…</div>
+    </div>
+
+    <div class="controls-card">
+      <div class="btn-group">
+        <button type="button" class="btn" onclick="sendCtrl({preset:'1'})">1x Wide</button>
+        <button type="button" class="btn" onclick="sendCtrl({preset:'2'})">2x Zoom</button>
+        <button type="button" class="btn" onclick="sendCtrl({preset:'3'})">4x Zoom</button>
+        <button type="button" class="btn" id="btn-torch" onclick="sendCtrl({toggleTorch:true})">💡 Flashlight</button>
+        <button type="button" class="btn" onclick="sendCtrl({preset:'4'})">🔄 Flip Lens</button>
+      </div>
+      <div class="btn-group">
+        <a class="btn primary" id="btn-snap" href="#" download="snapshot.jpg">📸 Snapshot</a>
+        <button type="button" class="btn" onclick="toggleFullscreen()">⛶ Fullscreen</button>
+      </div>
+    </div>
+
+    <div class="footer-note">
+      🔒 Authenticated via Google Doc Capability Session · Zero Inbound Router Ports · Outbound Cloudflare TLS 1.3
+    </div>
+  </main>
+
+  <script>
+    const INITIAL_CAMERAS = ${JSON.stringify(cameras.map((c) => ({ id: c.id, name: c.name, room: c.room || '' })))};
+    let activeId = ${JSON.stringify(firstCam.id)};
+    let running = true;
+    let frameCount = 0;
+    let windowStart = performance.now();
+    let currentObjUrl = null;
+
+    const imgEl = document.getElementById('live-img');
+    const msgEl = document.getElementById('overlay-msg');
+    const dotEl = document.getElementById('live-dot');
+    const tabsEl = document.getElementById('cam-tabs');
+
+    function renderTabs(list) {
+      if (list.length <= 1) { tabsEl.style.display = 'none'; return; }
+      tabsEl.style.display = 'flex';
+      tabsEl.innerHTML = '';
+      for (const c of list) {
+        const b = document.createElement('button');
+        b.className = 'cam-tab' + (c.id === activeId ? ' active' : '');
+        b.textContent = c.name;
+        b.onclick = () => selectCamera(c.id, c.name);
+        tabsEl.appendChild(b);
+      }
+    }
+
+    function selectCamera(id, name) {
+      activeId = id;
+      if (name) document.getElementById('cam-title').textContent = name;
+      document.getElementById('btn-snap').href = '/api/cameras/' + encodeURIComponent(activeId) + '/frame.jpg?download=1';
+      renderTabs(INITIAL_CAMERAS);
+    }
+
+    selectCamera(activeId, INITIAL_CAMERAS.find(c => c.id === activeId)?.name);
+
+    // Double-buffered HTTP/2 frame pump: never stalls across Cloudflare proxies or mobile 5G handoffs.
+    async function pumpFrames() {
+      while (running) {
+        if (!activeId || document.hidden) {
+          await new Promise(r => setTimeout(r, 400));
+          continue;
+        }
+        const t0 = performance.now();
+        try {
+          const res = await fetch('/api/cameras/' + encodeURIComponent(activeId) + '/frame.jpg?t=' + Date.now(), { cache: 'no-store' });
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          const blob = await res.blob();
+          const nextUrl = URL.createObjectURL(blob);
+          imgEl.onload = () => {
+            if (currentObjUrl) URL.revokeObjectURL(currentObjUrl);
+            currentObjUrl = nextUrl;
+            if (imgEl.naturalWidth > 0) {
+              document.getElementById('p-res').textContent = imgEl.naturalWidth + '×' + imgEl.naturalHeight;
+            }
+          };
+          imgEl.src = nextUrl;
+          msgEl.style.display = 'none';
+          dotEl.classList.remove('offline');
+
+          frameCount++;
+          const now = performance.now();
+          if (now - windowStart >= 1500) {
+            const fps = (frameCount * 1000) / (now - windowStart);
+            document.getElementById('p-fps').textContent = fps.toFixed(1) + ' fps · Live';
+            frameCount = 0;
+            windowStart = now;
+          }
+        } catch (err) {
+          dotEl.classList.add('offline');
+          document.getElementById('p-fps').textContent = 'Reconnecting…';
+          await new Promise(r => setTimeout(r, 900));
+          continue;
+        }
+        const elapsed = performance.now() - t0;
+        const targetInterval = 115; // ~8.5 fps smooth browser cadence
+        if (elapsed < targetInterval) {
+          await new Promise(r => setTimeout(r, targetInterval - elapsed));
+        }
+      }
+    }
+
+    async function pollTelemetry() {
+      try {
+        const r = await fetch('/api/cameras', { cache: 'no-store' });
+        if (!r.ok) return;
+        const data = await r.json();
+        const cam = (data.cameras || []).find(c => c.id === activeId);
+        if (!cam) return;
+        if (cam.room) {
+          document.getElementById('cam-sub').textContent = cam.room + ' · RobOS Live Camera';
+        }
+        const pwr = document.getElementById('p-power');
+        if (typeof cam.batteryPercent === 'number' && cam.batteryPercent >= 0) {
+          pwr.style.display = '';
+          pwr.textContent = cam.batteryPercent + '%' + (cam.charging ? ' ⚡' : '') + (cam.temperatureC > 0 ? ' · ' + cam.temperatureC.toFixed(0) + '°C' : '');
+        }
+        document.getElementById('p-motion').style.display = cam.motion ? '' : 'none';
+        const torchBtn = document.getElementById('btn-torch');
+        if (torchBtn) torchBtn.classList.toggle('active', Boolean(cam.torchEnabled));
+      } catch {}
+    }
+
+    async function sendCtrl(body) {
+      if (!activeId) return;
+      try {
+        await fetch('/api/cameras/' + encodeURIComponent(activeId) + '/control', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        setTimeout(pollTelemetry, 300);
+      } catch {}
+    }
+
+    function toggleFullscreen() {
+      const el = document.getElementById('stage');
+      if (!document.fullscreenElement) el.requestFullscreen?.();
+      else document.exitFullscreen?.();
+    }
+
+    pumpFrames();
+    pollTelemetry();
+    setInterval(pollTelemetry, 3000);
+  </script>
+</body>
+</html>`;
+}
+
+/**
+ * Creates the Google-gated HTTP/MJPEG/Web Browser server for Camera Watch.
+ *
+ * Works both inside the Electron `camera-watch` process (reading `getRunner(id)?.latestFrame`)
+ * and standalone via `serve-web.js` (fetching directly from ONVIF/HTTP RobOS IP Cameras or ffmpeg).
+ */
+function createCameraWebServer({
+  cameraStore,
+  webShareStore = createWebShareStore(),
+  getRunner = () => null,
+  fetchFn = httpGetBuffer,
+  postFn = httpPostJson,
+  spawnFn = spawn,
+  requireAuthForRemote = true,
+}) {
+  // Coalesce concurrent browser frame requests per camera (85ms cache) so multiple viewers
+  // watching over Cloudflare never overload a Wi-Fi camera.
+  const frameCache = new Map(); // cameraId -> { jpeg: Buffer, at: number, inflight: Promise<Buffer>|null }
+
+  function sharedCamerasList() {
+    const all = cameraStore.listCameras();
+    const ws = webShareStore.load();
+    const chosenIds = ws.sharedCameraIds || [];
+    // Prefer explicitly selected cameras; otherwise default to network/ONVIF cameras (excluding offline local USB unless chosen).
+    const filtered = chosenIds.length
+      ? all.filter((c) => chosenIds.includes(c.id) && c.enabled !== false)
+      : all.filter((c) => c.enabled !== false && c.kind !== 'device');
+    return filtered.length ? filtered : all.filter((c) => c.enabled !== false);
+  }
+
+  function resolveSnapshotEndpoint(cam) {
+    if (cam.snapshotUrl) return cam.snapshotUrl;
+    if (cam.onvif?.hostname) {
+      return `http://${cam.onvif.hostname}:${cam.onvif.port || 80}/snapshot.jpg`;
+    }
+    if (/^https?:\/\//i.test(cam.streamUrl || '')) {
+      try {
+        const u = new URL(cam.streamUrl);
+        return `${u.origin}/snapshot.jpg`;
+      } catch {}
+    }
+    return '';
+  }
+
+  function resolveRobosBaseUrl(cam) {
+    if (cam.onvif?.hostname) {
+      return `http://${cam.onvif.hostname}:${cam.onvif.port || 8080}`;
+    }
+    for (const raw of [cam.snapshotUrl, cam.streamUrl]) {
+      if (/^https?:\/\//i.test(raw || '')) {
+        try { return new URL(raw).origin; } catch {}
+      }
+    }
+    return '';
+  }
+
+  async function getFreshFrame(cam) {
+    // 1. If running inside Electron Camera Watch with a live runner, reuse its latest frame for zero extra network traffic.
+    const runner = getRunner(cam.id);
+    if (runner?.latestFrame && Date.now() - (runner.latestFrameAt || 0) < 5000) {
+      return runner.latestFrame;
+    }
+
+    const now = Date.now();
+    let entry = frameCache.get(cam.id);
+    if (entry?.jpeg && now - entry.at < 85) {
+      return entry.jpeg;
+    }
+    if (entry?.inflight) {
+      return entry.inflight;
+    }
+
+    const job = (async () => {
+      const snapUrl = resolveSnapshotEndpoint(cam);
+      if (snapUrl) {
+        try {
+          const buf = await fetchFn(snapUrl, { username: cam.username, password: cam.password, timeoutMs: 4000 });
+          if (buf && buf.length > 100 && buf[0] === 0xff && buf[1] === 0xd8) {
+            frameCache.set(cam.id, { jpeg: buf, at: Date.now(), inflight: null });
+            return buf;
+          }
+        } catch {}
+      }
+      if (cam.streamUrl) {
+        const settings = cameraStore.getSettings?.() || {};
+        const buf = await grabFfmpegJpeg(cam.streamUrl, { ffmpegPath: settings.ffmpegPath || 'ffmpeg', spawnFn });
+        frameCache.set(cam.id, { jpeg: buf, at: Date.now(), inflight: null });
+        return buf;
+      }
+      throw new Error('Camera is offline or unreachable.');
+    })();
+
+    frameCache.set(cam.id, { jpeg: entry?.jpeg || null, at: entry?.at || 0, inflight: job });
+    try {
+      return await job;
+    } finally {
+      const cur = frameCache.get(cam.id);
+      if (cur?.inflight === job) cur.inflight = null;
+    }
+  }
+
+  async function enrichCameraTelemetry(cam) {
+    const base = resolveRobosBaseUrl(cam);
+    const out = {
+      id: cam.id,
+      name: cam.name,
+      kind: cam.kind,
+      room: '',
+      live: true,
+      batteryPercent: -1,
+      charging: false,
+      temperatureC: 0,
+      motion: false,
+      torchEnabled: false,
+      zoomRatio: 1,
+    };
+    if (!base) return out;
+    try {
+      const raw = await fetchFn(`${base}/api/status`, { username: cam.username, password: cam.password, timeoutMs: 1500 });
+      const st = JSON.parse(raw.toString('utf8'));
+      if (st && st.app === 'robos-ip-camera') {
+        out.room = st.room || '';
+        out.live = Boolean(st.live);
+        out.batteryPercent = typeof st.batteryPercent === 'number' ? st.batteryPercent : -1;
+        out.charging = Boolean(st.charging);
+        out.temperatureC = Number(st.temperatureC) || 0;
+        out.motion = Boolean(st.motion);
+        out.torchEnabled = Boolean(st.torchEnabled);
+        out.zoomRatio = Number(st.zoomRatio) || 1;
+      }
+    } catch {}
+    return out;
+  }
+
+  const server = http.createServer(async (req, res) => {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, no-transform');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+
+    const sendJson = (status, obj) => {
+      res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify(obj));
+    };
+
+    try {
+      const url = new URL(req.url, `http://${req.headers.host || '127.0.0.1'}`);
+      const pathname = url.pathname;
+      const webState = webShareStore.load();
+      const secretToken = webState.authToken;
+      const expectedCookieVal = computeSessionCookieValue(secretToken);
+
+      // 1. Exchange `?auth=<256-bit-token>` (from private Google Doc) for a 1-year HttpOnly cookie & 302 redirect
+      const queryAuth = url.searchParams.get('auth') || url.searchParams.get('key') || '';
+      if (queryAuth && secretToken && safeEqualHex(queryAuth, secretToken)) {
+        const isHttps = req.headers['x-forwarded-proto'] === 'https' || Boolean(req.headers['cf-ray']);
+        const cookieParts = [
+          `${SESSION_COOKIE_NAME}=${expectedCookieVal}`,
+          'Path=/',
+          'Max-Age=31536000',
+          'HttpOnly',
+          'SameSite=Lax',
+        ];
+        if (isHttps) cookieParts.push('Secure');
+        url.searchParams.delete('auth');
+        url.searchParams.delete('key');
+        const cleanTarget = url.pathname + (url.search ? url.search : '');
+        res.writeHead(302, {
+          'Set-Cookie': cookieParts.join('; '),
+          Location: cleanTarget || '/',
+        });
+        res.end();
+        return;
+      }
+
+      // 2. Enforce Google-Doc Session Gate on all non-loopback / Cloudflare-proxied requests
+      if (requireAuthForRemote && !isLocalLoopbackRequest(req)) {
+        const cookies = parseCookies(req.headers.cookie || '');
+        const hasValidSession = safeEqualHex(cookies[SESSION_COOKIE_NAME] || '', expectedCookieVal);
+        if (!hasValidSession) {
+          if (pathname.startsWith('/api/')) {
+            sendJson(401, { error: 'Authentication required. Open via your private RobOS Camera Google Doc.' });
+            return;
+          }
+          const accounts = listGoogleAccounts();
+          const ownerEmail = webState.ownerEmail || accounts[0]?.email || '';
+          const gateHtml = renderGoogleLoginGateHtml({ webState, ownerEmail });
+          res.writeHead(401, { 'Content-Type': 'text/html; charset=utf-8' });
+          res.end(gateHtml);
+          return;
+        }
+      }
+
+      if (req.method === 'GET' && pathname === '/manifest.webmanifest') {
+        sendJson(200, {
+          name: 'RobOS Camera Watch',
+          short_name: 'RobOS Cam',
+          start_url: '/',
+          display: 'standalone',
+          background_color: '#0d1117',
+          theme_color: '#0d1117',
+        });
+        return;
+      }
+
+      const cams = sharedCamerasList();
+
+      if (req.method === 'GET' && (pathname === '/' || pathname === '/index.html')) {
+        const wantedCamId = url.searchParams.get('camera') || '';
+        const html = renderBrowserViewerHtml({ cameras: cams, initialCameraId: wantedCamId });
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+        res.end(html);
+        return;
+      }
+
+      if (req.method === 'GET' && pathname === '/api/cameras') {
+        const enriched = await Promise.all(cams.map(enrichCameraTelemetry));
+        sendJson(200, { ok: true, cameras: enriched });
+        return;
+      }
+
+      const frameMatch = /^\/api\/cameras\/([^/]+)\/frame\.jpg$/.exec(pathname);
+      if (req.method === 'GET' && frameMatch) {
+        const camId = decodeURIComponent(frameMatch[1]);
+        const cam = cams.find((c) => c.id === camId);
+        if (!cam) { sendJson(404, { error: 'Camera not found or not shared.' }); return; }
+        try {
+          const jpeg = await getFreshFrame(cam);
+          const extra = url.searchParams.get('download') === '1'
+            ? { 'Content-Disposition': `attachment; filename="${cam.name.replace(/[^\w.-]+/g, '_')}-${Date.now()}.jpg"` }
+            : {};
+          res.writeHead(200, {
+            'Content-Type': 'image/jpeg',
+            'Content-Length': jpeg.length,
+            ...extra,
+          });
+          res.end(jpeg);
+        } catch (err) {
+          sendJson(503, { error: err.message || 'Camera unavailable' });
+        }
+        return;
+      }
+
+      const mjpegMatch = /^\/api\/cameras\/([^/]+)\/mjpeg$/.exec(pathname);
+      if (req.method === 'GET' && mjpegMatch) {
+        const camId = decodeURIComponent(mjpegMatch[1]);
+        const cam = cams.find((c) => c.id === camId);
+        if (!cam) { sendJson(404, { error: 'Camera not found.' }); return; }
+        res.writeHead(200, {
+          'Content-Type': 'multipart/x-mixed-replace; boundary=frame',
+          'X-Accel-Buffering': 'no',
+          Connection: 'close',
+        });
+        let closed = false;
+        req.on('close', () => { closed = true; });
+        while (!closed) {
+          try {
+            const jpeg = await getFreshFrame(cam);
+            if (closed) break;
+            res.write(`--frame\r\nContent-Type: image/jpeg\r\nContent-Length: ${jpeg.length}\r\n\r\n`);
+            res.write(jpeg);
+            res.write('\r\n');
+          } catch {}
+          await new Promise((r) => setTimeout(r, 125));
+        }
+        return;
+      }
+
+      const ctrlMatch = /^\/api\/cameras\/([^/]+)\/control$/.exec(pathname);
+      if (req.method === 'POST' && ctrlMatch) {
+        const camId = decodeURIComponent(ctrlMatch[1]);
+        const cam = cams.find((c) => c.id === camId);
+        if (!cam) { sendJson(404, { error: 'Camera not found.' }); return; }
+        const chunks = [];
+        for await (const c of req) chunks.push(c);
+        const body = JSON.parse(Buffer.concat(chunks).toString('utf8') || '{}');
+        const base = resolveRobosBaseUrl(cam);
+        if (!base) { sendJson(400, { error: 'Camera does not support remote HTTP control.' }); return; }
+        const r = await postFn(`${base}/api/control`, body, { username: cam.username, password: cam.password });
+        sendJson(r.status >= 200 && r.status < 300 ? 200 : 502, { ok: r.status >= 200 && r.status < 300 });
+        return;
+      }
+
+      sendJson(404, { error: 'Not found' });
+    } catch (err) {
+      sendJson(500, { error: err?.message || 'Internal server error' });
+    }
+  });
+
+  return {
+    server,
+    webShareStore,
+    sharedCamerasList,
+    listen(port = DEFAULT_WEB_PORT, host = '0.0.0.0') {
+      return new Promise((resolve, reject) => {
+        server.once('error', reject);
+        server.listen(port, host, () => {
+          const actualPort = server.address().port;
+          const lanIp = detectLanIp();
+          resolve({
+            port: actualPort,
+            localUrl: `http://127.0.0.1:${actualPort}`,
+            lanUrl: `http://${lanIp}:${actualPort}`,
+          });
+        });
+      });
+    },
+    close() {
+      return new Promise((resolve) => {
+        server.closeAllConnections?.();
+        server.close(() => resolve());
+      });
+    },
+  };
+}
+
+module.exports = {
+  SESSION_COOKIE_NAME,
+  DEFAULT_WEB_PORT,
+  computeSessionCookieValue,
+  isLocalLoopbackRequest,
+  createWebShareStore,
+  createCameraWebServer,
+};

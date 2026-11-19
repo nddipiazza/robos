@@ -245,6 +245,15 @@
         <div id="share-result" class="test-result hidden"></div>
         <h3>Who can watch</h3>
         <div id="share-status" class="share-list"></div>
+        <hr style="border:none;border-top:1px solid #30363d;margin:16px 0;" />
+        <h3>Share in Web Browser via Google Doc (Cloudflare HTTPS)</h3>
+        <p class="muted small">Creates a private Google Doc in your Google Drive with a 1-tap Cloudflare HTTPS browser viewer link (protected by Google Login + 256-bit session cookie, zero router ports opened).</p>
+        <label>Share Google Doc with email (optional)<input id="webshare-email" type="email" placeholder="family.member@gmail.com" /></label>
+        <div class="form-actions">
+          <button type="button" class="btn btn-primary" id="webshare-sync">Create / Update Google Doc</button>
+          <button type="button" class="btn" id="webshare-rotate">Rotate Browser Key</button>
+        </div>
+        <div id="webshare-result" class="test-result hidden"></div>
         <div class="form-actions">
           <span class="spacer"></span>
           <button type="button" class="btn" id="share-close">Close</button>

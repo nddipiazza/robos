@@ -63,12 +63,40 @@ try {
 } catch {}
 
 const { createCameraManager } = require('./lib/camera-manager');
+const { createWebShareStore, createCameraWebServer } = require('./lib/web-viewer');
+const { syncCameraGoogleDoc } = require('./lib/google-doc-share');
+const { startCloudflareTunnel } = require('./serve-web');
+
 const manager = createCameraManager({
   configDir: CONFIG_DIR,
   homeDir: HOME_DIR,
   // Sharing cameras between RobOS machines uses the App Mesh / Private Networks engine.
   loadMesh: () => requireShared('app-mesh-engine'),
 });
+const webShareStore = createWebShareStore({ configDir: CONFIG_DIR });
+let _webServer = null;
+let _webInfo = null;
+let _webTunnel = null;
+
+async function ensureWebShareRunning() {
+  if (_webInfo) return _webInfo;
+  const ws = webShareStore.load();
+  try {
+    _webServer = createCameraWebServer({ cameraStore: manager.store, webShareStore });
+    _webInfo = await _webServer.listen(ws.webPort, '0.0.0.0');
+    _webTunnel = startCloudflareTunnel({
+      localUrl: _webInfo.localUrl,
+      lanUrl: _webInfo.lanUrl,
+      cameraStore: manager.store,
+      webShareStore,
+      onReady: () => send('camera:sharing-changed'),
+    });
+    return _webInfo;
+  } catch {
+    // Port 19227 is already served by background serve-web.js daemon — reuse its state cleanly.
+    return { port: ws.webPort, localUrl: `http://127.0.0.1:${ws.webPort}`, lanUrl: `http://127.0.0.1:${ws.webPort}` };
+  }
+}
 
 const userDataDir = path.join(CONFIG_DIR, 'electron', APP_ID);
 app.setName?.(`robos-${APP_ID}`);
@@ -209,6 +237,66 @@ handle('share:stopCamera', (id) => manager.stopSharingCamera(id));
 handle('share:previewInvite', (text) => manager.previewInvite(text));
 handle('share:addCameras', (text, opts) => manager.addSharedCameras(text, opts));
 handle('share:copy', (text) => { require('electron').clipboard.writeText(String(text || '')); return true; });
+handle('webShare:status', () => {
+  const ws = webShareStore.load();
+  const { authToken, ...pub } = ws;
+  return { ...pub, hasToken: Boolean(authToken) };
+});
+handle('webShare:syncGoogleDoc', async ({ cameraIds = [], shareWithEmail = '' } = {}) => {
+  const info = await ensureWebShareRunning();
+  const chosenIds = Array.isArray(cameraIds) ? cameraIds.filter(Boolean) : [];
+  const ws = webShareStore.save({ enabled: true, ...(chosenIds.length ? { sharedCameraIds: chosenIds } : {}) });
+  // Wait briefly if cloudflared is still negotiating its Quick Tunnel URL
+  for (let i = 0; i < 16 && !webShareStore.load().publicTunnelUrl; i++) {
+    await new Promise((r) => setTimeout(r, 500));
+  }
+  const latest = webShareStore.load();
+  const tunnelUrl = latest.publicTunnelUrl || '';
+  const authedTunnelUrl = tunnelUrl ? `${tunnelUrl}/?auth=${latest.authToken}` : '';
+  const authedLanUrl = `${info.lanUrl}/?auth=${latest.authToken}`;
+  const all = manager.store.listCameras().filter((c) => c.enabled !== false);
+  const cams = chosenIds.length ? all.filter((c) => chosenIds.includes(c.id)) : all.filter((c) => c.kind !== 'device');
+  const synced = await syncCameraGoogleDoc({
+    cameras: cams.length ? cams : all,
+    webConfig: latest,
+    authedTunnelUrl,
+    publicTunnelUrl: tunnelUrl,
+    authedLanUrl,
+    shareWithEmail,
+    homeDir: HOME_DIR,
+  });
+  const updated = webShareStore.save({
+    accountId: synced.accountId,
+    ownerEmail: synced.ownerEmail,
+    folderId: synced.folderId,
+    folderUrl: synced.folderUrl,
+    docId: synced.docId,
+    docUrl: synced.docUrl,
+    docTitle: synced.docTitle,
+    syncedAt: synced.syncedAt,
+  });
+  const { authToken, ...pub } = updated;
+  return pub;
+});
+handle('webShare:rotateKey', async () => {
+  const rotated = webShareStore.rotateToken();
+  if (rotated.docId && rotated.publicTunnelUrl) {
+    const cams = manager.store.listCameras().filter((c) => c.enabled !== false && c.kind !== 'device');
+    await syncCameraGoogleDoc({
+      cameras: cams,
+      webConfig: rotated,
+      authedTunnelUrl: `${rotated.publicTunnelUrl}/?auth=${rotated.authToken}`,
+      publicTunnelUrl: rotated.publicTunnelUrl,
+      homeDir: HOME_DIR,
+    });
+  }
+  const { authToken, ...pub } = webShareStore.load();
+  return pub;
+});
+handle('webShare:openExternal', (url) => {
+  if (/^https?:\/\//i.test(String(url || ''))) shell.openExternal?.(String(url));
+  return true;
+});
 handle('camera:ptzMove', (id, v) => manager.ptzMove(id, v));
 handle('camera:ptzStop', (id) => manager.ptzStop(id));
 handle('camera:ptzPresets', (id) => manager.ptzPresets(id));

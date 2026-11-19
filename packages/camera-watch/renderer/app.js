@@ -680,6 +680,7 @@ async function openShareDialog() {
   $('share-result').classList.add('hidden');
   $('share-dialog').classList.remove('hidden');
   await renderShareStatus();
+  await renderWebShareStatus();
 }
 
 async function renderShareStatus() {
@@ -754,7 +755,64 @@ function openShareDialogCheckboxesFromState() {
     i.checked = Boolean(state.cameras.find((c) => c.id === i.value)?.share?.enabled);
   });
 }
-api.onSharingChanged?.(() => { if (!$('share-dialog').classList.contains('hidden')) renderShareStatus(); });
+
+async function renderWebShareStatus() {
+  const out = $('webshare-result');
+  if (!out || !api.webShareStatus) return;
+  try {
+    const ws = await call(api.webShareStatus);
+    if (!ws.docUrl && !ws.publicTunnelUrl) {
+      out.classList.add('hidden');
+      return;
+    }
+    out.className = 'test-result ok invite';
+    out.innerHTML = `
+      ${ws.docUrl ? `<div><strong>Google Doc:</strong> <a href="#" id="ws-open-doc" style="color:#00bcd4">${esc(ws.docTitle || ws.docUrl)}</a></div>` : ''}
+      ${ws.publicTunnelUrl ? `<div class="muted small">Cloudflare HTTPS Edge: <code>${esc(ws.publicTunnelUrl)}</code></div>` : ''}
+      ${ws.docUrl ? `<div class="row" style="margin-top:6px"><button type="button" class="btn btn-small btn-primary" id="ws-copy-doc">Copy Google Doc Link</button></div>` : ''}`;
+    $('ws-open-doc')?.addEventListener('click', (e) => { e.preventDefault(); call(api.openExternal, ws.docUrl); });
+    $('ws-copy-doc')?.addEventListener('click', async () => { await call(api.copyText, ws.docUrl); toast('Google Doc link copied.'); });
+  } catch {}
+}
+
+$('webshare-sync')?.addEventListener('click', async () => {
+  const btn = $('webshare-sync');
+  const out = $('webshare-result');
+  const ids = [...document.querySelectorAll('#share-camera-list input:checked')].map((i) => i.value);
+  btn.disabled = true;
+  btn.textContent = 'Syncing Cloudflare & Google Doc…';
+  try {
+    const res = await call(api.webShareSyncGoogleDoc, {
+      cameraIds: ids,
+      shareWithEmail: $('webshare-email')?.value.trim() || '',
+    });
+    if ($('webshare-email')) $('webshare-email').value = '';
+    await renderWebShareStatus();
+    if (res.docUrl) toast('Google Doc created & updated in Google Drive.');
+  } catch (err) {
+    out.className = 'test-result fail';
+    out.textContent = err.message;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Create / Update Google Doc';
+  }
+});
+
+$('webshare-rotate')?.addEventListener('click', async () => {
+  if (!window.confirm('Rotate the 256-bit browser key? Existing browser sessions are logged out and the Google Doc link updates.')) return;
+  try {
+    await call(api.webShareRotateKey);
+    await renderWebShareStatus();
+    toast('Browser key rotated and Google Doc updated.');
+  } catch (err) { toast(err.message, true); }
+});
+
+api.onSharingChanged?.(() => {
+  if (!$('share-dialog').classList.contains('hidden')) {
+    renderShareStatus();
+    renderWebShareStatus();
+  }
+});
 
 // ── Events ───────────────────────────────────────────────────────────────────
 async function loadEvents() {

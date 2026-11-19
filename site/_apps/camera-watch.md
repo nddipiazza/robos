@@ -19,6 +19,8 @@ RobOS Camera Watch (`packages/camera-watch`) watches the IP cameras on your home
 
 Start with the illustrated [Camera Watch setup and permissions guide](https://rowbose.com/camera-watcher/), including photographs of camera sharing and a live view on a second RobOS computer. Read the [camera network story](https://rowbose.com/blog/your-cameras-your-private-network/) for how scoped invites and per-camera access work together.
 
+You can also share a live **Web Browser Mode** view (`node packages/camera-watch/serve-web.js` or **Share → Create / Update Google Doc** in Camera Watch): an outbound Cloudflare HTTPS tunnel fronts port `19227` with a `401` Google Login gate, and a private Google Doc in your Google Drive holds the 256-bit 1-tap launch link that sets a 1-year `HttpOnly; Secure` session cookie for mobile or desktop browsers.
+
 ## What you need
 
 - `ffmpeg` on the machine (`sudo apt install ffmpeg` on Ubuntu). **Settings** shows whether Camera Watch can find it, and you can enter a full path.
