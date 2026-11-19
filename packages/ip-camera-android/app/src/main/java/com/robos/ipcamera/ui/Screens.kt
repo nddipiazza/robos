@@ -19,11 +19,9 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -135,17 +133,10 @@ fun LiveScreen(
                     )
                 }
 
-                val ratio = if (status.width > 0 && status.height > 0) {
-                    (status.width.toFloat() / status.height.toFloat()).coerceIn(0.55f, 1.9f)
-                } else {
-                    16f / 9f
-                }
-
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(max = 260.dp)
-                        .aspectRatio(ratio)
+                        .height(220.dp)
                         .clip(RoundedCornerShape(10.dp))
                         .background(Color(0xFF05070A))
                         .border(1.dp, Border, RoundedCornerShape(10.dp)),

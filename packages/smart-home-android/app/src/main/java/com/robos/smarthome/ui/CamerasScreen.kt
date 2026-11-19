@@ -13,10 +13,9 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -53,6 +52,7 @@ import com.robos.smarthome.core.UNASSIGNED_ROOM_ID
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun CamerasScreen(
     vm: HomeViewModel,
@@ -79,7 +79,11 @@ fun CamerasScreen(
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         item {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
                 Button(
                     onClick = vm::scanCameras,
                     enabled = !scanningCameras,
@@ -98,7 +102,7 @@ fun CamerasScreen(
                         onClick = { context.startActivity(ipCameraLaunchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) },
                         modifier = Modifier.testTag("open-ip-camera"),
                     ) {
-                        Text("This Phone")
+                        Text("IP Camera App")
                     }
                 }
             }
@@ -215,8 +219,7 @@ private fun CameraTileCard(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(max = 240.dp)
-                .aspectRatio(16f / 9f)
+                .height(200.dp)
                 .clip(RoundedCornerShape(10.dp))
                 .background(Color(0xFF05070A))
                 .border(1.dp, Border, RoundedCornerShape(10.dp))

@@ -1,0 +1,100 @@
+---
+title: "Turning the RobOS Android Phone into an Always-On ONVIF Surveillance Camera for Camera Watch and Smart Home"
+nav_label: "Android IP Camera"
+date: 2026-11-19 15:00:00 +0000
+date_label: "Nov 19, 2026"
+tags:
+  - "RobOS Mobile"
+  - "IP Camera &amp; ONVIF"
+  - "Camera Watch"
+  - "Smart Home"
+summary: "We built <strong>RobOS IP Camera for Android</strong> (<code>packages/ip-camera-android</code>, <a href=\"/ip-camera-android/\">rowbose.com/ip-camera-android</a>) to turn our <a href=\"/blog/robos-phone-lineageos-moto-g100/\">LineageOS 24 Moto G100</a>—or any Android 11+ phone—into an always-on local Wi-Fi surveillance camera. An off-screen Camera2 <code>ImageReader</code> inside a <code>foregroundServiceType=\"camera\"</code> service holds CPU, low-latency Wi-Fi and multicast locks so the stream keeps running at 10 fps with the display completely powered off. It announces itself over <strong>ONVIF WS-Discovery</strong> (<code>239.255.255.250:3702</code>), serves dual MJPEG streams, snapshots, motion alarms and solid-state sensor PTZ to <a href=\"/camera-watcher/\">Camera Watch</a>, and plugs into a new <strong>Cameras</strong> tab in <a href=\"/smart-home-android/\">Smart Home for Android</a>."
+description: "How we turned our LineageOS 24 Moto G100 Android phone into a 24/7 local Wi-Fi ONVIF surveillance camera with screen-off foreground streaming, solid-state PTZ, Camera Watch auto-discovery, and a new Smart Home Cameras tab."
+seo_title: "Turning an Android Phone into an Always-On ONVIF IP Camera · RobOS"
+og_image: /assets/blog/robos-ip-camera-android-surveillance/01-camera-watch-live-phone-feed.png
+og_image_alt: "RobOS Camera Watch on the desktop streaming live video and ONVIF PTZ presets from a Motorola Moto G100 running RobOS IP Camera over Wi-Fi"
+---
+<div class="blog-body">
+  <figure class="blog-fig">
+    <img src="{{ '/assets/blog/robos-ip-camera-android-surveillance/01-camera-watch-live-phone-feed.png' | relative_url }}" alt="RobOS Camera Watch focused view streaming live video over Wi-Fi from Living Room Phone (Moto G100) at 192.168.1.65:8080 with motion meter, pan-tilt-zoom pad, and ONVIF presets" loading="lazy">
+    <figcaption><strong>Live on the home LAN.</strong> <a href="{{ '/camera-watcher/' | relative_url }}">RobOS Camera Watch</a> connected over Wi-Fi to the Motorola Moto G100 (<code>192.168.1.65:8080</code>) after finding it automatically with ONVIF WS-Discovery, complete with local motion detection and solid-state ONVIF PTZ controls.</figcaption>
+  </figure>
+
+  <p><strong>A spare phone already has a good lens, a battery backup, and Wi-Fi.</strong> After <a href="{{ '/blog/robos-phone-lineageos-moto-g100/' | relative_url }}">putting LineageOS 24 (Android 17) and RobOS on an old Moto G100</a> and building <a href="{{ '/blog/your-cameras-your-private-network/' | relative_url }}">RobOS Camera Watch</a> on the desktop, the natural next step was turning a RobOS phone into a real network surveillance camera: plug it into wall power, point it at a room or entryway, add it to <strong>Camera Watch</strong> and <strong>Smart Home</strong>, and leave it running continuously with no cloud account and no vendor relay.</p>
+
+  <p><strong>Why ordinary Android camera apps stop when you walk away.</strong> Treating an Android 14–17 phone like dedicated IP camera firmware means solving four OS behaviors that normally shut down camera apps within minutes:</p>
+  <ol>
+    <li><strong>Activity preview surfaces vanish when the screen turns off.</strong> Most camera apps bind their Camera2 <code>CameraCaptureSession</code> to a Compose/View <code>SurfaceView</code> or <code>TextureView</code>. Locking the phone, switching apps, or pressing the physical Power button destroys that surface and halts capture.</li>
+    <li><strong>Wi-Fi power-save spikes latency and drops multicast.</strong> With the screen dark, Android puts the Wi-Fi radio into PS-Poll power save (our Moto G100's ping jumped to <code>297 ms</code>) and filters out UDP multicast packets—silently breaking ONVIF discovery on <code>239.255.255.250:3702</code>.</li>
+    <li><strong>Doze and Android 14+ foreground service rules.</strong> Starting or holding a camera session in the background requires an explicit <code>foregroundServiceType="camera"</code> declaration, runtime camera permission checks before <code>startForeground()</code>, and battery-optimization exemption.</li>
+    <li><strong>Per-frame Bitmap allocations overheat long-running streams.</strong> Allocating fresh <code>Bitmap</code> objects at 10–15 fps triggers constant garbage collection and warms up the phone over multi-day runs.</li>
+  </ol>
+
+  <h2>Architecture: Off-screen Camera2 foreground service + zero-cloud ONVIF</h2>
+  <figure class="blog-fig">
+    <img src="{{ '/assets/blog/robos-ip-camera-android-surveillance/05-always-on-architecture.jpg' | relative_url }}" alt="Technical architecture diagram of RobOS IP Camera for Android showing Camera2Engine off-screen ImageReader, CameraServerService wake and Wi-Fi locks, ONVIF WS-Discovery and SOAP server on port 8080, and Home Wi-Fi LAN connections to RobOS Camera Watch and RobOS Smart Home" loading="lazy">
+    <figcaption><strong>Always-on surveillance pipeline.</strong> Capture, rotation, OSD stamping, motion scoring, ONVIF SOAP, and MJPEG fan-out run inside <code>CameraServerService</code> with zero dependency on an open UI surface.</figcaption>
+  </figure>
+
+  <pre class="mermaid">
+flowchart LR
+  subgraph Phone["Android 11–17 Phone (RobOS IP Camera)"]
+    C2["Camera2Engine (HandlerThread)\nOff-screen YUV_420_888 ImageReader"] --> NV21["Zero-GC NV21 Converter\nAuto-Rotate + 5x7 OSD + Luma Motion"]
+    FGS["CameraServerService (FGS: camera)\nPartialWakeLock + LowLatency WifiLock + MulticastLock + 8s Watchdog"] --- C2
+    NV21 --> SRV["HttpOnvifServer (:8080) &amp; WsDiscovery (:3702)\n/video · /sub · /snapshot.jpg · /onvif/*"]
+  end
+  SRV -- "ONVIF WS-Discovery + SOAP + MJPEG (LAN)" --> CW["RobOS Camera Watch\nDesktop NVR · Motion Clips · PTZ"]
+  SRV -- "Wi-Fi Scan + Live Snapshots + Controls" --> SH["RobOS Smart Home\nAndroid &amp; Desktop Cameras Tab"]
+  </pre>
+
+  <p><strong>Decoupling Camera2 from the screen.</strong> In <a href="https://github.com/nddipiazza/robos/blob/main/packages/ip-camera-android/app/src/main/java/com/robos/ipcamera/android/Camera2Engine.kt"><code>Camera2Engine.kt</code></a>, the <code>CameraCaptureSession</code> targets a single off-screen <code>ImageReader.newInstance(w, h, ImageFormat.YUV_420_888, 3)</code> on a dedicated <code>HandlerThread("robos-camera2")</code>. When <code>MainActivity</code> is visible on screen, it receives a throttled ~4 fps preview bitmap; when you leave the app or turn the display off with the Power button, UI bitmap decoding drops to zero while the network stream continues uninterrupted. For wall mounts where you want a faint status clock at night, tapping <strong>Dim Screen</strong> switches to an <strong>OLED Blackout</strong> overlay (<code>screenBrightness = 0.01f</code> on pure <code>#000000</code>) that drifts slowly every 15 seconds to avoid burn-in.</p>
+
+  <p><strong>Zero-GC rotation, 5×7 pixel OSD, and luma motion detection.</strong> <a href="https://github.com/nddipiazza/robos/blob/main/packages/ip-camera-android/app/src/main/java/com/robos/ipcamera/core/FrameProcessor.kt"><code>FrameProcessor.kt</code></a> copies the three Camera2 planes into pre-allocated byte arrays, rotates <code>0°</code> / <code>90°</code> / <code>180°</code> / <code>270°</code> directly in YUV space, burns a crisp 5×7 bitmap timestamp bar (<code>XT2125-4 CAMERA | 2026-11-19 15:18:47</code>) straight into the NV21 bytes without touching <code>android.graphics.Canvas</code>, and downsamples a <code>96 × 54</code> grid from the <code>Y</code> luminance plane for on-camera motion detection matching <code>packages/camera-watch/lib/motion-detector.js</code>.</p>
+
+  <p><strong>Two real bugs caught during live verification.</strong> First, our initial snapshot from the Moto G100 came back upside down when the phone lay in reverse landscape (<code>Surface.ROTATION_270</code>): Android's <code>OrientationEventListener</code> reports degrees clockwise while <code>Surface.ROTATION_*</code> is counter-clockwise, so back-facing sensors need <code>(sensorOrientation + orientationDegrees) % 360</code> seeded from <code>Display.rotation</code> at startup before gravity events fire. Second, our JUnit suite (<a href="https://github.com/nddipiazza/robos/blob/main/packages/ip-camera-android/app/src/test/java/com/robos/ipcamera/core/IpCameraCoreTest.kt"><code>IpCameraCoreTest.kt</code></a>) caught a subtle WS-Security bug before deployment: a naive <code>&lt;Username[^&gt;]*&gt;</code> regex matched the enclosing <code>&lt;UsernameToken&gt;</code> tag instead of <code>&lt;Username&gt;</code> when validating OASIS <code>PasswordDigest</code> (<code>Base64(SHA1(Nonce + Created + Password))</code>).</p>
+
+  <h2>On the Moto G100: IP Camera, Smart Home Cameras tab, and RobOS Home</h2>
+  <div class="blog-fig-grid" style="grid-template-columns:repeat(auto-fit, minmax(220px, 1fr))">
+    <figure class="blog-fig">
+      <img src="{{ '/assets/blog/robos-ip-camera-android-surveillance/02-phone-ip-camera-live.png' | relative_url }}" alt="RobOS IP Camera running on the Moto G100 showing XT2125-4 Camera Live in Living Room, 720x1280 at 10 fps with 1 viewer watching, Switch to Front, 1x 2x 4x zoom chips, Flashlight toggle, and copyable MJPEG and ONVIF addresses" style="max-height:620px;object-fit:contain;margin:0 auto;display:block" loading="lazy">
+      <figcaption><strong>RobOS IP Camera</strong> (<a href="{{ '/ip-camera-android/' | relative_url }}"><code>packages/ip-camera-android</code></a>): live preview showing <code>1 watching</code> while Camera Watch streams over Wi-Fi.</figcaption>
+    </figure>
+    <figure class="blog-fig">
+      <img src="{{ '/assets/blog/robos-ip-camera-android-surveillance/03-phone-smart-home-cameras-tab.png' | relative_url }}" alt="RobOS Smart Home for Android showing the new Cameras tab with Find cameras, Add by IP, IP Camera App buttons, and XT2125-4 Camera Live in Living Room at 192.168.1.65:8080 with 1x, 2x, Light and Flip controls" style="max-height:620px;object-fit:contain;margin:0 auto;display:block" loading="lazy">
+      <figcaption><strong>Smart Home → Cameras</strong> (<a href="{{ '/smart-home-android/' | relative_url }}"><code>packages/smart-home-android</code></a>): found over Wi-Fi with live preview and remote zoom, light, and lens controls.</figcaption>
+    </figure>
+    <figure class="blog-fig">
+      <img src="{{ '/assets/blog/robos-ip-camera-android-surveillance/04-phone-robos-home-launcher.png' | relative_url }}" alt="RobOS Home launcher on the Moto G100 showing IP Camera, Preferences, and Smart Home first above AudioFX, Files, Firefox, Music, and Settings" style="max-height:620px;object-fit:contain;margin:0 auto;display:block" loading="lazy">
+      <figcaption><strong>RobOS Home</strong> (<a href="{{ '/robos-launcher-android/' | relative_url }}"><code>packages/robos-launcher-android</code></a>): <strong>IP Camera</strong> alongside <strong>Preferences</strong> and <strong>Smart Home</strong>, also bundled in <code>infra/android</code>.</figcaption>
+    </figure>
+  </div>
+
+  <p><strong>Solid-state PTZ without motors.</strong> Because the Moto G100's Camera2 HAL exposes <code>SENSOR_INFO_ACTIVE_ARRAY_SIZE</code> and <code>SCALER_CROP_REGION</code>, <a href="https://github.com/nddipiazza/robos/blob/main/packages/ip-camera-android/app/src/main/java/com/robos/ipcamera/core/HttpOnvifServer.kt"><code>HttpOnvifServer.kt</code></a> maps ONVIF <code>ContinuousMove</code> (pan, tilt, zoom) and <code>GotoPreset</code> directly onto silent sensor crop windows across the high-resolution sensor, plus hardware presets for <code>1x Wide (Back)</code>, <code>2x Zoom</code>, <code>4x Zoom</code>, <code>Front Camera</code>, and <code>Toggle Flashlight</code>.</p>
+
+  <h2>Verify it yourself: screen-off streaming, ONVIF discovery &amp; tests</h2>
+  <p>With the phone unlocked over USB on the same Wi-Fi network, we built and installed the APKs, discovered the phone from desktop Camera Watch via WS-Discovery, and powered the phone's screen completely off with <code>KEYCODE_SLEEP</code> (<code>mAwake=false</code>) to confirm frames kept flowing at <code>10.0 fps</code>:</p>
+
+  <div class="blog-log"># 1. Run JVM unit tests for RobOS IP Camera, Smart Home Android, and desktop Camera Watch
+(cd packages/ip-camera-android &amp;&amp; ./gradlew testDebugUnitTest)
+(cd packages/smart-home-android &amp;&amp; ./gradlew testDebugUnitTest)
+node --test packages/robos-test/tests/camera-watch/unit.test.js
+
+# 2. Build &amp; install onto any Android 11+ phone with USB debugging enabled
+(cd packages/ip-camera-android &amp;&amp; ./gradlew assembleDebug &amp;&amp; adb install -r app/build/outputs/apk/debug/app-debug.apk)
+(cd packages/smart-home-android &amp;&amp; ./gradlew assembleDebug &amp;&amp; adb install -r app/build/outputs/apk/debug/app-debug.apk)
+
+# 3. Verify ONVIF WS-Discovery + live telemetry + screen-off persistence over Wi-Fi
+curl -s http://192.168.1.65:8080/api/status | python3 -m json.tool
+adb shell input keyevent KEYCODE_SLEEP   # mAwake=false, mScreenOnFully=false
+sleep 5                                  # framesServed: 1087 -&gt; 1151 (+64 frames with display off)
+curl -s -o snapshot.jpg http://192.168.1.65:8080/snapshot.jpg</div>
+
+  <p><strong>Limits to keep in mind.</strong> Running a camera sensor and Wi-Fi radio 24/7 needs continuous wall power; the Live tab warns whenever the phone is discharging on battery. On Android 15+, background restrictions may prevent <code>BOOT_COMPLETED</code> from starting a camera foreground service directly on stock ROMs without opening the activity or tapping the boot-resume notification. And streams on your LAN use HTTP/MJPEG by default for universal <code>ffmpeg</code> and browser compatibility—turn on Keystore-backed password protection on shared networks, and use <a href="{{ '/camera-watcher/' | relative_url }}">Camera Watch's mutual-TLS 1.3 invites</a> when sharing views between computers.</p>
+</div>
+<div class="blog-links">
+  <a href="{{ '/ip-camera-android/' | relative_url }}">RobOS IP Camera →</a>
+  <a href="{{ '/camera-watcher/' | relative_url }}">Camera Watch guide →</a>
+  <a href="{{ '/smart-home-android/' | relative_url }}">Smart Home for Android →</a>
+  <a href="{{ '/mobile/' | relative_url }}">RobOS Mobile →</a>
+  <span class="blog-commits">Commits: <a href="https://github.com/nddipiazza/robos/commit/a3276ac3">a3276ac3</a></span>
+</div>
