@@ -2491,6 +2491,9 @@ kbd {
   color: #67e8f9;
   font-weight: 700;
 }
+.sb-panel-jobs {
+  padding: 0 2px;
+}
 .sb-lbl {
   font-size: 9px;
   font-weight: 750;

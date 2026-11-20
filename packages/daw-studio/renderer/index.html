@@ -480,6 +480,10 @@
         <span class="sb-val mono" id="sb-tracks-summary">0 ch</span>
       </div>
 
+      <div class="sb-panel sb-panel-jobs" id="sb-panel-jobs" title="Background Export &amp; Processing Jobs (click spinner/pill for status)">
+        <robos-job-status id="daw-job-status" idle-label="JOBS"></robos-job-status>
+      </div>
+
       <div class="sb-panel sb-panel-clickable" id="sb-panel-engine" title="Click to open Hardware I/O &amp; Audio Device Settings">
         <span class="sb-lbl">ENGINE</span>
         <span class="sb-val mono" id="sb-engine-summary">48.0 kHz</span>
@@ -1223,6 +1227,14 @@
     </div>
   </div>
 
+  <script src="../../robos-ui/robos-job-status.js"></script>
+  <script>
+    if (!window.RobosJobStatus) {
+      const jobScript = document.createElement('script');
+      jobScript.src = '/usr/local/share/robos/robos-ui/robos-job-status.js';
+      document.head.appendChild(jobScript);
+    }
+  </script>
   <script src="daw-icons.js"></script>
   <script src="daw-editing.js"></script>
   <script src="app.js"></script>

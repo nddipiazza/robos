@@ -10,6 +10,8 @@
  *     auto-loads via window.api.listPeople() or 'robos-people-load' event
  *   - <robos-voice-button> — voice dictation button with live streaming,
  *     guidance prompts, audio wave, and stop & send payload
+ *   - <robos-job-status> — reusable bottom-toolbar job spinner & status
+ *     popover (`robos-job-status.js`, `window.RobosJobs`)
  *
  * Usage:
  *   <script src="/path/to/robos-ui.js"></script>
@@ -3344,6 +3346,20 @@ robos-voice-button {
     customElements.define('robos-voice-button', VoiceButtonClass);
   }
 
+  // Auto-load <robos-job-status> / window.RobosJobs if not yet loaded
+  if (!global.RobosJobStatus) {
+    if (typeof require === 'function') {
+      try { require('./robos-job-status.js'); } catch {}
+    } else if (typeof document !== 'undefined' && document.currentScript && document.currentScript.src) {
+      try {
+        const jobScriptUrl = new URL('robos-job-status.js', document.currentScript.src).href;
+        const jobScript = document.createElement('script');
+        jobScript.src = jobScriptUrl;
+        (document.head || document.documentElement).appendChild(jobScript);
+      } catch {}
+    }
+  }
+
   // Export
   global.RobosVoiceButton = VoiceButtonClass;
   global.RobosUI = {
@@ -3351,6 +3367,9 @@ robos-voice-button {
     RobosPersonSelectorTextbox,
     RobosQuestionWizard,
     RobosVoiceButton: VoiceButtonClass,
+    get RobosJobStatus() { return global.RobosJobStatus; },
+    get RobosJobManager() { return global.RobosJobManager; },
+    get RobosJobs() { return global.RobosJobs; },
     DEFAULT_COMMANDS,
   };
 

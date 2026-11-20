@@ -43,6 +43,24 @@ let exportPrefs = {
   excludeClick: true,
 };
 let isExportingMixdown = false;
+let activeDrumkitJobHandle = null;
+
+function runDawJob(spec, asyncFn) {
+  const jobsApi = window.RobosJobs;
+  if (jobsApi && typeof jobsApi.run === 'function') {
+    return jobsApi.run(spec, asyncFn);
+  }
+  const noopHandle = {
+    id: 'noop',
+    update: () => {},
+    step: () => {},
+    complete: () => {},
+    fail: () => {},
+    cancel: () => {},
+    getSnapshot: () => null,
+  };
+  return Promise.resolve().then(() => asyncFn(noopHandle));
+}
 let inlineRenamingTrackId = null;
 let timelineDragState = null;
 let hoverLinkedPreview = null; // { key: string, zone: string, clipIds: Set<string> }
@@ -5700,46 +5718,67 @@ async function removeDrumsUnderTrack(track) {
   const prevSnap = DE.cloneDeep(currentProject);
   showStatus(`Analyzing "${track.name}" with Gemini RobOS Agent & separating drumless stem...`);
 
-  let progressUnsub = null;
-  if (typeof window.robos?.onRemoveDrumsProgress === 'function') {
-    progressUnsub = window.robos.onRemoveDrumsProgress((p) => {
-      if (p?.message) showStatus(p.message);
-    });
-  }
-
-  try {
-    const res = await window.robos.removeDrumsFromTrack({
-      trackId: track.id,
-      preferredProvider: 'antigravity',
-      project: currentProject,
-    });
-    if (!res?.ok || !res.project) {
-      showStatus(`Remove Drums failed: ${res?.error || 'Unknown error'}`, true);
-      return;
+  await runDawJob({
+    title: `Remove Drums (${track.name})`,
+    category: 'STEMS',
+    detail: `Analyzing "${track.name}" & separating drumless stem...`,
+    progress: 15,
+  }, async (job) => {
+    let progressUnsub = null;
+    if (typeof window.robos?.onRemoveDrumsProgress === 'function') {
+      progressUnsub = window.robos.onRemoveDrumsProgress((p) => {
+        if (p?.message) {
+          showStatus(p.message);
+          job.update({
+            detail: p.message,
+            ...(Number.isFinite(Number(p.percent)) ? { progress: Number(p.percent) } : {}),
+          });
+        }
+      });
     }
 
-    historyStack.pushSnapshot(prevSnap, `Remove Drums (${track.name})`);
-    currentProject = res.project;
-    for (const c of (res.drumlessTrack?.clips || [])) {
-      if (c.wavFile) decodedBufferCache.delete(c.wavFile);
-    }
-    if (res.drumlessTrack?.id) {
-      selectedTrackIds = new Set([res.drumlessTrack.id]);
-      anchorTrackId = res.drumlessTrack.id;
-    }
-    selectedClipIds = new Set(res.createdClipIds || []);
+    try {
+      const res = await window.robos.removeDrumsFromTrack({
+        trackId: track.id,
+        preferredProvider: 'antigravity',
+        project: currentProject,
+      });
+      if (!res?.ok || !res.project) {
+        const errMsg = res?.error || 'Unknown error';
+        showStatus(`Remove Drums failed: ${errMsg}`, true);
+        job.fail(errMsg);
+        return res;
+      }
 
-    markDirty(true);
-    renderStudio();
-    showStatus(
-      `Created "${res.drumlessTrack?.name || 'No Drums'}" directly below "${track.name}" (muted original stem · ${res.provider}) — press Space to play!`
-    );
-  } finally {
-    if (typeof progressUnsub === 'function') {
-      try { progressUnsub(); } catch {}
+      historyStack.pushSnapshot(prevSnap, `Remove Drums (${track.name})`);
+      currentProject = res.project;
+      for (const c of (res.drumlessTrack?.clips || [])) {
+        if (c.wavFile) decodedBufferCache.delete(c.wavFile);
+      }
+      if (res.drumlessTrack?.id) {
+        selectedTrackIds = new Set([res.drumlessTrack.id]);
+        anchorTrackId = res.drumlessTrack.id;
+      }
+      selectedClipIds = new Set(res.createdClipIds || []);
+
+      markDirty(true);
+      renderStudio();
+      const firstOutWav = res.drumlessTrack?.clips?.[0]?.wavFile || '';
+      const doneMsg = `Created "${res.drumlessTrack?.name || 'No Drums'}" directly below "${track.name}" (muted original stem · ${res.provider}) — press Space to play!`;
+      showStatus(doneMsg);
+      job.complete({
+        detail: `Created "${res.drumlessTrack?.name || 'No Drums'}" via ${res.provider}`,
+        outputPath: firstOutWav,
+        ...(firstOutWav ? { actionLabel: 'Reveal' } : {}),
+      });
+      return res;
+    } finally {
+      if (typeof progressUnsub === 'function') {
+        try { progressUnsub(); } catch {}
+      }
+      isRemovingDrums = false;
     }
-    isRemovingDrums = false;
-  }
+  });
 }
 
 async function generateClickTrackUnderTrack(track) {
@@ -5759,58 +5798,79 @@ async function generateClickTrackUnderTrack(track) {
   const prevSnap = DE.cloneDeep(currentProject);
   showStatus(`Analyzing "${track.name}" with Gemini RobOS Agent & generating aligned click track + 1-measure count-off...`);
 
-  let progressUnsub = null;
-  if (typeof window.robos?.onClickTrackProgress === 'function') {
-    progressUnsub = window.robos.onClickTrackProgress((p) => {
-      if (p?.message) showStatus(p.message);
-    });
-  }
-
-  try {
-    const res = await window.robos.generateClickTrack({
-      trackId: track.id,
-      preferredProvider: 'antigravity',
-      project: currentProject,
-    });
-    if (!res?.ok || !res.project) {
-      showStatus(`Generate Click Track failed: ${res?.error || 'Unknown error'}`, true);
-      return;
+  await runDawJob({
+    title: `Generate Click Track (${track.name})`,
+    category: 'CLICK AI',
+    detail: `Analyzing tempo & beats on "${track.name}"...`,
+    progress: 15,
+  }, async (job) => {
+    let progressUnsub = null;
+    if (typeof window.robos?.onClickTrackProgress === 'function') {
+      progressUnsub = window.robos.onClickTrackProgress((p) => {
+        if (p?.message) {
+          showStatus(p.message);
+          job.update({
+            detail: p.message,
+            ...(Number.isFinite(Number(p.percent)) ? { progress: Number(p.percent) } : {}),
+          });
+        }
+      });
     }
 
-    historyStack.pushSnapshot(prevSnap, `Generate Click Track (${track.name})`);
-    currentProject = res.project;
-    if (res.clickClip?.wavFile) {
-      decodedBufferCache.delete(res.clickClip.wavFile);
-    }
-    if (res.clickTrack?.id) {
-      selectedTrackIds = new Set([res.clickTrack.id]);
-      anchorTrackId = res.clickTrack.id;
-    }
-    selectedClipIds = res.clickClip?.id ? new Set([res.clickClip.id]) : new Set();
+    try {
+      const res = await window.robos.generateClickTrack({
+        trackId: track.id,
+        preferredProvider: 'antigravity',
+        project: currentProject,
+      });
+      if (!res?.ok || !res.project) {
+        const errMsg = res?.error || 'Unknown error';
+        showStatus(`Generate Click Track failed: ${errMsg}`, true);
+        job.fail(errMsg);
+        return res;
+      }
 
-    playheadSec = Number(res.countInStartSec) || 0;
-    playReturnAnchorSec = playheadSec;
-    const tcEl = document.getElementById('transport-timecode');
-    if (tcEl) tcEl.textContent = formatTimecode(playheadSec);
-    ensurePlayheadInViewport(playheadSec);
+      historyStack.pushSnapshot(prevSnap, `Generate Click Track (${track.name})`);
+      currentProject = res.project;
+      if (res.clickClip?.wavFile) {
+        decodedBufferCache.delete(res.clickClip.wavFile);
+      }
+      if (res.clickTrack?.id) {
+        selectedTrackIds = new Set([res.clickTrack.id]);
+        anchorTrackId = res.clickTrack.id;
+      }
+      selectedClipIds = res.clickClip?.id ? new Set([res.clickClip.id]) : new Set();
 
-    markDirty(true);
-    renderStudio();
-    const shiftNote = res.timelineShiftSec > 0
-      ? ` (shifted session +${res.timelineShiftSec.toFixed(2)}s to fit 1-bar count-in)`
-      : '';
-    const tempoDesc = Array.isArray(res.tempoSegments) && res.tempoSegments.length >= 2
-      ? `${res.tempoSegments.map(s => Math.round(s.bpm)).join(' -> ')} BPM (${res.tempoSegments.length} sections)`
-      : `${res.bpm} BPM`;
-    showStatus(
-      `Generated Click Track under "${track.name}" (${tempoDesc} · ${res.timeSignature}, 1-bar count-in @ ${formatTimecode(playheadSec)}) via ${res.provider}${shiftNote} — press Space to play!`
-    );
-  } finally {
-    if (typeof progressUnsub === 'function') {
-      try { progressUnsub(); } catch {}
+      playheadSec = Number(res.countInStartSec) || 0;
+      playReturnAnchorSec = playheadSec;
+      const tcEl = document.getElementById('transport-timecode');
+      if (tcEl) tcEl.textContent = formatTimecode(playheadSec);
+      ensurePlayheadInViewport(playheadSec);
+
+      markDirty(true);
+      renderStudio();
+      const shiftNote = res.timelineShiftSec > 0
+        ? ` (shifted session +${res.timelineShiftSec.toFixed(2)}s to fit 1-bar count-in)`
+        : '';
+      const tempoDesc = Array.isArray(res.tempoSegments) && res.tempoSegments.length >= 2
+        ? `${res.tempoSegments.map(s => Math.round(s.bpm)).join(' -> ')} BPM (${res.tempoSegments.length} sections)`
+        : `${res.bpm} BPM`;
+      showStatus(
+        `Generated Click Track under "${track.name}" (${tempoDesc} · ${res.timeSignature}, 1-bar count-in @ ${formatTimecode(playheadSec)}) via ${res.provider}${shiftNote} — press Space to play!`
+      );
+      job.complete({
+        detail: `Aligned Click (${tempoDesc} · ${res.timeSignature})`,
+        outputPath: res.clickClip?.wavFile || '',
+        ...(res.clickClip?.wavFile ? { actionLabel: 'Reveal' } : {}),
+      });
+      return res;
+    } finally {
+      if (typeof progressUnsub === 'function') {
+        try { progressUnsub(); } catch {}
+      }
+      isGeneratingClickTrack = false;
     }
-    isGeneratingClickTrack = false;
-  }
+  });
 }
 
 async function createLyricsTrackUnderTrack(track, { clipId = null } = {}) {
@@ -5830,53 +5890,74 @@ async function createLyricsTrackUnderTrack(track, { clipId = null } = {}) {
   const prevSnap = DE.cloneDeep(currentProject);
   showStatus(`Creating MIDI-mapped Karaoke Lyrics (.KAR 0xFF 05) for "${track.name}"...`);
 
-  let progressUnsub = null;
-  if (typeof window.robos?.onLyricsProgress === 'function') {
-    progressUnsub = window.robos.onLyricsProgress((p) => {
-      if (p?.message) showStatus(p.message);
-    });
-  }
-
-  try {
-    const res = await window.robos.createLyricsTrack({
-      trackId: track.id,
-      clipId,
-      project: currentProject,
-    });
-    if (!res?.ok || !res.project) {
-      showStatus(`Create Lyrics Track failed: ${res?.error || 'Unknown error'}`, true);
-      return;
+  await runDawJob({
+    title: `Create Lyrics Track (${track.name})`,
+    category: 'MIDI .KAR',
+    detail: `Mapping MIDI Karaoke (.KAR 0xFF 05) for "${track.name}"...`,
+    progress: 18,
+  }, async (job) => {
+    let progressUnsub = null;
+    if (typeof window.robos?.onLyricsProgress === 'function') {
+      progressUnsub = window.robos.onLyricsProgress((p) => {
+        if (p?.message) {
+          showStatus(p.message);
+          job.update({
+            detail: p.message,
+            ...(Number.isFinite(Number(p.percent)) ? { progress: Number(p.percent) } : {}),
+          });
+        }
+      });
     }
 
-    historyStack.pushSnapshot(prevSnap, `Create Lyrics Track (${track.name})`);
-    currentProject = res.project;
-    if (res.lyricsTrack?.id) {
-      selectedTrackIds = new Set([res.lyricsTrack.id]);
-      anchorTrackId = res.lyricsTrack.id;
-      // If no video track was already selected, point Video Output to the Karaoke stage and open the Video Display!
-      if (!selectedVideoOutputTrackId || !getVideoCapableTracks().some(t => t.id === selectedVideoOutputTrackId && isTrackVideoCapable(t))) {
-        selectedVideoOutputTrackId = res.lyricsTrack.id;
+    try {
+      const res = await window.robos.createLyricsTrack({
+        trackId: track.id,
+        clipId,
+        project: currentProject,
+      });
+      if (!res?.ok || !res.project) {
+        const errMsg = res?.error || 'Unknown error';
+        showStatus(`Create Lyrics Track failed: ${errMsg}`, true);
+        job.fail(errMsg);
+        return res;
       }
-    }
-    selectedClipIds = res.lyricsClip?.id ? new Set([res.lyricsClip.id]) : new Set();
 
-    if (!videoDockOpen && !videoPopoutOpen) {
-      videoDockOpen = true;
-    }
+      historyStack.pushSnapshot(prevSnap, `Create Lyrics Track (${track.name})`);
+      currentProject = res.project;
+      if (res.lyricsTrack?.id) {
+        selectedTrackIds = new Set([res.lyricsTrack.id]);
+        anchorTrackId = res.lyricsTrack.id;
+        // If no video track was already selected, point Video Output to the Karaoke stage and open the Video Display!
+        if (!selectedVideoOutputTrackId || !getVideoCapableTracks().some(t => t.id === selectedVideoOutputTrackId && isTrackVideoCapable(t))) {
+          selectedVideoOutputTrackId = res.lyricsTrack.id;
+        }
+      }
+      selectedClipIds = res.lyricsClip?.id ? new Set([res.lyricsClip.id]) : new Set();
 
-    invalidateStaticTimelineCaches();
-    markDirty(true);
-    renderStudio();
-    syncVideoOutputMonitor({ forcePush: true });
-    showStatus(
-      `Created MIDI Karaoke Track "${res.lyricsTrack?.name}" (${res.lineCount} lines · ${res.wordCount} MIDI 0xFF 05 words via ${res.source}) — press Space to play Karaoke on Video Output!`
-    );
-  } finally {
-    if (typeof progressUnsub === 'function') {
-      try { progressUnsub(); } catch {}
+      if (!videoDockOpen && !videoPopoutOpen) {
+        videoDockOpen = true;
+      }
+
+      invalidateStaticTimelineCaches();
+      markDirty(true);
+      renderStudio();
+      syncVideoOutputMonitor({ forcePush: true });
+      showStatus(
+        `Created MIDI Karaoke Track "${res.lyricsTrack?.name}" (${res.lineCount} lines · ${res.wordCount} MIDI 0xFF 05 words via ${res.source}) — press Space to play Karaoke on Video Output!`
+      );
+      job.complete({
+        detail: `${res.lineCount} lines · ${res.wordCount} MIDI words (${res.source})`,
+        outputPath: res.lyricsClip?.karFile || '',
+        ...(res.lyricsClip?.karFile ? { actionLabel: 'Reveal' } : {}),
+      });
+      return res;
+    } finally {
+      if (typeof progressUnsub === 'function') {
+        try { progressUnsub(); } catch {}
+      }
+      isCreatingLyricsTrack = false;
     }
-    isCreatingLyricsTrack = false;
-  }
+  });
 }
 
 async function importAudioWavFiles({ startSec = playheadSec, targetTrackId = null, filePaths = undefined } = {}) {
@@ -6367,170 +6448,193 @@ async function renderAndExportMixdown({
   }
 
   const renderRate = 48000;
+  const spec = EXPORT_FORMAT_CATALOG[format] || EXPORT_FORMAT_CATALOG.mp3;
   const statusEl = document.getElementById('export-modal-status');
   const setProg = (msg) => {
     showStatus(msg);
     if (statusEl) statusEl.textContent = msg;
   };
 
-  setProg(`Decoding stems & rendering stereo mixdown (${formatTimecode(renderStartSec)} -> ${formatTimecode(rawEndSec)})...`);
+  return runDawJob({
+    title: `Export ${spec.ext.toUpperCase()} Mixdown`,
+    category: 'MIXDOWN',
+    detail: `Decoding stems (${formatTimecode(renderStartSec)} -> ${formatTimecode(rawEndSec)})...`,
+    progress: 12,
+  }, async (job) => {
+    setProg(`Decoding stems & rendering stereo mixdown (${formatTimecode(renderStartSec)} -> ${formatTimecode(rawEndSec)})...`);
 
-  for (const track of playableTracks) {
-    for (const clip of (track.clips || [])) {
-      if (clip.muted) continue;
-      const cStart = Number(clip.startSec) || 0;
-      const cEnd = cStart + (Number(clip.durationSec) || 0);
-      if (cEnd <= renderStartSec || cStart >= renderEndSec) continue;
-      if (clip.wavFile) {
-        try { await loadDecodedAudio(clip.wavFile); } catch {}
-      }
-      if (track.soundReplacement?.enabled && Array.isArray(clip.transients)) {
-        for (const hit of clip.transients) {
-          const sp = resolveDrumSamplePath(track.soundReplacement.kitId, track.soundReplacement.pieceId, hit.velocity);
-          if (sp) {
-            try { await loadDecodedAudio(sp); } catch {}
+    for (const track of playableTracks) {
+      for (const clip of (track.clips || [])) {
+        if (clip.muted) continue;
+        const cStart = Number(clip.startSec) || 0;
+        const cEnd = cStart + (Number(clip.durationSec) || 0);
+        if (cEnd <= renderStartSec || cStart >= renderEndSec) continue;
+        if (clip.wavFile) {
+          try { await loadDecodedAudio(clip.wavFile); } catch {}
+        }
+        if (track.soundReplacement?.enabled && Array.isArray(clip.transients)) {
+          for (const hit of clip.transients) {
+            const sp = resolveDrumSamplePath(track.soundReplacement.kitId, track.soundReplacement.pieceId, hit.velocity);
+            if (sp) {
+              try { await loadDecodedAudio(sp); } catch {}
+            }
           }
         }
       }
     }
-  }
 
-  const totalFrames = Math.max(256, Math.ceil(sliceSpanSec * renderRate));
-  const offlineCtx = new OfflineAudioContext(2, totalFrames, renderRate);
-  const offlineMasterBus = createMasterDrumBus(offlineCtx);
+    job.update({
+      progress: 42,
+      detail: `Rendering stereo DSP master (${playableTracks.length} track(s), ${sliceSpanSec.toFixed(1)}s)...`,
+    });
 
-  for (const track of playableTracks) {
-    const { inputGain, trackMixBus, srActive, blend } = buildTrackWebAudioChain(offlineCtx, track, offlineMasterBus);
-    for (const clip of (track.clips || [])) {
-      if (clip.muted) continue;
-      const clipStart = Math.max(0, Number(clip.startSec) || 0);
-      const clipOff = Math.max(0, Number(clip.offsetSec) || 0);
-      const buf = decodedBufferCache.get(clip.wavFile);
-      const clipDur = Math.max(0.04, Number(clip.durationSec) || (buf ? Math.max(0.04, buf.duration - clipOff) : 0));
-      const clipEnd = clipStart + clipDur;
+    const totalFrames = Math.max(256, Math.ceil(sliceSpanSec * renderRate));
+    const offlineCtx = new OfflineAudioContext(2, totalFrames, renderRate);
+    const offlineMasterBus = createMasterDrumBus(offlineCtx);
 
-      if (buf && clipOff < buf.duration && clipEnd > renderStartSec + 0.002 && clipStart < renderEndSec - 0.002) {
-        const segStart = Math.max(clipStart, renderStartSec);
-        const segEnd = Math.min(clipEnd, renderEndSec);
-        const intoClip = segStart - clipStart;
-        const srcOffset = clipOff + intoClip;
-        const playDur = Math.min(segEnd - segStart, Math.max(0.01, buf.duration - srcOffset));
+    for (const track of playableTracks) {
+      const { inputGain, trackMixBus, srActive, blend } = buildTrackWebAudioChain(offlineCtx, track, offlineMasterBus);
+      for (const clip of (track.clips || [])) {
+        if (clip.muted) continue;
+        const clipStart = Math.max(0, Number(clip.startSec) || 0);
+        const clipOff = Math.max(0, Number(clip.offsetSec) || 0);
+        const buf = decodedBufferCache.get(clip.wavFile);
+        const clipDur = Math.max(0.04, Number(clip.durationSec) || (buf ? Math.max(0.04, buf.duration - clipOff) : 0));
+        const clipEnd = clipStart + clipDur;
 
-        if (playDur > 0.008 && srcOffset < buf.duration) {
-          const ctxStart = Math.max(0, segStart - renderStartSec);
-          const ctxEnd = ctxStart + playDur;
-          const src = offlineCtx.createBufferSource();
-          src.buffer = buf;
-          const clipGainNode = offlineCtx.createGain();
-          const clipGainLin = DE.dbToGain(Number(clip.gainDb) || 0);
-          const fadeIn = Math.max(0, Number(clip.fadeInSec) || 0);
-          const fadeOut = Math.max(0, Number(clip.fadeOutSec) || 0);
+        if (buf && clipOff < buf.duration && clipEnd > renderStartSec + 0.002 && clipStart < renderEndSec - 0.002) {
+          const segStart = Math.max(clipStart, renderStartSec);
+          const segEnd = Math.min(clipEnd, renderEndSec);
+          const intoClip = segStart - clipStart;
+          const srcOffset = clipOff + intoClip;
+          const playDur = Math.min(segEnd - segStart, Math.max(0.01, buf.duration - srcOffset));
 
-          if (intoClip < 0.002 && fadeIn > 0.002) {
-            clipGainNode.gain.setValueAtTime(0.0001, ctxStart);
-            clipGainNode.gain.linearRampToValueAtTime(clipGainLin, ctxStart + Math.min(fadeIn, playDur));
-          } else {
-            clipGainNode.gain.setValueAtTime(clipGainLin, ctxStart);
+          if (playDur > 0.008 && srcOffset < buf.duration) {
+            const ctxStart = Math.max(0, segStart - renderStartSec);
+            const ctxEnd = ctxStart + playDur;
+            const src = offlineCtx.createBufferSource();
+            src.buffer = buf;
+            const clipGainNode = offlineCtx.createGain();
+            const clipGainLin = DE.dbToGain(Number(clip.gainDb) || 0);
+            const fadeIn = Math.max(0, Number(clip.fadeInSec) || 0);
+            const fadeOut = Math.max(0, Number(clip.fadeOutSec) || 0);
+
+            if (intoClip < 0.002 && fadeIn > 0.002) {
+              clipGainNode.gain.setValueAtTime(0.0001, ctxStart);
+              clipGainNode.gain.linearRampToValueAtTime(clipGainLin, ctxStart + Math.min(fadeIn, playDur));
+            } else {
+              clipGainNode.gain.setValueAtTime(clipGainLin, ctxStart);
+            }
+            if ((clipEnd - segEnd) < 0.002 && fadeOut > 0.002 && playDur > fadeOut) {
+              clipGainNode.gain.setValueAtTime(clipGainLin, Math.max(ctxStart, ctxEnd - fadeOut));
+              clipGainNode.gain.linearRampToValueAtTime(0.0001, ctxEnd);
+            }
+
+            src.connect(clipGainNode).connect(inputGain);
+            src.start(ctxStart, srcOffset, playDur);
           }
-          if ((clipEnd - segEnd) < 0.002 && fadeOut > 0.002 && playDur > fadeOut) {
-            clipGainNode.gain.setValueAtTime(clipGainLin, Math.max(ctxStart, ctxEnd - fadeOut));
-            clipGainNode.gain.linearRampToValueAtTime(0.0001, ctxEnd);
-          }
-
-          src.connect(clipGainNode).connect(inputGain);
-          src.start(ctxStart, srcOffset, playDur);
         }
-      }
 
-      if (srActive && Array.isArray(clip.transients)) {
-        const clipVelScale = clip.autoGainStaged ? 1.0 : DE.clamp(0.15, 1.4, DE.dbToGain((Number(clip.gainDb) || 0) * 0.25));
-        for (const hit of clip.transients) {
-          const absHitSec = clipStart + (Number(hit.timeSec) || 0);
-          if (absHitSec < renderStartSec || absHitSec > Math.min(clipEnd + 0.005, renderEndSec)) continue;
-          const sp = resolveDrumSamplePath(track.soundReplacement.kitId, track.soundReplacement.pieceId, hit.velocity);
-          const srBuf = sp ? decodedBufferCache.get(sp) : null;
-          if (!srBuf) continue;
-          const hitSrc = offlineCtx.createBufferSource();
-          hitSrc.buffer = srBuf;
-          const hitGain = offlineCtx.createGain();
-          hitGain.gain.value = blend * Math.max(0.25, Math.min(1.3, (Number(hit.velocity) || 0.8) * clipVelScale));
-          hitSrc.connect(hitGain).connect(trackMixBus);
-          hitSrc.start(Math.max(0, absHitSec - renderStartSec));
+        if (srActive && Array.isArray(clip.transients)) {
+          const clipVelScale = clip.autoGainStaged ? 1.0 : DE.clamp(0.15, 1.4, DE.dbToGain((Number(clip.gainDb) || 0) * 0.25));
+          for (const hit of clip.transients) {
+            const absHitSec = clipStart + (Number(hit.timeSec) || 0);
+            if (absHitSec < renderStartSec || absHitSec > Math.min(clipEnd + 0.005, renderEndSec)) continue;
+            const sp = resolveDrumSamplePath(track.soundReplacement.kitId, track.soundReplacement.pieceId, hit.velocity);
+            const srBuf = sp ? decodedBufferCache.get(sp) : null;
+            if (!srBuf) continue;
+            const hitSrc = offlineCtx.createBufferSource();
+            hitSrc.buffer = srBuf;
+            const hitGain = offlineCtx.createGain();
+            hitGain.gain.value = blend * Math.max(0.25, Math.min(1.3, (Number(hit.velocity) || 0.8) * clipVelScale));
+            hitSrc.connect(hitGain).connect(trackMixBus);
+            hitSrc.start(Math.max(0, absHitSec - renderStartSec));
+          }
         }
       }
     }
-  }
 
-  const rendered = await offlineCtx.startRendering();
-  const left = new Float32Array(rendered.getChannelData(0));
-  const right = new Float32Array(rendered.numberOfChannels > 1 ? rendered.getChannelData(1) : left);
-  const n = left.length;
+    const rendered = await offlineCtx.startRendering();
+    const left = new Float32Array(rendered.getChannelData(0));
+    const right = new Float32Array(rendered.numberOfChannels > 1 ? rendered.getChannelData(1) : left);
+    const n = left.length;
 
-  // Apply smooth 15ms half-cosine edge fades on From -> To slices so mid-song cuts never click!
-  if (edgeFade && n > 64) {
-    const fadeSamples = Math.min(Math.round(0.015 * renderRate), Math.floor(n * 0.25));
-    if (renderStartSec > 0.005) {
+    // Apply smooth 15ms half-cosine edge fades on From -> To slices so mid-song cuts never click!
+    if (edgeFade && n > 64) {
+      const fadeSamples = Math.min(Math.round(0.015 * renderRate), Math.floor(n * 0.25));
+      if (renderStartSec > 0.005) {
+        for (let i = 0; i < fadeSamples; i++) {
+          const w = 0.5 - 0.5 * Math.cos((Math.PI * i) / fadeSamples);
+          left[i] *= w;
+          right[i] *= w;
+        }
+      }
       for (let i = 0; i < fadeSamples; i++) {
+        const idx = n - 1 - i;
         const w = 0.5 - 0.5 * Math.cos((Math.PI * i) / fadeSamples);
-        left[i] *= w;
-        right[i] *= w;
+        left[idx] *= w;
+        right[idx] *= w;
       }
     }
-    for (let i = 0; i < fadeSamples; i++) {
-      const idx = n - 1 - i;
-      const w = 0.5 - 0.5 * Math.cos((Math.PI * i) / fadeSamples);
-      left[idx] *= w;
-      right[idx] *= w;
-    }
-  }
 
-  // Optional Peak Normalization to -0.3 dBFS (0.96605 linear)
-  if (normalize) {
-    let peak = 0;
-    for (let i = 0; i < n; i++) {
-      const al = Math.abs(left[i]);
-      const ar = Math.abs(right[i]);
-      if (al > peak) peak = al;
-      if (ar > peak) peak = ar;
-    }
-    if (peak > 0.0002) {
-      const scale = DE.dbToGain(-0.3) / peak;
+    // Optional Peak Normalization to -0.3 dBFS (0.96605 linear)
+    if (normalize) {
+      let peak = 0;
       for (let i = 0; i < n; i++) {
-        left[i] = DE.clamp(-0.999, 0.999, left[i] * scale);
-        right[i] = DE.clamp(-0.999, 0.999, right[i] * scale);
+        const al = Math.abs(left[i]);
+        const ar = Math.abs(right[i]);
+        if (al > peak) peak = al;
+        if (ar > peak) peak = ar;
+      }
+      if (peak > 0.0002) {
+        const scale = DE.dbToGain(-0.3) / peak;
+        for (let i = 0; i < n; i++) {
+          left[i] = DE.clamp(-0.999, 0.999, left[i] * scale);
+          right[i] = DE.clamp(-0.999, 0.999, right[i] * scale);
+        }
       }
     }
-  }
 
-  const spec = EXPORT_FORMAT_CATALOG[format] || EXPORT_FORMAT_CATALOG.mp3;
-  setProg(`Encoding .${spec.ext.toUpperCase()} (${quality || spec.defaultQuality} @ ${sampleRate} Hz)...`);
+    const encMsg = `Encoding .${spec.ext.toUpperCase()} (${quality || spec.defaultQuality} @ ${sampleRate} Hz)...`;
+    setProg(encMsg);
+    job.update({ progress: 76, detail: encMsg });
 
-  const wavBytes = (format === 'wav' && quality === 'pcm_s16le' && Number(sampleRate) === 48000)
-    ? DE.encodeStereoFloat32ToWavBytes(left, right, renderRate)
-    : encodeStereoFloat32IeeeWavBytes(left, right, renderRate);
+    const wavBytes = (format === 'wav' && quality === 'pcm_s16le' && Number(sampleRate) === 48000)
+      ? DE.encodeStereoFloat32ToWavBytes(left, right, renderRate)
+      : encodeStereoFloat32IeeeWavBytes(left, right, renderRate);
 
-  const safeTitle = String(currentProject?.name || 'mixdown').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'session';
-  const res = await window.robos.exportMixdown({
-    wavBase64: uint8ToBase64(wavBytes),
-    format,
-    quality: quality || spec.defaultQuality,
-    sampleRate: Number(sampleRate) || 48000,
-    title: currentProject?.name || 'RobOS DAW Mixdown',
-    defaultName: defaultName || `${safeTitle}-mixdown.${spec.ext}`,
-    targetFile,
+    const safeTitle = String(currentProject?.name || 'mixdown').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'session';
+    const res = await window.robos.exportMixdown({
+      wavBase64: uint8ToBase64(wavBytes),
+      format,
+      quality: quality || spec.defaultQuality,
+      sampleRate: Number(sampleRate) || 48000,
+      title: currentProject?.name || 'RobOS DAW Mixdown',
+      defaultName: defaultName || `${safeTitle}-mixdown.${spec.ext}`,
+      targetFile,
+    });
+
+    if (res?.canceled) {
+      setProg('Mixdown export canceled.');
+      job.cancel('Mixdown export canceled');
+      return res;
+    }
+    if (res?.ok) {
+      const doneText = `Exported .${(res.ext || spec.ext).toUpperCase()} mixdown (${sliceSpanSec.toFixed(1)}s) -> ${res.filePath}`;
+      showStatus(doneText);
+      job.complete({
+        detail: `Exported .${(res.ext || spec.ext).toUpperCase()} (${sliceSpanSec.toFixed(1)}s @ ${sampleRate} Hz)`,
+        outputPath: res.filePath,
+        actionLabel: 'Reveal',
+      });
+      return res;
+    }
+    const errText = res?.error || 'Unknown error';
+    showStatus(`Export failed: ${errText}`, true);
+    if (statusEl) statusEl.textContent = `Export failed: ${errText}`;
+    job.fail(errText);
+    return res;
   });
-
-  if (res?.canceled) {
-    setProg('Mixdown export canceled.');
-    return res;
-  }
-  if (res?.ok) {
-    showStatus(`Exported .${(res.ext || spec.ext).toUpperCase()} mixdown (${sliceSpanSec.toFixed(1)}s) -> ${res.filePath}`);
-    return res;
-  }
-  showStatus(`Export failed: ${res?.error || 'Unknown error'}`, true);
-  if (statusEl) statusEl.textContent = `Export failed: ${res?.error || 'Unknown error'}`;
-  return res;
 }
 
 async function renderFullSessionMixdownWavBase64ForKdenlive({ excludeClick = true, normalize = true } = {}) {
@@ -6666,42 +6770,66 @@ async function saveSessionToKdenliveProject({ forceSaveAs = false, targetPath = 
   }
 
   isSavingKdenlive = true;
+  const targetLeaf = String(kdenlivePath).split('/').pop() || 'session.kdenlive';
+  const hadExistingTarget = Boolean(currentProject.kdenliveFile && currentProject.kdenliveFile === kdenlivePath);
   try {
-    showStatus('Rendering lossless 48 kHz audio mixdown & syncing aligned video tracks to Kdenlive project...');
-    const wavBase64 = await renderFullSessionMixdownWavBase64ForKdenlive({
-      excludeClick: Boolean(exportPrefs.excludeClick),
-      normalize: true,
-    });
+    return await runDawJob({
+      title: hadExistingTarget ? `Sync Kdenlive (${targetLeaf})` : `Save to Kdenlive (${targetLeaf})`,
+      category: 'KDENLIVE',
+      detail: 'Rendering lossless 48 kHz stereo audio mixdown...',
+      progress: 18,
+    }, async (job) => {
+      showStatus('Rendering lossless 48 kHz audio mixdown & syncing aligned video tracks to Kdenlive project...');
+      const wavBase64 = await renderFullSessionMixdownWavBase64ForKdenlive({
+        excludeClick: Boolean(exportPrefs.excludeClick),
+        normalize: true,
+      });
 
-    await syncProjectToMain();
-    const res = await window.robos.saveKdenliveProject({
-      kdenlivePath,
-      wavBase64,
-      project: currentProject,
-    });
+      job.update({
+        progress: 68,
+        detail: `Aligning video tracks & writing MLT XML (${targetLeaf})...`,
+      });
 
-    if (!res?.ok) {
-      showStatus(`Save to Kdenlive Project failed: ${res?.error || 'Unknown error'}`, true);
+      await syncProjectToMain();
+      const res = await window.robos.saveKdenliveProject({
+        kdenlivePath,
+        wavBase64,
+        project: currentProject,
+      });
+
+      if (!res?.ok) {
+        const errMsg = res?.error || 'Unknown error';
+        showStatus(`Save to Kdenlive Project failed: ${errMsg}`, true);
+        job.fail(errMsg);
+        return res;
+      }
+
+      currentProject.kdenliveFile = res.kdenlivePath;
+      const kdBtn = document.getElementById('btn-project-save-kdenlive');
+      if (kdBtn) {
+        kdBtn.title = `Sync Audio Mixdown + Video Tracks to ${res.kdenlivePath} (Ctrl+Alt+K · Shift+Click for Save As)`;
+      }
+
+      const fileNameOnly = res.kdenlivePath.split('/').pop();
+      if (res.existedBefore) {
+        const syncMsg = `Synced Kdenlive project -> ${fileNameOnly} (${res.updatedTrackCount} updated, ${res.createdTrackCount} created · 1 audio mixdown + ${res.videoTrackCount} video track(s))`;
+        showStatus(syncMsg);
+        job.complete({
+          detail: `Synced ${fileNameOnly} (${res.updatedTrackCount} updated, ${res.createdTrackCount} created · 1 audio + ${res.videoTrackCount} video)`,
+          outputPath: res.kdenlivePath,
+          actionLabel: 'Reveal',
+        });
+      } else {
+        const createMsg = `Created Kdenlive project -> ${fileNameOnly} (1 audio mixdown track + ${res.videoTrackCount} aligned video track(s))`;
+        showStatus(createMsg);
+        job.complete({
+          detail: `Created ${fileNameOnly} (1 audio mixdown + ${res.videoTrackCount} video track(s))`,
+          outputPath: res.kdenlivePath,
+          actionLabel: 'Reveal',
+        });
+      }
       return res;
-    }
-
-    currentProject.kdenliveFile = res.kdenlivePath;
-    const kdBtn = document.getElementById('btn-project-save-kdenlive');
-    if (kdBtn) {
-      kdBtn.title = `Sync Audio Mixdown + Video Tracks to ${res.kdenlivePath} (Ctrl+Alt+K · Shift+Click for Save As)`;
-    }
-
-    const fileNameOnly = res.kdenlivePath.split('/').pop();
-    if (res.existedBefore) {
-      showStatus(
-        `Synced Kdenlive project -> ${fileNameOnly} (${res.updatedTrackCount} updated, ${res.createdTrackCount} created · 1 audio mixdown + ${res.videoTrackCount} video track(s))`
-      );
-    } else {
-      showStatus(
-        `Created Kdenlive project -> ${fileNameOnly} (1 audio mixdown track + ${res.videoTrackCount} aligned video track(s))`
-      );
-    }
-    return res;
+    });
   } finally {
     isSavingKdenlive = false;
   }
@@ -10346,10 +10474,45 @@ async function init() {
   window.robos.onDrumkitProgress((prog) => {
     const pBar = document.getElementById('drumkits-progress-bar');
     if (pBar) {
-      pBar.textContent = `Downloading ${prog.kitId}: ${prog.completed}/${prog.total} (${prog.file})…`;
+      pBar.textContent = `Downloading ${prog.kitId}: ${prog.completed}/${prog.total} (${prog.file})...`;
       pBar.classList.remove('hidden');
       if (prog.completed >= prog.total) {
         setTimeout(() => pBar.classList.add('hidden'), 1800);
+      }
+    }
+    if (window.RobosJobs && prog?.kitId) {
+      const pct = prog.total > 0 ? Math.round((prog.completed / prog.total) * 100) : null;
+      if (!activeDrumkitJobHandle || activeDrumkitJobHandle.kitId !== prog.kitId) {
+        activeDrumkitJobHandle = {
+          kitId: prog.kitId,
+          handle: window.RobosJobs.start({
+            title: `Install Drum Kit (${prog.kitId})`,
+            category: 'DRUM KIT',
+            detail: `Downloading ${prog.completed}/${prog.total} (${prog.file || ''})...`,
+            progress: pct,
+          }),
+        };
+      } else {
+        activeDrumkitJobHandle.handle.update({
+          detail: `Downloading ${prog.completed}/${prog.total} (${prog.file || ''})...`,
+          progress: pct,
+        });
+      }
+      if (prog.total > 0 && prog.completed >= prog.total) {
+        activeDrumkitJobHandle.handle.complete({
+          detail: `Installed ${prog.kitId} (${prog.total} samples)`,
+        });
+        activeDrumkitJobHandle = null;
+      }
+    }
+  });
+
+  document.getElementById('daw-job-status')?.addEventListener('robos-job-action', async (ev) => {
+    const outPath = ev?.detail?.outputPath;
+    if (outPath && typeof window.robos?.revealFileInFolder === 'function') {
+      const rev = await window.robos.revealFileInFolder(outPath);
+      if (rev?.ok) {
+        showStatus(`Revealed ${String(outPath).split('/').pop()} in file manager.`);
       }
     }
   });
@@ -10533,6 +10696,7 @@ window.__dawStudioState = () => ({
   playbackHotSwapSeq,
   timeSelection: hasActiveTimeSelection() ? { ...timeSelection } : null,
   exportModalOpen: !document.getElementById('export-mixdown-modal')?.classList.contains('hidden'),
+  jobs: window.RobosJobs?.getSnapshot?.() || null,
   videoMode: {
     discoveredSourcesCount: discoveredVideoSources.length,
     videoTrackIds: getVideoCapableTracks().map(t => t.id),

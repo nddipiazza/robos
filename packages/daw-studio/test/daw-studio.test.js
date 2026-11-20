@@ -1973,4 +1973,39 @@ describe('DAW Editing Engine: Multi-Select, Track/Take Gain, Split/Trim, Copy/Pa
       fs.rmSync(tmpKdDir, { recursive: true, force: true });
     }
   });
+
+  it('mounts reusable <robos-job-status> bottom-toolbar spinner and tracks Kdenlive & WAV/MP3 mixdown jobs', async () => {
+    const pkgDir = path.join(__dirname, '..');
+    const htmlSrc = fs.readFileSync(path.join(pkgDir, 'renderer', 'index.html'), 'utf8');
+    const appSrc = fs.readFileSync(path.join(pkgDir, 'renderer', 'app.js'), 'utf8');
+
+    assert.ok(htmlSrc.includes('robos-job-status.js'), 'index.html must load robos-ui/robos-job-status.js');
+    assert.ok(htmlSrc.includes('<robos-job-status id="daw-job-status"'), 'index.html must mount <robos-job-status> in #daw-statusbar');
+
+    assert.ok(appSrc.includes("category: 'KDENLIVE'"), 'saveSessionToKdenliveProject must register KDENLIVE job');
+    assert.ok(appSrc.includes("category: 'MIXDOWN'"), 'renderAndExportMixdown must register MIXDOWN job');
+    assert.ok(appSrc.includes("category: 'MIDI .KAR'"), 'createLyricsTrackUnderTrack must register MIDI .KAR job');
+    assert.ok(appSrc.includes("category: 'CLICK AI'"), 'generateClickTrackUnderTrack must register CLICK AI job');
+    assert.ok(appSrc.includes("category: 'STEMS'"), 'removeDrumsUnderTrack must register STEMS job');
+    assert.ok(appSrc.includes('robos-job-action'), 'app.js must wire robos-job-action Reveal button');
+
+    const { RobosJobManager } = require('../../robos-ui/robos-job-status.js');
+    const mgr = new RobosJobManager();
+    const res = await mgr.run({
+      title: 'Save to Kdenlive (band.kdenlive)',
+      category: 'KDENLIVE',
+      progress: 18,
+      detail: 'Rendering lossless 48 kHz stereo audio mixdown...',
+    }, async (job) => {
+      assert.strictEqual(mgr.getSnapshot().runningCount, 1);
+      job.update({ progress: 68, detail: 'Aligning video tracks & writing MLT XML...' });
+      job.complete({ detail: 'Synced band.kdenlive', outputPath: '/tmp/band.kdenlive', actionLabel: 'Reveal' });
+      return { ok: true, kdenlivePath: '/tmp/band.kdenlive' };
+    });
+
+    assert.strictEqual(res.ok, true);
+    assert.strictEqual(mgr.getSnapshot().runningCount, 0);
+    assert.strictEqual(mgr.getSnapshot().jobs[0].status, 'completed');
+    assert.strictEqual(mgr.getSnapshot().jobs[0].outputPath, '/tmp/band.kdenlive');
+  });
 });

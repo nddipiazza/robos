@@ -1487,6 +1487,18 @@ ipcMain.handle('daw:save-kdenlive-project', async (_e, payload) => {
   }
 });
 
+ipcMain.handle('daw:reveal-file-in-folder', async (_e, filePath) => {
+  try {
+    if (filePath && fs.existsSync(String(filePath))) {
+      shell.showItemInFolder(String(filePath));
+      return { ok: true };
+    }
+    return { ok: false, error: 'File does not exist on disk.' };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
 // ─── Video Mode: Video Input Discovery, Track Creation & Pop-Out Video Output Window ───
 
 ipcMain.handle('daw:video-discover', async (_e, payload) => {
