@@ -286,6 +286,8 @@ function loadProject(idOrPath) {
         clip.videoFile = clip.sourceFile;
       }
       clip.videoFileExists = Boolean(clip.videoFile && fs.existsSync(clip.videoFile));
+      const hasAudioWav = Boolean(abs && fs.existsSync(abs));
+      clip.fileExists = hasAudioWav || clip.videoFileExists;
 
       // Hydrate MIDI Karaoke (.kar) & Enhanced Lyrics (.lrc) sidecars
       if (clip.relativeKarPath) clip.karFile = path.join(projectDir, clip.relativeKarPath);
@@ -312,7 +314,7 @@ function loadProject(idOrPath) {
       if (clip.fadeInSec === undefined) clip.fadeInSec = 0;
       if (clip.fadeOutSec === undefined) clip.fadeOutSec = 0;
       if (clip.muted === undefined) clip.muted = false;
-      if (clip.fileExists && (!Array.isArray(clip.peaks) || !clip.peaks.length)) {
+      if (hasAudioWav && (!Array.isArray(clip.peaks) || !clip.peaks.length)) {
         const buf = fs.readFileSync(abs);
         const info = computeWaveformPeaks(buf);
         clip.peaks = info.peaks;
@@ -322,13 +324,13 @@ function loadProject(idOrPath) {
       } else if (clip.durationSec && !clip.sourceDurationSec) {
         clip.sourceDurationSec = (Number(clip.offsetSec) || 0) + Number(clip.durationSec);
       }
-      if (clip.fileExists && clip.autoGainStaged === undefined && (Number(clip.gainDb) || 0) === 0 && (Number(track.gainDb) || 0) === 0 && Number(clip.peakDb) < -24 && Number(clip.peakDb) > -65) {
+      if (hasAudioWav && clip.autoGainStaged === undefined && (Number(clip.gainDb) || 0) === 0 && (Number(track.gainDb) || 0) === 0 && Number(clip.peakDb) < -24 && Number(clip.peakDb) > -65) {
         const buf = fs.readFileSync(abs);
         clip.gainDb = computeSmartAutoGainDb(buf);
         clip.autoGainStaged = true;
       }
       const needsTransientScan = !Array.isArray(clip.transients) || (clip.transients.length === 0 && Number(clip.peakDb) > -65);
-      if (clip.fileExists && needsTransientScan && track.soundReplacement?.supported) {
+      if (hasAudioWav && needsTransientScan && track.soundReplacement?.supported) {
         const buf = fs.readFileSync(abs);
         clip.transients = detectDrumTransients(buf, {
           thresholdDb: track.soundReplacement.thresholdDb ?? -28,

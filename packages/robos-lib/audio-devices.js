@@ -348,6 +348,219 @@ function parsePipeWireNodes(pwNodesText, defaultIds = new Set()) {
 
 const alignedCaptureMatrixCards = new Set();
 
+function scarlettDbToRaw(db) {
+  const num = Number(db);
+  if (!Number.isFinite(num) || num <= -79.75) return 0;
+  return Math.max(0, Math.min(184, Math.round(160 + num * 2)));
+}
+
+function scarlettRawToDb(raw) {
+  const r = Math.max(0, Math.min(184, Math.round(Number(raw) || 0)));
+  if (r <= 0) return -80;
+  return Number(((r - 160) * 0.5).toFixed(1));
+}
+
+/**
+ * Parse Focusrite Scarlett / Clarett+ internal DSP Headphone & Direct-Monitor Mix from `amixer -c <card>`.
+ * Identifies which Mix pair (`Mix A` / `Mix B`) feeds the Headphone outputs, separates Direct Hardware
+ * Inputs (`Analogue 1..9`, `S/PDIF 1..2`, `ADAT 1..8`) from Computer Playback (`PCM 1` / `PCM 2`),
+ * and reads Headphone 1 & 2 hardware output attenuators.
+ */
+function parseScarlettHeadphoneMix(amixerDumpText) {
+  const text = String(amixerDumpText || '');
+  if (!text) return null;
+
+  const blocks = new Map();
+  const parts = text.split(/^Simple mixer control '/m);
+  for (let i = 1; i < parts.length; i++) {
+    const chunk = parts[i];
+    const nameEnd = chunk.indexOf("',");
+    if (nameEnd === -1) continue;
+    const name = chunk.slice(0, nameEnd);
+    blocks.set(name, chunk.slice(nameEnd + 2));
+  }
+
+  const getEnumVal = (name) => {
+    const b = blocks.get(name);
+    if (!b) return null;
+    const m = b.match(/Item0:\s*'([^']+)'/);
+    return m ? m[1] : null;
+  };
+
+  const getVolInfo = (name) => {
+    const b = blocks.get(name);
+    if (!b) return null;
+    const lim = b.match(/Limits:\s*Playback\s+(\d+)\s*-\s*(\d+)/);
+    const mono = b.match(/Mono:\s*Playback\s+(\d+)\s*\[(\d+)%\](?:\s*\[([+-]?[\d.]+)dB\])?/);
+    if (!mono) return null;
+    const raw = parseInt(mono[1], 10);
+    const max = lim ? parseInt(lim[2], 10) : 184;
+    const db = mono[3] !== undefined ? parseFloat(mono[3]) : (max === 184 ? scarlettRawToDb(raw) : 0);
+    return { raw, max, percent: parseInt(mono[2], 10), db: Number(db.toFixed(1)) };
+  };
+
+  const getSwitchVal = (name) => {
+    const b = blocks.get(name);
+    if (!b) return null;
+    if (/\[(on)\]/i.test(b)) return true;
+    if (/\[(off)\]/i.test(b)) return false;
+    return null;
+  };
+
+  // Detect Headphone 1 & Headphone 2 hardware trim controls (e.g. 'Line 07 (Headphones 1 L)')
+  const headphones = [];
+  for (const [ctlName] of blocks.entries()) {
+    const hpMatch = ctlName.match(/^Line (\d+)\s*\(Headphones\s*(\d+)\s*L\)$/i);
+    if (hpMatch) {
+      const lNum = parseInt(hpMatch[1], 10);
+      const hpIdx = parseInt(hpMatch[2], 10);
+      const rNum = lNum + 1;
+      const lPad = String(lNum).padStart(2, '0');
+      const rPad = String(rNum).padStart(2, '0');
+      const rCtl = [...blocks.keys()].find(k => k.startsWith(`Line ${rPad} (`)) || `Line ${rPad}`;
+      const volL = getVolInfo(ctlName);
+      const volR = getVolInfo(rCtl) || volL;
+      const muteL = getSwitchVal(`Line ${lPad} Mute`);
+      const outRouteL = getEnumVal(`Analogue Output ${lPad}`);
+      const outRouteR = getEnumVal(`Analogue Output ${rPad}`);
+      if (volL) {
+        const avgRaw = Math.round(((volL.raw + (volR?.raw ?? volL.raw)) / 2));
+        headphones.push({
+          id: `hp${hpIdx}`,
+          label: `Headphones ${hpIdx}`,
+          leftControl: ctlName,
+          rightControl: rCtl,
+          leftMuteControl: blocks.has(`Line ${lPad} Mute`) ? `Line ${lPad} Mute` : null,
+          rightMuteControl: blocks.has(`Line ${rPad} Mute`) ? `Line ${rPad} Mute` : null,
+          routeLeft: outRouteL || 'Mix A',
+          routeRight: outRouteR || 'Mix B',
+          raw: avgRaw,
+          max: volL.max || 127,
+          percent: Math.round((avgRaw / (volL.max || 127)) * 100),
+          db: volL.db,
+          muted: Boolean(muteL),
+        });
+      }
+    }
+  }
+
+  // Determine which stereo Mix pair (`Mix A` / `Mix B`) feeds the primary Headphones (or Monitor 1+2)
+  let mixLeft = 'Mix A';
+  let mixRight = 'Mix B';
+  const hp1 = headphones[0];
+  if (hp1 && /^Mix [A-L]$/.test(hp1.routeLeft || '') && /^Mix [A-L]$/.test(hp1.routeRight || '')) {
+    mixLeft = hp1.routeLeft;
+    mixRight = hp1.routeRight;
+  } else {
+    const out1 = getEnumVal('Analogue Output 01');
+    const out2 = getEnumVal('Analogue Output 02');
+    if (/^Mix [A-L]$/.test(out1 || '') && /^Mix [A-L]$/.test(out2 || '')) {
+      mixLeft = out1;
+      mixRight = out2;
+    }
+  }
+
+  // Inspect all `Mixer Input 01..25` slots inside `mixLeft` and `mixRight`
+  const directInputs = [];
+  const pcmSlots = [];
+  for (let slot = 1; slot <= 25; slot++) {
+    const pad = String(slot).padStart(2, '0');
+    const src = getEnumVal(`Mixer Input ${pad}`);
+    const ctlL = `${mixLeft} Input ${pad}`;
+    const ctlR = `${mixRight} Input ${pad}`;
+    const vL = getVolInfo(ctlL);
+    const vR = getVolInfo(ctlR);
+    if (!src && !vL && !vR) continue;
+
+    const inputName = src || `Input ${slot}`;
+    const rawL = vL ? vL.raw : 0;
+    const rawR = vR ? vR.raw : 0;
+    const dbL = vL ? vL.db : -80;
+    const dbR = vR ? vR.db : -80;
+
+    if (/^PCM\s+\d+$/i.test(inputName)) {
+      pcmSlots.push({
+        slot,
+        pad,
+        inputName,
+        leftControl: ctlL,
+        rightControl: ctlR,
+        rawL,
+        rawR,
+        dbL,
+        dbR,
+      });
+    } else if (/^(Analogue|ADAT|S\/PDIF|SPDIF)\s+\d+$/i.test(inputName)) {
+      const maxRaw = Math.max(rawL, rawR);
+      const maxDb = scarlettRawToDb(maxRaw);
+      directInputs.push({
+        slot,
+        pad,
+        inputName,
+        leftControl: ctlL,
+        rightControl: ctlR,
+        rawL,
+        rawR,
+        dbL,
+        dbR,
+        maxRaw,
+        maxDb,
+        active: maxRaw > 0,
+      });
+    }
+  }
+
+  if (!directInputs.length && !pcmSlots.length && !headphones.length) {
+    return null;
+  }
+
+  const pcm1 = pcmSlots.find(p => p.inputName === 'PCM 1') || pcmSlots[0] || null;
+  const pcm2 = pcmSlots.find(p => p.inputName === 'PCM 2') || pcmSlots[1] || null;
+  const backingRaw = pcm1 && pcm2
+    ? Math.round((pcm1.rawL + pcm2.rawR) / 2)
+    : (pcm1 ? Math.max(pcm1.rawL, pcm1.rawR) : 160);
+  const backingPcmDb = scarlettRawToDb(backingRaw);
+
+  const activeDirect = directInputs.filter(d => d.active);
+  const maxDirectRaw = activeDirect.reduce((mx, d) => Math.max(mx, d.maxRaw), 0);
+  const maxDirectInputDb = scarlettRawToDb(maxDirectRaw);
+
+  return {
+    supported: true,
+    mixLeft,
+    mixRight,
+    activeDirectCount: activeDirect.length,
+    maxDirectInputDb,
+    backingPcmDb,
+    backingPcmRaw: backingRaw,
+    playbackPair: pcm1 ? {
+      leftSlot: pcm1.slot,
+      rightSlot: pcm2 ? pcm2.slot : pcm1.slot,
+      leftControl: pcm1.leftControl,
+      rightControl: pcm2 ? pcm2.rightControl : pcm1.rightControl,
+      rawL: pcm1.rawL,
+      rawR: pcm2 ? pcm2.rawR : pcm1.rawR,
+      db: backingPcmDb,
+    } : null,
+    directInputs,
+    headphones,
+  };
+}
+
+function readPipeWireSinkVolume(sinkIdOrDefault = '@DEFAULT_AUDIO_SINK@') {
+  const target = sinkIdOrDefault ? String(sinkIdOrDefault) : '@DEFAULT_AUDIO_SINK@';
+  const out = runCmd('wpctl', ['get-volume', target]) || runCmd('wpctl', ['get-volume', '@DEFAULT_AUDIO_SINK@']);
+  const m = String(out || '').match(/Volume:\s*([\d.]+)/i);
+  const volume = m ? parseFloat(m[1]) : 1.0;
+  const muted = /\[MUTED\]/i.test(String(out || ''));
+  return {
+    target,
+    volume: Number.isFinite(volume) ? Number(volume.toFixed(2)) : 1.0,
+    percent: Number.isFinite(volume) ? Math.round(volume * 100) : 100,
+    muted,
+  };
+}
+
 function readFocusriteHardwareControls(cardIndex) {
   if (cardIndex === null || cardIndex === undefined || cardIndex < 0) return null;
   const scontrols = runCmd('amixer', ['-c', String(cardIndex), 'scontrols']);
@@ -471,6 +684,9 @@ function readFocusriteHardwareControls(cardIndex) {
     });
   }
 
+  const fullMixerDump = runCmd('amixer', ['-c', String(cardIndex)]);
+  const headphoneMix = parseScarlettHeadphoneMix(fullMixerDump);
+
   return {
     cardIndex,
     firmwareVersion,
@@ -479,7 +695,144 @@ function readFocusriteHardwareControls(cardIndex) {
     captureRoutingAligned,
     phantomBanks,
     preamps,
+    headphoneMix,
     totalMixerControls: scontrols.split('\n').filter(Boolean).length,
+  };
+}
+
+/**
+ * Adjust Focusrite Scarlett / Clarett+ Hardware DSP Headphone Direct-Monitor vs Backing-Track Mix
+ * AND/OR Linux PipeWire Output Sink Volume (`wpctl`).
+ *
+ * Note: Turning down or muting Direct Hardware Inputs (`Analogue 1..8`, `ADAT 1..8`, `S/PDIF`) in
+ * `Mix A` / `Mix B` ONLY removes live mic bleed/echo from your headphones — all 20 USB capture
+ * channels (`PCM 01..20`) come straight off the preamps and remain at 100% recording gain!
+ */
+function setFocusriteHeadphoneMix({
+  cardIndex,
+  preset = null,               // 'backing-only' | 'boost-backing' | 'blend-direct'
+  directMonitorDb = undefined, // -80 .. +12 dB across direct hardware inputs (<= -79.5 = Off/0)
+  slotDb = null,               // { slot: 1..25, db: -80..+12 }
+  backingPcmDb = undefined,    // -80 .. +12 dB on PCM 1 (Mix A) & PCM 2 (Mix B)
+  pipewireOutputPercent = undefined, // 0 .. 150 (%)
+  sinkId = null,               // PipeWire node ID or '@DEFAULT_AUDIO_SINK@'
+  headphoneTrim = null,        // { id: 'hp1'|'hp2', percent?: 0..100, muted?: boolean }
+} = {}) {
+  let effectiveCard = (cardIndex !== null && cardIndex !== undefined && Number.isInteger(Number(cardIndex)))
+    ? Number(cardIndex)
+    : null;
+  if (effectiveCard === null) {
+    const fc = parseAlsaCards().find(c => c.isFocusrite);
+    if (fc) effectiveCard = fc.cardIndex;
+  }
+
+  let wantDirectDb = directMonitorDb;
+  let wantBackingDb = backingPcmDb;
+  let wantPwPercent = pipewireOutputPercent;
+  let ensureHpUnity = false;
+
+  if (preset === 'backing-only') {
+    wantDirectDb = -80;
+    if (wantBackingDb === undefined) wantBackingDb = 0;
+    if (wantPwPercent === undefined) wantPwPercent = 100;
+    ensureHpUnity = true;
+  } else if (preset === 'boost-backing') {
+    wantDirectDb = -80;
+    if (wantBackingDb === undefined) wantBackingDb = 6;
+    if (wantPwPercent === undefined) wantPwPercent = 115;
+    ensureHpUnity = true;
+  } else if (preset === 'blend-direct') {
+    wantDirectDb = -12;
+    if (wantBackingDb === undefined) wantBackingDb = 0;
+    if (wantPwPercent === undefined) wantPwPercent = 100;
+  }
+
+  if (wantPwPercent !== undefined && wantPwPercent !== null && Number.isFinite(Number(wantPwPercent))) {
+    const clampedPct = Math.max(0, Math.min(150, Math.round(Number(wantPwPercent))));
+    const ratio = (clampedPct / 100).toFixed(2);
+    const targetSink = sinkId ? String(sinkId) : '@DEFAULT_AUDIO_SINK@';
+    runCmd('wpctl', ['set-mute', targetSink, '0']);
+    runCmd('wpctl', ['set-volume', targetSink, ratio]);
+    if (targetSink !== '@DEFAULT_AUDIO_SINK@') {
+      // Keep default sink aligned when Scarlett is also the default output
+      runCmd('wpctl', ['set-mute', '@DEFAULT_AUDIO_SINK@', '0']);
+      runCmd('wpctl', ['set-volume', '@DEFAULT_AUDIO_SINK@', ratio]);
+    }
+  }
+
+  if (effectiveCard !== null && effectiveCard >= 0 && effectiveCard <= 31) {
+    const dump = runCmd('amixer', ['-c', String(effectiveCard)]);
+    const hpMix = parseScarlettHeadphoneMix(dump);
+
+    if (hpMix) {
+      // 1. Adjust all Direct Hardware Inputs (`Analogue 1..8`, `ADAT`, `S/PDIF`) in `Mix A` & `Mix B`
+      if (wantDirectDb !== undefined && wantDirectDb !== null && Number.isFinite(Number(wantDirectDb))) {
+        const rawVal = scarlettDbToRaw(Number(wantDirectDb));
+        for (const d of hpMix.directInputs) {
+          // If muting (-80 dB), only touch slots that are currently > 0 (fast: 2-4 calls instead of 36!);
+          // if raising > -80 dB, apply to Analogue 1 & 2 (or any already-active inputs) so unused unplugged ADATs don't hiss!
+          if (rawVal === 0) {
+            if (d.rawL > 0) runCmd('amixer', ['-c', String(effectiveCard), 'sset', d.leftControl, '0']);
+            if (d.rawR > 0) runCmd('amixer', ['-c', String(effectiveCard), 'sset', d.rightControl, '0']);
+          } else if (d.active || /^Analogue [12]$/i.test(d.inputName)) {
+            runCmd('amixer', ['-c', String(effectiveCard), 'sset', d.leftControl, String(rawVal)]);
+            runCmd('amixer', ['-c', String(effectiveCard), 'sset', d.rightControl, String(rawVal)]);
+          }
+        }
+      }
+
+      // 2. Adjust a specific individual Direct Input slot (`slotDb: { slot, db }`)
+      if (slotDb && Number.isInteger(Number(slotDb.slot)) && Number.isFinite(Number(slotDb.db))) {
+        const target = hpMix.directInputs.find(d => d.slot === Number(slotDb.slot));
+        if (target) {
+          const rawVal = scarlettDbToRaw(Number(slotDb.db));
+          runCmd('amixer', ['-c', String(effectiveCard), 'sset', target.leftControl, String(rawVal)]);
+          runCmd('amixer', ['-c', String(effectiveCard), 'sset', target.rightControl, String(rawVal)]);
+        }
+      }
+
+      // 3. Adjust Computer / Backing Track (`PCM 1` Left -> `Mix A`, `PCM 2` Right -> `Mix B`)
+      if (wantBackingDb !== undefined && wantBackingDb !== null && Number.isFinite(Number(wantBackingDb)) && hpMix.playbackPair) {
+        const rawBack = scarlettDbToRaw(Number(wantBackingDb));
+        runCmd('amixer', ['-c', String(effectiveCard), 'sset', hpMix.playbackPair.leftControl, String(rawBack)]);
+        runCmd('amixer', ['-c', String(effectiveCard), 'sset', hpMix.playbackPair.rightControl, String(rawBack)]);
+      }
+
+      // 4. Ensure Headphone 1 & 2 trims are unmuted / set when requested
+      if (ensureHpUnity) {
+        for (const hp of hpMix.headphones) {
+          if (hp.muted) {
+            if (hp.leftMuteControl) runCmd('amixer', ['-c', String(effectiveCard), 'sset', hp.leftMuteControl, 'off']);
+            if (hp.rightMuteControl) runCmd('amixer', ['-c', String(effectiveCard), 'sset', hp.rightMuteControl, 'off']);
+          }
+          if (hp.raw < hp.max) {
+            runCmd('amixer', ['-c', String(effectiveCard), 'sset', hp.leftControl, String(hp.max)]);
+            runCmd('amixer', ['-c', String(effectiveCard), 'sset', hp.rightControl, String(hp.max)]);
+          }
+        }
+      }
+
+      if (headphoneTrim && headphoneTrim.id) {
+        const hp = hpMix.headphones.find(h => h.id === headphoneTrim.id);
+        if (hp) {
+          if (typeof headphoneTrim.muted === 'boolean') {
+            const mArg = headphoneTrim.muted ? 'on' : 'off';
+            if (hp.leftMuteControl) runCmd('amixer', ['-c', String(effectiveCard), 'sset', hp.leftMuteControl, mArg]);
+            if (hp.rightMuteControl) runCmd('amixer', ['-c', String(effectiveCard), 'sset', hp.rightMuteControl, mArg]);
+          }
+          if (headphoneTrim.percent !== undefined && Number.isFinite(Number(headphoneTrim.percent))) {
+            const rawTrim = Math.max(0, Math.min(hp.max || 127, Math.round((Number(headphoneTrim.percent) / 100) * (hp.max || 127))));
+            runCmd('amixer', ['-c', String(effectiveCard), 'sset', hp.leftControl, String(rawTrim)]);
+            runCmd('amixer', ['-c', String(effectiveCard), 'sset', hp.rightControl, String(rawTrim)]);
+          }
+        }
+      }
+    }
+  }
+
+  return {
+    ok: true,
+    snapshot: getAudioDevicesSnapshot(),
   };
 }
 
@@ -731,6 +1084,7 @@ function getAudioDevicesSnapshot() {
     || outputs.find(o => o.isDefault)
     || outputs[0]
     || null;
+  const outputVolume = readPipeWireSinkVolume(activeOutput?.id || '@DEFAULT_AUDIO_SINK@');
 
   return {
     ok: true,
@@ -764,6 +1118,7 @@ function getAudioDevicesSnapshot() {
     outputs,
     activeInput,
     activeOutput,
+    outputVolume,
     config,
   };
 }
@@ -779,10 +1134,15 @@ module.exports = {
   parseAlsaCards,
   parsePipeWireClock,
   parsePipeWireNodes,
+  scarlettDbToRaw,
+  scarlettRawToDb,
+  parseScarlettHeadphoneMix,
+  readPipeWireSinkVolume,
   analyzeWavSamples,
   buildChimeWavBuffer,
   readFocusriteHardwareControls,
   setFocusriteHardwareControl,
+  setFocusriteHeadphoneMix,
   setPipeWireEngineSettings,
   testInputCapture,
   playTestTone,

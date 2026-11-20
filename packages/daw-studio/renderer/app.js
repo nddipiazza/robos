@@ -29,6 +29,7 @@ let timeSelection = null; // null | { fromSec: number, toSec: number }
 let exportPrefs = {
   format: 'mp3',
   qualityByFormat: {
+    mp4: 'stream_copy',
     mp3: '320k',
     wav: 'pcm_s24le',
     flac: '24bit',
@@ -43,7 +44,36 @@ let exportPrefs = {
   excludeClick: true,
 };
 let isExportingMixdown = false;
+let activeRecordStopPromise = null;
 let activeDrumkitJobHandle = null;
+let liveHeadphoneBoostDb = Number(localStorage.getItem('robos.daw.headphoneBoostDb')) || 0;
+let activeLiveMasterBoostGains = new Set();
+
+/**
+ * Compute exact wall-clock millisecond timestamp when `playStartCtxTime` physically exits the
+ * audio interface headphones, guarding against Linux Chromium/PulseAudio cork-epoch drift where
+ * `getOutputTimestamp().contextTime` freezes while corked and lags `ctx.currentTime` by minutes.
+ */
+function computeReliableEarsStartWallMs(ctx, playStartCtxTime) {
+  const nowPerf = performance.now();
+  const nowCtx = ctx.currentTime;
+  const ts = typeof ctx.getOutputTimestamp === 'function' ? ctx.getOutputTimestamp() : null;
+  if (ts && ts.contextTime > 0 && ts.performanceTime > 0) {
+    const impliedDacLatSec = (nowCtx - ts.contextTime) - (nowPerf - ts.performanceTime) / 1000;
+    if (impliedDacLatSec >= 0.001 && impliedDacLatSec <= 0.350) {
+      return {
+        earsStartWallMs: (performance.timeOrigin + ts.performanceTime) + (playStartCtxTime - ts.contextTime) * 1000,
+        lockedByHwTs: true,
+      };
+    }
+  }
+  const dacOutLatSec = ((Number(ctx.baseLatency) || 0) + (Number(ctx.outputLatency) || 0))
+    || ((Number(currentSnapshot?.clock?.latencyMs) || 42) / 1000);
+  return {
+    earsStartWallMs: (performance.timeOrigin + nowPerf) + (playStartCtxTime - nowCtx + dacOutLatSec) * 1000,
+    lockedByHwTs: false,
+  };
+}
 
 function runDawJob(spec, asyncFn) {
   const jobsApi = window.RobosJobs;
@@ -477,17 +507,16 @@ function startRecordingRafLoop() {
       liveRecRafId = null;
       return;
     }
-    // Continuously lock earsStartWallMs to PipeWire/ALSA hardware DAC presentation clock
+    // Continuously lock earsStartWallMs to PipeWire/ALSA hardware DAC presentation clock (only when free of cork-epoch drift)
     const mon = liveRecSession.overdubMonitor;
     if (mon?.active && mon.ctx && mon.ctx.currentTime >= mon.playStartCtxTime + 0.06) {
-      const ts = typeof mon.ctx.getOutputTimestamp === 'function' ? mon.ctx.getOutputTimestamp() : null;
-      if (ts && ts.contextTime > 0 && ts.performanceTime > 0) {
-        const measuredEarsMs = (performance.timeOrigin + ts.performanceTime) + (mon.playStartCtxTime - ts.contextTime) * 1000;
+      const probed = computeReliableEarsStartWallMs(mon.ctx, mon.playStartCtxTime);
+      if (probed.lockedByHwTs) {
         if (!mon.lockedByHwTs || !Number.isFinite(liveRecSession.earsStartWallMs)) {
-          liveRecSession.earsStartWallMs = measuredEarsMs;
+          liveRecSession.earsStartWallMs = probed.earsStartWallMs;
           mon.lockedByHwTs = true;
         } else {
-          liveRecSession.earsStartWallMs = liveRecSession.earsStartWallMs * 0.85 + measuredEarsMs * 0.15;
+          liveRecSession.earsStartWallMs = liveRecSession.earsStartWallMs * 0.85 + probed.earsStartWallMs * 0.15;
         }
       }
     }
@@ -680,6 +709,13 @@ async function commitEdit(label, mutatorFn, { reanalyzeTrackIds = [], statusMsg 
 }
 
 async function performUndo() {
+  if (isRecording) {
+    showStatus('Stopping recording & queuing Undo...');
+    await toggleRecording({ keepCursorAtStop: false });
+  } else if (activeRecordStopPromise) {
+    showStatus('Finishing recording render — Undo queued...');
+    await activeRecordStopPromise;
+  }
   const res = historyStack.undo(currentProject);
   if (!res) {
     showStatus('Nothing left to undo.');
@@ -689,6 +725,7 @@ async function performUndo() {
   pruneSelections();
   markDirty(true);
   renderStudio();
+  syncVideoOutputMonitor({ forcePush: true });
   if (isPlaying || isRecording) {
     seamlessRefreshLiveAudio();
   }
@@ -697,6 +734,10 @@ async function performUndo() {
 }
 
 async function performRedo() {
+  if (activeRecordStopPromise) {
+    showStatus('Finishing recording render — Redo queued...');
+    await activeRecordStopPromise;
+  }
   const res = historyStack.redo(currentProject);
   if (!res) {
     showStatus('Nothing to redo.');
@@ -706,6 +747,7 @@ async function performRedo() {
   pruneSelections();
   markDirty(true);
   renderStudio();
+  syncVideoOutputMonitor({ forcePush: true });
   if (isPlaying || isRecording) {
     seamlessRefreshLiveAudio();
   }
@@ -1002,6 +1044,18 @@ function createMasterDrumBus(ctx, destinationNode = ctx.destination) {
   const glueMakeup = ctx.createGain();
   glueMakeup.gain.value = DE.dbToGain(1.2);
 
+  // Live headphone / backing monitor boost (applied ONLY to real-time AudioContext, never offline exports)
+  const isLiveCtx = typeof OfflineAudioContext === 'undefined' || !(ctx instanceof OfflineAudioContext);
+  const monitorBoost = ctx.createGain();
+  monitorBoost.gain.value = isLiveCtx ? DE.dbToGain(liveHeadphoneBoostDb) : 1.0;
+  if (isLiveCtx) {
+    activeLiveMasterBoostGains.add(monitorBoost);
+    if (activeLiveMasterBoostGains.size > 12) {
+      const oldest = activeLiveMasterBoostGains.values().next().value;
+      activeLiveMasterBoostGains.delete(oldest);
+    }
+  }
+
   // True-peak zero-overshoot studio ceiling (-0.31 dBFS; 100% linear below -2.1 dBFS)
   const ceiling = ctx.createWaveShaper();
   if (!cachedMasterCeilingCurve) cachedMasterCeilingCurve = makeMasterCeilingCurve();
@@ -1009,7 +1063,8 @@ function createMasterDrumBus(ctx, destinationNode = ctx.destination) {
 
   busTrim.connect(busGlue);
   busGlue.connect(glueMakeup);
-  glueMakeup.connect(ceiling);
+  glueMakeup.connect(monitorBoost);
+  monitorBoost.connect(ceiling);
   ceiling.connect(destinationNode);
   return busTrim;
 }
@@ -1806,8 +1861,11 @@ function ensureSelectedVideoOutputTrack() {
   }
   const found = vTracks.find(t => t.id === selectedVideoOutputTrackId);
   if (found) return found;
-  selectedVideoOutputTrackId = vTracks[0].id;
-  return vTracks[0];
+  const defaultTrack = vTracks.find(t => t.trackKind === 'video' && (t.clips || []).some(c => !c.muted))
+    || vTracks.find(t => t.trackKind === 'video')
+    || vTracks[0];
+  selectedVideoOutputTrackId = defaultTrack.id;
+  return defaultTrack;
 }
 
 function findActiveVideoClipAtSec(track, sec) {
@@ -2851,15 +2909,9 @@ function startOverdubMonitorPlayback(ctx, startFrom, overdubEntries, { preserveS
   let earsStartWallMs = preserveSyncClock ? (liveRecSession?.earsStartWallMs ?? null) : null;
   let lockedByHwTs = false;
   if (!preserveSyncClock) {
-    const ts = typeof ctx.getOutputTimestamp === 'function' ? ctx.getOutputTimestamp() : null;
-    if (ts && ts.contextTime > 0 && ts.performanceTime > 0) {
-      earsStartWallMs = (performance.timeOrigin + ts.performanceTime) + (playStartCtxTime - ts.contextTime) * 1000;
-      lockedByHwTs = true;
-    } else {
-      const fallbackOutLatSec = ((Number(ctx.baseLatency) || 0) + (Number(ctx.outputLatency) || 0))
-        || ((Number(audioSnapshot?.clock?.latencyMs) || 42) / 1000);
-      earsStartWallMs = Date.now() + schedLeadSec * 1000 + fallbackOutLatSec * 1000;
-    }
+    const probed = computeReliableEarsStartWallMs(ctx, playStartCtxTime);
+    earsStartWallMs = probed.earsStartWallMs;
+    lockedByHwTs = probed.lockedByHwTs;
   }
 
   return {
@@ -2954,40 +3006,52 @@ async function toggleRecording({ keepCursorAtStop = false } = {}) {
     }
     drawAllTimelineCanvases();
 
-    let res = null;
-    try {
-      res = await window.robos.recordStop({ injectTestSignal, earsStartWallMs });
-    } finally {
-      isStoppingRecording = false;
-      liveRecSession = null;
-      liveRecLevels = {};
-    }
+    const finalizeStopPromise = (async () => {
+      let res = null;
+      try {
+        res = await window.robos.recordStop({ injectTestSignal, earsStartWallMs });
+      } finally {
+        isStoppingRecording = false;
+        liveRecSession = null;
+        liveRecLevels = {};
+      }
 
-    if (res?.ok && res.project) {
-      if (currentProject) historyStack.pushSnapshot(currentProject, 'Record Multi-Track Take');
-      currentProject = res.project;
-      const vidRecorded = res.recordedVideoClips || [];
-      selectedClipIds = new Set([
-        ...(res.recordedClips || []).map(x => x.clip?.id),
-        ...vidRecorded.map(x => x.clip?.id),
-      ].filter(Boolean));
-      if (vidRecorded.length > 0 && vidRecorded[0].trackId) {
-        selectedVideoOutputTrackId = vidRecorded[0].trackId;
-        if (!videoPopoutOpen) videoDockOpen = true;
+      if (res?.ok && res.project) {
+        if (currentProject) historyStack.pushSnapshot(currentProject, 'Record Multi-Track Take');
+        currentProject = res.project;
+        const vidRecorded = res.recordedVideoClips || [];
+        selectedClipIds = new Set([
+          ...(res.recordedClips || []).map(x => x.clip?.id),
+          ...vidRecorded.map(x => x.clip?.id),
+        ].filter(Boolean));
+        if (vidRecorded.length > 0 && vidRecorded[0].trackId) {
+          selectedVideoOutputTrackId = vidRecorded[0].trackId;
+          videoLiveCamEnabled = false;
+          if (!videoPopoutOpen) videoDockOpen = true;
+        }
+        // Invalidate any stale decoded cache for newly written takes
+        for (const item of (res.recordedClips || [])) {
+          if (item.clip?.wavFile) decodedBufferCache.delete(item.clip.wavFile);
+        }
+        markDirty(true);
+        renderStudio();
+        syncVideoOutputMonitor({ forcePush: true });
+        const totalHits = (res.recordedClips || []).reduce((n, x) => n + (x.clip?.transients?.length || 0), 0);
+        const vidSuffix = vidRecorded.length ? ` + ${vidRecorded.length} video track(s) (click "Export MP4" in Video Out to save video + audio)` : '';
+        showStatus(`Recorded ${res.recordedClips.length} armed mic track(s)${vidSuffix}${totalHits ? ` — ${totalHits} drum transient(s) detected` : ''}.`);
+      } else {
+        drawAllTimelineCanvases();
+        showStatus(`Recording stop error: ${res?.error || 'Unknown error'}`, true);
       }
-      // Invalidate any stale decoded cache for newly written takes
-      for (const item of (res.recordedClips || [])) {
-        if (item.clip?.wavFile) decodedBufferCache.delete(item.clip.wavFile);
+      return res;
+    })();
+    activeRecordStopPromise = finalizeStopPromise;
+    try {
+      await finalizeStopPromise;
+    } finally {
+      if (activeRecordStopPromise === finalizeStopPromise) {
+        activeRecordStopPromise = null;
       }
-      markDirty(true);
-      renderStudio();
-      syncVideoOutputMonitor({ forcePush: true });
-      const totalHits = (res.recordedClips || []).reduce((n, x) => n + (x.clip?.transients?.length || 0), 0);
-      const vidSuffix = vidRecorded.length ? ` + ${vidRecorded.length} video track(s)` : '';
-      showStatus(`Recorded ${res.recordedClips.length} armed mic track(s)${vidSuffix}${totalHits ? ` — ${totalHits} drum transient(s) detected` : ''}.`);
-    } else {
-      drawAllTimelineCanvases();
-      showStatus(`Recording stop error: ${res?.error || 'Unknown error'}`, true);
     }
     return;
   }
@@ -6180,6 +6244,15 @@ function uint8ToBase64(bytes) {
 }
 
 const EXPORT_FORMAT_CATALOG = {
+  mp4: {
+    ext: 'mp4',
+    defaultQuality: 'stream_copy',
+    qualities: [
+      { id: 'stream_copy', label: 'Instant Lossless Video Copy + 320 kbps AAC' },
+      { id: '1080p_hq', label: '1080p H.264 High Quality (CRF 18) + 320 kbps AAC' },
+      { id: '720p_hd', label: '720p H.264 HD (CRF 20) + 256 kbps AAC' },
+    ],
+  },
   mp3: {
     ext: 'mp3',
     defaultQuality: '320k',
@@ -6287,12 +6360,64 @@ function getExportPlayableTracks({ excludeClick = false } = {}) {
   return tracks.filter((t) => {
     if (anySolo ? !t.soloed : t.muted) return false;
     if (excludeClick) {
-      const isClickTrack = /^click\b/i.test(String(t.name || ''))
-        || ((t.clips || []).length > 0 && (t.clips || []).every(c => c.mediaKind === 'click'));
-      if (isClickTrack) return false;
+      const nonMutedClips = (t.clips || []).filter(c => !c.muted);
+      const isPureClickTrack = nonMutedClips.length > 0 && nonMutedClips.every(c => c.mediaKind === 'click');
+      if (isPureClickTrack) return false;
     }
     return true;
   });
+}
+
+function getExportVideoTakeChoices() {
+  const choices = [];
+  for (const t of (currentProject?.tracks || [])) {
+    const vidClips = (t.clips || []).filter(c => !c.muted && Boolean(resolveClipVideoFilePath(c)));
+    if (!vidClips.length) continue;
+    // Order newest take first on each track, prioritizing dedicated camera tracks (`trackKind === 'video'`) first!
+    for (let i = vidClips.length - 1; i >= 0; i--) {
+      const c = vidClips[i];
+      const vPath = resolveClipVideoFilePath(c);
+      const startSec = Number(c.startSec) || 0;
+      const durSec = Math.max(0.05, Number(c.durationSec) || 0);
+      choices.push({
+        key: `${t.id}::${c.id}`,
+        trackId: t.id,
+        trackName: t.name,
+        isCameraTrack: t.trackKind === 'video',
+        clipId: c.id,
+        takeNumber: i + 1,
+        totalTakesOnTrack: vidClips.length,
+        videoFile: vPath,
+        startSec,
+        offsetSec: Math.max(0, Number(c.offsetSec) || 0),
+        durationSec: durSec,
+        endSec: Number((startSec + durSec).toFixed(4)),
+        label: vidClips.length > 1
+          ? `${t.name} — Take #${i + 1}${i === vidClips.length - 1 ? ' (Latest)' : ''} [${formatTimecode(startSec)} -> ${formatTimecode(startSec + durSec)}]`
+          : `${t.name} — ${c.name || 'Video'} [${formatTimecode(startSec)} -> ${formatTimecode(startSec + durSec)}]`,
+      });
+    }
+  }
+  choices.sort((a, b) => Number(b.isCameraTrack) - Number(a.isCameraTrack));
+  return choices;
+}
+
+async function revealActiveVideoTakeInFolder(preferTrackId = '', preferClipId = '') {
+  const choices = getExportVideoTakeChoices();
+  const chosen = (preferClipId && choices.find(x => x.clipId === preferClipId))
+    || (preferTrackId && choices.find(x => x.trackId === preferTrackId))
+    || (selectedVideoOutputTrackId && choices.find(x => x.trackId === selectedVideoOutputTrackId))
+    || choices[0];
+  if (!chosen?.videoFile) {
+    showStatus('No recorded or imported .mp4 video file found in this session yet.', true);
+    return;
+  }
+  const rev = await window.robos?.revealFileInFolder?.(chosen.videoFile);
+  if (rev?.ok) {
+    showStatus(`Revealed video file in folder: ${chosen.videoFile}`);
+  } else {
+    showStatus(`Video file path: ${chosen.videoFile}`, !rev?.ok);
+  }
 }
 
 function getFullSessionExportBounds(excludeClick = false) {
@@ -6311,6 +6436,33 @@ function getFullSessionExportBounds(excludeClick = false) {
   return { startSec: 0, endSec: Number(Math.max(0, maxEndSec).toFixed(4)), playableTracks: playable };
 }
 
+function populateExportVideoTrackSelector(preferClipId = '', preferTrackId = '') {
+  const row = document.getElementById('export-video-track-row');
+  const sel = document.getElementById('export-video-track-select');
+  const choices = getExportVideoTakeChoices();
+  if (!sel) return choices;
+  if (!choices.length) {
+    sel.innerHTML = '<option value="">No recorded or imported .mp4 video clips in session</option>';
+  } else {
+    const preferred = (preferClipId && choices.find(c => c.clipId === preferClipId))
+      || (preferTrackId && choices.find(c => c.trackId === preferTrackId))
+      || (selectedVideoOutputTrackId && choices.find(c => c.trackId === selectedVideoOutputTrackId))
+      || choices[0];
+    sel.innerHTML = choices
+      .map(c => `<option value="${esc(c.key)}"${c.key === preferred?.key ? ' selected' : ''}>${esc(c.label)}</option>`)
+      .join('');
+  }
+  return choices;
+}
+
+function getSelectedExportVideoChoice() {
+  const sel = document.getElementById('export-video-track-select');
+  const choices = getExportVideoTakeChoices();
+  if (!choices.length) return null;
+  const val = sel?.value || '';
+  return choices.find(c => c.key === val) || choices[0];
+}
+
 function populateExportQualityOptions(formatId) {
   const spec = EXPORT_FORMAT_CATALOG[formatId] || EXPORT_FORMAT_CATALOG.mp3;
   const qSel = document.getElementById('export-quality-select');
@@ -6320,9 +6472,18 @@ function populateExportQualityOptions(formatId) {
     .map(q => `<option value="${esc(q.id)}"${q.id === savedQ ? ' selected' : ''}>${esc(q.label)}</option>`)
     .join('');
 
+  const vidRow = document.getElementById('export-video-track-row');
+  if (vidRow) vidRow.classList.toggle('hidden', formatId !== 'mp4');
+  const confirmBtn = document.getElementById('btn-export-confirm');
+  if (confirmBtn && !isExportingMixdown) {
+    confirmBtn.textContent = formatId === 'mp4'
+      ? 'Export MP4 Video + Audio...'
+      : 'Export Audio Mixdown...';
+  }
+
   const fnInp = document.getElementById('export-filename-input');
   if (fnInp && fnInp.value.trim()) {
-    const stem = fnInp.value.trim().replace(/\.(mp3|wav|flac|m4a|ogg|opus|aiff)$/i, '');
+    const stem = fnInp.value.trim().replace(/\.(mp4|mp3|wav|flac|m4a|ogg|opus|aiff)$/i, '');
     fnInp.value = `${stem}.${spec.ext}`;
   }
 }
@@ -6356,7 +6517,7 @@ function refreshExportModalSummary() {
   }
 }
 
-function openExportMixdownModal() {
+function openExportMixdownModal({ preferFormat = '', preferTrackId = '', preferClipId = '' } = {}) {
   const modal = document.getElementById('export-mixdown-modal');
   if (!modal || !currentProject) return;
   closeContextMenu();
@@ -6375,7 +6536,15 @@ function openExportMixdownModal() {
     return;
   }
 
-  const useSel = hasActiveTimeSelection();
+  const vidChoices = populateExportVideoTrackSelector(preferClipId, preferTrackId);
+  const hasRecordedCamTake = vidChoices.some(c => c.isCameraTrack);
+  const activeFormat = preferFormat
+    || (hasRecordedCamTake && exportPrefs.format === 'mp3' ? 'mp4' : (exportPrefs.format || 'mp3'));
+
+  // When opening specifically for MP4 video export and no narrow ruler selection is set, default bounds to the chosen video take!
+  const chosenVid = getSelectedExportVideoChoice();
+  const autoBoundToVid = activeFormat === 'mp4' && chosenVid && (!hasActiveTimeSelection() || preferFormat === 'mp4');
+  const useSel = Boolean(autoBoundToVid || hasActiveTimeSelection());
   const scopeSel = document.getElementById('export-scope-selection');
   const scopeFull = document.getElementById('export-scope-full');
   if (scopeSel) scopeSel.checked = useSel;
@@ -6384,33 +6553,39 @@ function openExportMixdownModal() {
   const fromInp = document.getElementById('export-from-input');
   const toInp = document.getElementById('export-to-input');
   if (fromInp) {
-    fromInp.value = formatTimecode(useSel ? timeSelection.fromSec : 0);
+    fromInp.value = formatTimecode(
+      autoBoundToVid ? chosenVid.startSec : (useSel ? timeSelection.fromSec : 0)
+    );
   }
   if (toInp) {
-    toInp.value = formatTimecode(useSel ? timeSelection.toSec : fullBounds.endSec);
+    toInp.value = formatTimecode(
+      autoBoundToVid ? chosenVid.endSec : (useSel ? timeSelection.toSec : fullBounds.endSec)
+    );
   }
 
   const fmtSel = document.getElementById('export-format-select');
-  if (fmtSel) fmtSel.value = exportPrefs.format || 'mp3';
+  if (fmtSel) fmtSel.value = activeFormat;
   const srSel = document.getElementById('export-samplerate-select');
   if (srSel) srSel.value = String(exportPrefs.sampleRate || 48000);
 
-  const spec = EXPORT_FORMAT_CATALOG[exportPrefs.format || 'mp3'] || EXPORT_FORMAT_CATALOG.mp3;
+  const spec = EXPORT_FORMAT_CATALOG[activeFormat] || EXPORT_FORMAT_CATALOG.mp3;
   const safeTitle = String(currentProject?.name || 'session').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'session';
   const fnInp = document.getElementById('export-filename-input');
   if (fnInp) {
-    fnInp.value = useSel
-      ? `${safeTitle}-selection.${spec.ext}`
-      : `${safeTitle}-mixdown.${spec.ext}`;
+    fnInp.value = activeFormat === 'mp4'
+      ? `${safeTitle}-video.${spec.ext}`
+      : (useSel ? `${safeTitle}-selection.${spec.ext}` : `${safeTitle}-mixdown.${spec.ext}`);
   }
-  populateExportQualityOptions(exportPrefs.format || 'mp3');
+  populateExportQualityOptions(activeFormat);
   refreshExportModalSummary();
 
   const statusEl = document.getElementById('export-modal-status');
   if (statusEl) {
-    statusEl.textContent = useSel
-      ? `Exporting selected range ${formatTimecode(timeSelection.fromSec)} -> ${formatTimecode(timeSelection.toSec)}`
-      : `Exporting full session (00:00.000 -> ${formatTimecode(fullBounds.endSec)})`;
+    statusEl.textContent = activeFormat === 'mp4' && chosenVid
+      ? `Combining "${chosenVid.trackName}" (Take #${chosenVid.takeNumber}) with stereo audio mixdown`
+      : (useSel
+        ? `Exporting selected range ${fromInp?.value || ''} -> ${toInp?.value || ''}`
+        : `Exporting full session (00:00.000 -> ${formatTimecode(fullBounds.endSec)})`);
   }
 
   modal.classList.remove('hidden');
@@ -6432,6 +6607,7 @@ async function renderAndExportMixdown({
   excludeClick = false,
   defaultName = '',
   targetFile = undefined,
+  videoChoice = null,
 } = {}) {
   const playableTracks = getExportPlayableTracks({ excludeClick });
   const fullBounds = getFullSessionExportBounds(excludeClick);
@@ -6456,8 +6632,8 @@ async function renderAndExportMixdown({
   };
 
   return runDawJob({
-    title: `Export ${spec.ext.toUpperCase()} Mixdown`,
-    category: 'MIXDOWN',
+    title: format === 'mp4' ? 'Export MP4 Video + Audio' : `Export ${spec.ext.toUpperCase()} Mixdown`,
+    category: format === 'mp4' ? 'VIDEO MP4' : 'MIXDOWN',
     detail: `Decoding stems (${formatTimecode(renderStartSec)} -> ${formatTimecode(rawEndSec)})...`,
     progress: 12,
   }, async (job) => {
@@ -6595,7 +6771,18 @@ async function renderAndExportMixdown({
       }
     }
 
-    const encMsg = `Encoding .${spec.ext.toUpperCase()} (${quality || spec.defaultQuality} @ ${sampleRate} Hz)...`;
+    const resolvedVid = format === 'mp4' ? (videoChoice || getSelectedExportVideoChoice()) : null;
+    if (format === 'mp4' && !resolvedVid?.videoFile) {
+      const noVidErr = 'No recorded or imported .mp4 video clip found to combine with audio.';
+      showStatus(noVidErr, true);
+      if (statusEl) statusEl.textContent = noVidErr;
+      job.fail(noVidErr);
+      return { ok: false, error: noVidErr };
+    }
+
+    const encMsg = format === 'mp4'
+      ? `Muxing camera video (${resolvedVid.trackName}) + stereo audio into .MP4...`
+      : `Encoding .${spec.ext.toUpperCase()} (${quality || spec.defaultQuality} @ ${sampleRate} Hz)...`;
     setProg(encMsg);
     job.update({ progress: 76, detail: encMsg });
 
@@ -6610,8 +6797,16 @@ async function renderAndExportMixdown({
       quality: quality || spec.defaultQuality,
       sampleRate: Number(sampleRate) || 48000,
       title: currentProject?.name || 'RobOS DAW Mixdown',
-      defaultName: defaultName || `${safeTitle}-mixdown.${spec.ext}`,
+      defaultName: defaultName || `${safeTitle}-${format === 'mp4' ? 'video' : 'mixdown'}.${spec.ext}`,
       targetFile,
+      videoMuxSpec: resolvedVid ? {
+        videoFile: resolvedVid.videoFile,
+        clipStartSec: resolvedVid.startSec,
+        clipOffsetSec: resolvedVid.offsetSec,
+        clipDurationSec: resolvedVid.durationSec,
+        renderStartSec,
+        renderEndSec,
+      } : null,
     });
 
     if (res?.canceled) {
@@ -6888,6 +7083,7 @@ async function executeExportMixdownFromModal() {
       edgeFade,
       excludeClick,
       defaultName,
+      videoChoice: format === 'mp4' ? getSelectedExportVideoChoice() : null,
     });
     if (res?.ok) {
       isExportingMixdown = false;
@@ -6955,6 +7151,7 @@ function buildMenubarItems(key) {
         if (res?.ok) showStatus(`Opened ${res.folder || res.projectDir}`);
       } },
       { sep: true },
+      { icon: 'audio-interface', label: 'Scarlett Headphone & Direct Monitor Mix...', kbd: '', run: () => openHeadphoneMixModal() },
       { icon: 'channel-fx', label: 'VST & Sample Directories...', kbd: 'Ctrl+Shift+P', run: () => openVstDirectoriesModal() },
       { icon: 'audio-interface', label: 'Audio Device Preferences', kbd: 'Ctrl+,', run: () => switchView('audio-devices') },
     ];
@@ -7651,6 +7848,8 @@ function openTakeContextMenu(ev, track, clip, clickTimeSec) {
     ${ctxRow('data-take-ctx', 'select-bounds', 'select-all', `Select Region Bounds (${formatTimecode(clipStart)} -> ${formatTimecode(clipEnd)})`)}
     ${hasActiveTimeSelection() ? ctxRow('data-take-ctx', 'clear-range', 'close', 'Clear Time Selection') : ''}
     ${ctxRow('data-take-ctx', 'export-mixdown', 'mixdown-export', 'Export Audio Mixdown...', 'Ctrl+Shift+E')}
+    ${resolveClipVideoFilePath(clip) ? ctxRow('data-take-ctx', 'export-video-mp4', 'video', 'Export Video + Audio Mixdown (.mp4)...') : ''}
+    ${resolveClipVideoFilePath(clip) ? ctxRow('data-take-ctx', 'reveal-video-mp4', 'folder', 'Reveal Raw Camera Video (.mp4) in Folder') : ''}
     <div class="ctx-sep"></div>
     ${ctxRow('data-take-ctx', 'gen-click', 'metronome', 'Generate Click Track', 'Gemini AI')}
     ${ctxRow('data-take-ctx', 'remove-drums', 'drum-replace', 'Remove Drums', 'Gemini AI')}
@@ -7768,6 +7967,10 @@ function openTakeContextMenu(ev, track, clip, clickTimeSec) {
         clearTimeSelection();
       } else if (cmd === 'export-mixdown') {
         openExportMixdownModal();
+      } else if (cmd === 'export-video-mp4') {
+        openExportMixdownModal({ preferFormat: 'mp4', preferTrackId: track.id, preferClipId: clip.id });
+      } else if (cmd === 'reveal-video-mp4') {
+        await revealActiveVideoTakeInFolder(track.id, clip.id);
       } else if (cmd === 'gen-click') {
         await generateClickTrackUnderTrack(track);
       } else if (cmd === 'remove-drums') {
@@ -9057,6 +9260,26 @@ function renderSnapshot(snap) {
         </div>
       `).join('');
 
+      const hpMix = fr.mixer.headphoneMix;
+      const inlineHpHtml = hpMix?.supported ? `
+        <div class="hpmix-inline-card">
+          <div>
+            <strong style="color:#f1f5f9;">Scarlett Headphone &amp; Direct Monitor (${esc(hpMix.mixLeft)}/${esc(hpMix.mixRight)})</strong>
+            <div class="hint" style="margin-top:2px;">
+              Direct Mic Bleed: <strong>${hpMix.activeDirectCount > 0 ? `${hpMix.activeDirectCount} input(s) live (${hpMix.maxDirectInputDb >= 0 ? '+' : ''}${hpMix.maxDirectInputDb} dB)` : 'OFF (Zero Mic Echo)'}</strong>
+              · Backing PCM 1+2: <strong>${hpMix.backingPcmDb >= 0 ? '+' : ''}${hpMix.backingPcmDb} dB</strong>
+              · PipeWire Sink: <strong>${snap.outputVolume?.percent ?? 100}%</strong>
+            </div>
+          </div>
+          <div class="btn-cluster">
+            ${hpMix.activeDirectCount > 0 ? `
+              <button type="button" class="btn btn-sm btn-primary" id="btn-inline-mute-direct">Mute Direct Mic Bleed + 100% Backing</button>
+            ` : ''}
+            <button type="button" class="btn btn-sm btn-bevel" id="btn-inline-open-hpmix">Open Headphone Mix...</button>
+          </div>
+        </div>
+      ` : '';
+
       mixerSlot.innerHTML = `
         <div class="card" id="focusrite-preamp-card">
           <div class="preamp-header">
@@ -9067,8 +9290,15 @@ function renderSnapshot(snap) {
             <div class="phantom-group">${clockSelectHtml}${banksHtml}</div>
           </div>
           <div class="preamp-strip-grid">${stripsHtml}</div>
+          ${inlineHpHtml}
         </div>
       `;
+
+      document.getElementById('btn-inline-open-hpmix')?.addEventListener('click', () => openHeadphoneMixModal());
+      document.getElementById('btn-inline-mute-direct')?.addEventListener('click', async (ev) => {
+        ev.currentTarget.disabled = true;
+        await applyHeadphoneMixUpdate({ preset: 'backing-only' }, 'Muted Scarlett direct mic bleed in headphones & set Backing Track to 100%.');
+      });
 
       mixerSlot.querySelectorAll('[data-hw-control]').forEach(btn => {
         btn.addEventListener('click', async () => {
@@ -9124,7 +9354,191 @@ function renderSnapshot(snap) {
       </li>
     `).join('');
   }
+  updateHeadphoneMixBadge(snap);
+  if (!document.getElementById('headphone-mix-modal')?.classList.contains('hidden')) {
+    renderHeadphoneMixModal(snap);
+  }
   updateStatusBarTelemetry();
+}
+
+let hpMixDebounceTimer = null;
+
+function setLiveHeadphoneBoostDb(dbVal) {
+  const clamped = DE.clamp(-12, 12, Number(dbVal) || 0);
+  liveHeadphoneBoostDb = Number(clamped.toFixed(1));
+  try { localStorage.setItem('robos.daw.headphoneBoostDb', String(liveHeadphoneBoostDb)); } catch {}
+  const gainLin = DE.dbToGain(liveHeadphoneBoostDb);
+  for (const node of activeLiveMasterBoostGains) {
+    try {
+      const now = node.context?.currentTime || 0;
+      node.gain.setTargetAtTime(gainLin, now, 0.008);
+    } catch {
+      try { node.gain.value = gainLin; } catch {}
+    }
+  }
+  const lbl = document.getElementById('hpmix-daw-boost-val');
+  if (lbl) lbl.textContent = `${liveHeadphoneBoostDb >= 0 ? '+' : ''}${liveHeadphoneBoostDb.toFixed(1)} dB`;
+}
+
+function updateHeadphoneMixBadge(snap = currentSnapshot) {
+  const badge = document.getElementById('headphone-mix-badge');
+  if (!badge) return;
+  const hpMix = snap?.focusrite?.mixer?.headphoneMix;
+  const pwPct = snap?.outputVolume?.percent ?? 100;
+  if (hpMix?.supported) {
+    if (hpMix.activeDirectCount > 0) {
+      badge.textContent = `${hpMix.activeDirectCount} Mic${hpMix.activeDirectCount > 1 ? 's' : ''} Live`;
+      badge.className = 'pill-count warn-bleed';
+      badge.title = `${hpMix.activeDirectCount} Focusrite hardware input(s) are currently audible in your headphones (${hpMix.maxDirectInputDb} dB). Click to mute direct mic echo & boost backing track.`;
+    } else {
+      const boostNote = hpMix.backingPcmDb > 0 ? ` +${hpMix.backingPcmDb}dB` : `${pwPct}%`;
+      badge.textContent = `Clean · ${boostNote}`;
+      badge.className = 'pill-count clean-mix';
+      badge.title = 'Focusrite direct mic bleed is muted in headphones — pure backing track monitoring.';
+    }
+  } else {
+    badge.textContent = `${pwPct}%`;
+    badge.className = 'pill-count';
+  }
+}
+
+async function openHeadphoneMixModal() {
+  const modal = document.getElementById('headphone-mix-modal');
+  if (!modal) return;
+  modal.classList.remove('hidden');
+  renderHeadphoneMixModal(currentSnapshot);
+  const fresh = await window.robos.getAudioSnapshot();
+  if (fresh?.ok) {
+    renderSnapshot(fresh);
+  }
+}
+
+function closeHeadphoneMixModal() {
+  document.getElementById('headphone-mix-modal')?.classList.add('hidden');
+}
+
+async function applyHeadphoneMixUpdate(patch = {}, statusMsg = '') {
+  const cardIndex = currentSnapshot?.focusrite?.alsaCardIndex ?? null;
+  const sinkId = currentSnapshot?.activeOutput?.id || null;
+  const noteEl = document.getElementById('hpmix-status-note');
+  if (noteEl) noteEl.textContent = 'Applying Scarlett hardware DSP & PipeWire output settings...';
+  const res = await window.robos.setHeadphoneMix({
+    cardIndex,
+    sinkId,
+    ...patch,
+  });
+  if (res?.ok && res.snapshot) {
+    renderSnapshot(res.snapshot);
+    if (statusMsg) showStatus(statusMsg);
+    if (noteEl) noteEl.textContent = statusMsg || 'Updated Scarlett Headphone & Backing Track Mix.';
+  } else if (noteEl) {
+    noteEl.textContent = `Update failed: ${res?.error || 'Unknown error'}`;
+  }
+  return res;
+}
+
+function scheduleHeadphoneMixUpdate(patch, statusMsg = '') {
+  if (hpMixDebounceTimer) clearTimeout(hpMixDebounceTimer);
+  hpMixDebounceTimer = setTimeout(() => {
+    hpMixDebounceTimer = null;
+    applyHeadphoneMixUpdate(patch, statusMsg);
+  }, 110);
+}
+
+function formatMonitorDbLabel(db) {
+  const n = Number(db);
+  if (!Number.isFinite(n) || n <= -79.5) return 'OFF (-80 dB)';
+  return `${n >= 0 ? '+' : ''}${n.toFixed(1)} dB`;
+}
+
+function renderHeadphoneMixModal(snap = currentSnapshot) {
+  const pwPct = snap?.outputVolume?.percent ?? 100;
+  const hpMix = snap?.focusrite?.mixer?.headphoneMix || null;
+
+  const pwSlider = document.getElementById('hpmix-pw-vol-slider');
+  const pwVal = document.getElementById('hpmix-pw-vol-val');
+  if (pwSlider) pwSlider.value = String(DE.clamp(20, 150, pwPct));
+  if (pwVal) pwVal.textContent = `${pwPct}%${snap?.outputVolume?.muted ? ' (MUTED)' : ''}`;
+
+  const dawSlider = document.getElementById('hpmix-daw-boost-slider');
+  const dawVal = document.getElementById('hpmix-daw-boost-val');
+  if (dawSlider) dawSlider.value = String(liveHeadphoneBoostDb);
+  if (dawVal) dawVal.textContent = `${liveHeadphoneBoostDb >= 0 ? '+' : ''}${liveHeadphoneBoostDb.toFixed(1)} dB`;
+
+  const pcmBlock = document.getElementById('hpmix-pcm-block');
+  const pcmSlider = document.getElementById('hpmix-pcm-db-slider');
+  const pcmVal = document.getElementById('hpmix-pcm-db-val');
+  const mixBusLbl = document.getElementById('hpmix-mixbus-lbl');
+  const masterDirSlider = document.getElementById('hpmix-direct-master-slider');
+  const masterDirVal = document.getElementById('hpmix-direct-master-val');
+  const listEl = document.getElementById('hpmix-direct-inputs-list');
+
+  if (!hpMix?.supported) {
+    if (pcmBlock) pcmBlock.classList.add('hidden');
+    if (masterDirSlider) masterDirSlider.disabled = true;
+    if (masterDirVal) masterDirVal.textContent = 'N/A';
+    if (listEl) {
+      listEl.innerHTML = '<div class="hint" style="padding:10px;">No Focusrite hardware DSP routing mixer detected on active USB audio card — use PipeWire &amp; DAW Boost sliders on the left.</div>';
+    }
+    return;
+  }
+
+  if (pcmBlock) pcmBlock.classList.remove('hidden');
+  if (mixBusLbl) mixBusLbl.textContent = `${hpMix.mixLeft} / ${hpMix.mixRight}`;
+  if (pcmSlider) pcmSlider.value = String(DE.clamp(-36, 12, hpMix.backingPcmDb));
+  if (pcmVal) pcmVal.textContent = formatMonitorDbLabel(hpMix.backingPcmDb);
+
+  if (masterDirSlider) {
+    masterDirSlider.disabled = false;
+    masterDirSlider.value = String(DE.clamp(-80, 6, hpMix.maxDirectInputDb));
+  }
+  if (masterDirVal) masterDirVal.textContent = formatMonitorDbLabel(hpMix.maxDirectInputDb);
+
+  if (listEl) {
+    // Show Analogue 1..8 plus any active S/PDIF or ADAT slots so the list stays focused & crystal-clear
+    const visibleSlots = hpMix.directInputs.filter(d => d.active || /^Analogue\s+[1-8]$/i.test(d.inputName));
+    listEl.innerHTML = visibleSlots.map(d => {
+      // Match session track name if a track uses this input!
+      const matchingTrack = (currentProject?.tracks || []).find(t => {
+        const m = String(d.inputName).match(/^Analogue\s+(\d+)$/i);
+        if (m) {
+          const chNum = Number(m[1]);
+          return new RegExp(`Input\\s*${chNum}\\b|Mic${chNum}\\b|Line${chNum + 6}\\b`, 'i').test(`${t.inputLabel || ''} ${t.inputNodeName || ''}`);
+        }
+        return false;
+      });
+      const friendlyLabel = matchingTrack ? `${d.inputName} (${matchingTrack.name})` : d.inputName;
+      return `
+        <div class="hpmix-direct-row ${d.active ? 'is-live' : ''}">
+          <span class="hpmix-direct-name" title="${esc(friendlyLabel)}">${esc(friendlyLabel)}</span>
+          <input type="range" min="-80" max="6" step="1" value="${DE.clamp(-80, 6, d.maxDb)}" data-hp-slot="${d.slot}" class="range-full" />
+          <span class="mono" data-hp-slot-lbl="${d.slot}" style="font-size:10px;text-align:right;">${d.active ? `${d.maxDb >= 0 ? '+' : ''}${d.maxDb} dB` : 'OFF'}</span>
+          <button type="button" class="btn btn-sm btn-bevel" data-hp-mute-slot="${d.slot}" data-hp-is-active="${d.active ? '1' : '0'}">${d.active ? 'Mute' : '0 dB'}</button>
+        </div>
+      `;
+    }).join('');
+
+    listEl.querySelectorAll('input[data-hp-slot]').forEach(inp => {
+      inp.addEventListener('input', (e) => {
+        const slot = Number(e.target.dataset.hpSlot);
+        const db = Number(e.target.value);
+        const lbl = listEl.querySelector(`[data-hp-slot-lbl="${slot}"]`);
+        if (lbl) lbl.textContent = db <= -79.5 ? 'OFF' : `${db >= 0 ? '+' : ''}${db} dB`;
+        scheduleHeadphoneMixUpdate({ slotDb: { slot, db } });
+      });
+    });
+
+    listEl.querySelectorAll('button[data-hp-mute-slot]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const slot = Number(btn.dataset.hpMuteSlot);
+        const isAct = btn.dataset.hpIsActive === '1';
+        applyHeadphoneMixUpdate(
+          { slotDb: { slot, db: isAct ? -80 : -6 } },
+          isAct ? `Muted Scarlett Slot #${slot} in headphones.` : `Unmuted Scarlett Slot #${slot} (-6 dB) in headphones.`
+        );
+      });
+    });
+  }
 }
 
 async function toggleLiveMonitor() {
@@ -9311,6 +9725,12 @@ async function init() {
   document.getElementById('btn-project-save')?.addEventListener('click', () => saveCurrentSession(false));
   document.getElementById('btn-project-save-as')?.addEventListener('click', () => saveCurrentSession(true));
   document.getElementById('btn-project-export')?.addEventListener('click', () => openExportMixdownModal());
+  document.getElementById('btn-vmon-export-mp4')?.addEventListener('click', () => {
+    openExportMixdownModal({ preferFormat: 'mp4', preferTrackId: selectedVideoOutputTrackId });
+  });
+  document.getElementById('btn-vmon-reveal-mp4')?.addEventListener('click', () => {
+    revealActiveVideoTakeInFolder(selectedVideoOutputTrackId);
+  });
   document.getElementById('btn-project-save-kdenlive')?.addEventListener('click', (ev) => saveSessionToKdenliveProject({ forceSaveAs: Boolean(ev.shiftKey) }));
   document.getElementById('btn-vmon-kdenlive')?.addEventListener('click', (ev) => saveSessionToKdenliveProject({ forceSaveAs: Boolean(ev.shiftKey) }));
   document.getElementById('btn-export-to-kdenlive')?.addEventListener('click', async (ev) => {
@@ -9363,6 +9783,38 @@ async function init() {
   });
   document.getElementById('export-format-select')?.addEventListener('change', (e) => {
     populateExportQualityOptions(e.target.value);
+    if (e.target.value === 'mp4') {
+      const chosen = getSelectedExportVideoChoice();
+      if (chosen && !hasActiveTimeSelection()) {
+        const selRadio = document.getElementById('export-scope-selection');
+        if (selRadio) selRadio.checked = true;
+        document.getElementById('export-from-input').value = formatTimecode(chosen.startSec);
+        document.getElementById('export-to-input').value = formatTimecode(chosen.endSec);
+        refreshExportModalSummary();
+      }
+    }
+  });
+  document.getElementById('export-video-track-select')?.addEventListener('change', () => {
+    const chosen = getSelectedExportVideoChoice();
+    if (chosen) {
+      const selRadio = document.getElementById('export-scope-selection');
+      if (selRadio) selRadio.checked = true;
+      document.getElementById('export-from-input').value = formatTimecode(chosen.startSec);
+      document.getElementById('export-to-input').value = formatTimecode(chosen.endSec);
+      refreshExportModalSummary();
+    }
+  });
+  document.getElementById('btn-export-use-video')?.addEventListener('click', () => {
+    const chosen = getSelectedExportVideoChoice();
+    if (!chosen) {
+      showStatus('No recorded or imported video clip found in this session.', true);
+      return;
+    }
+    const selRadio = document.getElementById('export-scope-selection');
+    if (selRadio) selRadio.checked = true;
+    document.getElementById('export-from-input').value = formatTimecode(chosen.startSec);
+    document.getElementById('export-to-input').value = formatTimecode(chosen.endSec);
+    refreshExportModalSummary();
   });
   document.getElementById('export-chk-exclude-click')?.addEventListener('change', refreshExportModalSummary);
   document.getElementById('btn-export-use-ruler')?.addEventListener('click', () => {
@@ -10291,6 +10743,59 @@ async function init() {
     }
   });
 
+  // Scarlett Headphone & Direct Monitor Mix Modal Handlers
+  document.getElementById('btn-topbar-headphone-mix')?.addEventListener('click', () => openHeadphoneMixModal());
+  document.getElementById('btn-hpmix-close')?.addEventListener('click', closeHeadphoneMixModal);
+  document.getElementById('btn-hpmix-done')?.addEventListener('click', closeHeadphoneMixModal);
+  document.getElementById('btn-hpmix-preset-drums')?.addEventListener('click', () => {
+    setLiveHeadphoneBoostDb(Math.max(0, liveHeadphoneBoostDb));
+    applyHeadphoneMixUpdate(
+      { preset: 'backing-only' },
+      'Applied Drum Tracking Preset: Scarlett direct mic echo muted (-80 dB) + Backing Track set to 100%.'
+    );
+  });
+  document.getElementById('btn-hpmix-preset-boost')?.addEventListener('click', () => {
+    setLiveHeadphoneBoostDb(3);
+    applyHeadphoneMixUpdate(
+      { preset: 'boost-backing' },
+      'Applied Loud Backing Boost: Direct mics muted + Scarlett DSP +6 dB + PipeWire 115% + DAW +3 dB.'
+    );
+  });
+  document.getElementById('btn-hpmix-preset-blend')?.addEventListener('click', () => {
+    setLiveHeadphoneBoostDb(0);
+    applyHeadphoneMixUpdate(
+      { preset: 'blend-direct' },
+      'Applied Subtle Direct Blend: Scarlett direct mics at -12 dB + Backing Track 100%.'
+    );
+  });
+  document.getElementById('btn-hpmix-mute-all-direct')?.addEventListener('click', () => {
+    applyHeadphoneMixUpdate(
+      { directMonitorDb: -80 },
+      'Muted all Focusrite direct hardware mic inputs in headphones (recording gain unchanged).'
+    );
+  });
+  document.getElementById('hpmix-pw-vol-slider')?.addEventListener('input', (e) => {
+    const pct = Number(e.target.value);
+    const lbl = document.getElementById('hpmix-pw-vol-val');
+    if (lbl) lbl.textContent = `${pct}%`;
+    scheduleHeadphoneMixUpdate({ pipewireOutputPercent: pct });
+  });
+  document.getElementById('hpmix-pcm-db-slider')?.addEventListener('input', (e) => {
+    const db = Number(e.target.value);
+    const lbl = document.getElementById('hpmix-pcm-db-val');
+    if (lbl) lbl.textContent = formatMonitorDbLabel(db);
+    scheduleHeadphoneMixUpdate({ backingPcmDb: db });
+  });
+  document.getElementById('hpmix-daw-boost-slider')?.addEventListener('input', (e) => {
+    setLiveHeadphoneBoostDb(Number(e.target.value));
+  });
+  document.getElementById('hpmix-direct-master-slider')?.addEventListener('input', (e) => {
+    const db = Number(e.target.value);
+    const lbl = document.getElementById('hpmix-direct-master-val');
+    if (lbl) lbl.textContent = formatMonitorDbLabel(db);
+    scheduleHeadphoneMixUpdate({ directMonitorDb: db });
+  });
+
   // Audio Devices Preferences Handlers
   document.getElementById('btn-rescan')?.addEventListener('click', async () => {
     const snap = await window.robos.getAudioSnapshot();
@@ -10696,6 +11201,16 @@ window.__dawStudioState = () => ({
   playbackHotSwapSeq,
   timeSelection: hasActiveTimeSelection() ? { ...timeSelection } : null,
   exportModalOpen: !document.getElementById('export-mixdown-modal')?.classList.contains('hidden'),
+  headphoneMixModalOpen: !document.getElementById('headphone-mix-modal')?.classList.contains('hidden'),
+  liveHeadphoneBoostDb,
+  headphoneMix: currentSnapshot?.focusrite?.mixer?.headphoneMix
+    ? {
+        activeDirectCount: currentSnapshot.focusrite.mixer.headphoneMix.activeDirectCount,
+        maxDirectInputDb: currentSnapshot.focusrite.mixer.headphoneMix.maxDirectInputDb,
+        backingPcmDb: currentSnapshot.focusrite.mixer.headphoneMix.backingPcmDb,
+        pipewireOutputPercent: currentSnapshot.outputVolume?.percent ?? 100,
+      }
+    : null,
   jobs: window.RobosJobs?.getSnapshot?.() || null,
   videoMode: {
     discoveredSourcesCount: discoveredVideoSources.length,

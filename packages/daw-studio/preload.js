@@ -13,6 +13,7 @@ contextBridge.exposeInMainWorld('robos', {
   getAudioSnapshot: () => ipcRenderer.invoke('daw:audio-snapshot'),
   saveAudioEngine: (payload) => ipcRenderer.invoke('daw:save-audio-engine', payload),
   setFocusriteControl: (payload) => ipcRenderer.invoke('daw:set-focusrite-control', payload),
+  setHeadphoneMix: (payload) => ipcRenderer.invoke('daw:set-headphone-mix', payload),
   testInputCapture: (payload) => ipcRenderer.invoke('daw:test-input', payload),
   playTestTone: (payload) => ipcRenderer.invoke('daw:play-test-tone', payload),
   onHardwareChanged: (cb) => subscribe('daw:hardware-changed', cb),

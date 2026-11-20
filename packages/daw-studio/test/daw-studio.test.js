@@ -1983,7 +1983,7 @@ describe('DAW Editing Engine: Multi-Select, Track/Take Gain, Split/Trim, Copy/Pa
     assert.ok(htmlSrc.includes('<robos-job-status id="daw-job-status"'), 'index.html must mount <robos-job-status> in #daw-statusbar');
 
     assert.ok(appSrc.includes("category: 'KDENLIVE'"), 'saveSessionToKdenliveProject must register KDENLIVE job');
-    assert.ok(appSrc.includes("category: 'MIXDOWN'"), 'renderAndExportMixdown must register MIXDOWN job');
+    assert.ok(appSrc.includes("'MIXDOWN'"), 'renderAndExportMixdown must register MIXDOWN job');
     assert.ok(appSrc.includes("category: 'MIDI .KAR'"), 'createLyricsTrackUnderTrack must register MIDI .KAR job');
     assert.ok(appSrc.includes("category: 'CLICK AI'"), 'generateClickTrackUnderTrack must register CLICK AI job');
     assert.ok(appSrc.includes("category: 'STEMS'"), 'removeDrumsUnderTrack must register STEMS job');
@@ -2139,5 +2139,193 @@ describe('DAW Editing Engine: Multi-Select, Track/Take Gain, Split/Trim, Copy/Pa
     const g78 = analyzeAudioBeatGrid(prog78, { earliestStartSec: 0 });
     assert.strictEqual(g78.timeSignature, '7/8');
     assert.ok(Math.abs(g78.firstDownbeatSec - 1.0) <= 0.025);
+  });
+
+  it('parses Focusrite Scarlett 18i20 DSP Headphone Direct-Monitor vs Backing PCM 1+2 mix and exposes Headphone Mix controls', () => {
+    const {
+      scarlettDbToRaw,
+      scarlettRawToDb,
+      parseScarlettHeadphoneMix,
+    } = require('../../robos-lib/audio-devices');
+
+    assert.strictEqual(scarlettDbToRaw(-80), 0);
+    assert.strictEqual(scarlettDbToRaw(-3), 154);
+    assert.strictEqual(scarlettDbToRaw(0), 160);
+    assert.strictEqual(scarlettDbToRaw(12), 184);
+    assert.strictEqual(scarlettRawToDb(0), -80);
+    assert.strictEqual(scarlettRawToDb(154), -3);
+    assert.strictEqual(scarlettRawToDb(184), 12);
+
+    const sampleDump = [
+      "Simple mixer control 'Analogue Output 07',0",
+      "  Capabilities: penum",
+      "  Item0: 'Mix A'",
+      "Simple mixer control 'Analogue Output 08',0",
+      "  Capabilities: penum",
+      "  Item0: 'Mix B'",
+      "Simple mixer control 'Line 07 (Headphones 1 L)',0",
+      "  Limits: Playback 0 - 127",
+      "  Mono: Playback 127 [100%] [0.00dB]",
+      "Simple mixer control 'Line 07 Mute',0",
+      "  Mono: Playback [off]",
+      "Simple mixer control 'Line 08 (Headphones 1 R)',0",
+      "  Limits: Playback 0 - 127",
+      "  Mono: Playback 127 [100%] [0.00dB]",
+      "Simple mixer control 'Mixer Input 01',0",
+      "  Item0: 'Analogue 1'",
+      "Simple mixer control 'Mixer Input 02',0",
+      "  Item0: 'Analogue 2'",
+      "Simple mixer control 'Mixer Input 19',0",
+      "  Item0: 'PCM 1'",
+      "Simple mixer control 'Mixer Input 20',0",
+      "  Item0: 'PCM 2'",
+      "Simple mixer control 'Mix A Input 01',0",
+      "  Limits: Playback 0 - 184",
+      "  Mono: Playback 154 [84%] [-3.00dB]",
+      "Simple mixer control 'Mix B Input 01',0",
+      "  Limits: Playback 0 - 184",
+      "  Mono: Playback 154 [84%] [-3.00dB]",
+      "Simple mixer control 'Mix A Input 02',0",
+      "  Limits: Playback 0 - 184",
+      "  Mono: Playback 0 [0%] [-80.00dB]",
+      "Simple mixer control 'Mix B Input 02',0",
+      "  Limits: Playback 0 - 184",
+      "  Mono: Playback 0 [0%] [-80.00dB]",
+      "Simple mixer control 'Mix A Input 19',0",
+      "  Limits: Playback 0 - 184",
+      "  Mono: Playback 160 [87%] [0.00dB]",
+      "Simple mixer control 'Mix B Input 20',0",
+      "  Limits: Playback 0 - 184",
+      "  Mono: Playback 160 [87%] [0.00dB]",
+    ].join('\n');
+
+    const parsed = parseScarlettHeadphoneMix(sampleDump);
+    assert.strictEqual(parsed.supported, true);
+    assert.strictEqual(parsed.mixLeft, 'Mix A');
+    assert.strictEqual(parsed.mixRight, 'Mix B');
+    assert.strictEqual(parsed.activeDirectCount, 1);
+    assert.strictEqual(parsed.maxDirectInputDb, -3);
+    assert.strictEqual(parsed.backingPcmDb, 0);
+    assert.strictEqual(parsed.headphones.length, 1);
+
+    const pkgDir = path.join(__dirname, '..');
+    const htmlSrc = fs.readFileSync(path.join(pkgDir, 'renderer', 'index.html'), 'utf8');
+    const appSrc = fs.readFileSync(path.join(pkgDir, 'renderer', 'app.js'), 'utf8');
+    assert.ok(htmlSrc.includes('id="btn-topbar-headphone-mix"'));
+    assert.ok(htmlSrc.includes('id="headphone-mix-modal"'));
+    assert.ok(appSrc.includes('computeReliableEarsStartWallMs'));
+  });
+
+  it('exports combined MP4 (Camera Video + Stereo Audio Mixdown), preserves video-only clip fileExists, and queues Ctrl+Z until recordStop completes', async () => {
+    const { MIXDOWN_FORMATS, transcodeMixdownBuffer } = require('../lib/mixdown-exporter');
+    const { synthesizeTestPatternMp4, probeVideoFileInfo, buildVideoTrack } = require('../lib/video-devices');
+
+    assert.ok(MIXDOWN_FORMATS.some(f => f.id === 'mp4'), 'MIXDOWN_FORMATS should include mp4 Video + Audio mixdown');
+
+    const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'robos-daw-mp4-mix-'));
+    const prevProjDir = process.env.ROBOS_DAW_PROJECTS_DIR;
+    process.env.ROBOS_DAW_PROJECTS_DIR = path.join(tmpRoot, 'projects');
+    try {
+      const camMp4 = path.join(tmpRoot, 'camera-take.mp4');
+      await synthesizeTestPatternMp4(camMp4, 1.5, false, { width: 640, height: 360 });
+
+      // 1. Verify video-only camera clip (wavFile: null) keeps fileExists: true across save/load
+      const proj = createEmptyProject({ name: 'Video Audio Export Test', sampleRate: 48000 });
+      const vTrack = buildVideoTrack({ name: 'XT2125-4 Camera', audioMode: 'none' });
+      vTrack.clips.push({
+        id: 'vtake-test1',
+        name: 'XT2125-4 Take',
+        mediaKind: 'video',
+        videoFile: camMp4,
+        wavFile: null,
+        startSec: 0.4,
+        offsetSec: 0,
+        durationSec: 1.5,
+        sourceDurationSec: 1.5,
+        videoWidth: 640,
+        videoHeight: 360,
+        videoFps: 25,
+      });
+      proj.tracks.push(vTrack);
+      const savedDir = path.join(tmpRoot, 'saved-proj');
+      saveProject(proj, { targetDir: savedDir });
+      const reloaded = loadProject(savedDir);
+      assert.strictEqual(reloaded.ok, true);
+      const reloadedClip = reloaded.project.tracks[0].clips[0];
+      assert.strictEqual(reloadedClip.videoFileExists, true);
+      assert.strictEqual(reloadedClip.fileExists, true, 'Video-only clip must remain fileExists: true on reload');
+
+      // 2. Synthesize 1.9s stereo audio mixdown buffer (0.0s -> 1.9s covering 0.4s lead-in + 1.5s video)
+      const sr = 48000;
+      const frames = Math.round(1.9 * sr);
+      const left = new Float32Array(frames);
+      const right = new Float32Array(frames);
+      for (let i = 0; i < frames; i++) {
+        const s = 0.35 * Math.sin((2 * Math.PI * 220 * i) / sr);
+        left[i] = s;
+        right[i] = s * 0.9;
+      }
+      const stereoWavBuf = Buffer.from(DE.encodeStereoFloat32ToWavBytes(left, right, sr));
+
+      // 3a. Export MP4 via instant lossless stream_copy (aligned at 0.0s)
+      const outFastMp4 = path.join(tmpRoot, 'exported-fast.mp4');
+      const fastRes = await transcodeMixdownBuffer(stereoWavBuf, {
+        outPath: outFastMp4,
+        format: 'mp4',
+        quality: 'stream_copy',
+        sampleRate: sr,
+        title: 'Drum Video Fast Mixdown',
+        videoMuxSpec: {
+          videoFile: camMp4,
+          clipStartSec: 0.0,
+          clipOffsetSec: 0,
+          clipDurationSec: 1.5,
+          renderStartSec: 0.0,
+          renderEndSec: 1.5,
+        },
+      });
+      assert.strictEqual(fastRes.ok, true);
+      const fastProbed = await probeVideoFileInfo(outFastMp4);
+      assert.strictEqual(fastProbed.hasVideo, true);
+      assert.strictEqual(fastProbed.hasAudio, true);
+
+      // 3b. Export MP4 muxing camera video + stereo audio mixdown with 0.4s timeline lead-in alignment
+      const outMp4 = path.join(tmpRoot, 'exported-video-mixdown.mp4');
+      const res = await transcodeMixdownBuffer(stereoWavBuf, {
+        outPath: outMp4,
+        format: 'mp4',
+        quality: 'stream_copy',
+        sampleRate: sr,
+        title: 'Drum Video Mixdown',
+        videoMuxSpec: {
+          videoFile: camMp4,
+          clipStartSec: 0.4,
+          clipOffsetSec: 0,
+          clipDurationSec: 1.5,
+          renderStartSec: 0.0,
+          renderEndSec: 1.9,
+        },
+      });
+      assert.strictEqual(res.ok, true);
+      assert.ok(fs.existsSync(outMp4) && res.bytes > 4000);
+      const probed = await probeVideoFileInfo(outMp4);
+      assert.strictEqual(probed.hasVideo, true, 'Exported MP4 must contain video stream');
+      assert.strictEqual(probed.hasAudio, true, 'Exported MP4 must contain stereo mixed audio stream');
+      assert.ok(probed.durationSec >= 1.6, `Expected duration >= 1.6s, got ${probed.durationSec}`);
+
+      // 4. Verify Video Output Export MP4 / Reveal .mp4 buttons and Ctrl+Z recordStop race guard
+      const pkgDir = path.join(__dirname, '..');
+      const htmlSrc = fs.readFileSync(path.join(pkgDir, 'renderer', 'index.html'), 'utf8');
+      const appSrc = fs.readFileSync(path.join(pkgDir, 'renderer', 'app.js'), 'utf8');
+      assert.ok(htmlSrc.includes('id="btn-vmon-export-mp4"'));
+      assert.ok(htmlSrc.includes('id="btn-vmon-reveal-mp4"'));
+      assert.ok(htmlSrc.includes('id="export-video-track-select"'));
+      assert.ok(appSrc.includes('let activeRecordStopPromise = null;'));
+      assert.ok(appSrc.includes('await activeRecordStopPromise;'));
+    } finally {
+      if (prevProjDir === undefined) delete process.env.ROBOS_DAW_PROJECTS_DIR;
+      else process.env.ROBOS_DAW_PROJECTS_DIR = prevProjDir;
+      fs.rmSync(tmpRoot, { recursive: true, force: true });
+    }
   });
 });

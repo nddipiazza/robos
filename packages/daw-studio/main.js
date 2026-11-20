@@ -319,6 +319,17 @@ ipcMain.handle('daw:set-focusrite-control', async (_e, payload) => {
   }
 });
 
+ipcMain.handle('daw:set-headphone-mix', async (_e, payload) => {
+  try {
+    if (!audioDevices || typeof audioDevices.setFocusriteHeadphoneMix !== 'function') {
+      throw new Error('Focusrite headphone mixer driver unavailable.');
+    }
+    return audioDevices.setFocusriteHeadphoneMix(payload || {});
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
 ipcMain.handle('daw:test-input', async (_e, payload) => {
   try {
     return await audioDevices.testInputCapture(payload || {});
@@ -1342,6 +1353,7 @@ async function handleMixdownExport(payload = {}) {
     title = '',
     defaultName = '',
     targetFile,
+    videoMuxSpec = null,
   } = payload || {};
   if (!wavBase64) throw new Error('Missing mixdown WAV buffer');
 
@@ -1381,6 +1393,7 @@ async function handleMixdownExport(payload = {}) {
       quality: effectiveQuality,
       sampleRate,
       title,
+      videoMuxSpec,
     });
   }
   if (!outPath) return { ok: false, canceled: true };
@@ -1392,6 +1405,7 @@ async function handleMixdownExport(payload = {}) {
     quality,
     sampleRate,
     title,
+    videoMuxSpec,
   });
 }
 

@@ -34,6 +34,11 @@
           <svg class="daw-svg-icon" width="13.5" height="13.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
           <span>Video Out</span>
         </button>
+        <button type="button" class="btn btn-sm btn-bevel" id="btn-topbar-headphone-mix" title="Focusrite Scarlett Headphone Mix — Turn Down Direct Mic Bleed &amp; Boost Backing Track Volume">
+          <svg class="daw-svg-icon" width="13.5" height="13.5" viewBox="0 0 24 24" fill="none" stroke="#00d4ff" stroke-width="2"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>
+          <span>Headphone Mix</span>
+          <span id="headphone-mix-badge" class="pill-count">...</span>
+        </button>
         <button type="button" class="btn btn-sm btn-bevel" id="btn-topbar-audio-devices" title="Hardware I/O &amp; Audio Device Preferences (Ctrl+, or 2)">
           <img src="assets/icons/audio-interface.webp" class="daw-ai-badge" width="15" height="15" alt="" />
           <span>Audio I/O</span>
@@ -301,6 +306,8 @@
                     <span class="vmon-mode-pill mono" id="vmon-mode-pill">READY</span>
                   </div>
                   <div class="vmon-actions">
+                    <button type="button" class="btn btn-sm btn-primary" id="btn-vmon-export-mp4" title="Export Video + Mixed-Down Stereo Audio (.mp4)">Export MP4</button>
+                    <button type="button" class="btn btn-sm btn-bevel" id="btn-vmon-reveal-mp4" title="Reveal Recorded Raw Camera .mp4 File in Folder">Reveal .mp4</button>
                     <button type="button" class="btn btn-sm btn-bevel" id="btn-vmon-kdenlive" title="Save / Sync Audio Mixdown + Video Tracks to Kdenlive Project (.kdenlive)">Kdenlive</button>
                     <button type="button" class="btn btn-sm btn-bevel" id="btn-vmon-live-cam" title="Preview Live Camera Feed When Stopped or Armed">Live Cam</button>
                     <button type="button" class="btn btn-sm btn-bevel" id="btn-vmon-wide" title="Toggle Compact / Wide Embedded Video Size">Wide</button>
@@ -1012,6 +1019,7 @@
             <span class="hint">Quick Bounds:</span>
             <button type="button" class="btn btn-sm btn-bevel" id="btn-export-use-ruler">Use Ruler Selection</button>
             <button type="button" class="btn btn-sm btn-bevel" id="btn-export-use-clips">Selected Region Bounds</button>
+            <button type="button" class="btn btn-sm btn-bevel" id="btn-export-use-video">Video Take Bounds</button>
             <button type="button" class="btn btn-sm btn-bevel" id="btn-export-use-full">Full Session</button>
           </div>
         </div>
@@ -1025,6 +1033,7 @@
             <div class="form-row" style="margin-bottom:0;">
               <label for="export-format-select">File Format</label>
               <select id="export-format-select" class="select">
+                <option value="mp4">MP4 Video (.mp4) — Camera Video + Stereo Audio Mixdown</option>
                 <option value="mp3">MP3 (.mp3) — Universal Audio</option>
                 <option value="wav">WAV (.wav) — Lossless PCM</option>
                 <option value="flac">FLAC (.flac) — Lossless Compressed</option>
@@ -1046,6 +1055,11 @@
                 <option value="96000">96,000 Hz (Hi-Res Master)</option>
               </select>
             </div>
+          </div>
+
+          <div id="export-video-track-row" class="form-row hidden" style="margin-top:10px;margin-bottom:0;">
+            <label for="export-video-track-select">Video Track &amp; Take to Combine with Audio Mixdown</label>
+            <select id="export-video-track-select" class="select"></select>
           </div>
 
           <div class="form-row" style="margin-top:10px;margin-bottom:0;">
@@ -1214,6 +1228,102 @@
         <div class="modal-footer-right">
           <button type="button" class="btn btn-bevel" id="btn-vid-modal-cancel">Cancel</button>
           <button type="button" class="btn btn-primary" id="btn-vid-confirm-add">+ Add Armed Video Track</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL 9: FOCUSRITE SCARLETT HEADPHONE & DIRECT MONITOR MIX ==================== -->
+  <div id="headphone-mix-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="hpmix-modal-title">
+    <div class="modal-window modal-lg" style="width:min(700px, 95vw);">
+      <div class="modal-header">
+        <div class="modal-title-row">
+          <img src="assets/icons/audio-interface.webp" class="daw-ai-badge" width="26" height="26" alt="" />
+          <div>
+            <h2 id="hpmix-modal-title">Scarlett Headphone &amp; Direct Monitor Mix</h2>
+            <p class="modal-subtitle">Turn down or mute Focusrite mic bleed/echo in your headphones while boosting your backing track — zero impact on recorded preamp gain</p>
+          </div>
+        </div>
+        <button type="button" class="modal-close" id="btn-hpmix-close" aria-label="Close Headphone Mix">&times;</button>
+      </div>
+
+      <div class="modal-body" id="hpmix-modal-body">
+        <div class="hpmix-preset-row">
+          <button type="button" class="btn btn-primary hpmix-preset-btn" id="btn-hpmix-preset-drums" title="Mutes Scarlett direct mic monitoring in Mix A/B (-80 dB) and sets Backing Track to 100% full output">
+            <strong>Zero Mic Echo + Full Backing</strong>
+            <span>Mute Scarlett direct inputs · 100% Backing (Best for Drums)</span>
+          </button>
+          <button type="button" class="btn btn-bevel hpmix-preset-btn" id="btn-hpmix-preset-boost" title="Mutes Scarlett direct mic monitoring and boosts Scarlett PCM 1+2 DSP by +6 dB + PipeWire 115%">
+            <strong>+6 dB Loud Backing Boost</strong>
+            <span>Mute direct inputs · +6 dB Scarlett DSP + 115% OS Volume</span>
+          </button>
+          <button type="button" class="btn btn-bevel hpmix-preset-btn" id="btn-hpmix-preset-blend" title="Sets subtle -12 dB direct mic monitoring alongside 100% backing track">
+            <strong>Subtle Direct Blend (-12 dB)</strong>
+            <span>Light direct mic monitor for quiet vocal/guitar takes</span>
+          </button>
+        </div>
+
+        <div class="hpmix-grid-2">
+          <!-- Column 1: Backing Track / Computer Playback Volume in Headphones -->
+          <div class="card hpmix-card">
+            <div class="hpmix-sec-title">1. BACKING TRACK &amp; CLICK VOLUME IN HEADPHONES</div>
+            <p class="hint" style="margin:2px 0 10px;">Boost the computer backing track &amp; metronome in your headphones without turning up mic bleed:</p>
+
+            <div class="hpmix-slider-block">
+              <div class="hpmix-lbl-row">
+                <label for="hpmix-pw-vol-slider">PipeWire / OS Scarlett Output Level</label>
+                <span id="hpmix-pw-vol-val" class="mono accent-text">100%</span>
+              </div>
+              <input type="range" id="hpmix-pw-vol-slider" min="20" max="150" step="5" value="100" class="range-full" />
+              <div class="hpmix-scale-hints"><span>20%</span><span>100% (Unity)</span><span>150% (+3.5 dB)</span></div>
+            </div>
+
+            <div class="hpmix-slider-block" id="hpmix-pcm-block">
+              <div class="hpmix-lbl-row">
+                <label for="hpmix-pcm-db-slider">Scarlett Hardware DSP Backing (<span id="hpmix-pcm-pair-lbl" class="mono">PCM 1+2</span>)</label>
+                <span id="hpmix-pcm-db-val" class="mono accent-text">0.0 dB</span>
+              </div>
+              <input type="range" id="hpmix-pcm-db-slider" min="-36" max="12" step="0.5" value="0" class="range-full" />
+              <div class="hpmix-scale-hints"><span>-36 dB</span><span>0.0 dB (Unity)</span><span>+12.0 dB (Max HW Boost)</span></div>
+            </div>
+
+            <div class="hpmix-slider-block">
+              <div class="hpmix-lbl-row">
+                <label for="hpmix-daw-boost-slider">DAW Playback &amp; Overdub Bus Boost</label>
+                <span id="hpmix-daw-boost-val" class="mono accent-text">0.0 dB</span>
+              </div>
+              <input type="range" id="hpmix-daw-boost-slider" min="-12" max="12" step="0.5" value="0" class="range-full" />
+              <div class="hpmix-scale-hints"><span>-12 dB</span><span>0.0 dB</span><span>+12.0 dB (True-Peak Limited)</span></div>
+            </div>
+          </div>
+
+          <!-- Column 2: Scarlett Direct Input Monitoring (Mic Echo / Bleed Control) -->
+          <div class="card hpmix-card">
+            <div class="hpmix-sec-head">
+              <div class="hpmix-sec-title">2. FOCUSRITE DIRECT INPUT MONITOR (MIC ECHO)</div>
+              <button type="button" class="btn btn-sm btn-bevel" id="btn-hpmix-mute-all-direct">Mute All Direct Mics</button>
+            </div>
+            <p class="hint" style="margin:2px 0 10px;">Controls live Scarlett mic/ADAT feed routed directly to <span id="hpmix-mixbus-lbl" class="mono">Mix A/B</span> headphones. <strong>Does NOT reduce recorded WAV gain.</strong></p>
+
+            <div class="hpmix-slider-block">
+              <div class="hpmix-lbl-row">
+                <label for="hpmix-direct-master-slider">Master Direct Input Monitor Level</label>
+                <span id="hpmix-direct-master-val" class="mono">-80 dB (OFF)</span>
+              </div>
+              <input type="range" id="hpmix-direct-master-slider" min="-80" max="6" step="1" value="-80" class="range-full" />
+              <div class="hpmix-scale-hints"><span>OFF (-80 dB)</span><span>-18 dB</span><span>0.0 dB</span><span>+6 dB</span></div>
+            </div>
+
+            <div class="hpmix-direct-list-title mini-heading">INDIVIDUAL SCARLETT INPUTS IN HEADPHONE MIX</div>
+            <div id="hpmix-direct-inputs-list" class="hpmix-direct-inputs-list"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <span class="hint" id="hpmix-status-note">Capture matrix PCM 01..20 taps preamps pre-fader — muting direct monitor never mutes your recording.</span>
+        <div class="modal-footer-right">
+          <button type="button" class="btn btn-primary" id="btn-hpmix-done">Done</button>
         </div>
       </div>
     </div>

@@ -16,6 +16,18 @@ const { execFile } = require('child_process');
 
 const MIXDOWN_FORMATS = [
   {
+    id: 'mp4',
+    label: 'MP4 Video (.mp4) — Camera Video + Stereo Audio Mixdown',
+    ext: 'mp4',
+    dialogName: 'MP4 Video + Audio',
+    defaultQuality: 'stream_copy',
+    qualities: [
+      { id: 'stream_copy', label: 'Instant Lossless Video Copy + 320 kbps AAC' },
+      { id: '1080p_hq', label: '1080p H.264 High Quality (CRF 18) + 320 kbps AAC' },
+      { id: '720p_hd', label: '720p H.264 HD (CRF 20) + 256 kbps AAC' },
+    ],
+  },
+  {
     id: 'mp3',
     label: 'MP3 (.mp3) — MPEG-1 Layer III',
     ext: 'mp3',
@@ -102,7 +114,9 @@ const MIXDOWN_FORMATS = [
 
 function getMixdownFormatSpec(formatId = 'mp3') {
   const clean = String(formatId || 'mp3').toLowerCase().replace(/^\./, '');
-  return MIXDOWN_FORMATS.find(f => f.id === clean || f.ext === clean) || MIXDOWN_FORMATS[0];
+  return MIXDOWN_FORMATS.find(f => f.id === clean || f.ext === clean)
+    || MIXDOWN_FORMATS.find(f => f.id === 'mp3')
+    || MIXDOWN_FORMATS[0];
 }
 
 function ensureFormatExtension(filePath, ext) {
@@ -184,6 +198,7 @@ async function transcodeMixdownBuffer(wavBuffer, {
   quality = '',
   sampleRate = 48000,
   title = '',
+  videoMuxSpec = null,
 } = {}) {
   if (!Buffer.isBuffer(wavBuffer) || wavBuffer.length < 44) {
     throw new Error('Invalid or empty WAV staging buffer for mixdown export.');
@@ -191,6 +206,94 @@ async function transcodeMixdownBuffer(wavBuffer, {
   const spec = getMixdownFormatSpec(format);
   const finalOutPath = ensureFormatExtension(outPath, spec.ext);
   fs.mkdirSync(path.dirname(finalOutPath), { recursive: true });
+
+  // MP4 Video + Stereo Audio Mixdown Muxer (combines recorded camera .mp4 + full stereo DAW mixdown)
+  if (spec.id === 'mp4') {
+    const vidPath = videoMuxSpec?.videoFile ? String(videoMuxSpec.videoFile) : '';
+    if (!vidPath || !fs.existsSync(vidPath)) {
+      throw new Error('Select a video track with a recorded or imported .mp4 clip to export MP4 video.');
+    }
+    const sr = [44100, 48000].includes(Number(sampleRate)) ? Number(sampleRate) : 48000;
+    const q = quality || spec.defaultQuality;
+    const renderStartSec = Math.max(0, Number(videoMuxSpec.renderStartSec) || 0);
+    const renderEndSec = Math.max(renderStartSec + 0.05, Number(videoMuxSpec.renderEndSec) || (renderStartSec + 10));
+    const clipStartSec = Math.max(0, Number(videoMuxSpec.clipStartSec) || 0);
+    const clipOffsetSec = Math.max(0, Number(videoMuxSpec.clipOffsetSec) || 0);
+    const sliceDurSec = Math.max(0.05, renderEndSec - renderStartSec);
+    const vidSeekSec = clipOffsetSec + Math.max(0, renderStartSec - clipStartSec);
+    const leadPadSec = Math.max(0, clipStartSec - renderStartSec);
+    const metaArgs = title ? ['-metadata', `title=${String(title).slice(0, 180)}`] : [];
+
+    const tmpWav = path.join(os.tmpdir(), `robos-daw-vidmux-${crypto.randomBytes(5).toString('hex')}.wav`);
+    try {
+      fs.writeFileSync(tmpWav, wavBuffer);
+      if (q === 'stream_copy' && leadPadSec <= 0.04) {
+        const fastArgs = [
+          '-y',
+          '-v', 'error',
+          ...(vidSeekSec > 0.005 ? ['-ss', vidSeekSec.toFixed(4)] : []),
+          '-i', vidPath,
+          '-i', tmpWav,
+          '-t', sliceDurSec.toFixed(4),
+          '-map', '0:v:0',
+          '-map', '1:a:0',
+          '-c:v', 'copy',
+          '-c:a', 'aac',
+          '-b:a', '320k',
+          '-ar', String(sr),
+          '-movflags', '+faststart',
+          ...metaArgs,
+          finalOutPath,
+        ];
+        await runFfmpeg(fastArgs);
+      } else {
+        const vfParts = [];
+        if (q === '720p_hd') {
+          vfParts.push("scale='min(1280,iw)':'min(720,ih)':force_original_aspect_ratio=decrease,scale=trunc(iw/2)*2:trunc(ih/2)*2");
+        } else {
+          vfParts.push("scale='min(1920,iw)':'min(1080,ih)':force_original_aspect_ratio=decrease,scale=trunc(iw/2)*2:trunc(ih/2)*2");
+        }
+        if (leadPadSec > 0.04) {
+          vfParts.push(`tpad=start_duration=${leadPadSec.toFixed(4)}:start_mode=add:color=black`);
+        }
+        const crf = q === '720p_hd' ? '20' : '18';
+        const aBr = q === '720p_hd' ? '256k' : '320k';
+        const encArgs = [
+          '-y',
+          '-v', 'error',
+          ...(vidSeekSec > 0.005 ? ['-ss', vidSeekSec.toFixed(4)] : []),
+          '-i', vidPath,
+          '-i', tmpWav,
+          '-t', sliceDurSec.toFixed(4),
+          '-map', '0:v:0',
+          '-map', '1:a:0',
+          '-vf', vfParts.join(','),
+          '-c:v', 'libx264',
+          '-preset', 'veryfast',
+          '-crf', crf,
+          '-pix_fmt', 'yuv420p',
+          '-c:a', 'aac',
+          '-b:a', aBr,
+          '-ar', String(sr),
+          '-movflags', '+faststart',
+          ...metaArgs,
+          finalOutPath,
+        ];
+        await runFfmpeg(encArgs);
+      }
+      const stat = fs.statSync(finalOutPath);
+      return {
+        ok: true,
+        filePath: finalOutPath,
+        bytes: stat.size,
+        format: 'mp4',
+        ext: 'mp4',
+        quality: q,
+      };
+    } finally {
+      try { fs.unlinkSync(tmpWav); } catch {}
+    }
+  }
 
   // Fast direct write only when 16-bit WAV @ 48kHz is requested and matches input verbatim
   if (spec.id === 'wav' && quality === 'pcm_s16le' && Number(sampleRate) === 48000 && wavBuffer.readUInt16LE(34) === 16) {

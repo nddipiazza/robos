@@ -3016,3 +3016,138 @@ kbd {
   align-items: center;
   gap: 4px;
 }
+
+/* ── Focusrite Scarlett Headphone & Direct Monitor Mix Modal ─────────── */
+.pill-count.warn-bleed {
+  background: rgba(245, 158, 11, 0.22);
+  border: 1px solid rgba(245, 158, 11, 0.52);
+  color: #fde68a;
+}
+.pill-count.clean-mix {
+  background: rgba(34, 197, 94, 0.18);
+  border: 1px solid rgba(34, 197, 94, 0.45);
+  color: #86efac;
+}
+.hpmix-preset-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.hpmix-preset-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 2px;
+  height: auto;
+  min-height: 46px;
+  padding: 7px 10px;
+  text-align: left;
+}
+.hpmix-preset-btn strong {
+  font-size: 11.5px;
+  font-weight: 700;
+}
+.hpmix-preset-btn span {
+  font-size: 10px;
+  opacity: 0.85;
+  white-space: normal;
+  line-height: 1.25;
+}
+.hpmix-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+@media (max-width: 660px) {
+  .hpmix-preset-row,
+  .hpmix-grid-2 {
+    grid-template-columns: 1fr;
+  }
+}
+.hpmix-card {
+  padding: 11px 12px;
+  display: flex;
+  flex-direction: column;
+}
+.hpmix-sec-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.hpmix-sec-title {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.65px;
+  color: #93c5fd;
+}
+.hpmix-slider-block {
+  padding: 7px 9px;
+  border-radius: 6px;
+  background: rgba(11, 15, 23, 0.72);
+  border: 1px solid #243044;
+  margin-bottom: 8px;
+}
+.hpmix-lbl-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #e2e8f0;
+  margin-bottom: 5px;
+}
+.hpmix-scale-hints {
+  display: flex;
+  justify-content: space-between;
+  font-size: 9.5px;
+  color: #64748b;
+  margin-top: 2px;
+}
+.hpmix-direct-list-title {
+  margin: 4px 0 6px;
+}
+.hpmix-direct-inputs-list {
+  max-height: 162px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.hpmix-direct-row {
+  display: grid;
+  grid-template-columns: 98px 1fr 56px auto;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 8px;
+  border-radius: 5px;
+  background: rgba(13, 18, 28, 0.88);
+  border: 1px solid #222d40;
+  font-size: 11px;
+}
+.hpmix-direct-row.is-live {
+  border-color: rgba(245, 158, 11, 0.48);
+  background: rgba(45, 29, 8, 0.35);
+}
+.hpmix-direct-name {
+  font-weight: 650;
+  color: #e2e8f0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.hpmix-inline-card {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 7px;
+  background: rgba(12, 18, 28, 0.85);
+  border: 1px solid rgba(0, 212, 255, 0.28);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
