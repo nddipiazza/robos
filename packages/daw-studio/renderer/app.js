@@ -125,6 +125,7 @@ let isCreatingLyricsTrack = false;
 let embeddedKaraokeLineSig = '';
 let activeVideoModalType = 'robos-ip-camera'; // 'robos-ip-camera' | 'v4l2' | 'custom'
 let activeRobosProbedStatus = null;
+let isSavingKdenlive = false;
 
 function esc(str) {
   return String(str ?? '')
@@ -6532,6 +6533,180 @@ async function renderAndExportMixdown({
   return res;
 }
 
+async function renderFullSessionMixdownWavBase64ForKdenlive({ excludeClick = true, normalize = true } = {}) {
+  const playableTracks = getExportPlayableTracks({ excludeClick });
+  const fullBounds = getFullSessionExportBounds(excludeClick);
+  if (!playableTracks.length || fullBounds.endSec <= 0.04) {
+    return '';
+  }
+
+  const renderRate = 48000;
+  const renderEndSec = Math.min(900, Math.max(0.1, fullBounds.endSec + 0.5));
+  for (const track of playableTracks) {
+    for (const clip of (track.clips || [])) {
+      if (clip.muted) continue;
+      if (clip.wavFile) {
+        try { await loadDecodedAudio(clip.wavFile); } catch {}
+      }
+      if (track.soundReplacement?.enabled && Array.isArray(clip.transients)) {
+        for (const hit of clip.transients) {
+          const sp = resolveDrumSamplePath(track.soundReplacement.kitId, track.soundReplacement.pieceId, hit.velocity);
+          if (sp) {
+            try { await loadDecodedAudio(sp); } catch {}
+          }
+        }
+      }
+    }
+  }
+
+  const totalFrames = Math.max(256, Math.ceil(renderEndSec * renderRate));
+  const offlineCtx = new OfflineAudioContext(2, totalFrames, renderRate);
+  const offlineMasterBus = createMasterDrumBus(offlineCtx);
+
+  for (const track of playableTracks) {
+    const { inputGain, trackMixBus, srActive, blend } = buildTrackWebAudioChain(offlineCtx, track, offlineMasterBus);
+    for (const clip of (track.clips || [])) {
+      if (clip.muted) continue;
+      const clipStart = Math.max(0, Number(clip.startSec) || 0);
+      const clipOff = Math.max(0, Number(clip.offsetSec) || 0);
+      const buf = decodedBufferCache.get(clip.wavFile);
+      const clipDur = Math.max(0.04, Number(clip.durationSec) || (buf ? Math.max(0.04, buf.duration - clipOff) : 0));
+      const clipEnd = clipStart + clipDur;
+
+      if (buf && clipOff < buf.duration && clipEnd > 0.002 && clipStart < renderEndSec - 0.002) {
+        const segEnd = Math.min(clipEnd, renderEndSec);
+        const playDur = Math.min(segEnd - clipStart, Math.max(0.01, buf.duration - clipOff));
+        if (playDur > 0.008) {
+          const src = offlineCtx.createBufferSource();
+          src.buffer = buf;
+          const clipGainNode = offlineCtx.createGain();
+          const clipGainLin = DE.dbToGain(Number(clip.gainDb) || 0);
+          const fadeIn = Math.max(0, Number(clip.fadeInSec) || 0);
+          const fadeOut = Math.max(0, Number(clip.fadeOutSec) || 0);
+
+          if (fadeIn > 0.002) {
+            clipGainNode.gain.setValueAtTime(0.0001, clipStart);
+            clipGainNode.gain.linearRampToValueAtTime(clipGainLin, clipStart + Math.min(fadeIn, playDur));
+          } else {
+            clipGainNode.gain.setValueAtTime(clipGainLin, clipStart);
+          }
+          if (fadeOut > 0.002 && playDur > fadeOut) {
+            clipGainNode.gain.setValueAtTime(clipGainLin, Math.max(clipStart, clipStart + playDur - fadeOut));
+            clipGainNode.gain.linearRampToValueAtTime(0.0001, clipStart + playDur);
+          }
+          src.connect(clipGainNode).connect(inputGain);
+          src.start(clipStart, clipOff, playDur);
+        }
+      }
+
+      if (srActive && Array.isArray(clip.transients)) {
+        const clipVelScale = clip.autoGainStaged ? 1.0 : DE.clamp(0.15, 1.4, DE.dbToGain((Number(clip.gainDb) || 0) * 0.25));
+        for (const hit of clip.transients) {
+          const absHitSec = clipStart + (Number(hit.timeSec) || 0);
+          if (absHitSec < 0 || absHitSec > Math.min(clipEnd + 0.005, renderEndSec)) continue;
+          const sp = resolveDrumSamplePath(track.soundReplacement.kitId, track.soundReplacement.pieceId, hit.velocity);
+          const srBuf = sp ? decodedBufferCache.get(sp) : null;
+          if (!srBuf) continue;
+          const hitSrc = offlineCtx.createBufferSource();
+          hitSrc.buffer = srBuf;
+          const hitGain = offlineCtx.createGain();
+          hitGain.gain.value = blend * Math.max(0.25, Math.min(1.3, (Number(hit.velocity) || 0.8) * clipVelScale));
+          hitSrc.connect(hitGain).connect(trackMixBus);
+          hitSrc.start(absHitSec);
+        }
+      }
+    }
+  }
+
+  const rendered = await offlineCtx.startRendering();
+  const left = new Float32Array(rendered.getChannelData(0));
+  const right = new Float32Array(rendered.numberOfChannels > 1 ? rendered.getChannelData(1) : left);
+  const n = left.length;
+
+  if (normalize && n > 0) {
+    let peak = 0;
+    for (let i = 0; i < n; i++) {
+      const al = Math.abs(left[i]);
+      const ar = Math.abs(right[i]);
+      if (al > peak) peak = al;
+      if (ar > peak) peak = ar;
+    }
+    if (peak > 0.0002) {
+      const scale = DE.dbToGain(-0.3) / peak;
+      for (let i = 0; i < n; i++) {
+        left[i] = DE.clamp(-0.999, 0.999, left[i] * scale);
+        right[i] = DE.clamp(-0.999, 0.999, right[i] * scale);
+      }
+    }
+  }
+
+  return uint8ToBase64(encodeStereoFloat32IeeeWavBytes(left, right, renderRate));
+}
+
+async function saveSessionToKdenliveProject({ forceSaveAs = false, targetPath = '' } = {}) {
+  if (!currentProject) return { ok: false };
+  if (isSavingKdenlive) {
+    showStatus('Already syncing Kdenlive project — please wait a moment...');
+    return { ok: false };
+  }
+
+  const hasAnyClips = (currentProject.tracks || []).some(t => (t.clips || []).length > 0);
+  if (!hasAnyClips) {
+    showStatus('Record or import audio/video clips before saving to a Kdenlive project.', true);
+    return { ok: false };
+  }
+
+  let kdenlivePath = targetPath || (!forceSaveAs ? (currentProject.kdenliveFile || '') : '');
+  if (!kdenlivePath) {
+    const pick = await window.robos?.pickKdenlivePath?.({ defaultPath: currentProject.kdenliveFile || '' });
+    if (!pick?.ok || pick?.canceled || !pick.kdenlivePath) {
+      return { ok: false, canceled: true };
+    }
+    kdenlivePath = pick.kdenlivePath;
+  }
+
+  isSavingKdenlive = true;
+  try {
+    showStatus('Rendering lossless 48 kHz audio mixdown & syncing aligned video tracks to Kdenlive project...');
+    const wavBase64 = await renderFullSessionMixdownWavBase64ForKdenlive({
+      excludeClick: Boolean(exportPrefs.excludeClick),
+      normalize: true,
+    });
+
+    await syncProjectToMain();
+    const res = await window.robos.saveKdenliveProject({
+      kdenlivePath,
+      wavBase64,
+      project: currentProject,
+    });
+
+    if (!res?.ok) {
+      showStatus(`Save to Kdenlive Project failed: ${res?.error || 'Unknown error'}`, true);
+      return res;
+    }
+
+    currentProject.kdenliveFile = res.kdenlivePath;
+    const kdBtn = document.getElementById('btn-project-save-kdenlive');
+    if (kdBtn) {
+      kdBtn.title = `Sync Audio Mixdown + Video Tracks to ${res.kdenlivePath} (Ctrl+Alt+K · Shift+Click for Save As)`;
+    }
+
+    const fileNameOnly = res.kdenlivePath.split('/').pop();
+    if (res.existedBefore) {
+      showStatus(
+        `Synced Kdenlive project -> ${fileNameOnly} (${res.updatedTrackCount} updated, ${res.createdTrackCount} created · 1 audio mixdown + ${res.videoTrackCount} video track(s))`
+      );
+    } else {
+      showStatus(
+        `Created Kdenlive project -> ${fileNameOnly} (1 audio mixdown track + ${res.videoTrackCount} aligned video track(s))`
+      );
+    }
+    return res;
+  } finally {
+    isSavingKdenlive = false;
+  }
+}
+
 async function executeExportMixdownFromModal() {
   if (isExportingMixdown || !currentProject) return;
   const isSelMode = Boolean(document.getElementById('export-scope-selection')?.checked);
@@ -6645,6 +6820,8 @@ function buildMenubarItems(key) {
       { sep: true },
       { icon: 'import-wav', label: 'Import Audio / Video File(s)...', kbd: 'Ctrl+Shift+I', run: () => importAudioWavFiles() },
       { icon: 'mixdown-export', label: 'Export Audio Mixdown (MP3, WAV, FLAC, M4A...)', kbd: 'Ctrl+Shift+E', disabled: !hasClips, run: () => openExportMixdownModal() },
+      { icon: 'kdenlive', label: currentProject?.kdenliveFile ? `Sync to Kdenlive Project (${currentProject.kdenliveFile.split('/').pop()})` : 'Save to Kdenlive Project (.kdenlive)...', kbd: 'Ctrl+Alt+K', disabled: !hasClips, run: () => saveSessionToKdenliveProject({ forceSaveAs: false }) },
+      { icon: 'kdenlive', label: 'Save to Kdenlive Project As...', kbd: '', disabled: !hasClips, run: () => saveSessionToKdenliveProject({ forceSaveAs: true }) },
       { icon: 'folder', label: 'Reveal Session Audio Folder', kbd: '', run: async () => {
         const res = await window.robos.openSessionFolder();
         if (res?.ok) showStatus(`Opened ${res.folder || res.projectDir}`);
@@ -9006,6 +9183,12 @@ async function init() {
   document.getElementById('btn-project-save')?.addEventListener('click', () => saveCurrentSession(false));
   document.getElementById('btn-project-save-as')?.addEventListener('click', () => saveCurrentSession(true));
   document.getElementById('btn-project-export')?.addEventListener('click', () => openExportMixdownModal());
+  document.getElementById('btn-project-save-kdenlive')?.addEventListener('click', (ev) => saveSessionToKdenliveProject({ forceSaveAs: Boolean(ev.shiftKey) }));
+  document.getElementById('btn-vmon-kdenlive')?.addEventListener('click', (ev) => saveSessionToKdenliveProject({ forceSaveAs: Boolean(ev.shiftKey) }));
+  document.getElementById('btn-export-to-kdenlive')?.addEventListener('click', async (ev) => {
+    document.getElementById('export-mixdown-modal')?.classList.add('hidden');
+    await saveSessionToKdenliveProject({ forceSaveAs: Boolean(ev.shiftKey) });
+  });
   document.getElementById('btn-project-open')?.addEventListener('click', openProjectModal);
   document.getElementById('btn-open-modal-close')?.addEventListener('click', () => document.getElementById('open-project-modal')?.classList.add('hidden'));
   document.getElementById('btn-open-modal-cancel')?.addEventListener('click', () => document.getElementById('open-project-modal')?.classList.add('hidden'));
@@ -9634,6 +9817,9 @@ async function init() {
     } else if (isMod && ev.altKey && keyLower === 'r') {
       ev.preventDefault();
       await armAllTracks();
+    } else if (isMod && ev.altKey && keyLower === 'k') {
+      ev.preventDefault();
+      await saveSessionToKdenliveProject({ forceSaveAs: Boolean(ev.shiftKey) });
     } else if (isMod && ev.altKey && keyLower === 's') {
       ev.preventDefault();
       await commitEdit('Clear All Solos', () => { DE.setTracksPropertyBatch(currentProject, 'all', 'soloed', false); });

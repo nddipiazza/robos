@@ -237,6 +237,7 @@ function saveProject(project, { targetDir } = {}) {
     createdAt: project.createdAt || new Date().toISOString(),
     savedAt: new Date().toISOString(),
     projectDir,
+    ...(project.kdenliveFile ? { kdenliveFile: project.kdenliveFile } : {}),
     markers: Array.isArray(project.markers) ? project.markers : [],
     tracks: normalizedTracks,
   };

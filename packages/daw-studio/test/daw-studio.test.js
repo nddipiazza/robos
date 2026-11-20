@@ -1814,4 +1814,163 @@ describe('DAW Editing Engine: Multi-Select, Track/Take Gain, Split/Trim, Copy/Pa
       fs.rmSync(tmpLyrDir, { recursive: true, force: true });
     }
   });
+
+  it('saves and re-syncs Kdenlive (.kdenlive) projects: creates audio mixdown + aligned video tracks, replaces existing tracks, recreates deleted tracks, and preserves user Kdenlive tracks', async () => {
+    const tmpKdDir = fs.mkdtempSync(path.join(os.tmpdir(), 'robos-daw-kdenlive-'));
+    try {
+      const { synthesizeTestPatternMp4 } = require('../lib/video-devices');
+      const {
+        ROBOS_AUDIO_TRACK_NAME,
+        parseMltXml,
+        serializeMltXml,
+        getProp,
+        saveOrUpdateKdenliveProject,
+      } = require('../lib/kdenlive-exporter');
+
+      const cam1Mp4 = path.join(tmpKdDir, 'drum-cam-1.mp4');
+      const cam2TakeA = path.join(tmpKdDir, 'overhead-a.mp4');
+      const cam2TakeB = path.join(tmpKdDir, 'overhead-b.mp4');
+      await synthesizeTestPatternMp4(cam1Mp4, 4.0, false, { width: 1280, height: 720 });
+      await synthesizeTestPatternMp4(cam2TakeA, 2.0, false, { width: 1280, height: 720 });
+      await synthesizeTestPatternMp4(cam2TakeB, 2.0, false, { width: 1280, height: 720 });
+
+      const mixWavBuf1 = synthesizeDrumTakeWav({ profileId: 'snare-top', durationSec: 6.0 });
+      const kdenliveFile = path.join(tmpKdDir, 'metal-drum-video.kdenlive');
+
+      const proj = createEmptyProject({ name: 'Metal Drum Video', bpm: 140, sampleRate: 48000 });
+      proj.tracks.push(
+        {
+          id: 'trk-vid-1',
+          name: 'Drum Cam 1',
+          trackKind: 'video',
+          muted: false,
+          clips: [
+            {
+              id: 'vc-1',
+              name: 'Drum Cam 1 Take',
+              mediaKind: 'video',
+              videoFile: cam1Mp4,
+              startSec: 2.0,
+              offsetSec: 0.5,
+              durationSec: 3.0,
+              muted: false,
+            },
+          ],
+        },
+        {
+          id: 'trk-vid-2',
+          name: 'Overhead Cam',
+          trackKind: 'video',
+          muted: false,
+          clips: [
+            {
+              id: 'vc-2a',
+              name: 'Overhead Intro',
+              mediaKind: 'video',
+              videoFile: cam2TakeA,
+              startSec: 0.0,
+              offsetSec: 0.0,
+              durationSec: 1.5,
+              muted: false,
+            },
+            {
+              id: 'vc-2b',
+              name: 'Overhead Chorus',
+              mediaKind: 'video',
+              videoFile: cam2TakeB,
+              startSec: 3.5,
+              offsetSec: 0.0,
+              durationSec: 1.5,
+              muted: false,
+            },
+          ],
+        }
+      );
+
+      // 1. First Save (no existing .kdenlive file): creates audio mixdown track + 2 aligned video tracks
+      const pass1 = await saveOrUpdateKdenliveProject({
+        project: proj,
+        kdenlivePath: kdenliveFile,
+        mixdownWavBuffer: mixWavBuf1,
+      });
+      assert.strictEqual(pass1.ok, true);
+      assert.strictEqual(pass1.existedBefore, false);
+      assert.strictEqual(pass1.videoTrackCount, 2);
+      assert.strictEqual(pass1.createdTrackCount, 3); // 1 audio + 2 video
+      assert.strictEqual(pass1.updatedTrackCount, 0);
+      assert.ok(fs.existsSync(kdenliveFile));
+      assert.ok(fs.existsSync(pass1.mixdownWavPath));
+
+      const doc1 = parseMltXml(fs.readFileSync(kdenliveFile, 'utf8'));
+      const tractors1 = doc1.root.children.filter(c => c.type === 'element' && c.tag === 'tractor');
+      const drumCamTractor1 = tractors1.find(t => getProp(t, 'kdenlive:track_name') === 'RobOS Video — Drum Cam 1');
+      assert.ok(drumCamTractor1, 'Expected RobOS Video — Drum Cam 1 track tractor');
+
+      // Verify exact 2.000s <blank> lead-in + 0.500s source in-point on Drum Cam 1's playlist!
+      const drumCamPlId = drumCamTractor1.children.find(c => c.tag === 'track')?.attrs?.producer;
+      const drumCamPl = doc1.root.children.find(c => c.attrs?.id === drumCamPlId);
+      assert.strictEqual(drumCamPl.children[0].tag, 'blank');
+      assert.strictEqual(drumCamPl.children[0].attrs.length, '00:00:02.000');
+      assert.strictEqual(drumCamPl.children[1].tag, 'entry');
+      assert.strictEqual(drumCamPl.children[1].attrs.in, '00:00:00.500');
+
+      // 2. Simulate user editing inside Kdenlive:
+      //    - Add a custom user track ("V3 User Titles")
+      //    - Strip `robos:role` from RobOS Audio Mixdown (proving kdenlive:track_name matching works after Kdenlive Ctrl+S!)
+      //    - Delete "RobOS Video — Overhead Cam" in Kdenlive
+      const audioTr1 = tractors1.find(t => getProp(t, 'kdenlive:track_name') === ROBOS_AUDIO_TRACK_NAME);
+      audioTr1.children = audioTr1.children.filter(c => !(c.tag === 'property' && c.attrs?.name?.startsWith('robos:')));
+
+      const overheadTr1 = tractors1.find(t => getProp(t, 'kdenlive:track_name') === 'RobOS Video — Overhead Cam');
+      const seqTr1 = tractors1.find(t => Boolean(getProp(t, 'kdenlive:uuid')));
+      // Remove Overhead Cam from sequence tractor (simulating user deleting that track in Kdenlive)
+      seqTr1.children = seqTr1.children.filter(c => !(c.tag === 'track' && c.attrs?.producer === overheadTr1.attrs.id));
+      doc1.root.children = doc1.root.children.filter(c => c !== overheadTr1);
+
+      // Insert a user-owned Kdenlive track ("V3 User Titles")
+      const userPl = { type: 'element', tag: 'playlist', attrs: { id: 'playlist99' }, children: [] };
+      const userTr = {
+        type: 'element',
+        tag: 'tractor',
+        attrs: { id: 'tractor99', in: '00:00:00.000', out: '00:00:05.000' },
+        children: [
+          { type: 'element', tag: 'property', attrs: { name: 'kdenlive:track_name' }, children: [{ type: 'text', value: 'V3 User Titles' }] },
+          { type: 'element', tag: 'track', attrs: { hide: 'audio', producer: 'playlist99' }, children: [] },
+        ],
+      };
+      const seqIdx = doc1.root.children.indexOf(seqTr1);
+      doc1.root.children.splice(seqIdx, 0, userPl, userTr);
+      const trackInsertIdx = seqTr1.children.findIndex(c => c.tag === 'transition');
+      seqTr1.children.splice(trackInsertIdx, 0, { type: 'element', tag: 'track', attrs: { producer: 'tractor99' }, children: [] });
+      fs.writeFileSync(kdenliveFile, serializeMltXml(doc1), 'utf8');
+
+      // 3. Second Save (file already exists!): nudge Drum Cam 1 to 1.0s, render longer 8.0s mixdown, and re-export!
+      proj.tracks[0].clips[0].startSec = 1.0;
+      const mixWavBuf2 = synthesizeDrumTakeWav({ profileId: 'kick-in', durationSec: 8.0 });
+      const pass2 = await saveOrUpdateKdenliveProject({
+        project: proj,
+        kdenlivePath: kdenliveFile,
+        mixdownWavBuffer: mixWavBuf2,
+      });
+
+      assert.strictEqual(pass2.ok, true);
+      assert.strictEqual(pass2.existedBefore, true);
+      assert.strictEqual(pass2.preservedUserTrackCount, 1);
+      // RobOS Audio Mixdown + Drum Cam 1 updated in place; deleted Overhead Cam recreated!
+      assert.strictEqual(pass2.updatedTrackCount, 2);
+      assert.strictEqual(pass2.createdTrackCount, 1);
+
+      const doc2 = parseMltXml(fs.readFileSync(kdenliveFile, 'utf8'));
+      const tractors2 = doc2.root.children.filter(c => c.type === 'element' && c.tag === 'tractor');
+      assert.ok(tractors2.some(t => getProp(t, 'kdenlive:track_name') === 'V3 User Titles'), 'User track must be preserved');
+      assert.ok(tractors2.some(t => getProp(t, 'kdenlive:track_name') === 'RobOS Video — Overhead Cam'), 'Deleted video track must be recreated');
+
+      const drumCamTractor2 = tractors2.find(t => getProp(t, 'kdenlive:track_name') === 'RobOS Video — Drum Cam 1');
+      const drumCamPlId2 = drumCamTractor2.children.find(c => c.tag === 'track')?.attrs?.producer;
+      const drumCamPl2 = doc2.root.children.find(c => c.attrs?.id === drumCamPlId2);
+      assert.strictEqual(drumCamPl2.children[0].attrs.length, '00:00:01.000', 'Updated video clip offset must reflect 1.000s');
+    } finally {
+      fs.rmSync(tmpKdDir, { recursive: true, force: true });
+    }
+  });
 });

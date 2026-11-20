@@ -1423,6 +1423,70 @@ ipcMain.handle('daw:open-session-folder', async () => {
   }
 });
 
+ipcMain.handle('daw:pick-kdenlive-path', async (_e, payload) => {
+  try {
+    const proj = ensureCurrentProject();
+    const home = process.env.HOME || os.homedir();
+    const safeSlug = String(proj.name || 'studio-session')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '') || 'studio-session';
+    const defaultPath = payload?.defaultPath || proj.kdenliveFile || path.join(home, `${safeSlug}.kdenlive`);
+
+    if (!mainWindow || mainWindow.isDestroyed()) {
+      return { ok: true, kdenlivePath: defaultPath };
+    }
+    const res = await dialog.showSaveDialog(mainWindow, {
+      title: 'Save / Sync to Kdenlive Project (.kdenlive)',
+      buttonLabel: 'Save / Update Kdenlive Project',
+      defaultPath,
+      dontAddToRecent: false,
+      filters: [
+        { name: 'Kdenlive Video Project (*.kdenlive)', extensions: ['kdenlive'] },
+        { name: 'All Files', extensions: ['*'] },
+      ],
+    });
+    if (res.canceled || !res.filePath) {
+      return { ok: false, canceled: true };
+    }
+    const finalPath = /\.kdenlive$/i.test(res.filePath) ? res.filePath : `${res.filePath}.kdenlive`;
+    return { ok: true, kdenlivePath: finalPath };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('daw:save-kdenlive-project', async (_e, payload) => {
+  try {
+    const snap = audioDevices?.getAudioDevicesSnapshot?.() || null;
+    if (payload?.project && Array.isArray(payload.project.tracks)) {
+      currentProject = payload.project;
+    }
+    const proj = ensureCurrentProject(snap);
+    const kdenlivePath = payload?.kdenlivePath || proj.kdenliveFile;
+    if (!kdenlivePath) {
+      throw new Error('Specify a target .kdenlive file path.');
+    }
+
+    delete require.cache[require.resolve('./lib/kdenlive-exporter')];
+    const { saveOrUpdateKdenliveProject } = require('./lib/kdenlive-exporter');
+    const mixdownWavBuffer = payload?.wavBase64 ? Buffer.from(payload.wavBase64, 'base64') : null;
+    const res = await saveOrUpdateKdenliveProject({
+      project: proj,
+      kdenlivePath,
+      mixdownWavBuffer,
+    });
+    proj.kdenliveFile = res.kdenlivePath;
+    currentProject = proj;
+    return {
+      ...res,
+      project: proj,
+    };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
 // ─── Video Mode: Video Input Discovery, Track Creation & Pop-Out Video Output Window ───
 
 ipcMain.handle('daw:video-discover', async (_e, payload) => {

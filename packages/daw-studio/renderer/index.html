@@ -83,6 +83,10 @@
                   <img src="assets/icons/mixdown-export.webp" class="daw-ai-badge" width="13.5" height="13.5" alt="" />
                   <span>Export</span>
                 </button>
+                <button type="button" class="btn btn-sm btn-bevel" id="btn-project-save-kdenlive" title="Save / Sync Audio Mixdown + Video Tracks to Kdenlive Project (.kdenlive) — Ctrl+Alt+K (Shift+Click to Save As)">
+                  <svg class="daw-svg-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#c084fc" stroke-width="2"><rect x="2" y="3" width="20" height="18" rx="2"/><line x1="7" y1="3" x2="7" y2="21"/><line x1="17" y1="3" x2="17" y2="21"/><polygon points="10 9 15 12 10 15 10 9" fill="#c084fc" stroke="none"/></svg>
+                  <span>Kdenlive</span>
+                </button>
               </div>
             </div>
 
@@ -297,6 +301,7 @@
                     <span class="vmon-mode-pill mono" id="vmon-mode-pill">READY</span>
                   </div>
                   <div class="vmon-actions">
+                    <button type="button" class="btn btn-sm btn-bevel" id="btn-vmon-kdenlive" title="Save / Sync Audio Mixdown + Video Tracks to Kdenlive Project (.kdenlive)">Kdenlive</button>
                     <button type="button" class="btn btn-sm btn-bevel" id="btn-vmon-live-cam" title="Preview Live Camera Feed When Stopped or Armed">Live Cam</button>
                     <button type="button" class="btn btn-sm btn-bevel" id="btn-vmon-wide" title="Toggle Compact / Wide Embedded Video Size">Wide</button>
                     <button type="button" class="btn btn-sm btn-primary" id="btn-vmon-popout" title="Detach Video Output into Its Own Standalone App Window">
@@ -1071,6 +1076,7 @@
         <span class="hint" id="export-modal-status">Ready to render stereo mixdown.</span>
         <div class="modal-footer-right">
           <button type="button" class="btn btn-bevel" id="btn-export-modal-cancel">Cancel</button>
+          <button type="button" class="btn btn-bevel" id="btn-export-to-kdenlive" title="Save / Update Audio Mixdown + Video Tracks in a Kdenlive Project (.kdenlive)">Save to Kdenlive (.kdenlive)...</button>
           <button type="button" class="btn btn-primary" id="btn-export-confirm">Export Audio Mixdown...</button>
         </div>
       </div>

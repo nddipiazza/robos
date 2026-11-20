@@ -81,6 +81,8 @@ contextBridge.exposeInMainWorld('robos', {
   },
   exportMixdown: (payload) => ipcRenderer.invoke('daw:export-mixdown', payload),
   exportMixdownWav: (payload) => ipcRenderer.invoke('daw:export-mixdown-wav', payload),
+  pickKdenlivePath: (payload) => ipcRenderer.invoke('daw:pick-kdenlive-path', payload),
+  saveKdenliveProject: (payload) => ipcRenderer.invoke('daw:save-kdenlive-project', payload),
   openSessionFolder: () => ipcRenderer.invoke('daw:open-session-folder'),
 
   // Video Mode: Video Inputs (RobOS Android IP Cam, ONVIF, V4L2) & Video Output Monitor Window
