@@ -362,7 +362,7 @@ static func build(unit_type: String, owner_id: int, is_vale: bool = false) -> No
 		"aegis_warden": _aegis_warden(root, team)
 		"storm_scribe": _aegis_warden(root, team)
 		"sunblade": _sunblade(root, team, true)
-		"duskblade": _sunblade(root, team)
+		"duskblade": _sunblade(root, team, true)
 		"skirmisher": _skirmisher(root, team)
 		"crownspire": _crownspire(root, team)
 		"dawn_interceptor": _kestrel_interceptor(root, team, glow)

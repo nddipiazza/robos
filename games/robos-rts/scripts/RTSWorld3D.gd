@@ -20,7 +20,7 @@ const FOG_ALPHA := [255, 152, 0]
 const CAMPAIGN_PICKUP_KINDS := ["crystal_cache", "aether_cache", "artifact", "brood_sample"]
 const WALK_LEGS := [&"LeftLeg", &"RightLeg"]
 const AttackMotion = preload("res://scripts/RTSAttackMotion.gd")
-const SunbladeMotion = preload("res://scripts/RTSSunbladeMotion.gd")
+const BladeMelee = preload("res://scripts/RTSBladeMelee.gd")
 const SIEGE_RECOIL_KICK := 0.048
 const SIEGE_RECOIL_END := 0.22
 var _campaign_lava: MeshInstance3D
@@ -1251,7 +1251,9 @@ func sync_3d_entities(selected_tags: Array[int], delta: float, local_player: int
 			barrier = barrier or (int(u.get("mutation_barrier_until", 0)) > SimEngine.tick and u.get("mutation_barrier_hp", 0.0) > 0.0)
 			shield_sphere.visible = barrier or (u["shields"] > 0.5 and float(u["out_of_combat_timer"]) < 1.4)
 		var attack_pose := Transform3D.IDENTITY
-		if u_node.has_meta("attack_profile") and not u_node.has_meta("robotics_animation"):
+		if u_node.has_meta("blade_rig"):
+			BladeMelee.sync(u_node, u, u_node.get_meta("blade_rig"), anim_time)
+		elif u_node.has_meta("attack_profile") and not u_node.has_meta("robotics_animation"):
 			var profile: Dictionary = u_node.get_meta("attack_profile")
 			var age := anim_time - float(u_node.get_meta("attack_time", -100.0))
 			if age < float(profile.recover) or u.attack_state == "windup":
@@ -1263,8 +1265,6 @@ func sync_3d_entities(selected_tags: Array[int], delta: float, local_player: int
 				var rig: Dictionary = u_node.get_meta("siege_gun")
 				gun.transform = rig.rest * attack_pose
 				attack_pose = Transform3D.IDENTITY
-		if u_node.has_meta("sunblade_rig"):
-			SunbladeMotion.sync(u_node, u, u_node.get_meta("sunblade_rig"), anim_time)
 		var key: String = u_node.get_meta("mesh_batch", "")
 		if not key.is_empty():
 			if not human_transforms.has(key):
@@ -1443,6 +1443,8 @@ func _create_unit_node_3d(u: Dictionary) -> Node3D:
 	if is_vale:
 		cache_key += ":vale"
 	var attack := AttackMotion.profile(u.unit_type)
+	if attack.is_empty():
+		attack = AttackMotion.profile(model_type)
 	var attack_anchors: Array[Vector3] = []
 	var root: Node3D
 	if u.faction == "humans" and u.unit_type not in ["resistance_civilian", "ridge_scout"] and model_type not in Models.LIVE_ANIMATED_MODELS:
@@ -1510,10 +1512,12 @@ func _create_unit_node_3d(u: Dictionary) -> Node3D:
 			if model.has_meta("robotics_animation"):
 				root.set_meta("robotics_animation", model.get_meta("robotics_animation"))
 			root.add_child(model)
-			if u.unit_type == "sunblade":
-				var rig := SunbladeMotion.bind(model)
+			if BladeMelee.supports(model_type, attack):
+				var rig := BladeMelee.bind(model, model_type, rad, attack)
 				if not rig.is_empty():
-					root.set_meta("sunblade_rig", rig)
+					root.set_meta("blade_rig", rig)
+					if model_type == "sunblade":
+						root.set_meta("sunblade_rig", rig)
 	if not attack.is_empty():
 		root.set_meta("attack_profile", attack)
 		root.set_meta("attack_anchors", attack_anchors)
@@ -1794,8 +1798,8 @@ func _on_weapon_attack(attacker: Dictionary, target: Dictionary, weapon: Diction
 		_play_robotics_clip(attacker.tag, "attack")
 		_render_spine_line(attacker, target)
 		return
-	elif attacker.unit_type in ["bastion_walker", "mirage_adept", "storm_scribe", "duskblade", "lattice_archon",
-			"rupture_crawler", "carapace_bulwark", "corrosion_flyer", "brood_siege_flyer", "locust_landed",
+	elif attacker.unit_type in ["bastion_walker", "mirage_adept", "storm_scribe", "lattice_archon",
+			"rupture_crawler", "corrosion_flyer", "brood_siege_flyer", "locust_landed",
 			"dawn_interceptor", "prism_ray", "horizon_lancer", "pursuit_fighter", "shade_agent", "sunseer"]:
 		_play_robotics_clip(attacker.tag, "attack")
 	if attacker.unit_type == "aegis_relay" and SimEngine.ladder_rules:
@@ -1804,10 +1808,12 @@ func _on_weapon_attack(attacker: Dictionary, target: Dictionary, weapon: Diction
 	var p1 := Vector3(from_pos.x, SimEngine.unit_visual_elevation(attacker) + 1.3, from_pos.y)
 	var siege_shot: bool = attacker.unit_type == "howitzer_emplaced"
 	var profile := AttackMotion.profile(attacker.unit_type)
+	if profile.is_empty():
+		profile = AttackMotion.profile(_appearance_type(attacker))
 	if siege_shot:
 		p1 = _fire_siege_gun(attacker)
 	elif not profile.is_empty():
-		_render_profiled_attack(attacker, target, profile, is_splash)
+		_render_profiled_attack(attacker, target, profile, is_splash, weapon)
 		return
 	if not SimEngine.can_see_unit(_viewing_player, target) or active_fx.size() >= MAX_ACTIVE_FX:
 		return
@@ -2030,14 +2036,21 @@ func _spawn_attack_projectile(
 		"start": start, "end": end, "arc": arc, "impact": impact,
 	})
 
-func _render_profiled_attack(attacker: Dictionary, target: Dictionary, profile: Dictionary, splash: bool) -> void:
+func _render_profiled_attack(attacker: Dictionary, target: Dictionary, profile: Dictionary, splash: bool, weapon: Dictionary = {}) -> void:
 	var node := unit_nodes.get(attacker.tag) as Node3D
-	if node and node.has_meta("sunblade_rig"):
-		SunbladeMotion.strike(node.get_meta("sunblade_rig"), anim_time)
+	if node and node.has_meta("blade_rig"):
+		var rig: Dictionary = node.get_meta("blade_rig")
+		BladeMelee.strike(rig, anim_time, int(weapon.get("attacks", 1)))
 		node.set_meta("attack_time", anim_time)
 		if SimEngine.can_see_unit(_viewing_player, target):
-			var impact := Vector3(target.pos.x, SimEngine.unit_visual_elevation(target) + minf(1.25, target.radius), target.pos.y)
-			_spawn_burst(impact, Color("#b6f3ff"), 0.32, 0.12, 1.9)
+			var to_target: Vector2 = target.pos - attacker.pos
+			var dir2 := to_target.normalized() if to_target.length_squared() > 0.001 else Vector2.from_angle(float(attacker.facing))
+			var contact_2d: Vector2 = target.pos - dir2 * maxf(0.0, float(target.radius) - 0.35)
+			var impact_y := SimEngine.unit_visual_elevation(target) + clampf(float(target.radius) * 0.9, 0.55, 1.35)
+			var impact := Vector3(contact_2d.x, impact_y, contact_2d.y)
+			var tint := BladeMelee.impact_color(rig)
+			var flash_r := clampf(float(profile.get("flash", 0.44)) * 0.85, 0.24, 0.62)
+			_spawn_burst(impact, tint, flash_r, 0.13, 2.05, Vector3.ZERO, true)
 		return
 	var offsets: Array[Vector3] = []
 	if node and node.has_meta("attack_anchors"):
