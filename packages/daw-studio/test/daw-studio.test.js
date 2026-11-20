@@ -2008,4 +2008,136 @@ describe('DAW Editing Engine: Multi-Select, Track/Take Gain, Split/Trim, Copy/Pa
     assert.strictEqual(mgr.getSnapshot().jobs[0].status, 'completed');
     assert.strictEqual(mgr.getSnapshot().jobs[0].outputPath, '/tmp/band.kdenlive');
   });
+
+  it('detects music time signature first (4/4, 3/4, 6/8, 7/8) and locks True Beat 1 without Beat-1-on-Beat-3 pickup swap', () => {
+    const { analyzeAudioBeatGrid, synthesizeAlignedClickWav } = require('../lib/click-track-generator');
+    const sr = 16000;
+
+    const synthArrangement = (durSec, fn) => {
+      const buf = new Float32Array(Math.ceil(durSec * sr));
+      const hit = (sec, freq, amp, decay = 45, dur = 0.09, noiseAmp = 0) => {
+        const s0 = Math.round(sec * sr);
+        const len = Math.min(Math.round(dur * sr), buf.length - s0);
+        for (let i = 0; i < len; i++) {
+          if (s0 + i < 0) continue;
+          const t = i / sr;
+          const n = noiseAmp > 0 ? ((Math.sin(i * 12.9898) * 43758.5453) % 1) * noiseAmp * Math.exp(-decay * 1.4 * t) : 0;
+          buf[s0 + i] += amp * Math.sin(2 * Math.PI * freq * t) * Math.exp(-decay * t) + n;
+        }
+      };
+      const chord = (sec, dur, rootHz, amp = 0.24) => {
+        const s0 = Math.round(sec * sr);
+        const len = Math.min(Math.round(dur * sr), buf.length - s0);
+        for (let i = 0; i < len; i++) {
+          if (s0 + i < 0) continue;
+          const t = i / sr;
+          const env = Math.min(1, t / 0.01) * Math.exp(-1.5 * t);
+          buf[s0 + i] += amp * env * (0.6 * Math.sin(2 * Math.PI * rootHz * t) + 0.4 * Math.sin(2 * Math.PI * rootHz * 1.5 * t));
+        }
+      };
+      fn({ hit, chord });
+      return buf;
+    };
+
+    // 1. 4/4 @ 120 BPM with a 2-beat pickup on Beats 3 & 4 ("3 - 4 | BAM Bar 1 Beat 1!")
+    const pickup44 = synthArrangement(18, ({ hit, chord }) => {
+      hit(1.0, 260, 0.55, 55, 0.08, 0.35); // Pickup Beat 3
+      hit(1.5, 230, 0.62, 55, 0.08, 0.40); // Pickup Beat 4
+      const roots = [110, 146.8, 164.8, 130.8];
+      for (let bar = 0; bar < 7; bar++) {
+        const bs = 2.0 + bar * 2.0; // True Bar 1 Beat 1 = 2.0s
+        chord(bs, 1.95, roots[bar % 4], 0.25);
+        hit(bs + 0.0, 68, 0.88, 35, 0.12, bar % 4 === 0 ? 0.35 : 0.05);
+        hit(bs + 0.5, 240, 0.65, 55, 0.08, 0.45);
+        hit(bs + 1.0, 68, 0.75, 40, 0.10, 0.04);
+        hit(bs + 1.5, 240, 0.65, 55, 0.08, 0.45);
+      }
+    });
+    const g44 = analyzeAudioBeatGrid(pickup44, { earliestStartSec: 0 });
+    assert.strictEqual(g44.timeSignature, '4/4');
+    assert.ok(Math.abs(g44.bpm - 120) <= 0.5);
+    assert.ok(Math.abs(g44.firstDownbeatSec - 2.0) <= 0.025, `Expected True Beat 1 at 2.00s (not 1.00s Beat-3 pickup), got ${g44.firstDownbeatSec}s`);
+
+    // Verify 1-bar count-off starts at 0.00s so Beats 3 & 4 of count-off play over the 1.0s & 1.5s pickup and Beat 1 lands at 2.0s!
+    const click44 = synthesizeAlignedClickWav({ bpm: g44.bpm, beatsPerBar: g44.beatsPerBar, firstDownbeatSec: g44.firstDownbeatSec, songEndSec: 8.0 });
+    assert.ok(Math.abs(click44.clipStartSec - 0.0) <= 0.025);
+    assert.strictEqual(click44.transients[4].velocity, 0.95, '5th click (index 4) must be Song Bar 1 Beat 1 Downbeat');
+
+    // 2. 4/4 Half-Time Breakdown @ 132 BPM (Kick + Chord on Beat 1, Heavy Snare on Beat 3 — must NOT swap 1 & 3)
+    const bht = 60 / 132;
+    const halfTime44 = synthArrangement(18, ({ hit, chord }) => {
+      const roots = [73.4, 87.3, 98.0, 82.4];
+      for (let bar = 0; bar < 8; bar++) {
+        const bs = 1.2 + bar * 4 * bht;
+        chord(bs, 3.8 * bht, roots[bar % 4], 0.26);
+        hit(bs + 0 * bht, 62, 0.92, 32, 0.14, 0.18);
+        hit(bs + 1 * bht, 900, 0.28, 95, 0.04, 0.18);
+        hit(bs + 2 * bht, 235, 0.85, 48, 0.09, 0.55);
+        hit(bs + 3 * bht, 900, 0.28, 95, 0.04, 0.18);
+      }
+    });
+    const gHt = analyzeAudioBeatGrid(halfTime44, { earliestStartSec: 0 });
+    assert.strictEqual(gHt.timeSignature, '4/4');
+    assert.ok(Math.abs(gHt.firstDownbeatSec - 1.2) <= 0.025, `Half-time Beat 1 must lock to 1.20s, got ${gHt.firstDownbeatSec}s`);
+
+    // 3. 3/4 Triple Meter @ 126 BPM with 1-beat pickup
+    const b34 = 60 / 126;
+    const waltz34 = synthArrangement(18, ({ hit, chord }) => {
+      const trueB1 = 0.8 + b34;
+      hit(0.8, 320, 0.45, 65, 0.06, 0.20);
+      const roots = [130.8, 164.8, 196.0, 146.8];
+      for (let bar = 0; bar < 10; bar++) {
+        const bs = trueB1 + bar * 3 * b34;
+        chord(bs, 2.9 * b34, roots[bar % 4], 0.24);
+        hit(bs, 70, 0.88, 36, 0.11, 0.05);
+        hit(bs + b34, 290, 0.52, 65, 0.07, 0.30);
+        hit(bs + 2 * b34, 290, 0.50, 65, 0.07, 0.28);
+      }
+    });
+    const g34 = analyzeAudioBeatGrid(waltz34, { earliestStartSec: 0 });
+    assert.strictEqual(g34.timeSignature, '3/4');
+    assert.ok(Math.abs(g34.firstDownbeatSec - (0.8 + b34)) <= 0.025);
+
+    // 4. 6/8 Compound Meter @ 150 eighth-BPM with 3-pulse pickup ("4 - 5 - 6 | 1!")
+    const p68 = 60 / 150;
+    const groove68 = synthArrangement(20, ({ hit, chord }) => {
+      hit(0.6, 250, 0.58, 55, 0.08, 0.38);
+      hit(1.0, 900, 0.32, 90, 0.04, 0.25);
+      hit(1.4, 900, 0.34, 90, 0.04, 0.25);
+      const roots = [110, 130.8, 146.8, 98];
+      for (let bar = 0; bar < 7; bar++) {
+        const bs = 1.8 + bar * 6 * p68;
+        chord(bs, 5.8 * p68, roots[bar % 4], 0.25);
+        hit(bs + 0 * p68, 68, 0.90, 35, 0.12, bar % 2 === 0 ? 0.25 : 0.05);
+        hit(bs + 1 * p68, 950, 0.32, 95, 0.04, 0.22);
+        hit(bs + 2 * p68, 950, 0.32, 95, 0.04, 0.22);
+        hit(bs + 3 * p68, 240, 0.72, 55, 0.08, 0.46);
+        hit(bs + 4 * p68, 950, 0.32, 95, 0.04, 0.22);
+        hit(bs + 5 * p68, 950, 0.35, 95, 0.04, 0.24);
+      }
+    });
+    const g68 = analyzeAudioBeatGrid(groove68, { earliestStartSec: 0 });
+    assert.strictEqual(g68.timeSignature, '6/8');
+    assert.ok(Math.abs(g68.firstDownbeatSec - 1.8) <= 0.025);
+
+    // 5. 7/8 Prog Odd Meter @ 140 eighth-BPM
+    const p78 = 60 / 140;
+    const prog78 = synthArrangement(20, ({ hit, chord }) => {
+      const roots = [82.4, 98.0, 110.0, 73.4];
+      for (let bar = 0; bar < 6; bar++) {
+        const bs = 1.0 + bar * 7 * p78;
+        chord(bs, 6.8 * p78, roots[bar % 4], 0.24);
+        hit(bs + 0 * p78, 66, 0.90, 35, 0.11, 0.20);
+        hit(bs + 1 * p78, 900, 0.30, 95, 0.04, 0.20);
+        hit(bs + 2 * p78, 240, 0.65, 55, 0.08, 0.40);
+        hit(bs + 3 * p78, 900, 0.30, 95, 0.04, 0.20);
+        hit(bs + 4 * p78, 72, 0.68, 40, 0.09, 0.08);
+        hit(bs + 5 * p78, 240, 0.62, 55, 0.08, 0.38);
+        hit(bs + 6 * p78, 900, 0.32, 95, 0.04, 0.22);
+      }
+    });
+    const g78 = analyzeAudioBeatGrid(prog78, { earliestStartSec: 0 });
+    assert.strictEqual(g78.timeSignature, '7/8');
+    assert.ok(Math.abs(g78.firstDownbeatSec - 1.0) <= 0.025);
+  });
 });
