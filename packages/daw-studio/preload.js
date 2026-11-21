@@ -92,6 +92,7 @@ contextBridge.exposeInMainWorld('robos', {
   probeRobosIpCamera: (payload) => ipcRenderer.invoke('daw:robos-cam-probe', payload),
   controlRobosIpCamera: (payload) => ipcRenderer.invoke('daw:robos-cam-control', payload),
   captureVideoSnapshot: (payload) => ipcRenderer.invoke('daw:video-snapshot', payload),
+  getVideoFilmstrip: (payload) => ipcRenderer.invoke('daw:video-filmstrip', payload),
   addVideoTrack: (payload) => ipcRenderer.invoke('daw:add-video-track', payload),
   openVideoOutputWindow: (payload) => ipcRenderer.invoke('daw:video-window-open', payload),
   closeVideoOutputWindow: () => ipcRenderer.invoke('daw:video-window-close'),

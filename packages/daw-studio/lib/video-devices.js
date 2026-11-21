@@ -1049,6 +1049,176 @@ function probeVideoFileInfo(filePath) {
   });
 }
 
+const inFlightFilmstrips = new Map();
+let activeFilmstripWorkers = 0;
+const filmstripWorkerQueue = [];
+
+function acquireFilmstripSlot() {
+  if (activeFilmstripWorkers < 2) {
+    activeFilmstripWorkers++;
+    return Promise.resolve();
+  }
+  return new Promise(resolve => filmstripWorkerQueue.push(resolve));
+}
+
+function releaseFilmstripSlot() {
+  const next = filmstripWorkerQueue.shift();
+  if (next) next();
+  else activeFilmstripWorkers = Math.max(0, activeFilmstripWorkers - 1);
+}
+
+function getDefaultFilmstripCacheDir() {
+  return process.env.ROBOS_DAW_THUMBCACHE_DIR
+    || path.join(os.homedir(), '.cache', 'robos', 'daw-studio', 'filmstrips');
+}
+
+async function runFfmpegFilmstrip(args, timeoutMs = 30000) {
+  await acquireFilmstripSlot();
+  try {
+    await new Promise((resolve, reject) => {
+      execFile('ffmpeg', args, { timeout: timeoutMs, maxBuffer: 8 * 1024 * 1024 }, (err, _stdout, stderr) => {
+        if (err) {
+          reject(new Error((stderr || err.message || 'FFmpeg filmstrip extraction failed').trim()));
+          return;
+        }
+        resolve();
+      });
+    });
+  } finally {
+    releaseFilmstripSlot();
+  }
+}
+
+/**
+ * Generates (and caches on disk) a horizontal JPEG filmstrip sprite sheet (`tileCount x 1`)
+ * for NLE timeline video thumbnail rendering.
+ */
+async function generateVideoFilmstripSprite(videoFile, {
+  maxTiles = 40,
+  tileWidth = 160,
+  tileHeight = 90,
+  cacheDir = null,
+} = {}) {
+  const absVideo = videoFile ? path.resolve(String(videoFile)) : '';
+  if (!absVideo || !fs.existsSync(absVideo)) {
+    return { ok: false, error: 'Video file not found on disk.' };
+  }
+  let stat;
+  try {
+    stat = fs.statSync(absVideo);
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+  if (!stat.size || stat.size < 256) {
+    return { ok: false, error: 'Video file is empty.' };
+  }
+
+  const tw = Math.max(64, Math.min(320, Math.round(Number(tileWidth) || 160)));
+  const th = Math.max(36, Math.min(180, Math.round(Number(tileHeight) || 90)));
+  const capTiles = Math.max(4, Math.min(64, Math.round(Number(maxTiles) || 40)));
+  const dir = cacheDir || getDefaultFilmstripCacheDir();
+  fs.mkdirSync(dir, { recursive: true });
+
+  const cacheHash = crypto
+    .createHash('sha1')
+    .update(`v1:${absVideo}:${stat.size}:${Math.round(stat.mtimeMs)}:${tw}x${th}:${capTiles}`)
+    .digest('hex')
+    .slice(0, 24);
+  const spriteFile = path.join(dir, `${cacheHash}.jpg`);
+  const metaFile = path.join(dir, `${cacheHash}.json`);
+
+  if (fs.existsSync(spriteFile) && fs.existsSync(metaFile)) {
+    try {
+      const sStat = fs.statSync(spriteFile);
+      if (sStat.size > 256) {
+        const meta = JSON.parse(fs.readFileSync(metaFile, 'utf8'));
+        if (meta && Number(meta.tileCount) >= 1) {
+          return {
+            ok: true,
+            spriteFile,
+            tileCount: Number(meta.tileCount),
+            tileWidth: Number(meta.tileWidth) || tw,
+            tileHeight: Number(meta.tileHeight) || th,
+            sourceDurationSec: Number(meta.sourceDurationSec) || 1,
+            cached: true,
+          };
+        }
+      }
+    } catch {}
+  }
+
+  if (inFlightFilmstrips.has(cacheHash)) {
+    return inFlightFilmstrips.get(cacheHash);
+  }
+
+  const jobPromise = (async () => {
+    try {
+      const probe = await probeVideoFileInfo(absVideo);
+      if (!probe.hasVideo) {
+        return { ok: false, error: 'Media file does not contain a video stream.' };
+      }
+      const vidDur = Math.max(0.25, Number(probe.durationSec) || 2.0);
+      const tileCount = vidDur <= 2.5
+        ? Math.max(4, Math.min(capTiles, Math.ceil(vidDur * 4)))
+        : Math.max(8, Math.min(capTiles, Math.ceil(vidDur / 2.2)));
+      const fpsExpr = (tileCount / vidDur).toFixed(6);
+      const vf = `fps=${fpsExpr}:round=near,scale=${tw}:${th}:force_original_aspect_ratio=increase,crop=${tw}:${th},tile=${tileCount}x1`;
+      const tmpOut = path.join(dir, `${cacheHash}.${process.pid}.${crypto.randomBytes(3).toString('hex')}.jpg`);
+
+      try {
+        const buildArgs = (nokey) => [
+          '-nostdin',
+          '-y',
+          '-v', 'error',
+          ...(nokey ? ['-skip_frame', 'nokey'] : []),
+          '-i', absVideo,
+          '-vf', vf,
+          '-frames:v', '1',
+          '-q:v', '5',
+          tmpOut,
+        ];
+        if (vidDur > 22) {
+          try {
+            await runFfmpegFilmstrip(buildArgs(true));
+          } catch {
+            await runFfmpegFilmstrip(buildArgs(false));
+          }
+        } else {
+          await runFfmpegFilmstrip(buildArgs(false));
+        }
+
+        if (!fs.existsSync(tmpOut) || fs.statSync(tmpOut).size < 256) {
+          await runFfmpegFilmstrip(buildArgs(false));
+        }
+
+        fs.renameSync(tmpOut, spriteFile);
+        const meta = {
+          tileCount,
+          tileWidth: tw,
+          tileHeight: th,
+          sourceDurationSec: Number(vidDur.toFixed(4)),
+        };
+        fs.writeFileSync(metaFile, JSON.stringify(meta));
+        return {
+          ok: true,
+          spriteFile,
+          ...meta,
+          cached: false,
+        };
+      } finally {
+        try { if (fs.existsSync(tmpOut)) fs.unlinkSync(tmpOut); } catch {}
+      }
+    } catch (err) {
+      return { ok: false, error: err.message };
+    } finally {
+      inFlightFilmstrips.delete(cacheHash);
+    }
+  })();
+
+  inFlightFilmstrips.set(cacheHash, jobPromise);
+  return jobPromise;
+}
+
 function remuxFaststartMp4(rawFile, finalFile) {
   return new Promise((resolve) => {
     execFile('ffmpeg', [
@@ -1413,6 +1583,7 @@ module.exports = {
   captureVideoSourceSnapshot,
   buildVideoTrack,
   probeVideoFileInfo,
+  generateVideoFilmstripSprite,
   synthesizeTestPatternMp4,
   VideoTrackRecorder,
 };

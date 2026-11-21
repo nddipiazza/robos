@@ -2328,4 +2328,57 @@ describe('DAW Editing Engine: Multi-Select, Track/Take Gain, Split/Trim, Copy/Pa
       fs.rmSync(tmpRoot, { recursive: true, force: true });
     }
   });
+
+  it('generates and caches NLE timeline video filmstrip thumbnail sprites for video clips', async () => {
+    const {
+      synthesizeTestPatternMp4,
+      probeVideoFileInfo,
+      generateVideoFilmstripSprite,
+    } = require('../lib/video-devices');
+
+    const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'robos-daw-filmstrip-'));
+    try {
+      const sampleMp4 = path.join(tmpRoot, 'timeline-preview.mp4');
+      const cacheDir = path.join(tmpRoot, 'cache');
+      await synthesizeTestPatternMp4(sampleMp4, 2.0, false, { width: 640, height: 360 });
+
+      // 1. Fresh generation produces tileCount x 1 JPEG sprite with exact dimensions
+      const res1 = await generateVideoFilmstripSprite(sampleMp4, {
+        maxTiles: 12,
+        tileWidth: 160,
+        tileHeight: 90,
+        cacheDir,
+      });
+      assert.strictEqual(res1.ok, true);
+      assert.strictEqual(res1.cached, false);
+      assert.ok(res1.tileCount >= 4 && res1.tileCount <= 12);
+      assert.ok(fs.existsSync(res1.spriteFile));
+
+      const spriteInfo = await probeVideoFileInfo(res1.spriteFile);
+      assert.strictEqual(spriteInfo.width, res1.tileCount * 160);
+      assert.strictEqual(spriteInfo.height, 90);
+
+      // 2. Second request hits persistent disk cache immediately
+      const res2 = await generateVideoFilmstripSprite(sampleMp4, {
+        maxTiles: 12,
+        tileWidth: 160,
+        tileHeight: 90,
+        cacheDir,
+      });
+      assert.strictEqual(res2.ok, true);
+      assert.strictEqual(res2.cached, true);
+      assert.strictEqual(res2.spriteFile, res1.spriteFile);
+      assert.strictEqual(res2.tileCount, res1.tileCount);
+
+      // 3. Verify timeline filmstrip drawing & IPC wiring in renderer/app.js + preload.js
+      const pkgDir = path.join(__dirname, '..');
+      const preloadSrc = fs.readFileSync(path.join(pkgDir, 'preload.js'), 'utf8');
+      const appSrc = fs.readFileSync(path.join(pkgDir, 'renderer', 'app.js'), 'utf8');
+      assert.ok(preloadSrc.includes("getVideoFilmstrip: (payload) => ipcRenderer.invoke('daw:video-filmstrip'"));
+      assert.ok(appSrc.includes('function drawVideoFilmstripIntoClip('));
+      assert.ok(appSrc.includes('function ensureVideoClipFilmstrip('));
+    } finally {
+      fs.rmSync(tmpRoot, { recursive: true, force: true });
+    }
+  });
 });

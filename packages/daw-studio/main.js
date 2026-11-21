@@ -68,6 +68,7 @@ const {
   discoverAllVideoSources,
   captureVideoSourceSnapshot,
   buildVideoTrack,
+  generateVideoFilmstripSprite,
   VideoTrackRecorder,
 } = require('./lib/video-devices');
 
@@ -1563,6 +1564,14 @@ ipcMain.handle('daw:robos-cam-control', async (_e, payload) => {
 ipcMain.handle('daw:video-snapshot', async (_e, payload) => {
   try {
     return await captureVideoSourceSnapshot(payload?.videoConfig || payload || {});
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('daw:video-filmstrip', async (_e, payload) => {
+  try {
+    return await generateVideoFilmstripSprite(payload?.videoFile, payload || {});
   } catch (err) {
     return { ok: false, error: err.message };
   }

@@ -174,6 +174,7 @@ let embeddedKaraokeLineSig = '';
 let activeVideoModalType = 'robos-ip-camera'; // 'robos-ip-camera' | 'v4l2' | 'custom'
 let activeRobosProbedStatus = null;
 let isSavingKdenlive = false;
+const videoFilmstripCache = new Map(); // videoFile -> { status, img, tileCount, tileWidth, tileHeight, sourceDurationSec }
 
 function esc(str) {
   return String(str ?? '')
@@ -1851,6 +1852,235 @@ function toLocalMediaUrl(filePath) {
   if (!filePath) return '';
   if (/^(file|https?|blob|data):/i.test(filePath)) return filePath;
   return `file://${encodeURI(filePath).replace(/#/g, '%23').replace(/\?/g, '%3F')}`;
+}
+
+function formatShortFrameTimestamp(sec) {
+  const s = Math.max(0, Math.floor(Number(sec) || 0));
+  const m = Math.floor(s / 60);
+  const rem = s % 60;
+  return `${String(m).padStart(2, '0')}:${String(rem).padStart(2, '0')}`;
+}
+
+function ensureVideoClipFilmstrip(videoFile) {
+  const cleanPath = String(videoFile || '').trim();
+  if (!cleanPath) return null;
+  const existing = videoFilmstripCache.get(cleanPath);
+  if (existing) return existing;
+
+  const entry = {
+    status: 'loading',
+    img: null,
+    tileCount: 0,
+    tileWidth: 160,
+    tileHeight: 90,
+    sourceDurationSec: 0,
+  };
+  videoFilmstripCache.set(cleanPath, entry);
+
+  if (typeof window.robos?.getVideoFilmstrip !== 'function') {
+    entry.status = 'error';
+    return entry;
+  }
+
+  window.robos.getVideoFilmstrip({ videoFile: cleanPath, maxTiles: 40, tileWidth: 160, tileHeight: 90 })
+    .then((res) => {
+      if (!res?.ok || !res.spriteFile || !res.tileCount) {
+        entry.status = 'error';
+        invalidateStaticTimelineCaches();
+        drawAllTimelineCanvases();
+        return;
+      }
+      const img = new Image();
+      img.onload = () => {
+        entry.status = 'ready';
+        entry.img = img;
+        entry.tileCount = Math.max(1, Number(res.tileCount) || 1);
+        entry.tileWidth = Math.max(32, Number(res.tileWidth) || 160);
+        entry.tileHeight = Math.max(24, Number(res.tileHeight) || 90);
+        entry.sourceDurationSec = Math.max(0.1, Number(res.sourceDurationSec) || 1);
+        invalidateStaticTimelineCaches();
+        drawAllTimelineCanvases();
+      };
+      img.onerror = () => {
+        entry.status = 'error';
+        invalidateStaticTimelineCaches();
+        drawAllTimelineCanvases();
+      };
+      img.src = toLocalMediaUrl(res.spriteFile);
+    })
+    .catch(() => {
+      entry.status = 'error';
+    });
+
+  return entry;
+}
+
+function drawCinemaSprocketRails(ctx, startX, clipW, bodyTop, bodyH, viewW, isMuted, railTint = 'rgba(192, 132, 252, 0.48)') {
+  const railH = 5.5;
+  const visL = Math.max(0, startX);
+  const visR = Math.min(viewW, startX + clipW);
+  if (visR <= visL) return;
+
+  ctx.fillStyle = 'rgba(6, 9, 15, 0.90)';
+  ctx.fillRect(visL, bodyTop, visR - visL, railH);
+  ctx.fillRect(visL, bodyTop + bodyH - railH, visR - visL, railH);
+
+  ctx.fillStyle = isMuted ? 'rgba(148, 163, 184, 0.25)' : railTint;
+  const holeStep = 14;
+  const firstHoleIdx = Math.max(0, Math.floor((visL - startX) / holeStep));
+  for (let hx = startX + 4 + firstHoleIdx * holeStep; hx < Math.min(viewW, startX + clipW - 5); hx += holeStep) {
+    ctx.fillRect(hx, bodyTop + 1.5, 5.5, 2.5);
+    ctx.fillRect(hx, bodyTop + bodyH - 4, 5.5, 2.5);
+  }
+}
+
+function drawVideoFilmstripIntoClip(ctx, {
+  track,
+  clip,
+  startX,
+  clipW,
+  regionTop,
+  regionH,
+  viewW,
+  isMuted,
+}) {
+  const bodyTop = regionTop + 17;
+  const bodyH = Math.max(24, regionH - 17);
+  const thumbTop = bodyTop + 5.5;
+  const thumbH = Math.max(16, bodyH - 11);
+  const cellW = Math.max(48, Math.round(thumbH * (16 / 9)));
+  const isDedicatedVideoTrack = track.trackKind === 'video';
+
+  drawCinemaSprocketRails(ctx, startX, clipW, bodyTop, bodyH, viewW, isMuted);
+
+  const visLeft = Math.max(0, startX);
+  const visRight = Math.min(viewW, startX + clipW);
+  if (visRight <= visLeft + 0.5) return;
+
+  const vidPath = resolveClipVideoFilePath(clip);
+  const film = vidPath ? ensureVideoClipFilmstrip(vidPath) : null;
+
+  if (film?.status === 'ready' && film.img && film.tileCount >= 1) {
+    const clipDurSec = Math.max(0.05, Number(clip.durationSec) || 1);
+    const clipOffSec = Math.max(0, Number(clip.offsetSec) || 0);
+    const srcDurSec = Math.max(
+      0.05,
+      clipOffSec + clipDurSec,
+      Number(film.sourceDurationSec) || Number(clip.sourceDurationSec) || clipDurSec
+    );
+    const firstSlot = Math.max(0, Math.floor((visLeft - startX) / cellW));
+    const lastSlot = Math.max(firstSlot, Math.floor((visRight - startX) / cellW));
+    const prevAlpha = ctx.globalAlpha;
+    const thumbAlpha = isDedicatedVideoTrack
+      ? (isMuted ? 0.38 : 0.96)
+      : (isMuted ? 0.20 : 0.38);
+
+    for (let slot = firstSlot; slot <= lastSlot; slot++) {
+      const cellX = startX + slot * cellW;
+      const availW = Math.min(cellW, (startX + clipW) - cellX);
+      if (availW <= 0.5 || cellX > viewW + 1 || cellX + availW < -1) continue;
+
+      const relMidPx = slot * cellW + Math.min(cellW * 0.5, availW * 0.5);
+      const sampleSec = clipOffSec + (relMidPx / Math.max(1, clipW)) * clipDurSec;
+      const tileIdx = Math.max(
+        0,
+        Math.min(film.tileCount - 1, Math.floor((sampleSec / srcDurSec) * film.tileCount))
+      );
+      const sx = tileIdx * film.tileWidth;
+      const sw = Math.max(1, film.tileWidth * (availW / cellW));
+
+      ctx.globalAlpha = thumbAlpha;
+      ctx.drawImage(
+        film.img,
+        sx,
+        0,
+        sw,
+        film.tileHeight,
+        cellX,
+        thumbTop,
+        availW,
+        thumbH
+      );
+
+      // Crisp NLE inter-frame divider line
+      if (slot > 0 && cellX >= -1 && cellX <= viewW + 1) {
+        ctx.globalAlpha = isMuted ? 0.45 : 0.86;
+        ctx.fillStyle = '#070a10';
+        ctx.fillRect(Math.round(cellX), thumbTop, 1.2, thumbH);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+        ctx.fillRect(Math.round(cellX) + 1.2, thumbTop, 0.8, thumbH);
+      }
+
+      // Subtle frame timecode stamp on dedicated video tracks when cells are wide enough
+      if (isDedicatedVideoTrack && !isMuted && availW >= 78) {
+        const frameTimelineSec = (Number(clip.startSec) || 0) + (slot * cellW / Math.max(1, clipW)) * clipDurSec;
+        const stamp = formatShortFrameTimestamp(frameTimelineSec);
+        ctx.globalAlpha = 0.78;
+        ctx.fillStyle = 'rgba(6, 9, 15, 0.72)';
+        ctx.fillRect(cellX + 3, thumbTop + thumbH - 13, 30, 10.5);
+        ctx.globalAlpha = 0.92;
+        ctx.fillStyle = '#e2e8f0';
+        ctx.font = '600 8.5px ui-monospace, SFMono-Regular, Menlo, monospace';
+        ctx.fillText(stamp, cellX + 5.5, thumbTop + thumbH - 4.8);
+      }
+    }
+
+    if (!isDedicatedVideoTrack) {
+      // Keep audio transients crystal-clear on hybrid audio+video tracks
+      ctx.globalAlpha = isMuted ? 0.25 : 0.34;
+      ctx.fillStyle = '#090d14';
+      ctx.fillRect(visLeft, thumbTop, visRight - visLeft, thumbH);
+    }
+    ctx.globalAlpha = prevAlpha;
+    return;
+  }
+
+  // Loading / fallback cinema frame cells before FFmpeg sprite finishes (or if file unavailable)
+  ctx.fillStyle = isMuted ? 'rgba(30, 41, 59, 0.35)' : 'rgba(20, 16, 34, 0.72)';
+  ctx.fillRect(visLeft, thumbTop, visRight - visLeft, thumbH);
+  ctx.strokeStyle = isMuted ? 'rgba(148, 163, 184, 0.22)' : 'rgba(192, 132, 252, 0.30)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  const firstSlot = Math.max(1, Math.ceil((visLeft - startX) / cellW));
+  for (let fx = startX + firstSlot * cellW; fx < Math.min(viewW, startX + clipW - 4); fx += cellW) {
+    ctx.moveTo(Math.round(fx) + 0.5, thumbTop);
+    ctx.lineTo(Math.round(fx) + 0.5, thumbTop + thumbH);
+  }
+  ctx.stroke();
+
+  if (film?.status === 'loading' && clipW >= 120) {
+    ctx.save();
+    ctx.fillStyle = 'rgba(216, 180, 254, 0.78)';
+    ctx.font = '600 9.5px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    ctx.fillText('Generating video filmstrip...', Math.max(visLeft + 8, startX + 8), thumbTop + thumbH / 2 + 3);
+    ctx.restore();
+  }
+}
+
+function captureLiveRecordingVideoThumbIfDue(recElapsedSec) {
+  if (!liveRecSession || !isRecording) return;
+  const nowMs = performance.now();
+  if (liveRecSession.lastVideoThumbAtMs && nowMs - liveRecSession.lastVideoThumbAtMs < 1400) return;
+  const liveImg = document.getElementById('embedded-video-live-img');
+  if (!liveImg || !liveImg.complete || !liveImg.naturalWidth || !liveImg.naturalHeight) return;
+
+  liveRecSession.lastVideoThumbAtMs = nowMs;
+  if (!liveRecSession.videoThumbs) liveRecSession.videoThumbs = [];
+  if (liveRecSession.videoThumbs.length >= 60) return;
+
+  try {
+    const thumbCanvas = document.createElement('canvas');
+    thumbCanvas.width = 160;
+    thumbCanvas.height = 90;
+    const tctx = thumbCanvas.getContext('2d');
+    tctx.drawImage(liveImg, 0, 0, 160, 90);
+    liveRecSession.videoThumbs.push({
+      relSec: Math.max(0, Number(recElapsedSec) || 0),
+      canvas: thumbCanvas,
+    });
+  } catch {
+    // Cross-origin MJPEG canvas taint fallback: safe no-op until recording stops and FFmpeg sprite loads
+  }
 }
 
 function ensureSelectedVideoOutputTrack() {
@@ -4216,7 +4446,10 @@ function computeTrackStaticCacheKey(track, tIdx, w, h, totalSec, secPerBeat, vie
     const sel = selectedClipIds.has(c.id) ? 1 : 0;
     const hov = hoverLinkedPreview?.clipIds?.has(c.id) ? hoverLinkedPreview.zone : '';
     const drg = timelineDragState?.targetClipIds?.has(c.id) ? timelineDragState.mode : '';
-    clipsSig += `|${c.id}:${c.startSec}:${c.durationSec}:${c.gainDb || 0}:${c.fadeInSec || 0}:${c.fadeOutSec || 0}:${c.muted ? 1 : 0}:${c.peaks?.length || 0}:${c.transients?.length || 0}:${c.wordCount || 0}:${c.lyricsData?.lines?.length || 0}:${sel}:${hov}:${drg}`;
+    const vPath = resolveClipVideoFilePath(c);
+    const fEntry = vPath ? videoFilmstripCache.get(vPath) : null;
+    const filmSig = fEntry ? `${fEntry.status}:${fEntry.tileCount || 0}` : '';
+    clipsSig += `|${c.id}:${c.startSec}:${c.offsetSec || 0}:${c.durationSec}:${c.gainDb || 0}:${c.fadeInSec || 0}:${c.fadeOutSec || 0}:${c.muted ? 1 : 0}:${c.peaks?.length || 0}:${c.transients?.length || 0}:${c.wordCount || 0}:${c.lyricsData?.lines?.length || 0}:${filmSig}:${sel}:${hov}:${drg}`;
   }
   return `${w}x${h}:${tIdx}:${viewStart.toFixed(4)}:${totalSec}:${secPerBeat.toFixed(4)}:${track.gainDb || 0}:${waveformZoomDb}:${track.color || ''}:${isTrackSel}:${srOn}${clipsSig}`;
 }
@@ -4484,33 +4717,35 @@ function drawAllTimelineCanvases() {
           }
         }
         if (isVideoRegion) {
-          // Cinema filmstrip sprocket holes along top and bottom rails of video region
-          ctx.fillStyle = isMuted ? 'rgba(148, 163, 184, 0.25)' : 'rgba(192, 132, 252, 0.42)';
-          const holeStep = 14;
-          for (let sx = Math.max(0, startX) + 4; sx < Math.min(w, startX + clipW - 6); sx += holeStep) {
-            ctx.fillRect(sx, regionTop + 19, 6, 3.5);
-            ctx.fillRect(sx, regionTop + regionH - 6.5, 6, 3.5);
-          }
-          if (!peaks.length) {
-            const midY = regionTop + 17 + (regionH - 19) / 2;
-            ctx.fillStyle = isMuted ? 'rgba(100, 116, 139, 0.18)' : 'rgba(168, 85, 247, 0.14)';
-            ctx.fillRect(startX, midY - 12, clipW, 24);
-            const frameStep = 28;
-            ctx.strokeStyle = isMuted ? 'rgba(148, 163, 184, 0.25)' : 'rgba(192, 132, 252, 0.35)';
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            for (let fx = Math.max(0, startX) + frameStep; fx < Math.min(w, startX + clipW - 4); fx += frameStep) {
-              ctx.moveTo(fx + 0.5, midY - 12);
-              ctx.lineTo(fx + 0.5, midY + 12);
-            }
-            ctx.stroke();
-          }
+          drawVideoFilmstripIntoClip(ctx, {
+            track,
+            clip,
+            startX,
+            clipW,
+            regionTop,
+            regionH,
+            viewW: w,
+            isMuted,
+          });
         }
         if (peaks.length) {
           const stepX = clipW / peaks.length;
           const barW = Math.max(1, stepX - (stepX > 2.2 ? 0.45 : 0.15));
-          const midY = regionTop + 17 + (regionH - 19) / 2;
-          const maxAmpH = (regionH - 22) / 2;
+          const isVidTrackWave = track.trackKind === 'video';
+          const waveStripH = isVidTrackWave ? 20 : (regionH - 22);
+          const midY = isVidTrackWave
+            ? (regionTop + regionH - 6 - waveStripH / 2)
+            : (regionTop + 17 + (regionH - 19) / 2);
+          const maxAmpH = waveStripH / 2;
+
+          if (isVidTrackWave) {
+            const visL = Math.max(0, startX);
+            const visR = Math.min(w, startX + clipW);
+            if (visR > visL) {
+              ctx.fillStyle = 'rgba(7, 10, 16, 0.72)';
+              ctx.fillRect(visL, midY - maxAmpH - 1, visR - visL, waveStripH + 2);
+            }
+          }
 
           ctx.fillStyle = isMuted ? '#475569' : baseColor;
           ctx.globalAlpha = isMuted ? 0.35 : 0.54;
@@ -4613,12 +4848,15 @@ function drawAllTimelineCanvases() {
         const hitNote = track.soundReplacement?.enabled && clip.transients?.length
           ? ` · TRIG ${clip.transients.length}`
           : '';
+        const metaBadge = (isVideoRegion && !peaks.length)
+          ? (clip.videoWidth && clip.videoHeight ? `${clip.videoWidth}x${clip.videoHeight}` : 'HD MP4')
+          : `${clip.peakDb ?? '—'} dB`;
         ctx.save();
         ctx.beginPath();
         ctx.rect(startX + 4, regionTop + 1, Math.max(4, clipW - 8), 16);
         ctx.clip();
         ctx.fillText(
-          `${muteTag}${clip.name || 'Take'}  ${Number(clip.durationSec || 0).toFixed(1)}s · ${clip.peakDb ?? '—'} dB${gainTag}${hitNote}`,
+          `${muteTag}${clip.name || 'Take'}  ${Number(clip.durationSec || 0).toFixed(1)}s · ${metaBadge}${gainTag}${hitNote}`,
           startX + 6,
           regionTop + 12.5
         );
@@ -4703,6 +4941,42 @@ function drawAllTimelineCanvases() {
       ctx.fillRect(startX, regionTop, clipW, 17);
       ctx.fillStyle = '#ef4444';
       ctx.fillRect(startX, regionTop, clipW, 2.5);
+
+      if (track.trackKind === 'video') {
+        captureLiveRecordingVideoThumbIfDue(recElapsedSec);
+        const bodyTop = regionTop + 17;
+        const bodyH = Math.max(24, regionH - 17);
+        const thumbTop = bodyTop + 5.5;
+        const thumbH = Math.max(16, bodyH - 11);
+        const cellW = Math.max(48, Math.round(thumbH * (16 / 9)));
+        drawCinemaSprocketRails(ctx, startX, clipW, bodyTop, bodyH, w, false, 'rgba(248, 113, 113, 0.55)');
+        const liveThumbs = liveRecSession?.videoThumbs || [];
+        if (liveThumbs.length > 0 && recElapsedSec > 0.05) {
+          const visLeft = Math.max(0, startX);
+          const visRight = Math.min(w, startX + clipW);
+          const firstSlot = Math.max(0, Math.floor((visLeft - startX) / cellW));
+          const lastSlot = Math.max(firstSlot, Math.floor((visRight - startX) / cellW));
+          for (let slot = firstSlot; slot <= lastSlot; slot++) {
+            const cellX = startX + slot * cellW;
+            const availW = Math.min(cellW, (startX + clipW) - cellX);
+            if (availW <= 0.5) continue;
+            const targetRelSec = ((slot * cellW + availW * 0.5) / Math.max(1, clipW)) * recElapsedSec;
+            let best = liveThumbs[0];
+            for (const lt of liveThumbs) {
+              if (Math.abs(lt.relSec - targetRelSec) <= Math.abs(best.relSec - targetRelSec)) best = lt;
+            }
+            if (best?.canvas) {
+              ctx.globalAlpha = 0.88;
+              ctx.drawImage(best.canvas, 0, 0, 160 * (availW / cellW), 90, cellX, thumbTop, availW, thumbH);
+              ctx.globalAlpha = 1.0;
+              if (slot > 0) {
+                ctx.fillStyle = 'rgba(20, 6, 10, 0.85)';
+                ctx.fillRect(Math.round(cellX), thumbTop, 1.2, thumbH);
+              }
+            }
+          }
+        }
+      }
 
       // Time-anchored live streaming Dual-Layer Peak + Core Waveform (aligned for pre-roll latency)
       const rawPeaks = recState?.peaks || [];
