@@ -1,0 +1,149 @@
+---
+title: "RobOS DAW Studio Upgrades: NLE Video Filmstrip Tracks, 1-Click MP4 Video+Audio Mixdown, Idempotent Kdenlive Sync, Clean IP Camera Capture & Scarlett DSP Headphone Mix"
+nav_label: "DAW Filmstrip, MP4 & Kdenlive"
+date: 2026-11-21 15:00:00 +0000
+date_label: "Nov 21, 2026"
+tags:
+  - "RobOS DAW Studio"
+  - "NLE Video Filmstrip &amp; MP4 Mux"
+  - "Kdenlive (.kdenlive) Sync"
+  - "Scarlett DSP &amp; RobOS IP Camera"
+summary: "After tracking full-band drum and guitar covers with a ceiling-mounted <a href=\"/ip-camera-android/\"><strong>RobOS IP Camera</strong></a> and a 20-channel <strong>Focusrite Scarlett 18i20 + Behringer ADA8200 ADAT</strong> rig in <a href=\"/daw/\"><strong>RobOS DAW Studio</strong></a>, we shipped six studio-driven upgrades across the timeline, camera firmware, hardware monitor matrix, and export pipeline: <strong>NLE Video Filmstrip Thumbnails</strong> inside timeline video tracks (cached 40-frame FFmpeg sprite sheets with sprocket rails and live recording snapshots), <strong>1-Click MP4 Video + Stereo Audio Mixdown</strong> (lossless <code>-c:v copy</code> + <code>320 kbps AAC</code> console master), <strong>Idempotent Save &amp; Re-Sync to Kdenlive (<code>.kdenlive</code>)</strong> that updates <code>[RobOS]</code> audio/video tracks without overwriting your multi-cam edits, a unified non-blocking <strong><code>&lt;robos-job-status&gt;</code> bottom-toolbar background queue</strong>, <strong>Scarlett 18i20 Hardware DSP Headphone Direct-Monitor vs. Backing Mix</strong> + <strong>Time-Signature-First True Beat-1 Click AI</strong>, and <strong>clean OSD-free DAW recording (<code>?timestamp=0</code>) + landscape auto-fullscreen</strong> in RobOS IP Camera for Android."
+description: "NLE video filmstrip thumbnails, 1-click MP4 video+audio mixdown, idempotent Kdenlive (.kdenlive) sync, non-blocking <robos-job-status> exports, Scarlett 18i20 DSP headphone monitor mix, True Beat-1 click AI, and clean landscape RobOS IP Camera capture in RobOS DAW Studio."
+seo_title: "DAW Studio NLE Video Filmstrip, 1-Click MP4 Mixdown, Kdenlive Sync & Scarlett DSP Mix · RobOS"
+og_image: /assets/blog/robos-daw-studio-mp4-filmstrip-kdenlive-and-headphone-mix/01-nle-video-filmstrip-and-video-out.jpg
+og_image_alt: "RobOS DAW Studio showing NLE Video Filmstrip keyframe thumbnails on the XT2125-4 Camera track, synchronized Video Output dock with Export MP4, Reveal .mp4 and Kdenlive buttons, and the bottom-toolbar background job queue"
+---
+<div class="blog-body">
+  <figure class="blog-fig">
+    <img src="{{ '/assets/blog/robos-daw-studio-mp4-filmstrip-kdenlive-and-headphone-mix/01-nle-video-filmstrip-and-video-out.jpg' | relative_url }}" alt="RobOS DAW Studio workbench showing NLE Video Filmstrip keyframe thumbnails with cinema sprocket rails on the XT2125-4 Camera track, live Video Output monitor with Export MP4, Reveal .mp4, and Kdenlive actions, and bottom statusbar JOBS indicator" loading="lazy">
+    <figcaption><strong>NLE Video Filmstrip &amp; 1-Click Video Delivery in RobOS DAW Studio</strong> (<a href="{{ '/daw/' | relative_url }}"><code>rowbose.com/daw</code></a>): camera clips on <code>XT2125-4 Camera</code> render cached keyframe filmstrip tiles with cinema sprocket perforations right on the arrangement canvas, synced at 60 fps to the <strong>Video Output</strong> dock with 1-click <strong>Export MP4</strong>, <strong>Reveal .mp4</strong>, and <strong>Kdenlive</strong> project handoff.</figcaption>
+  </figure>
+
+  <p><strong>Nothing sharpens a workstation faster than cutting real drum and guitar sessions in a loud room.</strong> Right after shipping <a href="{{ '/blog/robos-daw-studio-linux-multitrack-drum-workstation/' | relative_url }}">20-channel Linux drum tracking</a> and <a href="{{ '/blog/robos-daw-studio-video-mode-and-midi-karaoke/' | relative_url }}">HD Video Mode + MIDI Karaoke</a>, we mounted an Android phone running <a href="{{ '/ip-camera-android/' | relative_url }}"><strong>RobOS IP Camera</strong></a> directly on the studio ceiling above our 12-mic acoustic kit, tracked multi-take covers (including <em>Fall Out Boy — "XO"</em>), and took those sessions all the way to finished vertical split-screen videos. Every friction point we hit during live tracking and post-production turned directly into the six upgrades below.</p>
+
+  <h2>1. Real Overhead Studio Rig + Clean, Auto-Fullscreen RobOS IP Camera Capture</h2>
+  <p>When an Android phone doubles as both a 24/7 home surveillance camera for <a href="{{ '/camera-watcher/' | relative_url }}">RobOS Camera Watch</a> and an overhead 1080p studio drum camera for <strong>RobOS DAW Studio</strong>, two camera behaviors immediately matter: you never want a surveillance timestamp burned into your music video takes, and when the phone is clamped horizontally overhead, you want a clean edge-to-edge viewfinder rather than a cramped portrait settings screen.</p>
+
+  <figure class="blog-fig">
+    <img src="{{ '/assets/blog/robos-daw-studio-mp4-filmstrip-kdenlive-and-headphone-mix/04-ceiling-ipcam-rack-and-mics-grid.jpg' | relative_url }}" alt="2x2 studio hardware grid: (A) Ceiling-mounted Moto Android phone running RobOS IP Camera over the drum kit, (B) 20-channel Behringer ADA8200 ADAT + Focusrite Scarlett 18i20 rack, (C) MXL large-diaphragm room condenser and close mics, and (D) Lenovo ThinkPad running 17-track RobOS DAW Studio on PipeWire" loading="lazy">
+    <figcaption><strong>Inside the Live Studio Session</strong>: <strong>(A)</strong> Moto G100 ceiling-mounted overhead streaming clean 1080p Wi-Fi MJPEG (<code>:8080/video?timestamp=0</code>); <strong>(B)</strong> 8-ch <strong>Behringer ADA8200</strong> MIDAS ADAT preamps stacked over a <strong>Focusrite Scarlett 18i20 (3rd Gen)</strong> on a unified 20-ch ALSA clock; <strong>(C)</strong> MXL room condenser + close drum mics; <strong>(D)</strong> Lenovo ThinkPad running 17 tracks on PipeWire Pro-Audio.</figcaption>
+  </figure>
+
+  <ul>
+    <li><strong>OSD-Free Clean DAW Camera Stream (<code>?timestamp=0</code>):</strong> During DAW recording, <code>VideoTrackRecorder</code> (<a href="https://github.com/nddipiazza/robos/blob/main/packages/daw-studio/lib/video-devices.js"><code>packages/daw-studio/lib/video-devices.js</code></a>) appends <code>?timestamp=0</code> to the camera stream URL and posts <code>{"overlayTimestamp": false}</code> to <code>/api/control</code>, restoring the previous setting when recording stops. On Android (<a href="https://github.com/nddipiazza/robos/blob/main/packages/ip-camera-android/app/src/main/java/com/robos/ipcamera/core/HttpOnvifServer.kt"><code>HttpOnvifServer.kt</code></a>, <a href="https://github.com/nddipiazza/robos/blob/main/packages/ip-camera-android/app/src/main/java/com/robos/ipcamera/core/Camera2Engine.kt"><code>Camera2Engine.kt</code></a>), <code>FrameHub.cleanViewers</code> suppresses the burned-in timestamp OSD across active DAW capture sessions with an instant EOF disconnect watcher so Camera Watch surveillance resumes normal timestamps the moment your session finishes.</li>
+    <li><strong>Automatic Edge-to-Edge Landscape Fullscreen Viewfinder:</strong> Rotating the phone into landscape while the camera service is running (<a href="https://github.com/nddipiazza/robos/blob/main/packages/ip-camera-android/app/src/main/java/com/robos/ipcamera/MainActivity.kt"><code>MainActivity.kt</code></a>, <a href="https://github.com/nddipiazza/robos/blob/main/packages/ip-camera-android/app/src/main/java/com/robos/ipcamera/ui/Screens.kt"><code>Screens.kt</code></a>) now unlocks sensor orientation, hides Android status/navigation bars via <code>WindowInsetsControllerCompat</code>, and automatically fills the entire 16:9 screen with the live camera output so you can check drum framing from the throne at a glance (with a 1-tap <strong>Fullscreen</strong> button in portrait and double-tap / floating pill to return to controls).</li>
+  </ul>
+
+  <h2>2. NLE Video Filmstrip Thumbnails Inside Timeline Video Tracks</h2>
+  <p>Previously, video-only camera clips rendered as solid violet blocks on the arrangement timeline—making it hard to spot visually when the drummer sat down at the kit, picked up sticks, or finished a pass without scrubbing blindly. Video lanes now render true non-linear editor (NLE) keyframe filmstrips directly inside every video clip (<a href="https://github.com/nddipiazza/robos/blob/main/packages/daw-studio/lib/video-devices.js"><code>generateVideoFilmstripSprite</code></a>, <a href="https://github.com/nddipiazza/robos/blob/main/packages/daw-studio/renderer/app.js"><code>drawVideoFilmstripIntoClip</code></a>):</p>
+
+  <ul>
+    <li><strong>Cached 40-Frame FFmpeg Sprite Strips + 2-Worker Limiter:</strong> Each recorded or imported <code>.mp4</code>/<code>.mkv</code>/<code>.webm</code> clip generates a single horizontal JPEG sprite sheet (up to <code>40</code> evenly spaced <code>160x90</code> tiles + JSON metadata sidecar) keyed by file path, size, and <code>mtime</code> under <code>~/.cache/robos/daw-studio/filmstrips/</code>. A 2-worker background concurrency limiter keeps UI scrolling at 60 fps even on multi-camera projects and reloads cached filmstrips instantaneously across restarts.</li>
+    <li><strong>Zoom- &amp; Trim-Accurate Tiling + Cinema Sprocket Rails:</strong> As you zoom in/out or slip-trim left/right clip handles, each visual tile samples the exact sprite frame corresponding to <code>clip.offsetSec + localSec</code>, framed by subtle cinema film-sprocket perforations along the top and bottom edges.</li>
+    <li><strong>Live Recording Snapshots &amp; Hybrid Audio+Video Backdrop:</strong> While recording a live camera take, DAW Studio snapshots the live monitor feed every ~<code>1.5 s</code> so filmstrip tiles grow across the growing red recording region in real time before seamlessly swapping to the final FFmpeg sprite strip on stop. Hybrid clips that carry both video and paired audio render a dimmed filmstrip backdrop behind the high-contrast transient waveform.</li>
+  </ul>
+
+  <h2>3. 1-Click MP4 Mixdown, Idempotent Kdenlive (<code>.kdenlive</code>) Sync &amp; Bottom-Bar Background Jobs</h2>
+  <p>Once you nail a drum or guitar take, you either want an <strong>instant shareable <code>.mp4</code></strong> combining your camera video with your mixed 17-track studio audio, or you want to jump straight into <strong>Kdenlive</strong> for multi-camera split-screens without manually aligning WAVs and MP4s by hand (<a href="https://github.com/nddipiazza/robos/blob/main/packages/daw-studio/lib/mixdown-exporter.js"><code>mixdown-exporter.js</code></a>, <a href="https://github.com/nddipiazza/robos/blob/main/packages/daw-studio/lib/kdenlive-exporter.js"><code>kdenlive-exporter.js</code></a>):</p>
+
+  <figure class="blog-fig">
+    <img src="{{ '/assets/blog/robos-daw-studio-mp4-filmstrip-kdenlive-and-headphone-mix/02-export-mp4-and-kdenlive-modal.jpg' | relative_url }}" alt="Export Mixdown modal in RobOS DAW Studio with MP4 Video (.mp4) — Camera Video + Stereo Audio Mixdown selected, XT2125-4 Camera Take #5 (Latest) chosen, Instant Lossless Video Copy + 320 kbps AAC quality, and Save to Kdenlive (.kdenlive) button" loading="lazy">
+    <figcaption><strong>1-Click MP4 Video + Stereo Audio Mixdown &amp; Kdenlive Handoff</strong>: choose <strong>MP4 Video (<code>.mp4</code>)</strong> to mux your latest camera take with the full 17-track console + Master Drum Glue stereo mixdown, or click <strong>Save to Kdenlive (<code>.kdenlive</code>)</strong> to generate/re-sync a multi-track MLT XML project.</figcaption>
+  </figure>
+
+  <ul>
+    <li><strong>1-Click MP4 Video + Stereo Console Mixdown:</strong> Accessible from the <strong>Export MP4</strong> button in the Video Output header, right-clicking any video track/clip, or <code>Ctrl+Shift+E</code>. Renders your unmuted DAW console tracks (parametric EQ, VCA compression, drum triggers, and Master Drum Glue at <code>-0.3 dBFS</code>) and muxes them onto your chosen camera take (defaulting automatically to the <strong>latest recorded take</strong>). Supports <strong>Instant Lossless Video Copy (<code>-c:v copy</code> + <code>320 kbps AAC</code>)</strong> when clip start aligns, plus <code>1080p CRF 18</code> and <code>720p CRF 20</code> H.264 re-encodes with black-frame <code>tpad</code> timeline lead-in alignment and <code>From -&gt; To</code> range trimming.</li>
+    <li><strong>Idempotent Save &amp; Re-Sync to Kdenlive (<code>.kdenlive</code>):</strong> Clicking <strong>Kdenlive</strong> renders a 24-bit WAV studio mixdown alongside an MLT XML <code>.kdenlive</code> project containing <code>[RobOS] Audio Mixdown</code> and frame-accurate <code>[RobOS] Video — &lt;Camera&gt;</code> tracks (with raw camera scratch audio muted automatically so only the polished DAW console mix plays). Best of all, export is <strong>idempotent</strong>: tweaking your kick EQ in RobOS DAW Studio and re-saving into the same <code>.kdenlive</code> file refreshes the <code>[RobOS]</code> audio/video producers while preserving every custom cut, title card, color grade, and split-screen track you added inside Kdenlive.</li>
+    <li><strong>Non-Blocking <code>&lt;robos-job-status&gt;</code> Bottom-Toolbar Queue:</strong> Exports no longer freeze your session behind a blocking modal. Clicking <strong>Export</strong> asks for the destination path <em>first</em> (<code>daw:pick-export-path</code>), immediately closes the dialog so you can keep playing or tweaking mixes, and streams live progress in the reusable <a href="https://github.com/nddipiazza/robos/blob/main/packages/robos-ui/robos-job-status.js"><code>&lt;robos-job-status&gt;</code></a> Web Component embedded in the <code>24px</code> bottom statusbar—unifying <code>VIDEO MP4</code>, <code>MIXDOWN</code>, <code>KDENLIVE</code>, <code>CLICK AI</code>, <code>MIDI .KAR</code>, and <code>STEMS</code> jobs with live percentage, expandable popover history, and a 1-click <strong>Reveal</strong> button.</li>
+  </ul>
+
+  <h2>4. Scarlett 18i20 Hardware DSP Headphone Mix, True Beat-1 Click AI &amp; Queued <code>Ctrl+Z</code></h2>
+  <p>Tracking acoustic drums in headphones surfaced three classic studio problems: Focusrite's internal hardware direct-monitor matrix was feeding raw drum mic bleed straight into our headphones and drowning out the backing song; <code>3/4</code> vs. <code>6/8</code> songs needed meter-aware downbeat accents; and hitting <code>Ctrl+Z</code> the instant a bad take stopped could race file finalization.</p>
+
+  <figure class="blog-fig">
+    <img src="{{ '/assets/blog/robos-daw-studio-mp4-filmstrip-kdenlive-and-headphone-mix/03-scarlett-headphone-mix-modal.jpg' | relative_url }}" alt="Headphone & Direct Monitor Mix (Scarlett 18i20) dialog in RobOS DAW Studio showing Zero Mic Echo + Full Backing preset, +125% Backing Playback Boost, Muted (-80 dB) Live Drum/Mic Direct Monitor in Headphones, and ALSA hardware verification badge" loading="lazy">
+    <figcaption><strong>Scarlett 18i20 Hardware DSP Headphone Mix</strong> (<a href="https://github.com/nddipiazza/robos/blob/main/packages/robos-lib/audio-devices.js"><code>setFocusriteHeadphoneMix</code></a>): 1-click <strong>Zero Mic Echo + Full Backing</strong> mutes Focusrite <code>Mix A/B</code> direct mic bleed in headphones while keeping pre-fader 20-channel ALSA <code>PCM 01..20</code> capture gain completely untouched.</figcaption>
+  </figure>
+
+  <ul>
+    <li><strong>Hardware DSP Direct-Monitor vs. Backing Balance:</strong> The new topbar <strong>Phones Mix</strong> button programs the Scarlett 18i20 / Clarett+ internal hardware mixer over mainline ALSA <code>amixer</code> (<a href="https://github.com/nddipiazza/robos/blob/main/packages/robos-lib/audio-devices.js"><code>packages/robos-lib/audio-devices.js</code></a>)—attenuating or muting live hardware mic inputs routed to headphone <code>Mix A</code>/<code>Mix B</code> (<code>-80 dB..+12 dB</code> across matrix controls) without touching pre-fader recording levels, while boosting USB <code>PCM 1+2</code> playback, PipeWire sink volume, and up to <code>+6 dB</code> WebAudio backing trim.</li>
+    <li><strong>Time-Signature-First Click Track AI (True Beat-1 Lock):</strong> <a href="https://github.com/nddipiazza/robos/blob/main/packages/daw-studio/lib/click-track-generator.js"><code>click-track-generator.js</code></a> now evaluates meter candidates (<code>4/4</code>, <code>3/4</code>, <code>6/8</code>, <code>5/4</code>, <code>7/8</code>) <em>before</em> synthesizing clicks—using a dedicated <code>3/4</code> vs. <code>6/8</code> compound-duple hemiola test and asymmetric low-band bass/kick onset energy so the high downbeat woodblock lands on the real musical <strong>Beat 1</strong> rather than Beat 3.</li>
+    <li><strong>PipeWire Cork-Safe Latency Guard &amp; Queued <code>Ctrl+Z</code>:</strong> <code>computeReliableEarsStartWallMs</code> cross-checks <code>AudioContext.getOutputTimestamp()</code> against wall-clock startup to reject stale PipeWire cork epochs, and pressing <code>Ctrl+Z</code> while FFmpeg/ALSA is still closing a recording pass queues cleanly behind <code>activeRecordStopPromise</code> so rapid punch-in retakes never race or orphan files.</li>
+  </ul>
+
+  <h2>5. Real Session Output: <em>Fall Out Boy — "XO"</em> Split-Screen Shorts &amp; Reactive FX</h2>
+  <p>Putting the entire pipeline to work—overhead RobOS IP Camera (<code>?timestamp=0</code>), 12-mic Scarlett + ADA8200 drum tracking, NLE timeline filmstrips, 1-click MP4 export, and Kdenlive split-screen editing—produced crisp multi-instrument covers ready for social sharing and creative DSP/Gemini visual styling:</p>
+
+  <figure class="blog-fig">
+    <img src="{{ '/assets/blog/robos-daw-studio-mp4-filmstrip-kdenlive-and-headphone-mix/05-fall-out-boy-xo-shorts-triptych.jpg' | relative_url }}" alt="Three vertical 1080x1920 frames from our Fall Out Boy XO drum and guitar session: (1) RobOS DAW Studio HUD showcase with live NLE filmstrip overlay, (2) Cyan Blueprint X-Ray Sobel edge FX, and (3) Infrared Thermal Vision FX" loading="lazy">
+    <figcaption><strong>From Ceiling Phone + 12 Drum Mics to Finished Multi-Cam Shorts</strong>: vertical split-screen outputs from our <em>Fall Out Boy — "XO"</em> session pairing overhead RobOS IP Camera drums with guitar tracking—shown in our RobOS HUD walkthrough alongside audio-reactive <strong>Cyan Blueprint X-Ray</strong> and <strong>Infrared Thermal Vision</strong> renders.</figcaption>
+  </figure>
+
+  <h2>6. End-to-End Pipeline Architecture &amp; CLI Verification</h2>
+  <figure class="blog-fig">
+    <img src="{{ '/assets/blog/robos-daw-studio-mp4-filmstrip-kdenlive-and-headphone-mix/06-daw-filmstrip-mp4-kdenlive-architecture.jpg' | relative_url }}" alt="RobOS DAW Studio technical architecture schematic showing Clean Capture & Scarlett DSP, Rhythm Lock & Queued Transport, NLE Video Filmstrip Workbench, and Non-Blocking robos-job-status MP4 & Kdenlive Exports" loading="lazy">
+    <figcaption><strong>RobOS DAW Studio Architecture</strong>: clean <code>?timestamp=0</code> Wi-Fi video from RobOS IP Camera + 20-ch Scarlett/ADAT audio with hardware DSP headphone mix feed True Beat-1 click alignment, cached 40-frame NLE timeline filmstrips, and non-blocking <code>&lt;robos-job-status&gt;</code> MP4 &amp; idempotent <code>.kdenlive</code> exports.</figcaption>
+  </figure>
+
+  <pre class="mermaid">
+flowchart LR
+  subgraph Cap["1. Clean Capture &amp; Scarlett DSP"]
+    Cam["RobOS IP Camera (Wi-Fi :8080)<br/>?timestamp=0 Clean Stream · Landscape Fullscreen"]
+    HW["Scarlett 18i20 + ADA8200 (20ch)<br/>Hardware Mix A/B Mute + Backing PCM Boost"]
+  end
+
+  subgraph Sync["2. Rhythm Lock &amp; Queued Transport"]
+    Click["Time-Signature-First Click AI<br/>4/4 · 3/4 · 6/8 · 7/8 + True Beat-1 Lock"]
+    Guard["PipeWire Cork-Safe Latency Guard<br/>+ Queued Ctrl+Z on Record Stop"]
+  end
+
+  subgraph NLE["3. NLE Video Filmstrip Workbench"]
+    Sprite["Cached FFmpeg Sprite Strips<br/>40x 160x90 Tiles · 2-Worker Limiter · Sprockets"]
+    Canvas["Zoom/Trim offsetSec Tiling<br/>Live Record Snapshots + 60fps Video Out"]
+    Sprite --> Canvas
+  end
+
+  subgraph Out["4. Non-Blocking &lt;robos-job-status&gt; Exports"]
+    MP4["1-Click MP4 Video + Audio Mux<br/>Pick Path First · -c:v copy + 320k AAC"]
+    Kden["Idempotent Kdenlive (.kdenlive) Sync<br/>Updates [RobOS] Tracks · Keeps User Edits"]
+  end
+
+  Cam -->|"Clean HD .mp4"| Sprite
+  HW -->|"20ch Pre-Fader WAV"| Guard
+  Click -->|"Beat-1 Grid"| Canvas
+  Guard -->|"Aligned Console Mix"| MP4
+  Canvas -->|"Latest Camera Take"| MP4
+  Canvas -->|"Frame-Synced Clips"| Kden
+  Guard -->|"24-bit Master WAV"| Kden
+  </pre>
+
+  <div class="blog-log"># 1. Run the 34-test RobOS DAW Studio suite (Scarlett DSP mix, Beat-1 Click AI, NLE filmstrip, MP4 mux &amp; idempotent .kdenlive sync)
+node --test packages/daw-studio/test/daw-studio.test.js
+
+# 2. Run the 7-test RobOS IP Camera Android JVM suite (?timestamp=0 clean DAW stream &amp; /api/control OSD restore)
+(cd packages/ip-camera-android &amp;&amp; ./gradlew testDebugUnitTest assembleDebug)
+
+# 3. Inspect cached NLE filmstrip sprites &amp; live background job status on a running DAW Studio (:19232)
+ls -lh ~/.cache/robos/daw-studio/filmstrips/
+curl -s -X POST http://127.0.0.1:19232/eval \
+  -H 'Content-Type: application/json' \
+  -d '{"js":"JSON.stringify(window.__dawStudioState())"}'</div>
+</div>
+<div class="blog-links">
+  <a href="{{ '/daw/' | relative_url }}">RobOS DAW Studio (/daw) →</a>
+  <a href="{{ '/ip-camera-android/' | relative_url }}">RobOS IP Camera for Android →</a>
+  <a href="{{ '/blog/robos-daw-studio-video-mode-and-midi-karaoke/' | relative_url }}">HD Video &amp; MIDI Karaoke post →</a>
+  <a href="{{ '/blog/robos-daw-studio-linux-multitrack-drum-workstation/' | relative_url }}">20-Ch Drum Tracking post →</a>
+  <span class="blog-commits">Commits:
+    <a href="https://github.com/nddipiazza/robos/commit/eccc2c5e">eccc2c5e</a> ·
+    <a href="https://github.com/nddipiazza/robos/commit/846cfb86">846cfb86</a> ·
+    <a href="https://github.com/nddipiazza/robos/commit/5bb00dc7">5bb00dc7</a> ·
+    <a href="https://github.com/nddipiazza/robos/commit/c6af2c63">c6af2c63</a> ·
+    <a href="https://github.com/nddipiazza/robos/commit/dd3243e6">dd3243e6</a> ·
+    <a href="https://github.com/nddipiazza/robos/commit/c260a311">c260a311</a> ·
+    <a href="https://github.com/nddipiazza/robos/commit/0b1226f5">0b1226f5</a> ·
+    <a href="https://github.com/nddipiazza/robos/commit/564a71aa">564a71aa</a>
+  </span>
+</div>
+{% include mermaid.html %}
