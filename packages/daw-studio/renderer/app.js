@@ -6866,9 +6866,10 @@ function openExportMixdownModal({ preferFormat = '', preferTrackId = '', preferC
 }
 
 function closeExportMixdownModal() {
-  if (isExportingMixdown) return;
   document.getElementById('export-mixdown-modal')?.classList.add('hidden');
 }
+
+const yieldUiPaint = () => new Promise(resolve => setTimeout(resolve, 16));
 
 async function renderAndExportMixdown({
   startSec = 0,
@@ -6897,21 +6898,62 @@ async function renderAndExportMixdown({
     return { ok: false };
   }
 
+  let effectiveFormat = format || 'mp3';
+  let effectiveQuality = quality || '';
+  const initialSpec = EXPORT_FORMAT_CATALOG[effectiveFormat] || EXPORT_FORMAT_CATALOG.mp3;
+  const safeTitle = String(currentProject?.name || 'mixdown').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'session';
+  const suggestedName = defaultName || `${safeTitle}-${effectiveFormat === 'mp4' ? 'video' : 'mixdown'}.${initialSpec.ext}`;
+
+  let resolvedVid = effectiveFormat === 'mp4' ? (videoChoice || getSelectedExportVideoChoice()) : null;
+  if (effectiveFormat === 'mp4' && !resolvedVid?.videoFile) {
+    const noVidErr = 'No recorded or imported .mp4 video clip found to combine with audio.';
+    showStatus(noVidErr, true);
+    const statusEl = document.getElementById('export-modal-status');
+    if (statusEl) statusEl.textContent = noVidErr;
+    return { ok: false, error: noVidErr };
+  }
+
+  // Ask for destination file path FIRST (just like Save to Kdenlive), then close the modal immediately
+  // so the export runs non-blockingly in the bottom-toolbar <robos-job-status> spinner!
+  let destFile = targetFile;
+  if (!destFile && typeof window.robos?.pickExportMixdownPath === 'function') {
+    const picked = await window.robos.pickExportMixdownPath({
+      format: effectiveFormat,
+      quality: effectiveQuality || initialSpec.defaultQuality,
+      defaultName: suggestedName,
+    });
+    if (!picked?.ok || picked?.canceled || !picked.filePath) {
+      return { ok: false, canceled: true };
+    }
+    destFile = picked.filePath;
+    if (picked.format) effectiveFormat = picked.format;
+    if (picked.quality) effectiveQuality = picked.quality;
+    if (effectiveFormat === 'mp4' && !resolvedVid) {
+      resolvedVid = videoChoice || getSelectedExportVideoChoice();
+      if (!resolvedVid?.videoFile) {
+        const noVidErr = 'No recorded or imported .mp4 video clip found to combine with audio.';
+        showStatus(noVidErr, true);
+        return { ok: false, error: noVidErr };
+      }
+    }
+  }
+
+  closeExportMixdownModal();
+
   const renderRate = 48000;
-  const spec = EXPORT_FORMAT_CATALOG[format] || EXPORT_FORMAT_CATALOG.mp3;
-  const statusEl = document.getElementById('export-modal-status');
-  const setProg = (msg) => {
-    showStatus(msg);
-    if (statusEl) statusEl.textContent = msg;
-  };
+  const spec = EXPORT_FORMAT_CATALOG[effectiveFormat] || EXPORT_FORMAT_CATALOG.mp3;
+  const targetLeaf = destFile ? (String(destFile).split('/').pop() || suggestedName) : suggestedName;
 
   return runDawJob({
-    title: format === 'mp4' ? 'Export MP4 Video + Audio' : `Export ${spec.ext.toUpperCase()} Mixdown`,
-    category: format === 'mp4' ? 'VIDEO MP4' : 'MIXDOWN',
+    title: effectiveFormat === 'mp4'
+      ? `Export MP4 Video (${targetLeaf})`
+      : `Export ${spec.ext.toUpperCase()} (${targetLeaf})`,
+    category: effectiveFormat === 'mp4' ? 'VIDEO MP4' : 'MIXDOWN',
     detail: `Decoding stems (${formatTimecode(renderStartSec)} -> ${formatTimecode(rawEndSec)})...`,
     progress: 12,
   }, async (job) => {
-    setProg(`Decoding stems & rendering stereo mixdown (${formatTimecode(renderStartSec)} -> ${formatTimecode(rawEndSec)})...`);
+    showStatus(`Decoding stems & rendering stereo mixdown (${formatTimecode(renderStartSec)} -> ${formatTimecode(rawEndSec)})...`);
+    await yieldUiPaint();
 
     for (const track of playableTracks) {
       for (const clip of (track.clips || [])) {
@@ -6937,6 +6979,7 @@ async function renderAndExportMixdown({
       progress: 42,
       detail: `Rendering stereo DSP master (${playableTracks.length} track(s), ${sliceSpanSec.toFixed(1)}s)...`,
     });
+    await yieldUiPaint();
 
     const totalFrames = Math.max(256, Math.ceil(sliceSpanSec * renderRate));
     const offlineCtx = new OfflineAudioContext(2, totalFrames, renderRate);
@@ -7045,35 +7088,27 @@ async function renderAndExportMixdown({
       }
     }
 
-    const resolvedVid = format === 'mp4' ? (videoChoice || getSelectedExportVideoChoice()) : null;
-    if (format === 'mp4' && !resolvedVid?.videoFile) {
-      const noVidErr = 'No recorded or imported .mp4 video clip found to combine with audio.';
-      showStatus(noVidErr, true);
-      if (statusEl) statusEl.textContent = noVidErr;
-      job.fail(noVidErr);
-      return { ok: false, error: noVidErr };
-    }
-
-    const encMsg = format === 'mp4'
+    const encMsg = effectiveFormat === 'mp4'
       ? `Muxing camera video (${resolvedVid.trackName}) + stereo audio into .MP4...`
-      : `Encoding .${spec.ext.toUpperCase()} (${quality || spec.defaultQuality} @ ${sampleRate} Hz)...`;
-    setProg(encMsg);
+      : `Encoding .${spec.ext.toUpperCase()} (${effectiveQuality || spec.defaultQuality} @ ${sampleRate} Hz)...`;
+    showStatus(encMsg);
     job.update({ progress: 76, detail: encMsg });
+    await yieldUiPaint();
 
-    const wavBytes = (format === 'wav' && quality === 'pcm_s16le' && Number(sampleRate) === 48000)
+    const wavBytes = (effectiveFormat === 'wav' && (effectiveQuality || spec.defaultQuality) === 'pcm_s16le' && Number(sampleRate) === 48000)
       ? DE.encodeStereoFloat32ToWavBytes(left, right, renderRate)
       : encodeStereoFloat32IeeeWavBytes(left, right, renderRate);
 
-    const safeTitle = String(currentProject?.name || 'mixdown').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'session';
+    await yieldUiPaint();
     const res = await window.robos.exportMixdown({
       wavBase64: uint8ToBase64(wavBytes),
-      format,
-      quality: quality || spec.defaultQuality,
+      format: effectiveFormat,
+      quality: effectiveQuality || spec.defaultQuality,
       sampleRate: Number(sampleRate) || 48000,
       title: currentProject?.name || 'RobOS DAW Mixdown',
-      defaultName: defaultName || `${safeTitle}-${format === 'mp4' ? 'video' : 'mixdown'}.${spec.ext}`,
-      targetFile,
-      videoMuxSpec: resolvedVid ? {
+      defaultName: suggestedName,
+      targetFile: destFile,
+      videoMuxSpec: (effectiveFormat === 'mp4' && resolvedVid) ? {
         videoFile: resolvedVid.videoFile,
         clipStartSec: resolvedVid.startSec,
         clipOffsetSec: resolvedVid.offsetSec,
@@ -7084,7 +7119,7 @@ async function renderAndExportMixdown({
     });
 
     if (res?.canceled) {
-      setProg('Mixdown export canceled.');
+      showStatus('Mixdown export canceled.');
       job.cancel('Mixdown export canceled');
       return res;
     }
@@ -7092,7 +7127,7 @@ async function renderAndExportMixdown({
       const doneText = `Exported .${(res.ext || spec.ext).toUpperCase()} mixdown (${sliceSpanSec.toFixed(1)}s) -> ${res.filePath}`;
       showStatus(doneText);
       job.complete({
-        detail: `Exported .${(res.ext || spec.ext).toUpperCase()} (${sliceSpanSec.toFixed(1)}s @ ${sampleRate} Hz)`,
+        detail: `Exported ${targetLeaf} (${sliceSpanSec.toFixed(1)}s @ ${sampleRate} Hz)`,
         outputPath: res.filePath,
         actionLabel: 'Reveal',
       });
@@ -7100,7 +7135,6 @@ async function renderAndExportMixdown({
     }
     const errText = res?.error || 'Unknown error';
     showStatus(`Export failed: ${errText}`, true);
-    if (statusEl) statusEl.textContent = `Export failed: ${errText}`;
     job.fail(errText);
     return res;
   });
@@ -7305,7 +7339,12 @@ async function saveSessionToKdenliveProject({ forceSaveAs = false, targetPath = 
 }
 
 async function executeExportMixdownFromModal() {
-  if (isExportingMixdown || !currentProject) return;
+  if (!currentProject) return;
+  if (isExportingMixdown) {
+    closeExportMixdownModal();
+    showStatus('Already running mixdown export in the bottom toolbar Jobs queue — please wait a moment...');
+    return;
+  }
   const isSelMode = Boolean(document.getElementById('export-scope-selection')?.checked);
   const excludeClick = Boolean(document.getElementById('export-chk-exclude-click')?.checked);
   const normalize = Boolean(document.getElementById('export-chk-normalize')?.checked);
@@ -7314,6 +7353,7 @@ async function executeExportMixdownFromModal() {
   const quality = document.getElementById('export-quality-select')?.value || '';
   const sampleRate = Number(document.getElementById('export-samplerate-select')?.value) || 48000;
   const defaultName = document.getElementById('export-filename-input')?.value?.trim() || '';
+  const chosenVideo = format === 'mp4' ? getSelectedExportVideoChoice() : null;
 
   const fullBounds = getFullSessionExportBounds(excludeClick);
   let startSec = 0;
@@ -7340,14 +7380,9 @@ async function executeExportMixdownFromModal() {
   exportPrefs.edgeFade = edgeFade;
   exportPrefs.excludeClick = excludeClick;
 
-  const btn = document.getElementById('btn-export-confirm');
   isExportingMixdown = true;
-  if (btn) {
-    btn.disabled = true;
-    btn.textContent = 'Rendering & Encoding...';
-  }
   try {
-    const res = await renderAndExportMixdown({
+    await renderAndExportMixdown({
       startSec,
       endSec,
       format,
@@ -7357,22 +7392,12 @@ async function executeExportMixdownFromModal() {
       edgeFade,
       excludeClick,
       defaultName,
-      videoChoice: format === 'mp4' ? getSelectedExportVideoChoice() : null,
+      videoChoice: chosenVideo,
     });
-    if (res?.ok) {
-      isExportingMixdown = false;
-      closeExportMixdownModal();
-    }
   } catch (err) {
     showStatus(`Mixdown render error: ${err.message}`, true);
-    const statusEl = document.getElementById('export-modal-status');
-    if (statusEl) statusEl.textContent = `Error: ${err.message}`;
   } finally {
     isExportingMixdown = false;
-    if (btn) {
-      btn.disabled = false;
-      btn.textContent = 'Export Audio Mixdown...';
-    }
   }
 }
 

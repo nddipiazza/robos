@@ -1410,6 +1410,62 @@ async function handleMixdownExport(payload = {}) {
   });
 }
 
+async function pickExportMixdownDestination(payload = {}) {
+  delete require.cache[require.resolve('./lib/mixdown-exporter')];
+  const exporter = require('./lib/mixdown-exporter');
+  const {
+    format = 'mp3',
+    quality = '',
+    defaultName = '',
+  } = payload || {};
+
+  const spec = exporter.getMixdownFormatSpec(format);
+  const fallbackName = exporter.ensureFormatExtension(defaultName || `mixdown.${spec.ext}`, spec.ext);
+  if (!mainWindow || mainWindow.isDestroyed()) {
+    return { ok: false, canceled: true };
+  }
+
+  const home = process.env.HOME || os.homedir();
+  const otherFilters = exporter.MIXDOWN_FORMATS
+    .filter(f => f.id !== spec.id)
+    .map(f => ({ name: f.dialogName, extensions: [f.ext] }));
+  const res = await dialog.showSaveDialog(mainWindow, {
+    title: spec.id === 'mp4'
+      ? 'Export MP4 Video + Stereo Audio Mixdown (.mp4)'
+      : `Export Audio Mixdown (.${spec.ext})`,
+    defaultPath: path.join(home, fallbackName),
+    filters: [
+      { name: spec.dialogName, extensions: [spec.ext] },
+      ...otherFilters,
+    ],
+  });
+  if (res.canceled || !res.filePath) {
+    return { ok: false, canceled: true };
+  }
+  const outPath = res.filePath;
+  const userTypedExt = path.extname(outPath).replace(/^\./, '').toLowerCase();
+  const matchedTypedSpec = exporter.MIXDOWN_FORMATS.find(f => f.ext === userTypedExt);
+  const effectiveFormat = matchedTypedSpec ? matchedTypedSpec.id : spec.id;
+  const effectiveQuality = matchedTypedSpec && matchedTypedSpec.id !== spec.id
+    ? matchedTypedSpec.defaultQuality
+    : (quality || spec.defaultQuality);
+
+  return {
+    ok: true,
+    filePath: outPath,
+    format: effectiveFormat,
+    quality: effectiveQuality,
+  };
+}
+
+ipcMain.handle('daw:pick-export-path', async (_e, payload) => {
+  try {
+    return await pickExportMixdownDestination(payload);
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
 ipcMain.handle('daw:export-mixdown', async (_e, payload) => {
   try {
     return await handleMixdownExport(payload);

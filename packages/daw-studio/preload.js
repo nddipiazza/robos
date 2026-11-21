@@ -80,6 +80,7 @@ contextBridge.exposeInMainWorld('robos', {
       return file?.path || '';
     }
   },
+  pickExportMixdownPath: (payload) => ipcRenderer.invoke('daw:pick-export-path', payload),
   exportMixdown: (payload) => ipcRenderer.invoke('daw:export-mixdown', payload),
   exportMixdownWav: (payload) => ipcRenderer.invoke('daw:export-mixdown-wav', payload),
   pickKdenlivePath: (payload) => ipcRenderer.invoke('daw:pick-kdenlive-path', payload),

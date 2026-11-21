@@ -1984,6 +1984,9 @@ describe('DAW Editing Engine: Multi-Select, Track/Take Gain, Split/Trim, Copy/Pa
 
     assert.ok(appSrc.includes("category: 'KDENLIVE'"), 'saveSessionToKdenliveProject must register KDENLIVE job');
     assert.ok(appSrc.includes("'MIXDOWN'"), 'renderAndExportMixdown must register MIXDOWN job');
+    assert.ok(appSrc.includes("'VIDEO MP4'"), 'renderAndExportMixdown must register VIDEO MP4 job');
+    assert.ok(appSrc.includes('window.robos.pickExportMixdownPath'), 'Export must pick save path first then run in bottom-toolbar job spinner');
+    assert.ok(!appSrc.includes("btn.textContent = 'Rendering & Encoding...'"), 'Export modal must close immediately instead of blocking workbench with modal status');
     assert.ok(appSrc.includes("category: 'MIDI .KAR'"), 'createLyricsTrackUnderTrack must register MIDI .KAR job');
     assert.ok(appSrc.includes("category: 'CLICK AI'"), 'generateClickTrackUnderTrack must register CLICK AI job');
     assert.ok(appSrc.includes("category: 'STEMS'"), 'removeDrumsUnderTrack must register STEMS job');
