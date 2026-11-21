@@ -10,6 +10,7 @@ import android.provider.Settings
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -94,6 +95,7 @@ fun LiveScreen(
     padding: PaddingValues,
     onRequestPermission: () -> Unit,
     onEnterBlackout: () -> Unit,
+    onEnterFullscreen: () -> Unit = {},
 ) {
     val context = LocalContext.current
     val shareState by vm.shareState.collectAsState()
@@ -154,7 +156,8 @@ fun LiveScreen(
                         .height(220.dp)
                         .clip(RoundedCornerShape(10.dp))
                         .background(Color(0xFF05070A))
-                        .border(1.dp, Border, RoundedCornerShape(10.dp)),
+                        .border(1.dp, Border, RoundedCornerShape(10.dp))
+                        .clickable(enabled = config.enabled, onClick = onEnterFullscreen),
                     contentAlignment = Alignment.Center,
                 ) {
                     if (preview != null && config.enabled) {
@@ -218,6 +221,23 @@ fun LiveScreen(
                                 .padding(horizontal = 10.dp, vertical = 4.dp),
                         ) {
                             Text("MOTION (${status.motionScore}%)", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+
+                    if (config.enabled) {
+                        Row(
+                            modifier = Modifier
+                                .align(Alignment.BottomEnd)
+                                .padding(8.dp)
+                                .clip(RoundedCornerShape(999.dp))
+                                .background(Color(0xDD0D1117))
+                                .border(1.dp, Accent, RoundedCornerShape(999.dp))
+                                .clickable(onClick = onEnterFullscreen)
+                                .padding(horizontal = 11.dp, vertical = 5.dp)
+                                .testTag("enter-fullscreen"),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text("Fullscreen", color = Accent, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
                         }
                     }
                 }
@@ -861,6 +881,202 @@ fun NetworkScreen(
                     }
                     Switch(checked = config.keepScreenAwake, onCheckedChange = vm::setKeepScreenAwake)
                 }
+            }
+        }
+    }
+}
+
+// ── Immersive Fullscreen Live Video Output (Auto-Active in Landscape) ────────
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun FullscreenVideoOverlay(
+    vm: CameraViewModel,
+    config: IpCameraConfig,
+    status: CameraRuntimeStatus,
+    preview: ImageBitmap?,
+    onExitFullscreen: () -> Unit,
+    onEnterBlackout: () -> Unit,
+) {
+    var hudVisible by remember { mutableStateOf(true) }
+    var hudInteractionTick by remember { mutableIntStateOf(0) }
+    var cropToFill by rememberSaveable { mutableStateOf(false) }
+
+    LaunchedEffect(hudVisible, hudInteractionTick) {
+        if (hudVisible) {
+            delay(3800L)
+            hudVisible = false
+        }
+    }
+
+    val bumpHud = {
+        hudVisible = true
+        hudInteractionTick++
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black)
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onTap = {
+                        hudVisible = !hudVisible
+                        if (hudVisible) hudInteractionTick++
+                    },
+                    onDoubleTap = {
+                        cropToFill = !cropToFill
+                        bumpHud()
+                    },
+                )
+            }
+            .testTag("fullscreen-video-overlay"),
+        contentAlignment = Alignment.Center,
+    ) {
+        if (preview != null && config.enabled) {
+            Image(
+                bitmap = preview,
+                contentDescription = "Fullscreen live camera output",
+                contentScale = if (cropToFill) ContentScale.Crop else ContentScale.Fit,
+                modifier = Modifier.fillMaxSize(),
+            )
+        } else {
+            MutedText(if (!config.enabled) "Stream paused" else status.streamState.label)
+        }
+
+        if (hudVisible) {
+            // Top-left live stream & power telemetry pill
+            Row(
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(14.dp)
+                    .clip(RoundedCornerShape(999.dp))
+                    .background(Color(0xCC0D1117))
+                    .border(1.dp, Border, RoundedCornerShape(999.dp))
+                    .padding(horizontal = 12.dp, vertical = 6.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                val dotColor = when (status.streamState) {
+                    StreamState.LIVE -> Success
+                    StreamState.STARTING, StreamState.RECONNECTING -> Warning
+                    StreamState.ERROR, StreamState.PERMISSION_NEEDED -> Danger
+                    StreamState.STOPPED -> Muted
+                }
+                StatusDot(dotColor, 9)
+                val battSuffix = if (status.batteryPercent in 0..100 && !status.charging) {
+                    " · ${status.batteryPercent}% batt"
+                } else {
+                    ""
+                }
+                Text(
+                    "${config.cameraName} · ${status.width}×${status.height} · ${"%.1f".format(status.measuredFps)} fps · ${status.activeViewers} watching$battSuffix",
+                    color = TextColor,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium,
+                )
+            }
+
+            // Top-right view mode, dim screen, & exit fullscreen controls
+            Row(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(14.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Row(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(999.dp))
+                        .background(Color(0xDD0D1117))
+                        .border(1.dp, Border, RoundedCornerShape(999.dp))
+                        .clickable {
+                            cropToFill = !cropToFill
+                            bumpHud()
+                        }
+                        .padding(horizontal = 12.dp, vertical = 7.dp)
+                        .testTag("fullscreen-scale-toggle"),
+                ) {
+                    Text(
+                        if (cropToFill) "Fit Frame" else "Fill Screen",
+                        color = TextColor,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                }
+
+                Row(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(999.dp))
+                        .background(Color(0xDD0D1117))
+                        .border(1.dp, Border, RoundedCornerShape(999.dp))
+                        .clickable(onClick = onEnterBlackout)
+                        .padding(horizontal = 12.dp, vertical = 7.dp),
+                ) {
+                    Text("Dim Screen", color = TextColor, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                }
+
+                Row(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(999.dp))
+                        .background(Color(0xDD0D1117))
+                        .border(1.dp, Accent, RoundedCornerShape(999.dp))
+                        .clickable(onClick = onExitFullscreen)
+                        .padding(horizontal = 13.dp, vertical = 7.dp)
+                        .testTag("exit-fullscreen"),
+                ) {
+                    Text("Exit Fullscreen", color = Accent, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+
+            // Bottom floating quick camera controls (lens, zoom, torch, timestamp)
+            FlowRow(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(14.dp)
+                    .clip(RoundedCornerShape(999.dp))
+                    .background(Color(0xCC0D1117))
+                    .border(1.dp, Border, RoundedCornerShape(999.dp))
+                    .padding(horizontal = 12.dp, vertical = 6.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                FilterChip(
+                    selected = false,
+                    onClick = {
+                        vm.flipLens()
+                        bumpHud()
+                    },
+                    label = { Text(if (config.lensFacing == LensFacing.BACK) "Front Lens" else "Back Lens") },
+                )
+                listOf(1.0f to "1x", 2.0f to "2x", 4.0f to "4x").forEach { (z, label) ->
+                    FilterChip(
+                        selected = kotlin.math.abs(config.zoomRatio - z) < 0.2f,
+                        onClick = {
+                            vm.setZoom(z)
+                            bumpHud()
+                        },
+                        label = { Text(label) },
+                    )
+                }
+                if (config.lensFacing == LensFacing.BACK) {
+                    FilterChip(
+                        selected = config.torchEnabled,
+                        onClick = {
+                            vm.toggleTorch()
+                            bumpHud()
+                        },
+                        label = { Text(if (config.torchEnabled) "Light On" else "Light") },
+                    )
+                }
+                FilterChip(
+                    selected = config.overlayTimestamp,
+                    onClick = {
+                        vm.setOverlayTimestamp(!config.overlayTimestamp)
+                        bumpHud()
+                    },
+                    label = { Text(if (config.overlayTimestamp) "Timestamp On" else "Timestamp Off") },
+                )
             }
         }
     }
