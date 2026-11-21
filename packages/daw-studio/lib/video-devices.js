@@ -153,6 +153,13 @@ function resolveRobosStreamUrlForQuality(streamUrl, qualityPreset = DEFAULT_VIDE
   return raw;
 }
 
+function withRobosCleanStreamParam(streamUrl) {
+  const raw = String(streamUrl || '').trim();
+  if (!raw) return '';
+  if (/[?&](timestamp|osd|clean)=/i.test(raw)) return raw;
+  return `${raw}${raw.includes('?') ? '&' : '?'}timestamp=0`;
+}
+
 function buildRobosIpCameraSource({
   id = '',
   host = '',
@@ -294,6 +301,7 @@ async function probeRobosIpCameraStatus(hostOrUrl, { port = 8080, username = '',
     lensFacing: status?.lensFacing || 'BACK',
     zoomRatio: Number(status?.zoomRatio) || 1.0,
     torchEnabled: Boolean(status?.torchEnabled),
+    overlayTimestamp: status?.overlayTimestamp !== undefined ? Boolean(status.overlayTimestamp) : true,
     batteryPercent: typeof status?.batteryPercent === 'number' ? status.batteryPercent : -1,
     charging: Boolean(status?.charging),
     temperatureC: Number(status?.temperatureC) || 0,
@@ -806,7 +814,7 @@ function buildFfmpegVideoInputArgs(videoConfig = {}) {
 
   const isRobos = Boolean(videoConfig.isRobosAndroidCam || srcType === 'robos-ip-camera');
   const rawStream = isRobos
-    ? resolveRobosStreamUrlForQuality(videoConfig.streamUrl, spec.id)
+    ? withRobosCleanStreamParam(resolveRobosStreamUrlForQuality(videoConfig.streamUrl, spec.id))
     : videoConfig.streamUrl;
   const authedUrl = withVideoCredentials(rawStream, videoConfig.username, videoConfig.password);
 
@@ -1320,13 +1328,33 @@ class VideoTrackRecorder {
       };
 
       if (!injectTestSignal) {
-        // Best-effort remote quality sync for RobOS IP Cameras before/as stream opens
+        // Sync quality & suppress RobOS IP Camera surveillance timestamp watermark during DAW recording
         if ((vcfg.isRobosAndroidCam || vcfg.sourceType === 'robos-ip-camera') && process.env.ROBOS_TEST !== '1') {
-          controlRobosIpCamera(vcfg, {
-            resolution: spec.robosResolution,
-            fps: spec.fps,
-            jpegQuality: spec.jpegQuality,
-          }).catch(() => {});
+          entry.robosCleanSessionActive = true;
+          entry.priorOverlayTimestamp = true;
+          probeRobosIpCameraStatus(vcfg.baseUrl || vcfg.streamUrl || vcfg.host, {
+            port: vcfg.port || 8080,
+            username: vcfg.username || '',
+            password: vcfg.password || '',
+            timeoutMs: 800,
+          }).then((probed) => {
+            if (probed?.ok && probed.status && typeof probed.status.overlayTimestamp === 'boolean') {
+              entry.priorOverlayTimestamp = probed.status.overlayTimestamp;
+            }
+            return controlRobosIpCamera(vcfg, {
+              resolution: spec.robosResolution,
+              fps: spec.fps,
+              jpegQuality: spec.jpegQuality,
+              overlayTimestamp: false,
+            });
+          }).catch(() => {
+            controlRobosIpCamera(vcfg, {
+              resolution: spec.robosResolution,
+              fps: spec.fps,
+              jpegQuality: spec.jpegQuality,
+              overlayTimestamp: false,
+            }).catch(() => {});
+          });
         }
 
         const inArgs = buildFfmpegVideoInputArgs(vcfg);
@@ -1405,16 +1433,23 @@ class VideoTrackRecorder {
   }
 
   async _terminateEntryProc(entry) {
-    if (!entry.proc) return;
-    const proc = entry.proc;
-    entry.proc = null;
-    try { proc.stdin?.write('q\n'); } catch {}
-    try { proc.kill('SIGINT'); } catch {}
-    const killTimer = setTimeout(() => {
-      try { proc.kill('SIGKILL'); } catch {}
-    }, 1800);
-    await entry.exitPromise;
-    clearTimeout(killTimer);
+    if (entry.proc) {
+      const proc = entry.proc;
+      entry.proc = null;
+      try { proc.stdin?.write('q\n'); } catch {}
+      try { proc.kill('SIGINT'); } catch {}
+      const killTimer = setTimeout(() => {
+        try { proc.kill('SIGKILL'); } catch {}
+      }, 1800);
+      await entry.exitPromise;
+      clearTimeout(killTimer);
+    }
+    if (entry.robosCleanSessionActive) {
+      entry.robosCleanSessionActive = false;
+      if (entry.priorOverlayTimestamp === true && process.env.ROBOS_TEST !== '1') {
+        controlRobosIpCamera(entry.videoConfig, { overlayTimestamp: true }).catch(() => {});
+      }
+    }
   }
 
   async cancel() {
@@ -1570,6 +1605,7 @@ module.exports = {
   getVideoQualitySpec,
   parseRobosBaseUrl,
   resolveRobosStreamUrlForQuality,
+  withRobosCleanStreamParam,
   buildRobosIpCameraSource,
   probeRobosIpCameraStatus,
   controlRobosIpCamera,

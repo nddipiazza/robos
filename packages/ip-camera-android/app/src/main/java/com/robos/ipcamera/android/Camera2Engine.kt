@@ -358,7 +358,7 @@ class Camera2Engine(
                 onMotionResult(mr)
             }
 
-            if (cfg.overlayTimestamp) {
+            if (cfg.overlayTimestamp && !hub.hasCleanViewers) {
                 val stampText = "${cfg.cameraName} | ${LocalDateTime.now().format(osdFormatter)}"
                 Nv21Overlay.stamp(nv21, stampText)
             }

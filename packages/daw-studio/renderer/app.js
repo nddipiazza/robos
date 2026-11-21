@@ -2119,6 +2119,9 @@ function getLiveStreamDirectMjpegUrl(track) {
   const vcfg = track?.videoConfig;
   if (!vcfg || !vcfg.streamUrl) return '';
   if (/^https?:/i.test(vcfg.streamUrl) && !vcfg.username) {
+    if ((vcfg.isRobosAndroidCam || vcfg.sourceType === 'robos-ip-camera') && !/[?&](timestamp|osd|clean)=/i.test(vcfg.streamUrl)) {
+      return `${vcfg.streamUrl}${vcfg.streamUrl.includes('?') ? '&' : '?'}timestamp=0`;
+    }
     return vcfg.streamUrl;
   }
   return '';
@@ -5309,6 +5312,7 @@ function renderInspectorDrawer() {
           ${isRobosVid ? `
             <button type="button" class="btn btn-sm btn-bevel" id="btn-insp-robos-flip" title="Flip RobOS IP Camera Back / Front Lens">Flip Lens</button>
             <button type="button" class="btn btn-sm btn-bevel" id="btn-insp-robos-torch" title="Toggle Phone Flashlight">Light</button>
+            <button type="button" class="btn btn-sm btn-bevel" id="btn-insp-robos-notimestamp" title="Hide surveillance timestamp overlay on RobOS IP Camera">Hide Timestamp</button>
           ` : ''}
         </div>
       </div>
@@ -5506,6 +5510,11 @@ function renderInspectorDrawer() {
     if (!track.videoConfig) return;
     const res = await window.robos?.controlRobosIpCamera?.({ videoConfig: track.videoConfig, command: { toggleTorch: true } });
     if (res?.ok) showStatus(`Toggled LED flashlight on "${track.name}"`);
+  });
+  document.getElementById('btn-insp-robos-notimestamp')?.addEventListener('click', async () => {
+    if (!track.videoConfig) return;
+    const res = await window.robos?.controlRobosIpCamera?.({ videoConfig: track.videoConfig, command: { overlayTimestamp: false } });
+    if (res?.ok) showStatus(`Disabled surveillance timestamp watermark on "${track.name}"`);
   });
   document.getElementById('btn-insp-norm-gain')?.addEventListener('click', async () => {
     await commitEdit('Auto-Normalize Track Gain', () => {

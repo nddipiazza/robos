@@ -1560,10 +1560,17 @@ describe('DAW Editing Engine: Multi-Select, Track/Take Gain, Split/Trim, Copy/Pa
       assert.strictEqual(probed.status.width, 1920);
       assert.strictEqual(probed.status.batteryPercent, 84);
 
-      const ctrlRes = await controlRobosIpCamera(probed.source, { lens: 'FRONT', toggleTorch: true, resolution: 'FHD_1080P' });
+      const {
+        withRobosCleanStreamParam,
+      } = require('../lib/video-devices');
+      assert.strictEqual(withRobosCleanStreamParam('http://192.168.1.65:8080/video'), 'http://192.168.1.65:8080/video?timestamp=0');
+      assert.strictEqual(withRobosCleanStreamParam('http://192.168.1.65:8080/video?timestamp=0'), 'http://192.168.1.65:8080/video?timestamp=0');
+
+      const ctrlRes = await controlRobosIpCamera(probed.source, { lens: 'FRONT', toggleTorch: true, resolution: 'FHD_1080P', overlayTimestamp: false });
       assert.strictEqual(ctrlRes.ok, true);
       assert.strictEqual(ctrlRes.status.lensFacing, 'FRONT');
       assert.strictEqual(lastControlCmd.resolution, 'FHD_1080P');
+      assert.strictEqual(lastControlCmd.overlayTimestamp, false);
 
       // 1. Verify Camera Watch + RobOS Android IP Camera discovery upgrades /sub to HD /video by default
       const mockCwJson = path.join(tmpVidDir, 'cameras.json');

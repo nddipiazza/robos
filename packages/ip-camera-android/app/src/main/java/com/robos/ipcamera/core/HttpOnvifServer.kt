@@ -51,6 +51,7 @@ interface CameraController {
     fun onPtzPreset(token: String) {}
     fun onToggleTorch(enabled: Boolean? = null) {}
     fun onSwitchLens(facing: LensFacing? = null) {}
+    fun onSetOverlayTimestamp(enabled: Boolean) {}
     fun onUpdateStreamQuality(resolution: ResolutionPreset? = null, fps: Int? = null, jpegQuality: Int? = null) {}
 }
 
@@ -72,9 +73,13 @@ class FrameHub {
 
     val framesPublished = AtomicLong(0L)
     val activeViewers = AtomicInteger(0)
+    val cleanViewers = AtomicInteger(0)
 
     val hasSubViewers: Boolean
         get() = subListeners.isNotEmpty()
+
+    val hasCleanViewers: Boolean
+        get() = cleanViewers.get() > 0
 
     fun publishMain(jpeg: ByteArray) {
         latestMainJpeg = jpeg
@@ -212,6 +217,7 @@ class HttpOnvifServer(
         val method = parts[0].uppercase()
         val rawTarget = parts[1]
         val path = rawTarget.substringBefore('?')
+        val query = rawTarget.substringAfter('?', "")
 
         val headers = mutableMapOf<String, String>()
         while (true) {
@@ -271,11 +277,11 @@ class HttpOnvifServer(
             }
             method == "GET" && (path == "/video" || path == "/mjpeg" || path == "/live") -> {
                 socket.soTimeout = 0
-                streamMjpeg(output, subStream = false)
+                streamMjpeg(input, output, subStream = false, suppressTimestamp = isCleanStreamQuery(query))
             }
             method == "GET" && path == "/sub" -> {
                 socket.soTimeout = 0
-                streamMjpeg(output, subStream = true)
+                streamMjpeg(input, output, subStream = true, suppressTimestamp = isCleanStreamQuery(query))
             }
             method == "GET" && (path == "/snapshot.jpg" || path == "/frame.jpg") -> {
                 val jpeg = hub.latestMainJpeg
@@ -301,6 +307,8 @@ class HttpOnvifServer(
                     put("fps", JsonPrimitive(st.measuredFps))
                     put("targetFps", JsonPrimitive(cfg.fps))
                     put("activeViewers", JsonPrimitive(hub.activeViewers.get()))
+                    put("cleanStreamActive", JsonPrimitive(hub.hasCleanViewers))
+                    put("overlayTimestamp", JsonPrimitive(cfg.overlayTimestamp))
                     put("framesServed", JsonPrimitive(hub.framesPublished.get()))
                     put("uptimeSeconds", JsonPrimitive(st.uptimeSeconds))
                     put("lensFacing", JsonPrimitive(cfg.lensFacing.name))
@@ -360,13 +368,40 @@ class HttpOnvifServer(
             if (reqRes != null || reqFps != null || reqQ != null) {
                 controller.onUpdateStreamQuality(resolution = reqRes, fps = reqFps, jpegQuality = reqQ)
             }
+            val reqTs = obj?.get("overlayTimestamp")?.jsonPrimitive?.booleanOrNull
+                ?: obj?.get("timestamp")?.jsonPrimitive?.booleanOrNull
+            if (reqTs != null) {
+                controller.onSetOverlayTimestamp(reqTs)
+            } else if (obj?.get("toggleTimestamp")?.jsonPrimitive?.booleanOrNull == true) {
+                controller.onSetOverlayTimestamp(!controller.currentConfig().overlayTimestamp)
+            }
             writeResponse(output, 200, "OK", "application/json; charset=utf-8", "{\"ok\":true}".toByteArray())
         } catch (e: Exception) {
             writeResponse(output, 400, "Bad Request", "application/json; charset=utf-8", "{\"ok\":false}".toByteArray())
         }
     }
 
-    private suspend fun streamMjpeg(output: BufferedOutputStream, subStream: Boolean) {
+    private fun isCleanStreamQuery(query: String): Boolean {
+        if (query.isBlank()) return false
+        for (pair in query.split('&')) {
+            val k = pair.substringBefore('=').trim().lowercase()
+            val v = pair.substringAfter('=', "").trim().lowercase()
+            if ((k == "timestamp" || k == "osd" || k == "overlay") && (v == "0" || v == "false" || v == "off")) {
+                return true
+            }
+            if (k == "clean" && (v.isEmpty() || v == "1" || v == "true")) {
+                return true
+            }
+        }
+        return false
+    }
+
+    private suspend fun streamMjpeg(
+        input: InputStream,
+        output: BufferedOutputStream,
+        subStream: Boolean,
+        suppressTimestamp: Boolean = false,
+    ) {
         val header = buildString {
             append("HTTP/1.1 200 OK\r\n")
             append("Content-Type: multipart/x-mixed-replace; boundary=frame\r\n")
@@ -377,7 +412,18 @@ class HttpOnvifServer(
         output.write(header.toByteArray(StandardCharsets.US_ASCII))
         output.flush()
 
+        if (suppressTimestamp) hub.cleanViewers.incrementAndGet()
         val channel = if (subStream) hub.openSubSubscription() else hub.openMainSubscription()
+        val disconnectWatcher = scope?.launch {
+            try {
+                while (input.read() != -1) {
+                    // Wait for client TCP FIN / RST so viewer counts drop immediately on disconnect
+                }
+            } catch (_: Exception) {
+            } finally {
+                channel.close()
+            }
+        }
         try {
             for (jpeg in channel) {
                 val partHeader = "--frame\r\nContent-Type: image/jpeg\r\nContent-Length: ${jpeg.size}\r\n\r\n"
@@ -387,6 +433,8 @@ class HttpOnvifServer(
                 output.flush()
             }
         } finally {
+            disconnectWatcher?.cancel()
+            if (suppressTimestamp) hub.cleanViewers.decrementAndGet()
             if (subStream) hub.closeSubSubscription(channel) else hub.closeMainSubscription(channel)
         }
     }
@@ -772,6 +820,7 @@ class HttpOnvifServer(
       <button class="btn" onclick="act({preset:'1'})">1x Wide</button>
       <button class="btn" onclick="act({preset:'2'})">2x Zoom</button>
       <button class="btn" onclick="act({preset:'4'})">Front / Back</button>
+      <button class="btn" id="btn-osd-ts" onclick="act({toggleTimestamp:true})">${if (cfg.overlayTimestamp) "Hide Timestamp" else "Show Timestamp"}</button>
     </div>
     <div class="meta">
       <div><strong>RobOS Camera Watch / ONVIF:</strong> Use <b>Find cameras</b> in Camera Watch, or add ONVIF port <code>${cfg.port}</code> path <code>/onvif/device_service</code></div>
@@ -791,6 +840,10 @@ class HttpOnvifServer(
         document.getElementById('p-res').textContent = s.width + '×' + s.height + (s.zoomRatio > 1.05 ? ' · ' + s.zoomRatio.toFixed(1) + 'x' : '');
         document.getElementById('p-fps').textContent = s.fps.toFixed(1) + ' fps';
         document.getElementById('p-viewers').textContent = s.activeViewers + ' watching';
+        const tsBtn = document.getElementById('btn-osd-ts');
+        if (tsBtn && typeof s.overlayTimestamp === 'boolean') {
+          tsBtn.textContent = s.overlayTimestamp ? 'Hide Timestamp' : 'Show Timestamp';
+        }
         const battEl = document.getElementById('p-batt');
         const stageBattEl = document.getElementById('stage-batt');
         if (s.batteryPercent >= 0 && !s.charging) {

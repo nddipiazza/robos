@@ -575,6 +575,10 @@ class CameraServerService : Service(), CameraController {
         }
     }
 
+    override fun onSetOverlayTimestamp(enabled: Boolean) {
+        app.updateConfig { cur -> cur.copy(overlayTimestamp = enabled) }
+    }
+
     override fun onUpdateStreamQuality(resolution: ResolutionPreset?, fps: Int?, jpegQuality: Int?) {
         app.updateConfig { cur ->
             cur.copy(

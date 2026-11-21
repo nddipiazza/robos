@@ -189,6 +189,7 @@ class IpCameraCoreTest {
             override fun password() = secretPassword
             override fun onPtzMove(cmd: PtzCommand) { lastMove = cmd }
             override fun onPtzPreset(token: String) { lastPreset = token }
+            override fun onSetOverlayTimestamp(enabled: Boolean) { cfg = cfg.copy(overlayTimestamp = enabled) }
         }
 
         val server = HttpOnvifServer(controller, hub, bindHost = "127.0.0.1")
@@ -211,6 +212,29 @@ class IpCameraCoreTest {
             val readN = mjpegConn.inputStream.read(chunk)
             assertTrue(readN > 20)
             mjpegConn.disconnect()
+
+            // 2b. Clean DAW stream (/video?timestamp=0) activates hub.hasCleanViewers while connected,
+            //     and POST /api/control toggles overlayTimestamp remotely.
+            val cleanConn = (URL("$base/video?timestamp=0").openConnection() as HttpURLConnection)
+            assertEquals(200, cleanConn.responseCode)
+            val cleanBuf = ByteArray(64)
+            assertTrue(cleanConn.inputStream.read(cleanBuf) > 10)
+            assertTrue(hub.hasCleanViewers)
+            cleanConn.inputStream.close()
+            cleanConn.disconnect()
+            Thread.sleep(60)
+            assertFalse(hub.hasCleanViewers)
+
+            val ctrlConn = (URL("$base/api/control").openConnection() as HttpURLConnection).apply {
+                requestMethod = "POST"
+                doOutput = true
+                setRequestProperty("Content-Type", "application/json")
+            }
+            ctrlConn.outputStream.use { it.write("""{"overlayTimestamp":false}""".toByteArray(StandardCharsets.UTF_8)) }
+            assertEquals(200, ctrlConn.responseCode)
+            assertFalse(cfg.overlayTimestamp)
+            val stJson = URL("$base/api/status").readText()
+            assertTrue(stJson.contains("\"overlayTimestamp\":false"))
 
             // 3. ONVIF SOAP GetProfiles, GetStreamUri and GotoPreset (open LAN mode).
             val streamSoap = postSoap("$base/onvif/media", "<trt:GetStreamUri><trt:ProfileToken>main</trt:ProfileToken></trt:GetStreamUri>")
