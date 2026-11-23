@@ -1,0 +1,359 @@
+package com.robos.assistant.core
+
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.supervisorScope
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
+import kotlinx.coroutines.withContext
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
+import java.net.InetSocketAddress
+import java.net.Socket
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
+import java.util.Base64
+
+@Serializable
+data class HubProbeDto(
+    val ok: Boolean = false,
+    val service: String = "",
+    val hostname: String = "",
+    val port: Int = 19188,
+    val assistantState: String = "",
+    val ttsEngine: String = "",
+    val voice: String = "",
+    val activeApp: String = "",
+)
+
+@Serializable
+data class PhoneTurnDto(
+    val ok: Boolean = false,
+    val error: String = "",
+    val response: String = "",
+    val skill: String = "",
+    val actionDone: String = "",
+    val audioWavBase64: String = "",
+    val audioDurationMs: Long = 0L,
+    val turn: PhoneTurnInnerDto? = null,
+)
+
+@Serializable
+data class PhoneTurnInnerDto(
+    val response: String = "",
+    val skill: String = "",
+    val actionDone: String = "",
+)
+
+data class ServerProbeResult(
+    val reachable: Boolean,
+    val hostIp: String = "",
+    val port: Int = 19188,
+    val hostname: String = "",
+    val ttsEngine: String = "",
+    val latencyMs: Long = -1L,
+)
+
+/**
+ * Deterministic raw-TCP HTTP/1.0 client for discovering and communicating with the
+ * RobOS Voice Server (`:19188` in `packages/voice-prompt`).
+ */
+class RobosVoiceServerClient {
+    private val json = Json {
+        ignoreUnknownKeys = true
+        encodeDefaults = true
+    }
+
+    suspend fun discoverServerHostIp(
+        wifiIp: String,
+        port: Int = DEFAULT_SERVER_PORT,
+        cachedHostIp: String = "",
+        deviceUuid: String = "",
+        assistantName: String = "",
+        room: String = "",
+        phonePort: Int = 8090,
+    ): ServerProbeResult? = withContext(Dispatchers.IO) {
+        if (cachedHostIp.isNotBlank()) {
+            val cachedProbe = probeServer(
+                hostIp = cachedHostIp,
+                port = port,
+                timeoutMs = 750,
+                deviceUuid = deviceUuid,
+                assistantName = assistantName,
+                room = room,
+                phonePort = phonePort,
+            )
+            if (cachedProbe.reachable) return@withContext cachedProbe
+        }
+
+        val parts = wifiIp.trim().split('.')
+        if (parts.size != 4) return@withContext null
+        val prefix = "${parts[0]}.${parts[1]}.${parts[2]}."
+        val myLastOctet = parts[3].toIntOrNull()
+
+        val found = CompletableDeferred<ServerProbeResult?>()
+        val gate = Semaphore(40)
+        supervisorScope {
+            val jobs = (1..254).filter { it != myLastOctet }.map { octet ->
+                val candidate = "$prefix$octet"
+                launch {
+                    gate.withPermit {
+                        if (!found.isCompleted) {
+                            val probe = probeServer(
+                                hostIp = candidate,
+                                port = port,
+                                timeoutMs = 420,
+                                deviceUuid = deviceUuid,
+                                assistantName = assistantName,
+                                room = room,
+                                phonePort = phonePort,
+                            )
+                            if (probe.reachable) {
+                                found.complete(probe)
+                            }
+                        }
+                    }
+                }
+            }
+            launch {
+                jobs.forEach { it.join() }
+                if (!found.isCompleted) found.complete(null)
+            }
+            val winner = found.await()
+            jobs.forEach { it.cancel() }
+            winner
+        }
+    }
+
+    fun probeServer(
+        hostIp: String,
+        port: Int = DEFAULT_SERVER_PORT,
+        timeoutMs: Int = 900,
+        deviceUuid: String = "",
+        assistantName: String = "",
+        room: String = "",
+        phonePort: Int = 8090,
+    ): ServerProbeResult {
+        val cleanHost = hostIp.trim()
+        if (cleanHost.isEmpty()) return ServerProbeResult(reachable = false)
+        val t0 = System.nanoTime()
+        return try {
+            val querySuffix = if (deviceUuid.isNotBlank()) {
+                "?deviceUuid=${enc(deviceUuid)}&assistantName=${enc(assistantName)}&room=${enc(room)}&phonePort=$phonePort"
+            } else {
+                ""
+            }
+            val (hubCode, hubBody) = rawHttp(
+                hostIp = cleanHost,
+                port = port,
+                method = "GET",
+                path = "/api/robos-assistant-hub$querySuffix",
+                connectTimeoutMs = timeoutMs,
+                readTimeoutMs = timeoutMs,
+            )
+            val latency = ((System.nanoTime() - t0) / 1_000_000L).coerceAtLeast(1L)
+            if (hubCode == 200 && hubBody.contains("robos-voice-server")) {
+                val dto = json.decodeFromString(HubProbeDto.serializer(), hubBody)
+                return ServerProbeResult(
+                    reachable = dto.ok,
+                    hostIp = cleanHost,
+                    port = port,
+                    hostname = dto.hostname,
+                    ttsEngine = dto.ttsEngine,
+                    latencyMs = latency,
+                )
+            }
+
+            // Fallback compatibility with /api/status on older RobOS Voice daemons
+            val (statusCode, statusBody) = rawHttp(
+                hostIp = cleanHost,
+                port = port,
+                method = "GET",
+                path = "/api/status",
+                connectTimeoutMs = timeoutMs,
+                readTimeoutMs = timeoutMs,
+            )
+            val statusLatency = ((System.nanoTime() - t0) / 1_000_000L).coerceAtLeast(1L)
+            if (statusCode == 200 && statusBody.contains("assistantState")) {
+                val dto = json.decodeFromString(HubProbeDto.serializer(), statusBody)
+                ServerProbeResult(
+                    reachable = dto.ok,
+                    hostIp = cleanHost,
+                    port = port,
+                    hostname = cleanHost,
+                    ttsEngine = dto.ttsEngine,
+                    latencyMs = statusLatency,
+                )
+            } else {
+                ServerProbeResult(reachable = false)
+            }
+        } catch (_: Exception) {
+            ServerProbeResult(reachable = false)
+        }
+    }
+
+    suspend fun executePhoneTurn(
+        hostIp: String,
+        port: Int = DEFAULT_SERVER_PORT,
+        config: AssistantConfig,
+        trigger: String,
+        query: String,
+        fullTranscript: String,
+    ): ServerTurnResponse = withContext(Dispatchers.IO) {
+        val cleanHost = hostIp.trim()
+        if (cleanHost.isEmpty()) {
+            return@withContext ServerTurnResponse(ok = false, error = "No RobOS Server host configured")
+        }
+
+        val payload = buildJsonObject {
+            put("deviceUuid", config.deviceUuid)
+            put("assistantName", config.assistantName)
+            put("room", config.room)
+            put("phonePort", config.port)
+            put("trigger", trigger)
+            put("query", query)
+            put("message", query)
+            put("fullTranscript", fullTranscript)
+            put("returnAudio", config.speakServerReplies)
+            put("speakOnServer", false)
+        }.toString()
+
+        val (code, body) = rawHttp(
+            hostIp = cleanHost,
+            port = port,
+            method = "POST",
+            path = "/api/assistant/phone-turn",
+            bodyJson = payload,
+            connectTimeoutMs = 3_000,
+            readTimeoutMs = 45_000,
+        )
+
+        if (code == 404) {
+            // Fallback to /api/assistant/chat if connected to a pre-hub daemon
+            val (chatCode, chatBody) = rawHttp(
+                hostIp = cleanHost,
+                port = port,
+                method = "POST",
+                path = "/api/assistant/chat",
+                bodyJson = payload,
+                connectTimeoutMs = 3_000,
+                readTimeoutMs = 45_000,
+            )
+            return@withContext parseTurnDto(chatCode, chatBody)
+        }
+
+        parseTurnDto(code, body)
+    }
+
+    private fun parseTurnDto(code: Int, body: String): ServerTurnResponse {
+        val dto = try {
+            json.decodeFromString(PhoneTurnDto.serializer(), body)
+        } catch (_: Exception) {
+            return ServerTurnResponse(ok = false, error = "Invalid response from RobOS Server (HTTP $code)")
+        }
+        if (code !in 200..299 || !dto.ok) {
+            return ServerTurnResponse(
+                ok = false,
+                error = dto.error.ifBlank { "RobOS Server returned HTTP $code" },
+            )
+        }
+        val wavBytes = if (dto.audioWavBase64.isNotBlank()) {
+            try {
+                Base64.getDecoder().decode(dto.audioWavBase64)
+            } catch (_: Exception) {
+                null
+            }
+        } else {
+            null
+        }
+        val responseText = dto.response.ifBlank { dto.turn?.response.orEmpty() }
+        val skill = dto.skill.ifBlank { dto.turn?.skill.orEmpty() }
+        val actionDone = dto.actionDone.ifBlank { dto.turn?.actionDone.orEmpty() }
+        return ServerTurnResponse(
+            ok = true,
+            response = responseText,
+            skill = skill,
+            actionDone = actionDone,
+            audioWavBytes = wavBytes,
+        )
+    }
+
+    private fun enc(value: String): String =
+        URLEncoder.encode(value, StandardCharsets.UTF_8.name())
+
+    private fun rawHttp(
+        hostIp: String,
+        port: Int,
+        method: String,
+        path: String,
+        headers: Map<String, String> = emptyMap(),
+        bodyJson: String? = null,
+        connectTimeoutMs: Int = 2_000,
+        readTimeoutMs: Int = 10_000,
+    ): Pair<Int, String> {
+        val bodyBytes = bodyJson?.toByteArray(StandardCharsets.UTF_8)
+        Socket().use { sock ->
+            sock.tcpNoDelay = true
+            sock.soTimeout = readTimeoutMs
+            sock.connect(InetSocketAddress(hostIp, port), connectTimeoutMs)
+            val reqHead = buildString {
+                append("$method $path HTTP/1.0\r\n")
+                append("Host: $hostIp:$port\r\n")
+                append("Connection: close\r\n")
+                append("Accept: application/json\r\n")
+                for ((k, v) in headers) {
+                    append("$k: $v\r\n")
+                }
+                if (bodyBytes != null) {
+                    append("Content-Type: application/json; charset=utf-8\r\n")
+                    append("Content-Length: ${bodyBytes.size}\r\n")
+                }
+                append("\r\n")
+            }
+            val out = sock.getOutputStream()
+            out.write(reqHead.toByteArray(StandardCharsets.UTF_8))
+            if (bodyBytes != null) {
+                out.write(bodyBytes)
+            }
+            out.flush()
+
+            val rawResp = sock.getInputStream().readBytes()
+            val sep = findHeaderEnd(rawResp)
+            val headerStr = if (sep >= 0) {
+                String(rawResp, 0, sep, StandardCharsets.ISO_8859_1)
+            } else {
+                String(rawResp, StandardCharsets.UTF_8)
+            }
+            val statusLine = headerStr.lineSequence().firstOrNull().orEmpty()
+            val code = statusLine.split(' ').getOrNull(1)?.toIntOrNull() ?: 0
+            val bodyStr = if (sep >= 0 && sep + 4 <= rawResp.size) {
+                String(rawResp, sep + 4, rawResp.size - (sep + 4), StandardCharsets.UTF_8)
+            } else {
+                ""
+            }
+            return code to bodyStr
+        }
+    }
+
+    private fun findHeaderEnd(buf: ByteArray): Int {
+        var i = 0
+        while (i <= buf.size - 4) {
+            if (buf[i] == '\r'.code.toByte() &&
+                buf[i + 1] == '\n'.code.toByte() &&
+                buf[i + 2] == '\r'.code.toByte() &&
+                buf[i + 3] == '\n'.code.toByte()
+            ) {
+                return i
+            }
+            i++
+        }
+        return -1
+    }
+
+    companion object {
+        const val DEFAULT_SERVER_PORT = 19188
+    }
+}

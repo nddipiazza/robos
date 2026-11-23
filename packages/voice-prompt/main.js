@@ -18,6 +18,7 @@ const globalShortcut = isElectronRuntime ? electronPkg.globalShortcut : { regist
 const dialog = isElectronRuntime ? electronPkg.dialog : { showErrorBox: () => {} };
 const path = require('path');
 const fs = require('fs');
+const os = require('os');
 const http = require('http');
 const promptStore = require('./lib/prompt-store');
 const contextProvider = require('./lib/context-provider');
@@ -53,6 +54,42 @@ let hudWindow = null;
 let voiceCommandsWindow = null;
 let apiServer = null;
 let currentApiPort = parseInt(process.env.ROBOS_VOICE_PORT || '19188', 10);
+const connectedAssistantNodes = new Map();
+
+function normalizeRemoteIp(rawAddress = '') {
+  const trimmed = String(rawAddress || '').trim();
+  return trimmed.startsWith('::ffff:') ? trimmed.slice(7) : trimmed;
+}
+
+function upsertAssistantNode(body = {}, remoteAddress = '') {
+  const deviceUuid = String(body.deviceUuid || '').trim();
+  if (!deviceUuid) return null;
+  const hostIp = String(body.hostIp || normalizeRemoteIp(remoteAddress) || '').trim();
+  const entry = {
+    deviceUuid,
+    assistantName: String(body.assistantName || 'RobOS Phone Assistant').trim().slice(0, 64),
+    room: String(body.room || 'Living Room').trim().slice(0, 48),
+    hostIp,
+    port: Number(body.phonePort || body.port || 8090) || 8090,
+    lastSeenIso: new Date().toISOString(),
+    lastSeenMs: Date.now(),
+  };
+  connectedAssistantNodes.set(deviceUuid, entry);
+  return entry;
+}
+
+function listActiveAssistantNodes(maxAgeMs = 60_000) {
+  const cutoff = Date.now() - maxAgeMs;
+  const items = [];
+  for (const [id, node] of connectedAssistantNodes.entries()) {
+    if (node.lastSeenMs < cutoff) {
+      connectedAssistantNodes.delete(id);
+    } else {
+      items.push(node);
+    }
+  }
+  return items;
+}
 
 function broadcastToWindows(channel, data) {
   if (mainWindow && !mainWindow.isDestroyed()) {
@@ -818,6 +855,125 @@ function startApiServer(overridePort) {
         const isOpen = Boolean(voiceCommandsWindow && !voiceCommandsWindow.isDestroyed() && voiceCommandsWindow.isVisible());
         res.writeHead(200);
         return res.end(JSON.stringify({ ok: true, open: isOpen }));
+      }
+
+      // 10.12 RobOS Assistant Phone Hub & Turn Bridge (packages/robos-assistant-android)
+      if (pathname === '/api/robos-assistant-hub' && method === 'GET') {
+        const deviceUuid = urlObj.searchParams.get('deviceUuid') || '';
+        if (deviceUuid) {
+          upsertAssistantNode({
+            deviceUuid,
+            assistantName: urlObj.searchParams.get('assistantName') || '',
+            room: urlObj.searchParams.get('room') || '',
+            phonePort: urlObj.searchParams.get('phonePort') || '8090',
+          }, req.socket && req.socket.remoteAddress);
+        }
+        const ttsPrefs = ttsEngine.getPrefs();
+        res.writeHead(200);
+        return res.end(JSON.stringify({
+          ok: true,
+          service: 'robos-voice-server',
+          hostname: os.hostname(),
+          port: currentApiPort,
+          assistantState: desktopAssistant.getState(),
+          ttsEngine: ttsPrefs.engine || 'kokoro',
+          voice: ttsPrefs.voice || 'af_heart',
+          wakeWordEnabled: wakeDetector.isEnabled(),
+          connectedAssistants: listActiveAssistantNodes(),
+        }));
+      }
+
+      if (pathname === '/api/assistant-nodes' && method === 'GET') {
+        res.writeHead(200);
+        return res.end(JSON.stringify({ ok: true, nodes: listActiveAssistantNodes() }));
+      }
+
+      if (pathname === '/api/assistant-nodes/register' && method === 'POST') {
+        const body = await parseBody(req);
+        const node = upsertAssistantNode(body, req.socket && req.socket.remoteAddress);
+        if (!node) {
+          res.writeHead(400);
+          return res.end(JSON.stringify({ ok: false, error: 'deviceUuid is required' }));
+        }
+        res.writeHead(200);
+        return res.end(JSON.stringify({
+          ok: true,
+          service: 'robos-voice-server',
+          hostname: os.hostname(),
+          port: currentApiPort,
+          node,
+        }));
+      }
+
+      if (pathname === '/api/tts/synthesize' && method === 'POST') {
+        const body = await parseBody(req);
+        const text = typeof body === 'string' ? body : (body.text || '');
+        if (!String(text).trim()) {
+          res.writeHead(400);
+          return res.end(JSON.stringify({ ok: false, error: 'text is required' }));
+        }
+        const synth = await ttsEngine.synthesize(text, typeof body === 'object' ? body : {});
+        const wavBuf = (synth && synth.filePath && fs.existsSync(synth.filePath))
+          ? fs.readFileSync(synth.filePath)
+          : Buffer.alloc(0);
+        res.writeHead(200);
+        return res.end(JSON.stringify({
+          ok: true,
+          engine: synth.engine || ttsEngine.getPrefs().engine,
+          durationMs: synth.durationMs || 0,
+          audioWavBase64: wavBuf.toString('base64'),
+        }));
+      }
+
+      if (pathname === '/api/assistant/phone-turn' && method === 'POST') {
+        const body = await parseBody(req);
+        if (body && typeof body === 'object' && body.deviceUuid) {
+          upsertAssistantNode(body, req.socket && req.socket.remoteAddress);
+        }
+        const query = typeof body === 'string'
+          ? body
+          : (body.query || body.message || body.text || '');
+        if (!String(query).trim()) {
+          res.writeHead(400);
+          return res.end(JSON.stringify({ ok: false, error: 'query is required' }));
+        }
+        const speakOnServer = Boolean(body && typeof body === 'object' && body.speakOnServer);
+        const returnAudio = !body || typeof body !== 'object' || body.returnAudio !== false;
+        const result = await desktopAssistant.processQuery(query, {
+          ...(typeof body === 'object' ? body : {}),
+          silent: !speakOnServer,
+        });
+        if (!result.ok) {
+          res.writeHead(400);
+          return res.end(JSON.stringify(result));
+        }
+        const turn = result.turn || {};
+        let audioWavBase64 = '';
+        let audioDurationMs = 0;
+        let audioEngine = '';
+        if (returnAudio && turn.response) {
+          try {
+            const synth = await ttsEngine.synthesize(turn.response, {
+              mockAudio: Boolean(body && body.mockAudio),
+            });
+            if (synth && synth.filePath && fs.existsSync(synth.filePath)) {
+              audioWavBase64 = fs.readFileSync(synth.filePath).toString('base64');
+              audioDurationMs = synth.durationMs || 0;
+              audioEngine = synth.engine || '';
+            }
+          } catch {}
+        }
+        res.writeHead(200);
+        return res.end(JSON.stringify({
+          ok: true,
+          turn,
+          response: turn.response || '',
+          skill: turn.skill || '',
+          actionDone: turn.actionDone || '',
+          audioWavBase64,
+          audioDurationMs,
+          audioEngine,
+        }));
       }
 
       // 11. Debug / Testing endpoints for harness & snapshot-cli: /eval, /health

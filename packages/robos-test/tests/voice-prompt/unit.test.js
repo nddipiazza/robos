@@ -301,6 +301,29 @@ describe('Voice Prompt Unit Tests', () => {
       assert.ok(Array.isArray(devRes.data.devices));
       assert.ok(devRes.data.devices.length >= 1);
     });
+
+    it('GET /api/robos-assistant-hub and POST /api/assistant/phone-turn serve RobOS Assistant phones', async () => {
+      const hubRes = await httpReq('GET', '/api/robos-assistant-hub?deviceUuid=phone-123&assistantName=Kitchen%20Phone&room=Kitchen&phonePort=8090');
+      assert.strictEqual(hubRes.status, 200);
+      assert.strictEqual(hubRes.data.ok, true);
+      assert.strictEqual(hubRes.data.service, 'robos-voice-server');
+      assert.ok(Array.isArray(hubRes.data.connectedAssistants));
+      assert.ok(hubRes.data.connectedAssistants.some(n => n.deviceUuid === 'phone-123' && n.room === 'Kitchen'));
+
+      const turnRes = await httpReq('POST', '/api/assistant/phone-turn', {
+        deviceUuid: 'phone-123',
+        assistantName: 'Kitchen Phone',
+        room: 'Kitchen',
+        query: 'what time is it',
+        returnAudio: true,
+        speakOnServer: false,
+        mockAudio: true,
+      });
+      assert.strictEqual(turnRes.status, 200);
+      assert.strictEqual(turnRes.data.ok, true);
+      assert.ok(typeof turnRes.data.response === 'string' && turnRes.data.response.length > 0);
+      assert.ok(turnRes.data.turn && turnRes.data.turn.query === 'what time is it');
+    });
   });
 
   describe('Speech Stream Overlap & Recall Prevention', () => {

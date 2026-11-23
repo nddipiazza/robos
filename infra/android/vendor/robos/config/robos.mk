@@ -5,7 +5,8 @@ PRODUCT_PACKAGES += \
     RobOSHome \
     RobOSSmartHome \
     RobOSPreferences \
-    RobOSIPCamera
+    RobOSIPCamera \
+    RobOSAssistant
 
 # The stock launcher provides gesture navigation, so RobOS uses the three-button bar.
 PRODUCT_PRODUCT_PROPERTIES += \

@@ -48,7 +48,7 @@ keywords: "RobOS Mobile, RobOS Android apps, RobOS on any phone, mobile prototyp
     <div class="phone-way">
       <span class="proto-tag">Any Android 11+ phone</span>
       <h3>Standalone Android apps</h3>
-      <p>Build the native Kotlin apps (<a href="{{ '/smart-home-android/' | relative_url }}">Smart Home</a>, <a href="{{ '/ip-camera-android/' | relative_url }}">IP Camera</a>, <a href="{{ '/robos-preferences-android/' | relative_url }}">Preferences</a> and <a href="{{ '/robos-launcher-android/' | relative_url }}">RobOS Home</a>) and install them over USB with <code>adb install</code>. They run alongside your normal apps, need no unlocked bootloader, and leave your data untouched.</p>
+      <p>Build the native Kotlin apps (<a href="{{ '/smart-home-android/' | relative_url }}">Smart Home</a>, <a href="{{ '/ip-camera-android/' | relative_url }}">IP Camera</a>, <a href="{{ '/robos-assistant-android/' | relative_url }}">Assistant</a>, <a href="{{ '/robos-preferences-android/' | relative_url }}">Preferences</a> and <a href="{{ '/robos-launcher-android/' | relative_url }}">RobOS Home</a>) and install them over USB with <code>adb install</code>. They run alongside your normal apps, need no unlocked bootloader, and leave your data untouched.</p>
     </div>
     <div class="phone-way">
       <span class="proto-tag">Supported unlocked phones</span>
@@ -83,6 +83,9 @@ keywords: "RobOS Mobile, RobOS Android apps, RobOS on any phone, mobile prototyp
   <h3>RobOS IP Camera (<a href="{{ '/ip-camera-android/' | relative_url }}"><code>packages/ip-camera-android</code></a>)</h3>
   <p>Turns a spare or dedicated Android 11+ phone into an always-on local Wi-Fi surveillance camera for <a href="{{ '/camera-watcher/' | relative_url }}">Camera Watch</a> and Smart Home. It runs an off-screen Camera2 capture session inside a foreground camera service holding CPU, low-latency Wi-Fi and multicast locks, so turning the display completely off with the Power button—or switching to the built-in OLED Blackout wall-mount screen—never drops the stream. It announces itself over ONVIF WS-Discovery (<code>239.255.255.250:3702</code>), serves live MJPEG (<code>/video</code>, <code>/sub</code>) and JPEG snapshots (<code>/snapshot.jpg</code>), supports solid-state sensor PTZ zoom and flashlight presets, and detects motion locally with ONVIF alarms.</p>
 
+  <h3>RobOS Assistant (<a href="{{ '/robos-assistant-android/' | relative_url }}"><code>packages/robos-assistant-android</code></a>)</h3>
+  <p>Brings <a href="{{ '/voice-prompt/' | relative_url }}">RobOS Voice</a> to an always-on phone microphone with the same 24/7 foreground surveillance architecture as IP Camera. Holding CPU and low-latency Wi-Fi locks inside a microphone foreground service, it detects speech with a 500 ms pre-roll buffer, transcribes words completely offline on the phone with open-source Vosk (no Google Play Services needed), and saves every utterance as both a playable <code>.wav</code> clip and searchable text on device and at <code>http://&lt;phone-ip&gt;:8090/</code>. A RobOS Voice Server (<code>:19188</code>) must be connected on Wi-Fi in order to execute <code>"Hello RobOS"</code> actions and speak Kokoro/Edge-TTS replies; when disconnected, it simply listens and records audio and text like a surveillance camera.</p>
+
   <h3>RobOS Preferences (<a href="{{ '/robos-preferences-android/' | relative_url }}"><code>packages/robos-preferences-android</code></a>)</h3>
   <p>Brings your RobOS computer settings to your phone. Tap <strong>Sign in with Google</strong> and the phone's browser opens Google's sign-in page using the same loopback PKCE flow as the desktop. Preferences finds your Config Sync backups in Google Drive, opens them (including passphrase-protected scrypt + AES-256-GCM vaults), and lists what each category holds. Today it restores what mobile apps already use: Smart Home's lights, rooms, scenes and schedules. Other categories remain untouched in your backup until mobile prototypes support them.</p>
   <div class="phone-note"><strong>What stays private.</strong> Config Sync never uploads encryption keys for Feit and Smart Life lights. Each device fetches its own copy from your Tuya project and encrypts it with the Android Keystore, so your phone asks for your Tuya Access ID and Access Secret once even when your computer already has them.</div>
@@ -96,9 +99,10 @@ keywords: "RobOS Mobile, RobOS Android apps, RobOS on any phone, mobile prototyp
     <li>Turn on <strong>Developer options</strong> and <strong>USB debugging</strong> on your Android phone, then connect it to your computer over USB.</li>
     <li>Make sure JDK 17 and the Android SDK (<code>ANDROID_HOME</code> or <code>local.properties</code>) are installed on your computer.</li>
     <li>Build and install the prototypes from your RobOS checkout:
-<pre><code># Smart Home + IP Camera + Preferences (all signed with your local debug key so settings handoff works)
+<pre><code># Smart Home + IP Camera + Assistant + Preferences (all signed with your local debug key so settings handoff works)
 (cd packages/smart-home-android &amp;&amp; ./gradlew assembleDebug &amp;&amp; adb install -r app/build/outputs/apk/debug/app-debug.apk)
 (cd packages/ip-camera-android &amp;&amp; ./gradlew assembleDebug &amp;&amp; adb install -r app/build/outputs/apk/debug/app-debug.apk)
+(cd packages/robos-assistant-android &amp;&amp; ./gradlew assembleDebug &amp;&amp; adb install -r app/build/outputs/apk/debug/app-debug.apk)
 (cd packages/robos-preferences-android &amp;&amp; ./gradlew assembleDebug &amp;&amp; adb install -r app/build/outputs/apk/debug/app-debug.apk)
 
 # Optional: the RobOS Home launcher

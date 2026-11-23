@@ -15,6 +15,7 @@ The RobOS parts are built and tested on an emulator. The full image has not been
 | Smart Home | `packages/smart-home-android` |
 | Preferences | `packages/robos-preferences-android` |
 | IP Camera | `packages/ip-camera-android` |
+| Assistant | `packages/robos-assistant-android` |
 | Stock apps removed | The `overrides` list in `vendor/robos/Android.bp`. It includes `Updater`, which would otherwise replace RobOS with stock LineageOS |
 | Everything else | LineageOS `lineage-24.0`, the current official branch for this phone |
 

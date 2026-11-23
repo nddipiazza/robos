@@ -90,6 +90,8 @@ RobOS Voice CLI
 
 Usage:
   robos-voice status                  Check RobOS Voice running status and modes
+  robos-voice serve [--port <19188>]  Run headless RobOS Voice & Assistant Hub server
+  robos-voice assistants              List connected RobOS Assistant phone nodes
   robos-voice context                 Query context of RobOS apps in use right now
   robos-voice speak <text>            Speak text out loud in natural human voice (Kokoro/Edge-TTS)
   robos-voice stop-speaking           Stop ongoing speech playback immediately
@@ -114,6 +116,24 @@ Usage:
         const res = await request('GET', '/api/status');
         console.log(JSON.stringify(res.data, null, 2));
       }
+      return;
+    }
+
+    if (command === 'serve') {
+      let port = API_PORT;
+      const portIdx = args.indexOf('--port');
+      if (portIdx !== -1 && args[portIdx + 1]) {
+        port = parseInt(args[portIdx + 1], 10) || API_PORT;
+      }
+      const voiceMain = require('../voice-prompt/main');
+      voiceMain.startApiServer(port);
+      console.log(`RobOS Voice & Phone Assistant Server running on 0.0.0.0:${port}`);
+      return;
+    }
+
+    if (command === 'assistants') {
+      const res = await request('GET', '/api/assistant-nodes');
+      console.log(JSON.stringify(res.data, null, 2));
       return;
     }
 

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Outer radar surveillance listening arc -->
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M33,44 A22,22 0 0,0 33,64"
+        android:strokeColor="#00BCD4"
+        android:strokeAlpha="0.55"
+        android:strokeLineCap="round"
+        android:strokeWidth="2.8" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M75,44 A22,22 0 0,1 75,64"
+        android:strokeColor="#00BCD4"
+        android:strokeAlpha="0.55"
+        android:strokeLineCap="round"
+        android:strokeWidth="2.8" />
+    <!-- RobOS Voice Microphone Capsule -->
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M54,32 C49.58,32 46,35.58 46,40 L46,54 C46,58.42 49.58,62 54,62 C58.42,62 62,58.42 62,54 L62,40 C62,35.58 58.42,32 54,32 Z"
+        android:strokeColor="#00BCD4"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:strokeWidth="3.4" />
+    <!-- Microphone Cradle & Stand -->
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M40,51 L40,54 C40,61.73 46.27,68 54,68 C61.73,68 68,61.73 68,54 L68,51"
+        android:strokeColor="#00BCD4"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:strokeWidth="3.2" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M54,68 L54,76 M46,76 L62,76"
+        android:strokeColor="#00BCD4"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:strokeWidth="3.2" />
+</vector>
