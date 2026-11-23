@@ -782,8 +782,12 @@ class HttpOnvifServer(
     .pill.batt { background: rgba(245,158,11,0.18); border-color: rgba(245,158,11,0.65); color: #fcd34d; font-weight: 700; }
     .pill.batt-low { background: rgba(239,68,68,0.22); border-color: #ef4444; color: #fca5a5; font-weight: 700; }
     main { max-width: 1120px; margin: 20px auto; padding: 0 16px; }
-    .stage { position: relative; background: #05070a; border: 1px solid #30363d; border-radius: 12px; overflow: hidden; display: flex; justify-content: center; align-items: center; min-height: 280px; }
-    .stage img { width: 100%; height: auto; max-height: 76vh; object-fit: contain; display: block; }
+    .stage { position: relative; background: #05070a; border: 1px solid #30363d; border-radius: 12px; overflow: hidden; display: flex; justify-content: center; align-items: center; min-height: 280px; touch-action: manipulation; }
+    .stage img { width: 100%; height: auto; max-height: 76vh; object-fit: contain; display: block; user-select: none; }
+    .stage:fullscreen, .stage:-webkit-full-screen, .stage.is-fullscreen { position: fixed; inset: 0; width: 100vw; height: 100dvh; max-height: 100dvh; border-radius: 0; border: none; z-index: 95; background: #000; }
+    .stage:fullscreen img, .stage:-webkit-full-screen img, .stage.is-fullscreen img { width: 100%; height: 100%; max-height: 100dvh; object-fit: contain; }
+    .yt-fs-btn { position: absolute; right: 12px; bottom: 12px; width: 40px; height: 40px; border-radius: 9px; background: rgba(13,17,23,0.78); border: 1px solid rgba(255,255,255,0.45); color: #fff; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; z-index: 6; padding: 0; }
+    .yt-fs-btn svg { width: 22px; height: 22px; fill: currentColor; pointer-events: none; }
     .stage-batt { position: absolute; top: 12px; right: 12px; backdrop-filter: blur(6px); background: rgba(13,17,23,0.84); border: 1px solid rgba(245,158,11,0.75); color: #fcd34d; border-radius: 999px; padding: 5px 12px; font-size: 12.5px; font-weight: 700; pointer-events: none; }
     .stage-batt.low { border-color: #ef4444; color: #fca5a5; background: rgba(127,29,29,0.82); }
     .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
@@ -810,9 +814,12 @@ class HttpOnvifServer(
     </div>
   </header>
   <main>
-    <div class="stage">
+    <div class="stage" id="stage">
       <img src="/video" alt="Live camera stream" />
       <span class="stage-batt${if (st.batteryPercent in 0..20) " low" else ""}" id="stage-batt" style="${if (st.batteryPercent >= 0 && !st.charging) "" else "display:none"}">${if (st.batteryPercent >= 0 && !st.charging) "${if (st.batteryPercent <= 20) "🪫 Low Battery" else "🔋 On Battery"} · ${st.batteryPercent}%" else ""}</span>
+      <button type="button" class="yt-fs-btn" id="yt-fs-btn" title="Full screen" aria-label="Full screen" onclick="event.stopPropagation(); toggleFs();">
+        <svg id="yt-fs-icon" viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
+      </button>
     </div>
     <div class="actions">
       <a class="btn primary" href="/snapshot.jpg" download="snapshot.jpg">Save Snapshot</a>
@@ -829,6 +836,44 @@ class HttpOnvifServer(
   </main>
   <script>
     document.getElementById('u-video').textContent = location.origin + '/video';
+    const YT_EXPAND = 'M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z';
+    const YT_EXIT = 'M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z';
+    function isFs() {
+      const el = document.getElementById('stage');
+      return Boolean(document.fullscreenElement || document.webkitFullscreenElement || el.classList.contains('is-fullscreen'));
+    }
+    function syncFsIcon() {
+      const p = document.querySelector('#yt-fs-icon path');
+      if (p) p.setAttribute('d', isFs() ? YT_EXIT : YT_EXPAND);
+    }
+    async function toggleFs() {
+      const el = document.getElementById('stage');
+      if (isFs()) {
+        el.classList.remove('is-fullscreen');
+        try { if (document.fullscreenElement) await document.exitFullscreen(); else document.webkitExitFullscreen?.(); } catch {}
+        syncFsIcon();
+        return;
+      }
+      try {
+        if (el.requestFullscreen) await el.requestFullscreen();
+        else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+        else el.classList.add('is-fullscreen');
+      } catch { el.classList.add('is-fullscreen'); }
+      syncFsIcon();
+    }
+    document.addEventListener('fullscreenchange', syncFsIcon);
+    document.addEventListener('webkitfullscreenchange', syncFsIcon);
+    (function() {
+      const stg = document.getElementById('stage');
+      let lastTap = 0;
+      stg.addEventListener('dblclick', (e) => { if (!e.target.closest('button')) { e.preventDefault(); toggleFs(); } });
+      stg.addEventListener('touchend', (e) => {
+        if (e.target.closest('button')) return;
+        const now = Date.now();
+        if (now - lastTap > 40 && now - lastTap < 320) { e.preventDefault(); lastTap = 0; toggleFs(); }
+        else lastTap = now;
+      }, { passive: false });
+    })();
     async function act(body) {
       await fetch('/api/control', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
     }

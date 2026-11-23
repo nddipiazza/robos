@@ -121,6 +121,8 @@ describe('Camera Watch Google-Gated Web Browser Mode & Cloudflare Capability Gat
       assert.match(pageHtml, /stage-battery/);
       assert.match(pageHtml, /On Battery/);
       assert.match(pageHtml, /!cam\.charging/);
+      assert.match(pageHtml, /yt-fs-btn/);
+      assert.match(pageHtml, /bindStageDoubleTap/);
 
       const camsRes = await httpRequest(`${info.localUrl}/api/cameras`, { headers: authedHeaders });
       assert.strictEqual(camsRes.status, 200);

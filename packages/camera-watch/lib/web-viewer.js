@@ -333,8 +333,13 @@ function renderBrowserViewerHtml({ cameras, initialCameraId }) {
     .cam-tab { background: #161b22; color: #c9d1d9; border: 1px solid #30363d; border-radius: 999px; padding: 6px 14px; font-size: 13px; font-weight: 600; cursor: pointer; }
     .cam-tab.active { background: #00bcd4; color: #04222a; border-color: #00bcd4; }
     main { flex: 1; width: 100%; max-width: 1180px; margin: 0 auto; padding: 14px 16px 28px; display: flex; flex-direction: column; gap: 14px; }
-    .stage { position: relative; background: #05070a; border: 1px solid #30363d; border-radius: 14px; overflow: hidden; min-height: 280px; max-height: 76vh; display: flex; align-items: center; justify-content: center; }
-    .stage img { width: 100%; height: auto; max-height: 76vh; object-fit: contain; display: block; user-select: none; }
+    .stage { position: relative; background: #05070a; border: 1px solid #30363d; border-radius: 14px; overflow: hidden; min-height: 280px; max-height: 76vh; display: flex; align-items: center; justify-content: center; touch-action: manipulation; }
+    .stage img { width: 100%; height: auto; max-height: 76vh; object-fit: contain; display: block; user-select: none; -webkit-user-drag: none; }
+    .stage:fullscreen, .stage:-webkit-full-screen, .stage.is-fullscreen { position: fixed; inset: 0; width: 100vw; height: 100dvh; max-height: 100dvh; border-radius: 0; border: none; z-index: 95; background: #000; }
+    .stage:fullscreen img, .stage:-webkit-full-screen img, .stage.is-fullscreen img { width: 100%; height: 100%; max-height: 100dvh; object-fit: contain; }
+    .yt-fs-btn { position: absolute; right: 12px; bottom: 12px; width: 40px; height: 40px; border-radius: 9px; background: rgba(13,17,23,0.78); border: 1px solid rgba(255,255,255,0.45); color: #fff; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; z-index: 6; padding: 0; transition: background 0.15s, transform 0.12s; }
+    .yt-fs-btn:hover { background: rgba(13,17,23,0.95); border-color: #00bcd4; transform: scale(1.05); }
+    .yt-fs-btn svg { width: 22px; height: 22px; fill: currentColor; pointer-events: none; }
     .overlay-msg { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #8b949e; font-size: 14px; pointer-events: none; }
     .controls-card { background: #161b22; border: 1px solid #30363d; border-radius: 14px; padding: 14px 16px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
     .btn-group { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
@@ -397,6 +402,9 @@ function renderBrowserViewerHtml({ cameras, initialCameraId }) {
       <div class="stage-hud">
         <span class="stage-badge" id="stage-battery" style="display:none"></span>
       </div>
+      <button type="button" class="yt-fs-btn" id="yt-fs-btn" title="Full screen (double-tap video)" aria-label="Full screen" onclick="event.stopPropagation(); toggleFullscreen();">
+        <svg id="yt-fs-icon" viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
+      </button>
       <div class="overlay-msg" id="overlay-msg">Connecting to live camera…</div>
     </div>
 
@@ -568,11 +576,67 @@ function renderBrowserViewerHtml({ cameras, initialCameraId }) {
       } catch {}
     }
 
-    function toggleFullscreen() {
+    const YT_EXPAND_PATH = 'M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z';
+    const YT_EXIT_PATH = 'M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z';
+
+    function isStageFullscreen() {
       const el = document.getElementById('stage');
-      if (!document.fullscreenElement) el.requestFullscreen?.();
-      else document.exitFullscreen?.();
+      return Boolean(document.fullscreenElement || document.webkitFullscreenElement || el.classList.contains('is-fullscreen'));
     }
+
+    function syncFullscreenIcon() {
+      const iconPath = document.querySelector('#yt-fs-icon path');
+      if (iconPath) iconPath.setAttribute('d', isStageFullscreen() ? YT_EXIT_PATH : YT_EXPAND_PATH);
+    }
+
+    async function toggleFullscreen() {
+      const el = document.getElementById('stage');
+      if (isStageFullscreen()) {
+        el.classList.remove('is-fullscreen');
+        try {
+          if (document.fullscreenElement) await document.exitFullscreen();
+          else if (document.webkitFullscreenElement) document.webkitExitFullscreen?.();
+        } catch {}
+        syncFullscreenIcon();
+        return;
+      }
+      try {
+        if (el.requestFullscreen) {
+          await el.requestFullscreen();
+        } else if (el.webkitRequestFullscreen) {
+          el.webkitRequestFullscreen();
+        } else {
+          el.classList.add('is-fullscreen');
+        }
+      } catch {
+        el.classList.add('is-fullscreen');
+      }
+      syncFullscreenIcon();
+    }
+
+    document.addEventListener('fullscreenchange', syncFullscreenIcon);
+    document.addEventListener('webkitfullscreenchange', syncFullscreenIcon);
+
+    (function bindStageDoubleTap() {
+      const stageEl = document.getElementById('stage');
+      let lastTapAt = 0;
+      stageEl.addEventListener('dblclick', (e) => {
+        if (e.target.closest('button')) return;
+        e.preventDefault();
+        toggleFullscreen();
+      });
+      stageEl.addEventListener('touchend', (e) => {
+        if (e.target.closest('button')) return;
+        const now = Date.now();
+        if (now - lastTapAt > 40 && now - lastTapAt < 320) {
+          e.preventDefault();
+          lastTapAt = 0;
+          toggleFullscreen();
+        } else {
+          lastTapAt = now;
+        }
+      }, { passive: false });
+    })();
 
     function showShareMsg(text, isErr) {
       const el = document.getElementById('share-msg');

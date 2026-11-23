@@ -1,6 +1,9 @@
 package com.robos.ipcamera.ui
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,8 +31,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -162,5 +170,50 @@ fun formatUptime(seconds: Long): String {
         hours > 0 -> "${hours}h ${mins}m"
         mins > 0 -> "${mins}m ${secs}s"
         else -> "${secs}s"
+    }
+}
+
+/**
+ * Crisp YouTube-style 4-corner Fullscreen / Exit-Fullscreen icon button.
+ */
+@Composable
+fun YoutubeFullscreenIconButton(
+    isFullscreen: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    alpha: Float = 1f,
+) {
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = modifier
+            .alpha(alpha)
+            .size(38.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .background(Color(0xC80D1117))
+            .border(1.dp, Color(0x88FFFFFF), RoundedCornerShape(8.dp))
+            .clickable(onClick = onClick),
+    ) {
+        Canvas(modifier = Modifier.size(20.dp)) {
+            val s = size.minDimension
+            val p = s * 0.12f
+            val arm = s * 0.26f
+            val stroke = Stroke(width = 2.2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
+            val path = Path().apply {
+                if (!isFullscreen) {
+                    // Outward 4 corners (YouTube expand icon)
+                    moveTo(p, p + arm); lineTo(p, p); lineTo(p + arm, p)
+                    moveTo(s - p - arm, p); lineTo(s - p, p); lineTo(s - p, p + arm)
+                    moveTo(p, s - p - arm); lineTo(p, s - p); lineTo(p + arm, s - p)
+                    moveTo(s - p - arm, s - p); lineTo(s - p, s - p); lineTo(s - p, s - p - arm)
+                } else {
+                    // Inward 4 corners (YouTube exit-fullscreen icon)
+                    moveTo(p, p + arm); lineTo(p + arm, p + arm); lineTo(p + arm, p)
+                    moveTo(s - p - arm, p); lineTo(s - p - arm, p + arm); lineTo(s - p, p + arm)
+                    moveTo(p, s - p - arm); lineTo(p + arm, s - p - arm); lineTo(p + arm, s - p)
+                    moveTo(s - p - arm, s - p); lineTo(s - p - arm, s - p - arm); lineTo(s - p, s - p - arm)
+                }
+            }
+            drawPath(path = path, color = Color.White, style = stroke)
+        }
     }
 }

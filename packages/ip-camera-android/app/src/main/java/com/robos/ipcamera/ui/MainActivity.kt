@@ -97,32 +97,15 @@ private fun IpCameraRoot(
     var tab by rememberSaveable { mutableStateOf(IpCamTab.Live) }
     var blackout by rememberSaveable { mutableStateOf(false) }
     var manualFullscreen by rememberSaveable { mutableStateOf(false) }
-    var dismissedLandscapeAutoFullscreen by rememberSaveable { mutableStateOf(false) }
     val snackbars = remember { SnackbarHostState() }
 
-    val configuration = LocalConfiguration.current
-    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-
-    LaunchedEffect(isLandscape) {
-        if (!isLandscape) {
-            dismissedLandscapeAutoFullscreen = false
-        }
-    }
-
-    val isFullscreenVideo = !blackout && (
-        manualFullscreen ||
-            (isLandscape && tab == IpCamTab.Live && config.enabled && !dismissedLandscapeAutoFullscreen)
-        )
+    val isFullscreenVideo = !blackout && manualFullscreen
 
     val enterFullscreen = {
-        dismissedLandscapeAutoFullscreen = false
         manualFullscreen = true
     }
     val exitFullscreen = {
         manualFullscreen = false
-        if (isLandscape) {
-            dismissedLandscapeAutoFullscreen = true
-        }
     }
 
     val permissionLauncher = rememberLauncherForActivityResult(

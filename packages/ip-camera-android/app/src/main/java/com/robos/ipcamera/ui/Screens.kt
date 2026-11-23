@@ -5,6 +5,7 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
 import android.net.Uri
 import android.provider.Settings
 import androidx.compose.foundation.Image
@@ -63,6 +64,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontFamily
@@ -150,14 +152,19 @@ fun LiveScreen(
                     )
                 }
 
+                val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(220.dp)
+                        .height(if (isLandscape) 250.dp else 220.dp)
                         .clip(RoundedCornerShape(10.dp))
                         .background(Color(0xFF05070A))
                         .border(1.dp, Border, RoundedCornerShape(10.dp))
-                        .clickable(enabled = config.enabled, onClick = onEnterFullscreen),
+                        .pointerInput(config.enabled) {
+                            if (config.enabled) {
+                                detectTapGestures(onDoubleTap = { onEnterFullscreen() })
+                            }
+                        },
                     contentAlignment = Alignment.Center,
                 ) {
                     if (preview != null && config.enabled) {
@@ -225,20 +232,14 @@ fun LiveScreen(
                     }
 
                     if (config.enabled) {
-                        Row(
+                        YoutubeFullscreenIconButton(
+                            isFullscreen = false,
+                            onClick = onEnterFullscreen,
                             modifier = Modifier
                                 .align(Alignment.BottomEnd)
                                 .padding(8.dp)
-                                .clip(RoundedCornerShape(999.dp))
-                                .background(Color(0xDD0D1117))
-                                .border(1.dp, Accent, RoundedCornerShape(999.dp))
-                                .clickable(onClick = onEnterFullscreen)
-                                .padding(horizontal = 11.dp, vertical = 5.dp)
                                 .testTag("enter-fullscreen"),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Text("Fullscreen", color = Accent, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
-                        }
+                        )
                     }
                 }
 
@@ -925,8 +926,7 @@ fun FullscreenVideoOverlay(
                         if (hudVisible) hudInteractionTick++
                     },
                     onDoubleTap = {
-                        cropToFill = !cropToFill
-                        bumpHud()
+                        onExitFullscreen()
                     },
                 )
             }
@@ -1079,6 +1079,16 @@ fun FullscreenVideoOverlay(
                 )
             }
         }
+
+        YoutubeFullscreenIconButton(
+            isFullscreen = true,
+            onClick = onExitFullscreen,
+            alpha = if (hudVisible) 1f else 0.55f,
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(14.dp)
+                .testTag("yt-exit-fullscreen"),
+        )
     }
 }
 

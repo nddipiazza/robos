@@ -2,10 +2,12 @@ package com.robos.smarthome.ui
 
 import android.content.Intent
 import android.graphics.BitmapFactory
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,6 +19,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -39,13 +42,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.robos.smarthome.core.CameraPowerState
 import com.robos.smarthome.core.HomeState
 import com.robos.smarthome.core.SmartCamera
@@ -142,23 +152,142 @@ fun CamerasScreen(
     }
 
     focused?.let { cam ->
-        AlertDialog(
-            onDismissRequest = { focused = null },
-            title = { Text(cam.name) },
-            text = {
-                CameraTileCard(
-                    vm = vm,
-                    camera = cam,
-                    roomLabel = roomNames[cam.roomId] ?: "No room yet",
-                    fastRefresh = true,
-                    onFocus = null,
-                    onRemove = null,
-                )
-            },
-            confirmButton = {
-                TextButton(onClick = { focused = null }) { Text("Close") }
-            },
+        FullscreenCameraDialog(
+            vm = vm,
+            camera = cam,
+            onDismiss = { focused = null },
         )
+    }
+}
+
+@Composable
+private fun FullscreenCameraDialog(
+    vm: HomeViewModel,
+    camera: SmartCamera,
+    onDismiss: () -> Unit,
+) {
+    var frame by remember(camera.id) { mutableStateOf<ImageBitmap?>(null) }
+    var online by remember(camera.id) { mutableStateOf<Boolean?>(null) }
+    var power by remember(camera.id) { mutableStateOf<CameraPowerState?>(null) }
+
+    LaunchedEffect(camera.id, camera.isRobosIpCamera) {
+        if (!camera.isRobosIpCamera) return@LaunchedEffect
+        while (isActive) {
+            power = vm.fetchCameraPower(camera)
+            delay(3500L)
+        }
+    }
+
+    LaunchedEffect(camera.snapshotUrl) {
+        while (isActive) {
+            val bytes = vm.fetchCameraFrame(camera)
+            if (bytes != null && bytes.isNotEmpty()) {
+                val bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                if (bmp != null) {
+                    frame = bmp.asImageBitmap()
+                    online = true
+                } else {
+                    online = false
+                }
+            } else {
+                online = false
+            }
+            delay(200L)
+        }
+    }
+
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(
+            usePlatformDefaultWidth = false,
+            decorFitsSystemWindows = false,
+        ),
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black)
+                .pointerInput(Unit) {
+                    detectTapGestures(onDoubleTap = { onDismiss() })
+                }
+                .testTag("fullscreen-camera"),
+            contentAlignment = Alignment.Center,
+        ) {
+            val currentFrame = frame
+            if (currentFrame != null) {
+                Image(
+                    bitmap = currentFrame,
+                    contentDescription = camera.name,
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            } else {
+                MutedText(if (online == false) "Camera offline" else "Connecting to ${camera.name}…")
+            }
+
+            Row(
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(14.dp)
+                    .clip(RoundedCornerShape(999.dp))
+                    .background(Color(0xCC0D1117))
+                    .border(1.dp, Border, RoundedCornerShape(999.dp))
+                    .padding(horizontal = 12.dp, vertical = 6.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                ColorDot(if (online == true) Success else Muted, size = 9)
+                val batt = if (power?.isOnBattery == true) " · 🔋 ${power?.batteryPercent}% Battery" else ""
+                Text("${camera.name}$batt", color = TextColor, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+            }
+
+            YoutubeFullscreenIcon(
+                isFullscreen = true,
+                onClick = onDismiss,
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(14.dp)
+                    .testTag("exit-fullscreen-camera"),
+            )
+        }
+    }
+}
+
+@Composable
+private fun YoutubeFullscreenIcon(
+    isFullscreen: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = modifier
+            .size(38.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .background(Color(0xC80D1117))
+            .border(1.dp, Color(0x88FFFFFF), RoundedCornerShape(8.dp))
+            .clickable(onClick = onClick),
+    ) {
+        Canvas(modifier = Modifier.size(20.dp)) {
+            val s = size.minDimension
+            val p = s * 0.12f
+            val arm = s * 0.26f
+            val stroke = Stroke(width = 2.2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
+            val path = Path().apply {
+                if (!isFullscreen) {
+                    moveTo(p, p + arm); lineTo(p, p); lineTo(p + arm, p)
+                    moveTo(s - p - arm, p); lineTo(s - p, p); lineTo(s - p, p + arm)
+                    moveTo(p, s - p - arm); lineTo(p, s - p); lineTo(p + arm, s - p)
+                    moveTo(s - p - arm, s - p); lineTo(s - p, s - p); lineTo(s - p, s - p - arm)
+                } else {
+                    moveTo(p, p + arm); lineTo(p + arm, p + arm); lineTo(p + arm, p)
+                    moveTo(s - p - arm, p); lineTo(s - p - arm, p + arm); lineTo(s - p, p + arm)
+                    moveTo(p, s - p - arm); lineTo(p + arm, s - p - arm); lineTo(p + arm, s - p)
+                    moveTo(s - p - arm, s - p); lineTo(s - p - arm, s - p - arm); lineTo(s - p, s - p - arm)
+                }
+            }
+            drawPath(path = path, color = Color.White, style = stroke)
+        }
     }
 }
 
@@ -233,7 +362,15 @@ private fun CameraTileCard(
                 .clip(RoundedCornerShape(10.dp))
                 .background(Color(0xFF05070A))
                 .border(1.dp, Border, RoundedCornerShape(10.dp))
-                .let { if (onFocus != null) it.clickable { onFocus() } else it },
+                .let {
+                    if (onFocus != null) {
+                        it.pointerInput(camera.id) {
+                            detectTapGestures(onDoubleTap = { onFocus() })
+                        }
+                    } else {
+                        it
+                    }
+                },
             contentAlignment = Alignment.Center,
         ) {
             val currentFrame = frame
@@ -280,6 +417,17 @@ private fun CameraTileCard(
                 ) {
                     Text("LIVE", color = Success, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                 }
+            }
+
+            if (onFocus != null) {
+                YoutubeFullscreenIcon(
+                    isFullscreen = false,
+                    onClick = onFocus,
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(8.dp)
+                        .testTag("fullscreen-btn:${camera.name}"),
+                )
             }
         }
 
