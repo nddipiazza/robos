@@ -48,6 +48,42 @@ data class PhoneTurnInnerDto(
     val actionDone: String = "",
 )
 
+@Serializable
+data class ProcessAudioDto(
+    val ok: Boolean = false,
+    val error: String = "",
+    val isSpeech: Boolean = false,
+    val transcript: String = "",
+    val sttSource: String = "robos-server-whisper",
+    val wakeWordDetected: Boolean = false,
+    val greetingOnly: Boolean = false,
+    val actionExecuted: Boolean = false,
+    val trigger: String = "",
+    val query: String = "",
+    val response: String = "",
+    val skill: String = "",
+    val actionDone: String = "",
+    val audioWavBase64: String = "",
+    val audioDurationMs: Long = 0L,
+)
+
+data class ServerAudioProcessResult(
+    val ok: Boolean,
+    val isSpeech: Boolean = false,
+    val transcript: String = "",
+    val sttSource: String = "robos-server-whisper",
+    val wakeWordDetected: Boolean = false,
+    val greetingOnly: Boolean = false,
+    val actionExecuted: Boolean = false,
+    val trigger: String = "",
+    val query: String = "",
+    val response: String = "",
+    val skill: String = "",
+    val actionDone: String = "",
+    val audioWavBytes: ByteArray? = null,
+    val error: String = "",
+)
+
 data class ServerProbeResult(
     val reachable: Boolean,
     val hostIp: String = "",
@@ -59,7 +95,8 @@ data class ServerProbeResult(
 
 /**
  * Deterministic raw-TCP HTTP/1.0 client for discovering and communicating with the
- * RobOS Voice Server (`:19188` in `packages/voice-prompt`).
+ * RobOS Voice Server (`:19188` in `packages/voice-prompt`), including full server-side
+ * Whisper audio transcription + `"Commander"` wake-word & skill execution.
  */
 class RobosVoiceServerClient {
     private val json = Json {
@@ -167,7 +204,6 @@ class RobosVoiceServerClient {
                 )
             }
 
-            // Fallback compatibility with /api/status on older RobOS Voice daemons
             val (statusCode, statusBody) = rawHttp(
                 hostIp = cleanHost,
                 port = port,
@@ -193,6 +229,89 @@ class RobosVoiceServerClient {
         } catch (_: Exception) {
             ServerProbeResult(reachable = false)
         }
+    }
+
+    /**
+     * Offloads raw `.wav` utterance processing to the connected RobOS Server's Whisper engine
+     * (`POST /api/assistant/process-audio`) for high-accuracy speech recognition + `"Commander"` execution.
+     */
+    suspend fun processUtteranceAudio(
+        hostIp: String,
+        port: Int = DEFAULT_SERVER_PORT,
+        config: AssistantConfig,
+        wavBytes: ByteArray,
+        fallbackTranscript: String = "",
+        followupArmed: Boolean = false,
+        armedTrigger: String = "",
+    ): ServerAudioProcessResult = withContext(Dispatchers.IO) {
+        val cleanHost = hostIp.trim()
+        if (cleanHost.isEmpty()) {
+            return@withContext ServerAudioProcessResult(ok = false, error = "No RobOS Server host configured")
+        }
+
+        val payload = buildJsonObject {
+            put("deviceUuid", config.deviceUuid)
+            put("assistantName", config.assistantName)
+            put("room", config.room)
+            put("phonePort", config.port)
+            put("audioWavBase64", Base64.getEncoder().encodeToString(wavBytes))
+            if (fallbackTranscript.isNotBlank()) put("fallbackTranscript", fallbackTranscript)
+            put("wakeWordEnabled", config.wakeWordEnabled)
+            put("followupArmed", followupArmed)
+            if (armedTrigger.isNotBlank()) put("armedTrigger", armedTrigger)
+            put("returnAudio", config.speakServerReplies)
+            put("speakOnServer", false)
+        }.toString()
+
+        val (code, body) = rawHttp(
+            hostIp = cleanHost,
+            port = port,
+            method = "POST",
+            path = "/api/assistant/process-audio",
+            bodyJson = payload,
+            connectTimeoutMs = 3_000,
+            readTimeoutMs = 45_000,
+        )
+
+        val dto = try {
+            json.decodeFromString(ProcessAudioDto.serializer(), body)
+        } catch (_: Exception) {
+            return@withContext ServerAudioProcessResult(ok = false, error = "Invalid response from RobOS Server (HTTP $code)")
+        }
+
+        if (code !in 200..299 || !dto.ok) {
+            return@withContext ServerAudioProcessResult(
+                ok = false,
+                error = dto.error.ifBlank { "RobOS Server returned HTTP $code" },
+            )
+        }
+
+        val replyWav = if (dto.audioWavBase64.isNotBlank()) {
+            try {
+                Base64.getDecoder().decode(dto.audioWavBase64)
+            } catch (_: Exception) {
+                null
+            }
+        } else {
+            null
+        }
+
+        ServerAudioProcessResult(
+            ok = true,
+            isSpeech = dto.isSpeech,
+            transcript = dto.transcript,
+            sttSource = dto.sttSource.ifBlank { "robos-server-whisper" },
+            wakeWordDetected = dto.wakeWordDetected,
+            greetingOnly = dto.greetingOnly,
+            actionExecuted = dto.actionExecuted,
+            trigger = dto.trigger,
+            query = dto.query,
+            response = dto.response,
+            skill = dto.skill,
+            actionDone = dto.actionDone,
+            audioWavBytes = replyWav,
+            error = dto.error,
+        )
     }
 
     suspend fun executePhoneTurn(
@@ -232,7 +351,6 @@ class RobosVoiceServerClient {
         )
 
         if (code == 404) {
-            // Fallback to /api/assistant/chat if connected to a pre-hub daemon
             val (chatCode, chatBody) = rawHttp(
                 hostIp = cleanHost,
                 port = port,

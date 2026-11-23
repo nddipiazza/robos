@@ -119,7 +119,7 @@ fun ListenTabScreen(
             }
             if (serverConnected) {
                 Text(
-                    text = "Connected to ${status.serverHostname.ifBlank { status.serverHost }} (${status.serverHost}:${status.serverPort}). Wake word \"Hello RobOS\" executes RobOS actions AND records audio + text.",
+                    text = "Connected to ${status.serverHostname.ifBlank { status.serverHost }} (${status.serverHost}:${status.serverPort}). Server Whisper transcribes speech and wake word \"Commander\" executes RobOS actions.",
                     style = MaterialTheme.typography.bodyMedium,
                 )
             } else {
@@ -208,7 +208,7 @@ fun ListenTabScreen(
                 } else {
                     MutedText(
                         if (serverConnected) {
-                            "Say \"Hello RobOS…\" (pronounced \"Row Bose\") to run an action, or speak normally to record audio + text."
+                            "Say \"Commander…\" to run an action (audio processed by RobOS Server Whisper), or speak normally to record audio + text."
                         } else {
                             "Listening continuously. Spoken words are transcribed offline and saved with .wav audio."
                         },
@@ -555,8 +555,8 @@ fun AssistantTabScreen(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column(Modifier.weight(1f)) {
-                    Text("Wake Word Detection (\"Hello RobOS\")")
-                    MutedText("Pronounced \"Row Bose\". Triggers actions only when RobOS Server is connected.")
+                    Text("Wake Word Detection (\"Commander\")")
+                    MutedText("Triggers RobOS actions when a RobOS Server is connected.")
                 }
                 Switch(
                     checked = config.wakeWordEnabled,

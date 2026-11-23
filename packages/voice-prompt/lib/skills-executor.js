@@ -38,7 +38,7 @@ class SkillsExecutor {
       { id: 'media-next-episode', label: 'Continue Watching a Show', intent: 'Play the next episode of a show in RobOS Movie Player, resuming the one in progress', patterns: ['continue watching [show]', 'play the next episode of [show]'] },
       { id: 'shopping-lists', label: 'Manage Household Shopping Lists (Grocery, Target, Costco)', intent: 'Add, check off, remove, adjust quantity, sync with Google Docs/Drive, or read items on Grocery, Target, and Costco shopping lists', patterns: ['add [items] to grocery/target/costco list', 'check off [item] on shopping list', 'remove [item] from target list', 'what is on my costco list', 'clear checked on grocery list'] },
       { id: 'google-calendar', label: 'Manage Google Calendar, Named Family Calendars & Access Google Doc', intent: 'Create/list Google Calendar events on Named Calendars (Family, Primary), list named calendars, or sync the 1-button Calendar Request Google Doc', patterns: ['add [event] to family calendar', 'schedule [event] on [date] at [time]', 'what google calendars do I have', 'sync calendar google doc'] },
-      { id: 'greeting', label: 'Casual Greeting', intent: 'Respond with a friendly greeting', patterns: ['hello robos', 'hi', 'hey'] },
+      { id: 'greeting', label: 'Casual Greeting', intent: 'Respond with a friendly greeting', patterns: ['commander', 'hi', 'hey'] },
       { id: 'ai-agent', label: 'AI Coding Agent Fallback', intent: 'General reasoning with active workspace context', patterns: ['*'] }
     ];
   }
@@ -59,9 +59,9 @@ class SkillsExecutor {
     }
     const q = query.toLowerCase();
 
-    // 0. Greeting Intent: "hi", "hello", "hey", "hello robos", "rob os", "row bose", etc.
-    const isGreeting = /^(?:hi|hello|hey|greetings|howdy|what'?s\s+up)(?:\s+(?:robos|rob\s+os|row\s+bose|nabu|there|assistant))?[!.]*$/i.test(query) ||
-                       /^(?:robos|rob\s+os|row\s+bose|nabu)[!.]*$/i.test(query);
+    // 0. Greeting Intent: "hi", "hello", "hey", "commander", etc.
+    const isGreeting = /^(?:hi|hello|hey|greetings|howdy|what'?s\s+up)(?:\s+(?:commander|there|assistant))?[!.]*$/i.test(query) ||
+                       /^commander[!.]*$/i.test(query);
     if (isGreeting) {
       return await this.executeGreeting(options);
     }
@@ -343,7 +343,7 @@ class SkillsExecutor {
     }
 
     // 13. System Status
-    if (q.includes('status of the project') || q.includes('project status') || q.includes('system status') || q.includes('how is robos')) {
+    if (q.includes('status of the project') || /(?:system|project)(?:'s)?\s+status/.test(q) || q.includes('how is robos')) {
       return await this.executeSystemStatus();
     }
 

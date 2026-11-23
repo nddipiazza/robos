@@ -182,7 +182,7 @@ class AssistantViewModel(application: Application) : AndroidViewModel(applicatio
                     startedEpochMs = now - 700L,
                     endedEpochMs = now,
                 ),
-                rawTranscript = "Hello RobOS $clean",
+                rawTranscript = "Commander, $clean",
                 sttSource = "manual-ask",
             )
             if (entry?.actionStatus == ActionOutcomeStatus.ACTION_EXECUTED) {

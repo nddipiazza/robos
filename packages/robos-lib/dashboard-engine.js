@@ -3895,7 +3895,7 @@ function renderDashboardTvWallboardHtml({
                   )
                   .join('')
               : !interim
-              ? `<div style="background:#0a101d;border:1px solid #1e2d47;border-radius:8px;padding:10px;font-size:12px;color:#94a3b8;text-align:center;">No voice dictation bubbles yet. Press <code>Super+V</code> or say <strong>"Hello RobOS"</strong> to dictate.</div>`
+              ? `<div style="background:#0a101d;border:1px solid #1e2d47;border-radius:8px;padding:10px;font-size:12px;color:#94a3b8;text-align:center;">No voice dictation bubbles yet. Press <code>Super+V</code> or say <strong>"Commander"</strong> to dictate.</div>`
               : ''
           }
         </div>

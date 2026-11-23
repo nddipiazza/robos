@@ -323,6 +323,38 @@ describe('Voice Prompt Unit Tests', () => {
       assert.strictEqual(turnRes.data.ok, true);
       assert.ok(typeof turnRes.data.response === 'string' && turnRes.data.response.length > 0);
       assert.ok(turnRes.data.turn && turnRes.data.turn.query === 'what time is it');
+
+      const procAmbient = await httpReq('POST', '/api/assistant/process-audio', {
+        deviceUuid: 'phone-123',
+        mockTranscript: 'Remember to pick up groceries later',
+        returnAudio: true,
+        mockAudio: true,
+      });
+      assert.strictEqual(procAmbient.status, 200);
+      assert.strictEqual(procAmbient.data.isSpeech, true);
+      assert.strictEqual(procAmbient.data.wakeWordDetected, false);
+
+      const procWakeOnly = await httpReq('POST', '/api/assistant/process-audio', {
+        deviceUuid: 'phone-123',
+        mockTranscript: 'Commander',
+        returnAudio: true,
+        mockAudio: true,
+      });
+      assert.strictEqual(procWakeOnly.status, 200);
+      assert.strictEqual(procWakeOnly.data.wakeWordDetected, true);
+      assert.strictEqual(procWakeOnly.data.greetingOnly, true);
+      assert.strictEqual(procWakeOnly.data.response, 'Yes, Commander?');
+
+      const procCmd = await httpReq('POST', '/api/assistant/process-audio', {
+        deviceUuid: 'phone-123',
+        mockTranscript: 'Commander, what time is it',
+        returnAudio: true,
+        mockAudio: true,
+      });
+      assert.strictEqual(procCmd.status, 200);
+      assert.strictEqual(procCmd.data.wakeWordDetected, true);
+      assert.strictEqual(procCmd.data.actionExecuted, true);
+      assert.strictEqual(procCmd.data.query, 'what time is it');
     });
   });
 

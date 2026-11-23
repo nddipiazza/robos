@@ -432,7 +432,7 @@ function setupEventListeners() {
   chkWakeWord?.addEventListener('change', async () => {
     if (api && api.toggleWakeWord) {
       await api.toggleWakeWord(chkWakeWord.checked);
-      showFeedback(chkWakeWord.checked ? 'Wake-word detection enabled ("hello robos" / "row bose").' : 'Wake-word detection disabled.');
+      showFeedback(chkWakeWord.checked ? 'Wake-word detection enabled ("Commander").' : 'Wake-word detection disabled.');
     }
   });
 
@@ -574,7 +574,7 @@ function setupEventListeners() {
     if (api.onWakeGreeting) {
       api.onWakeGreeting((data) => {
         appendChatTurn({
-          query: data.trigger || 'Hello RobOS',
+          query: data.trigger || 'Commander',
           response: data.greeting || 'Hi!',
           timestamp: new Date().toISOString(),
         });

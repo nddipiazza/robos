@@ -950,7 +950,7 @@ robos-widget-sprint-radar, robos-widget-voice-dictation, robos-widget-game-theat
                   )
                   .join('')
               : !interim
-              ? `<div style="background:#0d1117;border:1px solid #21262d;border-radius:7px;padding:9px;font-size:11px;color:#8b949e;text-align:center;">No voice dictation bubbles yet. Press <code>Super+V</code> or say <strong>"Hello RobOS"</strong> to dictate.</div>`
+              ? `<div style="background:#0d1117;border:1px solid #21262d;border-radius:7px;padding:9px;font-size:11px;color:#8b949e;text-align:center;">No voice dictation bubbles yet. Press <code>Super+V</code> or say <strong>"Commander"</strong> to dictate.</div>`
               : ''
           }
         </div>

@@ -266,7 +266,7 @@ class RobOSVoiceClient {
   }
 
   /**
-   * Toggle wake-word detection for "hello robos"
+   * Toggle wake-word detection for "Commander"
    */
   async toggleWakeWord(enabled = true) {
     const res = await this._request('POST', '/api/wake-word/toggle', { enabled });

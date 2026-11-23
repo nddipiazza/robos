@@ -58,7 +58,7 @@ console.log(reply.turn.response);
 ```
 
 ### 4. Background Stream Topic Mode
-In background mode, the microphone stream continuously transcribes speech into ephemeral real-time SSE chunks (`/api/stream`). Nothing is saved to disk by default unless wake-word `"hello robos"` (or `"rob os"` / `"row bose"`) is detected.
+In background mode, the microphone stream continuously transcribes speech into ephemeral real-time SSE chunks (`/api/stream`). Nothing is saved to disk by default unless wake-word `"Commander"` is detected.
 ```bash
 ./packages/robos-cli/robos-voice background start
 ./packages/robos-cli/robos-voice background stop

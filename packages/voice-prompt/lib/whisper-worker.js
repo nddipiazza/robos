@@ -3,17 +3,26 @@
 const { parentPort } = require('worker_threads');
 
 let transcriberPromise = null;
+let loadedModelId = null;
 
 async function getTranscriber() {
   if (!transcriberPromise) {
     transcriberPromise = (async () => {
-      try {
-        const { pipeline } = await import('@xenova/transformers');
-        return await pipeline('automatic-speech-recognition', 'Xenova/whisper-tiny.en');
-      } catch (err) {
-        console.warn('[whisper-worker] Failed to load Whisper pipeline:', err.message);
-        return null;
+      const preferred = process.env.ROBOS_WHISPER_MODEL || 'Xenova/whisper-base.en';
+      const candidates = preferred === 'Xenova/whisper-tiny.en'
+        ? ['Xenova/whisper-tiny.en']
+        : [preferred, 'Xenova/whisper-tiny.en'];
+      for (const modelId of candidates) {
+        try {
+          const { pipeline } = await import('@xenova/transformers');
+          const asr = await pipeline('automatic-speech-recognition', modelId);
+          loadedModelId = modelId;
+          return asr;
+        } catch (err) {
+          console.warn(`[whisper-worker] Failed to load ${modelId}:`, err.message);
+        }
       }
+      return null;
     })();
   }
   return transcriberPromise;
@@ -28,7 +37,7 @@ parentPort.on('message', async (msg) => {
 
   if (msg.type === 'init') {
     const t = await getTranscriber();
-    parentPort.postMessage({ type: 'init-done', ready: Boolean(t) });
+    parentPort.postMessage({ type: 'init-done', ready: Boolean(t), modelId: loadedModelId });
     return;
   }
 
@@ -41,7 +50,7 @@ parentPort.on('message', async (msg) => {
         return;
       }
       const res = await transcriber(samples, opts);
-      parentPort.postMessage({ type: 'transcribe-result', id, text: res?.text || '' });
+      parentPort.postMessage({ type: 'transcribe-result', id, text: res?.text || '', modelId: loadedModelId });
     } catch (err) {
       parentPort.postMessage({ type: 'transcribe-result', id, text: '', error: err.message });
     }

@@ -321,9 +321,10 @@ describe('RobOS Home Speaker Tests', () => {
   });
 
   describe('Nabu Voice Command & Media Router (Hello Nabu -> RobOS Skills + Media Library)', () => {
-    it('strips wake phrases (Hello Nabu, Okay Nabu, Hello RobOS) and classifies intents', () => {
+    it('strips wake phrases (Hello Nabu, Okay Nabu, Commander) and classifies intents', () => {
       const router = require(path.join(APP_DIR, 'lib', 'nabu-command-router'));
       assert.strictEqual(router.stripWakePhrase('Hello Nabu, play some Dark Tranquillity'), 'play some Dark Tranquillity');
+      assert.strictEqual(router.stripWakePhrase('Commander, play some Dark Tranquillity'), 'play some Dark Tranquillity');
       assert.strictEqual(router.stripWakePhrase('Okay Nabu please open Task Explorer'), 'open Task Explorer');
       assert.strictEqual(router.classifyVoiceCommand('play some Dark Tranquillity').type, 'play-media');
       // Phonetic ASR coarticulation ("Place some..." / "Place Slayer..." instead of "Play...")

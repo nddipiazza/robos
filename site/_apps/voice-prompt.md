@@ -20,7 +20,7 @@ The tabs are **Dictation & Context**, **Outgoing Voice (Natural TTS)** and **Rob
 
 - **Dictation & Context.** **Activate Microphone** starts recording. Recognized text streams into the panel, and **Save Voice Prompt** stores it. A context panel shows the focused app, window title, running apps and the active workspace and branch. The default push-to-talk hotkey is `Super+V`, set by `pushToTalkKey` in the voice preferences.
 - **Outgoing Voice.** Choose the engine (Kokoro-82M, Edge-TTS, Piper or Speech Dispatcher), a voice, speed, pitch and volume, and preview with **Speak Out Loud**. "RobOS" is spoken as "Row Bose".
-- **RobOS Desktop Assistant.** The code can detect phrases such as "hello robos" or "row bose" followed by a question and send the question, with the active window and workspace as context, to the AI agent library. Nothing in the app passes the live speech stream to that code, so hands-free activation does not work yet. If no AI provider answers, the assistant returns a generic acknowledgement and does not answer the question. See [RobOS Voice](/voice-prompt/reference/).
+- **RobOS Desktop Assistant.** The code can detect the wake word `"Commander"` followed by a question and send the question, with the active window and workspace as context, to the AI agent library. Connected **RobOS Assistant** Android phones also send recorded utterances to `/api/assistant/process-audio` for server-side Whisper transcription and `"Commander"` command execution. See [RobOS Voice](/voice-prompt/reference/).
 
 A floating HUD window shows speech bubbles and command results, and a commands dialog lists the spoken commands that map to RobOS apps and skills.
 

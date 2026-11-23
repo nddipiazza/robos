@@ -130,6 +130,18 @@ class AssistantApp : Application() {
                 )
             },
             isServerConnected = { _status.value.serverState == ServerConnectionState.CONNECTED },
+            serverAudioProcessor = { cfg, wavBytes, fallbackTranscript, followupArmed, armedTrigger ->
+                val host = _status.value.serverHost.ifBlank { cfg.robosServerHost }
+                serverClient.processUtteranceAudio(
+                    hostIp = host,
+                    port = cfg.robosServerPort,
+                    config = cfg,
+                    wavBytes = wavBytes,
+                    fallbackTranscript = fallbackTranscript,
+                    followupArmed = followupArmed,
+                    armedTrigger = armedTrigger,
+                )
+            },
             onSpeakWav = { wavBytes, _ ->
                 speakReplyWavWithEchoGate(wavBytes)
             },
@@ -656,7 +668,8 @@ class AssistantServerService : Service(), AssistantNodeController {
             return
         }
 
-        val partial = if (app.voskEngine.isLoaded) {
+        val serverOnlineNow = app.status.value.actionsArmed
+        val partial = if (!serverOnlineNow && app.voskEngine.isLoaded) {
             app.voskEngine.feedStreamingFrame(buf, len)
         } else {
             ""
@@ -675,6 +688,12 @@ class AssistantServerService : Service(), AssistantNodeController {
                 app.coordinator.isAwaitingFollowup() -> ListeningState.AWAITING_QUERY
                 else -> ListeningState.LISTENING
             }
+            val liveCaption = when {
+                telemetry.inUtterance && serverOnlineNow -> "Recording speech for RobOS Server Whisper…"
+                telemetry.inUtterance && partial.isNotBlank() -> partial
+                telemetry.inUtterance -> cur.livePartialTranscript
+                else -> ""
+            }
             cur.copy(
                 running = true,
                 listeningState = nextState,
@@ -683,7 +702,7 @@ class AssistantServerService : Service(), AssistantNodeController {
                 noiseFloorDbFs = telemetry.noiseFloorDbFs,
                 vadSpeechActive = telemetry.speechActive,
                 waveformBars = telemetry.bars,
-                livePartialTranscript = if (telemetry.inUtterance && partial.isNotBlank()) partial else cur.livePartialTranscript.takeIf { telemetry.inUtterance }.orEmpty(),
+                livePartialTranscript = liveCaption,
                 activeListeners = app.liveHub.activeAudioListeners,
                 uptimeSeconds = ((SystemClock.elapsedRealtime() - startedElapsedMs) / 1000L).coerceAtLeast(0L),
             )
@@ -694,19 +713,35 @@ class AssistantServerService : Service(), AssistantNodeController {
             val partialFallback = partial
             serviceScope.launch {
                 val cfgNow = app.config.value
-                val finalTranscript = if (app.voskEngine.isLoaded) {
-                    app.voskEngine.transcribeUtterancePcm(captured.pcm16le, captured.sampleRate)
-                        .ifBlank { partialFallback }
+                val online = cfgNow.robosServerEnabled && app.status.value.actionsArmed
+                val offlineText = if (!online) {
+                    if (app.voskEngine.isLoaded) {
+                        app.voskEngine.transcribeUtterancePcm(captured.pcm16le, captured.sampleRate)
+                            .ifBlank { partialFallback }
+                    } else {
+                        partialFallback
+                    }
                 } else {
-                    partialFallback
+                    ""
                 }
-                val sttSource = if (app.voskEngine.isLoaded) "vosk-offline" else "audio-only"
+                val sttSource = when {
+                    online -> "robos-server-whisper"
+                    app.voskEngine.isLoaded -> "vosk-offline"
+                    else -> "audio-only"
+                }
                 app.updateStatus { it.copy(livePartialTranscript = "") }
                 app.coordinator.handleCapturedUtterance(
                     config = cfgNow,
                     utterance = captured,
-                    rawTranscript = finalTranscript,
+                    rawTranscript = offlineText,
                     sttSource = sttSource,
+                    fallbackOfflineTranscript = {
+                        if (app.voskEngine.isLoaded) {
+                            app.voskEngine.transcribeUtterancePcm(captured.pcm16le, captured.sampleRate)
+                        } else {
+                            partialFallback
+                        }
+                    },
                 )
             }
         }
@@ -800,7 +835,7 @@ class AssistantServerService : Service(), AssistantNodeController {
         val entry = app.coordinator.handleCapturedUtterance(
             config = cfg,
             utterance = utterance,
-            rawTranscript = "Hello RobOS $query",
+            rawTranscript = "Commander, $query",
             sttSource = "manual-ask",
         ) ?: return Result.failure(IllegalStateException("Could not record assistant turn"))
         return if (entry.actionStatus == ActionOutcomeStatus.ACTION_EXECUTED) {
@@ -826,18 +861,20 @@ class AssistantServerService : Service(), AssistantNodeController {
             startedEpochMs = now - durationMs,
             endedEpochMs = now,
         )
-        val resolvedText = if (text.isNotBlank()) {
-            text
-        } else if (app.voskEngine.isLoaded) {
-            app.voskEngine.transcribeUtterancePcm(pcm16le, sampleRate)
-        } else {
-            ""
+        val online = cfg.robosServerEnabled && app.status.value.actionsArmed
+        val resolvedText = when {
+            text.isNotBlank() -> text
+            !online && app.voskEngine.isLoaded -> app.voskEngine.transcribeUtterancePcm(pcm16le, sampleRate)
+            else -> ""
         }
         return app.coordinator.handleCapturedUtterance(
             config = cfg,
             utterance = utterance,
             rawTranscript = resolvedText,
-            sttSource = "vosk-offline",
+            sttSource = if (online && text.isBlank()) "robos-server-whisper" else "vosk-offline",
+            fallbackOfflineTranscript = {
+                if (app.voskEngine.isLoaded) app.voskEngine.transcribeUtterancePcm(pcm16le, sampleRate) else ""
+            },
         )
     }
 

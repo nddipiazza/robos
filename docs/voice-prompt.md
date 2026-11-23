@@ -101,7 +101,7 @@ Text that matches none of these gets the reply "Done: <your text>." and nothing 
 
 ## Not built yet
 
-Hands-free activation by saying "hello robos" is not connected. `lib/wake-word.js` can detect phrases such as "hello robos", "hey row bose" and "rob os", and unit tests cover it, but nothing in the app passes the live speech stream to it. The same applies to the assistant's stream handler. `POST /api/wake-word/toggle` sets a flag that has no effect today.
+`lib/wake-word.js` detects the wake word `"Commander"` (including `"Hey Commander"`, `"Hello Commander"`, `"OK Commander"`), used by `/api/assistant/process-audio` for connected **RobOS Assistant** phones and unit-tested in `packages/robos-test/tests/voice-prompt/`.
 
 ## CLI
 

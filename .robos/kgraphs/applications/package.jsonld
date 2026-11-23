@@ -359,7 +359,7 @@
         "schema:MobileApplication"
       ],
       "dcterms:title": "RobOS Assistant for Android",
-      "dcterms:description": "Always-on Android 11+ 24/7 audio surveillance recorder and RobOS Voice room assistant: microphone foreground service with CPU and low-latency Wi-Fi locks, 100% offline Vosk speech-to-text, pre-roll .wav + text recording with retention, LAN web console and /audio.wav stream (:8090), OLED Blackout mode, and a RobOS Voice Server (:19188) action gate that runs commands and speaks Kokoro/Edge-TTS replies only when connected.",
+      "dcterms:description": "Always-on Android 11+ 24/7 audio surveillance recorder and RobOS Voice room assistant: microphone foreground service with CPU and low-latency Wi-Fi locks, pre-roll .wav + text recording with retention, LAN web console and /audio.wav stream (:8090), OLED Blackout mode, and a RobOS Voice Server (:19188) action gate that processes audio on the server with OpenAI Whisper, runs \"Commander\" commands, and speaks neural TTS replies when connected while falling back to offline Vosk recording when disconnected.",
       "robos:namespace": "robos.applications",
       "robos:package": "applications",
       "robos:platform": "Android",
@@ -1022,7 +1022,7 @@
         "schema:MobileApplication"
       ],
       "dcterms:title": "RobOS Assistant for Android",
-      "dcterms:description": "Always-on Android 11+ 24/7 audio surveillance recorder and RobOS Voice room assistant: microphone foreground service with CPU and low-latency Wi-Fi locks, 100% offline Vosk speech-to-text, pre-roll .wav + text recording with retention, LAN web console and /audio.wav stream (:8090), OLED Blackout mode, and a RobOS Voice Server (:19188) action gate that runs commands and speaks Kokoro/Edge-TTS replies only when connected.",
+      "dcterms:description": "Always-on Android 11+ 24/7 audio surveillance recorder and RobOS Voice room assistant: microphone foreground service with CPU and low-latency Wi-Fi locks, pre-roll .wav + text recording with retention, LAN web console and /audio.wav stream (:8090), OLED Blackout mode, and a RobOS Voice Server (:19188) action gate that processes audio on the server with OpenAI Whisper, runs \"Commander\" commands, and speaks neural TTS replies when connected while falling back to offline Vosk recording when disconnected.",
       "robos:namespace": "robos.applications",
       "robos:package": "applications",
       "robos:platform": "Android",

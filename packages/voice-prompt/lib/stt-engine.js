@@ -35,11 +35,9 @@ function cleanTranscript(text) {
   return cleaned.trim();
 }
 
-function readWavToFloat32(filePath) {
-  if (!fs.existsSync(filePath)) return null;
+function decodeWavBufferToFloat32(buffer) {
+  if (!buffer || buffer.length <= 44) return null;
   try {
-    const buffer = fs.readFileSync(filePath);
-    if (buffer.length <= 44) return null;
     let offset = 12;
     while (offset < buffer.length - 8) {
       const chunkId = buffer.toString('ascii', offset, offset + 4);
@@ -63,7 +61,6 @@ function readWavToFloat32(filePath) {
         offset += 8 + chunkSize;
       }
     }
-    // Fallback: standard 44-byte WAV header
     if (buffer.length > 44) {
       const dataOffset = 44;
       const sampleCount = Math.floor((buffer.length - dataOffset) / 2);
@@ -75,9 +72,19 @@ function readWavToFloat32(filePath) {
       return float32;
     }
   } catch (err) {
-    console.warn('[stt-engine] readWavToFloat32 error:', err.message);
+    console.warn('[stt-engine] decodeWavBufferToFloat32 error:', err.message);
   }
   return null;
+}
+
+function readWavToFloat32(filePath) {
+  if (!fs.existsSync(filePath)) return null;
+  try {
+    return decodeWavBufferToFloat32(fs.readFileSync(filePath));
+  } catch (err) {
+    console.warn('[stt-engine] readWavToFloat32 error:', err.message);
+    return null;
+  }
 }
 
 /**
@@ -701,11 +708,32 @@ class STTEngine extends EventEmitter {
     this.emit('dictation', result);
     return result;
   }
+
+  /**
+   * Transcribe a raw 16kHz PCM16LE WAV Buffer on the server using the Whisper worker.
+   */
+  async transcribeWavBuffer(wavBuffer) {
+    const samples = decodeWavBufferToFloat32(wavBuffer);
+    if (!samples || samples.length < 800) {
+      return { ok: true, text: '', modelId: null };
+    }
+    const opts = samples.length > 16000 * 30
+      ? { chunk_length_s: 30, stride_length_s: 5 }
+      : {};
+    const res = await this.transcribeAsync(samples, opts);
+    const cleaned = cleanTranscript(res?.text || '');
+    return {
+      ok: true,
+      text: cleaned,
+      modelId: res?.modelId || 'Xenova/whisper-base.en',
+    };
+  }
 }
 
 module.exports = {
   STTEngine,
   AdaptiveEnergyVad,
   readWavToFloat32,
+  decodeWavBufferToFloat32,
   cleanTranscript,
 };

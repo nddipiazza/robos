@@ -976,6 +976,165 @@ function startApiServer(overridePort) {
         }));
       }
 
+      // Server-side Whisper audio processing + "Commander" wake-word & action execution for connected phones
+      if (pathname === '/api/assistant/process-audio' && method === 'POST') {
+        const body = await parseBody(req);
+        if (body && typeof body === 'object' && body.deviceUuid) {
+          upsertAssistantNode(body, req.socket && req.socket.remoteAddress);
+        }
+        const wavB64 = body && typeof body === 'object' ? String(body.audioWavBase64 || '') : '';
+        if (!wavB64 && !(body && body.mockTranscript !== undefined)) {
+          res.writeHead(400);
+          return res.end(JSON.stringify({ ok: false, error: 'audioWavBase64 is required' }));
+        }
+
+        let transcript = '';
+        let sttSource = 'robos-server-whisper';
+        if (body && typeof body.mockTranscript === 'string') {
+          transcript = body.mockTranscript.trim();
+        } else {
+          const wavBuffer = Buffer.from(wavB64, 'base64');
+          const sttRes = await sttEngine.transcribeWavBuffer(wavBuffer);
+          transcript = (sttRes && sttRes.text ? sttRes.text : '').trim();
+          if (!transcript && body && typeof body.fallbackTranscript === 'string') {
+            transcript = body.fallbackTranscript.trim();
+            if (transcript) sttSource = 'vosk-fallback';
+          }
+        }
+
+        if (!transcript) {
+          res.writeHead(200);
+          return res.end(JSON.stringify({
+            ok: true,
+            isSpeech: false,
+            transcript: '',
+            sttSource,
+          }));
+        }
+
+        const wakeEnabled = !body || body.wakeWordEnabled !== false;
+        const followupArmed = Boolean(body && body.followupArmed);
+        const returnAudio = !body || body.returnAudio !== false;
+        const speakOnServer = Boolean(body && body.speakOnServer);
+
+        const localWake = wakeEnabled
+          ? (new WakeWordDetector({ enabled: true, cooldownMs: 0 })).processText(transcript)
+          : { matched: false, trigger: null, query: null };
+
+        const wakeDetected = Boolean(localWake.matched || followupArmed);
+        const trigger = localWake.matched
+          ? (localWake.trigger || 'Commander')
+          : (followupArmed ? String(body.armedTrigger || 'Commander') : '');
+        const query = localWake.matched
+          ? String(localWake.query || '').trim()
+          : (followupArmed ? transcript : '');
+
+        if (!wakeDetected) {
+          res.writeHead(200);
+          return res.end(JSON.stringify({
+            ok: true,
+            isSpeech: true,
+            transcript,
+            sttSource,
+            wakeWordDetected: false,
+            greetingOnly: false,
+            actionExecuted: false,
+          }));
+        }
+
+        const isGreetingOnly = localWake.matched && (!query || /^(?:hi|hello|hey|howdy|what'?s\s+up|there)[!.?\s]*$/i.test(query));
+        if (isGreetingOnly) {
+          const greetingText = 'Yes, Commander?';
+          let audioWavBase64 = '';
+          let audioDurationMs = 0;
+          let audioEngine = '';
+          if (returnAudio) {
+            try {
+              const synth = await ttsEngine.synthesize(greetingText, {
+                mockAudio: Boolean(body && body.mockAudio),
+              });
+              if (synth && synth.filePath && fs.existsSync(synth.filePath)) {
+                audioWavBase64 = fs.readFileSync(synth.filePath).toString('base64');
+                audioDurationMs = synth.durationMs || 0;
+                audioEngine = synth.engine || '';
+              }
+            } catch {}
+          }
+          res.writeHead(200);
+          return res.end(JSON.stringify({
+            ok: true,
+            isSpeech: true,
+            transcript,
+            sttSource,
+            wakeWordDetected: true,
+            greetingOnly: true,
+            actionExecuted: false,
+            trigger,
+            query: '',
+            response: greetingText,
+            audioWavBase64,
+            audioDurationMs,
+            audioEngine,
+          }));
+        }
+
+        const result = await desktopAssistant.processQuery(query, {
+          ...(typeof body === 'object' ? body : {}),
+          silent: !speakOnServer,
+        });
+        if (!result.ok) {
+          res.writeHead(200);
+          return res.end(JSON.stringify({
+            ok: true,
+            isSpeech: true,
+            transcript,
+            sttSource,
+            wakeWordDetected: true,
+            greetingOnly: false,
+            actionExecuted: false,
+            trigger,
+            query,
+            error: result.error || 'Action failed',
+          }));
+        }
+
+        const turn = result.turn || {};
+        let audioWavBase64 = '';
+        let audioDurationMs = 0;
+        let audioEngine = '';
+        if (returnAudio && turn.response) {
+          try {
+            const synth = await ttsEngine.synthesize(turn.response, {
+              mockAudio: Boolean(body && body.mockAudio),
+            });
+            if (synth && synth.filePath && fs.existsSync(synth.filePath)) {
+              audioWavBase64 = fs.readFileSync(synth.filePath).toString('base64');
+              audioDurationMs = synth.durationMs || 0;
+              audioEngine = synth.engine || '';
+            }
+          } catch {}
+        }
+
+        res.writeHead(200);
+        return res.end(JSON.stringify({
+          ok: true,
+          isSpeech: true,
+          transcript,
+          sttSource,
+          wakeWordDetected: true,
+          greetingOnly: false,
+          actionExecuted: true,
+          trigger,
+          query,
+          response: turn.response || '',
+          skill: turn.skill || '',
+          actionDone: turn.actionDone || '',
+          audioWavBase64,
+          audioDurationMs,
+          audioEngine,
+        }));
+      }
+
       // 11. Debug / Testing endpoints for harness & snapshot-cli: /eval, /health
       if (pathname === '/eval' && method === 'POST') {
         const body = await parseBody(req);
@@ -1472,7 +1631,7 @@ ipcMain.handle('vp-background-toggle', async (_e, enable) => {
 
 ipcMain.handle('vp-trigger-wake-word', async () => {
   showHudWindow();
-  return desktopAssistant.handleWakeWord({ trigger: 'hello robos', query: '' });
+  return desktopAssistant.handleWakeWord({ trigger: 'Commander', query: '' });
 });
 
 ipcMain.handle('vp-assistant-chat', async (_e, query, options) => {

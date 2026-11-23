@@ -79,24 +79,19 @@ class RobosAssistantCoreTest {
     }
 
     @Test
-    fun wakeWordParserMatchesRobosAndRowBoseVariants() {
-        val m1 = WakeWordParser.parse("Hello RobOS, what is the git status?")
+    fun wakeWordParserMatchesCommanderVariants() {
+        val m1 = WakeWordParser.parse("Commander, what is the git status?")
         assertTrue(m1.matched)
         assertFalse(m1.isGreetingOnly)
         assertEquals("what is the git status?", m1.query)
 
-        val m2 = WakeWordParser.parse("hey row bose turn on kitchen lights")
+        val m2 = WakeWordParser.parse("hey commander turn on kitchen lights")
         assertTrue(m2.matched)
         assertEquals("turn on kitchen lights", m2.query)
 
-        val m3 = WakeWordParser.parse("Hello RobOS!")
+        val m3 = WakeWordParser.parse("Commander!")
         assertTrue(m3.matched)
         assertTrue(m3.isGreetingOnly)
-
-        val voskSandhi = SurveillanceCoordinator.cleanTranscript("hello robo sweat time is it")
-        val m4 = WakeWordParser.parse(voskSandhi)
-        assertTrue(m4.matched)
-        assertEquals("what time is it", m4.query)
 
         val ambient = WakeWordParser.parse("Remember to buy coffee beans tomorrow morning")
         assertFalse(ambient.matched)
@@ -144,7 +139,7 @@ class RobosAssistantCoreTest {
             val offlineCmd = coordinator.handleCapturedUtterance(
                 config = cfg,
                 utterance = utt.copy(startedEpochMs = 1_700_000_005_000L, endedEpochMs = 1_700_000_005_900L),
-                rawTranscript = "Hello RobOS turn on the office lights",
+                rawTranscript = "Commander, turn on the office lights",
             )
             assertNotNull(offlineCmd)
             assertTrue(offlineCmd!!.wakeWordDetected)
@@ -186,10 +181,13 @@ class RobosAssistantCoreTest {
                     val raw = ByteArray(4096)
                     val n = sock.getInputStream().read(raw)
                     val reqStr = if (n > 0) String(raw, 0, n, StandardCharsets.UTF_8) else ""
-                    val bodyJson = if (reqStr.startsWith("GET /api/robos-assistant-hub")) {
-                        """{"ok":true,"service":"robos-voice-server","hostname":"robos-workstation","port":$mockPort,"ttsEngine":"kokoro"}"""
-                    } else {
-                        """{"ok":true,"response":"Branch main is clean with 0 uncommitted files.","skill":"git-status","actionDone":"Checked git status","audioWavBase64":"$replyWavB64"}"""
+                    val bodyJson = when {
+                        reqStr.startsWith("GET /api/robos-assistant-hub") ->
+                            """{"ok":true,"service":"robos-voice-server","hostname":"robos-workstation","port":$mockPort,"ttsEngine":"kokoro"}"""
+                        reqStr.startsWith("POST /api/assistant/process-audio") ->
+                            """{"ok":true,"isSpeech":true,"transcript":"Commander, what is the git status","sttSource":"robos-server-whisper","wakeWordDetected":true,"greetingOnly":false,"actionExecuted":true,"trigger":"Commander","query":"what is the git status","response":"Branch main is clean with 0 uncommitted files.","skill":"git-status","actionDone":"Checked git status","audioWavBase64":"$replyWavB64"}"""
+                        else ->
+                            """{"ok":true,"response":"Branch main is clean with 0 uncommitted files.","skill":"git-status","actionDone":"Checked git status","audioWavBase64":"$replyWavB64"}"""
                     }
                     val bytes = bodyJson.toByteArray(StandardCharsets.UTF_8)
                     val resp = "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: ${bytes.size}\r\nConnection: close\r\n\r\n"
@@ -214,6 +212,9 @@ class RobosAssistantCoreTest {
                     client.executePhoneTurn("127.0.0.1", mockPort, cfg, trigger, query, full)
                 },
                 isServerConnected = { true },
+                serverAudioProcessor = { cfg, wavBytes, fb, armed, trig ->
+                    client.processUtteranceAudio("127.0.0.1", mockPort, cfg, wavBytes, fb, armed, trig)
+                },
                 onSpeakWav = { wavBytes, text ->
                     assertEquals(replyWav.size, wavBytes.size)
                     spokenReplies.add(text)
@@ -230,14 +231,16 @@ class RobosAssistantCoreTest {
             val pcm = HttpAssistantServer.synthesizeSpeechLikeTonePcm(durationMs = 800L)
             val now = System.currentTimeMillis()
 
-            // 1. Connected wake-word command -> executes on RobOS Server and speaks reply
+            // 1. Connected raw audio utterance -> offloaded to server Whisper (/api/assistant/process-audio) + executes "Commander" action!
             val executed = coordinator.handleCapturedUtterance(
                 config = cfg,
                 utterance = CapturedUtterance(pcm, 16000, 800L, -12f, now, now + 800L),
-                rawTranscript = "Hello RobOS what is the git status",
+                rawTranscript = "",
+                sttSource = "robos-server-whisper",
             )
             assertNotNull(executed)
-            assertEquals(ActionOutcomeStatus.ACTION_EXECUTED, executed!!.actionStatus)
+            assertEquals("robos-server-whisper", executed!!.sttSource)
+            assertEquals(ActionOutcomeStatus.ACTION_EXECUTED, executed.actionStatus)
             assertEquals("git-status", executed.actionSkill)
             assertEquals("Branch main is clean with 0 uncommitted files.", executed.assistantReply)
             assertEquals(1, spokenReplies.size)
@@ -250,11 +253,11 @@ class RobosAssistantCoreTest {
             )
             assertNull(echo)
 
-            // 3. Two-breath wake word ("Hello RobOS" -> "check workspace")
+            // 3. Two-breath wake word ("Commander" -> "what is the git status")
             val armed = coordinator.handleCapturedUtterance(
                 config = cfg,
                 utterance = CapturedUtterance(pcm, 16000, 600L, -14f, now + 3000L, now + 3600L),
-                rawTranscript = "Hello RobOS",
+                rawTranscript = "Commander",
             )
             assertNotNull(armed)
             assertTrue(coordinator.isAwaitingFollowup(now + 4000L))
@@ -324,7 +327,7 @@ class RobosAssistantCoreTest {
                     val entry = coordinator.handleCapturedUtterance(
                         config = cfg,
                         utterance = CapturedUtterance(pcm, 16000, 600L, -16f, 1000L, 1600L),
-                        rawTranscript = "Hello RobOS $query",
+                        rawTranscript = "Commander, $query",
                     )!!
                     return Result.success(entry)
                 }
@@ -349,7 +352,7 @@ class RobosAssistantCoreTest {
             assertTrue(askOfflineBody.contains("not connected"))
 
             // 2. Simulate offline utterance -> recorded as WAV + text, retrievable via /recordings/<id>.wav
-            val (simCode, simBody) = simpleHttp(port, "POST", "/api/simulate-utterance", """{"text":"Hello RobOS open calendar","durationMs":700}""")
+            val (simCode, simBody) = simpleHttp(port, "POST", "/api/simulate-utterance", """{"text":"Commander, open calendar","durationMs":700}""")
             assertEquals(200, simCode)
             assertTrue(simBody.contains("SERVER_OFFLINE_RECORDED_ONLY"))
 

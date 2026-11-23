@@ -135,7 +135,7 @@ data class CapturedUtterance(
  * Surveillance-grade Voice Activity Detector (VAD) & Utterance Segmenter.
  *
  * Maintains a circular pre-roll PCM buffer so the beginning of every spoken phrase
- * (e.g. "Hello RobOS...") is preserved intact without clipping initial consonants.
+ * (e.g. "Commander...") is preserved intact without clipping initial consonants.
  */
 class AdaptiveVadSegmenter(
     private val sampleRate: Int = 16000,
@@ -381,17 +381,16 @@ data class WakeWordMatch(
 }
 
 /**
- * Wake-word parser matching `packages/voice-prompt/lib/wake-word.js` ("RobOS" / "Row Bose" / "Nabu"),
- * including offline phonetic variants produced by small acoustic models ("row bows", "hello robots").
+ * Wake-word parser matching `packages/voice-prompt/lib/wake-word.js` ("Commander").
  */
 object WakeWordParser {
     private val PATTERNS = listOf(
         Regex(
-            "(?:^|\\b)(?:hello|hey|hi|ok|okay|yo)[,\\s.-]*(?:nabu|na\\s+bu|naboo|robos|robo|rob\\s+os|rob-os|row\\s+bose|row-bose|rowbose|roh\\s+bose|row\\s+bows|row\\s+boats?|robe\\s+os|robust|robots?)\\b",
+            "(?:^|\\b)(?:hello|hey|hi|ok|okay|yo)[,\\s.-]*commander\\b",
             RegexOption.IGNORE_CASE,
         ),
         Regex(
-            "(?:^|\\b)(?:nabu|na\\s+bu|naboo|robos|rob\\s+os|rob-os|row\\s+bose|row-bose|rowbose|roh\\s+bose|row\\s+bows)\\b",
+            "(?:^|\\b)commander\\b",
             RegexOption.IGNORE_CASE,
         ),
     )
@@ -662,19 +661,31 @@ fun interface RobosServerGateway {
     ): ServerTurnResponse
 }
 
+fun interface ServerAudioGateway {
+    suspend fun processAudio(
+        config: AssistantConfig,
+        wavBytes: ByteArray,
+        fallbackTranscript: String,
+        followupArmed: Boolean,
+        armedTrigger: String,
+    ): ServerAudioProcessResult
+}
+
 /**
  * Core Surveillance + RobOS Server Gate Coordinator.
  *
  * Enforces the primary architectural invariant:
- * - Every captured speech utterance is recorded locally as BOTH a `.wav` audio file AND text.
- * - RobOS actions ONLY execute when a RobOS Server is actively connected (`isServerConnected() == true`
- *   and `config.robosServerEnabled == true`). When disconnected, the phone operates strictly as an
- *   offline audio + text surveillance recorder (`SERVER_OFFLINE_RECORDED_ONLY` / `AMBIENT_RECORDED`).
+ * - When a RobOS Server is connected (`isServerConnected() == true`), raw `.wav` audio is processed
+ *   by the server's Whisper model (`serverAudioProcessor`) and `"Commander"` commands execute live.
+ * - When no RobOS Server is connected, the phone falls back to offline on-device Vosk transcription
+ *   and strictly records `.wav` audio + text (`SERVER_OFFLINE_RECORDED_ONLY` / `AMBIENT_RECORDED`)
+ *   with zero actions executed.
  */
 class SurveillanceCoordinator(
     private val archiveStore: RecordingArchiveStore,
     private val serverGateway: RobosServerGateway,
     private val isServerConnected: () -> Boolean,
+    private val serverAudioProcessor: ServerAudioGateway? = null,
     private val onSpeakWav: suspend (ByteArray, String) -> Unit = { _, _ -> },
     private val onEvent: (String, AudioRecordingEntry?) -> Unit = { _, _ -> },
 ) {
@@ -700,18 +711,151 @@ class SurveillanceCoordinator(
         utterance: CapturedUtterance,
         rawTranscript: String,
         sttSource: String = "vosk-offline",
+        fallbackOfflineTranscript: () -> String = { "" },
     ): AudioRecordingEntry? {
-        val transcript = cleanTranscript(rawTranscript)
         val serverOnline = config.robosServerEnabled && isServerConnected()
         val nowMs = utterance.endedEpochMs
+        val id = buildRecordingId(utterance.startedEpochMs)
+        val wavBytes = WavCodec.encodePcm16Mono(utterance.pcm16le, utterance.sampleRate)
 
-        // When offline Vosk STT is active and heard zero spoken words (e.g. desk tap / keyboard click),
-        // ignore non-speech noise unless the user explicitly enabled `saveNonSpeechNoise`.
+        // Primary path when connected to RobOS Server: offload `.wav` to server Whisper + "Commander" router!
+        if (serverOnline && serverAudioProcessor != null && rawTranscript.isBlank() && sttSource != "manual-ask") {
+            val wasFollowup = nowMs < armedFollowupUntilEpochMs
+            val prevTrigger = armedTrigger.ifBlank { "Commander" }
+            onEvent("processing_action", null)
+
+            val srvRes = try {
+                serverAudioProcessor.processAudio(
+                    config = config,
+                    wavBytes = wavBytes,
+                    fallbackTranscript = "",
+                    followupArmed = wasFollowup,
+                    armedTrigger = prevTrigger,
+                )
+            } catch (e: Exception) {
+                ServerAudioProcessResult(ok = false, error = e.message ?: "Server audio processing failed")
+            }
+
+            if (srvRes.ok) {
+                val whisperText = cleanTranscript(srvRes.transcript)
+                if ((!srvRes.isSpeech || whisperText.isBlank()) && !config.saveNonSpeechNoise) {
+                    onEvent("noise_ignored", null)
+                    return null
+                }
+
+                if (whisperText.isNotBlank() && lastSpokenReplyLower.isNotBlank()) {
+                    val prefix = lastSpokenReplyLower.take(18)
+                    if (prefix.length >= 6 && whisperText.lowercase().contains(prefix)) {
+                        onEvent("echo_ignored", null)
+                        return null
+                    }
+                }
+
+                if (wasFollowup) {
+                    disarmFollowup()
+                }
+
+                if (!config.recordAllSpeech && !srvRes.wakeWordDetected) {
+                    onEvent("ambient_skipped", null)
+                    return null
+                }
+
+                val displayText = whisperText.ifBlank { "(audio event captured)" }
+
+                if (srvRes.greetingOnly) {
+                    val replyText = srvRes.response.ifBlank { "Yes, Commander?" }
+                    val saved = archiveStore.saveRecording(
+                        wavBytes = wavBytes,
+                        entryWithoutSize = AudioRecordingEntry(
+                            id = id,
+                            createdAtIso = Instant.ofEpochMilli(utterance.startedEpochMs).toString(),
+                            epochMs = utterance.startedEpochMs,
+                            room = config.room,
+                            assistantName = config.assistantName,
+                            wavFileName = "$id.wav",
+                            durationMs = utterance.durationMs,
+                            sizeBytes = wavBytes.size.toLong(),
+                            peakDbFs = utterance.peakDbFs,
+                            transcript = displayText,
+                            sttSource = srvRes.sttSource,
+                            wakeWordDetected = true,
+                            wakeTrigger = srvRes.trigger.ifBlank { "Commander" },
+                            commandQuery = "",
+                            serverConnectedAtCapture = true,
+                            actionStatus = ActionOutcomeStatus.AMBIENT_RECORDED,
+                            actionSummary = "Commander wake word heard — listening for command",
+                            assistantReply = replyText,
+                        ),
+                        maxClips = config.retentionMaxClips,
+                        maxMb = config.retentionMaxMb,
+                    )
+                    armedTrigger = srvRes.trigger.ifBlank { "Commander" }
+                    armedFollowupUntilEpochMs = System.currentTimeMillis() + FOLLOWUP_WINDOW_MS
+                    if (config.speakServerReplies && srvRes.audioWavBytes != null && srvRes.audioWavBytes.size > 44) {
+                        lastSpokenReplyLower = replyText.trim().lowercase()
+                        onSpeakWav(srvRes.audioWavBytes, replyText)
+                        armedFollowupUntilEpochMs = System.currentTimeMillis() + FOLLOWUP_WINDOW_MS
+                    }
+                    onEvent("wake_armed", saved)
+                    return saved
+                }
+
+                val outcome = when {
+                    srvRes.actionExecuted -> ActionOutcomeStatus.ACTION_EXECUTED
+                    srvRes.wakeWordDetected -> ActionOutcomeStatus.ACTION_FAILED
+                    else -> ActionOutcomeStatus.AMBIENT_RECORDED
+                }
+                val summary = when {
+                    srvRes.actionExecuted -> srvRes.actionDone.ifBlank { srvRes.skill.ifBlank { "Executed on RobOS Server" } }
+                    srvRes.wakeWordDetected -> srvRes.error.ifBlank { "Action failed on RobOS Server" }
+                    else -> ""
+                }
+
+                val saved = archiveStore.saveRecording(
+                    wavBytes = wavBytes,
+                    entryWithoutSize = AudioRecordingEntry(
+                        id = id,
+                        createdAtIso = Instant.ofEpochMilli(utterance.startedEpochMs).toString(),
+                        epochMs = utterance.startedEpochMs,
+                        room = config.room,
+                        assistantName = config.assistantName,
+                        wavFileName = "$id.wav",
+                        durationMs = utterance.durationMs,
+                        sizeBytes = wavBytes.size.toLong(),
+                        peakDbFs = utterance.peakDbFs,
+                        transcript = displayText,
+                        sttSource = srvRes.sttSource,
+                        wakeWordDetected = srvRes.wakeWordDetected,
+                        wakeTrigger = srvRes.trigger,
+                        commandQuery = srvRes.query,
+                        serverConnectedAtCapture = true,
+                        actionStatus = outcome,
+                        actionSkill = srvRes.skill,
+                        actionSummary = summary,
+                        assistantReply = srvRes.response,
+                    ),
+                    maxClips = config.retentionMaxClips,
+                    maxMb = config.retentionMaxMb,
+                )
+
+                if (srvRes.actionExecuted && config.speakServerReplies && srvRes.audioWavBytes != null && srvRes.audioWavBytes.size > 44) {
+                    lastSpokenReplyLower = srvRes.response.trim().lowercase()
+                    onSpeakWav(srvRes.audioWavBytes, srvRes.response)
+                }
+
+                onEvent(if (srvRes.actionExecuted) "action_executed" else "recorded_ambient", saved)
+                return saved
+            }
+        }
+
+        // Fallback / Offline path (or deterministic text turn): use local offline Vosk transcript
+        val resolvedRaw = rawTranscript.ifBlank { fallbackOfflineTranscript() }
+        val transcript = cleanTranscript(resolvedRaw)
+
         if (transcript.isBlank() && sttSource == "vosk-offline" && !config.saveNonSpeechNoise) {
             return null
         }
 
-        // Drop acoustic echoes if the phone recently spoke its own reply
         if (transcript.isNotBlank() && lastSpokenReplyLower.isNotBlank()) {
             val prefix = lastSpokenReplyLower.take(18)
             if (prefix.length >= 6 && transcript.lowercase().contains(prefix)) {
@@ -729,7 +873,7 @@ class SurveillanceCoordinator(
         val wakeDetected = directWake.matched || followupActive
         val effectiveTrigger = when {
             directWake.matched -> directWake.trigger
-            followupActive -> armedTrigger.ifBlank { "Hello RobOS" }
+            followupActive -> armedTrigger.ifBlank { "Commander" }
             else -> ""
         }
         val effectiveQuery = when {
@@ -742,16 +886,13 @@ class SurveillanceCoordinator(
             disarmFollowup()
         }
 
-        // If user configured "record wake-word only" and no wake word was spoken, skip saving ambient chatter
         if (!config.recordAllSpeech && !wakeDetected) {
             return null
         }
 
-        val id = buildRecordingId(utterance.startedEpochMs)
-        val wavBytes = WavCodec.encodePcm16Mono(utterance.pcm16le, utterance.sampleRate)
         val displayTranscript = transcript.ifBlank { "(speech audio captured — no intelligible words)" }
 
-        // Two-breath wake word ("Hello RobOS" followed by command) — ONLY arms when RobOS Server is connected!
+        // Two-breath wake word ("Commander" followed by command) — ONLY arms when RobOS Server is connected!
         if (directWake.matched && directWake.isGreetingOnly) {
             if (serverOnline) {
                 armedFollowupUntilEpochMs = System.currentTimeMillis() + FOLLOWUP_WINDOW_MS
@@ -775,8 +916,8 @@ class SurveillanceCoordinator(
                         commandQuery = "",
                         serverConnectedAtCapture = true,
                         actionStatus = ActionOutcomeStatus.AMBIENT_RECORDED,
-                        actionSummary = "Wake word heard — listening for command",
-                        assistantReply = "Hi! Listening…",
+                        actionSummary = "Commander wake word heard — listening for command",
+                        assistantReply = "Yes, Commander?",
                     ),
                     maxClips = config.retentionMaxClips,
                     maxMb = config.retentionMaxMb,
@@ -784,7 +925,6 @@ class SurveillanceCoordinator(
                 onEvent("wake_armed", saved)
                 return saved
             } else {
-                // Server is NOT connected -> record audio + text only, never arm or run actions!
                 val saved = archiveStore.saveRecording(
                     wavBytes = wavBytes,
                     entryWithoutSize = AudioRecordingEntry(
@@ -814,7 +954,6 @@ class SurveillanceCoordinator(
             }
         }
 
-        // Initial surveillance record persisted immediately before any network call so audio + text are NEVER lost!
         val initialStatus = when {
             wakeDetected && !serverOnline -> ActionOutcomeStatus.SERVER_OFFLINE_RECORDED_ONLY
             else -> ActionOutcomeStatus.AMBIENT_RECORDED
@@ -855,7 +994,6 @@ class SurveillanceCoordinator(
             return entry
         }
 
-        // RobOS Server IS connected and an actionable wake-word query was spoken -> dispatch to RobOS Server!
         onEvent("processing_action", entry)
         val turnRes = try {
             serverGateway.executeTurn(
@@ -896,7 +1034,7 @@ class SurveillanceCoordinator(
     }
 
     companion object {
-        private const val FOLLOWUP_WINDOW_MS = 6_000L
+        private const val FOLLOWUP_WINDOW_MS = 8_000L
         private val FILE_TS_FMT = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss").withZone(ZoneOffset.UTC)
 
         fun buildRecordingId(epochMs: Long): String {
@@ -908,9 +1046,6 @@ class SurveillanceCoordinator(
         fun cleanTranscript(raw: String): String {
             return raw
                 .replace(Regex("\\[(?:BLANK_AUDIO|silence|noise|unk)\\]", RegexOption.IGNORE_CASE), " ")
-                // Vosk phonetic sandhi when "Row Bose what" splits sibilant across word boundary ("robo sweat")
-                .replace(Regex("\\b(hello|hey|hi|ok|okay)\\s+robo\\s+sweat\\b", RegexOption.IGNORE_CASE), "$1 RobOS what")
-                .replace(Regex("\\b(hello|hey|hi|ok|okay)\\s+robo\\b", RegexOption.IGNORE_CASE), "$1 RobOS")
                 .replace(Regex("\\s+"), " ")
                 .trim()
         }

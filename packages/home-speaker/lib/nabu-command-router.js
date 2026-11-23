@@ -66,12 +66,12 @@ function normalizeNumberTokens(str) {
 }
 
 /**
- * Strip wake words ("Hello Nabu", "Okay Nabu", "Hey Nabu", "Hello RobOS", etc.)
+ * Strip wake words ("Hello Nabu", "Okay Nabu", "Hey Nabu", "Commander", etc.)
  * and polite prefixes from the start of a voice transcript.
  */
 function stripWakePhrase(rawText) {
   let s = String(rawText || '').trim();
-  const wakeRegex = /^(?:(?:hello|hey|hi|okay|ok|yo)\s+)?(?:nabu|na\s+bu|naboo|robos|rob\s+os|row\s+bose|computer|assistant)\b[,.:;!\-\s]*/i;
+  const wakeRegex = /^(?:(?:hello|hey|hi|okay|ok|yo)\s+)?(?:nabu|na\s+bu|naboo|commander|computer|assistant)\b[,.:;!\-\s]*/i;
   for (let i = 0; i < 2; i++) {
     s = s.replace(wakeRegex, '').trim();
   }

@@ -68,10 +68,10 @@ class DesktopAssistant extends EventEmitter {
     this.emit('show-hud', { greeting, trigger: evt.trigger });
 
     if (!isPureGreeting) {
-      // User said wake-word AND query in one breath: "hello robos, what is the git status?"
+      // User said wake-word AND query in one breath: "Commander, what is the git status?"
       await this.processQuery(query);
     } else {
-      // User just said "hello robos" and nothing else
+      // User just said "Commander" and nothing else
       // First speak the greeting in SPEAKING state to prevent mic echo loop
       this.setState('SPEAKING', { greeting, trigger: evt.trigger });
       this.emit('wake-greeting', { greeting, trigger: evt.trigger });

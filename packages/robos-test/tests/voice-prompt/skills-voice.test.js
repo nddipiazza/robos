@@ -196,8 +196,8 @@ describe('RobOS Voice Skills Integration Tests', () => {
       assert.ok(res.response.includes('RobOS Task Explorer'));
     });
 
-    it('executes casual greeting "hello robos" and responds with casual greeting', async () => {
-      const res = await executor.executeCommand('hello robos');
+    it('executes casual greeting "commander" and responds with casual greeting', async () => {
+      const res = await executor.executeCommand('commander');
       assert.strictEqual(res.ok, true);
       assert.strictEqual(res.skill, 'greeting');
       assert.ok(!res.response.includes("10/4"), `Response "${res.response}" should not include 10/4`);
@@ -205,8 +205,8 @@ describe('RobOS Voice Skills Integration Tests', () => {
       assert.strictEqual(res.actionDone, 'Responded to greeting');
     });
 
-    it('executes "row bose" or "hi" and responds with casual greeting or custom override', async () => {
-      const res1 = await executor.executeCommand('row bose');
+    it('executes "hey commander" or "hi" and responds with casual greeting or custom override', async () => {
+      const res1 = await executor.executeCommand('hey commander');
       assert.strictEqual(res1.ok, true);
       assert.strictEqual(res1.skill, 'greeting');
       assert.ok(!res1.response.includes("10/4"));
@@ -220,7 +220,7 @@ describe('RobOS Voice Skills Integration Tests', () => {
   });
 
   describe('5. Voice Activation End-to-End with Wake-Word & Assistant', () => {
-    it('activates on wake-word "hello robos, add a task: Build end-to-end regression tests" and speaks response out loud', async () => {
+    it('activates on wake-word "Commander, add a task: Build end-to-end regression tests" and speaks response out loud', async () => {
       const assistant = new DesktopAssistant({
         ttsEngine: mockTTS,
         skillsExecutor: executor,

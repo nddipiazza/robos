@@ -56,8 +56,8 @@ describe('RobOS Voice Background Stream, Wake-Word & Desktop Assistant Tests', (
     });
   });
 
-  describe('2. Wake-Word Detection ("hello robos", "rob OS", "row bose")', () => {
-    it('detects "hello robos" and extracts trailing query', () => {
+  describe('2. Wake-Word Detection ("Commander", "Hey Commander", "Hello Commander")', () => {
+    it('detects "Commander" and extracts trailing query', () => {
       const detector = new WakeWordDetector();
       let wakeTriggered = false;
       let capturedQuery = null;
@@ -67,49 +67,49 @@ describe('RobOS Voice Background Stream, Wake-Word & Desktop Assistant Tests', (
         capturedQuery = evt.query;
       });
 
-      const res = detector.processText('Hello RobOS, what is the git status?');
+      const res = detector.processText('Commander, what is the git status?');
       assert.strictEqual(res.matched, true);
       assert.strictEqual(wakeTriggered, true);
       assert.strictEqual(capturedQuery, 'what is the git status?');
     });
 
-    it('detects "rob OS" variant', () => {
+    it('detects "Hey Commander" variant', () => {
       const detector = new WakeWordDetector();
-      const res = detector.processText('Hey rob OS how are you?');
+      const res = detector.processText('Hey Commander how are you?');
       assert.strictEqual(res.matched, true);
       assert.strictEqual(res.query, 'how are you?');
     });
 
-    it('detects "row bose" variant (pronounced like Bose speaker system)', () => {
+    it('detects "Hello Commander" and "OK Commander" variants', () => {
       const detector = new WakeWordDetector();
-      const res1 = detector.processText('hello row bose what is the active window');
+      const res1 = detector.processText('hello commander what is the active window');
       assert.strictEqual(res1.matched, true);
       assert.strictEqual(res1.query, 'what is the active window');
 
-      const res2 = detector.processText('row bose run tests');
+      const res2 = detector.processText('commander run tests');
       assert.strictEqual(res2.matched, true);
       assert.strictEqual(res2.query, 'run tests');
 
-      const res3 = detector.processText('hi row-bose status report');
+      const res3 = detector.processText('ok commander status report');
       assert.strictEqual(res3.matched, true);
       assert.strictEqual(res3.query, 'status report');
     });
 
     it('detects wake-word with standard speech punctuation (commas, periods, capitalizations)', () => {
       const detector = new WakeWordDetector();
-      const res1 = detector.processText('Hello, Robos.');
+      const res1 = detector.processText('Commander.');
       assert.strictEqual(res1.matched, true);
       assert.strictEqual(res1.query, '');
 
-      const res2 = detector.processText('Hello, RobOS, what is the git status?');
+      const res2 = detector.processText('Hello, Commander, what is the git status?');
       assert.strictEqual(res2.matched, true);
       assert.strictEqual(res2.query, 'what is the git status?');
 
-      const res3 = detector.processText('Hey, row bose, list active tasks.');
+      const res3 = detector.processText('Hey, Commander, list active tasks.');
       assert.strictEqual(res3.matched, true);
       assert.strictEqual(res3.query, 'list active tasks.');
 
-      const res4 = detector.processText('Hello, robust.');
+      const res4 = detector.processText('Okay, Commander.');
       assert.strictEqual(res4.matched, true);
       assert.strictEqual(res4.query, '');
     });
@@ -155,7 +155,7 @@ describe('RobOS Voice Background Stream, Wake-Word & Desktop Assistant Tests', (
       assert.ok(states.includes('IDLE'));
     });
 
-    it('responds casually with one of 50+ greetings and emits show-hud when user says "hello robos"', async () => {
+    it('responds casually with one of 50+ greetings and emits show-hud when user says "commander"', async () => {
       const tts = new TTSEngine();
       let spokenText = null;
       tts.speak = async (text) => {
@@ -177,8 +177,8 @@ describe('RobOS Voice Background Stream, Wake-Word & Desktop Assistant Tests', (
       const { DEFAULT_GREETINGS } = require('../../../voice-prompt/lib/greetings');
       assert.ok(DEFAULT_GREETINGS.length >= 50, `Must have at least 50 greeting varieties, found ${DEFAULT_GREETINGS.length}`);
 
-      // User says "hello robos" on the stream and nothing else
-      const wakeRes = detector.processText('hello robos');
+      // User says "commander" on the stream and nothing else
+      const wakeRes = detector.processText('commander');
       assert.strictEqual(wakeRes.matched, true);
       assert.strictEqual(wakeRes.query, '');
 
@@ -209,14 +209,14 @@ describe('RobOS Voice Background Stream, Wake-Word & Desktop Assistant Tests', (
         wakeGreeting: 'Ready to build.'
       });
 
-      detector.processText('hello robos');
+      detector.processText('commander');
       await new Promise(r => setTimeout(r, 50));
 
       assert.strictEqual(spokenText, 'Ready to build.');
       assert.strictEqual(assistant.getState(), 'LISTENING');
     });
 
-    it('responds with casual greeting when direct query is a greeting ("hello robos", "hi", "row bose")', async () => {
+    it('responds with casual greeting when direct query is a greeting ("commander", "hi", "hey commander")', async () => {
       const tts = new TTSEngine();
       let spokenText = null;
       tts.speak = async (text) => {
@@ -226,7 +226,7 @@ describe('RobOS Voice Background Stream, Wake-Word & Desktop Assistant Tests', (
 
       const assistant = new DesktopAssistant({ ttsEngine: tts, autoSpeak: true });
 
-      const res1 = await assistant.processQuery('hello robos');
+      const res1 = await assistant.processQuery('commander');
       assert.ok(!res1.turn.response.includes("10/4"));
       assert.ok(res1.turn.response.length > 0);
 
@@ -234,7 +234,7 @@ describe('RobOS Voice Background Stream, Wake-Word & Desktop Assistant Tests', (
       assert.ok(!res2.turn.response.includes("10/4"));
       assert.ok(res2.turn.response.length > 0);
 
-      const res3 = await assistant.processQuery('row bose');
+      const res3 = await assistant.processQuery('hey commander');
       assert.ok(!res3.turn.response.includes("10/4"));
       assert.ok(res3.turn.response.length > 0);
     });
@@ -344,7 +344,7 @@ describe('RobOS Voice Background Stream, Wake-Word & Desktop Assistant Tests', (
       assert.strictEqual(executor.hasActionableIntent('restart taskbar'), true);
 
       // Rejects non-actionable speech
-      assert.strictEqual(executor.hasActionableIntent('hello robos'), false);
+      assert.strictEqual(executor.hasActionableIntent('commander'), false);
       assert.strictEqual(executor.hasActionableIntent('hi'), false);
       assert.strictEqual(executor.hasActionableIntent('um yeah okay'), false);
       assert.strictEqual(executor.hasActionableIntent(''), false);
@@ -413,7 +413,7 @@ describe('RobOS Voice Background Stream, Wake-Word & Desktop Assistant Tests', (
       assistant.on('action-done', (evt) => { actionExecuted = evt.actionDone; });
 
       // Simulate wake detector matching wake-word with trailing query
-      const wakeMatch = detector.processText('Hello RobOS, what is the git status?');
+      const wakeMatch = detector.processText('Commander, what is the git status?');
       assert.strictEqual(wakeMatch.matched, true);
       assert.strictEqual(wakeMatch.query, 'what is the git status?');
 
