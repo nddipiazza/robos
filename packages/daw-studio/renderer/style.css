@@ -3151,3 +3151,221 @@ kbd {
   gap: 12px;
   flex-wrap: wrap;
 }
+
+/* ─── Create Click Track (Human Tap + Gemini AI) Modal ────────────────────── */
+.hclick-modal {
+  max-width: 880px;
+  width: 94vw;
+}
+.hclick-target-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 10px 13px;
+  margin-bottom: 12px;
+  border-radius: 7px;
+  background: rgba(11, 17, 27, 0.92);
+  border: 1px solid rgba(0, 212, 255, 0.30);
+  flex-wrap: wrap;
+}
+.hclick-target-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 260px;
+  flex: 1 1 280px;
+}
+.hclick-target-left .select {
+  flex: 1;
+}
+.hclick-target-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1.4 1 320px;
+}
+.hclick-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+@media (max-width: 760px) {
+  .hclick-grid-2 {
+    grid-template-columns: 1fr;
+  }
+}
+.hclick-card {
+  padding: 12px 14px;
+  background: rgba(14, 20, 31, 0.90);
+  border: 1px solid #243146;
+  border-radius: 8px;
+}
+.hclick-inline-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  align-items: end;
+}
+.hclick-count-spin-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.hclick-meter-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+.hclick-mini-meter {
+  flex: 1;
+  height: 9px;
+  border-radius: 5px;
+  background: #0a0f18;
+  border: 1px solid #233044;
+  overflow: hidden;
+}
+.hclick-mini-meter-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #10b981 0%, #00d4ff 72%, #f59e0b 92%, #ef4444 100%);
+  transition: width 60ms linear;
+}
+.hclick-live-stage {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 18px;
+  border-radius: 9px;
+  background: linear-gradient(135deg, rgba(13, 22, 36, 0.96), rgba(18, 28, 46, 0.94));
+  border: 1px solid rgba(0, 212, 255, 0.38);
+  margin-bottom: 12px;
+}
+.hclick-live-stage.is-recording {
+  border-color: rgba(16, 185, 129, 0.55);
+  box-shadow: 0 0 22px rgba(0, 212, 255, 0.10);
+}
+.hclick-countdown-badge {
+  width: 78px;
+  height: 78px;
+  min-width: 78px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30px;
+  font-weight: 800;
+  color: #00d4ff;
+  background: rgba(8, 13, 22, 0.95);
+  border: 2px solid rgba(0, 212, 255, 0.55);
+  text-shadow: 0 0 12px rgba(0, 212, 255, 0.45);
+}
+.hclick-countdown-badge.is-go {
+  color: #10b981;
+  border-color: rgba(16, 185, 129, 0.75);
+  font-size: 18px;
+  letter-spacing: 0.04em;
+}
+.hclick-live-main {
+  flex: 1;
+  min-width: 0;
+}
+.hclick-live-headline {
+  font-size: 14px;
+  font-weight: 750;
+  color: #f1f5f9;
+  letter-spacing: 0.02em;
+  margin-bottom: 3px;
+}
+.hclick-progress-wrap {
+  margin-top: 10px;
+}
+.hclick-progress-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #94a3b8;
+  margin-bottom: 4px;
+}
+.hclick-progress-track {
+  position: relative;
+  height: 10px;
+  border-radius: 5px;
+  background: #090e17;
+  border: 1px solid #253349;
+  overflow: hidden;
+}
+.hclick-progress-song-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 0%;
+  background: rgba(56, 189, 248, 0.25);
+}
+.hclick-progress-tap-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 0%;
+  background: linear-gradient(90deg, #00d4ff, #10b981);
+  transition: width 120ms ease-out;
+}
+.hclick-stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.hclick-stat-box {
+  padding: 9px 11px;
+  border-radius: 7px;
+  background: rgba(12, 18, 28, 0.90);
+  border: 1px solid #222f43;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.hclick-stat-box strong {
+  font-size: 16px;
+  color: #f8fafc;
+}
+.hclick-flash-box.pulse {
+  border-color: #10b981;
+  background: rgba(16, 185, 129, 0.18);
+}
+.hclick-tap-pad-btn {
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 8px;
+  border: 1px dashed rgba(0, 212, 255, 0.45);
+  background: rgba(12, 20, 33, 0.88);
+  color: #e2e8f0;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  transition: transform 50ms ease, background 90ms ease, border-color 90ms ease;
+}
+.hclick-tap-pad-btn:hover {
+  background: rgba(16, 28, 46, 0.95);
+  border-color: #00d4ff;
+}
+.hclick-tap-pad-btn:active,
+.hclick-tap-pad-btn.tap-active {
+  transform: scale(0.992);
+  background: rgba(0, 212, 255, 0.18);
+  border-color: #10b981;
+}
+.hclick-tap-pad-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #7dd3fc;
+}
+.hclick-tap-pad-sub {
+  font-size: 11px;
+  color: #94a3b8;
+}

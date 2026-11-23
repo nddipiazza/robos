@@ -2391,4 +2391,241 @@ describe('DAW Editing Engine: Multi-Select, Track/Take Gain, Split/Trim, Copy/Pa
       fs.rmSync(tmpRoot, { recursive: true, force: true });
     }
   });
+
+  it('synthesizes all 16 metronome instruments and defaults to Closed Hi-Hat + Open Hi-Hat on the transition beat with real choke physics', () => {
+    const {
+      DEFAULT_BEAT_INSTRUMENT,
+      DEFAULT_TRANSITION_INSTRUMENT,
+      DEFAULT_TRANSITION_PLACEMENT,
+      METRONOME_INSTRUMENTS,
+      synthesizeMetronomeInstrumentHit,
+      synthesizeInstrumentClickWav,
+      synthesizeMetronomePreviewWav,
+    } = require('../lib/human-click-track');
+    const { decodeWavMono } = require('../lib/drum-instruments');
+
+    assert.strictEqual(DEFAULT_BEAT_INSTRUMENT, 'hihat-closed');
+    assert.strictEqual(DEFAULT_TRANSITION_INSTRUMENT, 'hihat-open');
+    assert.strictEqual(DEFAULT_TRANSITION_PLACEMENT, 'turnaround');
+    assert.ok(METRONOME_INSTRUMENTS.length >= 16);
+
+    // Every selectable instrument renders crisp, bounded, non-silent audio from Sample #0
+    for (const inst of METRONOME_INSTRUMENTS) {
+      const hit = synthesizeMetronomeInstrumentHit(inst.id, { sampleRate: 48000, velocity: 0.85, isAccent: true });
+      assert.strictEqual(hit.instrumentId, inst.id);
+      assert.ok(hit.samples.length > 500, `Expected non-trivial sample length for ${inst.id}`);
+      let maxAbs = 0;
+      for (let i = 0; i < hit.samples.length; i++) {
+        const a = Math.abs(hit.samples[i]);
+        if (a > maxAbs) maxAbs = a;
+      }
+      assert.ok(maxAbs >= 0.15 && maxAbs <= 0.99, `Instrument ${inst.id} peak out of range: ${maxAbs}`);
+    }
+
+    // Default 4/4 click track: Closed Hi-Hat on beats 1..3, Open Hi-Hat on transition beat (beat 4) choking on next beat 1
+    const click = synthesizeInstrumentClickWav({
+      bpm: 120,
+      beatsPerBar: 4,
+      noteValue: 4,
+      countInBars: 1,
+      firstDownbeatSec: 2.0,
+      songEndSec: 6.0,
+      sampleRate: 48000,
+    });
+    assert.strictEqual(click.beatInstrument, 'hihat-closed');
+    assert.strictEqual(click.transitionInstrument, 'hihat-open');
+    assert.ok(click.transients.length >= 12);
+
+    // Count-in: beats 0, 1, 2 = hihat-closed, beat 3 (count-in transition into Song Bar 1 Beat 1) = hihat-open
+    assert.strictEqual(click.transients[0].instrumentId, 'hihat-closed');
+    assert.strictEqual(click.transients[1].instrumentId, 'hihat-closed');
+    assert.strictEqual(click.transients[2].instrumentId, 'hihat-closed');
+    assert.strictEqual(click.transients[3].instrumentId, 'hihat-open');
+    assert.strictEqual(click.transients[3].isTransitionBeat, true);
+    // Song Bar 1 Beat 1 (index 4) = accented hihat-closed, Beat 4 (index 7) = hihat-open
+    assert.strictEqual(click.transients[4].instrumentId, 'hihat-closed');
+    assert.strictEqual(click.transients[4].isDownbeat, true);
+    assert.strictEqual(click.transients[7].instrumentId, 'hihat-open');
+    assert.strictEqual(click.transients[7].isTransitionBeat, true);
+
+    // Verify hi-hat choke damps open hi-hat tail right before Beat 1 (t = 2.0s) strikes
+    const decoded = decodeWavMono(click.wavBuffer);
+    const justBeforeChokeIdx = Math.floor(1.998 * 48000);
+    assert.ok(Math.abs(decoded.samples[justBeforeChokeIdx]) < 0.05, 'Open hi-hat tail should choke cleanly right before Closed Hi-Hat strikes on Beat 1');
+
+    // Preview WAV renders 2 bars cleanly
+    const prev = synthesizeMetronomePreviewWav({ bpm: 120, beatsPerBar: 4 });
+    assert.strictEqual(prev.transients.length, 8);
+  });
+
+  it('fuses human tap recording + real song audio + Gemini to generate a best-in-class click track via Right-Click -> Create Click Track', async () => {
+    const {
+      extractHumanTapsFromWav,
+      fuseHumanTapsWithMusic,
+      synthesizeMetronomeInstrumentHit,
+      generateHumanGuidedClickTrackForProject,
+    } = require('../lib/human-click-track');
+    const { makeWavHeader } = require('../lib/pcm-capture');
+    const { createEmptyProject, buildTrackFromWizard } = require('../lib/session-manager');
+
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'daw-human-click-'));
+    try {
+      const sr = 48000;
+      const durSec = 14.0;
+      const totalSamples = Math.floor(durSec * sr);
+      const trueBpm = 138;
+      const beatSec = 60 / trueBpm;
+      const firstDownbeat = 1.20;
+
+      // 1. Build a real musical song WAV at 138 BPM (4/4) starting at 1.20s
+      const songSamples = new Float32Array(totalSamples);
+      for (let b = 0; ; b++) {
+        const tBeat = firstDownbeat + b * beatSec;
+        if (tBeat >= durSec - 0.25) break;
+        const barPos = b % 4;
+        const startIdx = Math.floor(tBeat * sr);
+        const len = Math.floor(0.14 * sr);
+        for (let i = 0; i < len && (startIdx + i) < totalSamples; i++) {
+          const t = i / sr;
+          if (barPos === 0 || barPos === 2) {
+            // Kick + bass root chord change on Bar 1
+            const f0 = barPos === 0 ? 64 : 72;
+            songSamples[startIdx + i] += 0.78 * Math.sin(2 * Math.PI * f0 * t) * Math.exp(-26 * t);
+          } else {
+            // Snare backbeat on 2 & 4
+            const n = Math.sin((i + 1) * 91.7) * 0.5;
+            songSamples[startIdx + i] += (0.45 * Math.sin(2 * Math.PI * 215 * t) + 0.45 * n) * Math.exp(-32 * t);
+          }
+        }
+      }
+      const writeWavFile = (filePath, floatArr) => {
+        const bytes = floatArr.length * 2;
+        const hdr = makeWavHeader(bytes, sr);
+        const pcm = Buffer.allocUnsafe(bytes);
+        for (let i = 0; i < floatArr.length; i++) {
+          pcm.writeInt16LE(Math.round(Math.max(-0.98, Math.min(0.98, floatArr[i])) * 32767), i * 2);
+        }
+        const full = Buffer.concat([hdr, pcm]);
+        fs.writeFileSync(filePath, full);
+        return full;
+      };
+      const songWavPath = path.join(tmpDir, 'song-138bpm.wav');
+      writeWavFile(songWavPath, songSamples);
+
+      // 2. Simulate a human tapping sticks into a mic channel with +-18ms human jitter, -12ms early bias,
+      //    harder Beat-1 accents, and 1 skipped beat!
+      const tapSamples = new Float32Array(totalSamples);
+      const stickVoice = synthesizeMetronomeInstrumentHit('drumsticks', { sampleRate: sr, velocity: 0.9 }).samples;
+      const jitterPatternMs = [-16, 8, -22, 14, -10, 19, -8, -15];
+      let expectedTapCount = 0;
+      for (let b = 0; ; b++) {
+        const idealSec = firstDownbeat + b * beatSec;
+        if (idealSec >= durSec - 0.4) break;
+        if (b === 9) continue; // Human missed 1 beat mid-song!
+        const jitterSec = (-12 + jitterPatternMs[b % jitterPatternMs.length]) / 1000;
+        const tapSec = idealSec + jitterSec;
+        const startIdx = Math.max(0, Math.floor(tapSec * sr));
+        const amp = (b % 4 === 0) ? 0.92 : 0.52;
+        for (let i = 0; i < stickVoice.length && (startIdx + i) < totalSamples; i++) {
+          tapSamples[startIdx + i] += stickVoice[i] * amp;
+        }
+        expectedTapCount++;
+      }
+      const tapWavPath = path.join(tmpDir, 'human-stick-taps.wav');
+      const tapWavBuf = writeWavFile(tapWavPath, tapSamples);
+
+      const extracted = extractHumanTapsFromWav(tapWavBuf, { clipStartSec: 0 });
+      assert.strictEqual(extracted.length, expectedTapCount, 'Should detect every human stick tap cleanly despite skipped beat');
+      assert.ok(extracted[0].accentRatio > 1.15, 'Accented Beat-1 stick tap should register elevated accentRatio');
+
+      // Verify more taps => higher coverage % in fuseHumanTapsWithMusic
+      const mono16k = new Float32Array(Math.floor(durSec * 16000));
+      for (let i = 0; i < mono16k.length; i++) {
+        mono16k[i] = songSamples[Math.min(songSamples.length - 1, i * 3)];
+      }
+      const shortFusion = fuseHumanTapsWithMusic(extracted.slice(0, 6), mono16k, { earliestStartSec: 0, latestEndSec: durSec });
+      const fullFusion = fuseHumanTapsWithMusic(extracted, mono16k, { earliestStartSec: 0, latestEndSec: durSec });
+      assert.ok(fullFusion.tapCoveragePct > shortFusion.tapCoveragePct + 40, 'Tapping longer across the song increases tapCoveragePct');
+      assert.ok(Math.abs(fullFusion.bpm - 138) <= 0.6, `Expected fused BPM ~138, got ${fullFusion.bpm}`);
+      assert.strictEqual(fullFusion.timeSignature, '4/4');
+
+      // 3. Full Project + Mock Gemini Agent end-to-end verification (with 2-bar configurable count-in)
+      const proj = createEmptyProject({ name: 'Human Guided Click Session', bpm: 120, sampleRate: sr });
+      const songTrack = buildTrackFromWizard({
+        profileId: 'acoustic-inst',
+        name: 'Fall Out Boy Backing Song',
+        inputNodeName: '',
+        armed: false,
+      });
+      songTrack.clips.push({
+        id: 'clip-song-1',
+        name: 'Fall Out Boy Backing',
+        wavFile: songWavPath,
+        startSec: 0,
+        offsetSec: 0,
+        durationSec: durSec,
+        muted: false,
+      });
+      proj.tracks.push(songTrack);
+
+      let capturedTelemetry = null;
+      const mockGeminiAgent = {
+        PROVIDER_MAP: { antigravity: { id: 'antigravity', name: 'Gemini (Mock)' } },
+        ask: async (_prompt, opts) => {
+          const jsonPath = path.join(opts.cwd, 'human-tap-fusion.json');
+          capturedTelemetry = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
+          assert.ok(fs.existsSync(path.join(opts.cwd, 'song-excerpt.wav')));
+          return {
+            ok: true,
+            provider: 'Gemini',
+            text: JSON.stringify({
+              bpm: 138.0,
+              beatsPerBar: 4,
+              noteValue: 4,
+              subdivision: 'quarter',
+              segments: null,
+              beatInstrument: 'hihat-closed',
+              transitionInstrument: 'hihat-open',
+              transitionPlacement: 'turnaround',
+              reasoning: 'Locked 138.0 BPM 4/4 grid from 27 human stick taps + kick/snare transients.',
+            }),
+          };
+        },
+      };
+
+      const genRes = await generateHumanGuidedClickTrackForProject(proj, songTrack.id, {
+        tapWavPath,
+        countInBars: 2,
+        aiAgentModule: mockGeminiAgent,
+        takesDir: tmpDir,
+      });
+
+      assert.strictEqual(genRes.ok, true);
+      assert.ok(capturedTelemetry, 'Gemini should receive human-tap-fusion.json telemetry');
+      assert.strictEqual(capturedTelemetry.humanTapSummary.tapCount, expectedTapCount);
+      assert.ok(capturedTelemetry.humanTapSummary.tapCoveragePct >= 75);
+      assert.strictEqual(genRes.bpm, 138);
+      assert.strictEqual(genRes.beatInstrument, 'hihat-closed');
+      assert.strictEqual(genRes.transitionInstrument, 'hihat-open');
+      assert.strictEqual(genRes.countInBars, 2);
+      assert.ok(genRes.timelineShiftSec > 0, '2-bar count-in before 1.20s downbeat shifts timeline forward cleanly');
+      assert.strictEqual(proj.tracks[1].id, genRes.clickTrack.id, 'Click track is placed directly below target song track');
+      assert.ok(fs.existsSync(genRes.clickClip.wavFile));
+
+      // 4. Verify UI & IPC right-click -> Create Click Track wiring
+      const pkgDir = path.join(__dirname, '..');
+      const htmlSrc = fs.readFileSync(path.join(pkgDir, 'renderer', 'index.html'), 'utf8');
+      const appSrc = fs.readFileSync(path.join(pkgDir, 'renderer', 'app.js'), 'utf8');
+      const preloadSrc = fs.readFileSync(path.join(pkgDir, 'preload.js'), 'utf8');
+      assert.ok(htmlSrc.includes('id="human-click-modal"'));
+      assert.ok(htmlSrc.includes('id="hclick-input-select"'));
+      assert.ok(htmlSrc.includes('id="hclick-countdown-beats-input"'));
+      assert.ok(htmlSrc.includes('id="hclick-beat-inst-select"'));
+      assert.ok(htmlSrc.includes('id="hclick-trans-inst-select"'));
+      assert.ok(appSrc.includes("'create-click', 'metronome', 'Create Click Track'"));
+      assert.ok(preloadSrc.includes("finishHumanClickTrack: (payload) => ipcRenderer.invoke('daw:human-click-finish'"));
+    } finally {
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+    }
+  });
 });

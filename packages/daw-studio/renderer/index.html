@@ -1329,6 +1329,203 @@
     </div>
   </div>
 
+  <!-- ==================== MODAL: CREATE CLICK TRACK (HUMAN TAP + GEMINI AI) ==================== -->
+  <div id="human-click-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="hclick-modal-title">
+    <div class="modal-window modal-lg hclick-modal">
+      <div class="modal-header">
+        <div class="modal-title-row">
+          <img src="assets/icons/metronome.webp" class="daw-ai-badge" width="28" height="28" alt="" />
+          <div>
+            <h2 id="hclick-modal-title">Create Click Track — Human Tap + Gemini AI</h2>
+            <p class="modal-subtitle" id="hclick-modal-subtitle">Tap along to the song on your chosen input channel — Gemini fuses your human feel with the real music for best-in-class clicks</p>
+          </div>
+        </div>
+        <div class="wizard-steps-pills">
+          <span class="wiz-pill active" id="hclick-pill-1">1. Channel &amp; Instruments</span>
+          <span class="wiz-pill" id="hclick-pill-2">2. Countdown &amp; Tap</span>
+          <span class="wiz-pill" id="hclick-pill-3">3. Gemini Click</span>
+        </div>
+        <button type="button" class="modal-close" id="btn-hclick-close" aria-label="Close Create Click Track Modal">×</button>
+      </div>
+
+      <div class="modal-body">
+        <!-- STAGE 1: SETUP CHANNEL, COUNTDOWN & METRONOME INSTRUMENTS -->
+        <div id="hclick-stage-setup">
+          <div class="hclick-target-banner">
+            <div class="hclick-target-left">
+              <label for="hclick-target-track-select" class="mini-heading" style="margin:0;">SONG TRACK TO TAP ALONG TO</label>
+              <select id="hclick-target-track-select" class="select"></select>
+            </div>
+            <div class="hclick-target-note">
+              <span class="badge-connected" id="hclick-song-span-badge">00:00</span>
+              <span class="hint"><strong>The more of the song you tap along and record, the better the clicks will be!</strong> Gemini combines your felt tempo, transitions, and accents with the song's real drum/chord transients.</span>
+            </div>
+          </div>
+
+          <div class="hclick-grid-2">
+            <!-- Card 1: Input Channel & Configurable Start Countdown -->
+            <div class="card hclick-card">
+              <div class="hpmix-sec-title">1. INPUT CHANNEL &amp; START COUNTDOWN</div>
+              <p class="hint" style="margin:2px 0 8px;">What channel will you be tapping to the song? Pick any mic/drum input (sticks, snare, hi-hat, clap) or tap Spacebar:</p>
+
+              <div class="form-row">
+                <label for="hclick-input-select">Tap Input Channel</label>
+                <select id="hclick-input-select" class="select"></select>
+              </div>
+
+              <div class="hclick-meter-row">
+                <button type="button" class="btn btn-sm btn-bevel" id="btn-hclick-detect-mic" title="Listen to all inputs and auto-select whichever mic or drum you strike">
+                  Strike Mic / Drum to Auto-Detect
+                </button>
+                <div class="hclick-mini-meter" title="Live Tap Channel Input Level">
+                  <div class="hclick-mini-meter-fill" id="hclick-setup-meter-fill"></div>
+                </div>
+                <span class="mono hint" id="hclick-setup-meter-db">-96 dB</span>
+              </div>
+
+              <div class="hclick-inline-2col" style="margin-top:10px;">
+                <div class="form-row" style="margin:0;">
+                  <label for="hclick-countdown-beats-input">Countdown to Start Song</label>
+                  <div class="hclick-count-spin-row">
+                    <input type="number" id="hclick-countdown-beats-input" class="text-input mono" min="0" max="16" step="1" value="4" style="width:68px;" />
+                    <span class="hint">counts @</span>
+                    <input type="number" id="hclick-countdown-bpm-input" class="text-input mono" min="45" max="220" step="1" value="120" style="width:72px;" title="Pace of the pre-song countdown ticks" />
+                    <span class="hint">BPM</span>
+                  </div>
+                </div>
+                <div class="form-row" style="margin:0;">
+                  <label for="hclick-countin-bars-select">Final Click Count-In</label>
+                  <select id="hclick-countin-bars-select" class="select">
+                    <option value="1" selected>1 Bar Before Song (Default)</option>
+                    <option value="2">2 Bars Before Song</option>
+                    <option value="4">4 Bars Before Song</option>
+                    <option value="0">0 Bars (Start on Beat 1)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-row" style="margin-top:8px;">
+                <label for="hclick-ai-provider-select">RobOS AI Producer (Prefers Gemini)</label>
+                <select id="hclick-ai-provider-select" class="select"></select>
+              </div>
+            </div>
+
+            <!-- Card 2: Metronome Instrument Picker -->
+            <div class="card hclick-card">
+              <div class="hpmix-sec-head">
+                <div class="hpmix-sec-title">2. METRONOME INSTRUMENTS</div>
+                <button type="button" class="btn btn-sm btn-bevel" id="btn-hclick-preview-sound" title="Audition 2 bars of the selected Beat + Transition instruments in headphones">
+                  <svg class="daw-svg-icon" width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg>
+                  <span id="hclick-preview-btn-lbl">Preview Sound</span>
+                </button>
+              </div>
+              <p class="hint" style="margin:2px 0 8px;">Defaults to <strong>Closed Hi-Hat</strong> on steady beats and <strong>Open Hi-Hat</strong> on the transition beat (chokes shut on the next closed hat):</p>
+
+              <div class="form-row">
+                <label for="hclick-preset-select">Metronome Style / Preset</label>
+                <select id="hclick-preset-select" class="select"></select>
+              </div>
+
+              <div class="hclick-inline-2col">
+                <div class="form-row" style="margin:0;">
+                  <label for="hclick-beat-inst-select">Regular Beat Instrument</label>
+                  <select id="hclick-beat-inst-select" class="select"></select>
+                </div>
+                <div class="form-row" style="margin:0;">
+                  <label for="hclick-trans-inst-select">Transition Beat Instrument</label>
+                  <select id="hclick-trans-inst-select" class="select"></select>
+                </div>
+              </div>
+
+              <div class="form-row" style="margin-top:8px;">
+                <label for="hclick-trans-placement-select">Transition Beat Placement</label>
+                <select id="hclick-trans-placement-select" class="select">
+                  <option value="turnaround" selected>Bar Turnaround Beat → Chokes on Beat 1 (Default)</option>
+                  <option value="downbeat">Beat 1 Downbeat of Every Bar &amp; Section Change</option>
+                  <option value="section">Phrase (4-Bar) &amp; Section Transitions Only</option>
+                </select>
+              </div>
+
+              <label class="checkbox-row" style="margin:10px 0 0;">
+                <input type="checkbox" id="chk-hclick-replace-existing" checked />
+                <span class="hint">Replace any previous generated Click Track in this session</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- STAGE 2: LIVE COUNTDOWN & TAP-ALONG RECORDING -->
+        <div id="hclick-stage-tapping" class="hidden">
+          <div class="hclick-live-stage" id="hclick-live-stage">
+            <div class="hclick-countdown-badge mono" id="hclick-countdown-badge">4</div>
+            <div class="hclick-live-main">
+              <div class="hclick-live-headline" id="hclick-live-headline">GET READY — COUNTING IN TO START SONG...</div>
+              <div class="hint" id="hclick-live-subhint">Grab your sticks or get ready on your mic — start tapping steady beats as soon as the song begins!</div>
+
+              <div class="hclick-progress-wrap">
+                <div class="hclick-progress-labels mono">
+                  <span id="hclick-song-elapsed">00:00.0 / 00:00.0</span>
+                  <span id="hclick-coverage-label">Song Tap Coverage: 0%</span>
+                </div>
+                <div class="hclick-progress-track">
+                  <div class="hclick-progress-song-fill" id="hclick-song-progress-fill"></div>
+                  <div class="hclick-progress-tap-fill" id="hclick-coverage-fill"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="hclick-stats-row">
+            <div class="hclick-stat-box">
+              <span class="mini-heading">TAPS RECORDED</span>
+              <strong class="mono" id="hclick-live-tap-count">0</strong>
+            </div>
+            <div class="hclick-stat-box">
+              <span class="mini-heading">LIVE FELT TEMPO</span>
+              <strong class="mono accent-text" id="hclick-live-bpm">— BPM</strong>
+            </div>
+            <div class="hclick-stat-box">
+              <span class="mini-heading">CHANNEL PEAK</span>
+              <strong class="mono" id="hclick-live-db">-96 dB</strong>
+            </div>
+            <div class="hclick-stat-box hclick-flash-box" id="hclick-tap-flash-pill">
+              <span class="mini-heading">BEAT DETECTOR</span>
+              <strong class="mono" id="hclick-tap-flash-text">LISTENING</strong>
+            </div>
+          </div>
+
+          <button type="button" class="hclick-tap-pad-btn" id="btn-hclick-tap-pad">
+            <span class="hclick-tap-pad-title">TAP ALONG HERE OR PRESS <kbd>SPACE</kbd> / <kbd>T</kbd></span>
+            <span class="hclick-tap-pad-sub">Tapping into a hardware mic/drum channel? Just play! You can also tap <kbd>SPACE</kbd> (or <kbd>SHIFT+SPACE</kbd> on transition beats) anytime.</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <div class="modal-footer-left">
+          <button type="button" class="btn btn-bevel" id="btn-hclick-cancel">Cancel</button>
+          <button type="button" class="btn btn-bevel hidden" id="btn-hclick-restart-tap">
+            <svg class="daw-svg-icon" width="12.5" height="12.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+            <span>Restart Countdown</span>
+          </button>
+        </div>
+        <div class="modal-footer-right">
+          <button type="button" class="btn btn-bevel" id="btn-hclick-autogen-notap" title="Generate click track using Gemini + song audio without recording human taps">
+            Auto-Generate (No Tap)
+          </button>
+          <button type="button" class="btn btn-primary" id="btn-hclick-start-tap">
+            <svg class="daw-svg-icon" width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg>
+            <span>Start Countdown &amp; Tap Along</span>
+          </button>
+          <button type="button" class="btn btn-primary hidden" id="btn-hclick-finish-tap">
+            <svg class="daw-svg-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="20 6 9 17 4 12"/></svg>
+            <span>Finish &amp; Build Click Track with Gemini</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div id="media-drop-overlay" class="media-drop-overlay hidden" aria-hidden="true">
     <div class="media-drop-card">
       <svg class="daw-svg-icon" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>

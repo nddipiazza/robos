@@ -52,6 +52,18 @@ const {
   generateAlignedClickTrackForProject,
 } = require('./lib/click-track-generator');
 const {
+  DEFAULT_BEAT_INSTRUMENT,
+  DEFAULT_TRANSITION_INSTRUMENT,
+  DEFAULT_TRANSITION_PLACEMENT,
+  DEFAULT_START_COUNTDOWN_BEATS,
+  DEFAULT_COUNT_IN_BARS,
+  METRONOME_INSTRUMENTS,
+  METRONOME_PRESETS,
+  synthesizeMetronomePreviewWav,
+  HumanTapCaptureRecorder,
+  generateHumanGuidedClickTrackForProject,
+} = require('./lib/human-click-track');
+const {
   removeDrumsFromTrackInProject,
 } = require('./lib/drum-remover');
 const {
@@ -145,6 +157,7 @@ const tapDetector = new MultiChannelTapDetector();
 const recorder = new MultiTrackRecorder();
 const videoRecorder = new VideoTrackRecorder();
 const soundcheckRecorder = new SoundcheckSessionRecorder();
+const humanTapRecorder = new HumanTapCaptureRecorder();
 let lastSoundcheckSession = null;
 
 function computeSignature(snap) {
@@ -1229,6 +1242,151 @@ ipcMain.handle('daw:generate-click-track', async (_e, payload) => {
     delete require.cache[require.resolve('./lib/click-track-generator')];
     const { generateAlignedClickTrackForProject: runClickGen } = require('./lib/click-track-generator');
     const res = await runClickGen(proj, trackId, {
+      preferredProvider: payload?.preferredProvider || 'antigravity',
+      aiAgentModule: aiAgent,
+      takesDir,
+      onProgress: (p) => sendToRenderer('daw:click-track-progress', p),
+    });
+    currentProject = res.project;
+    return res;
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+// ─── Human-Guided + Real-Music + Gemini Click Track IPC ─────────────────────
+
+ipcMain.handle('daw:human-click-catalog', async () => {
+  try {
+    const snap = audioDevices?.getAudioDevicesSnapshot?.() || null;
+    const orderedInputs = getOrderedCaptureInputs(snap);
+    return {
+      ok: true,
+      instruments: METRONOME_INSTRUMENTS,
+      presets: METRONOME_PRESETS,
+      inputs: orderedInputs,
+      defaults: {
+        beatInstrument: DEFAULT_BEAT_INSTRUMENT,
+        transitionInstrument: DEFAULT_TRANSITION_INSTRUMENT,
+        transitionPlacement: DEFAULT_TRANSITION_PLACEMENT,
+        startCountdownBeats: DEFAULT_START_COUNTDOWN_BEATS,
+        countInBars: DEFAULT_COUNT_IN_BARS,
+      },
+    };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('daw:human-click-preview', async (_e, payload) => {
+  try {
+    const sampleRate = Number(payload?.sampleRate) || 48000;
+    const prev = synthesizeMetronomePreviewWav({
+      beatInstrument: payload?.beatInstrument || DEFAULT_BEAT_INSTRUMENT,
+      transitionInstrument: payload?.transitionInstrument || DEFAULT_TRANSITION_INSTRUMENT,
+      transitionPlacement: payload?.transitionPlacement || DEFAULT_TRANSITION_PLACEMENT,
+      bpm: Number(payload?.bpm) || 124,
+      beatsPerBar: Number(payload?.beatsPerBar) || 4,
+      noteValue: Number(payload?.noteValue) || 4,
+      sampleRate,
+    });
+    return {
+      ok: true,
+      wavBase64: prev.wavBuffer.toString('base64'),
+      durationSec: prev.durationSec,
+      beatInstrument: prev.beatInstrument,
+      transitionInstrument: prev.transitionInstrument,
+    };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('daw:human-click-tap-start', async (_e, payload) => {
+  try {
+    tapDetector.stop();
+    if (recorder.isRecording()) await recorder.stop();
+    if (soundcheckRecorder.isRecording()) await soundcheckRecorder.cancel();
+    if (humanTapRecorder.isRecording()) await humanTapRecorder.cancel();
+
+    const snap = audioDevices?.getAudioDevicesSnapshot?.() || null;
+    const sampleRate = Number(snap?.clock?.effectiveRate) || Number(currentProject?.sampleRate) || 48000;
+    const inputNodeName = String(payload?.inputNodeName || '');
+    const inputLabel = String(payload?.inputLabel || 'Tap Input');
+
+    const started = humanTapRecorder.start({
+      inputNodeName,
+      inputLabel,
+      sampleRate,
+      onMeter: (m) => sendToRenderer('daw:human-click-tap-levels', m),
+    });
+    if (!started.isManualOnly) {
+      await humanTapRecorder.waitCaptureReady(260);
+    }
+    return {
+      ...started,
+      firstSampleMicWallMs: humanTapRecorder.getFirstSampleMicWallMs(),
+    };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('daw:human-click-tap-cancel', async () => {
+  try {
+    return await humanTapRecorder.cancel();
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('daw:human-click-finish', async (_e, payload) => {
+  try {
+    const snap = audioDevices?.getAudioDevicesSnapshot?.() || null;
+    if (payload?.project && Array.isArray(payload.project.tracks)) {
+      currentProject = payload.project;
+    }
+    const proj = ensureCurrentProject(snap);
+    const trackId = payload?.trackId;
+    if (!trackId) throw new Error('Missing target song trackId for click track creation.');
+
+    let extractedTaps = Array.isArray(payload?.taps) ? payload.taps : [];
+    const manualTaps = Array.isArray(payload?.manualTaps) ? payload.manualTaps : [];
+    const punchStartSec = Number(payload?.punchStartSec) || 0;
+    const rawEars = payload?.earsStartWallMs;
+    const earsStartWallMs = rawEars !== null && rawEars !== undefined && Number.isFinite(Number(rawEars))
+      ? Number(rawEars)
+      : null;
+
+    if (humanTapRecorder.isRecording()) {
+      const stopped = await humanTapRecorder.stop({
+        punchStartSec,
+        earsStartWallMs,
+        manualTaps,
+      });
+      if (stopped?.ok && Array.isArray(stopped.taps)) {
+        extractedTaps = stopped.taps;
+      }
+    }
+
+    const projDir = proj.projectDir || path.join(getProjectsRoot(), proj.id);
+    const takesDir = path.join(projDir, 'takes');
+    fs.mkdirSync(takesDir, { recursive: true });
+    proj.projectDir = projDir;
+
+    delete require.cache[require.resolve('./lib/human-click-track')];
+    const { generateHumanGuidedClickTrackForProject: runHumanClickGen } = require('./lib/human-click-track');
+    const res = await runHumanClickGen(proj, trackId, {
+      taps: extractedTaps,
+      manualTaps,
+      tapClipStartSec: punchStartSec,
+      countInBars: payload?.countInBars,
+      beatInstrument: payload?.beatInstrument || DEFAULT_BEAT_INSTRUMENT,
+      transitionInstrument: payload?.transitionInstrument || DEFAULT_TRANSITION_INSTRUMENT,
+      transitionPlacement: payload?.transitionPlacement || DEFAULT_TRANSITION_PLACEMENT,
+      letGeminiChooseInstruments: Boolean(payload?.letGeminiChooseInstruments),
+      replaceExistingClickTracks: Boolean(payload?.replaceExistingClickTracks),
+      hintTimeSignature: payload?.hintTimeSignature || null,
       preferredProvider: payload?.preferredProvider || 'antigravity',
       aiAgentModule: aiAgent,
       takesDir,

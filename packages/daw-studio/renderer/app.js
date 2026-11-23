@@ -6220,6 +6220,840 @@ async function generateClickTrackUnderTrack(track) {
   });
 }
 
+// ─── CREATE CLICK TRACK MODAL (HUMAN TAP + REAL MUSIC + GEMINI AI) ──────────
+
+let humanClickCatalogCache = null;
+let humanClickState = {
+  open: false,
+  stage: 'setup', // 'setup' | 'countdown' | 'tapping' | 'processing'
+  targetTrackId: null,
+  detectingMic: false,
+  tapDetectUnsub: null,
+  liveTapUnsub: null,
+  previewSourceNode: null,
+  rafId: null,
+  playbackCtx: null,
+  playbackNodes: [],
+  songStartCtxTime: 0,
+  countdownStartCtxTime: 0,
+  countdownBeats: 4,
+  countdownBpm: 120,
+  songStartSec: 0,
+  songEndSec: 0,
+  earsStartWallMs: null,
+  manualTaps: [],
+  micSpikeCount: 0,
+  liveBpm: null,
+  finishing: false,
+};
+
+const FALLBACK_METRONOME_INSTRUMENTS = [
+  { id: 'hihat-closed', name: 'Closed Hi-Hat (Crisp Stick Chick)', shortLabel: 'Closed Hi-Hat' },
+  { id: 'hihat-open', name: 'Open Hi-Hat (Sizzle Bark + Choke)', shortLabel: 'Open Hi-Hat' },
+  { id: 'hihat-pedal', name: 'Pedal Foot Hi-Hat Chick', shortLabel: 'Pedal Hi-Hat' },
+  { id: 'ride-bow', name: '20" Studio Ride Cymbal (Bow Ping)', shortLabel: 'Ride Bow' },
+  { id: 'ride-bell', name: 'Piercing Metal Ride Bell', shortLabel: 'Ride Bell' },
+  { id: 'drumsticks', name: 'Hickory Drumsticks (Stick-on-Stick)', shortLabel: 'Drumsticks' },
+  { id: 'sidestick', name: 'Snare Cross-Stick / Rim Click', shortLabel: 'Cross-Stick' },
+  { id: 'cowbell-high', name: 'Studio Cowbell (High Pitch)', shortLabel: 'High Cowbell' },
+  { id: 'cowbell-low', name: 'Studio Groove Cowbell (Low)', shortLabel: 'Low Cowbell' },
+  { id: 'woodblock-high', name: 'Maple Woodblock (High Clave)', shortLabel: 'High Woodblock' },
+  { id: 'woodblock-low', name: 'Maple Woodblock (Low Body)', shortLabel: 'Low Woodblock' },
+  { id: 'tambourine', name: 'Studio Brass Tambourine', shortLabel: 'Tambourine' },
+  { id: 'shaker', name: 'Tight Studio Shaker', shortLabel: 'Shaker' },
+  { id: 'clav-classic', name: 'Classic DAW Quartz / Urei Click', shortLabel: 'Classic Click' },
+  { id: 'snare-tight', name: 'Crisp Studio Snare Crack', shortLabel: 'Tight Snare' },
+  { id: 'kick-tight', name: 'Tight Triggered Kick Pulse', shortLabel: 'Tight Kick' },
+];
+
+const FALLBACK_METRONOME_PRESETS = [
+  { id: 'hihat-default', name: 'Closed Hi-Hat + Open Hi-Hat on Transition Beat (Default)', beatInstrument: 'hihat-closed', transitionInstrument: 'hihat-open', transitionPlacement: 'turnaround' },
+  { id: 'gemini-choice', name: 'Gemini Smart Pick (Chooses Best Pair from List for Song)', beatInstrument: 'hihat-closed', transitionInstrument: 'hihat-open', transitionPlacement: 'turnaround', letGeminiChoose: true },
+  { id: 'ride-and-bell', name: '20" Ride Bow + Piercing Ride Bell on Transition', beatInstrument: 'ride-bow', transitionInstrument: 'ride-bell', transitionPlacement: 'downbeat' },
+  { id: 'sticks-and-open-hat', name: 'Hickory Drumsticks + Open Hi-Hat on Transition', beatInstrument: 'drumsticks', transitionInstrument: 'hihat-open', transitionPlacement: 'turnaround' },
+  { id: 'hihat-and-cowbell', name: 'Closed Hi-Hat + High Studio Cowbell Transition', beatInstrument: 'hihat-closed', transitionInstrument: 'cowbell-high', transitionPlacement: 'downbeat' },
+  { id: 'sidestick-and-open-hat', name: 'Snare Cross-Stick + Open Hi-Hat on Transition', beatInstrument: 'sidestick', transitionInstrument: 'hihat-open', transitionPlacement: 'turnaround' },
+  { id: 'woodblock-duo', name: 'Low + High Maple Studio Woodblocks', beatInstrument: 'woodblock-low', transitionInstrument: 'woodblock-high', transitionPlacement: 'downbeat' },
+  { id: 'classic-urei', name: 'Classic DAW Quartz Click + High Woodblock', beatInstrument: 'clav-classic', transitionInstrument: 'woodblock-high', transitionPlacement: 'downbeat' },
+];
+
+function computeTrackAudibleSpan(track) {
+  const clips = (track?.clips || []).filter(c => !c.muted && c.wavFile);
+  if (!clips.length) return { startSec: 0, endSec: 0, spanSec: 0 };
+  let startSec = Infinity;
+  let endSec = 0;
+  for (const c of clips) {
+    const s = Math.max(0, Number(c.startSec) || 0);
+    const d = Math.max(0.05, Number(c.durationSec) || 0);
+    if (s < startSec) startSec = s;
+    if (s + d > endSec) endSec = s + d;
+  }
+  return {
+    startSec: Number.isFinite(startSec) ? startSec : 0,
+    endSec,
+    spanSec: Math.max(0, endSec - (Number.isFinite(startSec) ? startSec : 0)),
+  };
+}
+
+function stopHumanClickPreviewAudio() {
+  if (humanClickState.previewSourceNode) {
+    try { humanClickState.previewSourceNode.stop(); } catch {}
+    humanClickState.previewSourceNode = null;
+  }
+  const btn = document.getElementById('btn-hclick-preview-sound');
+  if (btn) btn.innerHTML = `${DI.svg('play', 12)}<span id="hclick-preview-btn-lbl">Preview Sound</span>`;
+}
+
+async function stopHumanClickMicAutoDetect() {
+  if (humanClickState.tapDetectUnsub) {
+    try { humanClickState.tapDetectUnsub(); } catch {}
+    humanClickState.tapDetectUnsub = null;
+  }
+  if (humanClickState.detectingMic) {
+    humanClickState.detectingMic = false;
+    try { await window.robos.wizardStopTapDetect(); } catch {}
+  }
+  const btn = document.getElementById('btn-hclick-detect-mic');
+  if (btn) btn.textContent = 'Strike Mic / Drum to Auto-Detect';
+}
+
+function stopHumanClickPlaybackAndRaf() {
+  if (humanClickState.rafId) {
+    cancelAnimationFrame(humanClickState.rafId);
+    humanClickState.rafId = null;
+  }
+  for (const n of humanClickState.playbackNodes) {
+    try { if (typeof n.stop === 'function') n.stop(); } catch {}
+    try { if (typeof n.disconnect === 'function') n.disconnect(); } catch {}
+  }
+  humanClickState.playbackNodes = [];
+  if (humanClickState.liveTapUnsub) {
+    try { humanClickState.liveTapUnsub(); } catch {}
+    humanClickState.liveTapUnsub = null;
+  }
+}
+
+function setHumanClickModalStage(stage) {
+  humanClickState.stage = stage;
+  const setupEl = document.getElementById('hclick-stage-setup');
+  const tapEl = document.getElementById('hclick-stage-tapping');
+  const p1 = document.getElementById('hclick-pill-1');
+  const p2 = document.getElementById('hclick-pill-2');
+  const p3 = document.getElementById('hclick-pill-3');
+  const btnStart = document.getElementById('btn-hclick-start-tap');
+  const btnAuto = document.getElementById('btn-hclick-autogen-notap');
+  const btnFinish = document.getElementById('btn-hclick-finish-tap');
+  const btnRestart = document.getElementById('btn-hclick-restart-tap');
+
+  const isSetup = stage === 'setup';
+  setupEl?.classList.toggle('hidden', !isSetup);
+  tapEl?.classList.toggle('hidden', isSetup);
+  p1?.classList.toggle('active', isSetup);
+  p2?.classList.toggle('active', stage === 'countdown' || stage === 'tapping');
+  p3?.classList.toggle('active', stage === 'processing');
+
+  btnStart?.classList.toggle('hidden', !isSetup);
+  btnAuto?.classList.toggle('hidden', !isSetup);
+  btnFinish?.classList.toggle('hidden', isSetup);
+  btnRestart?.classList.toggle('hidden', isSetup);
+}
+
+function updateHumanClickTargetBadge() {
+  const trackSel = document.getElementById('hclick-target-track-select');
+  const badge = document.getElementById('hclick-song-span-badge');
+  const tid = trackSel?.value || humanClickState.targetTrackId;
+  humanClickState.targetTrackId = tid;
+  const tr = (currentProject?.tracks || []).find(t => t.id === tid);
+  if (badge && tr) {
+    const sp = computeTrackAudibleSpan(tr);
+    badge.textContent = `${formatTimecode(sp.spanSec)} SONG`;
+  }
+}
+
+async function openCreateClickTrackModal(preferredTrack = null) {
+  if (!currentProject) return;
+  if (isGeneratingClickTrack) {
+    showStatus('Already building a Click Track — watch progress in the bottom JOBS bar.');
+    return;
+  }
+
+  const audibleSongTracks = (currentProject.tracks || []).filter(t => {
+    if (t.trackKind === 'lyrics' || t.trackKind === 'video') return false;
+    if (/^click\b/i.test(t.name || '')) return false;
+    return (t.clips || []).some(c => !c.muted && c.wavFile);
+  });
+
+  if (!audibleSongTracks.length) {
+    showStatus('Import or record a song/music track first before creating a Click Track.', true);
+    return;
+  }
+
+  stopPlayback();
+  stopHumanClickPreviewAudio();
+  await stopHumanClickMicAutoDetect();
+  stopHumanClickPlaybackAndRaf();
+
+  if (!humanClickCatalogCache && typeof window.robos?.getHumanClickCatalog === 'function') {
+    try {
+      const cat = await window.robos.getHumanClickCatalog();
+      if (cat?.ok) humanClickCatalogCache = cat;
+    } catch {}
+  }
+
+  const instruments = humanClickCatalogCache?.instruments || FALLBACK_METRONOME_INSTRUMENTS;
+  const presets = humanClickCatalogCache?.presets || FALLBACK_METRONOME_PRESETS;
+  const orderedInputs = humanClickCatalogCache?.inputs || getOrderedInputs();
+
+  const chosenTrack = (preferredTrack && audibleSongTracks.some(t => t.id === preferredTrack.id))
+    ? preferredTrack
+    : audibleSongTracks[0];
+  humanClickState.targetTrackId = chosenTrack.id;
+
+  // 1. Target Song Track Select
+  const trackSel = document.getElementById('hclick-target-track-select');
+  if (trackSel) {
+    trackSel.innerHTML = audibleSongTracks.map(t => {
+      const sp = computeTrackAudibleSpan(t);
+      return `<option value="${esc(t.id)}"${t.id === chosenTrack.id ? ' selected' : ''}>${esc(t.name)} (${formatTimecode(sp.spanSec)})</option>`;
+    }).join('');
+  }
+  updateHumanClickTargetBadge();
+
+  // 2. Tap Input Channel Select (Session Mic Tracks first -> All Hardware Inputs -> Keyboard/Tap Pad)
+  const inputSel = document.getElementById('hclick-input-select');
+  if (inputSel) {
+    const savedNode = localStorage.getItem('robos.daw.humanClick.inputNode') || '';
+    const sessionMicTracks = (currentProject.tracks || []).filter(t => Boolean(t.inputNodeName) && t.trackKind !== 'video' && t.trackKind !== 'lyrics');
+    const seenNodes = new Set();
+    const opts = [];
+
+    for (const st of sessionMicTracks) {
+      if (seenNodes.has(st.inputNodeName)) continue;
+      seenNodes.add(st.inputNodeName);
+      opts.push({
+        value: st.inputNodeName,
+        label: `${st.name} (${st.inputLabel || st.inputNodeName})`,
+        preferSnareHat: /snare|hat|hi-hat|stick|overhead|room|vocal|mic/i.test(st.name || ''),
+      });
+    }
+    for (const inp of orderedInputs) {
+      if (!inp?.name || seenNodes.has(inp.name)) continue;
+      seenNodes.add(inp.name);
+      opts.push({
+        value: inp.name,
+        label: inp.description || inp.name,
+        preferSnareHat: Boolean(inp.isFocusrite),
+      });
+    }
+    opts.push({
+      value: '__manual__',
+      label: 'Keyboard [SPACE / T] or On-Screen Tap Pad (No Mic Needed)',
+      preferSnareHat: false,
+    });
+
+    const defaultVal = opts.some(o => o.value === savedNode)
+      ? savedNode
+      : (opts.find(o => o.preferSnareHat)?.value || opts[0]?.value || '__manual__');
+
+    inputSel.innerHTML = opts.map(o =>
+      `<option value="${esc(o.value)}"${o.value === defaultVal ? ' selected' : ''}>${esc(o.label)}</option>`
+    ).join('');
+  }
+
+  // 3. Countdown & Count-In Defaults
+  const savedCountdown = localStorage.getItem('robos.daw.humanClick.countdownBeats');
+  const cdBeatsEl = document.getElementById('hclick-countdown-beats-input');
+  if (cdBeatsEl) cdBeatsEl.value = savedCountdown !== null ? savedCountdown : '4';
+  const cdBpmEl = document.getElementById('hclick-countdown-bpm-input');
+  if (cdBpmEl) cdBpmEl.value = String(Math.round(clampNum(55, 200, Number(currentProject?.bpm) || 120)));
+
+  // 4. AI Provider Select
+  const provSel = document.getElementById('hclick-ai-provider-select');
+  if (provSel) {
+    const list = aiProviders.length ? aiProviders : [
+      { id: 'antigravity', name: 'Gemini CLI / Antigravity' },
+      { id: 'claude-code', name: 'Claude Code' },
+      { id: 'github-copilot', name: 'GitHub Copilot' },
+      { id: 'codex', name: 'Codex' },
+    ];
+    const sorted = [...list].sort((a, b) => (a.id === 'antigravity' ? -1 : b.id === 'antigravity' ? 1 : 0));
+    provSel.innerHTML = sorted.map(p =>
+      `<option value="${esc(p.id)}"${p.id === preferredAiProvider ? ' selected' : ''}>${esc(p.name)}${p.id === 'antigravity' ? ' (Recommended)' : ''}</option>`
+    ).join('');
+  }
+
+  // 5. Metronome Presets & Instrument Dropdowns (Default: Closed Hi-Hat + Open Hi-Hat on Transition Beat)
+  const presetSel = document.getElementById('hclick-preset-select');
+  const beatSel = document.getElementById('hclick-beat-inst-select');
+  const transSel = document.getElementById('hclick-trans-inst-select');
+  const placeSel = document.getElementById('hclick-trans-placement-select');
+
+  const savedBeat = localStorage.getItem('robos.daw.humanClick.beatInst') || 'hihat-closed';
+  const savedTrans = localStorage.getItem('robos.daw.humanClick.transInst') || 'hihat-open';
+  const savedPlace = localStorage.getItem('robos.daw.humanClick.transPlace') || 'turnaround';
+  const savedPreset = localStorage.getItem('robos.daw.humanClick.preset') || 'hihat-default';
+
+  if (presetSel) {
+    presetSel.innerHTML = [
+      ...presets.map(p => `<option value="${esc(p.id)}"${p.id === savedPreset ? ' selected' : ''}>${esc(p.name)}</option>`),
+      `<option value="custom"${savedPreset === 'custom' ? ' selected' : ''}>Custom Instrument Combination</option>`,
+    ].join('');
+  }
+  if (beatSel) {
+    beatSel.innerHTML = instruments.map(inst =>
+      `<option value="${esc(inst.id)}"${inst.id === savedBeat ? ' selected' : ''}>${esc(inst.name)}</option>`
+    ).join('');
+  }
+  if (transSel) {
+    transSel.innerHTML = instruments.map(inst =>
+      `<option value="${esc(inst.id)}"${inst.id === savedTrans ? ' selected' : ''}>${esc(inst.name)}</option>`
+    ).join('');
+  }
+  if (placeSel) {
+    placeSel.value = ['turnaround', 'downbeat', 'section'].includes(savedPlace) ? savedPlace : 'turnaround';
+  }
+
+  const meterFill = document.getElementById('hclick-setup-meter-fill');
+  if (meterFill) meterFill.style.width = '0%';
+  const meterDb = document.getElementById('hclick-setup-meter-db');
+  if (meterDb) meterDb.textContent = '-96 dB';
+
+  setHumanClickModalStage('setup');
+  humanClickState.open = true;
+  document.getElementById('human-click-modal')?.classList.remove('hidden');
+}
+
+async function closeCreateClickTrackModal({ abortCapture = true } = {}) {
+  stopHumanClickPreviewAudio();
+  await stopHumanClickMicAutoDetect();
+  stopHumanClickPlaybackAndRaf();
+  if (abortCapture && typeof window.robos?.cancelHumanClickTapCapture === 'function') {
+    try { await window.robos.cancelHumanClickTapCapture(); } catch {}
+  }
+  humanClickState.open = false;
+  humanClickState.stage = 'setup';
+  humanClickState.finishing = false;
+  document.getElementById('human-click-modal')?.classList.add('hidden');
+}
+
+function clampNum(min, max, v) {
+  return Math.max(min, Math.min(max, v));
+}
+
+function pulseHumanTapIndicator(label = 'TAP!') {
+  const pill = document.getElementById('hclick-tap-flash-pill');
+  const txt = document.getElementById('hclick-tap-flash-text');
+  const pad = document.getElementById('btn-hclick-tap-pad');
+  if (txt) txt.textContent = label;
+  pill?.classList.add('pulse');
+  pad?.classList.add('tap-active');
+  setTimeout(() => {
+    pill?.classList.remove('pulse');
+    pad?.classList.remove('tap-active');
+    if (txt && humanClickState.stage === 'tapping') txt.textContent = 'LISTENING';
+  }, 110);
+}
+
+function recordManualHumanTap(isAccent = false) {
+  if (!humanClickState.open || (humanClickState.stage !== 'tapping' && humanClickState.stage !== 'countdown')) return;
+  const ctx = humanClickState.playbackCtx;
+  if (!ctx) return;
+  const relSongSec = ctx.currentTime - humanClickState.songStartCtxTime;
+  if (relSongSec < -0.25) return; // Still early in countdown
+  const timelineSec = Math.max(0, humanClickState.songStartSec + Math.max(0, relSongSec));
+  const prev = humanClickState.manualTaps[humanClickState.manualTaps.length - 1];
+  if (prev && (timelineSec - prev.timeSec) < 0.11) return;
+
+  humanClickState.manualTaps.push({
+    timeSec: Number(timelineSec.toFixed(4)),
+    velocity: isAccent ? 0.98 : 0.78,
+    isAccent: Boolean(isAccent),
+  });
+
+  if (humanClickState.manualTaps.length >= 3) {
+    const recent = humanClickState.manualTaps.slice(-8);
+    const iois = [];
+    for (let i = 0; i < recent.length - 1; i++) {
+      const dt = recent[i + 1].timeSec - recent[i].timeSec;
+      if (dt >= 0.22 && dt <= 1.6) iois.push(dt);
+    }
+    if (iois.length >= 2) {
+      iois.sort((a, b) => a - b);
+      humanClickState.liveBpm = Number((60 / iois[iois.length >> 1]).toFixed(1));
+    }
+  }
+  pulseHumanTapIndicator(isAccent ? 'ACCENT!' : 'TAP!');
+}
+
+async function previewSelectedMetronomeSound() {
+  if (humanClickState.previewSourceNode) {
+    stopHumanClickPreviewAudio();
+    return;
+  }
+  const beatInstrument = document.getElementById('hclick-beat-inst-select')?.value || 'hihat-closed';
+  const transitionInstrument = document.getElementById('hclick-trans-inst-select')?.value || 'hihat-open';
+  const transitionPlacement = document.getElementById('hclick-trans-placement-select')?.value || 'turnaround';
+  const bpm = clampNum(60, 210, Number(document.getElementById('hclick-countdown-bpm-input')?.value) || Number(currentProject?.bpm) || 124);
+
+  const btn = document.getElementById('btn-hclick-preview-sound');
+  if (btn) btn.innerHTML = `${DI.svg('stop', 12)}<span id="hclick-preview-btn-lbl">Stop Preview</span>`;
+
+  try {
+    const res = await window.robos.previewHumanClickMetronome({
+      beatInstrument,
+      transitionInstrument,
+      transitionPlacement,
+      bpm,
+      beatsPerBar: 4,
+      noteValue: 4,
+    });
+    if (!res?.ok || !res.wavBase64) {
+      stopHumanClickPreviewAudio();
+      return;
+    }
+    const bin = atob(res.wavBase64);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    const ctx = await ensureLiveAudioContext();
+    const audioBuf = await ctx.decodeAudioData(bytes.buffer.slice(0));
+    const src = ctx.createBufferSource();
+    src.buffer = audioBuf;
+    const g = ctx.createGain();
+    g.gain.value = 0.92;
+    src.connect(g).connect(ctx.destination);
+    src.onended = () => {
+      if (humanClickState.previewSourceNode === src) {
+        humanClickState.previewSourceNode = null;
+        if (btn) btn.innerHTML = `${DI.svg('play', 12)}<span id="hclick-preview-btn-lbl">Preview Sound</span>`;
+      }
+    };
+    humanClickState.previewSourceNode = src;
+    src.start();
+  } catch (err) {
+    stopHumanClickPreviewAudio();
+    showStatus(`Metronome preview error: ${err.message}`, true);
+  }
+}
+
+async function startHumanClickTappingSession() {
+  if (!currentProject || humanClickState.finishing) return;
+  stopHumanClickPreviewAudio();
+  await stopHumanClickMicAutoDetect();
+  stopHumanClickPlaybackAndRaf();
+
+  const trackId = document.getElementById('hclick-target-track-select')?.value || humanClickState.targetTrackId;
+  const targetTrack = (currentProject.tracks || []).find(t => t.id === trackId);
+  if (!targetTrack) {
+    showStatus('Select a valid song track first.', true);
+    return;
+  }
+  humanClickState.targetTrackId = targetTrack.id;
+
+  const inputSel = document.getElementById('hclick-input-select');
+  const inputNodeName = inputSel?.value || '__manual__';
+  const inputLabel = inputSel?.selectedOptions?.[0]?.textContent || inputNodeName;
+  const countdownBeats = clampNum(0, 16, Math.round(Number(document.getElementById('hclick-countdown-beats-input')?.value ?? 4)));
+  const countdownBpm = clampNum(45, 220, Number(document.getElementById('hclick-countdown-bpm-input')?.value) || 120);
+
+  localStorage.setItem('robos.daw.humanClick.inputNode', inputNodeName);
+  localStorage.setItem('robos.daw.humanClick.countdownBeats', String(countdownBeats));
+  localStorage.setItem('robos.daw.humanClick.beatInst', document.getElementById('hclick-beat-inst-select')?.value || 'hihat-closed');
+  localStorage.setItem('robos.daw.humanClick.transInst', document.getElementById('hclick-trans-inst-select')?.value || 'hihat-open');
+  localStorage.setItem('robos.daw.humanClick.transPlace', document.getElementById('hclick-trans-placement-select')?.value || 'turnaround');
+  localStorage.setItem('robos.daw.humanClick.preset', document.getElementById('hclick-preset-select')?.value || 'hihat-default');
+
+  const span = computeTrackAudibleSpan(targetTrack);
+  const songStartSec = span.startSec;
+  const songEndSec = Math.max(songStartSec + 1.0, span.endSec);
+
+  // Preload decoded audio buffers for the target song track (and any non-click backing tracks)
+  const playbackTracks = (currentProject.tracks || []).filter(t => {
+    if (t.muted || t.trackKind === 'lyrics' || t.trackKind === 'video') return false;
+    if (/^click\b/i.test(t.name || '')) return false;
+    if (t.id === targetTrack.id) return true;
+    // Also play unmuted non-click backing stems if no solo conflict
+    return !t.inputNodeName && (t.clips || []).some(c => !c.muted && c.wavFile && c.mediaKind !== 'click');
+  });
+  if (!playbackTracks.some(t => t.id === targetTrack.id)) {
+    playbackTracks.unshift(targetTrack);
+  }
+
+  for (const tr of playbackTracks) {
+    for (const cl of (tr.clips || [])) {
+      if (!cl.muted && cl.wavFile) {
+        try { await loadDecodedAudio(cl.wavFile); } catch {}
+      }
+    }
+  }
+
+  humanClickState.manualTaps = [];
+  humanClickState.micSpikeCount = 0;
+  humanClickState.liveBpm = null;
+  humanClickState.countdownBeats = countdownBeats;
+  humanClickState.countdownBpm = countdownBpm;
+  humanClickState.songStartSec = songStartSec;
+  humanClickState.songEndSec = songEndSec;
+
+  // Subscribe to real-time PipeWire input level & spike detection
+  if (typeof window.robos?.onHumanClickTapLevels === 'function') {
+    humanClickState.liveTapUnsub = window.robos.onHumanClickTapLevels((m) => {
+      const dbEl = document.getElementById('hclick-live-db');
+      if (dbEl && Number.isFinite(Number(m?.peakDb))) {
+        dbEl.textContent = `${Math.round(m.peakDb)} dB`;
+      }
+      if (m?.tapDetected && humanClickState.stage === 'tapping') {
+        humanClickState.micSpikeCount = Math.max(humanClickState.micSpikeCount + 1, Number(m.liveTapCount) || 0);
+        if (m.liveBpm) humanClickState.liveBpm = m.liveBpm;
+        pulseHumanTapIndicator('MIC TAP!');
+      }
+    });
+  }
+
+  // Start hardware capture BEFORE countdown finishes so ADC stream has 0ms startup race!
+  const capRes = await window.robos.startHumanClickTapCapture({
+    inputNodeName,
+    inputLabel,
+  });
+  if (!capRes?.ok) {
+    showStatus(`Could not start tap capture on "${inputLabel}": ${capRes?.error || 'Unknown error'}`, true);
+    return;
+  }
+
+  const ctx = await ensureLiveAudioContext();
+  humanClickState.playbackCtx = ctx;
+  const countIntervalSec = 60 / countdownBpm;
+  const leadSec = 0.06;
+  const countdownStartCtxTime = ctx.currentTime + leadSec;
+  const songStartCtxTime = countdownStartCtxTime + countdownBeats * countIntervalSec;
+  humanClickState.countdownStartCtxTime = countdownStartCtxTime;
+  humanClickState.songStartCtxTime = songStartCtxTime;
+
+  const masterBus = createMasterDrumBus(ctx);
+  humanClickState.playbackNodes.push(masterBus);
+
+  // Schedule crisp audible countdown stick clicks (`N ... 1`)
+  for (let c = 0; c < countdownBeats; c++) {
+    const tTick = countdownStartCtxTime + c * countIntervalSec;
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    const isFirstOrLast = c === 0 || c === countdownBeats - 1;
+    osc.frequency.value = isFirstOrLast ? 1480 : 1046.5;
+    g.gain.setValueAtTime(0.24, tTick);
+    g.gain.exponentialRampToValueAtTime(0.0001, tTick + 0.055);
+    osc.connect(g).connect(ctx.destination);
+    osc.start(tTick);
+    osc.stop(tTick + 0.06);
+    humanClickState.playbackNodes.push(osc, g);
+  }
+
+  // Schedule song track clips starting at exact `songStartCtxTime`
+  for (const tr of playbackTracks) {
+    const { inputGain, trackMixBus } = buildTrackWebAudioChain(ctx, tr, masterBus);
+    humanClickState.playbackNodes.push(inputGain, trackMixBus);
+    for (const clip of (tr.clips || [])) {
+      if (clip.muted || !clip.wavFile || clip.mediaKind === 'click') continue;
+      const buf = decodedBufferCache.get(clip.wavFile);
+      if (!buf) continue;
+      const clipStart = Number(clip.startSec) || 0;
+      const clipOff = Math.max(0, Number(clip.offsetSec) || 0);
+      const clipDur = Math.max(0.04, Number(clip.durationSec) || Math.max(0.04, buf.duration - clipOff));
+      const clipEnd = clipStart + clipDur;
+      if (clipEnd <= songStartSec + 0.005 || clipOff >= buf.duration) continue;
+
+      const src = ctx.createBufferSource();
+      src.buffer = buf;
+      const cg = ctx.createGain();
+      cg.gain.value = DE.dbToGain(Number(clip.gainDb) || 0);
+      src.connect(cg).connect(inputGain);
+
+      if (clipStart >= songStartSec) {
+        const t0 = songStartCtxTime + (clipStart - songStartSec);
+        const playDur = Math.min(clipDur, Math.max(0.01, buf.duration - clipOff));
+        src.start(t0, clipOff, playDur);
+      } else {
+        const into = songStartSec - clipStart;
+        const srcOff = clipOff + into;
+        const playDur = Math.min(clipEnd - songStartSec, Math.max(0.01, buf.duration - srcOff));
+        if (playDur > 0.01 && srcOff < buf.duration) {
+          src.start(songStartCtxTime, srcOff, playDur);
+        }
+      }
+      humanClickState.playbackNodes.push(src, cg);
+    }
+  }
+
+  const probed = computeReliableEarsStartWallMs(ctx, songStartCtxTime);
+  humanClickState.earsStartWallMs = probed.earsStartWallMs;
+
+  setHumanClickModalStage(countdownBeats > 0 ? 'countdown' : 'tapping');
+  const stageCard = document.getElementById('hclick-live-stage');
+  const badgeEl = document.getElementById('hclick-countdown-badge');
+  const headEl = document.getElementById('hclick-live-headline');
+  const subEl = document.getElementById('hclick-live-subhint');
+
+  const totalSongDur = Math.max(0.5, songEndSec - songStartSec);
+
+  const tickRaf = () => {
+    if (!humanClickState.open || humanClickState.finishing) return;
+    const nowCtx = ctx.currentTime;
+    if (nowCtx < songStartCtxTime) {
+      humanClickState.stage = 'countdown';
+      stageCard?.classList.remove('is-recording');
+      badgeEl?.classList.remove('is-go');
+      const remSec = songStartCtxTime - nowCtx;
+      const remCount = Math.max(1, Math.ceil(remSec / countIntervalSec));
+      if (badgeEl) badgeEl.textContent = String(remCount);
+      if (headEl) headEl.textContent = `STARTING IN ${remCount}... GET READY ON "${inputLabel.toUpperCase()}"`;
+      if (subEl) subEl.textContent = 'Song starts right on "GO" — tap steady beats for as much of the song as you want!';
+    } else {
+      if (humanClickState.stage !== 'tapping') {
+        humanClickState.stage = 'tapping';
+        // Re-probe hardware DAC timestamp once stream is actively flowing for sub-ms lock
+        const refreshed = computeReliableEarsStartWallMs(ctx, songStartCtxTime);
+        if (refreshed.lockedByHwTs) humanClickState.earsStartWallMs = refreshed.earsStartWallMs;
+      }
+      stageCard?.classList.add('is-recording');
+      badgeEl?.classList.add('is-go');
+      if (badgeEl) badgeEl.textContent = 'TAP!';
+      if (headEl) headEl.textContent = `RECORDING TAP GUIDE — KEEP TAPPING ALONG TO "${targetTrack.name}"`;
+      if (subEl) subEl.textContent = 'The longer you tap through verses, choruses & transitions, the tighter Gemini locks your click track.';
+
+      const songElapsed = Math.min(totalSongDur, Math.max(0, nowCtx - songStartCtxTime));
+      playheadSec = songStartSec + songElapsed;
+      const tcEl = document.getElementById('transport-timecode');
+      if (tcEl) tcEl.textContent = formatTimecode(playheadSec);
+
+      const progPct = Math.min(100, (songElapsed / totalSongDur) * 100);
+      const songFill = document.getElementById('hclick-song-progress-fill');
+      if (songFill) songFill.style.width = `${progPct.toFixed(1)}%`;
+      const elLbl = document.getElementById('hclick-song-elapsed');
+      if (elLbl) elLbl.textContent = `${formatTimecode(songElapsed)} / ${formatTimecode(totalSongDur)}`;
+
+      const totalTaps = Math.max(humanClickState.micSpikeCount, humanClickState.manualTaps.length);
+      const tapCntEl = document.getElementById('hclick-live-tap-count');
+      if (tapCntEl) tapCntEl.textContent = String(totalTaps);
+      const bpmEl = document.getElementById('hclick-live-bpm');
+      if (bpmEl) bpmEl.textContent = humanClickState.liveBpm ? `${humanClickState.liveBpm} BPM` : '— BPM';
+
+      const estCovPct = totalTaps >= 2 ? Math.min(100, Math.round(progPct)) : 0;
+      const covFill = document.getElementById('hclick-coverage-fill');
+      if (covFill) covFill.style.width = `${estCovPct}%`;
+      const covLbl = document.getElementById('hclick-coverage-label');
+      if (covLbl) covLbl.textContent = `Song Tap Coverage: ${estCovPct}%`;
+
+      if ((nowCtx - songStartCtxTime) >= totalSongDur + 0.35) {
+        finishHumanClickTappingSession({ autoFinishedAtSongEnd: true });
+        return;
+      }
+    }
+    humanClickState.rafId = requestAnimationFrame(tickRaf);
+  };
+  humanClickState.rafId = requestAnimationFrame(tickRaf);
+}
+
+async function finishHumanClickTappingSession({ skipHumanTaps = false } = {}) {
+  if (!currentProject || humanClickState.finishing || isGeneratingClickTrack) return;
+  humanClickState.finishing = true;
+
+  const trackId = document.getElementById('hclick-target-track-select')?.value || humanClickState.targetTrackId;
+  const targetTrack = (currentProject.tracks || []).find(t => t.id === trackId);
+  const presetVal = document.getElementById('hclick-preset-select')?.value || 'hihat-default';
+  const beatInstrument = document.getElementById('hclick-beat-inst-select')?.value || 'hihat-closed';
+  const transitionInstrument = document.getElementById('hclick-trans-inst-select')?.value || 'hihat-open';
+  const transitionPlacement = document.getElementById('hclick-trans-placement-select')?.value || 'turnaround';
+  const countInBars = clampNum(0, 8, Math.round(Number(document.getElementById('hclick-countin-bars-select')?.value ?? 1)));
+  const preferredProvider = document.getElementById('hclick-ai-provider-select')?.value || 'antigravity';
+  const replaceExistingClickTracks = Boolean(document.getElementById('chk-hclick-replace-existing')?.checked);
+  const letGeminiChooseInstruments = presetVal === 'gemini-choice';
+
+  const punchStartSec = humanClickState.songStartSec || 0;
+  const earsStartWallMs = skipHumanTaps ? null : humanClickState.earsStartWallMs;
+  const manualTaps = skipHumanTaps ? [] : [...humanClickState.manualTaps];
+
+  stopHumanClickPlaybackAndRaf();
+  if (skipHumanTaps && typeof window.robos?.cancelHumanClickTapCapture === 'function') {
+    try { await window.robos.cancelHumanClickTapCapture(); } catch {}
+  }
+  await closeCreateClickTrackModal({ abortCapture: false });
+
+  if (!targetTrack) return;
+
+  isGeneratingClickTrack = true;
+  const prevSnap = DE.cloneDeep(currentProject);
+  showStatus(
+    skipHumanTaps
+      ? `Generating Studio Click Track for "${targetTrack.name}" with Gemini...`
+      : `Processing your human tap recording + "${targetTrack.name}" audio with Gemini...`
+  );
+
+  await runDawJob({
+    title: `Create Click Track (${targetTrack.name})`,
+    category: 'CLICK AI',
+    detail: skipHumanTaps
+      ? `Analyzing "${targetTrack.name}" & rendering ${beatInstrument} + ${transitionInstrument}...`
+      : `Fusing human tap recording + "${targetTrack.name}" transients with Gemini...`,
+    progress: 18,
+  }, async (job) => {
+    let progressUnsub = null;
+    if (typeof window.robos?.onClickTrackProgress === 'function') {
+      progressUnsub = window.robos.onClickTrackProgress((p) => {
+        if (p?.message) {
+          showStatus(p.message);
+          job.update({
+            detail: p.message,
+            ...(Number.isFinite(Number(p.percent)) ? { progress: Number(p.percent) } : {}),
+          });
+        }
+      });
+    }
+
+    try {
+      const res = await window.robos.finishHumanClickTrack({
+        trackId: targetTrack.id,
+        punchStartSec,
+        earsStartWallMs,
+        manualTaps,
+        countInBars,
+        beatInstrument,
+        transitionInstrument,
+        transitionPlacement,
+        letGeminiChooseInstruments,
+        replaceExistingClickTracks,
+        preferredProvider,
+        project: currentProject,
+      });
+
+      if (!res?.ok || !res.project) {
+        const errMsg = res?.error || 'Unknown error';
+        showStatus(`Create Click Track failed: ${errMsg}`, true);
+        job.fail(errMsg);
+        return res;
+      }
+
+      historyStack.pushSnapshot(prevSnap, `Create Click Track (${targetTrack.name})`);
+      currentProject = res.project;
+      if (res.clickClip?.wavFile) {
+        decodedBufferCache.delete(res.clickClip.wavFile);
+      }
+      if (res.clickTrack?.id) {
+        selectedTrackIds = new Set([res.clickTrack.id]);
+        anchorTrackId = res.clickTrack.id;
+      }
+      selectedClipIds = res.clickClip?.id ? new Set([res.clickClip.id]) : new Set();
+
+      playheadSec = Number(res.countInStartSec) || 0;
+      playReturnAnchorSec = playheadSec;
+      const tcEl = document.getElementById('transport-timecode');
+      if (tcEl) tcEl.textContent = formatTimecode(playheadSec);
+      ensurePlayheadInViewport(playheadSec);
+
+      markDirty(true);
+      renderStudio();
+
+      const tempoDesc = Array.isArray(res.tempoSegments) && res.tempoSegments.length >= 2
+        ? `${res.tempoSegments.map(s => Math.round(s.bpm)).join(' -> ')} BPM (${res.tempoSegments.length} sections)`
+        : `${res.bpm} BPM`;
+      const tapSummary = res.tapCount > 0
+        ? `from ${res.tapCount} human taps (${res.tapCoveragePct}% song coverage) + real music`
+        : 'from song transients';
+
+      showStatus(
+        `Created Click Track under "${targetTrack.name}" (${tempoDesc} · ${res.timeSignature}, ${res.beatInstrument} + ${res.transitionInstrument}) ${tapSummary} via ${res.provider} — press Space to play!`
+      );
+      job.complete({
+        detail: `${tempoDesc} · ${res.timeSignature} (${res.tapCount || 0} taps)`,
+        outputPath: res.clickClip?.wavFile || '',
+        ...(res.clickClip?.wavFile ? { actionLabel: 'Reveal' } : {}),
+      });
+      return res;
+    } finally {
+      if (typeof progressUnsub === 'function') {
+        try { progressUnsub(); } catch {}
+      }
+      isGeneratingClickTrack = false;
+      humanClickState.finishing = false;
+    }
+  });
+}
+
+function wireHumanClickModalEvents() {
+  document.getElementById('btn-hclick-close')?.addEventListener('click', () => closeCreateClickTrackModal());
+  document.getElementById('btn-hclick-cancel')?.addEventListener('click', () => closeCreateClickTrackModal());
+  document.getElementById('hclick-target-track-select')?.addEventListener('change', updateHumanClickTargetBadge);
+
+  document.getElementById('hclick-preset-select')?.addEventListener('change', (ev) => {
+    const val = ev.target.value;
+    const presets = humanClickCatalogCache?.presets || FALLBACK_METRONOME_PRESETS;
+    const found = presets.find(p => p.id === val);
+    if (found) {
+      const beatSel = document.getElementById('hclick-beat-inst-select');
+      const transSel = document.getElementById('hclick-trans-inst-select');
+      const placeSel = document.getElementById('hclick-trans-placement-select');
+      if (beatSel) beatSel.value = found.beatInstrument;
+      if (transSel) transSel.value = found.transitionInstrument;
+      if (placeSel && found.transitionPlacement) placeSel.value = found.transitionPlacement;
+    }
+  });
+
+  const markCustomPresetIfEdited = () => {
+    const presetSel = document.getElementById('hclick-preset-select');
+    if (presetSel && presetSel.value !== 'gemini-choice') {
+      presetSel.value = 'custom';
+    }
+  };
+  document.getElementById('hclick-beat-inst-select')?.addEventListener('change', markCustomPresetIfEdited);
+  document.getElementById('hclick-trans-inst-select')?.addEventListener('change', markCustomPresetIfEdited);
+
+  document.getElementById('btn-hclick-preview-sound')?.addEventListener('click', previewSelectedMetronomeSound);
+
+  document.getElementById('btn-hclick-detect-mic')?.addEventListener('click', async () => {
+    if (humanClickState.detectingMic) {
+      await stopHumanClickMicAutoDetect();
+      return;
+    }
+    const btn = document.getElementById('btn-hclick-detect-mic');
+    if (btn) btn.textContent = 'Listening — Strike Mic / Drum Now...';
+    humanClickState.detectingMic = true;
+    humanClickState.tapDetectUnsub = window.robos.onTapLevels((payload) => {
+      const topDb = payload?.loudest?.peakDb ?? -96;
+      const pct = Math.max(0, Math.min(100, ((topDb + 66) / 66) * 100));
+      const fill = document.getElementById('hclick-setup-meter-fill');
+      if (fill) fill.style.width = `${pct.toFixed(1)}%`;
+      const dbLbl = document.getElementById('hclick-setup-meter-db');
+      if (dbLbl) dbLbl.textContent = `${Math.round(topDb)} dB`;
+
+      if (payload?.detected?.name) {
+        const sel = document.getElementById('hclick-input-select');
+        if (sel && Array.from(sel.options).some(o => o.value === payload.detected.name)) {
+          sel.value = payload.detected.name;
+          showStatus(`Auto-selected tap channel: ${payload.detected.description || payload.detected.name}`);
+          stopHumanClickMicAutoDetect();
+        }
+      }
+    });
+    await window.robos.wizardStartTapDetect({ strikeThresholdDb: -26 });
+  });
+
+  document.getElementById('btn-hclick-start-tap')?.addEventListener('click', startHumanClickTappingSession);
+  document.getElementById('btn-hclick-restart-tap')?.addEventListener('click', async () => {
+    stopHumanClickPlaybackAndRaf();
+    if (typeof window.robos?.cancelHumanClickTapCapture === 'function') {
+      try { await window.robos.cancelHumanClickTapCapture(); } catch {}
+    }
+    await startHumanClickTappingSession();
+  });
+  document.getElementById('btn-hclick-autogen-notap')?.addEventListener('click', () => {
+    finishHumanClickTappingSession({ skipHumanTaps: true });
+  });
+  document.getElementById('btn-hclick-finish-tap')?.addEventListener('click', () => {
+    finishHumanClickTappingSession({ skipHumanTaps: false });
+  });
+  document.getElementById('btn-hclick-tap-pad')?.addEventListener('mousedown', (ev) => {
+    ev.preventDefault();
+    recordManualHumanTap(ev.shiftKey);
+  });
+}
+
 async function createLyricsTrackUnderTrack(track, { clipId = null } = {}) {
   if (!track || !currentProject) return;
   if (isCreatingLyricsTrack) {
@@ -7505,7 +8339,8 @@ function buildMenubarItems(key) {
       { icon: 'mic-wizard', label: 'Add Mic via Studio Wizard...', kbd: '', run: () => openAddMicWizard() },
       { icon: 'video', label: 'Add Video Input Track (RobOS IP Cam / Webcam)...', kbd: '', run: () => openAddVideoModal() },
       { icon: 'drumset-ai', label: 'DrumSet AI All-Mic Soundcheck...', kbd: '', run: () => openDrumsetWizard() },
-      { icon: 'metronome', label: 'Generate Click Track Below Selected (Gemini AI)...', kbd: '', disabled: !primaryTrack || !(primaryTrack.clips || []).some(c => !c.muted), run: () => primaryTrack && generateClickTrackUnderTrack(primaryTrack) },
+      { icon: 'metronome', label: 'Create Click Track (Tap + Gemini AI)...', kbd: '', disabled: !primaryTrack || !(primaryTrack.clips || []).some(c => !c.muted), run: () => primaryTrack && openCreateClickTrackModal(primaryTrack) },
+      { icon: 'metronome', label: 'Quick Auto Click Track (No Tap)...', kbd: '', disabled: !primaryTrack || !(primaryTrack.clips || []).some(c => !c.muted), run: () => primaryTrack && generateClickTrackUnderTrack(primaryTrack) },
       { icon: 'drum-replace', label: 'Remove Drums to New Track Below (Gemini AI)...', kbd: '', disabled: !primaryTrack || !(primaryTrack.clips || []).some(c => !c.muted), run: () => primaryTrack && removeDrumsUnderTrack(primaryTrack) },
       { icon: 'lyrics', label: 'Create Lyrics Track (MIDI Karaoke .KAR)...', kbd: '', disabled: !primaryTrack || !(primaryTrack.clips || []).some(c => !c.muted), run: () => primaryTrack && createLyricsTrackUnderTrack(primaryTrack) },
       { sep: true },
@@ -7894,7 +8729,7 @@ function openTimelineSpaceContextMenu(ev, track, clickTimeSec) {
     <div class="ctx-sep"></div>
     ${ctxRow('data-tl-ctx', 'paste-here', 'paste', 'Paste Region(s) Here', 'Ctrl+V', { disabled: !clipClipboard })}
     ${ctxRow('data-tl-ctx', 'import-here', 'import-wav', 'Import Audio / Video Here...', 'Ctrl+Shift+I')}
-    ${track ? ctxRow('data-tl-ctx', 'gen-click', 'metronome', 'Generate Click Track', 'Gemini AI', { disabled: !(track.clips || []).some(c => !c.muted) }) : ''}
+    ${track ? ctxRow('data-tl-ctx', 'create-click', 'metronome', 'Create Click Track', 'Tap + Gemini AI', { disabled: !(track.clips || []).some(c => !c.muted) }) : ''}
     ${track ? ctxRow('data-tl-ctx', 'remove-drums', 'drum-replace', 'Remove Drums', 'Gemini AI', { disabled: !(track.clips || []).some(c => !c.muted) }) : ''}
     ${track ? ctxRow('data-tl-ctx', 'create-lyrics', 'lyrics', 'Create Lyrics Track', 'MIDI .KAR', { disabled: !(track.clips || []).some(c => !c.muted) }) : ''}
     ${ctxRow('data-tl-ctx', 'split-all-here', 'scissors', `Split All Regions Crossing ${formatTimecode(safeTime)}`)}
@@ -7935,6 +8770,8 @@ function openTimelineSpaceContextMenu(ev, track, clickTimeSec) {
         }, { statusMsg: `Pasted region(s) at ${formatTimecode(safeTime)}` });
       } else if (cmd === 'import-here') {
         await importAudioWavFiles({ startSec: safeTime, targetTrackId: track?.id || null });
+      } else if (cmd === 'create-click' && track) {
+        await openCreateClickTrackModal(track);
       } else if (cmd === 'gen-click' && track) {
         await generateClickTrackUnderTrack(track);
       } else if (cmd === 'remove-drums' && track) {
@@ -7989,7 +8826,7 @@ function openTrackContextMenu(ev, track, clickTimeSec = null) {
       <span class="ctx-item-left">${DI.badge('mic-wizard', 15)}<span>${esc(multiLabel)}</span></span>
       <span class="mono" style="color:#94a3b8;font-size:10px;">${DE.formatDb(Number(track.gainDb) || 0)}</span>
     </div>
-    ${ctxRow('data-ctx', 'gen-click', 'metronome', 'Generate Click Track', 'Gemini AI', { disabled: !(track.clips || []).some(c => !c.muted) })}
+    ${ctxRow('data-ctx', 'create-click', 'metronome', 'Create Click Track', 'Tap + Gemini AI', { disabled: !(track.clips || []).some(c => !c.muted) })}
     ${ctxRow('data-ctx', 'remove-drums', 'drum-replace', 'Remove Drums', 'Gemini AI', { disabled: !(track.clips || []).some(c => !c.muted) })}
     ${ctxRow('data-ctx', 'create-lyrics', 'lyrics', 'Create Lyrics Track', 'MIDI .KAR', { disabled: !(track.clips || []).some(c => !c.muted) })}
     ${ctxRow('data-ctx', 'add-below', 'plus', 'Add Blank Audio Track Below', 'Ctrl+T')}
@@ -8042,7 +8879,9 @@ function openTrackContextMenu(ev, track, clickTimeSec = null) {
       const cmd = btn.dataset.ctx;
       closeContextMenu();
 
-      if (cmd === 'gen-click') {
+      if (cmd === 'create-click') {
+        await openCreateClickTrackModal(track);
+      } else if (cmd === 'gen-click') {
         await generateClickTrackUnderTrack(track);
       } else if (cmd === 'remove-drums') {
         await removeDrumsUnderTrack(track);
@@ -8159,7 +8998,7 @@ function openTakeContextMenu(ev, track, clip, clickTimeSec) {
     ${resolveClipVideoFilePath(clip) ? ctxRow('data-take-ctx', 'export-video-mp4', 'video', 'Export Video + Audio Mixdown (.mp4)...') : ''}
     ${resolveClipVideoFilePath(clip) ? ctxRow('data-take-ctx', 'reveal-video-mp4', 'folder', 'Reveal Raw Camera Video (.mp4) in Folder') : ''}
     <div class="ctx-sep"></div>
-    ${ctxRow('data-take-ctx', 'gen-click', 'metronome', 'Generate Click Track', 'Gemini AI')}
+    ${ctxRow('data-take-ctx', 'create-click', 'metronome', 'Create Click Track', 'Tap + Gemini AI')}
     ${ctxRow('data-take-ctx', 'remove-drums', 'drum-replace', 'Remove Drums', 'Gemini AI')}
     ${ctxRow('data-take-ctx', 'create-lyrics', 'lyrics', 'Create Lyrics Track', 'MIDI .KAR')}
     ${ctxRow('data-take-ctx', 'split-here', 'scissors', `Split Region${targetClipIds.size > 1 ? 's' : ''} Here (${formatTimecode(clickTimeSec)})`, '', { disabled: !canSplitHere })}
@@ -8279,6 +9118,8 @@ function openTakeContextMenu(ev, track, clip, clickTimeSec) {
         openExportMixdownModal({ preferFormat: 'mp4', preferTrackId: track.id, preferClipId: clip.id });
       } else if (cmd === 'reveal-video-mp4') {
         await revealActiveVideoTakeInFolder(track.id, clip.id);
+      } else if (cmd === 'create-click') {
+        await openCreateClickTrackModal(track);
       } else if (cmd === 'gen-click') {
         await generateClickTrackUnderTrack(track);
       } else if (cmd === 'remove-drums') {
@@ -9967,6 +10808,7 @@ async function init() {
   document.getElementById('btn-quick-add-track')?.addEventListener('click', () => addBlankAudioTracks(1));
   document.getElementById('btn-quick-import-media')?.addEventListener('click', () => importAudioWavFiles());
   setupMediaDragAndDrop();
+  wireHumanClickModalEvents();
   document.getElementById('btn-quick-arm-sel')?.addEventListener('click', () => armSelectedTracks());
   document.getElementById('btn-quick-disarm-all')?.addEventListener('click', () => disarmAllTracks());
   document.getElementById('btn-quick-remove-tracks')?.addEventListener('click', () => removeSelectedTracks());
@@ -10393,9 +11235,29 @@ async function init() {
       return;
     }
 
+    // Human Click Track Tap-Along Keyboard Handler (Space / T = Beat Tap, Shift+Space / A = Transition Accent, Esc = Close)
+    if (humanClickState.open) {
+      if (ev.key === 'Escape') {
+        ev.preventDefault();
+        ev.stopPropagation();
+        await closeCreateClickTrackModal();
+        return;
+      }
+      if (!isTextTyping && !isMod && !ev.altKey && (humanClickState.stage === 'tapping' || humanClickState.stage === 'countdown')) {
+        if (ev.code === 'Space' || keyLower === 't' || keyLower === 'a') {
+          ev.preventDefault();
+          ev.stopPropagation();
+          if (!ev.repeat) {
+            recordManualHumanTap(ev.shiftKey || keyLower === 'a');
+          }
+          return;
+        }
+      }
+    }
+
     // Fast-path Spacebar transport stop/start (even if a slider/button/select is focused when recording or playing!)
     if (!isTextTyping && !isMod && !ev.altKey && ev.code === 'Space') {
-      const anyModalOpen = ['add-mic-wizard-modal', 'open-project-modal', 'drumkits-modal', 'drumset-wizard-modal', 'rename-item-modal', 'shortcuts-modal', 'export-mixdown-modal', 'add-video-modal']
+      const anyModalOpen = ['add-mic-wizard-modal', 'open-project-modal', 'drumkits-modal', 'drumset-wizard-modal', 'rename-item-modal', 'shortcuts-modal', 'export-mixdown-modal', 'add-video-modal', 'headphone-mix-modal', 'human-click-modal']
         .some(id => {
           const el = document.getElementById(id);
           return el && !el.classList.contains('hidden');
@@ -10459,7 +11321,7 @@ async function init() {
     }
 
     // Do not intercept studio shortcuts if a modal dialog is open
-    const anyModalOpen = ['add-mic-wizard-modal', 'open-project-modal', 'drumkits-modal', 'drumset-wizard-modal', 'rename-item-modal', 'shortcuts-modal', 'export-mixdown-modal', 'add-video-modal']
+    const anyModalOpen = ['add-mic-wizard-modal', 'open-project-modal', 'drumkits-modal', 'drumset-wizard-modal', 'rename-item-modal', 'shortcuts-modal', 'export-mixdown-modal', 'add-video-modal', 'headphone-mix-modal', 'human-click-modal']
       .some(id => {
         const el = document.getElementById(id);
         return el && !el.classList.contains('hidden');
@@ -11556,6 +12418,18 @@ window.__dawStudioState = () => ({
     kitId: d.kitId,
   })),
   totalDiscoveredPlugins: vstDirsStatus?.totalPlugins || 0,
+  humanClickModal: {
+    open: humanClickState.open,
+    stage: humanClickState.stage,
+    targetTrackId: humanClickState.targetTrackId,
+    beatInstrument: document.getElementById('hclick-beat-inst-select')?.value || 'hihat-closed',
+    transitionInstrument: document.getElementById('hclick-trans-inst-select')?.value || 'hihat-open',
+    transitionPlacement: document.getElementById('hclick-trans-placement-select')?.value || 'turnaround',
+    countdownBeats: Number(document.getElementById('hclick-countdown-beats-input')?.value ?? 4),
+    manualTapCount: humanClickState.manualTaps.length,
+    micSpikeCount: humanClickState.micSpikeCount,
+    liveBpm: humanClickState.liveBpm,
+  },
   liveRecording: liveRecSession ? {
     startSec: liveRecSession.startSec,
     elapsedSec: Number(getLiveRecordingElapsedSec().toFixed(3)),
@@ -11570,6 +12444,7 @@ window.__dawStudioState = () => ({
   } : null,
 });
 window.__openDrumsetWizard = openDrumsetWizard;
+window.__openCreateClickTrackModal = openCreateClickTrackModal;
 window.__openVstDirectoriesModal = openVstDirectoriesModal;
 window.__dawTestOpenMenubar = (key = 'track') => {
   const btn = document.querySelector(`.menubar-trigger[data-menubar="${key}"]`);
