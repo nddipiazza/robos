@@ -345,6 +345,10 @@ class TTSEngine extends EventEmitter {
       } catch {}
       this.kokoroWorker = null;
     }
+    if (this.piperDaemon) {
+      try { this.piperDaemon.kill('SIGTERM'); } catch {}
+      this.piperDaemon = null;
+    }
     this.kokoroPending.clear();
   }
 
@@ -389,11 +393,15 @@ class TTSEngine extends EventEmitter {
             clearTimeout(readySafety);
             resolveReady();
             this.kokoroWorker = null;
+            for (const [, h] of this.kokoroPending) h.reject(err);
+            this.kokoroPending.clear();
           });
           proc.on('exit', () => {
             clearTimeout(readySafety);
             resolveReady();
             this.kokoroWorker = null;
+            for (const [, h] of this.kokoroPending) h.reject(new Error('Kokoro worker exited'));
+            this.kokoroPending.clear();
           });
           this.kokoroWorker = proc;
         }
@@ -497,6 +505,10 @@ except Exception as e:
   }
 
   _synthesizePiper(text, outWav, { voice = 'en_US-lessac-medium', speed = 1.0 } = {}) {
+    // Always prefer the native C++ piper --json-input daemon (~190ms warm synthesis) when installed!
+    if (fs.existsSync(path.join(os.homedir(), '.local/bin/piper')) || !fs.existsSync(KOKORO_MODEL)) {
+      return this._synthesizePiperCli(text, outWav, { voice, speed });
+    }
     const worker = this._getKokoroWorker();
     if (worker && worker.stdin && !worker.killed) {
       return new Promise((resolve, reject) => {
@@ -521,12 +533,87 @@ except Exception as e:
     return this._synthesizePiperCli(text, outWav, { voice, speed });
   }
 
-  _synthesizePiperCli(text, outWav, { voice = 'en_US-lessac-medium', speed = 1.0 } = {}) {
-    return new Promise((resolve, reject) => {
-      const modelPath = voice.includes('/') || voice.endsWith('.onnx')
-        ? voice
-        : path.join(PIPER_DIR, `${voice}/${voice}.onnx`);
+  _getPiperDaemon(modelPath, speed = 1.0) {
+    if (process.env.ROBOS_TEST === '1') return null;
+    const piperBin = fs.existsSync(path.join(os.homedir(), '.local/bin/piper'))
+      ? path.join(os.homedir(), '.local/bin/piper')
+      : null;
+    if (!piperBin || !fs.existsSync(modelPath)) return null;
 
+    if (this.piperDaemon && !this.piperDaemon.killed && this.piperDaemonModel === modelPath) {
+      return this.piperDaemon;
+    }
+    try {
+      if (this.piperDaemon) {
+        try { this.piperDaemon.kill('SIGTERM'); } catch {}
+      }
+      const lengthScale = (1.0 / (Number(speed) || 1.0)).toFixed(2);
+      const proc = spawn(piperBin, ['-m', modelPath, '--json-input', '--length-scale', String(lengthScale), '-q'], {
+        stdio: ['pipe', 'pipe', 'pipe'],
+      });
+      this.piperQueue = this.piperQueue || [];
+      this.piperStdoutBuf = '';
+      if (proc.stderr) proc.stderr.on('data', () => {});
+      proc.stdout.on('data', (chunk) => {
+        this.piperStdoutBuf += chunk.toString();
+        let idx;
+        while ((idx = this.piperStdoutBuf.indexOf('\n')) >= 0) {
+          const line = this.piperStdoutBuf.slice(0, idx).trim();
+          this.piperStdoutBuf = this.piperStdoutBuf.slice(idx + 1);
+          const item = this.piperQueue.shift();
+          if (item) item.resolve(line);
+        }
+      });
+      proc.on('exit', () => {
+        if (this.piperDaemon === proc) this.piperDaemon = null;
+        while (this.piperQueue && this.piperQueue.length) {
+          this.piperQueue.shift().reject(new Error('Piper daemon exited'));
+        }
+      });
+      proc.on('error', () => {
+        if (this.piperDaemon === proc) this.piperDaemon = null;
+      });
+      try {
+        proc.unref();
+        if (proc.stdin) proc.stdin.unref();
+        if (proc.stdout) proc.stdout.unref();
+        if (proc.stderr) proc.stderr.unref();
+      } catch {}
+      this.piperDaemon = proc;
+      this.piperDaemonModel = modelPath;
+      return proc;
+    } catch {
+      return null;
+    }
+  }
+
+  _synthesizePiperCli(text, outWav, { voice = 'en_US-lessac-medium', speed = 1.0 } = {}) {
+    const modelPath = voice.includes('/') || voice.endsWith('.onnx')
+      ? voice
+      : path.join(PIPER_DIR, `${voice}/${voice}.onnx`);
+
+    const daemon = this._getPiperDaemon(modelPath, speed);
+    if (daemon && daemon.stdin && !daemon.killed) {
+      return new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => reject(new Error('Piper daemon timeout')), 6000);
+        this.piperQueue.push({
+          resolve: () => { clearTimeout(timeout); resolve(); },
+          reject: (err) => { clearTimeout(timeout); reject(err); },
+        });
+        try {
+          daemon.stdin.write(JSON.stringify({ text, output_file: outWav }) + '\n');
+        } catch (err) {
+          clearTimeout(timeout);
+          this.piperQueue.pop();
+          reject(err);
+        }
+      }).catch(() => this._synthesizePiperCold(text, outWav, modelPath, speed));
+    }
+    return this._synthesizePiperCold(text, outWav, modelPath, speed);
+  }
+
+  _synthesizePiperCold(text, outWav, modelPath, speed = 1.0) {
+    return new Promise((resolve, reject) => {
       const piperBin = fs.existsSync(path.join(os.homedir(), '.local/bin/piper'))
         ? path.join(os.homedir(), '.local/bin/piper')
         : 'piper';

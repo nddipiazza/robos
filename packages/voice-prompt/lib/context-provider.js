@@ -188,10 +188,33 @@ function getWorkspaceContext() {
   };
 }
 
+let _cachedHeadlessContext = null;
+let _cachedDesktopContext = null;
+let _cachedDesktopAtMs = 0;
+
 /**
  * Aggregate all context into a single structured metadata object
  */
 async function getAggregatedContext() {
+  if (process.env.ROBOS_HEADLESS === '1') {
+    if (!_cachedHeadlessContext) {
+      const workspace = getWorkspaceContext();
+      _cachedHeadlessContext = {
+        capturedAt: new Date().toISOString(),
+        activeApp: { appId: 'robos-server', title: os.hostname(), wid: null, wmClass: null },
+        runningApps: [],
+        workspace,
+        summary: `On RobOS Server ${os.hostname()}`,
+      };
+    }
+    return { ..._cachedHeadlessContext, capturedAt: new Date().toISOString() };
+  }
+
+  const now = Date.now();
+  if (process.env.ROBOS_TEST !== '1' && _cachedDesktopContext && (now - _cachedDesktopAtMs < 4000)) {
+    return { ..._cachedDesktopContext, capturedAt: new Date().toISOString() };
+  }
+
   const [activeWin, runningApps] = await Promise.all([
     getActiveWindow(),
     getRunningApps(),
@@ -201,7 +224,7 @@ async function getAggregatedContext() {
 
   const activeAppId = activeWin.appId || (runningApps.length > 0 ? runningApps[0].appId : 'desktop');
 
-  return {
+  const result = {
     capturedAt: new Date().toISOString(),
     activeApp: {
       appId: activeAppId,
@@ -213,6 +236,9 @@ async function getAggregatedContext() {
     workspace,
     summary: activeWin.title ? `In ${activeWin.title} (${activeAppId})` : `In ${activeAppId}`,
   };
+  _cachedDesktopContext = result;
+  _cachedDesktopAtMs = now;
+  return result;
 }
 
 module.exports = {

@@ -976,8 +976,9 @@ function startApiServer(overridePort) {
         }));
       }
 
-      // Server-side Whisper audio processing + "Commander" wake-word & action execution for connected phones
+      // Server-side fast Moonshine/Whisper audio processing + "Commander" wake-word & action execution for connected phones
       if (pathname === '/api/assistant/process-audio' && method === 'POST') {
+        const reqStartMs = Date.now();
         const body = await parseBody(req);
         if (body && typeof body === 'object' && body.deviceUuid) {
           upsertAssistantNode(body, req.socket && req.socket.remoteAddress);
@@ -989,13 +990,14 @@ function startApiServer(overridePort) {
         }
 
         let transcript = '';
-        let sttSource = 'robos-server-whisper';
+        let sttSource = 'robos-server-asr';
         if (body && typeof body.mockTranscript === 'string') {
           transcript = body.mockTranscript.trim();
         } else {
           const wavBuffer = Buffer.from(wavB64, 'base64');
           const sttRes = await sttEngine.transcribeWavBuffer(wavBuffer);
           transcript = (sttRes && sttRes.text ? sttRes.text : '').trim();
+          if (sttRes && sttRes.modelId) sttSource = sttRes.modelId;
           if (!transcript && body && typeof body.fallbackTranscript === 'string') {
             transcript = body.fallbackTranscript.trim();
             if (transcript) sttSource = 'vosk-fallback';

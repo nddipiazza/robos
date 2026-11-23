@@ -646,8 +646,9 @@ fun AssistantTabScreen(
             Choice(
                 label = "End-of-Speech Silence Hang Time",
                 options = listOf(
+                    420 to "0.4s (Ultra-Fast — Recommended)",
                     700 to "0.7s (Fast response)",
-                    1100 to "1.1s (Balanced — Recommended)",
+                    1100 to "1.1s (Balanced)",
                     1800 to "1.8s (Long pauses)",
                     2500 to "2.5s (Dictation)",
                 ),

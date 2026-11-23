@@ -77,6 +77,79 @@ function decodeWavBufferToFloat32(buffer) {
   return null;
 }
 
+function trimSilenceFloat32(samples, sampleRate = 16000, threshold = 0.012) {
+  if (!samples || samples.length === 0) return samples;
+  const win = 160; // 10ms window at 16kHz
+  let first = -1;
+  let last = -1;
+  for (let i = 0; i + win <= samples.length; i += win) {
+    let sumSq = 0;
+    for (let j = 0; j < win; j++) {
+      const v = samples[i + j];
+      sumSq += v * v;
+    }
+    const rms = Math.sqrt(sumSq / win);
+    if (rms >= threshold) {
+      if (first === -1) first = i;
+      last = i + win;
+    }
+  }
+  if (first === -1) return new Float32Array(0);
+  const pad = Math.floor(sampleRate * 0.08); // 80ms pad on each side
+  const start = Math.max(0, first - pad);
+  const end = Math.min(samples.length, last + pad);
+  return samples.subarray(start, end);
+}
+
+let _fastMoonshineRecognizer = undefined;
+function getFastMoonshineRecognizer() {
+  if (_fastMoonshineRecognizer !== undefined) return _fastMoonshineRecognizer;
+  if (process.env.ROBOS_TEST === '1' || process.env.ROBOS_TEST_MODE === '1') {
+    _fastMoonshineRecognizer = null;
+    return null;
+  }
+  try {
+    const asrFastDir = path.join(os.homedir(), '.local/share/robos/asr-fast');
+    const sherpaPath = path.join(asrFastDir, 'node_modules/sherpa-onnx-node');
+    const modelDir = fs.existsSync(path.join(asrFastDir, 'sherpa-onnx-moonshine-base-en-int8/encode.int8.onnx'))
+      ? path.join(asrFastDir, 'sherpa-onnx-moonshine-base-en-int8')
+      : (fs.existsSync(path.join(asrFastDir, 'sherpa-onnx-moonshine-tiny-en-int8/encode.int8.onnx'))
+        ? path.join(asrFastDir, 'sherpa-onnx-moonshine-tiny-en-int8')
+        : null);
+    if (!fs.existsSync(sherpaPath) || !modelDir) {
+      _fastMoonshineRecognizer = null;
+      return null;
+    }
+    const sherpa = require(sherpaPath);
+    const rec = new sherpa.OfflineRecognizer({
+      featConfig: { sampleRate: 16000, featureDim: 80 },
+      modelConfig: {
+        moonshine: {
+          preprocessor: path.join(modelDir, 'preprocess.onnx'),
+          encoder: path.join(modelDir, 'encode.int8.onnx'),
+          uncachedDecoder: path.join(modelDir, 'uncached_decode.int8.onnx'),
+          cachedDecoder: path.join(modelDir, 'cached_decode.int8.onnx'),
+        },
+        tokens: path.join(modelDir, 'tokens.txt'),
+        numThreads: Math.min(6, Math.max(2, os.cpus().length - 1)),
+        provider: 'cpu',
+        debug: 0,
+      },
+    });
+    // Warm up JIT / ONNX arenas once with 0.25s dummy buffer
+    const warmStream = rec.createStream();
+    warmStream.acceptWaveform({ sampleRate: 16000, samples: new Float32Array(4000) });
+    rec.decode(warmStream);
+    _fastMoonshineRecognizer = { rec, modelId: path.basename(modelDir) };
+    console.log(`[stt-engine] Loaded fast C++ ASR (${_fastMoonshineRecognizer.modelId})`);
+    return _fastMoonshineRecognizer;
+  } catch (err) {
+    console.warn('[stt-engine] Fast Moonshine ASR unavailable, falling back to Whisper:', err.message);
+    _fastMoonshineRecognizer = null;
+    return null;
+  }
+}
+
 function readWavToFloat32(filePath) {
   if (!fs.existsSync(filePath)) return null;
   try {
@@ -156,14 +229,16 @@ class STTEngine extends EventEmitter {
     this.currentContext = options.context || {};
     this.bubbleSeq = 0;
 
-    // Pre-warm Whisper worker in background
+    // Pre-warm fast Moonshine C++ ASR (or Whisper fallback) in background
     if (process.env.ROBOS_TEST !== '1' && process.env.ROBOS_TEST_MODE !== '1') {
       setTimeout(() => {
         try {
-          const w = this.getWorker();
-          if (w) w.postMessage({ type: 'init' });
+          if (!getFastMoonshineRecognizer()) {
+            const w = this.getWorker();
+            if (w) w.postMessage({ type: 'init' });
+          }
         } catch {}
-      }, 100);
+      }, 50);
     }
   }
 
@@ -710,13 +785,36 @@ class STTEngine extends EventEmitter {
   }
 
   /**
-   * Transcribe a raw 16kHz PCM16LE WAV Buffer on the server using the Whisper worker.
+   * Transcribe a raw 16kHz PCM16LE WAV Buffer on the server using C++ Moonshine INT8 (or Whisper fallback).
    */
   async transcribeWavBuffer(wavBuffer) {
-    const samples = decodeWavBufferToFloat32(wavBuffer);
-    if (!samples || samples.length < 800) {
+    const rawSamples = decodeWavBufferToFloat32(wavBuffer);
+    if (!rawSamples || rawSamples.length < 800) {
       return { ok: true, text: '', modelId: null };
     }
+    const samples = trimSilenceFloat32(rawSamples, 16000);
+    if (!samples || samples.length < 640) {
+      return { ok: true, text: '', modelId: 'vad-trimmed-empty' };
+    }
+
+    const fast = getFastMoonshineRecognizer();
+    if (fast && fast.rec) {
+      try {
+        const stream = fast.rec.createStream();
+        stream.acceptWaveform({ sampleRate: 16000, samples });
+        fast.rec.decode(stream);
+        const out = fast.rec.getResult(stream);
+        const cleaned = cleanTranscript(out?.text || '');
+        return {
+          ok: true,
+          text: cleaned,
+          modelId: fast.modelId,
+        };
+      } catch (err) {
+        console.warn('[stt-engine] Moonshine decode error, falling back:', err.message);
+      }
+    }
+
     const opts = samples.length > 16000 * 30
       ? { chunk_length_s: 30, stride_length_s: 5 }
       : {};

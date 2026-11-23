@@ -10,8 +10,8 @@ import android.os.SystemClock
 /**
  * Dedicated 24/7 off-screen 16 kHz mono PCM16LE microphone capture engine.
  *
- * Operates inside `AssistantServerService` with zero Activity dependency so screen-off,
- * lock screen, app switching, or OLED Blackout mode never interrupt audio capture.
+ * Uses ultra-tight 30ms frames (480 samples = 960 bytes) so end-of-speech and
+ * "Commander" wake-word reflexes trigger with minimal buffering latency.
  */
 class MicrophoneEngine(
     private val sampleRate: Int = 16000,
@@ -44,7 +44,7 @@ class MicrophoneEngine(
             onError("Microphone hardware returned invalid buffer size ($minBuf).")
             return false
         }
-        val bufferSize = maxOf(minBuf * 2, sampleRate) // >= 0.5s ring capacity
+        val bufferSize = maxOf(minBuf * 2, sampleRate / 2)
 
         val sources = intArrayOf(
             MediaRecorder.AudioSource.VOICE_RECOGNITION,
@@ -88,10 +88,10 @@ class MicrophoneEngine(
         running = true
         lastFrameElapsedMs = SystemClock.elapsedRealtime()
 
-        // 160ms PCM frames (2560 samples = 5120 bytes at 16 kHz mono 16-bit)
-        val frameBytes = (sampleRate / 6) * 2
+        // 30ms PCM frames (480 samples = 960 bytes at 16 kHz mono 16-bit)
+        val frameBytes = ((sampleRate * 30) / 1000) * 2
         thread = Thread({
-            Process.setThreadPriority(Process.THREAD_PRIORITY_AUDIO)
+            Process.setThreadPriority(Process.THREAD_PRIORITY_URGENT_AUDIO)
             val buf = ByteArray(frameBytes)
             while (running) {
                 val rec = audioRecord ?: break

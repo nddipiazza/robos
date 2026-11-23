@@ -79,6 +79,74 @@ class RobosAssistantCoreTest {
     }
 
     @Test
+    fun earlyFinalizeHintAndFastCommanderWakeReflexRespondBeforeDiskWrite() = runTest {
+        val segmenter = AdaptiveVadSegmenter(
+            sampleRate = 16000,
+            sensitivity = 65,
+            silenceHangMs = 1100, // Even with 1.1s normal hang, earlyFinalizeHint cuts at 300ms!
+            preRollMs = 300,
+            maxClipSeconds = 30,
+        )
+        val quiet30ms = ByteArray(960) // 30ms @ 16kHz PCM16LE
+        val speech30ms = HttpAssistantServer.synthesizeSpeechLikeTonePcm(durationMs = 30L, sampleRate = 16000, freqHz = 260.0)
+        val captured = ArrayList<CapturedUtterance>()
+        var clockMs = 5_000_000L
+
+        repeat(10) {
+            segmenter.processPcm16Le(quiet30ms, quiet30ms.size, clockMs, earlyFinalizeHint = false) { captured.add(it) }
+            clockMs += 30L
+        }
+        // 450ms of "Commander" speech
+        repeat(15) {
+            segmenter.processPcm16Le(speech30ms, speech30ms.size, clockMs, earlyFinalizeHint = true) { captured.add(it) }
+            clockMs += 30L
+        }
+        assertTrue(segmenter.isInUtterance)
+        // 210ms comma pause MUST NOT cut early
+        repeat(7) {
+            segmenter.processPcm16Le(quiet30ms, quiet30ms.size, clockMs, earlyFinalizeHint = true) { captured.add(it) }
+            clockMs += 30L
+        }
+        assertTrue("210ms comma pause must not finalize early", captured.isEmpty())
+        // At 300ms (3 more frames), fastWakeCut triggers immediately!
+        repeat(3) {
+            segmenter.processPcm16Le(quiet30ms, quiet30ms.size, clockMs, earlyFinalizeHint = true) { captured.add(it) }
+            clockMs += 30L
+        }
+        assertEquals(1, captured.size)
+
+        val dir = Files.createTempDirectory("robos-fast-wake-test").toFile()
+        try {
+            val store = RecordingArchiveStore(dir)
+            val events = ArrayList<String>()
+            val ackWav = WavCodec.encodePcm16Mono(speech30ms, 16000)
+            val coordinator = SurveillanceCoordinator(
+                archiveStore = store,
+                serverGateway = { _, _, _, _ -> ServerTurnResponse(ok = true) },
+                isServerConnected = { true },
+                onSpeakWav = { _, text ->
+                    // At the moment audio plays, disk archive has NOT written yet!
+                    assertEquals(0, store.stats().totalRecordings)
+                    events.add("spoke:$text")
+                },
+                onEvent = { ev, _ -> events.add("event:$ev") },
+            )
+            val saved = coordinator.fastArmLocalCommanderWake(
+                config = AssistantConfig(speakServerReplies = true),
+                utterance = captured[0],
+                wakeAckWav = ackWav,
+            )
+            assertEquals("fast-wake-spotter", saved.sttSource)
+            assertEquals("Yes, Commander?", saved.assistantReply)
+            assertTrue(coordinator.isAwaitingFollowup())
+            assertEquals(listOf("spoke:Yes, Commander?", "event:wake_armed"), events)
+            assertEquals(1, store.stats().totalRecordings)
+        } finally {
+            dir.deleteRecursively()
+        }
+    }
+
+    @Test
     fun wakeWordParserMatchesCommanderVariants() {
         val m1 = WakeWordParser.parse("Commander, what is the git status?")
         assertTrue(m1.matched)

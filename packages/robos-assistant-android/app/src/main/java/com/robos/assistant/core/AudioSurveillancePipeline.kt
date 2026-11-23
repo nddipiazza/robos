@@ -148,7 +148,7 @@ class AdaptiveVadSegmenter(
     var sensitivity: Int = sensitivity.coerceIn(1, 100)
 
     @Volatile
-    var silenceHangMs: Int = silenceHangMs.coerceIn(400, 4000)
+    var silenceHangMs: Int = silenceHangMs.coerceIn(200, 4000)
 
     @Volatile
     var maxClipSeconds: Int = maxClipSeconds.coerceIn(10, 300)
@@ -168,6 +168,13 @@ class AdaptiveVadSegmenter(
     private val rollingBars = FloatArray(16) { 0.04f }
     private var barWriteIdx = 0
 
+    @get:Synchronized
+    val isInUtterance: Boolean
+        get() = inUtterance
+
+    @Synchronized
+    fun currentUtteranceBytes(): ByteArray = activeBuffer.toByteArray()
+
     @Synchronized
     fun reset() {
         inUtterance = false
@@ -184,6 +191,7 @@ class AdaptiveVadSegmenter(
         pcm: ByteArray,
         length: Int = pcm.size,
         nowEpochMs: Long = System.currentTimeMillis(),
+        earlyFinalizeHint: Boolean = false,
         onUtteranceComplete: (CapturedUtterance) -> Unit,
     ): FrameLevelTelemetry {
         val validBytes = (length.coerceAtMost(pcm.size)) and 0x7FFFFFFE
@@ -258,8 +266,9 @@ class AdaptiveVadSegmenter(
             val totalBytes = activeBuffer.size()
             val totalDurationMs = (totalBytes * 1000L) / (sampleRate * 2)
             val maxDurationMs = maxClipSeconds * 1000L
+            val fastWakeCut = earlyFinalizeHint && silenceAccumulatedMs >= 300L && totalDurationMs in 300L..1750L
 
-            if (silenceAccumulatedMs >= silenceHangMs || totalDurationMs >= maxDurationMs) {
+            if (fastWakeCut || silenceAccumulatedMs >= silenceHangMs || totalDurationMs >= maxDurationMs) {
                 val capturedBytes = activeBuffer.toByteArray()
                 val hadRealSpeech = utteranceSpeechFrames >= 2 && totalDurationMs >= 280L
                 val startMs = utteranceStartedEpochMs
@@ -704,6 +713,56 @@ class SurveillanceCoordinator(
     fun disarmFollowup() {
         armedFollowupUntilEpochMs = 0L
         armedTrigger = ""
+    }
+
+    /**
+     * Zero-network-wait (< 190ms) reflex path when the on-device constrained grammar spotter
+     * confirms standalone `"Commander"` while connected to a RobOS Server:
+     * plays the RAM-cached `"Yes, Commander?"` WAV first, arms the follow-up command window,
+     * and persists the `.wav` surveillance clip immediately after.
+     */
+    suspend fun fastArmLocalCommanderWake(
+        config: AssistantConfig,
+        utterance: CapturedUtterance,
+        wakeAckWav: ByteArray,
+    ): AudioRecordingEntry {
+        val replyText = "Yes, Commander?"
+        armedTrigger = "Commander"
+        armedFollowupUntilEpochMs = System.currentTimeMillis() + FOLLOWUP_WINDOW_MS
+        if (config.speakServerReplies && wakeAckWav.size > 44) {
+            lastSpokenReplyLower = replyText.lowercase()
+            onSpeakWav(wakeAckWav, replyText)
+            armedFollowupUntilEpochMs = System.currentTimeMillis() + FOLLOWUP_WINDOW_MS
+        }
+        val id = buildRecordingId(utterance.startedEpochMs)
+        val wavBytes = WavCodec.encodePcm16Mono(utterance.pcm16le, utterance.sampleRate)
+        val saved = archiveStore.saveRecording(
+            wavBytes = wavBytes,
+            entryWithoutSize = AudioRecordingEntry(
+                id = id,
+                createdAtIso = Instant.ofEpochMilli(utterance.startedEpochMs).toString(),
+                epochMs = utterance.startedEpochMs,
+                room = config.room,
+                assistantName = config.assistantName,
+                wavFileName = "$id.wav",
+                durationMs = utterance.durationMs,
+                sizeBytes = wavBytes.size.toLong(),
+                peakDbFs = utterance.peakDbFs,
+                transcript = "Commander",
+                sttSource = "fast-wake-spotter",
+                wakeWordDetected = true,
+                wakeTrigger = "Commander",
+                commandQuery = "",
+                serverConnectedAtCapture = true,
+                actionStatus = ActionOutcomeStatus.AMBIENT_RECORDED,
+                actionSummary = "Instant Commander wake reflex — listening for command",
+                assistantReply = replyText,
+            ),
+            maxClips = config.retentionMaxClips,
+            maxMb = config.retentionMaxMb,
+        )
+        onEvent("wake_armed", saved)
+        return saved
     }
 
     suspend fun handleCapturedUtterance(

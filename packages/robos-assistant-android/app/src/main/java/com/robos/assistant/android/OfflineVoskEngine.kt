@@ -34,6 +34,9 @@ class OfflineVoskEngine(private val modelsRootDir: File) {
     private var model: Model? = null
 
     private var streamRecognizer: Recognizer? = null
+    private var wakeSpotter: Recognizer? = null
+    private var wakeSpotterSawCommander: Boolean = false
+    private var wakeSpotterSawUnk: Boolean = false
 
     val modelDir: File
         get() = File(modelsRootDir, MODEL_FOLDER_NAME)
@@ -53,11 +56,54 @@ class OfflineVoskEngine(private val modelsRootDir: File) {
                 model = loaded
                 streamRecognizer?.close()
                 streamRecognizer = Recognizer(loaded, sampleRate.toFloat())
+                wakeSpotter?.close()
+                wakeSpotter = Recognizer(loaded, sampleRate.toFloat(), WAKE_GRAMMAR_JSON)
                 true
             } catch (_: Throwable) {
                 model = null
                 streamRecognizer = null
+                wakeSpotter = null
                 false
+            }
+        }
+    }
+
+    /**
+     * Ultra-fast (< 0.5ms) 5-word constrained grammar check for standalone `"Commander"` wake word.
+     * Sticky per utterance until [resetWakeSpotter]: returns true iff `"commander"` has been
+     * recognized in the current utterance and ZERO trailing `[unk]` command words have been heard.
+     */
+    fun feedWakeSpotterFrame(pcm16le: ByteArray, length: Int): Boolean {
+        synchronized(lock) {
+            val spot = wakeSpotter ?: return false
+            return try {
+                val accepted = spot.acceptWaveForm(pcm16le, length)
+                val rawJson = if (accepted) spot.result else spot.partialResult
+                val dto = json.decodeFromString(VoskJsonDto.serializer(), rawJson)
+                val phrase = dto.partial.ifBlank { dto.text }.trim().lowercase()
+                if (phrase.isNotEmpty()) {
+                    val tokens = phrase.split(' ').filter { it.isNotBlank() }
+                    if (tokens.any { it == "[unk]" } || tokens.size > 2) {
+                        wakeSpotterSawUnk = true
+                    }
+                    if (tokens.any { it == "commander" }) {
+                        wakeSpotterSawCommander = true
+                    }
+                }
+                wakeSpotterSawCommander && !wakeSpotterSawUnk
+            } catch (_: Throwable) {
+                false
+            }
+        }
+    }
+
+    fun resetWakeSpotter() {
+        synchronized(lock) {
+            wakeSpotterSawCommander = false
+            wakeSpotterSawUnk = false
+            try {
+                wakeSpotter?.reset()
+            } catch (_: Throwable) {
             }
         }
     }
@@ -219,6 +265,11 @@ class OfflineVoskEngine(private val modelsRootDir: File) {
     fun close() {
         synchronized(lock) {
             try {
+                wakeSpotter?.close()
+            } catch (_: Throwable) {
+            }
+            wakeSpotter = null
+            try {
                 streamRecognizer?.close()
             } catch (_: Throwable) {
             }
@@ -234,5 +285,7 @@ class OfflineVoskEngine(private val modelsRootDir: File) {
     companion object {
         const val MODEL_FOLDER_NAME = "vosk-model-small-en-us-0.15"
         const val MODEL_DOWNLOAD_URL = "https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.zip"
+        private const val WAKE_GRAMMAR_JSON =
+            """["commander", "hey commander", "hello commander", "hi commander", "ok commander", "okay commander", "[unk]"]"""
     }
 }

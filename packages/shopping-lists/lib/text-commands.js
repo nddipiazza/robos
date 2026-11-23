@@ -327,9 +327,9 @@ async function executeTextCommand(store, rawInput, options = {}) {
     };
   }
 
-  // 8. LIST / SHOW / STATUS / VOICE QUERY ("what is on my costco list?", "show target list", "list grocery")
-  const isShowQuery = /^(?:list|show|view|read|status|items)(?:\s+.*)?$/i.test(cleanedInput)
-    || /^(?:what(?:'s|\s+is|\s+are)?\s+(?:on|in)|what\s+do\s+(?:we|i)\s+need\s+(?:at|from|on|in)|read\s+(?:me\s+)?(?:my|our|the))\s+.*(?:shopping|grocery|target|costco|list)/i.test(cleanedInput);
+  // 8. LIST / SHOW / STATUS / VOICE QUERY ("what is on my costco list?", "can you see my grocery list?", "show target list", "list grocery")
+  const isShowQuery = /^(?:list|show|view|read|see|status|items)(?:\s+.*)?$/i.test(cleanedInput)
+    || /^(?:what(?:'s|\s+is|\s+are)?\s+(?:on|in)|what\s+do\s+(?:we|i)\s+need\s+(?:at|from|on|in)|(?:read|show|see|check|tell\s+me)(?:\s+me)?\s+(?:what(?:'s|\s+is)\s+(?:on|in)\s+)?(?:my|our|the))\s+.*(?:shopping|grocery|target|costco|list)/i.test(cleanedInput);
   if (isShowQuery) {
     const targetId = /\ball\b/i.test(cleanedInput) ? 'all' : (explicitListId || (cleanedInput.toLowerCase() === 'list' || cleanedInput.toLowerCase() === 'status' ? 'all' : defaultListId));
     const filterMode = /\bunchecked|to[\s-]buy\b/i.test(cleanedInput) ? 'unchecked'

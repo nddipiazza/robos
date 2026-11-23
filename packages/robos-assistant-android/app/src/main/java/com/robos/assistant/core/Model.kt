@@ -26,8 +26,8 @@ data class AssistantConfig(
     val port: Int = 8090,
     val sampleRate: Int = 16000,
     val vadSensitivity: Int = 60,
-    val silenceHangMs: Int = 1100,
-    val preRollMs: Int = 500,
+    val silenceHangMs: Int = 420,
+    val preRollMs: Int = 320,
     val maxClipSeconds: Int = 45,
     val recordAllSpeech: Boolean = true,
     val saveNonSpeechNoise: Boolean = false,
@@ -50,8 +50,8 @@ data class AssistantConfig(
         port = port.coerceIn(1024, 65535),
         sampleRate = 16000,
         vadSensitivity = vadSensitivity.coerceIn(1, 100),
-        silenceHangMs = silenceHangMs.coerceIn(400, 4000),
-        preRollMs = preRollMs.coerceIn(200, 1500),
+        silenceHangMs = silenceHangMs.coerceIn(200, 4000),
+        preRollMs = preRollMs.coerceIn(160, 1500),
         maxClipSeconds = maxClipSeconds.coerceIn(10, 300),
         robosServerHost = robosServerHost.trim().take(128),
         robosServerPort = robosServerPort.coerceIn(1, 65535),
@@ -80,7 +80,13 @@ class FileConfigStore(private val file: File) : ConfigStore {
             return initial
         }
         return try {
-            json.decodeFromString(AssistantConfig.serializer(), file.readText()).sanitized()
+            val loaded = json.decodeFromString(AssistantConfig.serializer(), file.readText()).sanitized()
+            // Migrate legacy 1100ms default to ultra-fast 420ms conversational endpointing
+            if (loaded.silenceHangMs == 1100) {
+                save(loaded.copy(silenceHangMs = 420, preRollMs = 320))
+            } else {
+                loaded
+            }
         } catch (_: Exception) {
             AssistantConfig(assistantName = defaultModelName).sanitized()
         }

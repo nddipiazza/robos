@@ -97,6 +97,10 @@ class AssistantApp : Application() {
     @Volatile
     var echoCooldownUntilElapsedMs: Long = 0L
 
+    @Volatile
+    var cachedWakeAckWav: ByteArray? = null
+
+    private val wakeAckFetchInProgress = AtomicBoolean(false)
     private val modelDownloadInProgress = AtomicBoolean(false)
     private var playbackJob: Job? = null
     val ready = CountDownLatch(1)
@@ -413,9 +417,35 @@ class AssistantApp : Application() {
             speakerPlayer.playWavBytes(wavBytes)
         } finally {
             voskEngine.resetStream()
-            echoCooldownUntilElapsedMs = SystemClock.elapsedRealtime() + 700L
+            voskEngine.resetWakeSpotter()
+            echoCooldownUntilElapsedMs = SystemClock.elapsedRealtime() + 260L
             updateStatus {
-                it.copy(listeningState = if (it.running) ListeningState.LISTENING else ListeningState.PAUSED)
+                it.copy(
+                    listeningState = when {
+                        !it.running -> ListeningState.PAUSED
+                        coordinator.isAwaitingFollowup() -> ListeningState.AWAITING_QUERY
+                        else -> ListeningState.LISTENING
+                    },
+                )
+            }
+        }
+    }
+
+    private fun ensureCachedWakeAckWav(hostIp: String, port: Int) {
+        if (cachedWakeAckWav != null || hostIp.isBlank()) return
+        if (!wakeAckFetchInProgress.compareAndSet(false, true)) return
+        scope.launch {
+            try {
+                val wav = serverClient.fetchSynthesizedSpeechWav(
+                    hostIp = hostIp,
+                    port = port,
+                    text = "Yes, Commander?",
+                )
+                if (wav != null && wav.size > 44) {
+                    cachedWakeAckWav = wav
+                }
+            } finally {
+                wakeAckFetchInProgress.set(false)
             }
         }
     }
@@ -444,6 +474,7 @@ class AssistantApp : Application() {
                 phonePort = cfg.port,
             )
             if (probe.reachable) {
+                ensureCachedWakeAckWav(probe.hostIp, probe.port)
                 updateStatus {
                     it.copy(
                         serverState = ServerConnectionState.CONNECTED,
@@ -478,6 +509,7 @@ class AssistantApp : Application() {
                 phonePort = cfg.port,
             )
             if (found != null && found.reachable) {
+                ensureCachedWakeAckWav(found.hostIp, found.port)
                 if (cfg.robosServerHost != found.hostIp) {
                     val saved = configStore.save(cfg.copy(robosServerHost = found.hostIp))
                     _config.value = saved
@@ -527,6 +559,9 @@ class AssistantServerService : Service(), AssistantNodeController {
     private var startedElapsedMs: Long = 0L
     private var activeHttpPort: Int = -1
     private var lastNotificationText: String = ""
+
+    @Volatile
+    private var utteranceWakeSpotterMatched: Boolean = false
 
     private val app: AssistantApp
         get() = application as AssistantApp
@@ -664,11 +699,28 @@ class AssistantServerService : Service(), AssistantNodeController {
 
         // Suppress VAD/STT ingestion while the phone is playing back audio or TTS reply
         if (SystemClock.elapsedRealtime() < app.echoCooldownUntilElapsedMs || app.speakerPlayer.isPlaying) {
+            if (utteranceWakeSpotterMatched) {
+                utteranceWakeSpotterMatched = false
+                app.voskEngine.resetWakeSpotter()
+            }
             seg.reset()
             return
         }
 
+        val cfgSnapshot = app.config.value
         val serverOnlineNow = app.status.value.actionsArmed
+        val spotterEligible = serverOnlineNow &&
+            cfgSnapshot.wakeWordEnabled &&
+            app.voskEngine.isLoaded &&
+            !app.coordinator.isAwaitingFollowup()
+
+        val wasInUtterance = seg.isInUtterance
+        if (wasInUtterance && spotterEligible) {
+            utteranceWakeSpotterMatched = app.voskEngine.feedWakeSpotterFrame(buf, len)
+        } else if (!spotterEligible) {
+            utteranceWakeSpotterMatched = false
+        }
+
         val partial = if (!serverOnlineNow && app.voskEngine.isLoaded) {
             app.voskEngine.feedStreamingFrame(buf, len)
         } else {
@@ -676,8 +728,22 @@ class AssistantServerService : Service(), AssistantNodeController {
         }
 
         var completedUtterance: CapturedUtterance? = null
-        val telemetry = seg.processPcm16Le(buf, len) { utterance ->
+        val telemetry = seg.processPcm16Le(
+            pcm = buf,
+            length = len,
+            earlyFinalizeHint = (spotterEligible && utteranceWakeSpotterMatched),
+        ) { utterance ->
             completedUtterance = utterance
+        }
+
+        if (!wasInUtterance && telemetry.inUtterance && spotterEligible) {
+            app.voskEngine.resetWakeSpotter()
+            val onsetBytes = seg.currentUtteranceBytes()
+            utteranceWakeSpotterMatched = if (onsetBytes.isNotEmpty()) {
+                app.voskEngine.feedWakeSpotterFrame(onsetBytes, onsetBytes.size)
+            } else {
+                false
+            }
         }
 
         app.updateStatus { cur ->
@@ -689,7 +755,8 @@ class AssistantServerService : Service(), AssistantNodeController {
                 else -> ListeningState.LISTENING
             }
             val liveCaption = when {
-                telemetry.inUtterance && serverOnlineNow -> "Recording speech for RobOS Server Whisper…"
+                telemetry.inUtterance && utteranceWakeSpotterMatched -> "Commander…"
+                telemetry.inUtterance && serverOnlineNow -> "Streaming speech to RobOS Server…"
                 telemetry.inUtterance && partial.isNotBlank() -> partial
                 telemetry.inUtterance -> cur.livePartialTranscript
                 else -> ""
@@ -710,10 +777,25 @@ class AssistantServerService : Service(), AssistantNodeController {
 
         val captured = completedUtterance
         if (captured != null) {
+            val wasWakeSpotterOnly = spotterEligible && utteranceWakeSpotterMatched
+            utteranceWakeSpotterMatched = false
+            app.voskEngine.resetWakeSpotter()
             val partialFallback = partial
             serviceScope.launch {
                 val cfgNow = app.config.value
                 val online = cfgNow.robosServerEnabled && app.status.value.actionsArmed
+                app.updateStatus { it.copy(livePartialTranscript = "") }
+
+                if (online && wasWakeSpotterOnly && captured.durationMs <= 1750L && !app.coordinator.isAwaitingFollowup()) {
+                    val ackWav = app.cachedWakeAckWav ?: app.speakerPlayer.builtinWakeAckWav
+                    app.coordinator.fastArmLocalCommanderWake(
+                        config = cfgNow,
+                        utterance = captured,
+                        wakeAckWav = ackWav,
+                    )
+                    return@launch
+                }
+
                 val offlineText = if (!online) {
                     if (app.voskEngine.isLoaded) {
                         app.voskEngine.transcribeUtterancePcm(captured.pcm16le, captured.sampleRate)
@@ -725,11 +807,10 @@ class AssistantServerService : Service(), AssistantNodeController {
                     ""
                 }
                 val sttSource = when {
-                    online -> "robos-server-whisper"
+                    online -> "robos-server-moonshine"
                     app.voskEngine.isLoaded -> "vosk-offline"
                     else -> "audio-only"
                 }
-                app.updateStatus { it.copy(livePartialTranscript = "") }
                 app.coordinator.handleCapturedUtterance(
                     config = cfgNow,
                     utterance = captured,

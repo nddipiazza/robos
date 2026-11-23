@@ -474,4 +474,34 @@ class RobosVoiceServerClient {
     companion object {
         const val DEFAULT_SERVER_PORT = 19188
     }
+
+    suspend fun fetchSynthesizedSpeechWav(
+        hostIp: String,
+        port: Int = DEFAULT_SERVER_PORT,
+        text: String,
+    ): ByteArray? = withContext(Dispatchers.IO) {
+        val cleanHost = hostIp.trim()
+        if (cleanHost.isEmpty()) return@withContext null
+        try {
+            val payload = buildJsonObject { put("text", text) }.toString()
+            val (code, body) = rawHttp(
+                hostIp = cleanHost,
+                port = port,
+                method = "POST",
+                path = "/api/tts/synthesize",
+                bodyJson = payload,
+                connectTimeoutMs = 2_000,
+                readTimeoutMs = 8_000,
+            )
+            if (code !in 200..299) return@withContext null
+            val dto = json.decodeFromString(PhoneTurnDto.serializer(), body)
+            if (dto.ok && dto.audioWavBase64.isNotBlank()) {
+                Base64.getDecoder().decode(dto.audioWavBase64)
+            } else {
+                null
+            }
+        } catch (_: Exception) {
+            null
+        }
+    }
 }

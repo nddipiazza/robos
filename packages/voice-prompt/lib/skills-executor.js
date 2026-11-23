@@ -112,8 +112,20 @@ class SkillsExecutor {
     // 1.5 Household Shopping Lists Skill (Grocery, Target, Costco)
     // Matches "/shopping-lists ...", "add 2 gal milk to grocery list", "what is on my costco list", "check off avocados on grocery", "remove tide pods from target", "add milk to the [anything] list"
     let normalizedShoppingQuery = query;
+    const shoppingPkgDirs = [
+      path.resolve(__dirname, '../../shopping-lists'),
+      path.join(this.homeDir || os.homedir(), '.local/share/robos/shopping-lists'),
+      '/usr/local/share/robos/shopping-lists',
+    ];
+    const resolveShoppingMod = (rel) => {
+      for (const d of shoppingPkgDirs) {
+        const candidate = path.join(d, rel);
+        if (fs.existsSync(candidate + '.js') || fs.existsSync(candidate)) return require(candidate);
+      }
+      throw new Error(`shopping-lists module not found: ${rel}`);
+    };
     try {
-      const { normalizeShoppingVoiceTranscript } = require('../../shopping-lists/lib/defaults');
+      const { normalizeShoppingVoiceTranscript } = resolveShoppingMod('lib/defaults');
       normalizedShoppingQuery = normalizeShoppingVoiceTranscript(query);
     } catch {}
     const isShoppingCommand = /^\/shopping-lists?\b/i.test(normalizedShoppingQuery)
@@ -123,8 +135,8 @@ class SkillsExecutor {
           && !/\b(?:task|tasks|todo|issue|issues|ticket|tickets|watch|movie|song|playlist)\b/i.test(normalizedShoppingQuery));
     if (isShoppingCommand) {
       try {
-        const { createStore } = require('../../shopping-lists/lib/store');
-        const { executeTextCommand } = require('../../shopping-lists/lib/text-commands');
+        const { createStore } = resolveShoppingMod('lib/store');
+        const { executeTextCommand } = resolveShoppingMod('lib/text-commands');
         const store = createStore({ homeDir: this.homeDir, configDir: this.configDir });
         const shopRes = await executeTextCommand(store, normalizedShoppingQuery);
         return {
@@ -231,6 +243,18 @@ class SkillsExecutor {
           data: { error: errMsg },
         };
       }
+    }
+
+    // 1.7 Instant Clock / Date / Readiness Skills (0ms local response)
+    if (/\b(?:what\s+time\s+is\s+it|current\s+time|tell\s+me\s+the\s+time)\b/i.test(query)) {
+      const nowStr = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+      const msg = `It is ${nowStr}, Commander.`;
+      return { ok: true, skill: 'clock:time', actionDone: msg, response: msg };
+    }
+    if (/\b(?:what\s+(?:day|date)\s+is\s+(?:it|today)|today'?s\s+date)\b/i.test(query)) {
+      const dateStr = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+      const msg = `Today is ${dateStr}, Commander.`;
+      return { ok: true, skill: 'clock:date', actionDone: msg, response: msg };
     }
 
     // 2. App Launching Intent:

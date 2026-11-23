@@ -30,6 +30,13 @@ try {
   if (!fs.existsSync(kokoroModel)) {
     voiceMain.ttsEngine.savePrefs({ engine: 'piper', voice: 'en_US-lessac-medium' });
   }
+  // Pre-warm Moonshine C++ INT8 ASR + TTS cache + persistent C++ Piper daemon for sub-250ms first-turn latency
+  const { getFastMoonshineRecognizer } = require('${VOICE_PKG}/lib/stt-engine');
+  getFastMoonshineRecognizer();
+  voiceMain.ttsEngine.synthesize('Yes, Commander?').catch(() => {});
+  voiceMain.ttsEngine._synthesizePiperCli('Warmup', path.join(os.tmpdir(), 'robos-piper-warmup.wav')).then(() => {
+    try { fs.unlinkSync(path.join(os.tmpdir(), 'robos-piper-warmup.wav')); } catch {}
+  }).catch(() => {});
 } catch {}
 const server = voiceMain.startApiServer(PORT);
 try {
