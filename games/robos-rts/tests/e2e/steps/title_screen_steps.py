@@ -80,7 +80,9 @@ def toggle_fullscreen(context):
 
 @then("campaign mission access is {access}")
 def campaign_access(context, access):
-    assert menu_state(context)["campaign_unlocked"] == json.loads(access)
+    expected = json.loads(access)
+    unlocked = menu_state(context)["campaign_unlocked"]
+    assert unlocked[:len(expected)] == expected and not any(unlocked[len(expected):]), unlocked
 
 
 @then("mission {number:d} begins with its voiced cinematic")

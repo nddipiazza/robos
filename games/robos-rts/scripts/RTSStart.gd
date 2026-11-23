@@ -7,8 +7,8 @@ const MatchMenu = preload("res://scripts/RTSMatchMenu.gd")
 const LeaveConfirmation = preload("res://scripts/RTSLeaveConfirmation.gd")
 const GameInput = preload("res://scripts/RTSGameInput.gd")
 const Campaign = preload("res://scripts/engine/RTSCampaign.gd")
-const Mutators = preload("res://scripts/engine/RTSCampaignMutators.gd")
-const MutatorIcon = preload("res://scripts/RTSMutatorIcon.gd")
+const HubData = preload("res://scripts/engine/RTSCampaignHubData.gd")
+const CampaignHub = preload("res://scripts/campaign/RTSCampaignHub.gd")
 const SCENARIOS := [
 	["starfall-canyon", "Starfall Canyon", "Three-faction showcase"],
 	["colony-macro-economy", "Colony Economy", "Gather, build, and train an army"],
@@ -35,11 +35,6 @@ var _online_ai_host: Button
 var _online_ai_watch: Button
 var _online_status: Label
 var _online_factions: Array = []
-var _campaign_error: Label
-var _campaign_difficulty: OptionButton
-var _mutator_buttons: Dictionary = {}
-var _mutator_total: Label
-var _mission_buttons: Array[Button] = []
 var _options: CanvasLayer
 var _first_button: Button
 var _back_focus: Button
@@ -64,10 +59,10 @@ func _ready() -> void:
 	keys.position = Vector2(130, 972)
 	_build_main_page()
 	_build_scenario_page()
-	_build_campaign_page()
 	if not OS.has_feature("web"):
 		_build_online_page()
 		RTSNetwork.status_changed.connect(_update_online_status)
+	_build_campaign_page()
 	_first_button.grab_focus()
 
 func waiting_on_title() -> bool:
@@ -261,174 +256,26 @@ func _build_scenario_page() -> void:
 	_scenarios.hide()
 
 func _build_campaign_page() -> void:
-	_campaign = Control.new()
+	_campaign = CampaignHub.new()
+	_campaign.launch_mission.connect(_play_mission)
+	_campaign.back_to_title.connect(_show_home)
 	add_child(_campaign)
-	var eyebrow := _label(_campaign, "STARFALL COMMAND  /  CAMPAIGN", 18, Color("#8bd5e0"))
-	eyebrow.position = Vector2(130, 143)
-	var title := _label(_campaign, "Ashfall Signal", 62, Color("#ecf5ff"))
-	title.position = Vector2(126, 177)
-	var brief := _label(_campaign, "Break the Directorate blockade and bring the frontier colonists home.", 23, Color("#b7cbd9"))
-	brief.position = Vector2(130, 270)
-	var buttons := _stack(_campaign, Vector2(130, 342), 800)
-	var difficulty_row := HBoxContainer.new()
-	difficulty_row.add_theme_constant_override("separation", 16)
-	buttons.add_child(difficulty_row)
-	_label(difficulty_row, "Difficulty", 20, Color("#b7cbd9"))
-	_campaign_difficulty = OptionButton.new()
-	_campaign_difficulty.custom_minimum_size = Vector2(180, 40)
-	_campaign_difficulty.add_theme_font_size_override("font_size", 20)
-	for difficulty in Campaign.DIFFICULTIES:
-		_campaign_difficulty.add_item(difficulty.capitalize())
-	var selected := SimEngine.campaign.difficulty if SimEngine.campaign != null else "normal"
-	_campaign_difficulty.select(Campaign.DIFFICULTIES.find(selected))
-	difficulty_row.add_child(_campaign_difficulty)
-	var mission_scroll := ScrollContainer.new()
-	mission_scroll.custom_minimum_size = Vector2(800, 544)
-	mission_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	mission_scroll.follow_focus = true
-	buttons.add_child(mission_scroll)
-	var missions := VBoxContainer.new()
-	missions.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	missions.add_theme_constant_override("separation", 8)
-	mission_scroll.add_child(missions)
-	var completed := Campaign.completed_missions()
-	for index in Campaign.MISSIONS.size():
-		var mission: Dictionary = Campaign.MISSIONS[index]
-		var detail: String = mission.brief
-		if not Campaign.mission_available(index, completed):
-			detail = "Locked  /  Complete mission %d first" % index
-		elif mission.id in completed:
-			detail = "Completed  /  Replay mission"
-		var button := _mission_button(missions, "%02d   %s" % [index + 1, mission.title], detail, index)
-		if not Campaign.mission_available(index, completed):
-			button.disabled = true
-			button.modulate = Color("#a4b5c6")
-		_mission_buttons.append(button)
-	_menu_button(buttons, "Back", "", _show_home)
-	_campaign_error = _label(buttons, "", 18, Color("#ff948c"))
-	_build_mutator_picker()
 	_campaign.hide()
-
-func _build_mutator_picker() -> void:
-	var frame := PanelContainer.new()
-	frame.position = Vector2(960, 342)
-	frame.size = Vector2(830, 590)
-	frame.add_theme_stylebox_override("panel", _button_style(Color("#101c2b"), Color("#3a6577"), 2))
-	_campaign.add_child(frame)
-	var margin := MarginContainer.new()
-	for side in ["left", "right", "top", "bottom"]:
-		margin.add_theme_constant_override("margin_" + side, 22)
-	frame.add_child(margin)
-	var body := VBoxContainer.new()
-	body.add_theme_constant_override("separation", 12)
-	margin.add_child(body)
-	var heading := HBoxContainer.new()
-	body.add_child(heading)
-	_label(heading, "Mutators", 26, Color("#ecf5ff")).size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_mutator_total = _label(heading, "", 16, Color("#a4b5c6"))
-	var scroll := ScrollContainer.new()
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	scroll.follow_focus = true
-	body.add_child(scroll)
-	var entries := VBoxContainer.new()
-	entries.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	entries.add_theme_constant_override("separation", 14)
-	scroll.add_child(entries)
-	var available := _mutator_grid(entries)
-	var enabled: Array = SimEngine.campaign.selected_mutators() if SimEngine.campaign != null else []
-	for id in Mutators.ACTIVE:
-		var info: Array = Mutators.ACTIVE[id]
-		var choice := _mutator_tile(available, id, info[0], info[1])
-		choice.button_pressed = id in enabled
-		_mutator_buttons[id] = choice
-		choice.toggled.connect(func(_pressed): _update_mutator_total())
-	_update_mutator_total()
-	_label(entries, "Coming soon", 21, Color("#a4b5c6"))
-	var upcoming := _mutator_grid(entries)
-	for title in Mutators.UPCOMING:
-		_mutator_tile(upcoming, "", title)
-
-func _mutator_grid(parent: Container) -> GridContainer:
-	var grid := GridContainer.new()
-	grid.columns = 5
-	grid.add_theme_constant_override("h_separation", 8)
-	grid.add_theme_constant_override("v_separation", 8)
-	parent.add_child(grid)
-	return grid
-
-func _mutator_tile(grid: GridContainer, id: String, title: String, description := "") -> Button:
-	var available := not id.is_empty()
-	var tile := Button.new()
-	tile.custom_minimum_size = Vector2(145, 104 if available else 84)
-	tile.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	tile.toggle_mode = true
-	tile.disabled = not available
-	tile.clip_contents = true
-	tile.tooltip_text = "%s\n%s" % [title, description.replace("\n", " ") if available else "Coming soon"]
-	tile.add_theme_stylebox_override("normal", _button_style(Color("#152638"), Color("#35546a"), 1))
-	tile.add_theme_stylebox_override("hover", _button_style(Color("#1a3448"), Color("#6c9eb1"), 1))
-	tile.add_theme_stylebox_override("pressed", _button_style(Color("#173d4a"), Color("#82d7e6"), 3))
-	tile.add_theme_stylebox_override("hover_pressed", _button_style(Color("#215060"), Color("#a5ebf1"), 3))
-	tile.add_theme_stylebox_override("disabled", _button_style(Color("#111d2a"), Color("#2a4154"), 1))
-	grid.add_child(tile)
-	var body := VBoxContainer.new()
-	body.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	body.offset_left = 8
-	body.offset_right = -8
-	body.offset_top = 6
-	body.offset_bottom = -5
-	body.add_theme_constant_override("separation", 2)
-	body.alignment = BoxContainer.ALIGNMENT_CENTER
-	body.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	tile.add_child(body)
-	var icon := MutatorIcon.new()
-	icon.kind = id
-	icon.custom_minimum_size = Vector2(30, 30)
-	icon.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	body.add_child(icon)
-	var name_label := _label(body, title, 15, Color("#ecf5ff") if available else Color("#8398a8"))
-	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	if available:
-		var font := name_label.get_theme_font("font")
-		if font.get_string_size(title, HORIZONTAL_ALIGNMENT_LEFT, -1, 15).x > 129.0:
-			name_label.add_theme_font_size_override("font_size", 14)
-		var detail := _label(body, description, 13, Color("#a4b5c6"))
-		detail.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		detail.add_theme_constant_override("line_spacing", 0)
-	else:
-		name_label.add_theme_font_size_override("font_size", 14)
-		name_label.add_theme_constant_override("line_spacing", 0)
-		name_label.autowrap_mode = TextServer.AUTOWRAP_WORD
-	return tile
-
-func _update_mutator_total() -> void:
-	_mutator_total.text = "%d selected" % _selected_mutators().size()
-
-func _selected_mutators() -> Array:
-	return _mutator_buttons.keys().filter(func(id): return _mutator_buttons[id].button_pressed)
 
 func _open_campaign() -> void:
 	_back_focus = _menu_buttons.campaign
 	_page = "campaign"
 	_home.hide()
 	_campaign.show()
-	_campaign_error.text = ""
-	var completed := Campaign.completed_missions()
-	for index in _mission_buttons.size():
-		if not _mission_buttons[index].disabled and Campaign.MISSIONS[index].id not in completed:
-			_mission_buttons[index].grab_focus()
-			return
-	_mission_buttons.back().grab_focus()
+	_campaign.open_hub()
 
-func _play_mission(index: int) -> void:
-	_confirm_replacing_battle("Start a campaign mission?", _start_mission.bind(index))
+func _play_mission(index: int, difficulty: String, mutators: Array) -> void:
+	_confirm_replacing_battle("Start a campaign mission?", _start_mission.bind(index, difficulty, mutators))
 
-func _start_mission(index: int) -> void:
-	var result := SimEngine.start_campaign(index, Campaign.DIFFICULTIES[_campaign_difficulty.selected], _selected_mutators())
+func _start_mission(index: int, difficulty: String, mutators: Array) -> void:
+	var result := SimEngine.start_campaign(index, difficulty, mutators)
 	if not result.ok:
-		_campaign_error.text = result.error
+		_campaign.set_launch_error(result.error)
 
 func _stack(parent: Control, at: Vector2, width: float) -> VBoxContainer:
 	var stack := VBoxContainer.new()
@@ -459,25 +306,6 @@ func _button_style(fill: Color, edge: Color, accent_width: int) -> StyleBoxFlat:
 func _add_menu_button(parent: VBoxContainer, id: String, title: String, detail: String, callback: Callable) -> Button:
 	var button := _menu_button(parent, title, detail, callback)
 	_menu_buttons[id] = button
-	return button
-
-func _mission_button(parent: VBoxContainer, title: String, detail: String, index: int) -> Button:
-	var button := _menu_button(parent, "", "", _play_mission.bind(index))
-	button.tooltip_text = "%s\n%s" % [title, detail]
-	button.clip_contents = true
-	var text := VBoxContainer.new()
-	text.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	text.alignment = BoxContainer.ALIGNMENT_CENTER
-	text.add_theme_constant_override("separation", 1)
-	button.add_child(text)
-	text.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	text.offset_left = 22.0
-	text.offset_right = -22.0
-	var heading := _label(text, title, 24, Color("#e8f3fc"))
-	var caption := _label(text, detail, 16, Color("#a4c4d4"))
-	for label in [heading, caption]:
-		label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	return button
 
 func _menu_button(parent: VBoxContainer, title: String, detail: String, callback: Callable) -> Button:
@@ -586,6 +414,13 @@ func _confirmation_title() -> String:
 func _unhandled_key_input(event: InputEvent) -> void:
 	if not _confirmation_title().is_empty():
 		return
+	if event.pressed and _page == "campaign" and _campaign:
+		if event.keycode == KEY_ESCAPE and _campaign.handle_escape():
+			get_viewport().set_input_as_handled()
+			return
+		if _campaign.handle_shortcut(event.keycode):
+			get_viewport().set_input_as_handled()
+			return
 	if event.pressed and event.keycode == KEY_ESCAPE and _page != "main":
 		_show_home()
 		get_viewport().set_input_as_handled()
@@ -600,11 +435,19 @@ func ui_state() -> Dictionary:
 		"screen": "title", "page": _page, "resume_available": SimEngine.resume_from_title,
 		"confirmation": _confirmation_title(),
 		"online_status": RTSNetwork.state, "online_seat": RTSNetwork.seat,
-		"campaign_unlocked": _mission_buttons.map(func(button): return not button.disabled),
-		"campaign_mutators": _selected_mutators(),
-		"campaign_difficulty": Campaign.DIFFICULTIES[_campaign_difficulty.selected] if _campaign_difficulty else "normal",
+		"campaign_unlocked": _campaign.unlocked_missions() if _campaign else [],
+		"campaign_mutators": _campaign.selected_mutators() if _campaign else [],
+		"campaign_difficulty": _campaign.current_difficulty() if _campaign else "normal",
+		"campaign_room": _campaign.current_room if _campaign else "bridge",
+		"campaign_console": _campaign.active_console if _campaign else "",
+		"campaign_selected_mission": _campaign.mission_console.selected_index if _campaign and _campaign.mission_console else 0,
+		"campaign_credits": HubData.credits_available(),
 		"fullscreen": RTSDisplay.is_fullscreen(),
 	}
 
-func apply_ui_state(_request: Dictionary) -> Dictionary:
+func apply_ui_state(request: Dictionary) -> Dictionary:
+	if request.get("page", "") == "campaign" and _page != "campaign":
+		_open_campaign()
+	if _campaign and _page == "campaign":
+		_campaign.apply_control(request)
 	return ui_state()
