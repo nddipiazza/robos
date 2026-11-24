@@ -210,6 +210,8 @@ class MediaLibrary {
     entry.plays = (entry.plays || 0) + 1;
     entry.lastPlayed = new Date().toISOString();
     if (entry.completed === undefined) entry.completed = false;
+    entry.dismissedFromWatchlist = false;
+    entry.resetPlays = false;
     this.stats[trackId] = entry;
     this._saveStats();
     return entry;
@@ -223,6 +225,7 @@ class MediaLibrary {
       const entry = this.stats[id] || {};
       entry.loved = !!loved;
       entry.lovedAt = loved ? now : null;
+      if (loved) entry.dismissedFromWatchlist = false;
       this.stats[id] = entry;
       changed[id] = entry;
     }
@@ -256,6 +259,8 @@ class MediaLibrary {
       entry.progressPct = 100;
       entry.plays = Math.max(1, entry.plays || 0);
       entry.lastPlayed = now;
+      entry.dismissedFromWatchlist = false;
+      entry.resetPlays = false;
     } else if (pos >= 1 || started) {
       entry.positionSec = pos >= 1 ? pos : Math.max(0, Number(entry.positionSec) || 0);
       entry.inProgress = true;
@@ -265,6 +270,8 @@ class MediaLibrary {
         : (entry.progressPct && entry.progressPct < 100 ? entry.progressPct : 1);
       entry.plays = Math.max(1, entry.plays || 0);
       entry.lastPlayed = now;
+      entry.dismissedFromWatchlist = false;
+      entry.resetPlays = false;
     } else {
       if (entry.completed === undefined) entry.completed = false;
       entry.positionSec = 0;
@@ -290,15 +297,120 @@ class MediaLibrary {
         entry.progressPct = 100;
         entry.plays = Math.max(1, entry.plays || 0);
         entry.lastPlayed = now;
+        entry.dismissedFromWatchlist = false;
+        entry.resetPlays = false;
       } else {
         entry.completed = false;
         entry.inProgress = false;
         entry.positionSec = 0;
         entry.progressPct = 0;
+        entry.plays = 0;
+        entry.lastPlayed = null;
+        entry.resetPlays = true;
       }
       this.stats[id] = entry;
       changed[id] = entry;
     }
+    this._saveStats();
+    return changed;
+  }
+
+  /**
+   * Removes tracks (a show or movie) from My Watchlist (`loved: false`), removes them
+   * from custom Watchlist playlists (`movie-playlists.json`), clears any paused in-progress
+   * resume point, and marks `dismissedFromWatchlist: true` so Continue Watching hides it
+   * without erasing previously finished episodes.
+   */
+  dismissFromWatchlist(trackIds) {
+    const ids = Array.isArray(trackIds) ? trackIds.filter(Boolean) : [trackIds].filter(Boolean);
+    const idSet = new Set(ids);
+    const now = new Date().toISOString();
+    const changed = {};
+    for (const id of ids) {
+      const entry = this.stats[id] || {};
+      entry.loved = false;
+      entry.lovedAt = null;
+      entry.inProgress = false;
+      entry.positionSec = 0;
+      if (!entry.completed) entry.progressPct = 0;
+      entry.dismissedFromWatchlist = true;
+      entry.updatedAt = now;
+      this.stats[id] = entry;
+      changed[id] = entry;
+    }
+    this._saveStats();
+
+    if (Array.isArray(this.playlists) && idSet.size) {
+      let playlistsMutated = false;
+      for (const pl of this.playlists) {
+        if (!pl || !Array.isArray(pl.tracks)) continue;
+        const before = pl.tracks.length;
+        pl.tracks = pl.tracks.filter(t => !t || !idSet.has(t.id));
+        if (pl.tracks.length !== before) {
+          pl.updatedAt = now;
+          playlistsMutated = true;
+        }
+      }
+      if (playlistsMutated) this._savePlaylists();
+    }
+    return changed;
+  }
+
+  /**
+   * Atomically updates a show's episode cursor:
+   *   - `watchedIds` (ordered chronologically) become Watched (`completed: true`) with
+   *     monotonically increasing `lastPlayed` ending at `now`, so the episode immediately
+   *     before the target is guaranteed to be `latestActiveIdx`.
+   *   - `unwatchedIds` (from target episode onward) become New / Unwatched (`completed: false,
+   *     inProgress: false, positionSec: 0, progressPct: 0, plays: 0, lastPlayed: null`).
+   */
+  applyEpisodeCursor({ watchedIds = [], unwatchedIds = [], addLovedIds = [] } = {}) {
+    const wIds = Array.isArray(watchedIds) ? watchedIds.filter(Boolean) : [];
+    const uIds = Array.isArray(unwatchedIds) ? unwatchedIds.filter(Boolean) : [];
+    const lSet = new Set(Array.isArray(addLovedIds) ? addLovedIds.filter(Boolean) : []);
+    const nowMs = Date.now();
+    const nowIso = new Date(nowMs).toISOString();
+    const changed = {};
+
+    wIds.forEach((id, idx) => {
+      const entry = this.stats[id] || {};
+      const stamp = new Date(nowMs - (wIds.length - 1 - idx) * 1000).toISOString();
+      entry.completed = true;
+      entry.inProgress = false;
+      entry.positionSec = 0;
+      entry.progressPct = 100;
+      entry.plays = Math.max(1, entry.plays || 0);
+      entry.lastPlayed = stamp;
+      entry.dismissedFromWatchlist = false;
+      entry.resetPlays = false;
+      if (lSet.has(id)) {
+        entry.loved = true;
+        entry.lovedAt = entry.lovedAt || nowIso;
+      }
+      entry.updatedAt = nowIso;
+      this.stats[id] = entry;
+      changed[id] = entry;
+    });
+
+    for (const id of uIds) {
+      const entry = this.stats[id] || {};
+      entry.completed = false;
+      entry.inProgress = false;
+      entry.positionSec = 0;
+      entry.progressPct = 0;
+      entry.plays = 0;
+      entry.lastPlayed = null;
+      entry.dismissedFromWatchlist = false;
+      entry.resetPlays = true;
+      if (lSet.has(id)) {
+        entry.loved = true;
+        entry.lovedAt = entry.lovedAt || nowIso;
+      }
+      entry.updatedAt = nowIso;
+      this.stats[id] = entry;
+      changed[id] = entry;
+    }
+
     this._saveStats();
     return changed;
   }

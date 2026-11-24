@@ -36,6 +36,52 @@ function load(app, opts) {
   return { entries: history.readEntries(app, dir), tracks: history.readLibraryTracks(app, dir) };
 }
 
+function readTrackStats(dir) {
+  const file = path.join(dir, 'movie-track-stats.json');
+  try {
+    const raw = JSON.parse(fs.readFileSync(file, 'utf8'));
+    return (raw && typeof raw.tracks === 'object' && raw.tracks) ? raw.tracks : {};
+  } catch {
+    return {};
+  }
+}
+
+function writeTrackStats(dir, stats) {
+  const file = path.join(dir, 'movie-track-stats.json');
+  fs.mkdirSync(dir, { recursive: true });
+  const tmp = `${file}.${process.pid}.tmp`;
+  fs.writeFileSync(tmp, JSON.stringify({ updatedAt: new Date().toISOString(), tracks: stats }));
+  fs.renameSync(tmp, file);
+}
+
+function readPlaylists(dir) {
+  const file = path.join(dir, 'movie-playlists.json');
+  try {
+    const raw = JSON.parse(fs.readFileSync(file, 'utf8'));
+    return Array.isArray(raw) ? raw : (raw?.playlists || []);
+  } catch {
+    return [];
+  }
+}
+
+function writePlaylists(dir, playlists) {
+  const file = path.join(dir, 'movie-playlists.json');
+  fs.mkdirSync(dir, { recursive: true });
+  const tmp = `${file}.${process.pid}.tmp`;
+  fs.writeFileSync(tmp, JSON.stringify(playlists, null, 2));
+  fs.renameSync(tmp, file);
+}
+
+async function pushOfflineBatch(records) {
+  if (!records || !records.length) return;
+  try {
+    const svc = require('./media-service-client');
+    if (svc && typeof svc.pushBatchProgressToMediaServer === 'function') {
+      await svc.pushBatchProgressToMediaServer(records);
+    }
+  } catch {}
+}
+
 // ── The running player's control API (lib/control-server.js in each player) ──
 
 function pidAlive(pid) {
@@ -103,6 +149,19 @@ async function historyList(opts = {}) {
   return { ok: true, app, items: history.recentHistory(entries, { kind: opts.kind || undefined, limit: opts.limit || 20 }) };
 }
 
+async function watchlist(opts = {}) {
+  const live = await callPlayer('movie-player', 'GET', `/api/watchlist?limit=${Number(opts.limit) || 50}`, null, opts);
+  if (live && live.ok) return { ...live, via: 'movie-player' };
+  const dir = configDir(opts);
+  const { entries, tracks } = load('movie-player', opts);
+  const stats = readTrackStats(dir);
+  const playlists = readPlaylists(dir);
+  return {
+    ...history.watchlistSummary({ entries, tracks, stats, playlists, limit: Number(opts.limit) || 50 }),
+    via: 'history-file',
+  };
+}
+
 // ── Changes ──────────────────────────────────────────────────────────────────
 
 async function setWatched({ show, season = null, episode = null, watched = true, ...opts } = {}) {
@@ -110,17 +169,366 @@ async function setWatched({ show, season = null, episode = null, watched = true,
   const body = { show, season: season === '' ? null : season, episode: episode === '' ? null : episode, watched: watched !== false };
   const live = await callPlayer('movie-player', 'POST', '/api/set-watched', body, opts);
   if (live) return { ...live, via: 'movie-player' };
-  // The player is closed: write the history file; the player applies it when it opens.
+  // The player is closed: write stats + history file; the player applies it when it opens.
+  const dir = configDir(opts);
   const { tracks } = load('movie-player', opts);
   const found = history.findEpisodeTracks(show, { tracks, season: body.season, episode: body.episode });
   if (!found.tracks.length) return { ok: false, error: `No episodes of "${show}" matched in this computer's library.` };
-  const h = new history.MediaHistory({ app: 'movie-player', configDir: configDir(opts) });
+  const h = new history.MediaHistory({ app: 'movie-player', configDir: dir });
   const now = new Date().toISOString();
+  const trackStats = readTrackStats(dir);
   const stats = body.watched
-    ? { completed: true, inProgress: false, positionSec: 0, progressPct: 100, plays: 1, lastPlayed: now }
-    : { completed: false, inProgress: false, positionSec: 0, progressPct: 0 };
+    ? { completed: true, inProgress: false, positionSec: 0, progressPct: 100, plays: 1, lastPlayed: now, dismissedFromWatchlist: false, resetPlays: false, updatedAt: now }
+    : { completed: false, inProgress: false, positionSec: 0, progressPct: 0, plays: 0, lastPlayed: null, resetPlays: true, updatedAt: now };
+  for (const t of found.tracks) {
+    trackStats[t.id] = { ...(trackStats[t.id] || {}), ...stats };
+  }
+  writeTrackStats(dir, trackStats);
   h.recordMany(found.tracks.map(track => ({ track, stats })));
-  return { ok: true, show: found.show, season: body.season, episode: body.episode, watched: body.watched, count: found.tracks.length, via: 'history-file' };
+  await pushOfflineBatch(found.tracks.map(track => ({
+    track,
+    payload: { ...stats, completed: body.watched, unwatched: !body.watched },
+  })));
+  const scopeLabel = body.episode !== null
+    ? ` Season ${body.season} Episode ${body.episode}`
+    : (body.season !== null ? ` Season ${body.season}` : '');
+  const spoken = body.watched
+    ? `Marked ${found.show}${scopeLabel} (${found.tracks.length} episode${found.tracks.length === 1 ? '' : 's'}) as watched.`
+    : `Marked ${found.show}${scopeLabel} (${found.tracks.length} episode${found.tracks.length === 1 ? '' : 's'}) as new and unwatched.`;
+  return { ok: true, show: found.show, season: body.season, episode: body.episode, watched: body.watched, count: found.tracks.length, spoken, via: 'history-file' };
+}
+
+async function addToWatchlist(queryOrOpts, maybeOpts = {}) {
+  const raw = typeof queryOrOpts === 'string'
+    ? { query: queryOrOpts, ...maybeOpts }
+    : { ...(queryOrOpts || {}), ...maybeOpts };
+  const query = String(raw.query || raw.title || raw.show || '').trim();
+  if (!query) return { ok: false, error: 'Say which show or movie to add to your watchlist.', spoken: 'Say which show or movie to add to your watchlist.' };
+  const kind = raw.kind || null;
+
+  const live = await callPlayer('movie-player', 'POST', '/api/watchlist-add', { query, kind }, raw);
+  if (live) return { ...live, via: 'movie-player' };
+
+  const dir = configDir(raw);
+  const { entries, tracks } = load('movie-player', raw);
+  const target = history.findWatchlistTarget(query, { tracks, entries, preferredKind: kind });
+  if (!target.ok) return { ok: false, error: target.error, spoken: target.error };
+  if (!target.tracks.length) {
+    const error = `"${target.name}" is not in this computer's Movie Player library.`;
+    return { ok: false, error, spoken: error };
+  }
+  const now = new Date().toISOString();
+  const trackStats = readTrackStats(dir);
+  for (const t of target.tracks) {
+    trackStats[t.id] = {
+      ...(trackStats[t.id] || {}),
+      loved: true,
+      lovedAt: now,
+      dismissedFromWatchlist: false,
+      updatedAt: now,
+    };
+  }
+  writeTrackStats(dir, trackStats);
+  const h = new history.MediaHistory({ app: 'movie-player', configDir: dir });
+  h.recordMany(target.tracks.map(track => ({ track, stats: trackStats[track.id] })));
+  await pushOfflineBatch(target.tracks.map(track => ({
+    track,
+    payload: { ...(trackStats[track.id] || {}), loved: true },
+  })));
+  const label = target.kind === 'movie' && target.year ? `${target.name} (${target.year})` : target.name;
+  const spoken = `Added ${label} to your Movie Player watchlist.`;
+  return { ok: true, action: 'added', kind: target.kind, name: target.name, year: target.year || null, count: target.tracks.length, spoken, via: 'history-file' };
+}
+
+async function removeFromWatchlist(queryOrOpts, maybeOpts = {}) {
+  const raw = typeof queryOrOpts === 'string'
+    ? { query: queryOrOpts, ...maybeOpts }
+    : { ...(queryOrOpts || {}), ...maybeOpts };
+  const query = String(raw.query || raw.title || raw.show || '').trim();
+  if (!query) return { ok: false, error: 'Say which show or movie to remove from your watchlist.', spoken: 'Say which show or movie to remove from your watchlist.' };
+  const kind = raw.kind || null;
+
+  const live = await callPlayer('movie-player', 'POST', '/api/watchlist-remove', { query, kind }, raw);
+  if (live) return { ...live, via: 'movie-player' };
+
+  const dir = configDir(raw);
+  const { entries, tracks } = load('movie-player', raw);
+  const target = history.findWatchlistTarget(query, { tracks, entries, preferredKind: kind });
+  if (!target.ok) return { ok: false, error: target.error, spoken: target.error };
+
+  const now = new Date().toISOString();
+  const trackStats = readTrackStats(dir);
+  const idSet = new Set(target.tracks.map(t => t.id));
+  for (const t of target.tracks) {
+    const prev = trackStats[t.id] || {};
+    trackStats[t.id] = {
+      ...prev,
+      loved: false,
+      lovedAt: null,
+      inProgress: false,
+      positionSec: 0,
+      progressPct: prev.completed ? 100 : 0,
+      dismissedFromWatchlist: true,
+      updatedAt: now,
+    };
+  }
+  if (target.tracks.length) writeTrackStats(dir, trackStats);
+
+  // Remove from custom playlists if present
+  if (idSet.size) {
+    const playlists = readPlaylists(dir);
+    let plMutated = false;
+    for (const pl of playlists) {
+      if (!pl || !Array.isArray(pl.tracks)) continue;
+      const before = pl.tracks.length;
+      pl.tracks = pl.tracks.filter(t => !t || !idSet.has(t.id));
+      if (pl.tracks.length !== before) {
+        pl.updatedAt = now;
+        plMutated = true;
+      }
+    }
+    if (plMutated) writePlaylists(dir, playlists);
+  }
+
+  const h = new history.MediaHistory({ app: 'movie-player', configDir: dir });
+  if (target.tracks.length) {
+    h.recordMany(target.tracks.map(track => ({ track, stats: trackStats[track.id] })));
+  }
+  if (target.entryKeys && target.entryKeys.length) {
+    const hFile = history.historyFile('movie-player', dir);
+    const doc = history.readDoc(hFile);
+    let mutated = false;
+    for (const k of target.entryKeys) {
+      if (doc.entries && doc.entries[k]) {
+        doc.entries[k] = {
+          ...doc.entries[k],
+          loved: false,
+          lovedAt: null,
+          inProgress: false,
+          positionSec: 0,
+          dismissedFromWatchlist: true,
+          updatedAt: now,
+        };
+        mutated = true;
+      }
+    }
+    if (mutated) {
+      doc.updatedAt = now;
+      history.writeDoc(hFile, doc);
+    }
+  }
+
+  await pushOfflineBatch(target.tracks.map(track => ({
+    track,
+    payload: {
+      ...(trackStats[track.id] || {}),
+      loved: false,
+      inProgress: false,
+      positionSec: 0,
+      completed: Boolean(trackStats[track.id]?.completed),
+      unwatched: !trackStats[track.id]?.completed,
+      dismissedFromWatchlist: true,
+    },
+  })));
+
+  const label = target.kind === 'movie' && target.year ? `${target.name} (${target.year})` : target.name;
+  const spoken = `Removed ${label} from your watchlist.`;
+  return { ok: true, action: 'removed', kind: target.kind, name: target.name, year: target.year || null, count: target.tracks.length, spoken, via: 'history-file' };
+}
+
+async function markAllNew(queryOrOpts, maybeOpts = {}) {
+  const raw = typeof queryOrOpts === 'string'
+    ? { show: queryOrOpts, ...maybeOpts }
+    : { ...(queryOrOpts || {}), ...maybeOpts };
+  const show = String(raw.show || raw.query || raw.title || '').trim();
+  const season = raw.season === '' || raw.season === undefined || raw.season === null ? null : Number(raw.season);
+  if (!show) return { ok: false, error: 'Say which show to mark as new.', spoken: 'Say which show to mark as new.' };
+
+  const live = await callPlayer('movie-player', 'POST', '/api/mark-episodes-new', { show, season }, raw);
+  if (live) return { ...live, via: 'movie-player' };
+
+  const dir = configDir(raw);
+  const { entries, tracks } = load('movie-player', raw);
+  const found = history.findEpisodeTracks(show, { tracks, season });
+  let targetTracks = found.tracks;
+  let targetLabel = found.show;
+  let kind = 'tv';
+
+  if (!targetTracks.length) {
+    const movieTarget = history.findWatchlistTarget(show, { tracks, entries, preferredKind: 'movie' });
+    if (movieTarget.ok && movieTarget.tracks.length) {
+      targetTracks = movieTarget.tracks;
+      targetLabel = movieTarget.name;
+      kind = 'movie';
+    } else {
+      const error = `I could not find "${show}" in your library.`;
+      return { ok: false, error, spoken: error };
+    }
+  }
+
+  const now = new Date().toISOString();
+  const trackStats = readTrackStats(dir);
+  const resetState = {
+    completed: false,
+    inProgress: false,
+    positionSec: 0,
+    progressPct: 0,
+    plays: 0,
+    lastPlayed: null,
+    resetPlays: true,
+    updatedAt: now,
+  };
+  for (const t of targetTracks) {
+    trackStats[t.id] = { ...(trackStats[t.id] || {}), ...resetState };
+  }
+  writeTrackStats(dir, trackStats);
+  const h = new history.MediaHistory({ app: 'movie-player', configDir: dir });
+  h.recordMany(targetTracks.map(track => ({ track, stats: trackStats[track.id] })));
+  await pushOfflineBatch(targetTracks.map(track => ({
+    track,
+    payload: { unwatched: true, plays: 0, lastPlayed: null },
+  })));
+
+  const seasonLabel = season !== null ? ` Season ${season}` : '';
+  const spoken = kind === 'movie'
+    ? `Marked ${targetLabel} as new and unwatched.`
+    : `Marked all ${targetTracks.length} episode${targetTracks.length === 1 ? '' : 's'} of ${targetLabel}${seasonLabel} as new and unwatched.`;
+  return { ok: true, kind, show: targetLabel, season, count: targetTracks.length, spoken, via: 'history-file' };
+}
+
+async function setCurrentEpisode(opts = {}) {
+  const show = String(opts.show || opts.query || opts.title || '').trim();
+  const ep = opts.ep !== undefined && opts.ep !== null && String(opts.ep).trim() !== '' ? String(opts.ep).trim() : null;
+  const season = opts.season !== undefined && opts.season !== null && opts.season !== '' ? Number(opts.season) : null;
+  const episode = opts.episode !== undefined && opts.episode !== null && opts.episode !== '' ? Number(opts.episode) : null;
+  if (!show) return { ok: false, error: 'Say which show.', spoken: 'Say which show.' };
+
+  const live = await callPlayer('movie-player', 'POST', '/api/set-current-episode', { show, ep, season, episode }, opts);
+  if (live) return { ...live, via: 'movie-player' };
+
+  const dir = configDir(opts);
+  const { entries, tracks } = load('movie-player', opts);
+  const epInput = ep !== null ? ep : { season, episode };
+  const plan = history.planCurrentEpisode(show, epInput, { tracks, entries });
+  if (!plan.ok) return plan;
+
+  const nowMs = Date.now();
+  const nowIso = new Date(nowMs).toISOString();
+  const trackStats = readTrackStats(dir);
+  const addLoved = plan.watchedTracks.length === 0;
+  const historyItems = [];
+
+  plan.watchedTracks.forEach((t, idx) => {
+    const stamp = new Date(nowMs - (plan.watchedTracks.length - 1 - idx) * 1000).toISOString();
+    const next = {
+      ...(trackStats[t.id] || {}),
+      completed: true,
+      inProgress: false,
+      positionSec: 0,
+      progressPct: 100,
+      plays: Math.max(1, Number(trackStats[t.id]?.plays) || 0),
+      lastPlayed: stamp,
+      dismissedFromWatchlist: false,
+      resetPlays: false,
+      updatedAt: nowIso,
+    };
+    trackStats[t.id] = next;
+    historyItems.push({ track: t, stats: next });
+  });
+
+  for (const t of plan.unwatchedTracks) {
+    const next = {
+      ...(trackStats[t.id] || {}),
+      completed: false,
+      inProgress: false,
+      positionSec: 0,
+      progressPct: 0,
+      plays: 0,
+      lastPlayed: null,
+      dismissedFromWatchlist: false,
+      resetPlays: true,
+      ...(addLoved ? { loved: true, lovedAt: trackStats[t.id]?.lovedAt || nowIso } : {}),
+      updatedAt: nowIso,
+    };
+    trackStats[t.id] = next;
+    historyItems.push({ track: t, stats: next });
+  }
+
+  if (historyItems.length) {
+    writeTrackStats(dir, trackStats);
+    const h = new history.MediaHistory({ app: 'movie-player', configDir: dir });
+    h.recordMany(historyItems);
+  }
+
+  // Also update any history-only entries (from another machine) that have no local track
+  if (plan.watchedEntryKeys.length || plan.unwatchedEntryKeys.length) {
+    const hFile = history.historyFile('movie-player', dir);
+    const doc = history.readDoc(hFile);
+    let mutated = false;
+    plan.watchedEntryKeys.forEach((k, idx) => {
+      if (doc.entries && doc.entries[k]) {
+        const stamp = new Date(nowMs - (plan.watchedEntryKeys.length - 1 - idx) * 1000).toISOString();
+        doc.entries[k] = {
+          ...doc.entries[k],
+          completed: true,
+          inProgress: false,
+          positionSec: 0,
+          progressPct: 100,
+          plays: Math.max(1, Number(doc.entries[k].plays) || 0),
+          lastPlayed: stamp,
+          dismissedFromWatchlist: false,
+          resetPlays: false,
+          updatedAt: nowIso,
+        };
+        mutated = true;
+      }
+    });
+    for (const k of plan.unwatchedEntryKeys) {
+      if (doc.entries && doc.entries[k]) {
+        doc.entries[k] = {
+          ...doc.entries[k],
+          completed: false,
+          inProgress: false,
+          positionSec: 0,
+          progressPct: 0,
+          plays: 0,
+          lastPlayed: null,
+          dismissedFromWatchlist: false,
+          resetPlays: true,
+          updatedAt: nowIso,
+        };
+        mutated = true;
+      }
+    }
+    if (mutated) {
+      doc.updatedAt = nowIso;
+      history.writeDoc(hFile, doc);
+    }
+  }
+
+  await pushOfflineBatch([
+    ...plan.watchedTracks.map(track => ({
+      track,
+      payload: { ...(trackStats[track.id] || {}), completed: true, unwatched: false, inProgress: false, positionSec: 0 },
+    })),
+    ...plan.unwatchedTracks.map(track => ({
+      track,
+      payload: { ...(trackStats[track.id] || {}), completed: false, unwatched: true, inProgress: false, positionSec: 0, plays: 0, lastPlayed: null },
+    })),
+  ]);
+
+  return {
+    ok: true,
+    show: plan.show,
+    targetSeason: plan.targetSeason,
+    targetEpisode: plan.targetEpisode,
+    targetCode: plan.targetCode,
+    targetEpisodeTitle: plan.targetEpisodeTitle,
+    watchedBeforeCount: plan.watchedBeforeCount,
+    unwatchedFromCurrentCount: plan.unwatchedFromCurrentCount,
+    spoken: plan.spoken,
+    via: 'history-file',
+  };
 }
 
 async function playNextEpisode({ show, targetIp = null, ...opts } = {}) {
@@ -148,6 +556,7 @@ async function syncNow(opts = {}) {
 }
 
 module.exports = {
-  watchStatus, movieStatus, continueWatching, listShows, history: historyList,
-  setWatched, playNextEpisode, syncNow, callPlayer, controlInfo,
+  watchStatus, movieStatus, continueWatching, watchlist, listShows, history: historyList,
+  setWatched, addToWatchlist, removeFromWatchlist, markAllNew, setCurrentEpisode,
+  playNextEpisode, syncNow, callPlayer, controlInfo,
 };

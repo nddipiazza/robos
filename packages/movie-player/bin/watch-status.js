@@ -7,6 +7,11 @@
  *   node packages/movie-player/bin/watch-status.js show "the office"        where did we leave off?
  *   node packages/movie-player/bin/watch-status.js movie "dune"             watched it yet?
  *   node packages/movie-player/bin/watch-status.js continue                 in-progress shows and movies
+ *   node packages/movie-player/bin/watch-status.js watchlist                list Movie Player watchlist + continue watching
+ *   node packages/movie-player/bin/watch-status.js add "severance"          add show or movie to watchlist
+ *   node packages/movie-player/bin/watch-status.js remove "severance"       remove show or movie from watchlist
+ *   node packages/movie-player/bin/watch-status.js mark-new "severance" [--season 2]   mark all episodes as new / unwatched
+ *   node packages/movie-player/bin/watch-status.js current-episode "severance" "S02E04"  mark prior watched & S02E04+ unwatched
  *   node packages/movie-player/bin/watch-status.js shows                    every show with counts
  *   node packages/movie-player/bin/watch-status.js history [--audio] [--limit 20]
  *   node packages/movie-player/bin/watch-status.js watched "the office" --season 2 [--episode 3] [--unwatched]
@@ -57,6 +62,29 @@ async function main() {
     case 'show': case 'status': res = await watch.watchStatus(name); break;
     case 'movie': res = await watch.movieStatus(name); break;
     case 'continue': res = await watch.continueWatching({ limit: num(args.limit) || 10 }); break;
+    case 'watchlist': case 'list': res = await watch.watchlist({ limit: num(args.limit) || 50 }); break;
+    case 'add': case 'watchlist-add': res = await watch.addToWatchlist({ query: name, kind: args.kind || null }); break;
+    case 'remove': case 'watchlist-remove': res = await watch.removeFromWatchlist({ query: name, kind: args.kind || null }); break;
+    case 'mark-new': case 'reset': res = await watch.markAllNew({ show: name, season: num(args.season) }); break;
+    case 'current-episode': case 'set-current': case 'cursor': {
+      let showName = args.show || '';
+      let epSpec = args.ep || '';
+      if (!showName) {
+        if (rest.length >= 2 && args.season === undefined && args.episode === undefined && !args.ep) {
+          showName = rest[0];
+          epSpec = rest.slice(1).join(' ');
+        } else {
+          showName = name;
+        }
+      }
+      res = await watch.setCurrentEpisode({
+        show: showName,
+        ep: epSpec || null,
+        season: num(args.season),
+        episode: num(args.episode),
+      });
+      break;
+    }
     case 'shows': res = await watch.listShows(); break;
     case 'history': res = await watch.history({ app: args.audio ? 'audio-player' : 'movie-player', kind: args.kind, limit: num(args.limit) || 20 }); break;
     case 'watched': res = await watch.setWatched({ show: name, season: num(args.season), episode: num(args.episode), watched: !args.unwatched }); break;

@@ -147,9 +147,183 @@ function setShowWatched({ show, season = null, episode = null, watched = true } 
   if (!show) return { ok: false, error: 'Say which show' };
   const found = lib.findEpisodeTracks(show, { tracks, season, episode });
   if (!found.tracks.length) return { ok: false, error: `No episodes of "${show}"${season !== null ? ` season ${season}` : ''}${episode !== null ? ` episode ${episode}` : ''} are in this library.` };
-  const changed = mediaLibrary.setWatched(found.tracks.map(t => t.id), watched !== false);
+  const isWatched = watched !== false;
+  const changed = mediaLibrary.setWatched(found.tracks.map(t => t.id), isWatched);
   sendToWindow('audio:track-stats-updated', changed);
-  return { ok: true, show: found.show, season, episode, watched: watched !== false, count: found.tracks.length };
+  if (mediaServiceClientLib?.pushBatchProgressToMediaServer) {
+    mediaServiceClientLib.pushBatchProgressToMediaServer(found.tracks.map(t => ({
+      track: t,
+      payload: { ...(changed[t.id] || {}), completed: isWatched, unwatched: !isWatched },
+    }))).catch(() => {});
+  }
+  const scopeLabel = episode !== null
+    ? ` Season ${season} Episode ${episode}`
+    : (season !== null ? ` Season ${season}` : '');
+  const spoken = isWatched
+    ? `Marked ${found.show}${scopeLabel} (${found.tracks.length} episode${found.tracks.length === 1 ? '' : 's'}) as watched.`
+    : `Marked ${found.show}${scopeLabel} (${found.tracks.length} episode${found.tracks.length === 1 ? '' : 's'}) as new and unwatched.`;
+  return { ok: true, show: found.show, season, episode, watched: isWatched, count: found.tracks.length, spoken };
+}
+
+function addWatchlistItem({ query, title, show, kind = null } = {}) {
+  const { lib, entries, tracks } = watchQueries();
+  const q = String(query || title || show || '').trim();
+  if (!q) return { ok: false, error: 'Say which show or movie to add to your watchlist.' };
+  const target = lib.findWatchlistTarget(q, { tracks, entries, preferredKind: kind });
+  if (!target.ok) return { ok: false, error: target.error, spoken: target.error };
+  if (!target.tracks.length) {
+    const error = `"${target.name}" is not in this computer's Movie Player library.`;
+    return { ok: false, error, spoken: error };
+  }
+  const changed = mediaLibrary.setLoved(target.tracks.map(t => t.id), true);
+  sendToWindow('audio:track-stats-updated', changed);
+  if (mediaServiceClientLib?.pushBatchProgressToMediaServer) {
+    mediaServiceClientLib.pushBatchProgressToMediaServer(target.tracks.map(t => ({
+      track: t,
+      payload: { ...(changed[t.id] || {}), loved: true },
+    }))).catch(() => {});
+  }
+  const label = target.kind === 'movie' && target.year ? `${target.name} (${target.year})` : target.name;
+  const spoken = `Added ${label} to your Movie Player watchlist.`;
+  return { ok: true, action: 'added', kind: target.kind, name: target.name, year: target.year || null, count: target.tracks.length, spoken };
+}
+
+function removeWatchlistItem({ query, title, show, kind = null } = {}) {
+  const { lib, entries, tracks } = watchQueries();
+  const q = String(query || title || show || '').trim();
+  if (!q) return { ok: false, error: 'Say which show or movie to remove from your watchlist.' };
+  const target = lib.findWatchlistTarget(q, { tracks, entries, preferredKind: kind });
+  if (!target.ok) return { ok: false, error: target.error, spoken: target.error };
+
+  const changed = target.tracks.length ? mediaLibrary.dismissFromWatchlist(target.tracks.map(t => t.id)) : {};
+  // Also mark portable history entries that have no local track as unloved + dismissed
+  if (target.entryKeys && target.entryKeys.length) {
+    try {
+      const hFile = lib.historyFile('movie-player', CONFIG_DIR);
+      const doc = lib.readDoc(hFile);
+      const now = new Date().toISOString();
+      let mutated = false;
+      for (const k of target.entryKeys) {
+        if (doc.entries && doc.entries[k]) {
+          doc.entries[k] = {
+            ...doc.entries[k],
+            loved: false,
+            lovedAt: null,
+            inProgress: false,
+            positionSec: 0,
+            dismissedFromWatchlist: true,
+            updatedAt: now,
+          };
+          mutated = true;
+        }
+      }
+      if (mutated) {
+        doc.updatedAt = now;
+        lib.writeDoc(hFile, doc);
+        if (mediaLibrary.history) mediaLibrary.history.reloadIfChanged();
+      }
+    } catch {}
+  }
+
+  sendToWindow('audio:track-stats-updated', changed);
+  sendToWindow('audio:playlists-updated', mediaLibrary.getPlaylists());
+  if (target.tracks.length && mediaServiceClientLib?.pushBatchProgressToMediaServer) {
+    mediaServiceClientLib.pushBatchProgressToMediaServer(target.tracks.map(t => ({
+      track: t,
+      payload: {
+        ...(changed[t.id] || {}),
+        loved: false,
+        inProgress: false,
+        positionSec: 0,
+        completed: Boolean(changed[t.id]?.completed),
+        unwatched: !changed[t.id]?.completed,
+        dismissedFromWatchlist: true,
+      },
+    }))).catch(() => {});
+  }
+  const label = target.kind === 'movie' && target.year ? `${target.name} (${target.year})` : target.name;
+  const spoken = `Removed ${label} from your watchlist.`;
+  return { ok: true, action: 'removed', kind: target.kind, name: target.name, year: target.year || null, count: target.tracks.length, spoken };
+}
+
+function markShowEpisodesNew({ show, query, season = null } = {}) {
+  const { lib, entries, tracks } = watchQueries();
+  const q = String(show || query || '').trim();
+  if (!q) return { ok: false, error: 'Say which show to mark as new.' };
+  const found = lib.findEpisodeTracks(q, { tracks, season: season !== null && season !== undefined ? Number(season) : null });
+  if (!found.show && !found.tracks.length) {
+    // Try movie fallback in case user said "mark Dune as new"
+    const movieTarget = lib.findWatchlistTarget(q, { tracks, entries, preferredKind: 'movie' });
+    if (movieTarget.ok && movieTarget.tracks.length) {
+      const changed = mediaLibrary.setWatched(movieTarget.tracks.map(t => t.id), false);
+      sendToWindow('audio:track-stats-updated', changed);
+      if (mediaServiceClientLib?.pushBatchProgressToMediaServer) {
+        mediaServiceClientLib.pushBatchProgressToMediaServer(movieTarget.tracks.map(t => ({
+          track: t,
+          payload: { unwatched: true, plays: 0, lastPlayed: null },
+        }))).catch(() => {});
+      }
+      const spoken = `Marked ${movieTarget.name} as new and unwatched.`;
+      return { ok: true, kind: 'movie', title: movieTarget.name, count: movieTarget.tracks.length, spoken };
+    }
+    const error = `I could not find "${q}" in your library.`;
+    return { ok: false, error, spoken: error };
+  }
+  const changed = mediaLibrary.setWatched(found.tracks.map(t => t.id), false);
+  sendToWindow('audio:track-stats-updated', changed);
+  if (mediaServiceClientLib?.pushBatchProgressToMediaServer) {
+    mediaServiceClientLib.pushBatchProgressToMediaServer(found.tracks.map(t => ({
+      track: t,
+      payload: { unwatched: true, plays: 0, lastPlayed: null },
+    }))).catch(() => {});
+  }
+  const seasonLabel = season !== null && season !== undefined ? ` Season ${season}` : '';
+  const spoken = `Marked all ${found.tracks.length} episode${found.tracks.length === 1 ? '' : 's'} of ${found.show}${seasonLabel} as new and unwatched.`;
+  return { ok: true, kind: 'tv', show: found.show, season: season !== null && season !== undefined ? Number(season) : null, count: found.tracks.length, spoken };
+}
+
+function setShowCurrentEpisode({ show, query, ep = null, season = null, episode = null } = {}) {
+  const { lib, entries, tracks } = watchQueries();
+  const q = String(show || query || '').trim();
+  if (!q) return { ok: false, error: 'Say which show.' };
+  const epInput = ep !== null && ep !== undefined && String(ep).trim() !== ''
+    ? ep
+    : { season, episode };
+  const plan = lib.planCurrentEpisode(q, epInput, { tracks, entries });
+  if (!plan.ok) return plan;
+
+  const watchedIds = plan.watchedTracks.map(t => t.id);
+  const unwatchedIds = plan.unwatchedTracks.map(t => t.id);
+  // If setting current episode to the very first episode (0 prior watched), ensure show stays on Watchlist
+  const addLovedIds = watchedIds.length === 0 ? unwatchedIds : [];
+  const changed = mediaLibrary.applyEpisodeCursor({ watchedIds, unwatchedIds, addLovedIds });
+  sendToWindow('audio:track-stats-updated', changed);
+
+  if (mediaServiceClientLib?.pushBatchProgressToMediaServer) {
+    const batch = [
+      ...plan.watchedTracks.map(t => ({
+        track: t,
+        payload: { ...(changed[t.id] || {}), completed: true, unwatched: false, inProgress: false, positionSec: 0 },
+      })),
+      ...plan.unwatchedTracks.map(t => ({
+        track: t,
+        payload: { ...(changed[t.id] || {}), completed: false, unwatched: true, inProgress: false, positionSec: 0, plays: 0, lastPlayed: null },
+      })),
+    ];
+    if (batch.length) mediaServiceClientLib.pushBatchProgressToMediaServer(batch).catch(() => {});
+  }
+
+  return {
+    ok: true,
+    show: plan.show,
+    targetSeason: plan.targetSeason,
+    targetEpisode: plan.targetEpisode,
+    targetCode: plan.targetCode,
+    targetEpisodeTitle: plan.targetEpisodeTitle,
+    watchedBeforeCount: plan.watchedBeforeCount,
+    unwatchedFromCurrentCount: plan.unwatchedFromCurrentCount,
+    spoken: plan.spoken,
+  };
 }
 
 async function playNextEpisode({ show, targetIp = null } = {}) {
@@ -399,12 +573,26 @@ controlHandlers.queries = {
   '/api/watch-status': (q) => { const { lib, entries, tracks } = watchQueries(); return lib.showStatus(q.show || q.q || '', { entries, tracks }); },
   '/api/movie-status': (q) => { const { lib, entries, tracks } = watchQueries(); return lib.movieStatus(q.title || q.q || '', { entries, tracks }); },
   '/api/continue-watching': (q) => { const { lib, entries } = watchQueries(); return { ok: true, items: lib.continueWatching(entries, { limit: Number(q.limit) || 10 }) }; },
+  '/api/watchlist': (q) => {
+    const { lib, entries, tracks } = watchQueries();
+    return lib.watchlistSummary({
+      entries,
+      tracks,
+      stats: mediaLibrary.getStats(),
+      playlists: mediaLibrary.getPlaylists(),
+      limit: Number(q.limit) || 50,
+    });
+  },
   '/api/history': (q) => { const { lib, entries } = watchQueries(); return { ok: true, items: lib.recentHistory(entries, { kind: q.kind || undefined, limit: Number(q.limit) || 20 }) }; },
   '/api/shows': () => { const { lib, entries, tracks } = watchQueries(); return { ok: true, shows: lib.listShows({ entries, tracks }) }; },
   '/api/media-sync': () => ({ ok: true, ...(mediaSync ? mediaSync.status() : { outcome: 'unavailable' }) }),
 };
 controlHandlers.actions = {
   '/api/set-watched': (body) => setShowWatched(body),
+  '/api/watchlist-add': (body) => addWatchlistItem(body),
+  '/api/watchlist-remove': (body) => removeWatchlistItem(body),
+  '/api/mark-episodes-new': (body) => markShowEpisodesNew(body),
+  '/api/set-current-episode': (body) => setShowCurrentEpisode(body),
   '/api/play-next-episode': (body) => playNextEpisode(body),
   '/api/media-sync-now': async () => ({ ok: true, ...(mediaSync ? await mediaSync.runNow('manual') : { outcome: 'unavailable' }) }),
   '/api/media-service-reload': async () => {

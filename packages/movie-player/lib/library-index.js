@@ -932,6 +932,10 @@ function getShowWatchState(album, stats = {}) {
     statusBadge = `${watchedCount}/${episodes.length} watched`;
   }
 
+  const dismissedFromWatchlist = episodes.length > 0
+    && episodes.some(ep => Boolean(stats[ep.id]?.dismissedFromWatchlist))
+    && inProgressCount === 0;
+
   return {
     totalEpisodes: episodes.length,
     watchedCount,
@@ -939,8 +943,9 @@ function getShowWatchState(album, stats = {}) {
     inProgressCount,
     progressPct,
     hasActivity: anyStarted,
+    dismissedFromWatchlist,
     completed: allCompleted,
-    inProgress: anyStarted && !allCompleted,
+    inProgress: anyStarted && !allCompleted && !dismissedFromWatchlist,
     isMidEpisode,
     isNextUp,
     lastPlayed: latestActiveTime && latestActiveTime !== '1970-01-01' ? latestActiveTime : null,
@@ -957,7 +962,7 @@ function getShowWatchState(album, stats = {}) {
 
 function inProgressTracks(tracks, stats = {}) {
   return tracks
-    .filter(t => getTrackWatchState(t, stats).inProgress)
+    .filter(t => !stats[t.id]?.dismissedFromWatchlist && getTrackWatchState(t, stats).inProgress)
     .sort((a, b) => String((stats[b.id] || {}).lastPlayed || '').localeCompare(String((stats[a.id] || {}).lastPlayed || '')));
 }
 

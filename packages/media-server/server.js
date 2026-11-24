@@ -467,6 +467,10 @@ function createMediaServer(options = {}) {
         }
         if (req.method === 'POST') {
           const body = await readJsonBody(req);
+          if (body && Array.isArray(body.items)) {
+            const entries = store.updateProgressBatch(body.items, { deviceName: body.deviceName || '' });
+            return sendJson(res, 200, { ok: true, count: entries.length, entries });
+          }
           const entry = store.updateProgress(body);
           return sendJson(res, 200, { ok: true, entry });
         }

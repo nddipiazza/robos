@@ -1,0 +1,158 @@
+#!/usr/bin/env node
+'use strict';
+
+/**
+ * robos-movie-watchlist — CLI & Voice-command helper for RobOS Movie Player Watchlist & Episode Progress
+ *
+ * Usage:
+ *   robos-movie-watchlist list [--json]
+ *   robos-movie-watchlist add "<show or movie>" [--kind tv|movie] [--json]
+ *   robos-movie-watchlist remove "<show or movie>" [--kind tv|movie] [--json]
+ *   robos-movie-watchlist mark-new "<show>" [--season <n>] [--json]
+ *   robos-movie-watchlist current "<show>" "<ep>" [--json]
+ *   robos-movie-watchlist current "<show>" --season <n> --episode <n> [--json]
+ *   robos-movie-watchlist status "<show>" [--json]
+ *   robos-movie-watchlist say "<natural-language command>" [--json]
+ *
+ * Natural-language examples (`say` or direct phrase):
+ *   robos-movie-watchlist say "add Severance to my watch list"
+ *   robos-movie-watchlist say "remove Family Guy from my watch list"
+ *   robos-movie-watchlist say "mark all episodes of Severance as new"
+ *   robos-movie-watchlist say "my current episode of Family Guy is S21E05"
+ *   robos-movie-watchlist say "our current episode of Severance is season 2 episode 4"
+ */
+
+const path = require('node:path');
+const fs = require('node:fs');
+
+function resolveModule(relFromPackages) {
+  const candidates = [
+    process.env.ROBOS_LIB_PATH && path.resolve(process.env.ROBOS_LIB_PATH, '..', relFromPackages),
+    path.resolve(__dirname, '..', relFromPackages),
+    path.join('/usr/local/share/robos', relFromPackages),
+  ].filter(Boolean);
+  for (const p of candidates) {
+    if (fs.existsSync(p) || fs.existsSync(`${p}.js`)) return require(p);
+  }
+  return require(path.resolve(__dirname, '..', relFromPackages));
+}
+
+const watch = resolveModule('robos-lib/media-watch');
+const router = resolveModule('home-speaker/lib/nabu-command-router');
+
+function parseArgs(argv) {
+  const out = { _: [], json: false };
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i];
+    if (a === '--json') out.json = true;
+    else if (a === '-h' || a === '--help') out.help = true;
+    else if (a.startsWith('--')) out[a.slice(2)] = argv[++i];
+    else out._.push(a);
+  }
+  return out;
+}
+
+function usage() {
+  return fs.readFileSync(__filename, 'utf8')
+    .split('\n')
+    .filter(l => l.startsWith(' *'))
+    .map(l => l.slice(3))
+    .join('\n');
+}
+
+async function main() {
+  const args = parseArgs(process.argv.slice(2));
+  if (args.help || !args._.length) {
+    process.stdout.write(`${usage()}\n`);
+    process.exit(0);
+  }
+
+  const [cmd, ...rest] = args._;
+  const joined = rest.join(' ').trim();
+  const num = v => (v === undefined || v === null || v === '' ? null : Number(v));
+  const opts = args['config-dir'] ? { configDir: args['config-dir'] } : {};
+
+  let res;
+  switch (cmd) {
+    case 'list':
+    case 'watchlist':
+      res = await watch.watchlist({ limit: num(args.limit) || 50, ...opts });
+      break;
+    case 'add':
+    case 'watchlist-add':
+      res = await watch.addToWatchlist({ query: joined || args.query || args.show || args.title, kind: args.kind || null, ...opts });
+      break;
+    case 'remove':
+    case 'delete':
+    case 'watchlist-remove':
+      res = await watch.removeFromWatchlist({ query: joined || args.query || args.show || args.title, kind: args.kind || null, ...opts });
+      break;
+    case 'mark-new':
+    case 'reset':
+    case 'unwatched':
+      res = await watch.markAllNew({ show: joined || args.show || args.query, season: num(args.season), ...opts });
+      break;
+    case 'watched':
+    case 'mark-watched':
+      res = await watch.setWatched({ show: joined || args.show, season: num(args.season), episode: num(args.episode), watched: true, ...opts });
+      break;
+    case 'current':
+    case 'current-episode':
+    case 'set-current':
+    case 'cursor': {
+      let showName = args.show || '';
+      let epSpec = args.ep || '';
+      if (!showName) {
+        if (rest.length >= 2 && args.season === undefined && args.episode === undefined && !args.ep) {
+          showName = rest[0];
+          epSpec = rest.slice(1).join(' ');
+        } else {
+          showName = joined;
+        }
+      }
+      res = await watch.setCurrentEpisode({
+        show: showName,
+        ep: epSpec || null,
+        season: num(args.season),
+        episode: num(args.episode),
+        ...opts,
+      });
+      break;
+    }
+    case 'status':
+    case 'show':
+      res = await watch.watchStatus(joined || args.show, opts);
+      break;
+    case 'say':
+    default: {
+      const phrase = cmd === 'say' ? joined : [cmd, ...rest].join(' ').trim();
+      const cleaned = router.stripWakePhrase(phrase);
+      const wlIntent = router.parseWatchlistCommand(cleaned);
+      if (wlIntent) {
+        const out = await router.executeWatchlistCommand(wlIntent, opts);
+        res = out.data ? { ...out.data, ok: out.ok, spoken: out.response } : { ok: out.ok, spoken: out.response };
+      } else {
+        const wsIntent = router.parseWatchStatusQuery(cleaned);
+        if (wsIntent && wsIntent.type === 'watch-status') {
+          const out = await router.answerWatchStatus(wsIntent, opts);
+          res = out.data ? { ...out.data, ok: out.ok, spoken: out.response } : { ok: out.ok, spoken: out.response };
+        } else {
+          res = { ok: false, error: `Could not parse watchlist command: "${phrase}"` };
+        }
+      }
+      break;
+    }
+  }
+
+  if (args.json) {
+    process.stdout.write(`${JSON.stringify(res, null, 2)}\n`);
+  } else {
+    process.stdout.write(`${(res && (res.spoken || res.error)) || JSON.stringify(res)}\n`);
+  }
+  process.exit(res && res.ok === false ? 1 : 0);
+}
+
+main().catch((err) => {
+  console.error(err.message);
+  process.exit(1);
+});

@@ -8,14 +8,19 @@
  *   claude mcp add robos-media -- node <robos>/packages/movie-player/bin/media-mcp.js
  *
  * Tools
- *   robos_media_watch_status      where you left off in a show ("what season of X did we leave off on")
- *   robos_media_movie_status      whether a movie was watched or how far in
- *   robos_media_continue_watching in-progress shows and movies
- *   robos_media_list_shows        shows with watched / in-progress counts
- *   robos_media_watch_history     recently watched (Movie Player) or played (Audio Player)
- *   robos_media_set_watched       mark a show, season or episode watched / unwatched
- *   robos_media_play_next_episode play the next episode in the open Movie Player
- *   robos_media_sync_now          sync both players' library and history with the backup vault
+ *   robos_media_watch_status        where you left off in a show ("what season of X did we leave off on")
+ *   robos_media_movie_status        whether a movie was watched or how far in
+ *   robos_media_continue_watching   in-progress shows and movies
+ *   robos_media_watchlist           list the Movie Player watchlist (My Watchlist + Continue Watching)
+ *   robos_media_watchlist_add       add a TV show or movie to the Movie Player watchlist
+ *   robos_media_watchlist_remove    remove a TV show or movie from the watchlist (and hide from Continue Watching)
+ *   robos_media_mark_episodes_new   mark all episodes of a show (or one season) as new / unwatched
+ *   robos_media_set_current_episode set the user's current episode of a show (marks prior episodes watched and current+ unwatched)
+ *   robos_media_list_shows          shows with watched / in-progress counts
+ *   robos_media_watch_history       recently watched (Movie Player) or played (Audio Player)
+ *   robos_media_set_watched         mark a show, season or episode watched / unwatched
+ *   robos_media_play_next_episode   play the next episode in the open Movie Player
+ *   robos_media_sync_now            sync both players' library and history with the backup vault
  *
  * Every answer has a `spoken` sentence when one makes sense, ready for RobOS Voice.
  */
@@ -45,6 +50,45 @@ const TOOLS = [
     description: 'Shows and movies the user is in the middle of, newest first (one row per show).',
     inputSchema: { type: 'object', properties: { limit: int('How many (default 10)') } },
     call: a => watch.continueWatching({ limit: a.limit || 10 }),
+  },
+  {
+    name: 'robos_media_watchlist',
+    description: 'Lists the user\'s RobOS Movie Player Watchlist (shows and movies in My Watchlist plus active Continue Watching shows, with each show\'s next episode).',
+    inputSchema: { type: 'object', properties: { limit: int('How many items to return (default 50)') } },
+    call: a => watch.watchlist({ limit: a.limit || 50 }),
+  },
+  {
+    name: 'robos_media_watchlist_add',
+    description: 'Adds a TV show or movie to the RobOS Movie Player Watchlist ("add Severance to my watch list"). Updates the open Movie Player window immediately and syncs to RobOS Media Server.',
+    inputSchema: { type: 'object', properties: { query: str('Show or movie title'), kind: { type: 'string', enum: ['tv', 'movie'], description: 'Optional disambiguator when both a show and movie share a name' } }, required: ['query'] },
+    call: a => watch.addToWatchlist(a),
+  },
+  {
+    name: 'robos_media_watchlist_remove',
+    description: 'Removes a TV show or movie from the RobOS Movie Player Watchlist, custom Watchlists, and Continue Watching ("remove Family Guy from my watch list").',
+    inputSchema: { type: 'object', properties: { query: str('Show or movie title'), kind: { type: 'string', enum: ['tv', 'movie'] } }, required: ['query'] },
+    call: a => watch.removeFromWatchlist(a),
+  },
+  {
+    name: 'robos_media_mark_episodes_new',
+    description: 'Marks all episodes of a TV show (or a specific season) as brand new / unwatched ("mark all episodes of Severance as new").',
+    inputSchema: { type: 'object', properties: { show: str('Show name'), season: int('Optional season number; omit to mark every episode of the show as new') }, required: ['show'] },
+    call: a => watch.markAllNew(a),
+  },
+  {
+    name: 'robos_media_set_current_episode',
+    description: 'Updates the user\'s current episode cursor for a TV show ("my/our current episode of {show} is {ep}"): marks every episode strictly before {ep} as Watched, and marks {ep} plus all subsequent episodes as Unwatched so {ep} is Next Up.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        show: str('Show name, e.g. "Severance", "Family Guy", "The Office"'),
+        ep: str('Episode expression such as "S02E04", "2x04", "season 2 episode 4", "season 3", or episode title'),
+        season: int('Optional explicit season number (alternative to ep)'),
+        episode: int('Optional explicit episode number (alternative to ep)'),
+      },
+      required: ['show'],
+    },
+    call: a => watch.setCurrentEpisode(a),
   },
   {
     name: 'robos_media_list_shows',

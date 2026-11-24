@@ -901,11 +901,64 @@ async function pushProgressToMediaServer(track, payload = {}) {
       inProgress: payload.inProgress,
       plays: payload.plays,
       lastPlayed: payload.lastPlayed,
+      ...(payload.loved !== undefined ? { loved: Boolean(payload.loved), lovedAt: payload.lovedAt || null } : {}),
+      ...(payload.dismissedFromWatchlist !== undefined ? { dismissedFromWatchlist: Boolean(payload.dismissedFromWatchlist) } : {}),
       deviceName: os.hostname(),
     }, {}, 2500);
   } catch (err) {
     return { ok: false, error: err.message };
   }
+}
+
+async function pushBatchProgressToMediaServer(records = [], { timeoutMs = 4500 } = {}) {
+  if (!Array.isArray(records) || !records.length) return { ok: true, pushed: 0 };
+  const byEndpoint = new Map();
+  for (const r of records) {
+    const track = r && r.track;
+    const ms = track?.mediaService;
+    if (!ms?.endpoint || !ms?.remoteItemId) continue;
+    let base;
+    try { base = normalizeServerUrl(ms.endpoint); } catch { continue; }
+    const payload = r.payload || r;
+    const item = {
+      itemId: ms.remoteItemId,
+      positionSec: Number(payload.positionSec) || 0,
+      durationSec: Number(payload.durationSec || track.duration) || 0,
+      completed: Boolean(payload.completed),
+      unwatched: Boolean(payload.unwatched),
+      inProgress: payload.inProgress,
+      plays: payload.plays,
+      lastPlayed: payload.lastPlayed,
+      ...(payload.loved !== undefined ? { loved: Boolean(payload.loved), lovedAt: payload.lovedAt || null } : {}),
+      ...(payload.dismissedFromWatchlist !== undefined ? { dismissedFromWatchlist: Boolean(payload.dismissedFromWatchlist) } : {}),
+    };
+    if (!byEndpoint.has(base)) byEndpoint.set(base, []);
+    byEndpoint.get(base).push(item);
+  }
+  if (!byEndpoint.size) return { ok: true, pushed: 0, skipped: true };
+  let pushed = 0;
+  const errors = [];
+  for (const [base, items] of byEndpoint.entries()) {
+    try {
+      const res = await httpPostJson(`${base}/api/progress`, {
+        items,
+        deviceName: os.hostname(),
+      }, {}, timeoutMs);
+      if (res && res.ok) pushed += Number(res.count ?? items.length);
+      else {
+        // Fallback for older Media Server versions that only accept single-item POST /api/progress
+        for (const it of items) {
+          try {
+            const single = await httpPostJson(`${base}/api/progress`, { ...it, deviceName: os.hostname() }, {}, 2500);
+            if (single && single.ok) pushed += 1;
+          } catch {}
+        }
+      }
+    } catch (err) {
+      errors.push(err.message);
+    }
+  }
+  return { ok: errors.length === 0, pushed, ...(errors.length ? { errors } : {}) };
 }
 
 async function pullProgressFromMediaServers({ tracks = [], stats = {}, configDir, timeoutMs = 2500 } = {}) {
@@ -967,6 +1020,8 @@ async function pullProgressFromMediaServers({ tracks = [], stats = {}, configDir
           inProgress: !p.completed && Boolean(p.inProgress || pos >= 1),
           plays: Math.max(Number(cur?.plays) || 0, Number(p.plays) || (p.completed || p.inProgress || pos >= 1 ? 1 : 0)),
           lastPlayed: p.lastPlayed || p.updatedAt || cur?.lastPlayed || new Date().toISOString(),
+          ...(p.loved !== undefined ? { loved: Boolean(p.loved), lovedAt: p.lovedAt || null } : {}),
+          ...(p.dismissedFromWatchlist !== undefined ? { dismissedFromWatchlist: Boolean(p.dismissedFromWatchlist) } : {}),
           updatedAt: p.updatedAt || new Date().toISOString(),
           syncedFrom: p.deviceName || 'RobOS Media Server',
         };
@@ -1002,5 +1057,6 @@ module.exports = {
   resetAndLoadPlayerLibraries,
   startMediaServiceAutoSync,
   pushProgressToMediaServer,
+  pushBatchProgressToMediaServer,
   pullProgressFromMediaServers,
 };

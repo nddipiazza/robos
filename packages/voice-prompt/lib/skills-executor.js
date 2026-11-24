@@ -34,6 +34,7 @@ class SkillsExecutor {
       { id: 'stop-speaking', label: 'Stop Audio Playback', intent: 'Silence current TTS playback', patterns: ['stop speaking', 'silence', 'be quiet'] },
       { id: 'audio-play', label: 'Play Music from Library', intent: 'Find and play the best matching song, artist, album, or genre in RobOS Audio Player', patterns: ['play [song/artist/album]', 'play some [music]', 'listen to [artist]'] },
       { id: 'movie-play', label: 'Play Movie from Library', intent: 'Find and play the best matching movie or film in RobOS Movie Player', patterns: ['play movie [title]', 'watch [movie]', 'put on movie [title]'] },
+      { id: 'movie-watchlist', label: 'Manage Movie Player Watchlist & Episode Cursor', intent: 'Add or remove shows and movies on your RobOS Movie Player watchlist, mark all episodes as new/unwatched, or set your current episode (marking prior episodes watched and subsequent episodes unwatched)', patterns: ['add [show] to my watch list', 'remove [show] from my watch list', 'mark all episodes of [show] as new', 'my current episode of [show] is [S02E04]', 'our current episode of [show] is season 2 episode 4', 'what is on my watch list'] },
       { id: 'media-watch-status', label: 'Where Did We Leave Off?', intent: 'Answer which season and episode of a show you left off on (on any of your computers), what is next, or whether you watched a movie', patterns: ['what season of [show] did we leave off on', 'where did we leave off on [show]', 'what episode are we on in [show]', 'have we seen [movie]', 'what are we watching'] },
       { id: 'media-next-episode', label: 'Continue Watching a Show', intent: 'Play the next episode of a show in RobOS Movie Player, resuming the one in progress', patterns: ['continue watching [show]', 'play the next episode of [show]'] },
       { id: 'shopping-lists', label: 'Manage Household Shopping Lists (Grocery, Target, Costco)', intent: 'Add, check off, remove, adjust quantity, sync with Google Docs/Drive, or read items on Grocery, Target, and Costco shopping lists', patterns: ['add [items] to grocery/target/costco list', 'check off [item] on shopping list', 'remove [item] from target list', 'what is on my costco list', 'clear checked on grocery list'] },
@@ -66,14 +67,25 @@ class SkillsExecutor {
       return await this.executeGreeting(options);
     }
 
-    // 0.5 Media Library Playback & Transport ("play some Dark Tranquillity", "play movie Dune", "pause", "next song")
+    // 0.5 Media Library Playback, Watchlist & Transport ("play some Dark Tranquillity", "remove X from watch list", "my current episode of X is S02E04", "pause")
     try {
-      const { classifyVoiceCommand, executeNabuCommand, stripWakePhrase } = require('../../home-speaker/lib/nabu-command-router');
+      const { classifyVoiceCommand, executeNabuCommand, parseWatchlistCommand, stripWakePhrase } = require('../../home-speaker/lib/nabu-command-router');
       const cleanedMedia = stripWakePhrase(query);
-      const mediaIntent = classifyVoiceCommand(cleanedMedia);
-      // "what season of The Office did we leave off on?" and "continue watching The Office" too.
-      if (['play-movie', 'play-media', 'transport', 'watch-status', 'play-next-episode'].includes(mediaIntent.type)) {
-        const res = await executeNabuCommand(cleanedMedia, { skillsExecutor: this });
+      if (/^\/movie-watchlist\b/i.test(cleanedMedia)) {
+        const sub = cleanedMedia.replace(/^\/movie-watchlist\s*/i, '').trim() || 'what is on my watch list';
+        const res = await executeNabuCommand(sub, { skillsExecutor: this, configDir: this.configDir });
+        return {
+          ok: res.ok,
+          skill: res.skill || 'movie-watchlist',
+          actionDone: res.response,
+          response: res.response,
+          data: res.data || null,
+        };
+      }
+      const mediaIntent = classifyVoiceCommand(cleanedMedia, { configDir: this.configDir });
+      // "what season of The Office did we leave off on?", "continue watching The Office", and watchlist management too.
+      if (['play-movie', 'play-media', 'transport', 'watch-status', 'play-next-episode', 'movie-watchlist'].includes(mediaIntent.type)) {
+        const res = await executeNabuCommand(cleanedMedia, { skillsExecutor: this, configDir: this.configDir });
         return {
           ok: res.ok,
           skill: res.skill,
@@ -902,6 +914,14 @@ class SkillsExecutor {
 
     // Household Shopping Lists & Google Calendar commands
     if (/\b(?:shopping\s+lists?|grocery|target\s+list|costco|calendar|calendars|appointment|appointments)\b/i.test(query)) return true;
+
+    // Movie Player Watchlist, Episode Cursor & Watch Status commands
+    try {
+      const { parseWatchlistCommand, parseWatchStatusQuery, stripWakePhrase } = require('../../home-speaker/lib/nabu-command-router');
+      const cleanedQ = stripWakePhrase(query);
+      if (parseWatchlistCommand(cleanedQ) || parseWatchStatusQuery(cleanedQ)) return true;
+    } catch {}
+    if (/\b(?:watch\s*lists?|watchlists?|current\s+episode\s+(?:of|in|for)\s+\S+\s+(?:is|to)\s+\S+|mark\s+(?:all\s+)?episodes?\s+(?:of|in|for)\s+\S+\s+(?:as\s+)?(?:new|unwatched|watched))\b/i.test(query)) return true;
 
     // System commands
     if (/(?:restart\s+(?:taskbar|dock)|error\s+logs?|git\s+status|active\s+(?:app|window)|system\s+status)/i.test(query)) return true;

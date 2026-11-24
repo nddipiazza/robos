@@ -1054,7 +1054,7 @@ function HistorySection({ index, go, stats }) {
   const inProgressShows = useMemo(() => {
     return (index.tvShows || []).filter(show => {
       const st = getShowWatchState(show, stats);
-      return st.hasActivity && !st.completed;
+      return st.hasActivity && !st.completed && !st.dismissedFromWatchlist;
     });
   }, [index, stats]);
   const played = useMemo(() => recentlyPlayedTracks(index.tracks, stats).slice(0, 500), [index, stats]);

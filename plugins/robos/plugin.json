@@ -53,6 +53,7 @@
     "jrpg-parse-assets",
     "jrpg-generate-art",
     "media-watch-status",
+    "movie-watchlist",
     "send-email-thunderbird",
     "shopping-lists",
     "install-daw-instruments"
@@ -102,6 +103,7 @@
     "jrpg-parse-assets",
     "jrpg-generate-art",
     "media-watch-status",
+    "movie-watchlist",
     "send-email-thunderbird",
     "shopping-lists",
     "install-daw-instruments"

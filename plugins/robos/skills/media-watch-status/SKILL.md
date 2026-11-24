@@ -19,6 +19,10 @@ same on every computer, and no app has to be running to ask.
 - `show "<name>"` — where you left off in a show, what is next, per-season counts
 - `movie "<title>"` — finished, in progress, or not watched
 - `continue` — shows and movies in progress
+- `watchlist` — list shows and movies in My Watchlist + Continue Watching (see also the `movie-watchlist` skill)
+- `add "<show or movie>"` / `remove "<show or movie>"` — add or remove on your Movie Player Watchlist
+- `mark-new "<show>" [--season N]` — mark all episodes (or one season) as new / unwatched
+- `current-episode "<show>" "<ep>"` — mark every episode before `<ep>` watched and `<ep>` onward unwatched (*"my/our current episode of {show} is {ep}"*)
 - `shows` — every show with watched / in-progress counts
 - `history [--audio] [--limit N]` — recently watched (or played songs with `--audio`)
 - `watched "<show>" [--season N] [--episode N] [--unwatched]` — mark watched / unwatched

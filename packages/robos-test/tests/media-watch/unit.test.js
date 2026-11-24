@@ -323,3 +323,177 @@ describe('media history merge', () => {
     assert.ok(history.titleScore('the bear', 'The Office') < 0.5);
   });
 });
+
+describe('Movie Player watchlist & episode cursor skills (CLI, MCP, and RobOS Voice)', () => {
+  it('parses flexible episode expressions including codes, spoken numbers, seasons, and titles', () => {
+    assert.deepEqual(history.parseEpisodeSpec('S02E05'), { season: 2, episode: 5, raw: 'S02E05' });
+    assert.deepEqual(history.parseEpisodeSpec('2x04'), { season: 2, episode: 4, raw: '2x04' });
+    assert.deepEqual(
+      history.parseEpisodeSpec('season twenty one episode five'),
+      { season: 21, episode: 5, raw: 'season twenty one episode five' },
+    );
+    assert.deepEqual(
+      history.parseEpisodeSpec('episode 3 of season 2'),
+      { season: 2, episode: 3, raw: 'episode 3 of season 2' },
+    );
+    assert.deepEqual(
+      history.parseEpisodeSpec('season 3'),
+      { season: 3, episode: 1, seasonOnly: true, raw: 'season 3' },
+    );
+    assert.deepEqual(
+      history.parseEpisodeSpec('Dinner Party'),
+      { season: null, episode: null, titleQuery: 'Dinner Party', raw: 'Dinner Party' },
+    );
+  });
+
+  it('controls watchlist, marks all episodes as new, and sets current episode cursor via RobOS Voice, CLI, and MCP', async () => {
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'robos-watchlist-skill-'));
+    const home = path.join(tmp, 'home');
+    const configDir = path.join(home, '.config', 'robos');
+    fs.mkdirSync(configDir, { recursive: true });
+
+    const { SkillsExecutor } = require(path.join(PKG, 'voice-prompt/lib/skills-executor'));
+    const { buildIndex, getShowWatchState } = require(path.join(PKG, 'movie-player/lib/library-index'));
+
+    const mkEp = (show, s, e, epTitle) => {
+      const fp = path.join(home, 'Media', show, `Season ${s}`, `${show}.S${String(s).padStart(2, '0')}E${String(e).padStart(2, '0')}.mkv`);
+      return {
+        id: generateTrackId(fp),
+        filePath: fp,
+        title: `${show} · S0${s}E0${e} · ${epTitle}`,
+        mediaType: 'tv',
+        showName: show,
+        seasonNumber: s,
+        episodeNumber: e,
+        episodeTitle: epTitle,
+        album: show,
+        albumArtist: show,
+        discNumber: s,
+        trackNumber: e,
+        duration: 1800,
+      };
+    };
+
+    const tracks = [
+      mkEp('Severance', 1, 1, 'Good News About Hell'),
+      mkEp('Severance', 1, 2, 'Half Loop'),
+      mkEp('Severance', 1, 3, 'In Perpetuity'),
+      mkEp('Severance', 2, 1, 'Hello, Ms. Cobel'),
+      mkEp('Severance', 2, 2, 'Goodbye, Mrs. Selvig'),
+      mkEp('Severance', 2, 3, 'Who Is Alive?'),
+      mkEp('Severance', 2, 4, 'Woes Hollow'),
+      {
+        id: generateTrackId(path.join(home, 'Media', 'Movies', 'Interstellar.2014.mkv')),
+        filePath: path.join(home, 'Media', 'Movies', 'Interstellar.2014.mkv'),
+        title: 'Interstellar',
+        year: 2014,
+        mediaType: 'movie',
+        duration: 10140,
+      },
+    ];
+    fs.writeFileSync(path.join(configDir, 'movie-library.json'), JSON.stringify({ updatedAt: new Date().toISOString(), tracks }));
+
+    const prevHome = process.env.HOME;
+    const prevCfg = process.env.ROBOS_CONFIG_DIR;
+    process.env.HOME = home;
+    process.env.ROBOS_CONFIG_DIR = configDir;
+
+    try {
+      const executor = new SkillsExecutor();
+
+      // 1. Voice: add show & movie to watchlist (must route to movie-watchlist, NOT shopping-lists!)
+      assert.equal(executor.hasActionableIntent('add Severance to my watch list'), true);
+      const addShow = await executor.executeCommand('Commander, add Severance to my watch list');
+      assert.equal(addShow.ok, true);
+      assert.equal(addShow.skill, 'movie-watchlist');
+      assert.match(addShow.response, /Added Severance to your Movie Player watchlist/i);
+
+      const addMovie = await executor.executeCommand('add Interstellar to our watchlist');
+      assert.equal(addMovie.ok, true);
+      assert.equal(addMovie.skill, 'movie-watchlist');
+      assert.match(addMovie.response, /Added Interstellar \(2014\)/i);
+
+      // 2. Voice: query watchlist
+      const listRes = await executor.executeCommand('what is on my watch list');
+      assert.equal(listRes.ok, true);
+      assert.equal(listRes.skill, 'movie-watchlist');
+      assert.match(listRes.response, /Severance/);
+      assert.match(listRes.response, /Interstellar/);
+
+      // 3. Voice: "our current episode of Severance is season two episode three"
+      //    Should mark S01E01, S01E02, S01E03, S02E01, S02E02 (5 episodes) as Watched,
+      //    and S02E03 + S02E04 (2 episodes) as Unwatched, so S02E03 is Next Up!
+      assert.equal(executor.hasActionableIntent('our current episode of Severance is season two episode three'), true);
+      const curRes = await executor.executeCommand('our current episode of Severance is season two episode three');
+      assert.equal(curRes.ok, true);
+      assert.equal(curRes.skill, 'movie-watchlist');
+      assert.equal(curRes.data.targetCode, 'S02E03');
+      assert.equal(curRes.data.watchedBeforeCount, 5);
+      assert.equal(curRes.data.unwatchedFromCurrentCount, 2);
+
+      const stAfterCur = await watch.watchStatus('Severance', { configDir });
+      assert.equal(stAfterCur.watchedEpisodes, 5);
+      assert.equal(stAfterCur.lastWatched.code, 'S02E02');
+      assert.equal(stAfterCur.nextUp.code, 'S02E03');
+
+      // Also verify Movie Player UI index agrees on Continue: S02E03
+      const statsOnDisk = JSON.parse(fs.readFileSync(path.join(configDir, 'movie-track-stats.json'), 'utf8')).tracks;
+      const idx = buildIndex(tracks);
+      const uiState = getShowWatchState(idx.tvShows[0], statsOnDisk);
+      assert.equal(uiState.watchedCount, 5);
+      assert.equal(uiState.resumeEpisodeCode, 'S02E03');
+      assert.equal(uiState.actionLabel, 'Continue: S02E03');
+
+      // 4. Moving cursor backwards ("my current episode of Severance is S01E02")
+      //    Marks only S01E01 watched and resets S01E02..S02E04 unwatched!
+      const backRes = await executor.executeCommand('my current episode of Severance is S01E02');
+      assert.equal(backRes.ok, true);
+      assert.equal(backRes.data.watchedBeforeCount, 1);
+      assert.equal(backRes.data.unwatchedFromCurrentCount, 6);
+      const stBack = await watch.watchStatus('Severance', { configDir });
+      assert.equal(stBack.watchedEpisodes, 1);
+      assert.equal(stBack.nextUp.code, 'S01E02');
+
+      // 5. Voice: "remove Severance from my watch list"
+      //    Removes from My Watchlist AND hides from Continue Watching without wiping S01E01 watched
+      const remRes = await executor.executeCommand('remove Severance from my watch list');
+      assert.equal(remRes.ok, true);
+      assert.equal(remRes.skill, 'movie-watchlist');
+      assert.match(remRes.response, /Removed Severance from your watchlist/i);
+
+      const wlAfterRemove = await watch.watchlist({ configDir });
+      assert.equal(wlAfterRemove.items.some(i => i.kind === 'tv' && i.show === 'Severance'), false);
+      const statsAfterRemove = JSON.parse(fs.readFileSync(path.join(configDir, 'movie-track-stats.json'), 'utf8')).tracks;
+      const uiStateRemoved = getShowWatchState(idx.tvShows[0], statsAfterRemove);
+      assert.equal(uiStateRemoved.dismissedFromWatchlist, true);
+      assert.equal(uiStateRemoved.watchedCount, 1, 'previously watched count preserved until marked new');
+
+      // 6. Voice: "mark all episodes of Severance as new"
+      const newRes = await executor.executeCommand('mark all episodes of Severance as new');
+      assert.equal(newRes.ok, true);
+      assert.equal(newRes.skill, 'movie-watchlist');
+      assert.match(newRes.response, /Marked all 7 episodes of Severance as new and unwatched/i);
+      const stNew = await watch.watchStatus('Severance', { configDir });
+      assert.equal(stNew.watchedEpisodes, 0);
+      assert.equal(stNew.lastWatched, null);
+      assert.equal(stNew.nextUp.code, 'S01E01');
+
+      // 7. Standalone CLI (`robos-movie-watchlist`) & MCP (`media-mcp.js`)
+      const cliOut = execFileSync(
+        process.execPath,
+        [path.join(PKG, 'robos-cli/robos-movie-watchlist'), 'say', 'my current episode of Severance is Woes Hollow'],
+        { env: { ...process.env, HOME: home, ROBOS_CONFIG_DIR: configDir }, encoding: 'utf8' },
+      );
+      assert.match(cliOut, /Season 2, Episode 4/);
+      const mcpMod = require(path.join(PKG, 'movie-player/bin/media-mcp.js'));
+      const mcpList = await mcpMod.handle({ id: 1, method: 'tools/list' });
+      assert.ok(mcpList.tools.some(t => t.name === 'robos_media_set_current_episode'));
+      assert.ok(mcpList.tools.some(t => t.name === 'robos_media_watchlist_remove'));
+      assert.ok(mcpList.tools.some(t => t.name === 'robos_media_mark_episodes_new'));
+    } finally {
+      if (prevHome === undefined) delete process.env.HOME; else process.env.HOME = prevHome;
+      if (prevCfg === undefined) delete process.env.ROBOS_CONFIG_DIR; else process.env.ROBOS_CONFIG_DIR = prevCfg;
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+});

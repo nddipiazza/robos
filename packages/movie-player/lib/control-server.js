@@ -245,12 +245,17 @@ function createAudioPlayerClient({ configDir = defaultConfigDir(), timeoutMs = 8
     previous: (opts = {}) => call('POST', '/api/previous', opts),
     pause: (opts = {}) => call('POST', '/api/pause', opts),
     resume: (opts = {}) => call('POST', '/api/resume', opts),
-    // Movie Player watch status (null when the app is not running).
+    // Movie Player watch status & watchlist actions (null when the app is not running).
     watchStatus: (show) => call('GET', `/api/watch-status?show=${encodeURIComponent(show || '')}`),
     movieStatus: (title) => call('GET', `/api/movie-status?title=${encodeURIComponent(title || '')}`),
     continueWatching: (limit = 10) => call('GET', `/api/continue-watching?limit=${Number(limit) || 10}`),
+    watchlist: (limit = 50) => call('GET', `/api/watchlist?limit=${Number(limit) || 50}`),
     history: ({ kind = '', limit = 20 } = {}) => call('GET', `/api/history?kind=${encodeURIComponent(kind)}&limit=${Number(limit) || 20}`),
     setWatched: (opts = {}) => call('POST', '/api/set-watched', opts),
+    addToWatchlist: (opts = {}) => call('POST', '/api/watchlist-add', opts),
+    removeFromWatchlist: (opts = {}) => call('POST', '/api/watchlist-remove', opts),
+    markEpisodesNew: (opts = {}) => call('POST', '/api/mark-episodes-new', opts),
+    setCurrentEpisode: (opts = {}) => call('POST', '/api/set-current-episode', opts),
     playNextEpisode: (opts = {}) => call('POST', '/api/play-next-episode', opts),
     mediaSyncNow: () => call('POST', '/api/media-sync-now', {}),
   };

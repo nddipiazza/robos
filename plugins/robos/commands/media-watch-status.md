@@ -8,6 +8,11 @@ Where did we leave off? Watch status and play history from RobOS Movie Player an
 /media-watch-status show "the office"          # what season / episode we left off on, and what is next
 /media-watch-status movie "dune"               # watched it yet?
 /media-watch-status continue                   # what we are in the middle of
+/media-watch-status watchlist                  # list My Watchlist + Continue Watching
+/media-watch-status add "severance"            # add show or movie to Watchlist
+/media-watch-status remove "family guy"        # remove show or movie from Watchlist
+/media-watch-status mark-new "severance"       # mark all episodes as new / unwatched
+/media-watch-status current-episode "severance" "S02E04"  # mark prior episodes watched & S02E04+ unwatched
 /media-watch-status watched "the office" --season 2
 /media-watch-status next "the office"          # play the next episode in the open Movie Player
 /media-watch-status sync                       # sync library + history with the vault now

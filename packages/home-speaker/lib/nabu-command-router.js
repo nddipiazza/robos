@@ -1128,6 +1128,202 @@ function parseWatchStatusQuery(cleanedText) {
   return null;
 }
 
+const WATCHLIST_NOUN = String.raw`(?:(?:movie|tv|show|robos)\s+)?(?:watch\s*lists?|watchlists?|watch\s+later(?:\s+lists?)?)`;
+const WATCHLIST_OR_CONTINUE_NOUN = String.raw`(?:${WATCHLIST_NOUN}|continue\s+watching(?:\s+lists?)?)`;
+
+/**
+ * Parses natural-language Movie Player Watchlist & Episode-Cursor voice commands:
+ *   - "what's on my watch list" / "show our movie watchlist"
+ *   - "add Severance to my watch list"
+ *   - "remove Family Guy from my watch list" / "take Dune off our watchlist"
+ *   - "mark all episodes of Severance as new" / "mark Family Guy as unwatched"
+ *   - "my/our current episode of {show} is {exp}" / "update {show} to S02E05" / "we're on season 2 episode 3 of {show}"
+ */
+function parseWatchlistCommand(cleanedText) {
+  const raw = String(cleanedText || '').replace(/^\/movie-watchlist\s*/i, '').trim();
+  const q = foldText(raw).replace(/\s+(?:please|right\s+now|now|for\s+me|for\s+us|in\s+(?:robos\s+)?movie\s+player|on\s+(?:robos\s+)?movie\s+player)$/, '').trim();
+  if (!q) return null;
+
+  // 1. Set current episode cursor ("my/our current episode of {show} is {exp}")
+  const currentPatterns = [
+    // "my/our/the current episode of/in/for {show} is/to {exp}"
+    /^(?:(?:set|update|change|make)\s+)?(?:(?:my|our|the)\s+)?current\s+episode\s+(?:of|in|for|on)\s+(.+?)\s+(?:is|to|as|at|now)\s+(.+)$/,
+    // "for/in/on {show} my/our current episode is {exp}"
+    /^(?:for|in|on)\s+(.+?)\s+(?:my|our|the)\s+current\s+episode\s+is\s+(.+)$/,
+    // "mark (all)? (the)? episodes (of|in) {show} (as)? watched up (until|to|through) {exp}"
+    /^(?:mark|set)\s+(?:all\s+)?(?:the\s+)?(?:episodes?\s+(?:of|in|for)\s+)?(.+?)\s+(?:as\s+)?(?:watched\s+)?up\s+(?:until|to|till)\s+(.+)$/,
+  ];
+  for (const re of currentPatterns) {
+    const m = q.match(re);
+    if (m && cleanWatchTitle(m[1]) && m[2].trim()) {
+      return {
+        type: 'movie-watchlist',
+        action: 'set-current',
+        show: cleanWatchTitle(m[1]),
+        ep: m[2].trim(),
+      };
+    }
+  }
+
+  // "we are on / i'm on / we're at / we got up to {epSpec} (of|in|for) {show}"
+  const EP_CUE = String.raw`(?:s\d+\s*e\d+|\d+\s*x\s*\d+|season\s+[a-z0-9\s]+?(?:episode\s+[a-z0-9\s]+?)?|episode\s+[a-z0-9\s]+?)`;
+  const weAreOnMatch = q.match(new RegExp(String.raw`^(?:we\s+are|we\s+re|were|i\s+am|i\s+m|im)\s+(?:now\s+|currently\s+)?(?:on|at|up\s+to)\s+(${EP_CUE})\s+(?:of|in|for|on)\s+(.+)$`));
+  if (weAreOnMatch && cleanWatchTitle(weAreOnMatch[2])) {
+    return {
+      type: 'movie-watchlist',
+      action: 'set-current',
+      show: cleanWatchTitle(weAreOnMatch[2]),
+      ep: weAreOnMatch[1].trim(),
+    };
+  }
+
+  // "update/set {show} (current episode)? to {epSpec}" (requires explicit episode/season cue so we don't collide with unrelated "set X to Y")
+  const updateToMatch = q.match(/^(?:update|set|move|advance)\s+(.+?)(?:\s+current\s+episode|\s+progress)?\s+to\s+(.+)$/);
+  if (updateToMatch && /\b(?:s\d+\s*e\d+|\d+\s*x\s*\d+|season\s+\w+|episode\s+\w+|ep\s+\w+)\b/.test(updateToMatch[2])) {
+    const showClean = cleanWatchTitle(updateToMatch[1]);
+    if (showClean && !/\b(?:voice|volume|speaker|light|lights|brightness|calendar|task)\b/.test(showClean)) {
+      return {
+        type: 'movie-watchlist',
+        action: 'set-current',
+        show: showClean,
+        ep: updateToMatch[2].trim(),
+      };
+    }
+  }
+
+  // 2. Mark all episodes (or a season) as new / unwatched
+  // Season-scoped: "mark season 2 of {show} as new/unwatched" or "mark {show} season 2 as new/unwatched"
+  const normNums = normalizeNumberTokens(q);
+  let seasonNewMatch = normNums.match(/^(?:mark|set|reset)\s+(?:all\s+(?:the\s+)?episodes?\s+(?:of|in)\s+)?season\s+(\d{1,3})\s+(?:of|in|for)\s+(.+?)(?:\s+(?:as\s+|to\s+)?(?:all\s+)?(?:brand\s+)?(?:new|unwatched|unread))?$/);
+  if (seasonNewMatch && /\b(?:new|unwatched|reset)\b/.test(normNums)) {
+    const showClean = cleanWatchTitle(seasonNewMatch[2]);
+    if (showClean) return { type: 'movie-watchlist', action: 'mark-new', show: showClean, season: Number(seasonNewMatch[1]) };
+  }
+  seasonNewMatch = normNums.match(/^(?:mark|set|reset)\s+(.+?)\s+season\s+(\d{1,3})\s+(?:episodes?\s+)?(?:as\s+|to\s+)?(?:all\s+)?(?:brand\s+)?(?:new|unwatched)$/);
+  if (seasonNewMatch && cleanWatchTitle(seasonNewMatch[1])) {
+    return { type: 'movie-watchlist', action: 'mark-new', show: cleanWatchTitle(seasonNewMatch[1]), season: Number(seasonNewMatch[2]) };
+  }
+
+  const markNewPatterns = [
+    // "mark all (the)? episodes of/in/for {show} (as)? (brand)? new / unwatched"
+    /^(?:mark|set)\s+(?:all\s+|every\s+)?(?:the\s+)?episodes?\s+(?:of|in|for|on)\s+(.+?)\s+(?:as\s+|to\s+)?(?:all\s+)?(?:brand\s+)?(?:new|unwatched)$/,
+    // "mark all (the)? {show} episodes (as)? new / unwatched"
+    /^(?:mark|set)\s+(?:all\s+|every\s+)?(?:the\s+)?(.+?)\s+episodes?\s+(?:as\s+|to\s+)?(?:all\s+)?(?:brand\s+)?(?:new|unwatched)$/,
+    // "mark {show} as new / unwatched" | "mark {show} unwatched"
+    /^(?:mark|set)\s+(.+?)\s+(?:(?:as|to)\s+(?:all\s+)?(?:brand\s+)?(?:new|unwatched)|unwatched)$/,
+    // "mark all episodes as new for/in/of {show}"
+    /^(?:mark|set)\s+(?:all\s+|every\s+)?(?:the\s+)?episodes?\s+(?:as\s+|to\s+)?(?:brand\s+)?(?:new|unwatched)\s+(?:for|in|of|on)\s+(.+)$/,
+    // "reset watch progress/history for {show}" | "reset all episodes of {show}"
+    /^reset\s+(?:(?:my|our|the)\s+)?(?:watch\s+(?:progress|history|status)|all\s+(?:the\s+)?episodes?|episodes?)\s+(?:for|of|in|on)\s+(.+)$/,
+    /^reset\s+(.+?)\s+(?:watch\s+(?:progress|history|status)|episodes?)$/,
+  ];
+  for (const re of markNewPatterns) {
+    const m = q.match(re);
+    if (m && cleanWatchTitle(m[1])) {
+      return { type: 'movie-watchlist', action: 'mark-new', show: cleanWatchTitle(m[1]), season: null };
+    }
+  }
+
+  // 2.5 Mark all episodes (or a season) as watched
+  let seasonWatchedMatch = normNums.match(/^(?:mark|set)\s+(?:all\s+(?:the\s+)?episodes?\s+(?:of|in)\s+)?season\s+(\d{1,3})\s+(?:of|in|for)\s+(.+?)\s+(?:as\s+)?(?:watched|seen|finished|complete|completed)$/);
+  if (seasonWatchedMatch && cleanWatchTitle(seasonWatchedMatch[2])) {
+    return { type: 'movie-watchlist', action: 'mark-watched', show: cleanWatchTitle(seasonWatchedMatch[2]), season: Number(seasonWatchedMatch[1]) };
+  }
+  seasonWatchedMatch = normNums.match(/^(?:mark|set)\s+(.+?)\s+season\s+(\d{1,3})\s+(?:as\s+)?(?:watched|seen|finished|complete|completed)$/);
+  if (seasonWatchedMatch && cleanWatchTitle(seasonWatchedMatch[1])) {
+    return { type: 'movie-watchlist', action: 'mark-watched', show: cleanWatchTitle(seasonWatchedMatch[1]), season: Number(seasonWatchedMatch[2]) };
+  }
+  const markWatchedMatch = q.match(/^(?:mark|set)\s+(?:all\s+(?:the\s+)?episodes?\s+(?:of|in|for)\s+)?(.+?)(?:\s+episodes?)?\s+(?:as\s+)?(?:watched|finished|completed)$/);
+  if (markWatchedMatch && cleanWatchTitle(markWatchedMatch[1])) {
+    return { type: 'movie-watchlist', action: 'mark-watched', show: cleanWatchTitle(markWatchedMatch[1]), season: null };
+  }
+
+  // 3. List / read Watchlist ("what's on my watch list", "read our movie watchlist", "show my watchlist")
+  const listPatterns = [
+    new RegExp(String.raw`^(?:whats|what\s+is|what\s+s|what\s+are)\s+(?:currently\s+)?(?:on|in)\s+(?:(?:my|our|the)\s+)?${WATCHLIST_NOUN}$`),
+    new RegExp(String.raw`^(?:show|list|read|view|check|tell\s+me|what\s+is)\s+(?:me\s+|us\s+)?(?:(?:my|our|the)\s+)?${WATCHLIST_NOUN}$`),
+  ];
+  for (const re of listPatterns) {
+    if (re.test(q)) return { type: 'movie-watchlist', action: 'list' };
+  }
+
+  // 4. Remove from Watchlist / Continue Watching
+  const removePatterns = [
+    new RegExp(String.raw`^(?:remove|delete|drop|clear)\s+(.+?)\s+(?:from|off(?:\s+of)?)\s+(?:(?:my|our|the)\s+)?${WATCHLIST_OR_CONTINUE_NOUN}$`),
+    new RegExp(String.raw`^(?:take|pull)\s+(.+?)\s+off(?:\s+of)?\s+(?:(?:my|our|the)\s+)?${WATCHLIST_OR_CONTINUE_NOUN}$`),
+    new RegExp(String.raw`^(?:remove|delete)\s+(?:from\s+)?(?:(?:my|our|the)\s+)?${WATCHLIST_OR_CONTINUE_NOUN}\s+(.+)$`),
+  ];
+  for (const re of removePatterns) {
+    const m = q.match(re);
+    if (m && cleanWatchTitle(m[1])) {
+      const explicitMovie = /\b(?:movie|film)\b/.test(m[1]);
+      const explicitShow = /\b(?:show|series|tv\s+show)\b/.test(m[1]);
+      return {
+        type: 'movie-watchlist',
+        action: 'remove',
+        title: cleanWatchTitle(m[1]),
+        kind: explicitMovie ? 'movie' : (explicitShow ? 'tv' : null),
+      };
+    }
+  }
+
+  // 5. Add to Watchlist
+  const addPatterns = [
+    new RegExp(String.raw`^(?:add|put|save|queue)\s+(.+?)\s+(?:to|on|onto|in|into)\s+(?:(?:my|our|the)\s+)?${WATCHLIST_NOUN}$`),
+    new RegExp(String.raw`^(?:watchlist|watch\s+later)\s+(.+)$`),
+  ];
+  for (const re of addPatterns) {
+    const m = q.match(re);
+    if (m && cleanWatchTitle(m[1])) {
+      const explicitMovie = /\b(?:movie|film)\b/.test(m[1]);
+      const explicitShow = /\b(?:show|series|tv\s+show)\b/.test(m[1]);
+      return {
+        type: 'movie-watchlist',
+        action: 'add',
+        title: cleanWatchTitle(m[1]),
+        kind: explicitMovie ? 'movie' : (explicitShow ? 'tv' : null),
+      };
+    }
+  }
+
+  return null;
+}
+
+/** Executes a parsed `movie-watchlist` intent via `robos-lib/media-watch`. */
+async function executeWatchlistCommand(intent, { configDir } = {}) {
+  const watch = requireMediaWatch();
+  if (!watch) return { ok: false, response: 'RobOS media watchlist is not installed on this computer.' };
+  const opts = { configDir };
+  let res;
+  switch (intent.action) {
+    case 'list':
+      res = await watch.watchlist(opts);
+      break;
+    case 'add':
+      res = await watch.addToWatchlist({ query: intent.title, kind: intent.kind || null, ...opts });
+      break;
+    case 'remove':
+      res = await watch.removeFromWatchlist({ query: intent.title, kind: intent.kind || null, ...opts });
+      break;
+    case 'mark-new':
+      res = await watch.markAllNew({ show: intent.show, season: intent.season ?? null, ...opts });
+      break;
+    case 'mark-watched':
+      res = await watch.setWatched({ show: intent.show, season: intent.season ?? null, watched: true, ...opts });
+      break;
+    case 'set-current':
+      res = await watch.setCurrentEpisode({ show: intent.show, ep: intent.ep, ...opts });
+      break;
+    default:
+      return { ok: false, response: 'Unsupported movie watchlist action.' };
+  }
+  return {
+    ok: Boolean(res && res.ok),
+    response: (res && (res.spoken || res.error)) || 'Updated your Movie Player watchlist.',
+    data: res || null,
+  };
+}
+
 /** Answers a watch-status intent from the synced watch history (every computer). */
 async function answerWatchStatus(intent, { configDir } = {}) {
   const watch = requireMediaWatch();
@@ -1181,7 +1377,9 @@ function classifyVoiceCommand(cleanedText, { audioTracks = null, movieTracks = n
     return { type: 'voice-enroll', targetName: enrollMatch[1].trim(), query: cleanedText };
   }
 
-  // 1.6 Watch status questions and "continue watching X"
+  // 1.6 Watchlist management ("remove X from watch list", "mark all episodes of X as new", "my current episode of X is S02E04") & Watch status
+  const watchlistIntent = parseWatchlistCommand(cleanedText);
+  if (watchlistIntent) return { ...watchlistIntent, query: cleanedText };
   const watchIntent = parseWatchStatusQuery(cleanedText);
   if (watchIntent) return { ...watchIntent, query: cleanedText };
 
@@ -1197,8 +1395,10 @@ function classifyVoiceCommand(cleanedText, { audioTracks = null, movieTracks = n
     normShopQ = normalizeShoppingVoiceTranscript(cleanedText).toLowerCase();
   } catch {}
   if (
-    /\b(?:shopping\s+lists?|grocery(?:\s+shopping)?(?:\s+lists?)?|target(?:\s+shopping)?\s+lists?|costco(?:\s+shopping)?(?:\s+lists?)?|@(?:grocery|target|costco))\b/i.test(normShopQ) ||
-    /\b(?:to|on|in|from|at|for)\s+(?:[a-z0-9'\-\s]{1,30}\s+)?(?:grocery|target|costco|shopping|lists?)\b/i.test(normShopQ)
+    !/\b(?:watch\s*lists?|watchlists?|watch\s+later)\b/i.test(normShopQ) && (
+      /\b(?:shopping\s+lists?|grocery(?:\s+shopping)?(?:\s+lists?)?|target(?:\s+shopping)?\s+lists?|costco(?:\s+shopping)?(?:\s+lists?)?|@(?:grocery|target|costco))\b/i.test(normShopQ) ||
+      /\b(?:to|on|in|from|at|for)\s+(?:[a-z0-9'\-\s]{1,30}\s+)?(?:grocery|target|costco|shopping|lists?)\b/i.test(normShopQ)
+    )
   ) {
     return { type: 'robos-skill', query: cleanedText };
   }
@@ -1454,6 +1654,19 @@ async function executeNabuCommand(rawTranscript, {
   const { createAudioPlayerClient } = require('../../audio-player/lib/control-server');
   const { createAudioPlayerClient: createMoviePlayerClient } = require('../../movie-player/lib/control-server');
 
+  // ── 0.45 Movie Player Watchlist & Episode Cursor ("remove X from watch list", "mark all episodes of X as new", "my current episode of X is S02E04") ──
+  if (intent.type === 'movie-watchlist') {
+    const wlRes = await executeWatchlistCommand(intent, { configDir });
+    return {
+      ok: wlRes.ok,
+      skill: 'movie-watchlist',
+      cleanedCommand: cleaned,
+      robosUser: activeUser,
+      response: wlRes.response,
+      data: wlRes.data || null,
+    };
+  }
+
   // ── 0.5 Watch status ("what season of The Office did we leave off on?") ────
   if (intent.type === 'watch-status') {
     const answer = await answerWatchStatus(intent, { configDir });
@@ -1600,6 +1813,8 @@ async function executeNabuCommand(rawTranscript, {
 module.exports = {
   parseWatchStatusQuery,
   answerWatchStatus,
+  parseWatchlistCommand,
+  executeWatchlistCommand,
   stripWakePhrase,
   phoneticCode,
   jaroWinkler,

@@ -15319,6 +15319,7 @@
           actionLabel = `Continue ${epCode}`;
           statusBadge = `${watchedCount}/${episodes.length} watched`;
         }
+        const dismissedFromWatchlist = episodes.length > 0 && episodes.some((ep) => Boolean(stats[ep.id]?.dismissedFromWatchlist)) && inProgressCount === 0;
         return {
           totalEpisodes: episodes.length,
           watchedCount,
@@ -15326,8 +15327,9 @@
           inProgressCount,
           progressPct,
           hasActivity: anyStarted,
+          dismissedFromWatchlist,
           completed: allCompleted,
-          inProgress: anyStarted && !allCompleted,
+          inProgress: anyStarted && !allCompleted && !dismissedFromWatchlist,
           isMidEpisode,
           isNextUp,
           lastPlayed: latestActiveTime && latestActiveTime !== "1970-01-01" ? latestActiveTime : null,
@@ -15342,7 +15344,7 @@
         };
       }
       function inProgressTracks2(tracks, stats = {}) {
-        return tracks.filter((t) => getTrackWatchState7(t, stats).inProgress).sort((a, b) => String((stats[b.id] || {}).lastPlayed || "").localeCompare(String((stats[a.id] || {}).lastPlayed || "")));
+        return tracks.filter((t) => !stats[t.id]?.dismissedFromWatchlist && getTrackWatchState7(t, stats).inProgress).sort((a, b) => String((stats[b.id] || {}).lastPlayed || "").localeCompare(String((stats[a.id] || {}).lastPlayed || "")));
       }
       function formatDuration8(sec) {
         if (!sec || isNaN(sec)) return "--:--";
@@ -20344,7 +20346,7 @@
     const inProgressShows = (0, import_react16.useMemo)(() => {
       return (index.tvShows || []).filter((show) => {
         const st = (0, import_library_index3.getShowWatchState)(show, stats);
-        return st.hasActivity && !st.completed;
+        return st.hasActivity && !st.completed && !st.dismissedFromWatchlist;
       });
     }, [index, stats]);
     const played = (0, import_react16.useMemo)(() => (0, import_library_index3.recentlyPlayedTracks)(index.tracks, stats).slice(0, 500), [index, stats]);

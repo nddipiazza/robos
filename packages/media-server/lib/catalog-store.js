@@ -762,13 +762,22 @@ class MediaCatalogStore {
     inProgress = undefined,
     plays = undefined,
     lastPlayed = undefined,
+    loved = undefined,
+    lovedAt = undefined,
+    dismissedFromWatchlist = undefined,
     deviceName = '',
+    _persist = true,
   } = {}) {
     const item = itemId ? this.byId.get(itemId) : null;
     const key = mediaKey || (item ? item.mediaKey : itemId);
     if (!key) throw new Error('itemId or mediaKey is required');
     const prev = this.progress[key] || {};
     const now = new Date().toISOString();
+    const nextLoved = loved !== undefined ? Boolean(loved) : prev.loved;
+    const nextLovedAt = loved !== undefined ? (loved ? (lovedAt || now) : null) : (prev.lovedAt ?? null);
+    const nextDismissed = dismissedFromWatchlist !== undefined
+      ? Boolean(dismissedFromWatchlist)
+      : (completed || inProgress || positionSec >= 1 ? false : prev.dismissedFromWatchlist);
     if (unwatched) {
       const entry = {
         ...prev,
@@ -783,12 +792,18 @@ class MediaCatalogStore {
         progressPct: 0,
         completed: false,
         inProgress: false,
+        plays: plays !== undefined ? Number(plays) || 0 : 0,
+        lastPlayed: lastPlayed !== undefined ? lastPlayed : null,
+        ...(nextLoved !== undefined ? { loved: nextLoved, lovedAt: nextLovedAt } : {}),
+        ...(nextDismissed !== undefined ? { dismissedFromWatchlist: Boolean(nextDismissed) } : {}),
         updatedAt: now,
         deviceName: deviceName || os.hostname(),
       };
       this.progress[key] = entry;
-      this.progressRevision += 1;
-      this._writeJsonAtomic(this.progressFile, this.progress);
+      if (_persist) {
+        this.progressRevision += 1;
+        this._writeJsonAtomic(this.progressFile, this.progress);
+      }
       return entry;
     }
     const pos = Math.max(0, Number(positionSec) || 0);
@@ -816,14 +831,34 @@ class MediaCatalogStore {
       completed: done,
       inProgress: activeInProgress,
       plays: Math.max(Number(prev.plays) || 0, Number(plays) || (done || activeInProgress ? 1 : 0)),
-      lastPlayed: lastPlayed || now,
+      lastPlayed: lastPlayed !== undefined ? lastPlayed : (done || activeInProgress ? now : (prev.lastPlayed || null)),
+      ...(nextLoved !== undefined ? { loved: nextLoved, lovedAt: nextLovedAt } : {}),
+      ...(nextDismissed !== undefined ? { dismissedFromWatchlist: Boolean(nextDismissed) } : {}),
       updatedAt: now,
       deviceName: deviceName || os.hostname(),
     };
     this.progress[key] = entry;
-    this.progressRevision += 1;
-    this._writeJsonAtomic(this.progressFile, this.progress);
+    if (_persist) {
+      this.progressRevision += 1;
+      this._writeJsonAtomic(this.progressFile, this.progress);
+    }
     return entry;
+  }
+
+  updateProgressBatch(items = [], { deviceName = '' } = {}) {
+    if (!Array.isArray(items) || !items.length) return [];
+    const out = [];
+    for (const raw of items) {
+      if (!raw || typeof raw !== 'object') continue;
+      try {
+        out.push(this.updateProgress({ ...raw, deviceName: raw.deviceName || deviceName, _persist: false }));
+      } catch {}
+    }
+    if (out.length) {
+      this.progressRevision += 1;
+      this._writeJsonAtomic(this.progressFile, this.progress);
+    }
+    return out;
   }
 
   /**
