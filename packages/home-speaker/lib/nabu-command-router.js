@@ -1026,6 +1026,12 @@ function loadLibraryTracks(kind = 'audio', configDir = path.join(os.homedir(), '
   }
 }
 
+function isHeadlessEnvironment() {
+  if (process.env.ROBOS_HEADLESS === '1' || process.env.ROBOS_HEADLESS === 'true') return true;
+  if (process.platform === 'linux' && !process.env.DISPLAY && !process.env.WAYLAND_DISPLAY) return true;
+  return false;
+}
+
 /**
  * Ensure `audio-player` or `movie-player` is running and return its control client.
  */
@@ -1034,6 +1040,9 @@ async function ensureMediaPlayerRunning(appId, createClient, { configDir, timeou
   if (client.running()) {
     const st = await client.status();
     if (st && st.ok) return client;
+  }
+  if (isHeadlessEnvironment()) {
+    return client;
   }
 
   const repoRoot = path.resolve(__dirname, '..', '..', '..');
@@ -2199,6 +2208,7 @@ async function executeNabuCommand(rawTranscript, {
 
   const { createAudioPlayerClient } = require('../../audio-player/lib/control-server');
   const { createAudioPlayerClient: createMoviePlayerClient } = require('../../movie-player/lib/control-server');
+  const headlessTvCast = require('../../robos-lib/headless-tv-cast');
 
   // ── 0.45 Movie Player Watchlist & Episode Cursor ("remove X from watch list", "mark all episodes of X as new", "my current episode of X is S02E04") ──
   if (intent.type === 'movie-watchlist') {
@@ -2266,8 +2276,10 @@ async function executeNabuCommand(rawTranscript, {
       let res = null;
       if (autoLaunchPlayers) {
         const client = await ensureMediaPlayerRunning('movie-player', createMoviePlayerClient, { configDir });
-        if (typeof client.openTvLibrary === 'function') {
+        if (client.running() && typeof client.openTvLibrary === 'function') {
           res = await client.openTvLibrary({ targetIp: dev.ip, robosUser: activeUser });
+        } else {
+          res = await headlessTvCast.controlHeadlessTv('open-tv-library', { targetIp: dev.ip, configDir });
         }
       }
       return {
@@ -2286,6 +2298,26 @@ async function executeNabuCommand(rawTranscript, {
       const dev = intent.targetDevice;
       const client = createMoviePlayerClient({ configDir });
       if (!client.running()) {
+        const hs = headlessTvCast.readHeadlessSession(configDir);
+        if (hs && hs.active && Array.isArray(hs.tracks) && hs.tracks.length) {
+          const res = await headlessTvCast.playTracksHeadless({
+            tracks: hs.tracks,
+            initialIndex: hs.currentIndex || 0,
+            targetIp: dev.ip,
+            targetDevice: dev,
+            configDir,
+          });
+          return {
+            ok: Boolean(res && res.ok !== false),
+            skill: 'smart-tv-control',
+            cleanedCommand: cleaned,
+            robosUser: activeUser,
+            targetDevice: dev,
+            targetIp: dev.ip,
+            response: `Moved playback to ${dev.name}.`,
+            data: { ...(res || {}), targetDevice: dev, targetIp: dev.ip },
+          };
+        }
         return {
           ok: false,
           skill: 'smart-tv-control',
@@ -2318,6 +2350,8 @@ async function executeNabuCommand(rawTranscript, {
         res = intent.action === 'transfer-to-local' && typeof client.transferOutput === 'function'
           ? await client.transferOutput({ targetIp: 'local', robosUser: activeUser })
           : (typeof client.stopCast === 'function' ? await client.stopCast({ targetIp: intent.targetDevice?.ip || null }) : { ok: true });
+      } else if (autoLaunchPlayers) {
+        res = await headlessTvCast.controlHeadlessTv('stop-cast', { targetIp: intent.targetDevice?.ip || null, configDir });
       }
       return {
         ok: Boolean(res && res.ok !== false),
@@ -2347,17 +2381,35 @@ async function executeNabuCommand(rawTranscript, {
     let playResult = null;
     if (autoLaunchPlayers) {
       const client = await ensureMediaPlayerRunning('movie-player', createMoviePlayerClient, { configDir });
-      playResult = await client.play({
-        trackIds: match.tracks.map(t => t.id),
-        shuffle: false,
-        keepFirst: Boolean(match.keepFirst),
-        startAt: match.startAt !== undefined ? match.startAt : null,
-        targetIp: match.targetIp || null,
-        robosUser: activeUser,
-      });
+      if (client.running()) {
+        playResult = await client.play({
+          trackIds: match.tracks.map(t => t.id),
+          shuffle: false,
+          keepFirst: Boolean(match.keepFirst),
+          startAt: match.startAt !== undefined ? match.startAt : null,
+          targetIp: match.targetIp || null,
+          robosUser: activeUser,
+        });
+      } else if (match.targetIp && match.targetIp !== 'local') {
+        playResult = await headlessTvCast.playTracksHeadless({
+          tracks: match.tracks,
+          targetIp: match.targetIp,
+          targetDevice: match.targetDevice || null,
+          startAt: match.startAt !== undefined ? match.startAt : null,
+          configDir,
+        });
+      } else {
+        return {
+          ok: false,
+          skill: 'movie-play',
+          cleanedCommand: cleaned,
+          robosUser: activeUser,
+          response: 'This RobOS server is running headlessly — include a Smart TV name like "on the Roku TV" to cast directly.',
+        };
+      }
     }
     return {
-      ok: true,
+      ok: !playResult || playResult.ok !== false,
       skill: 'movie-play',
       cleanedCommand: cleaned,
       robosUser: activeUser,
@@ -2367,7 +2419,7 @@ async function executeNabuCommand(rawTranscript, {
       targetDevice: match.targetDevice || null,
       targetIp: match.targetIp || null,
       playResult,
-      response: match.summaryText,
+      response: playResult && playResult.ok === false ? (playResult.error || match.summaryText) : match.summaryText,
       data: {
         kind: 'movie',
         matchType: match.matchType,
@@ -2406,6 +2458,29 @@ async function executeNabuCommand(rawTranscript, {
     }
 
     if (!targetClient) {
+      if (headlessTvCast.hasActiveHeadlessSession(configDir)) {
+        const hs = headlessTvCast.readHeadlessSession(configDir);
+        const res = await headlessTvCast.controlHeadlessTv(intent.action, {
+          targetIp: intent.targetDevice?.ip || hs?.targetIp || null,
+          configDir,
+        });
+        const tvDisplay = intent.targetDevice?.name || hs?.targetDevice?.name || 'Smart TV';
+        const headlessLabels = {
+          pause: `Paused playback on ${tvDisplay}.`,
+          resume: `Resumed playback on ${tvDisplay}.`,
+          next: `Skipped to the next item on ${tvDisplay}.`,
+          previous: `Went back to the previous item on ${tvDisplay}.`,
+          restart: `Restarted from the beginning on ${tvDisplay}.`,
+        };
+        return {
+          ok: Boolean(res && res.ok !== false),
+          skill: `media-${intent.action}`,
+          cleanedCommand: cleaned,
+          robosUser: activeUser,
+          response: res && res.ok !== false ? (headlessLabels[intent.action] || `Updated ${tvDisplay}.`) : (res?.error || `Could not update ${tvDisplay}.`),
+          data: { ...(res || {}), robosUser: activeUser },
+        };
+      }
       return {
         ok: false,
         skill: `media-${intent.action}`,
@@ -2465,16 +2540,35 @@ async function executeNabuCommand(rawTranscript, {
 
     if (autoLaunchPlayers) {
       const client = await ensureMediaPlayerRunning(appId, factory, { configDir });
-      playResult = await client.play({
-        trackIds: match.tracks.map(t => t.id),
-        shuffle: Boolean(match.shuffle),
-        targetIp: match.targetIp || null,
-        robosUser: activeUser,
-      });
+      if (client.running()) {
+        playResult = await client.play({
+          trackIds: match.tracks.map(t => t.id),
+          shuffle: Boolean(match.shuffle),
+          targetIp: match.targetIp || null,
+          robosUser: activeUser,
+        });
+      } else if (chosenKind === 'movie' && match.targetIp && match.targetIp !== 'local') {
+        playResult = await headlessTvCast.playTracksHeadless({
+          tracks: match.tracks,
+          targetIp: match.targetIp,
+          targetDevice: match.targetDevice || null,
+          configDir,
+        });
+      } else if (!client.running()) {
+        return {
+          ok: false,
+          skill: chosenKind === 'movie' ? 'movie-play' : 'audio-play',
+          cleanedCommand: cleaned,
+          robosUser: activeUser,
+          response: chosenKind === 'movie'
+            ? 'This RobOS server is running headlessly — include a Smart TV name like "on the Roku TV" to cast directly.'
+            : 'Audio Player is not running on this headless server.',
+        };
+      }
     }
 
     return {
-      ok: true,
+      ok: !playResult || playResult.ok !== false,
       skill: chosenKind === 'movie' ? 'movie-play' : 'audio-play',
       cleanedCommand: cleaned,
       robosUser: activeUser,
@@ -2486,7 +2580,7 @@ async function executeNabuCommand(rawTranscript, {
       targetDevice: match.targetDevice || null,
       targetIp: match.targetIp || null,
       playResult,
-      response: match.summaryText,
+      response: playResult && playResult.ok === false ? (playResult.error || match.summaryText) : match.summaryText,
       data: {
         kind: chosenKind,
         matchType: match.matchType,

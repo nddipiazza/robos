@@ -536,6 +536,37 @@ async function playNextEpisode({ show, targetIp = null, ...opts } = {}) {
   const live = await callPlayer('movie-player', 'POST', '/api/play-next-episode', { show, targetIp }, { ...opts, timeoutMs: 30000 });
   if (live) return live;
   const status = await watchStatus(show, opts);
+  if (status && status.ok && status.nextUp && status.nextUp.trackId && targetIp && targetIp !== 'local') {
+    const dir = configDir(opts);
+    const { tracks } = load('movie-player', opts);
+    const showFound = history.findEpisodeTracks(status.show || show, { tracks });
+    const startIdx = showFound.tracks.findIndex(t => t.id === status.nextUp.trackId);
+    const queue = startIdx >= 0
+      ? showFound.tracks.slice(startIdx)
+      : tracks.filter(t => t.id === status.nextUp.trackId);
+    if (queue.length) {
+      const headlessCast = require('./headless-tv-cast');
+      const startAt = status.nextUp.resume && status.nextUp.positionSec >= 5 ? Math.round(status.nextUp.positionSec) : 0;
+      const castRes = await headlessCast.playTracksHeadless({
+        tracks: queue,
+        targetIp,
+        startAt,
+        configDir: dir,
+      });
+      if (castRes && castRes.ok) {
+        const epLabel = `Season ${status.nextUp.season} Episode ${status.nextUp.episode}${status.nextUp.episodeTitle ? ` ("${status.nextUp.episodeTitle}")` : ''}`;
+        return {
+          ok: true,
+          via: 'headless-tv-cast',
+          show: status.show,
+          episode: status.nextUp,
+          targetIp,
+          startAt: castRes.startAt,
+          spoken: `${status.nextUp.resume ? 'Resuming' : 'Playing'} ${status.show} ${epLabel}.`,
+        };
+      }
+    }
+  }
   return { ok: false, error: 'Open RobOS Movie Player first, then ask again.', status };
 }
 

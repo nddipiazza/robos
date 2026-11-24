@@ -655,8 +655,17 @@ class HttpAssistantServer(
       <strong>Ask RobOS Assistant</strong>
       <span class="muted" id="ask-hint">${if (connected) "RobOS Server connected — commands execute live" else "Connect a RobOS Server (:19188) to run actions"}</span>
     </div>
+    <div class="row" style="gap:6px;margin-bottom:8px;flex-wrap:wrap">
+      <button type="button" onclick="runQuick('Play a random episode of House on the Roku TV')">🎲 Random House on Roku TV</button>
+      <button type="button" onclick="runQuick('Play a random unwatched episode of House on the Roku TV')">✨ Unwatched House</button>
+      <button type="button" onclick="runQuick('Continue watching Ghosts US on the Roku TV')">▶ Continue Ghosts US</button>
+      <button type="button" onclick="runQuick('Play a random 90s movie on the Roku TV')">🎬 Random 90s Movie</button>
+      <button type="button" onclick="runQuick('What is on my watch list?')">📋 Watchlist</button>
+      <button type="button" onclick="runQuick('Pause on the Roku TV')">⏸ Pause TV</button>
+      <button type="button" onclick="runQuick('Stop casting')">⏹ Stop Cast</button>
+    </div>
     <div class="row">
-      <input id="ask-input" style="flex:1" placeholder="e.g. What is the git status?" ${if (!connected) "disabled" else ""}/>
+      <input id="ask-input" style="flex:1" placeholder="e.g. Play a random episode of House on the Roku TV" ${if (!connected) "disabled" else ""}/>
       <button id="ask-btn" class="primary" ${if (!connected) "disabled" else ""}>Run Action</button>
     </div>
   </div>
@@ -696,6 +705,10 @@ async function refresh() {
       <audio controls preload="none" src="/recordings/${'$'}{r.id}.wav"></audio>
     </div>
   `).join('');
+}
+async function runQuick(q) {
+  await fetch('/api/ask', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({query:q}) });
+  setTimeout(refresh, 500);
 }
 document.getElementById('refresh-btn').onclick = refresh;
 document.getElementById('ask-btn').onclick = async () => {

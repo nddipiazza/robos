@@ -334,11 +334,20 @@ function createMediaServer(options = {}) {
           const body = await readJsonBody(req);
           if (body && body.active === false) {
             activeRokuCast = null;
+          } else if (activeRokuCast && !body.mediaUrl && (body.paused !== undefined || body.seekKey)) {
+            activeRokuCast = {
+              ...activeRokuCast,
+              ...(body.paused !== undefined ? { paused: Boolean(body.paused) } : {}),
+              ...(body.seekKey ? { seekKey: String(body.seekKey), seekSeconds: Number(body.seekSeconds) || 0 } : {}),
+              updatedAt: new Date().toISOString(),
+            };
           } else {
             activeRokuCast = {
               active: true,
               loadKey: body.loadKey || `cast-${Date.now()}`,
+              trackId: body.trackId || '',
               mediaUrl: body.mediaUrl || '',
+              hlsUrl: body.hlsUrl || '',
               streamFormat: body.streamFormat || 'mp4',
               title: body.title || 'RobOS Movie Player',
               startAt: Number(body.startAt) || 0,

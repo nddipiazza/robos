@@ -742,4 +742,123 @@ describe('Movie Player watchlist & episode cursor skills (CLI, MCP, and RobOS Vo
       fs.rmSync(tmp, { recursive: true, force: true });
     }
   });
+
+  it('casts and controls Smart TV playback headlessly when ROBOS_HEADLESS=1 (no Electron window)', async () => {
+    const http = require('node:http');
+    const nabu = require('../../../home-speaker/lib/nabu-command-router');
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'robos-headless-cast-'));
+    const configDir = path.join(tmp, 'config');
+    fs.mkdirSync(configDir, { recursive: true });
+
+    // Spin up an in-memory /api/roku-cast server matching packages/media-server/server.js behavior
+    let activeCast = null;
+    const srv = http.createServer((req, res) => {
+      if (req.url === '/api/roku-cast' && req.method === 'POST') {
+        let raw = '';
+        req.on('data', c => { raw += c; });
+        req.on('end', () => {
+          const body = JSON.parse(raw || '{}');
+          if (body.active === false) {
+            activeCast = null;
+          } else if (activeCast && !body.mediaUrl && body.paused !== undefined) {
+            activeCast = { ...activeCast, paused: Boolean(body.paused) };
+          } else {
+            activeCast = { active: true, ...body, paused: Boolean(body.paused) };
+          }
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ ok: true, cinemaCast: activeCast }));
+        });
+        return;
+      }
+      res.writeHead(404);
+      res.end();
+    });
+    await new Promise(resolve => srv.listen(0, '0.0.0.0', resolve));
+    const port = srv.address().port;
+    const baseEndpoint = `http://127.0.0.1:${port}`;
+
+    fs.writeFileSync(path.join(configDir, 'media-servers.json'), JSON.stringify({
+      servers: [{ id: 'srv-1', url: baseEndpoint, enabled: true }],
+    }));
+    fs.writeFileSync(path.join(configDir, 'tv-studio.json'), JSON.stringify({
+      tvs: [
+        { id: 'tv-living-roku', name: '65" TCL Roku TV (Living room)', platformId: 'roku-os', ip: '192.168.1.15', paired: true },
+      ],
+    }));
+    const tracks = [
+      {
+        id: 'ghosts-410',
+        title: 'Ghosts · S04E10 — Episode 10',
+        showName: 'Ghosts',
+        seasonNumber: 4,
+        episodeNumber: 10,
+        episodeTitle: 'Episode 10',
+        mediaType: 'tv',
+        mediaService: { endpoint: baseEndpoint, remoteItemId: 'ms-410', directStreamUrl: `${baseEndpoint}/stream/ms-410.mkv` },
+      },
+      {
+        id: 'ghosts-411',
+        title: 'Ghosts · S04E11 —Thorapy 2',
+        showName: 'Ghosts',
+        seasonNumber: 4,
+        episodeNumber: 11,
+        episodeTitle: 'Thorapy 2',
+        mediaType: 'tv',
+        mediaService: { endpoint: baseEndpoint, remoteItemId: 'ms-411', directStreamUrl: `${baseEndpoint}/stream/ms-411.mkv` },
+      },
+    ];
+    fs.writeFileSync(path.join(configDir, 'movie-library.json'), JSON.stringify({ tracks }));
+
+    // Record S04E10 watched so "continue watching Ghosts" resolves S04E11!
+    const mh = new history.MediaHistory({ app: 'movie-player', configDir });
+    mh.record(tracks[0], { completed: true, plays: 1, lastPlayed: '2026-11-20T00:00:00Z' });
+
+    const prevHeadless = process.env.ROBOS_HEADLESS;
+    process.env.ROBOS_HEADLESS = '1';
+    try {
+      // 1. "continue watching Ghosts on the Roku TV" -> casts S04E11 directly to /api/roku-cast!
+      const cont = await nabu.executeNabuCommand('continue watching Ghosts on the Roku TV', {
+        configDir,
+        autoLaunchPlayers: true,
+      });
+      assert.equal(cont.ok, true);
+      assert.equal(cont.targetIp, '192.168.1.15');
+      assert.ok(activeCast && activeCast.active === true);
+      assert.equal(activeCast.trackId, 'ms-411');
+      assert.equal(activeCast.paused, false);
+      const originalLoadKey = activeCast.loadKey;
+
+      // 2. "pause on the Roku TV" -> preserves loadKey + mediaUrl while setting paused=true!
+      const paused = await nabu.executeNabuCommand('pause on the Roku TV', {
+        configDir,
+        autoLaunchPlayers: true,
+      });
+      assert.equal(paused.ok, true);
+      assert.equal(activeCast.paused, true);
+      assert.equal(activeCast.loadKey, originalLoadKey);
+      assert.match(activeCast.mediaUrl, /\/stream\/ms-411\.mkv$/);
+
+      // 3. "play a random episode of Ghosts on the Roku TV" -> casts S04E10 or S04E11
+      const rand = await nabu.executeNabuCommand('play a random episode of Ghosts on the Roku TV', {
+        configDir,
+        autoLaunchPlayers: true,
+      });
+      assert.equal(rand.ok, true);
+      assert.ok(['ms-410', 'ms-411'].includes(activeCast.trackId));
+      assert.equal(activeCast.paused, false);
+
+      // 4. "stop casting" -> clears activeCast
+      const stopped = await nabu.executeNabuCommand('stop casting', {
+        configDir,
+        autoLaunchPlayers: true,
+      });
+      assert.equal(stopped.ok, true);
+      assert.equal(activeCast, null);
+    } finally {
+      if (prevHeadless === undefined) delete process.env.ROBOS_HEADLESS;
+      else process.env.ROBOS_HEADLESS = prevHeadless;
+      await new Promise(resolve => srv.close(resolve));
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  });
 });

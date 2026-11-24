@@ -249,16 +249,48 @@ fun ListenTabScreen(
             Text("Ask RobOS Assistant", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
             MutedText(
                 if (serverConnected) {
-                    "Send a command directly to your connected RobOS Server and speak the reply."
+                    "Send a command directly to your connected RobOS Server and speak the reply, or tap a Movie Player & Smart TV quick command."
                 } else {
                     "Disabled while RobOS Server is disconnected (actions require an active RobOS Server)."
                 },
             )
+            val quickCinemaCommands = remember {
+                listOf(
+                    "🎲 Random House on Roku TV" to "Play a random episode of House on the Roku TV",
+                    "✨ Unwatched House on Roku TV" to "Play a random unwatched episode of House on the Roku TV",
+                    "▶ Continue Ghosts US on Roku TV" to "Continue watching Ghosts US on the Roku TV",
+                    "🎬 Random 90s Movie" to "Play a random 90s movie on the Roku TV",
+                    "📋 Watchlist" to "What is on my watch list?",
+                    "📺 Smart TVs" to "List my Smart TVs",
+                    "⏸ Pause TV" to "Pause on the Roku TV",
+                    "⏭ Next Ep" to "Next episode on the Roku TV",
+                    "⏹ Stop Cast" to "Stop casting",
+                )
+            }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                quickCinemaCommands.forEach { (label, commandText) ->
+                    FilterChip(
+                        selected = askText == commandText,
+                        enabled = serverConnected,
+                        onClick = {
+                            if (serverConnected) {
+                                onSendCommand(commandText)
+                            }
+                        },
+                        label = { Text(label) },
+                    )
+                }
+            }
             OutlinedTextField(
                 value = askText,
                 onValueChange = { askText = it },
                 enabled = serverConnected,
-                placeholder = { Text("What is the git status?") },
+                placeholder = { Text("Play a random episode of House on the Roku TV") },
                 singleLine = true,
                 modifier = Modifier
                     .fillMaxWidth()
