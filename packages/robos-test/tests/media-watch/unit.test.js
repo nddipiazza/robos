@@ -828,8 +828,8 @@ describe('Movie Player watchlist & episode cursor skills (CLI, MCP, and RobOS Vo
       assert.equal(activeCast.paused, false);
       const originalLoadKey = activeCast.loadKey;
 
-      // 2. "pause on the Roku TV" -> preserves loadKey + mediaUrl while setting paused=true!
-      const paused = await nabu.executeNabuCommand('pause on the Roku TV', {
+      // 2. "pause the Roku TV" / "paused the Roku TV" / "resume the Roku TV" -> preserves loadKey + mediaUrl while toggling paused!
+      const paused = await nabu.executeNabuCommand('paused the Roku TV', {
         configDir,
         autoLaunchPlayers: true,
       });
@@ -837,6 +837,14 @@ describe('Movie Player watchlist & episode cursor skills (CLI, MCP, and RobOS Vo
       assert.equal(activeCast.paused, true);
       assert.equal(activeCast.loadKey, originalLoadKey);
       assert.match(activeCast.mediaUrl, /\/stream\/ms-411\.mkv$/);
+
+      const resumed = await nabu.executeNabuCommand('resume the Roku TV', {
+        configDir,
+        autoLaunchPlayers: true,
+      });
+      assert.equal(resumed.ok, true);
+      assert.equal(activeCast.paused, false);
+      assert.equal(activeCast.loadKey, originalLoadKey);
 
       // 3. "play a random episode of Ghosts on the Roku TV" -> casts S04E10 or S04E11
       const rand = await nabu.executeNabuCommand('play a random episode of Ghosts on the Roku TV', {

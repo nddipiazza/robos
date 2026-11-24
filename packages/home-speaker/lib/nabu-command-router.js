@@ -1899,17 +1899,44 @@ function classifyVoiceCommand(cleanedText, { audioTracks = null, movieTracks = n
   const words = q.split(' ').filter(Boolean);
   const firstWord = words[0] || '';
 
-  // 1. Transport controls (exact, phonetic, or Smart TV scoped like "pause on the roku tv", "next episode", "start over")
+  // 1. Transport controls (exact, phonetic, or Smart TV scoped like "pause the roku tv", "pause on the roku tv", "paused the roku tv", "next episode", "start over")
+  const directDevMatch = q.match(/^(pause|paused|paws|pos|resume|resumed|unpause|unpaused|continue|play|stop|stopped|next|skip|restart)\s+(?:playback\s+)?(?:on\s+|in\s+)?(?:the\s+|my\s+|our\s+)?(.+)$/);
+  if (directDevMatch) {
+    const verb = directDevMatch[1];
+    const targetPhrase = directDevMatch[2].replace(/\s+(?:right\s+now|please|for\s+me)$/, '').trim();
+    const isMediaPhrase = /\b(?:watching|episode|season|movie|film|song|track|album|artist|of|by|from|on|to|onto)\b/.test(targetPhrase);
+    if (!isMediaPhrase) {
+      const directDev = resolveTargetDevice(targetPhrase, { configDir });
+      if (directDev && directDev.score >= 115) {
+        if (verb === 'stop' || verb === 'stopped') {
+          return { type: 'smart-tv-control', action: 'stop-cast', targetDevice: directDev };
+        }
+        const actionMap = {
+          pause: 'pause', paused: 'pause', paws: 'pause', pos: 'pause',
+          resume: 'resume', resumed: 'resume', unpause: 'resume', unpaused: 'resume', continue: 'resume', play: 'resume',
+          next: 'next', skip: 'next',
+          restart: 'restart',
+        };
+        return {
+          type: 'transport',
+          action: actionMap[verb] || 'pause',
+          preferMoviePlayer: directDev.deviceType === 'tv',
+          targetDevice: directDev,
+        };
+      }
+    }
+  }
+
   const { mediaCommand: transportCore, targetDevice: transportDevice } = extractDeviceFromCommand(cleanedText, { configDir });
   const qTransport = foldText(transportCore);
   const preferMovieTransport = Boolean(
-    /\b(?:movie|film|episode|show|series|video|cinema)\b/.test(qTransport) ||
+    /\b(?:movie|film|episode|show|series|video|cinema|tv|television)\b/.test(qTransport) ||
     (transportDevice && transportDevice.deviceType === 'tv')
   );
-  if (/^(?:pause|paws|pos|pause\s+(?:the\s+)?(?:music|song|movie|episode|show|video|playback)|hold\s+on)$/.test(qTransport)) {
+  if (/^(?:pause|paused|paws|pos|(?:pause|paused)\s+(?:the\s+)?(?:music|song|movie|episode|show|video|tv|television|playback)|hold\s+on)$/.test(qTransport)) {
     return { type: 'transport', action: 'pause', preferMoviePlayer: preferMovieTransport, targetDevice: transportDevice || null };
   }
-  if (/^(?:resume|continue|unpause|(?:resume|continue)\s+(?:the\s+)?(?:music|song|movie|episode|show|video|playback)|keep\s+playing)$/.test(qTransport)) {
+  if (/^(?:resume|resumed|continue|unpause|unpaused|(?:resume|resumed|continue|unpause|unpaused)\s+(?:the\s+)?(?:music|song|movie|episode|show|video|tv|television|playback)|keep\s+playing)$/.test(qTransport)) {
     return { type: 'transport', action: 'resume', preferMoviePlayer: preferMovieTransport, targetDevice: transportDevice || null };
   }
   if (/^(?:next|skip|next\s+(?:song|track|movie|episode|video)|skip\s+(?:this\s+)?(?:song|track|episode|movie))$/.test(qTransport)) {
@@ -2460,8 +2487,8 @@ async function executeNabuCommand(rawTranscript, {
       targetName = 'Movie Player';
     }
 
-    if (!targetClient) {
-      if (headlessTvCast.hasActiveHeadlessSession(configDir)) {
+    if (!targetClient || (intent.targetDevice && intent.targetDevice.deviceType === 'tv' && !movieClient.running())) {
+      if (headlessTvCast.hasActiveHeadlessSession(configDir) || (intent.targetDevice && intent.targetDevice.ip && intent.targetDevice.ip !== 'local')) {
         const hs = headlessTvCast.readHeadlessSession(configDir);
         const res = await headlessTvCast.controlHeadlessTv(intent.action, {
           targetIp: intent.targetDevice?.ip || hs?.targetIp || null,

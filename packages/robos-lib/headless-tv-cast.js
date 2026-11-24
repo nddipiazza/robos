@@ -414,16 +414,37 @@ async function controlHeadlessTv(action, { targetIp = null, configDir } = {}) {
     return { ok: true, via: 'headless-tv-cast', active: false };
   }
 
-  if (!session || !session.active || !Array.isArray(session.tracks) || !session.tracks.length) {
-    return { ok: false, error: 'No active Smart TV playback session on this server.' };
-  }
-
   if (action === 'pause' || action === 'resume') {
     const paused = action === 'pause';
-    const nextCast = { ...(session.castState || {}), active: true, paused };
-    writeHeadlessSession({ ...session, castState: nextCast, updatedAt: new Date().toISOString() }, dir);
+    if (session && session.active) {
+      const nextCast = { ...(session.castState || {}), active: true, paused };
+      writeHeadlessSession({ ...session, castState: nextCast, updatedAt: new Date().toISOString() }, dir);
+    }
     await Promise.all(serverUrls.map(srv => httpPostJson(`${srv}/api/roku-cast`, { paused })));
-    return { ok: true, via: 'headless-tv-cast', playing: !paused };
+
+    if (ip && !(process.env.ROBOS_TEST === '1' || process.env.NODE_TEST_CONTEXT)) {
+      const tvInfo = loadTvInfo(ip, dir);
+      if ((tvInfo.platformId || 'roku-os') === 'roku-os') {
+        const ecpPort = tvInfo?.ports?.ecp || 8060;
+        const mpXml = await getEcpXml(ip, ecpPort, '/query/media-player', 900);
+        const stateMatch = mpXml.match(/<player[^>]*state="([^"]+)"/);
+        const rState = stateMatch ? stateMatch[1] : '';
+        const durMatch = mpXml.match(/<duration>\s*(\d+)/);
+        const isKeepAlive = durMatch && Number(durMatch[1]) === 60000;
+        if (!isKeepAlive && ((paused && rState === 'play') || (!paused && rState === 'pause'))) {
+          await postEcpKey(ip, ecpPort, '/keypress/Play');
+        }
+      }
+    }
+
+    if ((!session || !session.active) && !ip) {
+      return { ok: false, error: 'No active Smart TV playback session on this server.' };
+    }
+    return { ok: true, via: 'headless-tv-cast', playing: !paused, targetIp: ip };
+  }
+
+  if (!session || !session.active || !Array.isArray(session.tracks) || !session.tracks.length) {
+    return { ok: false, error: 'No active Smart TV playback session on this server.' };
   }
 
   if (action === 'restart') {
