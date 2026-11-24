@@ -34,8 +34,15 @@
           <select id="select-account" class="select"></select>
         </div>
         <div class="field">
-          <label for="select-server">VPN Server Location</label>
+          <div class="label-row">
+            <label for="select-server">VPN Server Location</label>
+            <label class="inline-check" title="When a VPN server fails to connect or drops mid-session, automatically switch to the next server in line (e.g. Chicago 2 → Chicago 3) while keeping the kill-switch locked">
+              <input type="checkbox" id="toggle-auto-failover" checked />
+              <span>Auto-Failover Next Server</span>
+            </label>
+          </div>
           <select id="select-server" class="select"></select>
+          <div id="next-server-hint" class="next-server-hint"></div>
         </div>
         <div class="field-action" style="display:flex;gap:8px;">
           <button type="button" class="btn" id="btn-check-vpn">Test VPN Connection</button>

@@ -53,3 +53,32 @@ test('E2E Kill-Switch Proof: killing OpenVPN mid-session blocks all app traffic 
     assert.equal(s.passed, true, `Step ${s.step} (${s.name}) failed: ${s.detail}`);
   }
 });
+
+test('E2E Auto-Failover Proof: killing OpenVPN on Chicago 2 detects down tunnel and switches in-place to Chicago 3', async () => {
+  const engine = createVpnSandboxEngine();
+  const caps = engine.checkSystemCapabilities();
+  const simulate = !(caps.hasIp && caps.hasIptables && caps.hasOpenvpn && (caps.passwordlessSudo || caps.isRoot));
+
+  const profiles = engine.ovpnManager.listProfiles('ipvanish');
+  const chi2 = profiles.find(p => p.id === 'ipvanish-US-Chicago-chi-b02') || profiles[0];
+
+  const proof = await engine.proveAutoFailoverOnVpnDrop({
+    profileId: chi2?.id,
+    simulateIfNoTun: simulate,
+  });
+
+  console.log('\n=== E2E AUTO-FAILOVER PROOF REPORT ===');
+  console.log(JSON.stringify(proof, null, 2));
+  console.log('======================================\n');
+
+  assert.equal(proof.ok, true, 'All auto-failover proof phases must pass');
+  assert.equal(proof.appProcessSurvived, true, 'Sandboxed app process must stay running without restart across failover');
+  assert.equal(proof.ipLeakedDuringFailover, false, 'Zero packets may leak during failover');
+  if (chi2?.id === 'ipvanish-US-Chicago-chi-b02' && profiles.some(p => p.id === 'ipvanish-US-Chicago-chi-b03')) {
+    assert.equal(proof.initialProfileId, 'ipvanish-US-Chicago-chi-b02');
+    assert.equal(proof.failoverProfileId, 'ipvanish-US-Chicago-chi-b03', 'Chicago 2 must automatically fail over to Chicago 3');
+  }
+  for (const s of proof.steps) {
+    assert.equal(s.passed, true, `Step ${s.step} (${s.name}) failed: ${s.detail}`);
+  }
+});

@@ -9,6 +9,7 @@
   2. Host `FORWARD` chain (`ROBOS_VPN_FWD_<id>`) drops any packet from `veth_h_<id>` not destined to `<vpn_server_ip>:<vpn_port>`.
   3. Host `POSTROUTING` `MASQUERADE` rule is restricted to `<vpn_server_ip>:<vpn_port>`.
 - **Live 5-Step Mid-Session Drop Proof (`Prove Kill-Switch`)**: Launches a real tunnel, verifies the VPN exit IP, force-kills `openvpn` (`kill -9`) while leaving `veth` up, runs 4 egress probes (HTTPS, TCP, UDP DNS, UDP to VPN server IP as `uid 1000`), and verifies via kernel `iptables` counters that 100% of post-drop packets are dropped with 0 bytes leaked to your normal IP.
+- **Automatic VPN Down Detection & Next-in-Line Failover**: Automatically detects when a VPN server is unreachable at launch or drops mid-session (`tun0` down, `openvpn` exit, `persist-tun` disconnect/TLS error, or tunnel blackhole) and switches the running `robos_vpn_<id>` namespace in-place to the next server in line (e.g. `Chicago 2` → `Chicago 3` → `Chicago 4`) without restarting the sandboxed application and with zero leaked packets.
 - **Saved Apps**: Automatically creates a default **Transmission** profile when `transmission-gtk` is installed (e.g., via **RobOS Software Center**), and isolates browser profiles (`~/.config/robos/vpn-browser-profiles/<browser>`) and D-Bus sessions.
 
 ## Launch & Test

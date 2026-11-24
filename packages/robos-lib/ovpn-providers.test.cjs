@@ -6,8 +6,14 @@ const fs = require('node:fs');
 const path = require('node:path');
 const os = require('node:os');
 
-const { createOvpnManager, parseOvpnConfig, BUILTIN_OVPN_PROVIDERS } = require('./ovpn-providers');
-const { createVpnSandboxEngine, generateFirewallSpec, buildSetupShellScript, buildAppLaunchCommand } = require('./vpn-sandbox-engine');
+const { createOvpnManager, parseOvpnConfig, getFailoverCandidates, BUILTIN_OVPN_PROVIDERS } = require('./ovpn-providers');
+const {
+  createVpnSandboxEngine,
+  generateFirewallSpec,
+  buildSetupShellScript,
+  buildSwitchTunnelShellScript,
+  buildAppLaunchCommand,
+} = require('./vpn-sandbox-engine');
 
 test('IPVanish is pre-registered as a first-class built-in OpenVPN provider with curated .ovpn profiles', () => {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'robos-ovpn-test-'));
@@ -219,6 +225,182 @@ test('Transmission default profile is created automatically when Transmission is
     });
     const profilesWithout = engineWithoutTransmission.listSavedAppProfiles();
     assert.ok(!profilesWithout.some(p => p.id === 'sandbox-transmission'));
+  } finally {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
+});
+
+test('getFailoverCandidates orders next VPN servers in line naturally (e.g. Chicago 2 -> Chicago 3 -> Chicago 4)', () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'robos-vpn-order-test-'));
+  try {
+    const mgr = createOvpnManager({ configDir: tmpDir, usePass: false });
+    // Seed Chicago b01, b02, b03, b04, b10, c01
+    for (const [code, ip] of [
+      ['chi-b02', '216.131.76.9'],
+      ['chi-b03', '216.131.76.15'],
+      ['chi-b04', '216.131.76.21'],
+      ['chi-b10', '216.131.76.57'],
+      ['chi-c01', '216.131.76.165'],
+    ]) {
+      mgr.importOvpnProfile({
+        providerId: 'ipvanish',
+        filename: `ipvanish-US-Chicago-${code}.ovpn`,
+        content: `client\ndev tun\nproto udp\nremote ${code}.ipvanish.com 443\n# Resolved Fallback IP: ${ip}\nauth-user-pass\n`,
+      });
+    }
+
+    const ipvProfiles = mgr.listProfiles('ipvanish');
+    const candidatesFromChi2 = mgr.getFailoverCandidates(ipvProfiles, 'ipvanish-US-Chicago-chi-b02');
+    assert.equal(candidatesFromChi2[0].id, 'ipvanish-US-Chicago-chi-b03', 'Chicago 2 must advance directly to Chicago 3');
+    assert.equal(candidatesFromChi2[1].id, 'ipvanish-US-Chicago-chi-b04', 'Chicago 3 must be followed by Chicago 4');
+    assert.equal(candidatesFromChi2[2].id, 'ipvanish-US-Chicago-chi-b10', 'Chicago 4 must be followed by Chicago 10');
+    assert.equal(candidatesFromChi2[3].id, 'ipvanish-US-Chicago-chi-c01', 'Chicago b10 must be followed by Chicago c01');
+    assert.equal(candidatesFromChi2[4].id, 'ipvanish-US-Chicago-chi-b01', 'Should wrap around to Chicago 1 before leaving Chicago');
+    assert.equal(candidatesFromChi2[5].country, 'US', 'Should prefer other US cities before foreign countries');
+
+    // Also verify plain custom filenames (chicago1, chicago2, chicago3, chicago10, miami1) use natural numeric order
+    mgr.addCustomProvider({ id: 'myvpn', name: 'MyVPN' });
+    for (const name of ['chicago1', 'chicago10', 'chicago2', 'chicago3', 'miami1']) {
+      mgr.importOvpnProfile({
+        providerId: 'myvpn',
+        filename: `${name}.ovpn`,
+        content: `client\ndev tun\nproto udp\nremote 198.51.100.10 1194\nauth-user-pass\n`,
+      });
+    }
+    const customProfiles = mgr.listProfiles('myvpn');
+    const customNext = getFailoverCandidates(customProfiles, 'chicago2').map(p => p.id);
+    assert.deepEqual(customNext, ['chicago3', 'chicago10', 'chicago1', 'miami1']);
+  } finally {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
+});
+
+test('VPN Sandbox detects down VPN at launch AND mid-session and automatically fails over to next VPN in line (Chicago 2 -> Chicago 3 -> Chicago 4)', async () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'robos-vpn-failover-test-'));
+  try {
+    const ovpnManager = createOvpnManager({ configDir: tmpDir, usePass: false });
+    for (const [code, ip] of [
+      ['chi-b02', '216.131.76.9'],
+      ['chi-b03', '216.131.76.15'],
+      ['chi-b04', '216.131.76.21'],
+    ]) {
+      ovpnManager.importOvpnProfile({
+        providerId: 'ipvanish',
+        filename: `ipvanish-US-Chicago-${code}.ovpn`,
+        content: `client\ndev tun\nproto udp\nremote ${code}.ipvanish.com 443\n# Resolved Fallback IP: ${ip}\nauth-user-pass\n`,
+      });
+    }
+
+    ovpnManager.saveAccount({
+      providerId: 'ipvanish',
+      label: 'IPVanish Failover Account',
+      username: 'chi_user',
+      password: 'chi_secret_password',
+      defaultProfile: 'ipvanish-US-Chicago-chi-b02',
+      setDefault: true,
+    });
+
+    const downServers = new Set(['ipvanish-US-Chicago-chi-b02']);
+    const failoverEvents = [];
+    let lastSwitchScript = '';
+
+    const engine = createVpnSandboxEngine({
+      configDir: tmpDir,
+      ovpnManager,
+      usePass: false,
+      healthCheckIntervalMs: 0, // driven explicitly in test
+      onFailover: ev => failoverEvents.push(ev),
+      tunnelConnectHook: async ({ profile, spec, switchScript }) => {
+        if (switchScript) lastSwitchScript = switchScript;
+        if (downServers.has(profile.id)) {
+          return {
+            ok: false,
+            reason: 'tun_timeout',
+            error: `Connection timed out on ${profile.hostname}`,
+          };
+        }
+        return {
+          ok: true,
+          verifiedExitIp: spec.vpnServerIps[0],
+          assignedTunnelIp: '172.21.23.50',
+        };
+      },
+      tunnelHealthHook: async session => {
+        if (downServers.has(session.profileId)) {
+          return {
+            healthy: false,
+            reason: 'tun0_down',
+            detail: `${session.serverHost} tunnel went down`,
+          };
+        }
+        return { healthy: true };
+      },
+    });
+
+    // 1. Launch on Chicago 2 while Chicago 2 is DOWN -> must automatically connect to Chicago 3!
+    const session = await engine.launchSandboxedExecutable({
+      executable: process.execPath,
+      args: ['-e', 'setTimeout(() => {}, 5000)'],
+      profileId: 'ipvanish-US-Chicago-chi-b02',
+    });
+
+    assert.equal(session.requestedProfileId, 'ipvanish-US-Chicago-chi-b02');
+    assert.equal(session.profileId, 'ipvanish-US-Chicago-chi-b03', 'Must fail over from Chicago 2 to Chicago 3 at launch');
+    assert.equal(session.serverHost, 'chi-b03.ipvanish.com');
+    assert.equal(session.vpnExitIp, '216.131.76.15');
+    assert.equal(session.failoverCount, 1);
+    assert.equal(failoverEvents.length, 1);
+    assert.equal(failoverEvents[0].fromProfileId, 'ipvanish-US-Chicago-chi-b02');
+    assert.equal(failoverEvents[0].toProfileId, 'ipvanish-US-Chicago-chi-b03');
+    const initialPid = session.pid;
+
+    // 2. Now Chicago 3 ALSO goes down mid-session while the app is running -> health monitor must switch to Chicago 4 in-place!
+    downServers.add('ipvanish-US-Chicago-chi-b03');
+    const cycleEvents = await engine.runHealthCheckCycle();
+    assert.equal(cycleEvents.length, 1);
+    assert.equal(cycleEvents[0].ok, true);
+    assert.equal(cycleEvents[0].switched, true);
+    assert.equal(cycleEvents[0].fromProfileId, 'ipvanish-US-Chicago-chi-b03');
+    assert.equal(cycleEvents[0].toProfileId, 'ipvanish-US-Chicago-chi-b04');
+
+    const updated = engine.getSession(session.id);
+    assert.equal(updated.status, 'running');
+    assert.equal(updated.pid, initialPid, 'Sandboxed app PID must stay alive without restarting during in-place failover');
+    assert.equal(updated.profileId, 'ipvanish-US-Chicago-chi-b04');
+    assert.equal(updated.serverHost, 'chi-b04.ipvanish.com');
+    assert.equal(updated.vpnExitIp, '216.131.76.21');
+    assert.equal(updated.failoverCount, 2);
+
+    // Verify zero-leak switch script rotates NAT rule cleanly and maintains Default-DROP
+    assert.ok(lastSwitchScript.includes('iptables -P OUTPUT DROP'), 'Switch script must keep OUTPUT DROP policy locked');
+    assert.ok(
+      lastSwitchScript.includes('-D POSTROUTING') && lastSwitchScript.includes('216.131.76.15/32'),
+      'Switch script must remove previous server POSTROUTING MASQUERADE rule'
+    );
+    assert.ok(
+      lastSwitchScript.includes('216.131.76.21/32'),
+      'Switch script must lock firewall to new server IP'
+    );
+
+    engine.stopSession(session.id);
+
+    // 3. Verify AUTH_FAILED aborts immediately and does NOT cycle through servers
+    let authAttempts = 0;
+    const authFailEngine = createVpnSandboxEngine({
+      configDir: tmpDir,
+      ovpnManager,
+      usePass: false,
+      healthCheckIntervalMs: 0,
+      tunnelConnectHook: async () => {
+        authAttempts++;
+        return { ok: false, fatalAuth: true, error: 'OpenVPN authentication failed (AUTH_FAILED).' };
+      },
+    });
+    await assert.rejects(
+      () => authFailEngine.launchSandboxedExecutable({ executable: 'echo', args: ['hi'], profileId: 'ipvanish-US-Chicago-chi-b02' }),
+      /AUTH_FAILED/
+    );
+    assert.equal(authAttempts, 1, 'AUTH_FAILED must stop immediately without retrying subsequent servers');
   } finally {
     fs.rmSync(tmpDir, { recursive: true, force: true });
   }

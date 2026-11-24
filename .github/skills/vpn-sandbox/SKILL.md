@@ -31,13 +31,16 @@ Manage OpenVPN accounts and server locations (`packages/vpn-servers`, `packages/
    - Launch the GUI apps with `scripts/dev-launch.sh vpn-servers` or `scripts/dev-launch.sh vpn-sandbox`, or launch an executable programmatically via `launchSandboxedExecutable({ executable, args, accountId, profileId })`.
    - For browsers (`firefox`, `google-chrome-stable`, `chromium`), the engine automatically creates an isolated profile (`~/.config/robos/vpn-browser-profiles/<browser>`), passes `--no-remote --new-instance`, and wraps execution in `dbus-run-session`.
 
-3. **Run the 5-Phase Live E2E Kill-Switch Proof**:
-   - Execute the live kernel proof to verify that killing `openvpn` (`kill -9`) mid-session drops `tun0` while keeping `veth_n_<id>` up and blocks 100% of post-drop HTTPS, TCP, and UDP egress probes in the kernel (`EPERM` / `DROP`):
+3. **Run the Live E2E Kill-Switch & Auto-Failover Proofs**:
+   - Execute the live kernel proofs to verify:
+     1. Killing `openvpn` (`kill -9`) mid-session drops `tun0` while keeping `veth_n_<id>` up and blocks 100% of post-drop HTTPS, TCP, and UDP egress probes in the kernel (`EPERM` / `DROP`).
+     2. Automatic health detection (`checkSessionTunnelHealth`) sees when a VPN server is down (at launch or mid-session) and seamlessly fails over in-place to the next server in line (e.g. `ipvanish-US-Chicago-chi-b02` → `ipvanish-US-Chicago-chi-b03`) without restarting the sandboxed process.
      ```bash
      ROBOS_VPN_LIVE_E2E=1 node --test tests/e2e/vpn-sandbox-killswitch-proof.test.cjs
      ```
 
 ## Validation
 
-- Confirm `node --test packages/robos-lib/ovpn-providers.test.cjs` passes all unit tests.
+- Confirm `node --test packages/robos-lib/ovpn-providers.test.cjs` passes all unit tests (including natural next-in-line server ordering and launch + mid-session failover).
 - Confirm `proveKillSwitchOnVpnDrop()` returns `ok: true`, `ipLeakedAfterDrop: false`, `tun0DestroyedAfterKill: true`, and `droppedPacketsInKernel > 0`.
+- Confirm `proveAutoFailoverOnVpnDrop()` returns `ok: true`, `appProcessSurvived: true`, and `ipLeakedDuringFailover: false`.

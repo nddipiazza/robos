@@ -60,6 +60,13 @@ const ovpnManager = ovpnModule.createOvpnManager({ configDir: CONFIG_DIR });
 const sandboxEngine = sandboxModule.createVpnSandboxEngine({
   configDir: CONFIG_DIR,
   ovpnManager,
+  onFailover: event => {
+    try {
+      if (mainWindow && !mainWindow.isDestroyed?.()) {
+        mainWindow.webContents?.send?.('vpn-failover', event);
+      }
+    } catch {}
+  },
 });
 
 app.setPath?.('userData', path.join(CONFIG_DIR, 'electron', 'vpn-sandbox'));
@@ -216,6 +223,39 @@ ipcMain.handle('prove-kill-switch', async (_, opts) => {
       ...proof,
       sessions: sandboxEngine.listSessions(),
     };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('prove-auto-failover', async (_, opts) => {
+  try {
+    const proof = await sandboxEngine.proveAutoFailoverOnVpnDrop(opts || {});
+    return {
+      ...proof,
+      sessions: sandboxEngine.listSessions(),
+    };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('failover-session', async (_, sessionId, opts) => {
+  try {
+    const res = await sandboxEngine.failoverSession(sessionId, opts || {});
+    return {
+      ...res,
+      sessions: sandboxEngine.listSessions(),
+    };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('set-session-autofailover', async (_, sessionId, enabled) => {
+  try {
+    const session = sandboxEngine.setSessionAutoFailover(sessionId, enabled);
+    return { ok: true, session, sessions: sandboxEngine.listSessions() };
   } catch (err) {
     return { ok: false, error: err.message };
   }

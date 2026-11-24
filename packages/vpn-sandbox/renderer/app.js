@@ -8,7 +8,42 @@ let state = {
   sessions: [],
   hostNet: { defaultIface: 'eth0', localIp: '—' },
   showNormalIp: false,
+  autoFailover: true,
 };
+
+function deriveProfileSeriesKey(profile = {}) {
+  if (profile.country && profile.city) {
+    return `loc:${String(profile.country).trim().toUpperCase()}:${String(profile.city).trim().toLowerCase()}`;
+  }
+  const raw = String(profile.id || profile.hostname || '').trim().toLowerCase().replace(/\.ovpn$/, '');
+  if (!raw) return '';
+  const sepMatch = raw.match(/^(.+?)[-_.\s]+[a-z]?\d+$/i);
+  if (sepMatch) return `stem:${sepMatch[1]}`;
+  const numMatch = raw.match(/^([a-z][a-z0-9-_.\s]*?[a-z])\d+$/i);
+  if (numMatch) return `stem:${numMatch[1]}`;
+  return `stem:${raw}`;
+}
+
+function findNextProfileInLine(profiles = [], currentId = '') {
+  if (!profiles.length) return null;
+  const idx = profiles.findIndex(p => p.id === currentId);
+  if (idx === -1) return profiles[0] || null;
+  const cur = profiles[idx];
+  const curKey = deriveProfileSeriesKey(cur);
+  const curCountry = (cur.country || '').toUpperCase();
+  const rotated = [...profiles.slice(idx + 1), ...profiles.slice(0, idx)];
+  return (
+    rotated.find(p => curKey && deriveProfileSeriesKey(p) === curKey) ||
+    rotated.find(p => curCountry && (p.country || '').toUpperCase() === curCountry) ||
+    rotated[0] ||
+    null
+  );
+}
+
+function formatProfileLabel(p) {
+  if (!p) return '';
+  return p.country ? `${p.country} — ${p.city} (${p.hostname})` : p.label;
+}
 
 function maskIp(ip) {
   const s = String(ip || '').trim();
@@ -69,6 +104,19 @@ function renderHeaderAndSelectors() {
       .join('');
   }
 
+  const updateNextHint = profiles => {
+    const hintEl = document.getElementById('next-server-hint');
+    if (!hintEl) return;
+    if (!state.autoFailover) {
+      hintEl.textContent = 'Auto-failover disabled (stays strictly on selected server).';
+      return;
+    }
+    const nextProf = findNextProfileInLine(profiles, srvSelect.value);
+    hintEl.textContent = nextProf && nextProf.id !== srvSelect.value
+      ? `Next in line if down: ${formatProfileLabel(nextProf)}`
+      : '';
+  };
+
   const updateServers = (forceRebuild = false) => {
     const acc = accounts.find(a => a.id === accSelect.value) || accounts[0];
     const providerId = acc ? acc.providerId : 'ipvanish';
@@ -80,12 +128,15 @@ function renderHeaderAndSelectors() {
       : (acc?.defaultProfile || profiles[0]?.id || '');
 
     if (!forceRebuild && srvSelect.dataset.sig === sig && srvSelect.options.length > 0) {
+      updateNextHint(profiles);
       return;
     }
     srvSelect.dataset.sig = sig;
     srvSelect.innerHTML = profiles
-      .map(p => `<option value="${esc(p.id)}"${p.id === currentSrv ? ' selected' : ''}>${esc(p.country ? `${p.country} — ${p.city} (${p.hostname})` : p.label)}</option>`)
+      .map(p => `<option value="${esc(p.id)}"${p.id === currentSrv ? ' selected' : ''}>${esc(formatProfileLabel(p))}</option>`)
       .join('');
+    updateNextHint(profiles);
+    srvSelect.onchange = () => updateNextHint(profiles);
   };
 
   updateServers();
@@ -152,20 +203,42 @@ function renderSessions() {
   el.innerHTML = sessions
     .map(s => {
       const isRunning = s.status === 'running';
+      const isReconnecting = isRunning && s.tunnelState === 'reconnecting';
+      const isTunnelDown = isRunning && (s.tunnelState === 'down' || s.tunnelState === 'auth-error');
+      const lastFailover = Array.isArray(s.failoverHistory) && s.failoverHistory.length
+        ? s.failoverHistory[s.failoverHistory.length - 1]
+        : null;
+      const statusLabel = !isRunning
+        ? 'Stopped'
+        : isReconnecting
+          ? `VPN down — switching to ${s.failoverTarget || s.nextFailoverServerHost || 'next server'}…`
+          : isTunnelDown
+            ? 'VPN down (Kill-Switch blocking leaks)'
+            : 'Running through VPN';
+      const nextText = isRunning && s.autoFailover !== false && s.nextFailoverServerHost
+        ? ` · Next if down: ${esc(s.nextFailoverServerHost)}`
+        : '';
+
       return `
         <div class="session-card ${isRunning ? 'running' : ''}" data-session-id="${esc(s.id)}">
           <div class="session-top">
             <div>
               <div class="item-title">
-                ${isRunning ? '<span class="status-dot"></span>' : ''}
+                ${isRunning ? `<span class="status-dot${isReconnecting || isTunnelDown ? ' reconnecting' : ''}"></span>` : ''}
                 ${esc(s.executable)} ${esc((s.args || []).join(' '))}
               </div>
               <div class="item-sub">
-                ${isRunning ? 'Running through VPN' : 'Stopped'} · Server: ${esc(s.serverHost)} (${esc(s.accountLabel)})
+                ${esc(statusLabel)} · Server: ${esc(s.serverHost)} (${esc(s.accountLabel)})${nextText}
               </div>
+              ${
+                lastFailover
+                  ? `<div class="failover-badge">↻ Auto-switched (${esc(s.failoverCount || 1)}×): ${esc(lastFailover.fromServerHost)} → ${esc(s.serverHost)}</div>`
+                  : ''
+              }
             </div>
             <div style="display:flex;gap:6px;">
               <button type="button" class="btn" data-verify-session="${esc(s.id)}">Check VPN Traffic</button>
+              ${isRunning ? `<button type="button" class="btn" data-failover-session="${esc(s.id)}" title="Switch this running app to the next VPN server in line without restarting it">Next Server ↻</button>` : ''}
               ${isRunning ? `<button type="button" class="btn btn-danger" data-stop-session="${esc(s.id)}">Stop</button>` : ''}
               <button type="button" class="btn btn-danger" data-delete-session="${esc(s.id)}" title="Delete from list">✕</button>
             </div>
@@ -177,8 +250,8 @@ function renderSessions() {
               <strong>✓ ${esc(s.vpnExitIp)}</strong> (${esc(s.serverHost)})
             </div>
             <div class="traffic-box ok">
-              <span class="traffic-label">Kill-Switch &amp; Real IP Protection</span>
-              <strong>🔒 Protected</strong> — Real IP (${esc(formatNormalIp(s.hostNormalIp))}) hidden; traffic stops if VPN drops
+              <span class="traffic-label">Kill-Switch &amp; Auto-Failover Protection</span>
+              <strong>🔒 Protected</strong> — Real IP (${esc(formatNormalIp(s.hostNormalIp))}) hidden; ${s.autoFailover !== false ? 'auto-switches to next server if VPN drops' : 'traffic stops if VPN drops'}
             </div>
           </div>
         </div>
@@ -188,10 +261,42 @@ function renderSessions() {
 
   el.querySelectorAll('[data-verify-session]').forEach(btn => {
     btn.onclick = async () => {
-      const res = await window.robos.verifyVpnTraffic({ sessionId: btn.dataset.verifySession });
+      const res = await window.robos.verifyVpnTraffic({
+        sessionId: btn.dataset.verifySession,
+        autoFailover: state.autoFailover,
+      });
       if (res.sessions) state.sessions = res.sessions;
       renderSessions();
       showBanner(res.summary || 'VPN connection verified.', !res.ok);
+    };
+  });
+
+  el.querySelectorAll('[data-failover-session]').forEach(btn => {
+    btn.onclick = async () => {
+      const orig = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = 'Switching…';
+      showBanner('Switching running sandbox session to the next VPN server in line…');
+      const res = await window.robos.failoverSession(btn.dataset.failoverSession, {
+        reason: 'Manual switch to next server in line',
+      });
+      btn.disabled = false;
+      btn.textContent = orig;
+      if (res.sessions) state.sessions = res.sessions;
+      if (res.ok && res.toProfileId) {
+        const srvSelect = document.getElementById('select-server');
+        if (srvSelect && [...srvSelect.options].some(o => o.value === res.toProfileId)) {
+          srvSelect.value = res.toProfileId;
+        }
+      }
+      renderHeaderAndSelectors();
+      renderSessions();
+      showBanner(
+        res.ok
+          ? `↻ Switched ${res.fromServerHost} → ${res.toServerHost} (new VPN IP ${res.newExitIp}).`
+          : (res.error || 'Could not switch VPN server.'),
+        !res.ok
+      );
     };
   });
 
@@ -225,25 +330,77 @@ async function launchApp({ executable, args, accountId, profileId }) {
     showBanner('Pick an app or enter an executable command first.', true);
     return;
   }
+  showBanner(`Connecting VPN tunnel and launching ${executable}…`);
   const res = await window.robos.launchSandboxedApp({
     executable,
     args,
     accountId,
     profileId,
+    autoFailover: state.autoFailover,
   });
   if (!res.ok) {
     showBanner(res.error || 'Could not launch app.', true);
     return;
   }
   state.sessions = res.sessions || [];
+  if (res.session?.profileId && res.session.profileId !== profileId) {
+    const srvSelect = document.getElementById('select-server');
+    if (srvSelect && [...srvSelect.options].some(o => o.value === res.session.profileId)) {
+      srvSelect.value = res.session.profileId;
+    }
+  }
   renderHeaderAndSelectors();
   renderSessions();
+  if (res.session?.failoverCount > 0 && res.session.failoverHistory?.length) {
+    const last = res.session.failoverHistory[res.session.failoverHistory.length - 1];
+    showBanner(
+      `↻ ${last.fromServerHost} was down — automatically switched to next server ${res.session.serverHost} (✓ ${res.session.vpnExitIp}) and launched ${executable}.`
+    );
+    return;
+  }
   showBanner(res.verification?.summary || `Launched ${executable} via VPN (${res.session.vpnExitIp}).`);
 }
 
 async function init() {
   const initial = await window.robos.getInitialState();
   if (initial.ok) state = { ...state, ...initial };
+
+  const autoFailoverToggle = document.getElementById('toggle-auto-failover');
+  if (autoFailoverToggle) {
+    autoFailoverToggle.checked = state.autoFailover;
+    autoFailoverToggle.onchange = async () => {
+      state.autoFailover = autoFailoverToggle.checked;
+      for (const s of state.sessions || []) {
+        if (s.status === 'running' && typeof window.robos.setSessionAutoFailover === 'function') {
+          await window.robos.setSessionAutoFailover(s.id, state.autoFailover);
+        }
+      }
+      renderHeaderAndSelectors();
+      renderSessions();
+    };
+  }
+
+  if (typeof window.robos.onFailover === 'function') {
+    window.robos.onFailover(async ev => {
+      const fresh = await window.robos.getInitialState();
+      if (fresh.ok) {
+        state.sessions = fresh.sessions;
+        if (ev?.toProfileId) {
+          const srvSelect = document.getElementById('select-server');
+          if (srvSelect && [...srvSelect.options].some(o => o.value === ev.toProfileId)) {
+            srvSelect.value = ev.toProfileId;
+          }
+        }
+        renderHeaderAndSelectors();
+        renderSessions();
+      }
+      if (ev?.phase === 'runtime') {
+        showBanner(
+          `↻ VPN ${ev.fromServerHost} went down — automatically switched ${ev.executable || 'sandbox'} to next server ${ev.toServerHost} (new VPN IP ${ev.newExitIp}).`
+        );
+      }
+    });
+  }
 
   renderHeaderAndSelectors();
   renderSavedApps();
@@ -289,7 +446,14 @@ async function init() {
     const name = document.getElementById('input-profile-name').value.trim() || executable;
     const accountId = document.getElementById('select-account').value;
     const profileId = document.getElementById('select-server').value;
-    const res = await window.robos.saveAppProfile({ name, executable, args, accountId, profileId });
+    const res = await window.robos.saveAppProfile({
+      name,
+      executable,
+      args,
+      accountId,
+      profileId,
+      autoFailover: state.autoFailover,
+    });
     if (!res.ok) {
       showBanner(res.error || 'Could not save app.', true);
       return;
@@ -300,9 +464,26 @@ async function init() {
   };
 
   document.getElementById('btn-check-vpn').onclick = async () => {
+    const checkBtn = document.getElementById('btn-check-vpn');
     const accountId = document.getElementById('select-account').value;
     const profileId = document.getElementById('select-server').value;
-    const res = await window.robos.verifyVpnTraffic({ accountId, profileId });
+    const orig = checkBtn.textContent;
+    checkBtn.disabled = true;
+    checkBtn.textContent = 'Testing VPN…';
+    const res = await window.robos.verifyVpnTraffic({
+      accountId,
+      profileId,
+      autoFailover: state.autoFailover,
+    });
+    checkBtn.disabled = false;
+    checkBtn.textContent = orig;
+    if (res.failoverOccurred && res.profileId) {
+      const srvSelect = document.getElementById('select-server');
+      if (srvSelect && [...srvSelect.options].some(o => o.value === res.profileId)) {
+        srvSelect.value = res.profileId;
+        renderHeaderAndSelectors();
+      }
+    }
     showBanner(res.summary || 'VPN connection verified.', !res.ok);
   };
 

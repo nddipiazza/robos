@@ -246,6 +246,68 @@ function parseOvpnConfig(content = '') {
   };
 }
 
+function naturalProfileCompare(a, b) {
+  return String(a || '').localeCompare(String(b || ''), undefined, { numeric: true, sensitivity: 'base' });
+}
+
+/**
+ * Derives a location/series grouping key so failover advances sequentially through
+ * sibling servers in the same city/line first (e.g. Chicago 2 -> Chicago 3 -> Chicago 4)
+ * before falling back to other cities in the same country or provider list.
+ */
+function deriveProfileSeriesKey(profile = {}) {
+  if (profile.country && profile.city) {
+    return `loc:${String(profile.country).trim().toUpperCase()}:${String(profile.city).trim().toLowerCase()}`;
+  }
+  const raw = String(profile.id || profile.hostname || '')
+    .trim()
+    .toLowerCase()
+    .replace(/\.ovpn$/, '');
+  if (!raw) return '';
+  const sepTierMatch = raw.match(/^(.+?)[-_.\s]+[a-z]?\d+$/i);
+  if (sepTierMatch) return `stem:${sepTierMatch[1]}`;
+  const trailingNumMatch = raw.match(/^([a-z][a-z0-9-_.\s]*?[a-z])\d+$/i);
+  if (trailingNumMatch) return `stem:${trailingNumMatch[1]}`;
+  return `stem:${raw}`;
+}
+
+/**
+ * Returns the ordered failover server queue after `currentProfileId`:
+ *  1. Next servers in line in the same city/series (forward after current, then wrap-around within city/series)
+ *  2. Next servers in the same country (forward, then wrap-around)
+ *  3. Remaining servers in the provider list (forward, then wrap-around)
+ */
+function getFailoverCandidates(profiles = [], currentProfileId = '', { excludeIds = [] } = {}) {
+  if (!Array.isArray(profiles) || profiles.length === 0) return [];
+  const excluded = new Set([currentProfileId, ...(Array.isArray(excludeIds) ? excludeIds : [])].filter(Boolean));
+  const startIdx = profiles.findIndex(p => p && p.id === currentProfileId);
+  if (startIdx === -1) {
+    return profiles.filter(p => p && p.id && !excluded.has(p.id));
+  }
+
+  const startProfile = profiles[startIdx];
+  const targetSeries = deriveProfileSeriesKey(startProfile);
+  const targetCountry = startProfile.country ? String(startProfile.country).trim().toUpperCase() : '';
+  const rotated = [...profiles.slice(startIdx + 1), ...profiles.slice(0, startIdx)];
+
+  const sameSeries = [];
+  const sameCountry = [];
+  const remaining = [];
+
+  for (const p of rotated) {
+    if (!p || !p.id || excluded.has(p.id)) continue;
+    if (targetSeries && deriveProfileSeriesKey(p) === targetSeries) {
+      sameSeries.push(p);
+    } else if (targetCountry && p.country && String(p.country).trim().toUpperCase() === targetCountry) {
+      sameCountry.push(p);
+    } else {
+      remaining.push(p);
+    }
+  }
+
+  return [...sameSeries, ...sameCountry, ...remaining];
+}
+
 function createOvpnManager(options = {}) {
   const configDir = options.configDir || process.env.ROBOS_CONFIG_DIR || path.join(os.homedir(), '.config', 'robos');
   const passStoreDir = options.passStoreDir || process.env.PASSWORD_STORE_DIR || path.join(os.homedir(), '.password-store');
@@ -508,7 +570,7 @@ function createOvpnManager(options = {}) {
     const dir = path.join(profilesRoot, providerId);
     if (!fs.existsSync(dir)) return [];
 
-    const files = fs.readdirSync(dir).filter(f => f.endsWith('.ovpn')).sort();
+    const files = fs.readdirSync(dir).filter(f => f.endsWith('.ovpn')).sort(naturalProfileCompare);
     const curatedMap = new Map(
       (BUILTIN_OVPN_PROVIDERS[providerId]?.curatedServers || []).map(s => [s.id, s])
     );
@@ -815,34 +877,16 @@ function createOvpnManager(options = {}) {
     };
   }
 
-  async function testAccountConnection(input = {}) {
-    let provId = input.providerId || 'ipvanish';
-    let user = String(input.username || '').trim();
-    let pass = String(input.password || '').trim();
-    let profId = input.profileId || '';
-
-    if (input.accountId || (!user && !pass)) {
-      const creds = getAccountCredentials(input.accountId);
-      provId = creds.account.providerId || provId;
-      user = user || creds.username;
-      pass = pass || creds.password;
-      profId = profId || creds.account.defaultProfile;
-    }
-
-    if (!user || !pass) {
-      throw new Error('Enter your OpenVPN username and password to test the connection.');
-    }
-
-    const profiles = listProfiles(provId);
-    const profile = profiles.find(p => p.id === profId) || profiles[0];
-    if (!profile || !profile.path || !fs.existsSync(profile.path)) {
-      throw new Error(`No .ovpn server profile found for provider "${provId}".`);
-    }
-
+  async function testSingleProfileConnection({ profile, user, pass }) {
     const whichOvpn = spawnSync('which', ['openvpn'], { encoding: 'utf8' });
-    if (process.env.ROBOS_TEST === '1' || whichOvpn.status !== 0) {
+    const isSimulatedTest =
+      process.env.ROBOS_VPN_LIVE_E2E === '1'
+        ? false
+        : Boolean(process.env.ROBOS_TEST === '1' || process.env.NODE_TEST_CONTEXT || whichOvpn.status !== 0);
+    if (isSimulatedTest) {
       return {
         ok: true,
+        profileId: profile.id,
         serverHost: profile.hostname || profile.id,
         serverIp: profile.ip || '216.131.74.202',
         assignedIp: '172.21.23.100',
@@ -851,8 +895,8 @@ function createOvpnManager(options = {}) {
       };
     }
 
-    const tmpAuth = path.join(os.tmpdir(), `robos-ovpn-test-${process.pid}-${Date.now()}.auth`);
-    const tmpOvpn = path.join(os.tmpdir(), `robos-ovpn-test-${process.pid}-${Date.now()}.ovpn`);
+    const tmpAuth = path.join(os.tmpdir(), `robos-ovpn-test-${process.pid}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}.auth`);
+    const tmpOvpn = path.join(os.tmpdir(), `robos-ovpn-test-${process.pid}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}.ovpn`);
     fs.writeFileSync(tmpAuth, `${user}\n${pass}\n`, { mode: 0o600 });
 
     const profileDir = path.dirname(profile.path);
@@ -870,13 +914,28 @@ function createOvpnManager(options = {}) {
           pub.setServers(['1.1.1.1', '8.8.8.8', '9.9.9.9']);
           pub.resolve4(remoteHost, (e2, addrs2) => {
             if (!e2 && Array.isArray(addrs2) && addrs2.length) return resolve(addrs2[0]);
-            return resolve(profile.ip || remoteHost);
+            return resolve(profile.ip || null);
           });
         } catch {
-          return resolve(profile.ip || remoteHost);
+          return resolve(profile.ip || null);
         }
       });
     });
+
+    const cleanup = () => {
+      try { if (fs.existsSync(tmpAuth)) fs.unlinkSync(tmpAuth); } catch {}
+      try { if (fs.existsSync(tmpOvpn)) fs.unlinkSync(tmpOvpn); } catch {}
+    };
+
+    if (!resolvedIp) {
+      cleanup();
+      return {
+        ok: false,
+        profileId: profile.id,
+        serverHost: remoteHost,
+        error: `Could not resolve DNS for VPN server ${remoteHost}.`,
+      };
+    }
 
     const sanitized = rawOvpn
       .split(/\r?\n/)
@@ -901,11 +960,6 @@ function createOvpnManager(options = {}) {
       sanitized.push('pull-filter ignore "dhcp-option"');
     }
     fs.writeFileSync(tmpOvpn, sanitized.join('\n') + '\n', { mode: 0o600 });
-
-    const cleanup = () => {
-      try { if (fs.existsSync(tmpAuth)) fs.unlinkSync(tmpAuth); } catch {}
-      try { if (fs.existsSync(tmpOvpn)) fs.unlinkSync(tmpOvpn); } catch {}
-    };
 
     return new Promise(resolve => {
       const { spawn } = require('node:child_process');
@@ -943,6 +997,9 @@ function createOvpnManager(options = {}) {
         if (output.includes('AUTH_FAILED')) {
           finish({
             ok: false,
+            fatalAuth: true,
+            profileId: profile.id,
+            serverHost: profile.hostname || profile.id,
             error: `Authentication failed (AUTH_FAILED) on ${profile.hostname || profile.id}. Check your OpenVPN username and password.`,
           });
           return;
@@ -956,7 +1013,9 @@ function createOvpnManager(options = {}) {
           const cipher = cipherMatch ? cipherMatch[1] : 'AES-256-GCM';
           finish({
             ok: true,
+            profileId: profile.id,
             serverHost: profile.hostname || profile.id,
+            serverIp: resolvedIp,
             serverEndpoint,
             assignedIp,
             cipher,
@@ -974,7 +1033,7 @@ function createOvpnManager(options = {}) {
         checkOutput();
       });
       child.on('error', err => {
-        finish({ ok: false, error: `OpenVPN test error: ${err.message}` });
+        finish({ ok: false, profileId: profile.id, serverHost: profile.hostname || profile.id, error: `OpenVPN test error: ${err.message}` });
       });
       child.on('close', () => {
         checkOutput();
@@ -986,6 +1045,8 @@ function createOvpnManager(options = {}) {
             .pop();
           finish({
             ok: false,
+            profileId: profile.id,
+            serverHost: profile.hostname || profile.id,
             error: lastErr || `Connection test to ${profile.hostname || profile.id} did not complete.`,
           });
         }
@@ -994,15 +1055,91 @@ function createOvpnManager(options = {}) {
       const timer = setTimeout(() => {
         finish({
           ok: false,
+          profileId: profile.id,
+          serverHost: profile.hostname || profile.id,
           error: `Timed out connecting to ${profile.hostname || profile.id}. Try another server location or check your internet connection.`,
         });
       }, 9000);
     });
   }
 
+  async function testAccountConnection(input = {}) {
+    let provId = input.providerId || 'ipvanish';
+    let user = String(input.username || '').trim();
+    let pass = String(input.password || '').trim();
+    let profId = input.profileId || '';
+
+    if (input.accountId || (!user && !pass)) {
+      const creds = getAccountCredentials(input.accountId);
+      provId = creds.account.providerId || provId;
+      user = user || creds.username;
+      pass = pass || creds.password;
+      profId = profId || creds.account.defaultProfile;
+    }
+
+    if (!user || !pass) {
+      throw new Error('Enter your OpenVPN username and password to test the connection.');
+    }
+
+    const profiles = listProfiles(provId);
+    const initialProfile = profiles.find(p => p.id === profId) || profiles[0];
+    if (!initialProfile || !initialProfile.path || !fs.existsSync(initialProfile.path)) {
+      throw new Error(`No .ovpn server profile found for provider "${provId}".`);
+    }
+
+    const autoFailover = Boolean(input.autoFailover);
+    const maxAttempts = Math.max(0, Number(input.maxFailoverAttempts ?? 5));
+    const queue = autoFailover
+      ? [initialProfile, ...getFailoverCandidates(profiles, initialProfile.id).slice(0, maxAttempts)]
+      : [initialProfile];
+
+    const attemptedProfiles = [];
+    let lastRes = null;
+
+    for (let idx = 0; idx < queue.length; idx++) {
+      const candidate = queue[idx];
+      if (!candidate?.path || !fs.existsSync(candidate.path)) continue;
+      const res = await testSingleProfileConnection({ profile: candidate, user, pass });
+      attemptedProfiles.push({
+        profileId: candidate.id,
+        serverHost: candidate.hostname || candidate.id,
+        ok: res.ok,
+        error: res.error || null,
+      });
+      lastRes = res;
+      if (res.ok) {
+        if (idx > 0) {
+          return {
+            ...res,
+            failoverOccurred: true,
+            failoverFromProfileId: initialProfile.id,
+            failoverFromHost: initialProfile.hostname || initialProfile.id,
+            attemptedProfiles,
+            message: `⚠ ${initialProfile.hostname || initialProfile.id} was down — automatically switched to next server ${candidate.hostname || candidate.id} (${res.serverEndpoint || res.serverIp}) — VPN IP ${res.assignedIp} (${res.cipher}).`,
+          };
+        }
+        return { ...res, failoverOccurred: false, attemptedProfiles };
+      }
+      if (res.fatalAuth) {
+        return { ...res, attemptedProfiles };
+      }
+    }
+
+    return {
+      ...(lastRes || { ok: false, error: 'All attempted VPN servers were unreachable.' }),
+      attemptedProfiles,
+    };
+  }
+
   return {
     BUILTIN_OVPN_PROVIDERS,
     parseOvpnConfig,
+    naturalProfileCompare,
+    deriveProfileSeriesKey,
+    getFailoverCandidates: (providerOrProfiles = 'ipvanish', currentProfileId = '', opts = {}) => {
+      const profs = Array.isArray(providerOrProfiles) ? providerOrProfiles : listProfiles(providerOrProfiles);
+      return getFailoverCandidates(profs, currentProfileId, opts);
+    },
     passReady,
     listProviders,
     getProvider,
@@ -1025,6 +1162,9 @@ module.exports = {
   BUILTIN_OVPN_PROVIDERS,
   IPVANISH_CA_CERT,
   parseOvpnConfig,
+  naturalProfileCompare,
+  deriveProfileSeriesKey,
+  getFailoverCandidates,
   buildIpvanishOvpnContent,
   createOvpnManager,
   ...createOvpnManager(),
