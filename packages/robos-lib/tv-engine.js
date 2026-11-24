@@ -1803,15 +1803,15 @@ ${tailLabels}`;
       `title=${effectiveChannelTitle}`,
       `subtitle=${effectiveSubtitle}`,
       `major_version=${isMoviePlayerChannel ? 2 : 1}`,
-      `minor_version=${isMoviePlayerChannel ? 0 : 3}`,
-      `build_version=1`,
+      `minor_version=${isMoviePlayerChannel ? 1 : 3}`,
+      `build_version=2`,
       `ui_resolutions=fhd`,
       `mm_icon_focus_fhd=pkg:/images/channel-poster_fhd.png`,
       `mm_icon_focus_hd=pkg:/images/channel-poster_hd.png`,
       `mm_icon_side_hd=pkg:/images/channel-poster_sd.png`,
       `splash_screen_fhd=pkg:/images/splash_fhd.png`,
-      `splash_color=#110E0B`,
-      `splash_min_time=250`,
+      `splash_color=#0B1120`,
+      `splash_min_time=350`,
       '',
     ].join('\n');
     const mainBrs = `sub Main()
@@ -5551,15 +5551,34 @@ end function
 
     const imagesDir = path.join(targetDir, 'images');
     fs.mkdirSync(imagesDir, { recursive: true });
+    const repoLogoPath = path.resolve(__dirname, '..', '..', 'robos-transparent-background.png');
     try {
       for (const [imgName, w, h] of [
         ['channel-poster_fhd.png', 540, 405],
         ['channel-poster_hd.png', 290, 218],
         ['channel-poster_sd.png', 214, 144],
-        ['splash_fhd.png', 640, 360],
+        ['splash_fhd.png', 1920, 1080],
       ]) {
         const imgFull = path.join(imagesDir, imgName);
-        fs.writeFileSync(imgFull, buildCinemaPosterPng(w, h));
+        let renderedLogo = false;
+        if (fs.existsSync(repoLogoPath)) {
+          try {
+            const barH = Math.max(4, Math.round(h * 0.022));
+            const vf = [
+              `scale=${Math.round(w * 0.92)}:${Math.round(h * 0.88)}:force_original_aspect_ratio=decrease`,
+              `pad=${w}:${h}:(ow-iw)/2:(oh-ih)/2:color=white`,
+              `drawbox=x=0:y=0:w=${w}:h=${barH}:color=0x00BCD4:t=fill`,
+              `drawbox=x=0:y=${h - barH}:w=${w}:h=${barH}:color=0x0F172A:t=fill`,
+            ].join(',');
+            const r = spawnSync('ffmpeg', ['-y', '-i', repoLogoPath, '-vf', vf, '-frames:v', '1', imgFull], { timeout: 6000 });
+            if (r.status === 0 && fs.existsSync(imgFull) && fs.statSync(imgFull).size > 500) {
+              renderedLogo = true;
+            }
+          } catch {}
+        }
+        if (!renderedLogo) {
+          fs.writeFileSync(imgFull, buildCinemaPosterPng(w, h));
+        }
         filesCreated.push(imgFull);
       }
     } catch {}
