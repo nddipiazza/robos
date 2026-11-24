@@ -56,6 +56,7 @@ contextBridge.exposeInMainWorld('robosAudio', {
   setWatched: (ids, watched) => ipcRenderer.invoke('audio:set-watched', { ids, watched }),
   getWatchHistory: () => ipcRenderer.invoke('audio:get-watch-history'),
   clearWatchHistory: (ids, keys) => ipcRenderer.invoke('audio:clear-watch-history', { ids: ids || [], keys: keys || [] }),
+  importWatchHistory: (opts) => ipcRenderer.invoke('audio:import-watch-history', opts || {}),
   showInFolder: (filePath) => ipcRenderer.invoke('audio:show-in-folder', filePath),
   aiPlaylistGenerate: (request, count, dj, agent) => ipcRenderer.invoke('audio:ai-playlist-generate', { request, count, dj, agent }),
   fetchPublicMetadata: (opts) => ipcRenderer.invoke('audio:fetch-public-metadata', opts || {}),

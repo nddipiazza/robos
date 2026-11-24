@@ -13,6 +13,7 @@ Where did we leave off? Watch status and play history from RobOS Movie Player an
 /media-watch-status remove "family guy"        # remove show or movie from Watchlist
 /media-watch-status mark-new "severance"       # mark all episodes as new / unwatched
 /media-watch-status current-episode "severance" "S02E04"  # mark prior episodes watched & S02E04+ unwatched
+/media-watch-status import ~/Downloads/plex-watch-history.json  # import Plex / Trakt / CSV watch history
 /media-watch-status watched "the office" --season 2
 /media-watch-status next "the office"          # play the next episode in the open Movie Player
 /media-watch-status sync                       # sync library + history with the vault now

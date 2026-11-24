@@ -4195,4 +4195,60 @@ body.is-resizing, body.is-resizing * { cursor: col-resize !important; user-selec
   color: #110e0b;
 }
 
+.wh-import-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px;
+  font-size: 0.76rem;
+  white-space: nowrap;
+}
+
+.watch-history-tab.wh-drag-over {
+  outline: 2px dashed var(--accent, #e8a33d);
+  outline-offset: -4px;
+  background: rgba(232, 163, 61, 0.05);
+}
+
+.wh-import-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 18px 8px;
+  padding: 8px 12px;
+  border-radius: 7px;
+  font-size: 0.78rem;
+  border: 1px solid rgba(52, 211, 153, 0.35);
+  background: rgba(16, 185, 129, 0.11);
+  color: #e2f8ee;
+}
+
+.wh-import-banner.err {
+  border-color: rgba(248, 113, 113, 0.4);
+  background: rgba(239, 68, 68, 0.12);
+  color: #fecaca;
+}
+
+.wh-import-banner-main {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.wh-import-accounts {
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  font-size: 0.7rem;
+  color: #cbd5e1;
+}
+
+.wh-load-more {
+  display: flex;
+  justify-content: center;
+  padding: 12px;
+}
+
 

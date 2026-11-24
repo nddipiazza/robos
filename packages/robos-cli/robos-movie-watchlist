@@ -11,6 +11,7 @@
  *   robos-movie-watchlist mark-new "<show>" [--season <n>] [--json]
  *   robos-movie-watchlist current "<show>" "<ep>" [--json]
  *   robos-movie-watchlist current "<show>" --season <n> --episode <n> [--json]
+ *   robos-movie-watchlist import [<file>] [--account <name>] [--no-audio] [--json]
  *   robos-movie-watchlist status "<show>" [--json]
  *   robos-movie-watchlist say "<natural-language command>" [--json]
  *
@@ -45,6 +46,8 @@ function parseArgs(argv) {
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--json') out.json = true;
+    else if (a === '--no-audio') out.noAudio = true;
+    else if (a === '--no-server') out.noServer = true;
     else if (a === '-h' || a === '--help') out.help = true;
     else if (a.startsWith('--')) out[a.slice(2)] = argv[++i];
     else out._.push(a);
@@ -122,6 +125,16 @@ async function main() {
     case 'status':
     case 'show':
       res = await watch.watchStatus(joined || args.show, opts);
+      break;
+    case 'import':
+    case 'import-history':
+      res = await watch.importWatchHistory({
+        filePath: joined || args.file || args.path || null,
+        account: args.account || null,
+        includeAudio: !args.noAudio,
+        pushToServer: !args.noServer,
+        ...opts,
+      });
       break;
     case 'say':
     default: {

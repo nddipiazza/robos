@@ -539,6 +539,55 @@ async function playNextEpisode({ show, targetIp = null, ...opts } = {}) {
   return { ok: false, error: 'Open RobOS Movie Player first, then ask again.', status };
 }
 
+/**
+ * Imports a watch history file or payload (Plex JSON, Tautulli/Trakt/Letterboxd JSON or CSV,
+ * RobOS portable history) into Movie Player, Audio Player, Portable History, and RobOS Media Server.
+ */
+async function importWatchHistory(sourceOrOpts, maybeOpts = {}) {
+  const imp = require('./watch-history-import');
+  const raw = typeof sourceOrOpts === 'string'
+    ? { filePath: sourceOrOpts, ...maybeOpts }
+    : { ...(sourceOrOpts || {}), ...maybeOpts };
+
+  let filePath = raw.filePath || raw.path || null;
+  if (!filePath && !raw.data && !raw.payload) {
+    filePath = imp.findDefaultWatchHistoryFile({ homeDir: raw.homeDir });
+    if (!filePath) {
+      const error = 'No watch history file specified, and none found in ~/Downloads.';
+      return { ok: false, error, spoken: error };
+    }
+  }
+  if (filePath) {
+    filePath = path.resolve(String(filePath).replace(/^~(?=$|\/|\\)/, raw.homeDir || process.env.HOME || os.homedir()));
+  }
+
+  const body = {
+    ...(filePath ? { filePath } : {}),
+    ...(raw.data || raw.payload ? { data: raw.data || raw.payload } : {}),
+    ...(raw.account ? { account: raw.account } : {}),
+    includeAudio: raw.includeAudio !== false,
+    pushToServer: raw.pushToServer !== false,
+  };
+
+  const live = await callPlayer('movie-player', 'POST', '/api/import-watch-history', body, { ...raw, timeoutMs: 60000 });
+  if (live) {
+    const { changedMovieStats: _omit, ...rest } = live;
+    return { ...rest, via: 'movie-player' };
+  }
+
+  const res = await imp.importWatchHistory(raw.data || raw.payload || null, {
+    filePath: filePath || '',
+    account: raw.account || null,
+    includeAudio: raw.includeAudio !== false,
+    pushToServer: raw.pushToServer !== false,
+    configDir: raw.configDir,
+    homeDir: raw.homeDir,
+  });
+  if (!res.ok) return res;
+  const { changedMovieStats: _omit, ...clean } = res;
+  return { ...clean, via: 'history-file' };
+}
+
 /** Syncs both players' folders, playlists and history with the backup vault now. */
 async function syncNow(opts = {}) {
   let sync;
@@ -558,5 +607,5 @@ async function syncNow(opts = {}) {
 module.exports = {
   watchStatus, movieStatus, continueWatching, watchlist, listShows, history: historyList,
   setWatched, addToWatchlist, removeFromWatchlist, markAllNew, setCurrentEpisode,
-  playNextEpisode, syncNow, callPlayer, controlInfo,
+  importWatchHistory, playNextEpisode, syncNow, callPlayer, controlInfo,
 };

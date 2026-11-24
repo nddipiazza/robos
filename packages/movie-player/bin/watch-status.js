@@ -12,6 +12,7 @@
  *   node packages/movie-player/bin/watch-status.js remove "severance"       remove show or movie from watchlist
  *   node packages/movie-player/bin/watch-status.js mark-new "severance" [--season 2]   mark all episodes as new / unwatched
  *   node packages/movie-player/bin/watch-status.js current-episode "severance" "S02E04"  mark prior watched & S02E04+ unwatched
+ *   node packages/movie-player/bin/watch-status.js import [file.json] [--account name]  import Plex / Trakt / CSV watch history
  *   node packages/movie-player/bin/watch-status.js shows                    every show with counts
  *   node packages/movie-player/bin/watch-status.js history [--audio] [--limit 20]
  *   node packages/movie-player/bin/watch-status.js watched "the office" --season 2 [--episode 3] [--unwatched]
@@ -29,6 +30,7 @@ function parse(argv) {
     const a = argv[i];
     if (a === '--json') out.json = true;
     else if (a === '--audio') out.audio = true;
+    else if (a === '--no-audio') out.noAudio = true;
     else if (a === '--unwatched') out.unwatched = true;
     else if (a.startsWith('--')) out[a.slice(2)] = argv[++i];
     else out._.push(a);
@@ -86,6 +88,9 @@ async function main() {
       break;
     }
     case 'shows': res = await watch.listShows(); break;
+    case 'import': case 'import-history':
+      res = await watch.importWatchHistory({ filePath: name || args.file || null, account: args.account || null, includeAudio: !args.noAudio });
+      break;
     case 'history': res = await watch.history({ app: args.audio ? 'audio-player' : 'movie-player', kind: args.kind, limit: num(args.limit) || 20 }); break;
     case 'watched': res = await watch.setWatched({ show: name, season: num(args.season), episode: num(args.episode), watched: !args.unwatched }); break;
     case 'next': res = await watch.playNextEpisode({ show: name }); break;

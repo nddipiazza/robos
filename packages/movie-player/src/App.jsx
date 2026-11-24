@@ -1689,6 +1689,26 @@ export default function App() {
       .catch(() => {});
   };
 
+  const handleImportWatchHistory = async (opts = {}) => {
+    if (!window.robosAudio?.importWatchHistory) return null;
+    showStatus('Importing watch history file…');
+    try {
+      const res = await window.robosAudio.importWatchHistory(opts);
+      if (!res || res.canceled) return res || null;
+      if (!res.ok) {
+        showStatus(`Import failed: ${res.error || 'Invalid watch history file'}`);
+        return res;
+      }
+      if (res.stats) setStats(res.stats);
+      if (res.portableEntries) setPortableEntries(res.portableEntries);
+      showStatus(res.spoken || 'Watch history imported!');
+      return res;
+    } catch (err) {
+      showStatus(`Import failed: ${err.message}`);
+      return { ok: false, error: err.message };
+    }
+  };
+
   const handleClearWatchHistoryRow = async (row) => {
     if (!row) return;
     const ids = row.trackId ? [row.trackId] : [];
@@ -3367,6 +3387,7 @@ export default function App() {
               await loadStats();
               showStatus('Synced latest watch history & progress.');
             }}
+            onImportHistory={handleImportWatchHistory}
           />
         )}
 

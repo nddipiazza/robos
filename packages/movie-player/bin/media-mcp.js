@@ -16,6 +16,7 @@
  *   robos_media_watchlist_remove    remove a TV show or movie from the watchlist (and hide from Continue Watching)
  *   robos_media_mark_episodes_new   mark all episodes of a show (or one season) as new / unwatched
  *   robos_media_set_current_episode set the user's current episode of a show (marks prior episodes watched and current+ unwatched)
+ *   robos_media_import_watch_history import a watch history file (Plex JSON, Tautulli, Trakt, Letterboxd CSV, RobOS history)
  *   robos_media_list_shows          shows with watched / in-progress counts
  *   robos_media_watch_history       recently watched (Movie Player) or played (Audio Player)
  *   robos_media_set_watched         mark a show, season or episode watched / unwatched
@@ -89,6 +90,19 @@ const TOOLS = [
       required: ['show'],
     },
     call: a => watch.setCurrentEpisode(a),
+  },
+  {
+    name: 'robos_media_import_watch_history',
+    description: 'Imports a watch & play history file (Plex Watch History JSON, Plex MediaContainer JSON, Tautulli, Trakt, Letterboxd CSV, or RobOS media-history JSON) into Movie Player, Audio Player, Portable History, and RobOS Media Server.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        filePath: str('Path to watch history .json or .csv file (omit to auto-detect latest *watch-history* in ~/Downloads)'),
+        account: str('Optional account username filter for multi-account exports (default imports all accounts)'),
+        includeAudio: { type: 'boolean', description: 'Also import music track plays into RobOS Audio Player (default true)' },
+      },
+    },
+    call: a => watch.importWatchHistory(a),
   },
   {
     name: 'robos_media_list_shows',

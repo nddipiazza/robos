@@ -23,6 +23,7 @@ same on every computer, and no app has to be running to ask.
 - `add "<show or movie>"` / `remove "<show or movie>"` — add or remove on your Movie Player Watchlist
 - `mark-new "<show>" [--season N]` — mark all episodes (or one season) as new / unwatched
 - `current-episode "<show>" "<ep>"` — mark every episode before `<ep>` watched and `<ep>` onward unwatched (*"my/our current episode of {show} is {ep}"*)
+- `import [file.json] [--account name]` — import Plex, Tautulli, Trakt, Letterboxd CSV, or RobOS watch & play history into Movie Player, Audio Player, and RobOS Media Server
 - `shows` — every show with watched / in-progress counts
 - `history [--audio] [--limit N]` — recently watched (or played songs with `--audio`)
 - `watched "<show>" [--season N] [--episode N] [--unwatched]` — mark watched / unwatched

@@ -1286,6 +1286,20 @@ function parseWatchlistCommand(cleanedText) {
     }
   }
 
+  // 6. Import Watch History ("import my watch history", "import plex watch history", "import watch history from ~/Downloads/plex-watch-history.json")
+  const importPathMatch = raw.match(/^(?:import|load)\s+(?:(?:my|our|the)\s+)?(?:plex\s+)?watch\s+history(?:\s+(?:file\s+)?from\s+(.+))?$/i);
+  if (importPathMatch) {
+    const rawFrom = (importPathMatch[1] || '').trim().replace(/^["']|["']$/g, '');
+    const explicitFile = rawFrom && (rawFrom.includes('/') || rawFrom.includes('\\') || /\.(?:json|csv|tsv)$/i.test(rawFrom))
+      ? rawFrom
+      : null;
+    return {
+      type: 'movie-watchlist',
+      action: 'import',
+      filePath: explicitFile,
+    };
+  }
+
   return null;
 }
 
@@ -1313,6 +1327,9 @@ async function executeWatchlistCommand(intent, { configDir } = {}) {
       break;
     case 'set-current':
       res = await watch.setCurrentEpisode({ show: intent.show, ep: intent.ep, ...opts });
+      break;
+    case 'import':
+      res = await watch.importWatchHistory({ filePath: intent.filePath || null, ...opts });
       break;
     default:
       return { ok: false, response: 'Unsupported movie watchlist action.' };

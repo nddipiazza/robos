@@ -490,6 +490,148 @@ describe('Movie Player watchlist & episode cursor skills (CLI, MCP, and RobOS Vo
       assert.ok(mcpList.tools.some(t => t.name === 'robos_media_set_current_episode'));
       assert.ok(mcpList.tools.some(t => t.name === 'robos_media_watchlist_remove'));
       assert.ok(mcpList.tools.some(t => t.name === 'robos_media_mark_episodes_new'));
+      assert.ok(mcpList.tools.some(t => t.name === 'robos_media_import_watch_history'));
+    } finally {
+      if (prevHome === undefined) delete process.env.HOME; else process.env.HOME = prevHome;
+      if (prevCfg === undefined) delete process.env.ROBOS_CONFIG_DIR; else process.env.ROBOS_CONFIG_DIR = prevCfg;
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  it('imports Plex JSON & CSV watch history idempotently across Movie Player, Audio Player, folder variants, and year-distinct remakes', async () => {
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'robos-wh-import-'));
+    const home = path.join(tmp, 'home');
+    const downloads = path.join(home, 'Downloads');
+    const configDir = path.join(home, '.config', 'robos');
+    fs.mkdirSync(downloads, { recursive: true });
+    fs.mkdirSync(configDir, { recursive: true });
+
+    const movieTracks = [
+      {
+        id: 'trk-ghosts-410',
+        filePath: '/tv/Ghosts/S04E10.mkv',
+        title: 'Ghosts S04E10',
+        mediaType: 'tv',
+        showName: 'Ghosts',
+        seasonNumber: 4,
+        episodeNumber: 10,
+        episodeTitle: 'The Not-So-Silent Partner',
+        duration: 1320,
+      },
+      {
+        id: 'trk-ghosts-411',
+        filePath: '/tv/Ghosts/S04E11.mkv',
+        title: 'Ghosts S04E11',
+        mediaType: 'tv',
+        showName: 'Ghosts',
+        seasonNumber: 4,
+        episodeNumber: 11,
+        episodeTitle: 'Thorapy 2',
+        duration: 1320,
+      },
+      {
+        id: 'trk-avatar-2005-101',
+        filePath: '/tv/Avatar 2005/S01E01.mkv',
+        title: 'Avatar S01E01',
+        mediaType: 'tv',
+        showName: 'Avatar - The Last Airbender (2005 - 2008)',
+        seasonNumber: 1,
+        episodeNumber: 1,
+        duration: 1400,
+      },
+      {
+        id: 'trk-halloween-1978',
+        filePath: '/movies/Halloween.1978.mkv',
+        title: 'Halloween',
+        year: 1978,
+        mediaType: 'movie',
+        duration: 5460,
+      },
+      {
+        id: 'trk-halloween-2018',
+        filePath: '/movies/Halloween.2018.mkv',
+        title: 'Halloween',
+        year: 2018,
+        mediaType: 'movie',
+        duration: 6360,
+      },
+    ];
+    const audioTracks = [
+      {
+        id: 'aud-slayer-divine',
+        filePath: '/music/Slayer/Divine Intervention/05 Divine Intervention.flac',
+        title: 'Divine Intervention',
+        artist: 'Slayer',
+        album: 'Divine Intervention',
+        mediaType: 'audio',
+        duration: 333,
+      },
+    ];
+    fs.writeFileSync(path.join(configDir, 'movie-library.json'), JSON.stringify({ updatedAt: new Date().toISOString(), tracks: movieTracks }));
+    fs.writeFileSync(path.join(configDir, 'audio-library.json'), JSON.stringify({ updatedAt: new Date().toISOString(), tracks: audioTracks }));
+
+    const plexExport = {
+      exportedAt: '2026-11-24T20:27:21.413Z',
+      server: 'home-plex',
+      accounts: ['nick', 'leo'],
+      count: 6,
+      history: [
+        { viewedAt: '2026-11-24T06:16:18.000Z', account: 'nick', type: 'episode', title: 'The Not-So-Silent Partner', show_or_artist: 'Ghosts (US)', season: 4, episode: 10, library: 'TV Shows' },
+        { viewedAt: '2026-11-23T06:16:18.000Z', account: 'leo', type: 'episode', title: 'The Not-So-Silent Partner', show_or_artist: 'Ghosts (US)', season: 4, episode: 10, library: 'TV Shows' },
+        // Both 2005 S01E02 (not in local lib) and 2024 S01E01 (live-action remake — must NOT mark 2005 S01E01 watched!)
+        { viewedAt: '2026-10-01T01:00:00.000Z', account: 'nick', type: 'episode', title: 'The Avatar Returns', show_or_artist: 'Avatar: The Last Airbender', season: 1, episode: 2, library: 'TV Shows' },
+        { viewedAt: '2026-10-05T01:00:00.000Z', account: 'nick', type: 'episode', title: 'Aang', show_or_artist: 'Avatar: The Last Airbender (2024)', season: 1, episode: 1, library: 'TV Shows' },
+        // Halloween (2018) watched -> must mark 2018 watched, NOT 1978!
+        { viewedAt: '2026-10-31T02:00:00.000Z', account: 'nick', type: 'movie', title: 'Halloween', released: '2018-10-19', library: 'Movies' },
+        // Music track
+        { viewedAt: '2026-11-24T19:40:26.000Z', account: 'nick', type: 'track', title: 'Divine Intervention', show_or_artist: 'Slayer', season_or_album: 'Divine Intervention', season: 1, episode: 5, library: 'Music' },
+      ],
+    };
+    const plexFile = path.join(downloads, 'plex-watch-history.json');
+    fs.writeFileSync(plexFile, JSON.stringify(plexExport, null, 2));
+
+    const prevHome = process.env.HOME;
+    const prevCfg = process.env.ROBOS_CONFIG_DIR;
+    process.env.HOME = home;
+    process.env.ROBOS_CONFIG_DIR = configDir;
+
+    try {
+      const { SkillsExecutor } = require(path.join(PKG, 'voice-prompt/lib/skills-executor'));
+      const executor = new SkillsExecutor();
+
+      // Voice auto-discovers ~/Downloads/plex-watch-history.json!
+      const voiceImp = await executor.executeCommand('import my watch history');
+      assert.equal(voiceImp.ok, true);
+      assert.equal(voiceImp.skill, 'movie-watchlist');
+      assert.equal(voiceImp.data.imported.totalEvents, 6);
+
+      // Re-importing the exact same file is idempotent (plays stays 2, not 4!)
+      const secondImp = await watch.importWatchHistory(plexFile, { configDir, homeDir: home, pushToServer: false });
+      assert.equal(secondImp.ok, true);
+
+      const mStats = JSON.parse(fs.readFileSync(path.join(configDir, 'movie-track-stats.json'), 'utf8')).tracks;
+      assert.equal(mStats['trk-ghosts-410'].completed, true);
+      assert.equal(mStats['trk-ghosts-410'].plays, 2, 'duplicate re-import does not double play count');
+      assert.equal(Boolean(mStats['trk-avatar-2005-101']?.completed), false, '2024 remake did not falsely mark 2005 S01E01 watched');
+      assert.equal(mStats['trk-halloween-2018'].completed, true);
+      assert.equal(Boolean(mStats['trk-halloween-1978']?.completed), false, 'Halloween 2018 did not mark Halloween 1978 watched');
+
+      // Ghosts nextUp should now be S04E11!
+      const ghostsSt = await watch.watchStatus('Ghosts', { configDir });
+      assert.equal(ghostsSt.lastWatched.code, 'S04E10');
+      assert.equal(ghostsSt.nextUp.code, 'S04E11');
+
+      // Audio Player stats updated for Slayer!
+      const aStats = JSON.parse(fs.readFileSync(path.join(configDir, 'audio-track-stats.json'), 'utf8')).tracks;
+      assert.equal(aStats['aud-slayer-divine'].plays, 1);
+
+      // CSV import (Letterboxd style) marks Halloween 1978 watched too!
+      const csvFile = path.join(downloads, 'letterboxd-watched.csv');
+      fs.writeFileSync(csvFile, 'Date,Name,Year\n2026-10-30,"Halloween",1978\n');
+      const csvImp = await watch.importWatchHistory(csvFile, { configDir, homeDir: home, pushToServer: false });
+      assert.equal(csvImp.ok, true);
+      const mStatsAfterCsv = JSON.parse(fs.readFileSync(path.join(configDir, 'movie-track-stats.json'), 'utf8')).tracks;
+      assert.equal(mStatsAfterCsv['trk-halloween-1978'].completed, true);
     } finally {
       if (prevHome === undefined) delete process.env.HOME; else process.env.HOME = prevHome;
       if (prevCfg === undefined) delete process.env.ROBOS_CONFIG_DIR; else process.env.ROBOS_CONFIG_DIR = prevCfg;

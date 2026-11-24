@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Icon } from './Icon.jsx';
 import {
   fold,
@@ -57,11 +57,20 @@ export default function WatchHistoryTab({
   onOpenShow,
   onOpenMovie,
   onRefreshHistory,
+  onImportHistory,
 }) {
   const [filter, setFilter] = useState('all'); // 'all' | 'in_progress' | 'watched' | 'tv' | 'movie'
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState({ key: 'lastPlayed', dir: 'desc' });
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
+  const [importReport, setImportReport] = useState(null);
+  const [visibleLimit, setVisibleLimit] = useState(300);
+
+  useEffect(() => {
+    setVisibleLimit(300);
+  }, [filter, query, sort.key, sort.dir]);
 
   const historyRows = useMemo(() => {
     const rows = [];
@@ -211,8 +220,51 @@ export default function WatchHistoryTab({
     }
   };
 
+  const handleImportClick = async (opts = {}) => {
+    if (!onImportHistory) return;
+    setIsImporting(true);
+    try {
+      const res = await onImportHistory(opts);
+      if (res && !res.canceled) {
+        setImportReport(res);
+      }
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
+  const handleDropFile = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+    if (!onImportHistory) return;
+    const f = e.dataTransfer?.files?.[0];
+    if (!f) return;
+    setIsImporting(true);
+    try {
+      let res;
+      if (f.path) {
+        res = await onImportHistory({ filePath: f.path });
+      } else {
+        const text = await f.text();
+        res = await onImportHistory({ data: text, filePath: f.name });
+      }
+      if (res && !res.canceled) setImportReport(res);
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
+  const renderedRows = visibleRows.slice(0, visibleLimit);
+
   return (
-    <div className="watch-history-tab" id="watch-history-tab">
+    <div
+      className={`watch-history-tab ${isDragOver ? 'wh-drag-over' : ''}`}
+      id="watch-history-tab"
+      onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
+      onDragLeave={(e) => { if (e.currentTarget === e.target) setIsDragOver(false); }}
+      onDrop={handleDropFile}
+    >
       <div className="wh-toolbar">
         <div className="wh-toolbar-left">
           <h2 className="wh-heading">
@@ -251,6 +303,19 @@ export default function WatchHistoryTab({
               onKeyDown={(e) => { if (e.key === 'Escape') setQuery(''); }}
             />
           </div>
+          {onImportHistory && (
+            <button
+              id="btn-import-watch-history"
+              type="button"
+              className="btn-accent wh-import-btn"
+              disabled={isImporting}
+              onClick={() => handleImportClick()}
+              title="Import Watch History from Plex JSON, Tautulli, Trakt, Letterboxd CSV, or RobOS History file (or drag & drop a file here)"
+            >
+              <Icon name="file" size={13} />
+              <span>{isImporting ? 'Importing…' : 'Import History…'}</span>
+            </button>
+          )}
           <button
             id="btn-refresh-watch-history"
             type="button"
@@ -265,18 +330,61 @@ export default function WatchHistoryTab({
         </div>
       </div>
 
+      {importReport && (
+        <div className={`wh-import-banner ${importReport.ok ? 'ok' : 'err'}`} role="status">
+          <div className="wh-import-banner-main">
+            <strong>{importReport.ok ? '✓ Watch History Imported' : '⚠ Import Error'}:</strong>{' '}
+            <span>{importReport.spoken || importReport.error}</span>
+            {importReport.ok && Array.isArray(importReport.accounts) && importReport.accounts.length > 1 && (
+              <span className="wh-import-accounts">
+                Accounts: {importReport.accounts.join(', ')}
+              </span>
+            )}
+          </div>
+          <button
+            type="button"
+            className="wh-action-btn"
+            title="Dismiss"
+            onClick={() => setImportReport(null)}
+          >
+            <Icon name="x" size={12} />
+          </button>
+        </div>
+      )}
+
       {visibleRows.length === 0 ? (
         <div className="wh-empty">
           <Icon name="history" size={32} />
           <h3>{historyRows.length === 0 ? 'No watch history yet' : 'No matching history entries'}</h3>
           <p>
             {historyRows.length === 0
-              ? 'Play any TV episode or movie — every title automatically remembers where you stopped or marks itself Watched when finished.'
+              ? 'Play any TV episode or movie — or import your watch history file (Plex JSON, Tautulli, Trakt, Letterboxd CSV) to mark everything you have already watched.'
               : 'Try clearing the search box or switching the filter pill above.'}
           </p>
+          {historyRows.length === 0 && onImportHistory && (
+            <button
+              type="button"
+              className="btn-accent"
+              style={{ marginTop: '10px' }}
+              disabled={isImporting}
+              onClick={() => handleImportClick()}
+            >
+              <Icon name="file" size={14} />
+              <span>{isImporting ? 'Importing…' : 'Import Watch History File…'}</span>
+            </button>
+          )}
         </div>
       ) : (
-        <div className="wh-table-wrap">
+        <div
+          className="wh-table-wrap"
+          onScroll={(e) => {
+            if (visibleLimit >= visibleRows.length) return;
+            const el = e.currentTarget;
+            if (el.scrollHeight - el.scrollTop - el.clientHeight < 320) {
+              setVisibleLimit(prev => Math.min(visibleRows.length, prev + 300));
+            }
+          }}
+        >
           <table className="wh-skinny-table" aria-label="Watch History Table">
             <thead>
               <tr>
@@ -299,7 +407,7 @@ export default function WatchHistoryTab({
               </tr>
             </thead>
             <tbody>
-              {visibleRows.map((r) => {
+              {renderedRows.map((r) => {
                 const isCurrent = Boolean(r.track && sameTrack(currentTrack, r.track));
                 const canPlay = Boolean(r.track && onPlayTrack);
                 const posLabel = formatDuration(r.positionSec);
@@ -426,6 +534,17 @@ export default function WatchHistoryTab({
               })}
             </tbody>
           </table>
+          {visibleLimit < visibleRows.length && (
+            <div className="wh-load-more">
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={() => setVisibleLimit(prev => Math.min(visibleRows.length, prev + 500))}
+              >
+                Showing {renderedRows.length.toLocaleString()} of {visibleRows.length.toLocaleString()} — Show More
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>

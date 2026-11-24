@@ -29,7 +29,7 @@ const crypto = require('node:crypto');
 const { spawn } = require('node:child_process');
 
 const CONTROL_FILE = 'movie-player-control.json';
-const MAX_BODY = 64 * 1024;
+const MAX_BODY = 25 * 1024 * 1024;
 const CLIP_EXTENSIONS = new Set(['.mp4', '.mkv', '.webm', '.mov', '.m4v', '.avi', '.mp3', '.wav', '.ogg', '.oga', '.opus', '.m4a', '.aac', '.flac']);
 
 function defaultConfigDir() {
@@ -256,6 +256,7 @@ function createAudioPlayerClient({ configDir = defaultConfigDir(), timeoutMs = 8
     removeFromWatchlist: (opts = {}) => call('POST', '/api/watchlist-remove', opts),
     markEpisodesNew: (opts = {}) => call('POST', '/api/mark-episodes-new', opts),
     setCurrentEpisode: (opts = {}) => call('POST', '/api/set-current-episode', opts),
+    importWatchHistory: (opts = {}) => call('POST', '/api/import-watch-history', opts),
     playNextEpisode: (opts = {}) => call('POST', '/api/play-next-episode', opts),
     mediaSyncNow: () => call('POST', '/api/media-sync-now', {}),
   };

@@ -20898,12 +20898,20 @@
     onClearHistoryRow,
     onOpenShow,
     onOpenMovie,
-    onRefreshHistory
+    onRefreshHistory,
+    onImportHistory
   }) {
     const [filter, setFilter] = (0, import_react17.useState)("all");
     const [query, setQuery] = (0, import_react17.useState)("");
     const [sort, setSort] = (0, import_react17.useState)({ key: "lastPlayed", dir: "desc" });
     const [isRefreshing, setIsRefreshing] = (0, import_react17.useState)(false);
+    const [isImporting, setIsImporting] = (0, import_react17.useState)(false);
+    const [isDragOver, setIsDragOver] = (0, import_react17.useState)(false);
+    const [importReport, setImportReport] = (0, import_react17.useState)(null);
+    const [visibleLimit, setVisibleLimit] = (0, import_react17.useState)(300);
+    (0, import_react17.useEffect)(() => {
+      setVisibleLimit(300);
+    }, [filter, query, sort.key, sort.dir]);
     const historyRows = (0, import_react17.useMemo)(() => {
       const rows = [];
       const seenPortableKeys = /* @__PURE__ */ new Set();
@@ -21028,130 +21036,239 @@
         setIsRefreshing(false);
       }
     };
-    return /* @__PURE__ */ import_react17.default.createElement("div", { className: "watch-history-tab", id: "watch-history-tab" }, /* @__PURE__ */ import_react17.default.createElement("div", { className: "wh-toolbar" }, /* @__PURE__ */ import_react17.default.createElement("div", { className: "wh-toolbar-left" }, /* @__PURE__ */ import_react17.default.createElement("h2", { className: "wh-heading" }, /* @__PURE__ */ import_react17.default.createElement(Icon2, { name: "history", size: 16 }), /* @__PURE__ */ import_react17.default.createElement("span", null, "Watch History")), /* @__PURE__ */ import_react17.default.createElement("div", { className: "wh-filter-pills", role: "tablist", "aria-label": "Watch History Filters" }, [
-      ["all", `All (${counts.all})`],
-      ["in_progress", `\u25B6 In Progress (${counts.in_progress})`],
-      ["watched", `\u2713 Watched (${counts.watched})`],
-      ["tv", `TV Episodes (${counts.tv})`],
-      ["movie", `Movies (${counts.movie})`]
-    ].map(([id, label]) => /* @__PURE__ */ import_react17.default.createElement(
-      "button",
-      {
-        key: id,
-        id: `wh-filter-${id}`,
-        type: "button",
-        className: `wh-pill ${filter === id ? "active" : ""}`,
-        onClick: () => setFilter(id)
-      },
-      label
-    )))), /* @__PURE__ */ import_react17.default.createElement("div", { className: "wh-toolbar-right" }, /* @__PURE__ */ import_react17.default.createElement("div", { className: "search-box wh-search" }, /* @__PURE__ */ import_react17.default.createElement(Icon2, { name: "search", size: 13 }), /* @__PURE__ */ import_react17.default.createElement(
-      "input",
-      {
-        id: "watch-history-search",
-        type: "search",
-        placeholder: "Filter history by show, S01E01, movie\u2026",
-        value: query,
-        onChange: (e) => setQuery(e.target.value),
-        onKeyDown: (e) => {
-          if (e.key === "Escape") setQuery("");
+    const handleImportClick = async (opts = {}) => {
+      if (!onImportHistory) return;
+      setIsImporting(true);
+      try {
+        const res = await onImportHistory(opts);
+        if (res && !res.canceled) {
+          setImportReport(res);
         }
+      } finally {
+        setIsImporting(false);
       }
-    )), /* @__PURE__ */ import_react17.default.createElement(
-      "button",
+    };
+    const handleDropFile = async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsDragOver(false);
+      if (!onImportHistory) return;
+      const f = e.dataTransfer?.files?.[0];
+      if (!f) return;
+      setIsImporting(true);
+      try {
+        let res;
+        if (f.path) {
+          res = await onImportHistory({ filePath: f.path });
+        } else {
+          const text = await f.text();
+          res = await onImportHistory({ data: text, filePath: f.name });
+        }
+        if (res && !res.canceled) setImportReport(res);
+      } finally {
+        setIsImporting(false);
+      }
+    };
+    const renderedRows = visibleRows.slice(0, visibleLimit);
+    return /* @__PURE__ */ import_react17.default.createElement(
+      "div",
       {
-        id: "btn-refresh-watch-history",
-        type: "button",
-        className: "btn-secondary wh-sync-btn",
-        disabled: isRefreshing,
-        onClick: handleRefresh,
-        title: "Sync latest watch progress & history from RobOS Media Server and Config Vault"
+        className: `watch-history-tab ${isDragOver ? "wh-drag-over" : ""}`,
+        id: "watch-history-tab",
+        onDragOver: (e) => {
+          e.preventDefault();
+          setIsDragOver(true);
+        },
+        onDragLeave: (e) => {
+          if (e.currentTarget === e.target) setIsDragOver(false);
+        },
+        onDrop: handleDropFile
       },
-      /* @__PURE__ */ import_react17.default.createElement(Icon2, { name: "history", size: 13 }),
-      /* @__PURE__ */ import_react17.default.createElement("span", null, isRefreshing ? "Syncing\u2026" : "Sync")
-    ))), visibleRows.length === 0 ? /* @__PURE__ */ import_react17.default.createElement("div", { className: "wh-empty" }, /* @__PURE__ */ import_react17.default.createElement(Icon2, { name: "history", size: 32 }), /* @__PURE__ */ import_react17.default.createElement("h3", null, historyRows.length === 0 ? "No watch history yet" : "No matching history entries"), /* @__PURE__ */ import_react17.default.createElement("p", null, historyRows.length === 0 ? "Play any TV episode or movie \u2014 every title automatically remembers where you stopped or marks itself Watched when finished." : "Try clearing the search box or switching the filter pill above.")) : /* @__PURE__ */ import_react17.default.createElement("div", { className: "wh-table-wrap" }, /* @__PURE__ */ import_react17.default.createElement("table", { className: "wh-skinny-table", "aria-label": "Watch History Table" }, /* @__PURE__ */ import_react17.default.createElement("thead", null, /* @__PURE__ */ import_react17.default.createElement("tr", null, /* @__PURE__ */ import_react17.default.createElement("th", { className: "wh-col-play", "aria-label": "Play" }), /* @__PURE__ */ import_react17.default.createElement("th", { className: "wh-col-type" }, "Type"), /* @__PURE__ */ import_react17.default.createElement("th", { className: "wh-col-show wh-sortable", onClick: () => toggleSort2("title") }, "Show / Movie", sortArrow("title")), /* @__PURE__ */ import_react17.default.createElement("th", { className: "wh-col-episode" }, "Episode / Details"), /* @__PURE__ */ import_react17.default.createElement("th", { className: "wh-col-state wh-sortable", onClick: () => toggleSort2("status") }, "Current State", sortArrow("status")), /* @__PURE__ */ import_react17.default.createElement("th", { className: "wh-col-plays wh-sortable", onClick: () => toggleSort2("plays") }, "Views", sortArrow("plays")), /* @__PURE__ */ import_react17.default.createElement("th", { className: "wh-col-when wh-sortable", onClick: () => toggleSort2("lastPlayed") }, "Last Watched", sortArrow("lastPlayed")), /* @__PURE__ */ import_react17.default.createElement("th", { className: "wh-col-actions" }, "Actions"))), /* @__PURE__ */ import_react17.default.createElement("tbody", null, visibleRows.map((r) => {
-      const isCurrent = Boolean(r.track && sameTrack(currentTrack, r.track));
-      const canPlay = Boolean(r.track && onPlayTrack);
-      const posLabel = (0, import_library_index4.formatDuration)(r.positionSec);
-      const durLabel = r.durationSec > 0 ? (0, import_library_index4.formatDuration)(r.durationSec) : null;
-      return /* @__PURE__ */ import_react17.default.createElement(
-        "tr",
+      /* @__PURE__ */ import_react17.default.createElement("div", { className: "wh-toolbar" }, /* @__PURE__ */ import_react17.default.createElement("div", { className: "wh-toolbar-left" }, /* @__PURE__ */ import_react17.default.createElement("h2", { className: "wh-heading" }, /* @__PURE__ */ import_react17.default.createElement(Icon2, { name: "history", size: 16 }), /* @__PURE__ */ import_react17.default.createElement("span", null, "Watch History")), /* @__PURE__ */ import_react17.default.createElement("div", { className: "wh-filter-pills", role: "tablist", "aria-label": "Watch History Filters" }, [
+        ["all", `All (${counts.all})`],
+        ["in_progress", `\u25B6 In Progress (${counts.in_progress})`],
+        ["watched", `\u2713 Watched (${counts.watched})`],
+        ["tv", `TV Episodes (${counts.tv})`],
+        ["movie", `Movies (${counts.movie})`]
+      ].map(([id, label]) => /* @__PURE__ */ import_react17.default.createElement(
+        "button",
         {
-          key: r.rowKey,
-          className: `wh-row ${isCurrent ? "current" : ""} ${r.completed ? "is-watched" : ""} ${r.inProgress ? "is-progress" : ""}`,
-          onDoubleClick: () => {
-            if (canPlay) onPlayTrack(r.track);
+          key: id,
+          id: `wh-filter-${id}`,
+          type: "button",
+          className: `wh-pill ${filter === id ? "active" : ""}`,
+          onClick: () => setFilter(id)
+        },
+        label
+      )))), /* @__PURE__ */ import_react17.default.createElement("div", { className: "wh-toolbar-right" }, /* @__PURE__ */ import_react17.default.createElement("div", { className: "search-box wh-search" }, /* @__PURE__ */ import_react17.default.createElement(Icon2, { name: "search", size: 13 }), /* @__PURE__ */ import_react17.default.createElement(
+        "input",
+        {
+          id: "watch-history-search",
+          type: "search",
+          placeholder: "Filter history by show, S01E01, movie\u2026",
+          value: query,
+          onChange: (e) => setQuery(e.target.value),
+          onKeyDown: (e) => {
+            if (e.key === "Escape") setQuery("");
+          }
+        }
+      )), onImportHistory && /* @__PURE__ */ import_react17.default.createElement(
+        "button",
+        {
+          id: "btn-import-watch-history",
+          type: "button",
+          className: "btn-accent wh-import-btn",
+          disabled: isImporting,
+          onClick: () => handleImportClick(),
+          title: "Import Watch History from Plex JSON, Tautulli, Trakt, Letterboxd CSV, or RobOS History file (or drag & drop a file here)"
+        },
+        /* @__PURE__ */ import_react17.default.createElement(Icon2, { name: "file", size: 13 }),
+        /* @__PURE__ */ import_react17.default.createElement("span", null, isImporting ? "Importing\u2026" : "Import History\u2026")
+      ), /* @__PURE__ */ import_react17.default.createElement(
+        "button",
+        {
+          id: "btn-refresh-watch-history",
+          type: "button",
+          className: "btn-secondary wh-sync-btn",
+          disabled: isRefreshing,
+          onClick: handleRefresh,
+          title: "Sync latest watch progress & history from RobOS Media Server and Config Vault"
+        },
+        /* @__PURE__ */ import_react17.default.createElement(Icon2, { name: "history", size: 13 }),
+        /* @__PURE__ */ import_react17.default.createElement("span", null, isRefreshing ? "Syncing\u2026" : "Sync")
+      ))),
+      importReport && /* @__PURE__ */ import_react17.default.createElement("div", { className: `wh-import-banner ${importReport.ok ? "ok" : "err"}`, role: "status" }, /* @__PURE__ */ import_react17.default.createElement("div", { className: "wh-import-banner-main" }, /* @__PURE__ */ import_react17.default.createElement("strong", null, importReport.ok ? "\u2713 Watch History Imported" : "\u26A0 Import Error", ":"), " ", /* @__PURE__ */ import_react17.default.createElement("span", null, importReport.spoken || importReport.error), importReport.ok && Array.isArray(importReport.accounts) && importReport.accounts.length > 1 && /* @__PURE__ */ import_react17.default.createElement("span", { className: "wh-import-accounts" }, "Accounts: ", importReport.accounts.join(", "))), /* @__PURE__ */ import_react17.default.createElement(
+        "button",
+        {
+          type: "button",
+          className: "wh-action-btn",
+          title: "Dismiss",
+          onClick: () => setImportReport(null)
+        },
+        /* @__PURE__ */ import_react17.default.createElement(Icon2, { name: "x", size: 12 })
+      )),
+      visibleRows.length === 0 ? /* @__PURE__ */ import_react17.default.createElement("div", { className: "wh-empty" }, /* @__PURE__ */ import_react17.default.createElement(Icon2, { name: "history", size: 32 }), /* @__PURE__ */ import_react17.default.createElement("h3", null, historyRows.length === 0 ? "No watch history yet" : "No matching history entries"), /* @__PURE__ */ import_react17.default.createElement("p", null, historyRows.length === 0 ? "Play any TV episode or movie \u2014 or import your watch history file (Plex JSON, Tautulli, Trakt, Letterboxd CSV) to mark everything you have already watched." : "Try clearing the search box or switching the filter pill above."), historyRows.length === 0 && onImportHistory && /* @__PURE__ */ import_react17.default.createElement(
+        "button",
+        {
+          type: "button",
+          className: "btn-accent",
+          style: { marginTop: "10px" },
+          disabled: isImporting,
+          onClick: () => handleImportClick()
+        },
+        /* @__PURE__ */ import_react17.default.createElement(Icon2, { name: "file", size: 14 }),
+        /* @__PURE__ */ import_react17.default.createElement("span", null, isImporting ? "Importing\u2026" : "Import Watch History File\u2026")
+      )) : /* @__PURE__ */ import_react17.default.createElement(
+        "div",
+        {
+          className: "wh-table-wrap",
+          onScroll: (e) => {
+            if (visibleLimit >= visibleRows.length) return;
+            const el = e.currentTarget;
+            if (el.scrollHeight - el.scrollTop - el.clientHeight < 320) {
+              setVisibleLimit((prev) => Math.min(visibleRows.length, prev + 300));
+            }
           }
         },
-        /* @__PURE__ */ import_react17.default.createElement("td", { className: "wh-col-play" }, canPlay ? /* @__PURE__ */ import_react17.default.createElement(
+        /* @__PURE__ */ import_react17.default.createElement("table", { className: "wh-skinny-table", "aria-label": "Watch History Table" }, /* @__PURE__ */ import_react17.default.createElement("thead", null, /* @__PURE__ */ import_react17.default.createElement("tr", null, /* @__PURE__ */ import_react17.default.createElement("th", { className: "wh-col-play", "aria-label": "Play" }), /* @__PURE__ */ import_react17.default.createElement("th", { className: "wh-col-type" }, "Type"), /* @__PURE__ */ import_react17.default.createElement("th", { className: "wh-col-show wh-sortable", onClick: () => toggleSort2("title") }, "Show / Movie", sortArrow("title")), /* @__PURE__ */ import_react17.default.createElement("th", { className: "wh-col-episode" }, "Episode / Details"), /* @__PURE__ */ import_react17.default.createElement("th", { className: "wh-col-state wh-sortable", onClick: () => toggleSort2("status") }, "Current State", sortArrow("status")), /* @__PURE__ */ import_react17.default.createElement("th", { className: "wh-col-plays wh-sortable", onClick: () => toggleSort2("plays") }, "Views", sortArrow("plays")), /* @__PURE__ */ import_react17.default.createElement("th", { className: "wh-col-when wh-sortable", onClick: () => toggleSort2("lastPlayed") }, "Last Watched", sortArrow("lastPlayed")), /* @__PURE__ */ import_react17.default.createElement("th", { className: "wh-col-actions" }, "Actions"))), /* @__PURE__ */ import_react17.default.createElement("tbody", null, renderedRows.map((r) => {
+          const isCurrent = Boolean(r.track && sameTrack(currentTrack, r.track));
+          const canPlay = Boolean(r.track && onPlayTrack);
+          const posLabel = (0, import_library_index4.formatDuration)(r.positionSec);
+          const durLabel = r.durationSec > 0 ? (0, import_library_index4.formatDuration)(r.durationSec) : null;
+          return /* @__PURE__ */ import_react17.default.createElement(
+            "tr",
+            {
+              key: r.rowKey,
+              className: `wh-row ${isCurrent ? "current" : ""} ${r.completed ? "is-watched" : ""} ${r.inProgress ? "is-progress" : ""}`,
+              onDoubleClick: () => {
+                if (canPlay) onPlayTrack(r.track);
+              }
+            },
+            /* @__PURE__ */ import_react17.default.createElement("td", { className: "wh-col-play" }, canPlay ? /* @__PURE__ */ import_react17.default.createElement(
+              "button",
+              {
+                type: "button",
+                className: "wh-play-btn",
+                title: r.inProgress && r.positionSec >= 1 ? `Resume at ${posLabel}` : `Play ${r.showTitle}${r.epCode ? ` ${r.epCode}` : ""}`,
+                onClick: () => onPlayTrack(r.track)
+              },
+              isCurrent && isPlaying ? /* @__PURE__ */ import_react17.default.createElement("span", { className: "eq-bars" }, /* @__PURE__ */ import_react17.default.createElement("i", null), /* @__PURE__ */ import_react17.default.createElement("i", null), /* @__PURE__ */ import_react17.default.createElement("i", null)) : /* @__PURE__ */ import_react17.default.createElement(Icon2, { name: "play", size: 11 })
+            ) : /* @__PURE__ */ import_react17.default.createElement("span", { className: "wh-play-disabled", title: "Synced from another device" }, "\xB7")),
+            /* @__PURE__ */ import_react17.default.createElement("td", { className: "wh-col-type" }, /* @__PURE__ */ import_react17.default.createElement("span", { className: `wh-type-pill ${r.kind}` }, r.kind === "tv" ? "TV" : "FILM")),
+            /* @__PURE__ */ import_react17.default.createElement("td", { className: "wh-col-show", title: r.showTitle }, r.track ? /* @__PURE__ */ import_react17.default.createElement(
+              "button",
+              {
+                type: "button",
+                className: "wh-show-link",
+                onClick: () => {
+                  if (r.kind === "tv" && onOpenShow) onOpenShow(r.track, (0, import_library_index4.albumKeyOf)(r.track));
+                  else if (onOpenMovie) onOpenMovie(r.track, (0, import_library_index4.albumKeyOf)(r.track));
+                }
+              },
+              r.showTitle
+            ) : /* @__PURE__ */ import_react17.default.createElement("span", { className: "wh-show-text" }, r.showTitle)),
+            /* @__PURE__ */ import_react17.default.createElement("td", { className: "wh-col-episode", title: `${r.epCode ? `${r.epCode} \u2014 ` : ""}${r.episodeDisplay}` }, r.epCode && /* @__PURE__ */ import_react17.default.createElement("span", { className: "wh-ep-code" }, r.epCode), /* @__PURE__ */ import_react17.default.createElement("span", { className: "wh-ep-title" }, r.episodeDisplay)),
+            /* @__PURE__ */ import_react17.default.createElement("td", { className: "wh-col-state" }, /* @__PURE__ */ import_react17.default.createElement("div", { className: "wh-state-cell" }, isCurrent && isPlaying ? /* @__PURE__ */ import_react17.default.createElement("span", { className: "wh-state-badge playing" }, "\u25CF Playing", r.positionSec >= 1 ? ` \xB7 ${posLabel}` : "") : r.completed ? /* @__PURE__ */ import_react17.default.createElement("span", { className: "wh-state-badge watched" }, "\u2713 Watched") : r.inProgress ? /* @__PURE__ */ import_react17.default.createElement("span", { className: "wh-state-badge resume" }, "\u25B6 ", r.positionSec >= 1 ? `Stopped ${posLabel}${durLabel ? ` / ${durLabel}` : ""}${r.progressPct > 0 ? ` (${r.progressPct}%)` : ""}` : "Started") : /* @__PURE__ */ import_react17.default.createElement("span", { className: "wh-state-badge played" }, "Played"), (r.completed || r.inProgress) && /* @__PURE__ */ import_react17.default.createElement("span", { className: "wh-micro-bar", "aria-hidden": "true" }, /* @__PURE__ */ import_react17.default.createElement(
+              "i",
+              {
+                className: r.completed ? "watched" : "resume",
+                style: { width: `${r.completed ? 100 : Math.max(5, r.progressPct || 5)}%` }
+              }
+            )))),
+            /* @__PURE__ */ import_react17.default.createElement("td", { className: "wh-col-plays" }, r.plays ? `${r.plays}\xD7` : "1\xD7"),
+            /* @__PURE__ */ import_react17.default.createElement(
+              "td",
+              {
+                className: "wh-col-when",
+                title: `${r.lastPlayed || ""}${r.syncedFrom ? ` \xB7 Device: ${r.syncedFrom}` : ""}`
+              },
+              formatHistoryTimestamp(r.lastPlayed)
+            ),
+            /* @__PURE__ */ import_react17.default.createElement("td", { className: "wh-col-actions" }, r.track && r.inProgress && r.positionSec >= 1 && onStartOverTrack && /* @__PURE__ */ import_react17.default.createElement(
+              "button",
+              {
+                type: "button",
+                className: "wh-action-btn",
+                title: "Start over from 0:00",
+                onClick: () => onStartOverTrack(r.track)
+              },
+              "\u21BA"
+            ), r.track && onToggleWatched && /* @__PURE__ */ import_react17.default.createElement(
+              "button",
+              {
+                type: "button",
+                className: `wh-action-btn ${r.completed ? "active-watched" : ""}`,
+                title: r.completed ? "Mark as Unwatched" : "Mark as Watched",
+                onClick: () => onToggleWatched([r.track], !r.completed)
+              },
+              /* @__PURE__ */ import_react17.default.createElement(Icon2, { name: "check", size: 12 })
+            ), onClearHistoryRow && /* @__PURE__ */ import_react17.default.createElement(
+              "button",
+              {
+                type: "button",
+                className: "wh-action-btn danger",
+                title: "Remove from Watch History",
+                onClick: () => onClearHistoryRow(r)
+              },
+              /* @__PURE__ */ import_react17.default.createElement(Icon2, { name: "x", size: 12 })
+            ))
+          );
+        }))),
+        visibleLimit < visibleRows.length && /* @__PURE__ */ import_react17.default.createElement("div", { className: "wh-load-more" }, /* @__PURE__ */ import_react17.default.createElement(
           "button",
           {
             type: "button",
-            className: "wh-play-btn",
-            title: r.inProgress && r.positionSec >= 1 ? `Resume at ${posLabel}` : `Play ${r.showTitle}${r.epCode ? ` ${r.epCode}` : ""}`,
-            onClick: () => onPlayTrack(r.track)
+            className: "btn-secondary",
+            onClick: () => setVisibleLimit((prev) => Math.min(visibleRows.length, prev + 500))
           },
-          isCurrent && isPlaying ? /* @__PURE__ */ import_react17.default.createElement("span", { className: "eq-bars" }, /* @__PURE__ */ import_react17.default.createElement("i", null), /* @__PURE__ */ import_react17.default.createElement("i", null), /* @__PURE__ */ import_react17.default.createElement("i", null)) : /* @__PURE__ */ import_react17.default.createElement(Icon2, { name: "play", size: 11 })
-        ) : /* @__PURE__ */ import_react17.default.createElement("span", { className: "wh-play-disabled", title: "Synced from another device" }, "\xB7")),
-        /* @__PURE__ */ import_react17.default.createElement("td", { className: "wh-col-type" }, /* @__PURE__ */ import_react17.default.createElement("span", { className: `wh-type-pill ${r.kind}` }, r.kind === "tv" ? "TV" : "FILM")),
-        /* @__PURE__ */ import_react17.default.createElement("td", { className: "wh-col-show", title: r.showTitle }, r.track ? /* @__PURE__ */ import_react17.default.createElement(
-          "button",
-          {
-            type: "button",
-            className: "wh-show-link",
-            onClick: () => {
-              if (r.kind === "tv" && onOpenShow) onOpenShow(r.track, (0, import_library_index4.albumKeyOf)(r.track));
-              else if (onOpenMovie) onOpenMovie(r.track, (0, import_library_index4.albumKeyOf)(r.track));
-            }
-          },
-          r.showTitle
-        ) : /* @__PURE__ */ import_react17.default.createElement("span", { className: "wh-show-text" }, r.showTitle)),
-        /* @__PURE__ */ import_react17.default.createElement("td", { className: "wh-col-episode", title: `${r.epCode ? `${r.epCode} \u2014 ` : ""}${r.episodeDisplay}` }, r.epCode && /* @__PURE__ */ import_react17.default.createElement("span", { className: "wh-ep-code" }, r.epCode), /* @__PURE__ */ import_react17.default.createElement("span", { className: "wh-ep-title" }, r.episodeDisplay)),
-        /* @__PURE__ */ import_react17.default.createElement("td", { className: "wh-col-state" }, /* @__PURE__ */ import_react17.default.createElement("div", { className: "wh-state-cell" }, isCurrent && isPlaying ? /* @__PURE__ */ import_react17.default.createElement("span", { className: "wh-state-badge playing" }, "\u25CF Playing", r.positionSec >= 1 ? ` \xB7 ${posLabel}` : "") : r.completed ? /* @__PURE__ */ import_react17.default.createElement("span", { className: "wh-state-badge watched" }, "\u2713 Watched") : r.inProgress ? /* @__PURE__ */ import_react17.default.createElement("span", { className: "wh-state-badge resume" }, "\u25B6 ", r.positionSec >= 1 ? `Stopped ${posLabel}${durLabel ? ` / ${durLabel}` : ""}${r.progressPct > 0 ? ` (${r.progressPct}%)` : ""}` : "Started") : /* @__PURE__ */ import_react17.default.createElement("span", { className: "wh-state-badge played" }, "Played"), (r.completed || r.inProgress) && /* @__PURE__ */ import_react17.default.createElement("span", { className: "wh-micro-bar", "aria-hidden": "true" }, /* @__PURE__ */ import_react17.default.createElement(
-          "i",
-          {
-            className: r.completed ? "watched" : "resume",
-            style: { width: `${r.completed ? 100 : Math.max(5, r.progressPct || 5)}%` }
-          }
-        )))),
-        /* @__PURE__ */ import_react17.default.createElement("td", { className: "wh-col-plays" }, r.plays ? `${r.plays}\xD7` : "1\xD7"),
-        /* @__PURE__ */ import_react17.default.createElement(
-          "td",
-          {
-            className: "wh-col-when",
-            title: `${r.lastPlayed || ""}${r.syncedFrom ? ` \xB7 Device: ${r.syncedFrom}` : ""}`
-          },
-          formatHistoryTimestamp(r.lastPlayed)
-        ),
-        /* @__PURE__ */ import_react17.default.createElement("td", { className: "wh-col-actions" }, r.track && r.inProgress && r.positionSec >= 1 && onStartOverTrack && /* @__PURE__ */ import_react17.default.createElement(
-          "button",
-          {
-            type: "button",
-            className: "wh-action-btn",
-            title: "Start over from 0:00",
-            onClick: () => onStartOverTrack(r.track)
-          },
-          "\u21BA"
-        ), r.track && onToggleWatched && /* @__PURE__ */ import_react17.default.createElement(
-          "button",
-          {
-            type: "button",
-            className: `wh-action-btn ${r.completed ? "active-watched" : ""}`,
-            title: r.completed ? "Mark as Unwatched" : "Mark as Watched",
-            onClick: () => onToggleWatched([r.track], !r.completed)
-          },
-          /* @__PURE__ */ import_react17.default.createElement(Icon2, { name: "check", size: 12 })
-        ), onClearHistoryRow && /* @__PURE__ */ import_react17.default.createElement(
-          "button",
-          {
-            type: "button",
-            className: "wh-action-btn danger",
-            title: "Remove from Watch History",
-            onClick: () => onClearHistoryRow(r)
-          },
-          /* @__PURE__ */ import_react17.default.createElement(Icon2, { name: "x", size: 12 })
+          "Showing ",
+          renderedRows.length.toLocaleString(),
+          " of ",
+          visibleRows.length.toLocaleString(),
+          " \u2014 Show More"
         ))
-      );
-    })))));
+      )
+    );
   }
 
   // src/NowPlayingPanel.jsx
@@ -24238,6 +24355,25 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
       }).catch(() => {
       });
     };
+    const handleImportWatchHistory = async (opts = {}) => {
+      if (!window.robosAudio?.importWatchHistory) return null;
+      showStatus("Importing watch history file\u2026");
+      try {
+        const res = await window.robosAudio.importWatchHistory(opts);
+        if (!res || res.canceled) return res || null;
+        if (!res.ok) {
+          showStatus(`Import failed: ${res.error || "Invalid watch history file"}`);
+          return res;
+        }
+        if (res.stats) setStats(res.stats);
+        if (res.portableEntries) setPortableEntries(res.portableEntries);
+        showStatus(res.spoken || "Watch history imported!");
+        return res;
+      } catch (err) {
+        showStatus(`Import failed: ${err.message}`);
+        return { ok: false, error: err.message };
+      }
+    };
     const handleClearWatchHistoryRow = async (row) => {
       if (!row) return;
       const ids = row.trackId ? [row.trackId] : [];
@@ -25677,7 +25813,8 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
           onRefreshHistory: async () => {
             await loadStats();
             showStatus("Synced latest watch history & progress.");
-          }
+          },
+          onImportHistory: handleImportWatchHistory
         }
       ), activeTab === "cloud" && /* @__PURE__ */ import_react26.default.createElement(
         CloudBrowser,

@@ -102,6 +102,7 @@ const publicMetadata = new PublicMetadataService({ mediaLibrary, castService });
 const mediaHistoryLib = requireShared('robos-lib/media-history');
 const mediaCloudSyncLib = requireShared('robos-lib/media-cloud-sync');
 const mediaServiceClientLib = requireShared('robos-lib/media-service-client');
+const watchHistoryImportLib = requireShared('robos-lib/watch-history-import');
 const CONFIG_DIR = path.join(process.env.HOME || os.homedir(), '.config', 'robos');
 let mediaSync = null;
 if (mediaHistoryLib) {
@@ -334,6 +335,31 @@ async function playNextEpisode({ show, targetIp = null } = {}) {
   if (!next || !next.trackId) return { ok: false, error: status.finished ? `You're caught up on ${status.show}.` : `The next episode of ${status.show} is not in this library.`, status };
   const result = await controlHandlers.play({ trackIds: [next.trackId], targetIp });
   return { ...result, show: status.show, season: next.season, episode: next.episode, resume: next.resume, spoken: `Playing ${status.show} season ${next.season}, episode ${next.episode}${next.episodeTitle ? `, "${next.episodeTitle}"` : ''}${next.resume ? ', from where you left off' : ''}.` };
+}
+
+async function runWatchHistoryImport({ filePath = '', data = null, account = null, includeAudio = true, pushToServer = true } = {}) {
+  if (!watchHistoryImportLib || typeof watchHistoryImportLib.importWatchHistory !== 'function') {
+    return { ok: false, error: 'RobOS watch history importer is not installed.' };
+  }
+  const res = await watchHistoryImportLib.importWatchHistory(data || null, {
+    filePath,
+    account: account || null,
+    includeAudio: includeAudio !== false,
+    pushToServer: pushToServer !== false,
+    configDir: CONFIG_DIR,
+    movieLibrary: mediaLibrary,
+  });
+  if (!res.ok) return res;
+  if (res.changedMovieStats && Object.keys(res.changedMovieStats).length) {
+    sendToWindow('audio:track-stats-updated', res.changedMovieStats);
+  } else {
+    // Even if only portable history entries changed, notify renderer to reload watch history
+    sendToWindow('audio:track-stats-updated', { __imported: { updatedAt: new Date().toISOString() } });
+  }
+  castService._saveStreamServerEndpoint();
+  if (mediaSync) mediaSync.notifyLocalChange();
+  const { changedMovieStats: _omit, ...clean } = res;
+  return clean;
 }
 
 // Refresh cloud track stream URLs once CastService streamServer allocates its port,
@@ -593,6 +619,7 @@ controlHandlers.actions = {
   '/api/watchlist-remove': (body) => removeWatchlistItem(body),
   '/api/mark-episodes-new': (body) => markShowEpisodesNew(body),
   '/api/set-current-episode': (body) => setShowCurrentEpisode(body),
+  '/api/import-watch-history': (body) => runWatchHistoryImport(body),
   '/api/play-next-episode': (body) => playNextEpisode(body),
   '/api/media-sync-now': async () => ({ ok: true, ...(mediaSync ? await mediaSync.runNow('manual') : { outcome: 'unavailable' }) }),
   '/api/media-service-reload': async () => {
@@ -1532,6 +1559,48 @@ ipcMain.handle('audio:get-watch-history', async () => {
     : (mediaHistoryLib ? mediaHistoryLib.readEntries('movie-player', CONFIG_DIR) : {});
   return {
     ok: true,
+    stats: mediaLibrary.getStats(),
+    portableEntries: portableEntries || {},
+  };
+});
+
+ipcMain.handle('audio:import-watch-history', async (_evt, opts = {}) => {
+  let targetPath = opts && opts.filePath ? String(opts.filePath).trim() : '';
+  const inlineData = opts && opts.data ? opts.data : null;
+
+  if (!targetPath && !inlineData) {
+    if (!mainWindow || mainWindow.isDestroyed()) {
+      return { ok: false, canceled: true };
+    }
+    const defaultDir = fs.existsSync(path.join(os.homedir(), 'Downloads'))
+      ? path.join(os.homedir(), 'Downloads')
+      : os.homedir();
+    const dlg = await dialog.showOpenDialog(mainWindow, {
+      title: 'Import Watch History (Plex, Tautulli, Trakt, Letterboxd, RobOS)',
+      defaultPath: defaultDir,
+      buttonLabel: 'Import Watch History',
+      properties: ['openFile'],
+      filters: [
+        { name: 'Watch History Files (JSON, CSV, TSV)', extensions: ['json', 'csv', 'tsv'] },
+        { name: 'All Files', extensions: ['*'] },
+      ],
+    });
+    if (dlg.canceled || !dlg.filePaths.length) return { ok: false, canceled: true };
+    targetPath = dlg.filePaths[0];
+  }
+
+  const res = await runWatchHistoryImport({
+    filePath: targetPath,
+    data: inlineData,
+    account: opts?.account || null,
+    includeAudio: opts?.includeAudio !== false,
+  });
+  if (!res.ok) return res;
+  const portableEntries = mediaLibrary.history
+    ? mediaLibrary.history.entries()
+    : (mediaHistoryLib ? mediaHistoryLib.readEntries('movie-player', CONFIG_DIR) : {});
+  return {
+    ...res,
     stats: mediaLibrary.getStats(),
     portableEntries: portableEntries || {},
   };

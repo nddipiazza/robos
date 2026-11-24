@@ -27,6 +27,10 @@ All changes apply **immediately** to the open RobOS Movie Player window (updatin
      - `{exp}` itself **and every episode after `{exp}`** is marked **Unwatched / New** (`completed: false, inProgress: false, positionSec: 0, plays: 0`).
      - As a result, `{show}`'s **Continue Watching / Next Up** pointer lands directly on `{exp}`!
    - `{exp}` accepts shorthand codes (`S02E04`, `s2e4`, `2x04`), spoken numbers (`season 2 episode 4`, `season twenty one episode five`), season-only (`season 3` → `S03E01`), episode-only (`episode 5`), or an episode title (`"Dinner Party"`).
+6. **Import Watch History File (`import [<file>] [--account <name>] [--no-audio]`)**
+   - Imports watch & play history files from **Plex Watch History JSON** (`plex-watch-history.json`), raw Plex `MediaContainer` JSON, **Tautulli / Jellyfin / Trakt JSON**, **Letterboxd / Trakt CSV**, or **RobOS Portable Media History JSON**.
+   - Canonicalizes show & movie titles across folder naming variants (`Ghosts (US)` / `Ghosts`, `Travelers (2016)` / `Travelers`, `Stargate SG-1` / `Stargate SG1`, while keeping year-distinct remakes like `Avatar (2024)` separate from `2005`), aggregates duplicate play timestamps idempotently, updates **Movie Player** (`movie-track-stats.json` + `media-history/movie-player.json`), **Audio Player** (`audio-track-stats.json` + `media-history/audio-player.json`), and pushes batch progress to **RobOS Media Server** (`POST /api/progress`).
+   - Also available directly inside **RobOS Movie Player → Watch History → Import History…** (or by dragging & dropping a `.json`/`.csv` file onto the Watch History tab).
 
 ---
 
@@ -49,6 +53,10 @@ All changes apply **immediately** to the open RobOS Movie Player window (updatin
 ./packages/robos-cli/robos-movie-watchlist current "Family Guy" "S21E05"
 ./packages/robos-cli/robos-movie-watchlist current "Severance" "season 2 episode 4"
 ./packages/robos-cli/robos-movie-watchlist current "The Office" --season 3 --episode 5
+
+# Import a Plex / Tautulli / Trakt / CSV watch history file (auto-discovers ~/Downloads/*watch-history* if path omitted)
+./packages/robos-cli/robos-movie-watchlist import ~/Downloads/plex-watch-history.json
+./packages/robos-cli/robos-movie-watchlist import ~/Downloads/plex-watch-history.json --account "nicholas.671"
 
 # Run any natural-language voice phrase directly from CLI
 ./packages/robos-cli/robos-movie-watchlist say "our current episode of Severance is season 2 episode 4"

@@ -10,6 +10,7 @@ Manage your **RobOS Movie Player** Watchlist and episode cursor from the CLI, MC
 /movie-watchlist remove "Family Guy"                      # remove show or movie from Watchlist & Continue Watching
 /movie-watchlist mark-new "Severance" [--season 2]        # mark all episodes (or a season) as new / unwatched
 /movie-watchlist current "Family Guy" "S21E05"            # mark prior episodes watched & S21E05+ unwatched
+/movie-watchlist import ~/Downloads/plex-watch-history.json  # import Plex / Trakt / CSV watch & play history
 /movie-watchlist say "our current episode of Severance is season 2 episode 4"
 ```
 
