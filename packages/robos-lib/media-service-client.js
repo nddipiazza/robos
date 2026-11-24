@@ -887,6 +887,97 @@ function startMediaServiceAutoSync(opts = {}) {
   };
 }
 
+async function pushProgressToMediaServer(track, payload = {}) {
+  const ms = track?.mediaService;
+  if (!ms?.endpoint || !ms?.remoteItemId) return { ok: false, skipped: true };
+  const base = normalizeServerUrl(ms.endpoint);
+  try {
+    return await httpPostJson(`${base}/api/progress`, {
+      itemId: ms.remoteItemId,
+      positionSec: Number(payload.positionSec) || 0,
+      durationSec: Number(payload.durationSec || track.duration) || 0,
+      completed: Boolean(payload.completed),
+      unwatched: Boolean(payload.unwatched),
+      inProgress: payload.inProgress,
+      plays: payload.plays,
+      lastPlayed: payload.lastPlayed,
+      deviceName: os.hostname(),
+    }, {}, 2500);
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+}
+
+async function pullProgressFromMediaServers({ tracks = [], stats = {}, configDir, timeoutMs = 2500 } = {}) {
+  const cfg = loadMediaServersConfig({ configDir });
+  const endpoints = new Set();
+  for (const s of cfg.servers || []) {
+    if (s && s.enabled !== false && s.url) {
+      try { endpoints.add(normalizeServerUrl(s.url)); } catch {}
+    }
+  }
+  for (const t of tracks) {
+    if (t?.mediaService?.endpoint) {
+      try { endpoints.add(normalizeServerUrl(t.mediaService.endpoint)); } catch {}
+    }
+  }
+  if (!endpoints.size) return { changed: {}, count: 0 };
+
+  const byEndpointAndRemoteId = new Map();
+  for (const t of tracks) {
+    if (t?.id && t?.mediaService?.endpoint && t?.mediaService?.remoteItemId) {
+      try {
+        byEndpointAndRemoteId.set(`${normalizeServerUrl(t.mediaService.endpoint)}::${t.mediaService.remoteItemId}`, t);
+      } catch {}
+    }
+  }
+
+  const parseTs = (v) => {
+    const n = Date.parse(v || '');
+    return Number.isFinite(n) ? n : 0;
+  };
+
+  const changed = {};
+  for (const ep of endpoints) {
+    try {
+      const res = await httpGetJson(`${ep}/api/progress`, timeoutMs);
+      const progMap = (res && typeof res.progress === 'object' && res.progress) || {};
+      for (const p of Object.values(progMap)) {
+        if (!p || !p.itemId) continue;
+        const track = byEndpointAndRemoteId.get(`${ep}::${p.itemId}`);
+        if (!track) continue;
+        const cur = stats[track.id];
+        const remoteTs = parseTs(p.updatedAt) || parseTs(p.lastPlayed);
+        const localTs = parseTs(cur?.updatedAt) || parseTs(cur?.lastPlayed);
+        if (cur && localTs >= remoteTs && remoteTs > 0) continue;
+        if (!p.completed && !p.inProgress && !(Number(p.positionSec) >= 1) && !cur) continue;
+        const dur = Math.max(0, Math.round(Number(p.durationSec || track.duration) || 0));
+        const pos = p.completed ? 0 : Math.max(0, Math.round(Number(p.positionSec) || 0));
+        const pct = p.completed
+          ? 100
+          : (Number(p.progressPct) > 0
+            ? Number(p.progressPct)
+            : (dur > 0 && pos > 0 ? Math.min(99, Math.max(1, Math.round((pos / dur) * 100))) : (p.inProgress ? 1 : 0)));
+        const next = {
+          ...(cur || {}),
+          positionSec: pos,
+          durationSec: dur || cur?.durationSec || 0,
+          progressPct: pct,
+          completed: Boolean(p.completed),
+          inProgress: !p.completed && Boolean(p.inProgress || pos >= 1),
+          plays: Math.max(Number(cur?.plays) || 0, Number(p.plays) || (p.completed || p.inProgress || pos >= 1 ? 1 : 0)),
+          lastPlayed: p.lastPlayed || p.updatedAt || cur?.lastPlayed || new Date().toISOString(),
+          updatedAt: p.updatedAt || new Date().toISOString(),
+          syncedFrom: p.deviceName || 'RobOS Media Server',
+        };
+        stats[track.id] = next;
+        changed[track.id] = next;
+      }
+    } catch {}
+  }
+  return { changed, count: Object.keys(changed).length };
+}
+
 module.exports = {
   DEFAULT_MEDIA_SERVER_PORT,
   MCP_MEDIA_TOOLS,
@@ -910,4 +1001,6 @@ module.exports = {
   syncMediaServicesToLocalApps,
   resetAndLoadPlayerLibraries,
   startMediaServiceAutoSync,
+  pushProgressToMediaServer,
+  pullProgressFromMediaServers,
 };

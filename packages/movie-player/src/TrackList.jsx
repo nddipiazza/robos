@@ -275,8 +275,8 @@ function renderCell(col, t, idx, { isCurrent, isPlaying, st, variant, albumArtis
           <span className="tl-title-text" title={t.title}>
             {t.title}
             {ws.inProgress && (
-              <span className="tl-badge resume-pill" title={`Resume at ${formatDuration(ws.positionSec)} (${ws.progressPct}%)`}>
-                ▶ {formatDuration(ws.positionSec)}{ws.progressPct > 0 ? ` (${ws.progressPct}%)` : ''}
+              <span className="tl-badge resume-pill" title={ws.positionSec >= 1 ? `Stopped at ${formatDuration(ws.positionSec)} (${ws.progressPct}%)` : 'Started'}>
+                ▶ {ws.positionSec >= 1 ? `Stopped ${formatDuration(ws.positionSec)}${ws.progressPct > 0 ? ` (${ws.progressPct}%)` : ''}` : 'Started'}
               </span>
             )}
             {ws.completed && (
@@ -285,7 +285,7 @@ function renderCell(col, t, idx, { isCurrent, isPlaying, st, variant, albumArtis
               </span>
             )}
           </span>
-          {(showArtist || ws.inProgress) && (
+          {(showArtist || ws.inProgress || ws.completed) && (
             <span className="tl-sub">
               {showArtist && (
                 <>
@@ -293,9 +293,9 @@ function renderCell(col, t, idx, { isCurrent, isPlaying, st, variant, albumArtis
                   {t.cloud && <span className="tl-badge">{t.cloud.cached ? 'Cloud · cached' : 'Cloud'}</span>}
                 </>
               )}
-              {ws.inProgress && ws.progressPct > 0 && (
-                <span className="tl-inline-progress" title={`${ws.progressPct}% watched`}>
-                  <i style={{ width: `${ws.progressPct}%` }} />
+              {(ws.inProgress || ws.completed) && (
+                <span className="tl-inline-progress" title={ws.completed ? '100% watched' : `${ws.progressPct}% watched`}>
+                  <i className={ws.completed ? 'completed' : ''} style={{ width: `${ws.completed ? 100 : Math.max(5, ws.progressPct)}%` }} />
                 </span>
               )}
             </span>

@@ -847,6 +847,7 @@ async function syncCloudFolders(folders) {
   }
   readCloudTagsInBackground();
   applyHistoryFromOtherComputers();
+  await syncMediaServerProgress();
   maybeAutoFetchPublicMetadata();
   return results;
 }
@@ -1258,21 +1259,149 @@ ipcMain.handle('audio:get-art-base', async () => {
   };
 });
 
-ipcMain.handle('audio:get-track-stats', async () => mediaLibrary.getStats());
+async function syncMediaServerProgress() {
+  if (!mediaServiceClientLib?.pullProgressFromMediaServers) return {};
+  try {
+    const { changed } = await mediaServiceClientLib.pullProgressFromMediaServers({
+      tracks: mediaLibrary.tracks,
+      stats: mediaLibrary.stats,
+      configDir: CONFIG_DIR,
+    });
+    if (changed && Object.keys(changed).length) {
+      mediaLibrary._saveStats();
+      if (mediaLibrary.history) {
+        const items = [];
+        for (const [id, st] of Object.entries(changed)) {
+          const track = mediaLibrary.tracks.find(t => t && t.id === id);
+          if (track) items.push({ track, stats: st });
+        }
+        if (items.length) mediaLibrary.history.recordMany(items);
+      }
+      sendToWindow('audio:track-stats-updated', changed);
+      return changed;
+    }
+  } catch {}
+  return {};
+}
 
-ipcMain.handle('audio:record-play', async (_evt, trackId) => mediaLibrary.recordPlay(trackId));
+ipcMain.handle('audio:get-track-stats', async () => {
+  await syncMediaServerProgress();
+  return mediaLibrary.getStats();
+});
+
+ipcMain.handle('audio:record-play', async (_evt, trackId) => {
+  const entry = mediaLibrary.recordPlay(trackId);
+  const track = trackId && mediaLibrary.tracks.find(t => t && t.id === trackId);
+  if (track && entry && mediaServiceClientLib?.pushProgressToMediaServer) {
+    mediaServiceClientLib.pushProgressToMediaServer(track, entry).catch(() => {});
+  }
+  return entry;
+});
 
 ipcMain.handle('audio:set-loved', async (_evt, { ids, loved }) => mediaLibrary.setLoved(ids, loved));
 
-ipcMain.handle('audio:save-progress', async (_evt, { trackId, positionSec, durationSec, completed } = {}) => {
-  const entry = mediaLibrary.saveProgress(trackId, { positionSec, durationSec, completed });
+function persistAndPushProgress({ trackId, positionSec, durationSec, completed, started } = {}) {
+  const entry = mediaLibrary.saveProgress(trackId, { positionSec, durationSec, completed, started });
+  const track = trackId && mediaLibrary.tracks.find(t => t && t.id === trackId);
+  if (track && entry && mediaServiceClientLib?.pushProgressToMediaServer) {
+    mediaServiceClientLib.pushProgressToMediaServer(track, entry).catch(() => {});
+  }
   return entry;
+}
+
+ipcMain.handle('audio:save-progress', async (_evt, payload = {}) => {
+  return persistAndPushProgress(payload);
+});
+
+ipcMain.on('audio:save-progress-sync', (evt, payload = {}) => {
+  const entry = persistAndPushProgress(payload);
+  evt.returnValue = entry || null;
 });
 
 ipcMain.handle('audio:set-watched', async (_evt, { ids, watched } = {}) => {
   const changed = mediaLibrary.setWatched(ids, watched);
+  if (mediaServiceClientLib?.pushProgressToMediaServer) {
+    for (const [id, st] of Object.entries(changed || {})) {
+      const track = mediaLibrary.tracks.find(t => t && t.id === id);
+      if (track) {
+        mediaServiceClientLib.pushProgressToMediaServer(track, {
+          ...st,
+          completed: Boolean(watched),
+          unwatched: !watched,
+        }).catch(() => {});
+      }
+    }
+  }
   castService._saveStreamServerEndpoint();
   return changed;
+});
+
+ipcMain.handle('audio:get-watch-history', async () => {
+  await syncMediaServerProgress();
+  applyHistoryFromOtherComputers();
+  const portableEntries = mediaLibrary.history
+    ? mediaLibrary.history.entries()
+    : (mediaHistoryLib ? mediaHistoryLib.readEntries('movie-player', CONFIG_DIR) : {});
+  return {
+    ok: true,
+    stats: mediaLibrary.getStats(),
+    portableEntries: portableEntries || {},
+  };
+});
+
+ipcMain.handle('audio:clear-watch-history', async (_evt, { ids = [], keys = [] } = {}) => {
+  const removedIds = mediaLibrary.clearWatchHistory(ids);
+  if (mediaServiceClientLib?.pushProgressToMediaServer) {
+    for (const id of removedIds) {
+      const track = mediaLibrary.tracks.find(t => t && t.id === id);
+      if (track) {
+        mediaServiceClientLib.pushProgressToMediaServer(track, { unwatched: true }).catch(() => {});
+      }
+    }
+  }
+  if (mediaHistoryLib) {
+    try {
+      const hFile = mediaHistoryLib.historyFile('movie-player', CONFIG_DIR);
+      const doc = mediaHistoryLib.readDoc(hFile);
+      const keysToDelete = new Set(Array.isArray(keys) ? keys.filter(Boolean) : []);
+      for (const id of removedIds) {
+        const track = mediaLibrary.tracks.find(t => t && t.id === id);
+        const mk = track && mediaHistoryLib.mediaKey(track);
+        if (mk) keysToDelete.add(mk);
+      }
+      let mutated = false;
+      for (const k of keysToDelete) {
+        if (doc.entries && doc.entries[k]) {
+          if (doc.entries[k].loved) {
+            doc.entries[k] = {
+              ...doc.entries[k],
+              positionSec: 0,
+              progressPct: 0,
+              completed: false,
+              inProgress: false,
+              plays: 0,
+              lastPlayed: null,
+              updatedAt: new Date().toISOString(),
+            };
+          } else {
+            delete doc.entries[k];
+          }
+          mutated = true;
+        }
+      }
+      if (mutated) {
+        doc.updatedAt = new Date().toISOString();
+        fs.mkdirSync(path.dirname(hFile), { recursive: true });
+        fs.writeFileSync(hFile, JSON.stringify(doc, null, 2) + '\n');
+        if (mediaLibrary.history) mediaLibrary.history.reloadIfChanged();
+      }
+    } catch {}
+  }
+  return {
+    ok: true,
+    stats: mediaLibrary.getStats(),
+    portableEntries: mediaLibrary.history ? mediaLibrary.history.entries() : {},
+  };
 });
 
 // Watch status for the renderer (the same answers as the control API and the media MCP server).

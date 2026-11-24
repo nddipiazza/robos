@@ -608,8 +608,8 @@ function MoviesOnlySection({ index, go, prefs, setPref }) {
  *   3. Episode Guide (with `S01E01` codes, episode titles, air dates, ratings, plot synopses, and resume bars)
  */
 function TvNavigatorSection({ index, go, prefs, setPref, stats }) {
-  const shows = useMemo(() => sortAlbums(index.tvShows || [], prefs.tvSort || 'title'), [index, prefs.tvSort]);
-  const [seriesFilter, setSeriesFilter] = useState('all'); // 'all' | 'continue' | network
+  const shows = useMemo(() => sortAlbums(index.tvShows || [], prefs.tvSort || 'title', stats), [index, prefs.tvSort, stats]);
+  const [seriesFilter, setSeriesFilter] = useState('all'); // 'all' | 'continue' | 'watched' | network
   const [seriesQuery, setSeriesQuery] = useState('');
 
   const networks = useMemo(() => {
@@ -627,10 +627,16 @@ function TvNavigatorSection({ index, go, prefs, setPref, stats }) {
     });
   }, [shows, stats]);
 
+  const completedShows = useMemo(() => {
+    return shows.filter(s => getShowWatchState(s, stats).completed);
+  }, [shows, stats]);
+
   const filteredShows = useMemo(() => {
     let list = shows;
     if (seriesFilter === 'continue') {
       list = inProgressShows;
+    } else if (seriesFilter === 'watched') {
+      list = completedShows;
     } else if (seriesFilter.startsWith('net:')) {
       const net = seriesFilter.slice(4);
       list = list.filter(s => s.network === net);
@@ -648,7 +654,7 @@ function TvNavigatorSection({ index, go, prefs, setPref, stats }) {
       );
     }
     return list;
-  }, [shows, inProgressShows, seriesFilter, seriesQuery]);
+  }, [shows, inProgressShows, completedShows, seriesFilter, seriesQuery]);
 
   const selectedKey = prefs.selectedShowKey && index.albumByKey.has(prefs.selectedShowKey)
     ? prefs.selectedShowKey
@@ -675,6 +681,14 @@ function TvNavigatorSection({ index, go, prefs, setPref, stats }) {
             onClick={() => setSeriesFilter('continue')}
           >
             ▶ Continue Watching <span className="chip-count">{inProgressShows.length}</span>
+          </button>
+        )}
+        {completedShows.length > 0 && (
+          <button
+            className={`cinema-cat-chip ${seriesFilter === 'watched' ? 'active' : ''}`}
+            onClick={() => setSeriesFilter('watched')}
+          >
+            ✓ Watched <span className="chip-count">{completedShows.length}</span>
           </button>
         )}
         {networks.slice(0, 8).map(([net, cnt]) => (
@@ -720,7 +734,7 @@ function TvNavigatorSection({ index, go, prefs, setPref, stats }) {
               id="tv-nav-sort"
               value={prefs.tvSort || 'title'}
               onChange={(v) => setPref('tvSort', v)}
-              options={[['title', 'A–Z'], ['year', 'Newest'], ['addedAt', 'Added']]}
+              options={[['title', 'A–Z'], ['recentWatched', 'Recently Watched'], ['year', 'Newest'], ['addedAt', 'Added']]}
             />
           </div>
           <div className="tv-navigator-series-items">
@@ -746,16 +760,24 @@ function TvNavigatorSection({ index, go, prefs, setPref, stats }) {
                       {show.rating && <span className="tv-series-rail-rating">★ {show.rating}</span>}
                     </div>
                     <div className="tv-series-rail-meta">
-                      <span>{plural(show.seasonCount || 1, 'Season')} · {plural(show.episodeCount || show.tracks.length, 'Ep')}</span>
+                      <span>{plural(show.seasonCount || 1, 'Season')} · {ws.completedCount > 0 ? `${ws.completedCount}/${ws.totalEpisodes} Watched` : plural(show.episodeCount || show.tracks.length, 'Ep')}</span>
                       {show.network && <span className="tv-series-rail-net">{show.network}</span>}
                     </div>
                     {ws.completed ? (
-                      <span className="tv-series-rail-status watched">✓ All {ws.totalEpisodes} Watched</span>
+                      <span className="tv-series-rail-status watched">✓ Watched ({ws.totalEpisodes}/{ws.totalEpisodes})</span>
                     ) : ws.hasActivity ? (
                       <span className="tv-series-rail-status resume">
-                        ▶ {ws.resumePositionSec >= 5 ? `Resume ${epCode} (${formatDuration(ws.resumePositionSec)})` : `Next: ${epCode} (${ws.completedCount}/${ws.totalEpisodes})`}
+                        ▶ {ws.resumePositionSec >= 1 ? `Resume ${epCode} · ${formatDuration(ws.resumePositionSec)}` : `Next: ${epCode} (${ws.completedCount}/${ws.totalEpisodes})`}
                       </span>
                     ) : null}
+                    {ws.hasActivity && (
+                      <div className="tv-series-rail-progress">
+                        <div
+                          className={`tv-series-rail-progress-fill ${ws.completed ? 'completed' : ''}`}
+                          style={{ width: `${ws.completed ? 100 : Math.max(4, ws.progressPct)}%` }}
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
               );
@@ -798,7 +820,7 @@ function TvNavigatorSection({ index, go, prefs, setPref, stats }) {
 function TvShowsSection({ index, go, prefs, setPref, stats }) {
   const sortKey = prefs.albumSort || 'title';
   const [netFilter, setNetFilter] = useState('all');
-  const shows = useMemo(() => sortAlbums(index.tvShows || [], sortKey), [index, sortKey]);
+  const shows = useMemo(() => sortAlbums(index.tvShows || [], sortKey, stats), [index, sortKey, stats]);
   const networks = useMemo(() => {
     const counts = new Map();
     for (const s of shows) {
@@ -857,7 +879,7 @@ function TvShowsSection({ index, go, prefs, setPref, stats }) {
         <button className="btn-secondary" onClick={() => go({ section: 'tv_navigator' })}>
           <Icon name="tv" size={13} /> Split Season/Episode Navigator
         </button>
-        <SortSelect id="tv-sort" value={sortKey} onChange={(v) => setPref('albumSort', v)} options={[['title', 'Show Title (A–Z)'], ['year', 'Release Year (newest)'], ['addedAt', 'Recently added']]} />
+        <SortSelect id="tv-sort" value={sortKey} onChange={(v) => setPref('albumSort', v)} options={[['title', 'Show Title (A–Z)'], ['recentWatched', 'Recently Watched'], ['year', 'Release Year (newest)'], ['addedAt', 'Recently added']]} />
       </SectionHeader>
       {filteredShows.length ? (
         <AlbumGrid
@@ -1139,13 +1161,13 @@ function AlbumCard({ album, go, showArtist }) {
   if (album.isTvShow && showWatch) {
     watchProgressPct = showWatch.progressPct;
     if (showWatch.completed) {
-      watchBadge = { text: '✓ All Watched', cls: 'watched' };
+      watchBadge = { text: '✓ Watched', cls: 'watched' };
     } else if (showWatch.hasActivity) {
       const epCode = showWatch.resumeTrack?.episodeCode
         || (showWatch.resumeTrack?.seasonNumber != null
           ? `S${String(showWatch.resumeTrack.seasonNumber).padStart(2, '0')}E${String(showWatch.resumeTrack.episodeNumber || 1).padStart(2, '0')}`
           : 'Next');
-      if (showWatch.resumePositionSec >= 5) {
+      if (showWatch.resumePositionSec >= 1) {
         watchBadge = { text: `▶ ${epCode} · ${formatDuration(showWatch.resumePositionSec)}`, cls: 'resume' };
         playLabel = `Resume ${album.title} (${epCode} at ${formatDuration(showWatch.resumePositionSec)})`;
       } else {
@@ -1309,7 +1331,7 @@ function DetailHeader({ cover, eyebrow, title, subtitle, meta = [], tracks, menu
       || (showWatch.resumeTrack?.seasonNumber != null
         ? `S${String(showWatch.resumeTrack.seasonNumber).padStart(2, '0')}E${String(showWatch.resumeTrack.episodeNumber || 1).padStart(2, '0')}`
         : 'Next Episode');
-    if (showWatch.resumePositionSec >= 5) {
+    if (showWatch.resumePositionSec >= 1) {
       primaryPlayLabel = `Resume ${epCode} (${formatDuration(showWatch.resumePositionSec)})`;
       showStartOver = true;
     } else {
@@ -1317,7 +1339,9 @@ function DetailHeader({ cover, eyebrow, title, subtitle, meta = [], tracks, menu
     }
     handlePrimaryPlay = () => actions.playTracks(tracks, showWatch.resumeIndex, { startAt: showWatch.resumePositionSec });
   } else if (movieWatch && movieWatch.inProgress) {
-    primaryPlayLabel = `Resume at ${formatDuration(movieWatch.positionSec)} (${movieWatch.progressPct}%)`;
+    primaryPlayLabel = movieWatch.positionSec >= 1
+      ? `Resume at ${formatDuration(movieWatch.positionSec)} (${movieWatch.progressPct}%)`
+      : 'Resume Movie';
     showStartOver = true;
     handlePrimaryPlay = () => actions.playTracks(tracks, 0, { startAt: movieWatch.positionSec });
   }
@@ -1335,6 +1359,21 @@ function DetailHeader({ cover, eyebrow, title, subtitle, meta = [], tracks, menu
         <h2 className="detail-title">{title}</h2>
         {subtitle && <div className="detail-subtitle">{subtitle}</div>}
         <div className="detail-meta">{meta.filter(Boolean).map((m, i) => <span key={i}>{m}</span>)}</div>
+        {showWatch && showWatch.hasActivity && (
+          <div className="detail-show-progress-row">
+            <span className={`detail-show-status-pill ${showWatch.completed ? 'watched' : 'resume'}`}>
+              {showWatch.completed
+                ? `✓ Watched (${showWatch.totalEpisodes}/${showWatch.totalEpisodes} Episodes)`
+                : `${showWatch.completedCount}/${showWatch.totalEpisodes} Watched${showWatch.inProgressCount > 0 ? ` · ${showWatch.inProgressCount} In Progress` : ''}`}
+            </span>
+            <div className="detail-show-progress-bar">
+              <div
+                className={`detail-show-progress-fill ${showWatch.completed ? 'completed' : ''}`}
+                style={{ width: `${showWatch.completed ? 100 : Math.max(3, showWatch.progressPct)}%` }}
+              />
+            </div>
+          </div>
+        )}
         {album?.overview && (
           <p className="detail-overview" title={album.overview}>{album.overview}</p>
         )}
@@ -1505,7 +1544,7 @@ function TvShowSeasonsBreakdown({ album }) {
                 >
                   <Icon name="play" size={12} />
                   {seasonState.hasActivity && !seasonState.completed
-                    ? (seasonState.resumePositionSec >= 5
+                    ? (seasonState.resumePositionSec >= 1
                       ? `Resume E${String(seasonState.resumeTrack?.episodeNumber || seasonState.resumeIndex + 1).padStart(2, '0')} (${formatDuration(seasonState.resumePositionSec)})`
                       : `Continue E${String(seasonState.resumeTrack?.episodeNumber || seasonState.resumeIndex + 1).padStart(2, '0')}`)
                     : `Watch ${season.code}`}
@@ -1542,7 +1581,7 @@ function TvShowSeasonsBreakdown({ album }) {
                   >
                     <button
                       className="tv-episode-play"
-                      title={ws.inProgress ? `Resume ${epCode} at ${formatDuration(ws.positionSec)}` : `Play ${epCode} — ${epTitle}`}
+                      title={ws.inProgress && ws.positionSec >= 1 ? `Resume ${epCode} at ${formatDuration(ws.positionSec)}` : `Play ${epCode} — ${epTitle}`}
                       onClick={() => actions.playTracks(season.episodes, idx)}
                     >
                       {isCurrent && isPlaying ? <span className="eq-bars"><i></i><i></i><i></i></span> : <Icon name="play" size={13} />}
@@ -1552,9 +1591,16 @@ function TvShowSeasonsBreakdown({ album }) {
                       <span className="tv-episode-title">
                         {String(epTitle || '').replace(/^\d{3}\s*[-–—:]\s*/, '') || `Episode ${epNum}`}
                         {ep.rating && <span className="tv-ep-rating">★ {ep.rating}</span>}
-                        {ws.inProgress && (
+                        {isCurrent && isPlaying && (
+                          <span className="tv-ep-status-badge playing">
+                            ● Playing{ws.positionSec >= 1 ? ` · ${formatDuration(ws.positionSec)}` : ''}
+                          </span>
+                        )}
+                        {!(isCurrent && isPlaying) && ws.inProgress && (
                           <span className="tv-ep-status-badge resume">
-                            ▶ Resume {formatDuration(ws.positionSec)}{ws.progressPct > 0 ? ` (${ws.progressPct}%)` : ''}
+                            ▶ {ws.positionSec >= 1
+                              ? `Stopped at ${formatDuration(ws.positionSec)}${ws.progressPct > 0 ? ` (${ws.progressPct}%)` : ''}`
+                              : 'Started'}
                           </span>
                         )}
                         {ws.completed && (
@@ -1582,7 +1628,7 @@ function TvShowSeasonsBreakdown({ album }) {
                       )}
                     </div>
                     <div className="tv-ep-actions-cell">
-                      {ws.inProgress && (
+                      {ws.inProgress && ws.positionSec >= 1 && (
                         <button
                           className="btn-chip tv-ep-start-over"
                           title="Start episode over from 0:00"
@@ -1593,11 +1639,12 @@ function TvShowSeasonsBreakdown({ album }) {
                       )}
                       {actions.setWatched && (
                         <button
-                          className={`btn-icon-only tv-ep-watched-btn ${ws.completed ? 'watched' : ''}`}
-                          title={ws.completed ? 'Mark as unwatched' : 'Mark as watched'}
+                          className={`btn-chip tv-ep-watched-toggle ${ws.completed ? 'watched' : ''}`}
+                          title={ws.completed ? 'Click to mark as Unwatched' : 'Click to mark as Watched'}
                           onClick={(e) => { e.stopPropagation(); actions.setWatched([ep], !ws.completed); }}
                         >
-                          <Icon name="check" size={13} />
+                          <Icon name="check" size={12} />
+                          <span>{ws.completed ? 'Watched' : 'Mark Watched'}</span>
                         </button>
                       )}
                       <LoveButton track={ep} size={14} />

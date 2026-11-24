@@ -724,7 +724,23 @@ const ALBUM_SORTS = {
   tracks: (a, b) => b.tracks.length - a.tracks.length,
 };
 
-function sortAlbums(albums, key = 'title') {
+function sortAlbums(albums, key = 'title', stats = null) {
+  if (key === 'recentWatched' && stats) {
+    const latestOf = (a) => {
+      let best = '';
+      for (const t of (a.tracks || [])) {
+        const lp = (stats[t.id] || {}).lastPlayed || '';
+        if (lp > best) best = lp;
+      }
+      return best;
+    };
+    return [...albums].sort((a, b) => {
+      const la = latestOf(a);
+      const lb = latestOf(b);
+      if (la !== lb) return lb.localeCompare(la);
+      return ALBUM_SORTS.title(a, b);
+    });
+  }
   return [...albums].sort(ALBUM_SORTS[key] || ALBUM_SORTS.title);
 }
 
@@ -774,15 +790,19 @@ function getTrackWatchState(track, stats = {}) {
   const positionSec = Math.max(0, Math.round(Number(st.positionSec) || 0));
   const durationSec = Math.max(0, Math.round(Number(st.durationSec || track.duration) || 0));
   const completed = !!st.completed || (!st.inProgress && positionSec === 0 && (st.plays || 0) > 0 && st.completed !== false);
-  const inProgress = !completed && (!!st.inProgress || positionSec >= 5);
+  const inProgress = !completed && (!!st.inProgress || positionSec >= 1);
   let progressPct = Number(st.progressPct) || 0;
-  if (!progressPct && inProgress && durationSec > 0) {
+  if (!progressPct && inProgress && durationSec > 0 && positionSec > 0) {
     progressPct = Math.min(99, Math.max(1, Math.round((positionSec / durationSec) * 100)));
+  } else if (inProgress && !progressPct) {
+    progressPct = 1;
   } else if (completed) {
     progressPct = 100;
   }
   const resumeLabel = inProgress
-    ? `Resume at ${formatDuration(positionSec)}${progressPct > 0 ? ` (${progressPct}%)` : ''}`
+    ? (positionSec >= 1
+      ? `Resume at ${formatDuration(positionSec)}${progressPct > 0 ? ` (${progressPct}%)` : ''}`
+      : 'Started')
     : completed
       ? 'Watched'
       : null;
@@ -794,6 +814,7 @@ function getTrackWatchState(track, stats = {}) {
     completed,
     plays: st.plays || 0,
     lastPlayed: st.lastPlayed || null,
+    syncedFrom: st.syncedFrom || null,
     resumeLabel,
   };
 }
@@ -810,6 +831,7 @@ function getShowWatchState(album, stats = {}) {
       hasActivity: false,
       completed: false,
       inProgress: false,
+      lastPlayed: null,
       resumeEpisode: null,
       resumeTrack: null,
       resumeIndex: 0,
@@ -822,6 +844,7 @@ function getShowWatchState(album, stats = {}) {
 
   let watchedCount = 0;
   let inProgressCount = 0;
+  let partialUnits = 0;
   let latestActiveIdx = -1;
   let latestActiveTime = '';
   let latestInProgressIdx = -1;
@@ -832,6 +855,7 @@ function getShowWatchState(album, stats = {}) {
     if (ws.completed) watchedCount++;
     if (ws.inProgress) {
       inProgressCount++;
+      partialUnits += Math.min(0.95, Math.max(0.05, (ws.progressPct || 10) / 100));
       const t = ws.lastPlayed || '1970-01-01';
       if (t >= latestInProgressTime) {
         latestInProgressTime = t;
@@ -881,14 +905,22 @@ function getShowWatchState(album, stats = {}) {
   const allCompleted = watchedCount > 0 && watchedCount >= episodes.length && inProgressCount === 0;
   const anyStarted = watchedCount > 0 || inProgressCount > 0;
   const progressPct = episodes.length > 0
-    ? Math.min(100, Math.round(((watchedCount + (isMidEpisode ? 0.5 : 0)) / episodes.length) * 100))
+    ? (allCompleted
+      ? 100
+      : anyStarted
+        ? Math.min(99, Math.max(1, Math.round(((watchedCount + partialUnits) / episodes.length) * 100)))
+        : 0)
     : 0;
 
   let actionLabel = `Watch ${epCode}`;
   let statusBadge = null;
   if (isMidEpisode) {
-    actionLabel = `Resume ${epCode} (${formatDuration(resumePositionSec)})`;
-    statusBadge = `▶ ${epCode} · ${formatDuration(resumePositionSec)}`;
+    actionLabel = resumePositionSec >= 1
+      ? `Resume ${epCode} (${formatDuration(resumePositionSec)})`
+      : `Resume ${epCode}`;
+    statusBadge = resumePositionSec >= 1
+      ? `▶ ${epCode} · ${formatDuration(resumePositionSec)}`
+      : `▶ ${epCode} · In Progress`;
   } else if (isNextUp) {
     actionLabel = `Continue: ${epCode}`;
     statusBadge = `Next: ${epCode} · ${watchedCount}/${episodes.length} watched`;
@@ -911,6 +943,7 @@ function getShowWatchState(album, stats = {}) {
     inProgress: anyStarted && !allCompleted,
     isMidEpisode,
     isNextUp,
+    lastPlayed: latestActiveTime && latestActiveTime !== '1970-01-01' ? latestActiveTime : null,
     resumeEpisode,
     resumeTrack: resumeEpisode,
     resumeIndex: resumeIdx,

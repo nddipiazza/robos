@@ -209,6 +209,7 @@ class MediaLibrary {
     const entry = this.stats[trackId] || {};
     entry.plays = (entry.plays || 0) + 1;
     entry.lastPlayed = new Date().toISOString();
+    if (entry.completed === undefined) entry.completed = false;
     this.stats[trackId] = entry;
     this._saveStats();
     return entry;
@@ -229,7 +230,7 @@ class MediaLibrary {
     return changed;
   }
 
-  saveProgress(trackId, { positionSec = 0, durationSec = 0, completed = false } = {}) {
+  saveProgress(trackId, { positionSec = 0, durationSec = 0, completed = false, started = false } = {}) {
     if (!trackId) return null;
     const entry = this.stats[trackId] || {};
     const pos = Math.max(0, Math.round(Number(positionSec) || 0));
@@ -255,16 +256,20 @@ class MediaLibrary {
       entry.progressPct = 100;
       entry.plays = Math.max(1, entry.plays || 0);
       entry.lastPlayed = now;
-    } else if (pos < 5) {
+    } else if (pos >= 1 || started) {
+      entry.positionSec = pos >= 1 ? pos : Math.max(0, Number(entry.positionSec) || 0);
+      entry.inProgress = true;
+      entry.completed = false;
+      entry.progressPct = dur > 0 && entry.positionSec > 0
+        ? Math.min(99, Math.max(1, Math.round((entry.positionSec / dur) * 100)))
+        : (entry.progressPct && entry.progressPct < 100 ? entry.progressPct : 1);
+      entry.plays = Math.max(1, entry.plays || 0);
+      entry.lastPlayed = now;
+    } else {
+      if (entry.completed === undefined) entry.completed = false;
       entry.positionSec = 0;
       entry.inProgress = false;
       entry.progressPct = entry.completed ? 100 : 0;
-    } else {
-      entry.positionSec = pos;
-      entry.inProgress = true;
-      entry.completed = false;
-      entry.progressPct = dur > 0 ? Math.min(99, Math.max(1, Math.round((pos / dur) * 100))) : 0;
-      entry.lastPlayed = now;
     }
 
     this.stats[trackId] = entry;
@@ -296,6 +301,22 @@ class MediaLibrary {
     }
     this._saveStats();
     return changed;
+  }
+
+  clearWatchHistory(trackIds) {
+    const ids = Array.isArray(trackIds) ? trackIds : [trackIds];
+    const removed = [];
+    for (const id of ids.filter(Boolean)) {
+      const existing = this.stats[id];
+      if (existing && existing.loved) {
+        this.stats[id] = { loved: true, lovedAt: existing.lovedAt || null, completed: false, inProgress: false, positionSec: 0, progressPct: 0, plays: 0, lastPlayed: null };
+      } else {
+        delete this.stats[id];
+      }
+      removed.push(id);
+    }
+    this._saveStats();
+    return removed;
   }
 
   // ── Cover art (content-addressed, persisted under artDir) ─────────────────

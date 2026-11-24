@@ -751,28 +751,73 @@ class MediaCatalogStore {
 
   // ── Progress & Playlists ───────────────────────────────────────────────────
 
-  updateProgress({ itemId, mediaKey, positionSec = 0, durationSec = 0, chapterIndex = null, completed = false, deviceName = '' } = {}) {
+  updateProgress({
+    itemId,
+    mediaKey,
+    positionSec = 0,
+    durationSec = 0,
+    chapterIndex = null,
+    completed = false,
+    unwatched = false,
+    inProgress = undefined,
+    plays = undefined,
+    lastPlayed = undefined,
+    deviceName = '',
+  } = {}) {
     const item = itemId ? this.byId.get(itemId) : null;
     const key = mediaKey || (item ? item.mediaKey : itemId);
     if (!key) throw new Error('itemId or mediaKey is required');
+    const prev = this.progress[key] || {};
+    const now = new Date().toISOString();
+    if (unwatched) {
+      const entry = {
+        ...prev,
+        key,
+        itemId: item?.id || itemId || prev.itemId || null,
+        mediaType: item?.mediaType || prev.mediaType || 'movie',
+        title: item?.title || prev.title || key,
+        showName: item?.showName || prev.showName || '',
+        seasonNumber: item?.seasonNumber ?? prev.seasonNumber ?? null,
+        episodeNumber: item?.episodeNumber ?? prev.episodeNumber ?? null,
+        positionSec: 0,
+        progressPct: 0,
+        completed: false,
+        inProgress: false,
+        updatedAt: now,
+        deviceName: deviceName || os.hostname(),
+      };
+      this.progress[key] = entry;
+      this.progressRevision += 1;
+      this._writeJsonAtomic(this.progressFile, this.progress);
+      return entry;
+    }
     const pos = Math.max(0, Number(positionSec) || 0);
-    const dur = Math.max(0, Number(durationSec) || 0);
-    const done = Boolean(completed) || (dur > 60 && pos / dur >= 0.92);
+    const dur = Math.max(0, Number(durationSec) || Number(prev.durationSec) || Number(item?.duration) || 0);
+    const done = Boolean(completed) || (dur > 60 && (pos / dur >= 0.92 || (dur - pos <= 45 && pos >= 60)));
+    const activeInProgress = !done && (inProgress === true || pos >= 1 || (chapterIndex !== null && chapterIndex > 0));
+    const pct = done
+      ? 100
+      : activeInProgress && dur > 0
+        ? Math.min(99, Math.max(1, Math.round((pos / dur) * 100)))
+        : (activeInProgress ? (Number(prev.progressPct) || 1) : 0);
     const entry = {
-      ...(this.progress[key] || {}),
+      ...prev,
       key,
-      itemId: item?.id || itemId || null,
-      mediaType: item?.mediaType || this.progress[key]?.mediaType || 'movie',
-      title: item?.title || this.progress[key]?.title || key,
-      showName: item?.showName || this.progress[key]?.showName || '',
-      seasonNumber: item?.seasonNumber ?? this.progress[key]?.seasonNumber ?? null,
-      episodeNumber: item?.episodeNumber ?? this.progress[key]?.episodeNumber ?? null,
+      itemId: item?.id || itemId || prev.itemId || null,
+      mediaType: item?.mediaType || prev.mediaType || 'movie',
+      title: item?.title || prev.title || key,
+      showName: item?.showName || prev.showName || '',
+      seasonNumber: item?.seasonNumber ?? prev.seasonNumber ?? null,
+      episodeNumber: item?.episodeNumber ?? prev.episodeNumber ?? null,
       positionSec: done ? 0 : Math.round(pos),
       durationSec: Math.round(dur),
-      chapterIndex: chapterIndex !== null ? Number(chapterIndex) : (this.progress[key]?.chapterIndex ?? null),
+      progressPct: pct,
+      chapterIndex: chapterIndex !== null ? Number(chapterIndex) : (prev.chapterIndex ?? null),
       completed: done,
-      inProgress: !done && (pos >= 5 || (chapterIndex !== null && chapterIndex > 0)),
-      updatedAt: new Date().toISOString(),
+      inProgress: activeInProgress,
+      plays: Math.max(Number(prev.plays) || 0, Number(plays) || (done || activeInProgress ? 1 : 0)),
+      lastPlayed: lastPlayed || now,
+      updatedAt: now,
       deviceName: deviceName || os.hostname(),
     };
     this.progress[key] = entry;

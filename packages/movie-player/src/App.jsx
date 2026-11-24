@@ -4,6 +4,7 @@ import { Icon } from './Icon.jsx';
 import CloudBrowser from './CloudBrowser.jsx';
 import Lyrics from './Lyrics.jsx';
 import Library from './Library.jsx';
+import WatchHistoryTab from './WatchHistoryTab.jsx';
 import NowPlayingPanel from './NowPlayingPanel.jsx';
 import TrackInfo from './TrackInfo.jsx';
 import { AiPlaylistModal, DjSettingsModal } from './AiPlaylist.jsx';
@@ -14,7 +15,7 @@ import { castClock, CastProgress, useCastPlaying } from './castClock.jsx';
 import { useVirtualDj } from './useVirtualDj.js';
 import { useSpeakerTakeover } from './useSpeakerTakeover.js';
 import { LibraryContext, ContextMenu, LoveButton, Cover, artUrlFor } from './library-ui.jsx';
-import { albumKeyOf, fold, splitGenres, sortTracks } from '../lib/library-index.js';
+import { albumKeyOf, fold, splitGenres, sortTracks, getTrackWatchState } from '../lib/library-index.js';
 
 const DEFAULT_QUEUE = [];
 const QUEUE_KEY = 'robos-movie-player.queue.v1';
@@ -63,6 +64,7 @@ export default function App() {
   const [speakers, setSpeakers] = useState([]);
   const [library, setLibrary] = useState({ tracks: [], artists: [], albums: [] });
   const [stats, setStats] = useState({});
+  const [portableEntries, setPortableEntries] = useState({});
   const [artBase, setArtBase] = useState({ local: null, cast: null });
   const [repeatMode, setRepeatMode] = useState(playerPrefs.repeat || 'all'); // 'off' | 'all' | 'one'
   const [shuffleMode, setShuffleMode] = useState(!!playerPrefs.shuffle);
@@ -206,6 +208,11 @@ export default function App() {
       cleanups.push(window.robosAudio.onTrackStatsUpdated((changed) => {
         if (!changed || !Object.keys(changed).length) return;
         setStats(prev => ({ ...prev, ...changed }));
+        if (window.robosAudio?.getWatchHistory) {
+          window.robosAudio.getWatchHistory()
+            .then(res => { if (res?.portableEntries) setPortableEntries(res.portableEntries); })
+            .catch(() => {});
+        }
         const from = Object.values(changed).map(e => e && e.syncedFrom).find(Boolean);
         if (from) showStatus(`Watch history updated from ${from}`);
       }));
@@ -425,6 +432,12 @@ export default function App() {
 
   const loadStats = async () => {
     try {
+      if (window.robosAudio?.getWatchHistory) {
+        const res = await window.robosAudio.getWatchHistory();
+        if (res && res.stats) setStats(res.stats);
+        if (res && res.portableEntries) setPortableEntries(res.portableEntries);
+        return;
+      }
       if (window.robosAudio?.getTrackStats) setStats((await window.robosAudio.getTrackStats()) || {});
     } catch {}
   };
@@ -893,8 +906,12 @@ export default function App() {
           currentTrack.duration = dur;
         }
         let initialOffset = 0;
-        if (info.needsTranscode && pendingLocalSeekRef.current != null && pendingLocalSeekRef.current > 0) {
-          initialOffset = Math.floor(pendingLocalSeekRef.current);
+        const pend = pendingLocalSeekRef.current;
+        const pendSec = typeof pend === 'number'
+          ? pend
+          : (pend && pend.trackId === trackId ? Number(pend.positionSec) || 0 : 0);
+        if (info.needsTranscode && pendSec > 0) {
+          initialOffset = Math.floor(pendSec);
           pendingLocalSeekRef.current = null;
         }
         setPlaybackProbe((prev) => {
@@ -1107,15 +1124,52 @@ export default function App() {
     }
   };
 
+  const resolveResumeSecForTrack = (trackToPlay, startAt = null) => {
+    if (startAt != null) return Math.max(0, Math.floor(Number(startAt) || 0));
+    const st = (trackToPlay?.id && stats[trackToPlay.id]) || {};
+    if (!st.completed && (st.inProgress || Number(st.positionSec) >= 1)) {
+      return Math.max(0, Math.floor(Number(st.positionSec) || 0));
+    }
+    return 0;
+  };
+
+  const flushCurrentTrackProgress = ({ sync = false } = {}) => {
+    const cur = latestRef.current.currentTrack || currentTrack;
+    if (!cur?.id) return;
+    let pos = 0;
+    let dur = Number(cur.duration) || 0;
+    if (outputTarget !== 'local') {
+      pos = castClock.now() || 0;
+      dur = castClock.get().duration || dur;
+    } else if (isVideoTrack(cur) && videoRef.current) {
+      const v = videoRef.current;
+      pos = (Number(transcodeOffsetSec) || 0) + (v.currentTime || 0);
+      dur = knownVideoDurationSec > 0
+        ? knownVideoDurationSec
+        : ((!isTranscodeActive && isFinite(v.duration) && v.duration > 0) ? v.duration : dur);
+    } else if (playerRef.current?.audio?.current) {
+      const a = playerRef.current.audio.current;
+      pos = a.currentTime || 0;
+      dur = (isFinite(a.duration) && a.duration > 0) ? a.duration : dur;
+    }
+    if (pos >= 1) {
+      if (sync && window.robosAudio?.saveProgressSync) {
+        try {
+          const entry = window.robosAudio.saveProgressSync(cur.id, { positionSec: pos, durationSec: dur, completed: false });
+          if (entry) setStats(prev => ({ ...prev, [cur.id]: entry }));
+        } catch {}
+      } else {
+        saveTrackProgress(cur, pos, dur, false, { force: true });
+      }
+    }
+  };
+
   // Routes a track that was just made current to the speaker or local output.
   // `sameSrc` restarts the audio element when the source didn't change.
   const beginPlayback = (trackToPlay, sameSrc = false, { startAt = null } = {}) => {
     const audio = playerRef.current?.audio?.current;
     playedRef.current = { key: null, counted: false };
-    const st = (trackToPlay?.id && stats[trackToPlay.id]) || {};
-    const resumeSec = startAt != null
-      ? Math.max(0, Number(startAt) || 0)
-      : (!st.completed && (st.inProgress || Number(st.positionSec) >= 5) ? Math.floor(Number(st.positionSec) || 0) : 0);
+    const resumeSec = resolveResumeSecForTrack(trackToPlay, startAt);
 
     if (sameSrc && audio) audio.currentTime = resumeSec;
     if (outputTarget !== 'local') {
@@ -1125,7 +1179,7 @@ export default function App() {
     } else {
       if (activeCastSession) handleStopCast();
       if (resumeSec > 0) {
-        pendingLocalSeekRef.current = resumeSec;
+        pendingLocalSeekRef.current = { trackId: trackToPlay?.id || null, positionSec: resumeSec };
       } else {
         pendingLocalSeekRef.current = null;
       }
@@ -1164,6 +1218,9 @@ export default function App() {
       idx = 0;
     }
     const first = list[idx];
+    if (currentTrack && currentTrack.id && currentTrack.id !== first?.id) {
+      flushCurrentTrackProgress();
+    }
     if (first.filePath && !first.cloud && window.robosAudio?.ensureFileAccessible) {
       window.robosAudio.ensureFileAccessible(first.filePath).catch(() => {});
     }
@@ -1172,11 +1229,8 @@ export default function App() {
     setPlaylist(list);
     setCurrentTrackIndex(idx);
     beginPlayback(first, sameSrc, { startAt });
-    const st = (first?.id && stats[first.id]) || {};
-    const resumeSec = startAt != null
-      ? Math.max(0, Number(startAt) || 0)
-      : (!st.completed && (st.inProgress || Number(st.positionSec) >= 5) ? Math.floor(Number(st.positionSec) || 0) : 0);
-    if (resumeSec >= 5) {
+    const resumeSec = resolveResumeSecForTrack(first, startAt);
+    if (resumeSec >= 1) {
       showStatus(`Resuming "${first.title}" at ${formatDuration(resumeSec)}...`);
     } else {
       showStatus(list.length === 1
@@ -1202,8 +1256,11 @@ export default function App() {
     showStatus(where === 'next' ? `${what} will play next` : `Added ${what} to the queue`);
   };
 
-  const playTrack = async (track) => {
+  const playTrack = async (track, { startAt = null } = {}) => {
     if (!track) return;
+    if (currentTrack && currentTrack.id && currentTrack.id !== track.id) {
+      flushCurrentTrackProgress();
+    }
 
     if (track.filePath && window.robosAudio?.ensureFileAccessible) {
       await window.robosAudio.ensureFileAccessible(track.filePath).catch(() => {});
@@ -1227,35 +1284,13 @@ export default function App() {
       setPlaylist(prev => [...prev, trackToPlay]);
       setCurrentTrackIndex(playlist.length);
     }
-    if (sameSrc && playerRef.current?.audio?.current) playerRef.current.audio.current.currentTime = 0;
-
-    if (outputTarget !== 'local') {
-      // Cast the track to the selected speaker; keep local media completely stopped
-      castTrack(outputTarget, trackToPlay);
-      if (playerRef.current?.audio?.current) {
-        playerRef.current.audio.current.pause();
-      }
-      if (videoRef.current) {
-        videoRef.current.pause();
-      }
+    beginPlayback(trackToPlay, sameSrc, { startAt });
+    const resumeSec = resolveResumeSecForTrack(trackToPlay, startAt);
+    if (resumeSec >= 1) {
+      showStatus(`Resuming "${trackToPlay.title}" at ${formatDuration(resumeSec)}...`);
     } else {
-      // Local desktop playback: stop any remote casting sessions
-      if (activeCastSession) {
-        handleStopCast();
-      }
-      setTimeout(() => {
-        const el = isVideoTrack(trackToPlay) && videoRef.current ? videoRef.current : playerRef.current?.audio?.current;
-        if (el) {
-          el.muted = false;
-          el.play().catch((err) => {
-            console.warn('[MoviePlayer] Playback error:', err);
-            showStatus(`Playback error: ${err.message || 'File not accessible'}`);
-          });
-        }
-      }, 80);
+      showStatus(`Playing "${trackToPlay.title}" by ${trackToPlay.artist || 'Unknown'}`);
     }
-    setIsPlaying(true);
-    showStatus(`Playing "${trackToPlay.title}" by ${trackToPlay.artist || 'Unknown'}`);
   };
 
   // The local player's own play/pause. While casting it is idle and the speaker's
@@ -1277,13 +1312,15 @@ export default function App() {
     if (outputTarget !== 'local') {
       handleToggleCastPause();
     } else {
-      if (playerRef.current?.audio?.current) {
-        if (playerRef.current.audio.current.paused) {
-          playerRef.current.audio.current.play().catch(() => {});
+      const mediaEl = getMediaEl();
+      if (mediaEl) {
+        if (mediaEl.paused) {
+          mediaEl.play().catch(() => {});
           setIsPlaying(true);
         } else {
-          playerRef.current.audio.current.pause();
+          mediaEl.pause();
           setIsPlaying(false);
+          flushCurrentTrackProgress();
         }
       }
     }
@@ -1311,17 +1348,21 @@ export default function App() {
   };
 
   const restartCurrent = () => {
-    const audio = playerRef.current?.audio?.current;
+    const el = getMediaEl();
     playedRef.current = { key: null, counted: false };
-    if (audio && outputTarget === 'local') {
-      audio.currentTime = 0;
-      audio.play().catch(() => {});
+    if (el && outputTarget === 'local') {
+      if (isVideoTrack(currentTrack) && isTranscodeActive) {
+        seekVideoTo(0);
+      } else {
+        el.currentTime = 0;
+        el.play().catch(() => {});
+      }
     }
     if (outputTarget !== 'local' && currentTrack) castTrack(outputTarget, currentTrack);
   };
 
   // Jump to a queue entry (double-click in the Now Playing panel, next/prev, auto-advance).
-  const goToIndex = (idx, { remember = true } = {}) => {
+  const goToIndex = (idx, { remember = true, startAt = null } = {}) => {
     const track = playlist[idx];
     if (!track) return;
     if (remember && playlist[currentTrackIndex]) {
@@ -1331,10 +1372,11 @@ export default function App() {
       restartCurrent();
       return;
     }
+    if (currentTrack && currentTrack.id && currentTrack.id !== track.id) {
+      flushCurrentTrackProgress();
+    }
     setCurrentTrackIndex(idx);
-    if (outputTarget !== 'local') castTrack(outputTarget, track);
-    else if (playerRef.current?.audio?.current) playerRef.current.audio.current.muted = false;
-    setIsPlaying(true);
+    beginPlayback(track, false, { startAt });
   };
 
   const handlePlayNext = () => {
@@ -1586,18 +1628,62 @@ export default function App() {
 
   const lastProgressSaveRef = useRef({ trackId: null, time: 0 });
 
-  const saveTrackProgress = (track, positionSec, durationSec, completed = false, { force = false } = {}) => {
+  const saveTrackProgress = (track, positionSec, durationSec, completed = false, { force = false, started = false } = {}) => {
     if (!track?.id || !window.robosAudio?.saveProgress) return;
     const now = Date.now();
-    if (!force && !completed && lastProgressSaveRef.current.trackId === track.id && now - lastProgressSaveRef.current.time < 3000) {
+    if (!force && !completed && !started && lastProgressSaveRef.current.trackId === track.id && now - lastProgressSaveRef.current.time < 2500) {
       return;
     }
-    if (positionSec < 3 && !completed && !force) return;
+    if (positionSec < 1 && !completed && !started && !force) return;
     lastProgressSaveRef.current = { trackId: track.id, time: now };
-    window.robosAudio.saveProgress(track.id, { positionSec, durationSec, completed })
-      .then(entry => { if (entry) setStats(prev => ({ ...prev, [track.id]: entry })); })
+    window.robosAudio.saveProgress(track.id, { positionSec, durationSec, completed, started })
+      .then(entry => {
+        if (entry) setStats(prev => ({ ...prev, [track.id]: entry }));
+      })
       .catch(() => {});
   };
+
+  const handleClearWatchHistoryRow = async (row) => {
+    if (!row) return;
+    const ids = row.trackId ? [row.trackId] : [];
+    const keys = row.portableKey ? [row.portableKey] : [];
+    setStats(prev => {
+      const next = { ...prev };
+      for (const id of ids) {
+        if (next[id]?.loved) {
+          next[id] = { ...next[id], completed: false, inProgress: false, positionSec: 0, progressPct: 0, plays: 0, lastPlayed: null };
+        } else {
+          delete next[id];
+        }
+      }
+      return next;
+    });
+    if (keys.length) {
+      setPortableEntries(prev => {
+        const next = { ...prev };
+        for (const k of keys) delete next[k];
+        return next;
+      });
+    }
+    if (window.robosAudio?.clearWatchHistory) {
+      try {
+        const res = await window.robosAudio.clearWatchHistory(ids, keys);
+        if (res?.stats) setStats(res.stats);
+        if (res?.portableEntries) setPortableEntries(res.portableEntries);
+      } catch {}
+    }
+    showStatus(`Removed "${row.showTitle}${row.epCode ? ` ${row.epCode}` : ''}" from Watch History`);
+  };
+
+  const watchHistoryCount = useMemo(() => {
+    let n = 0;
+    for (const t of (library.tracks || [])) {
+      if (!t?.id) continue;
+      const ws = getTrackWatchState(t, stats);
+      if (ws.completed || ws.inProgress || ws.plays > 0 || ws.lastPlayed) n++;
+    }
+    return n;
+  }, [library.tracks, stats]);
 
   const setWatchedTracks = async (tracks, watched) => {
     const ids = [...new Set((tracks || []).map(t => t.id).filter(Boolean))];
@@ -1743,7 +1829,7 @@ export default function App() {
         playedRef.current.counted = true;
         recordPlay(t);
       }
-      if (position >= 5) {
+      if (position >= 1) {
         saveTrackProgress(t, position, duration || t.duration || 0, false);
       }
     },
@@ -2003,6 +2089,18 @@ export default function App() {
     } catch {}
   }, [currentTrack?.id, currentTrack?.title, currentTrack?.artId, artBase.local]);
 
+  latestRef.current.flushProgressSync = () => flushCurrentTrackProgress({ sync: true });
+
+  useEffect(() => {
+    const onUnload = () => latestRef.current.flushProgressSync?.();
+    window.addEventListener('beforeunload', onUnload);
+    window.addEventListener('pagehide', onUnload);
+    return () => {
+      window.removeEventListener('beforeunload', onUnload);
+      window.removeEventListener('pagehide', onUnload);
+    };
+  }, []);
+
   // Space: play/pause · Ctrl+→ / Ctrl+←: next / previous · Ctrl+F: search the library.
   useEffect(() => {
     const onKey = (e) => {
@@ -2208,6 +2306,16 @@ export default function App() {
           <Icon name="tv" /><span>TV Shows ({tvShowCount}{tvEpisodeCount ? ` · ${tvEpisodeCount} Eps` : ''})</span>
         </button>
         <button
+          id="tab-btn-history"
+          className={`tab-btn ${activeTab === 'history' ? 'active' : ''}`}
+          onClick={() => {
+            loadStats();
+            setActiveTab('history');
+          }}
+        >
+          <Icon name="history" /><span>Watch History{watchHistoryCount > 0 ? ` (${watchHistoryCount})` : ''}</span>
+        </button>
+        <button
           id="tab-btn-playlists"
           className={`tab-btn ${activeTab === 'playlists' ? 'active' : ''}`}
           onClick={() => setActiveTab('playlists')}
@@ -2248,7 +2356,7 @@ export default function App() {
 
       <div className="app-body">
       {/* Main Content Area */}
-      <main className={`tab-content ${(activeTab === 'library' || activeTab === 'shows') ? 'library-active' : ''}`}>
+      <main className={`tab-content ${(activeTab === 'library' || activeTab === 'shows' || activeTab === 'history') ? 'library-active' : ''}`}>
         {/* Background Scan Banner */}
         {isScanningLibrary && (
           <div className="scan-progress-banner">
@@ -2374,8 +2482,11 @@ export default function App() {
                         if (!isTranscodeActive && d && isFinite(d) && d > 0) {
                           if (currentTrack && !currentTrack.duration) currentTrack.duration = d;
                         }
-                        const at = pendingLocalSeekRef.current;
-                        if (at != null && e.currentTarget) {
+                        const pend = pendingLocalSeekRef.current;
+                        const at = typeof pend === 'number'
+                          ? pend
+                          : (pend && (!pend.trackId || pend.trackId === currentTrack?.id) ? Number(pend.positionSec) || 0 : null);
+                        if (at != null && at > 0 && e.currentTarget) {
                           pendingLocalSeekRef.current = null;
                           if (isTranscodeActive) {
                             seekVideoTo(at);
@@ -2396,14 +2507,14 @@ export default function App() {
                         const pos = transcodeOffsetSec + (v.currentTime || 0);
                         const dur = knownVideoDurationSec > 0
                           ? knownVideoDurationSec
-                          : ((!isTranscodeActive && isFinite(v.duration) && v.duration > 0) ? v.duration : 0);
+                          : ((!isTranscodeActive && isFinite(v.duration) && v.duration > 0) ? v.duration : (Number(currentTrack.duration) || 0));
                         const key = `${currentTrackIndex}:${currentTrack.id || currentTrack.src}`;
                         if (playedRef.current.key !== key) playedRef.current = { key, counted: false };
                         if (!playedRef.current.counted && pos >= Math.min(30, (dur || 60) / 2)) {
                           playedRef.current.counted = true;
                           recordPlay(currentTrack);
                         }
-                        if (pos >= 5 && dur > 0) {
+                        if (pos >= 1) {
                           saveTrackProgress(currentTrack, pos, dur, false);
                         }
                       }}
@@ -2412,13 +2523,24 @@ export default function App() {
                         const sec = transcodeOffsetSec + (v?.currentTime || 0);
                         const dur = knownVideoDurationSec > 0
                           ? knownVideoDurationSec
-                          : ((!isTranscodeActive && v && isFinite(v.duration) && v.duration > 0) ? v.duration : 0);
-                        if (currentTrack && sec >= 5 && dur > 0) {
+                          : ((!isTranscodeActive && v && isFinite(v.duration) && v.duration > 0) ? v.duration : (Number(currentTrack?.duration) || 0));
+                        if (currentTrack && sec >= 1) {
                           saveTrackProgress(currentTrack, sec, dur, false, { force: true });
                         }
                       }}
-                      onPlay={() => {
+                      onPlay={(e) => {
                         setIsPlaying(true);
+                        if (!currentTrack?.id) return;
+                        const st = stats[currentTrack.id] || {};
+                        if (!st.completed && !st.inProgress) {
+                          const v = e.currentTarget;
+                          const pos = transcodeOffsetSec + (v?.currentTime || 0);
+                          const dur = knownVideoDurationSec > 0
+                            ? knownVideoDurationSec
+                            : ((!isTranscodeActive && v && isFinite(v.duration) && v.duration > 0) ? v.duration : (Number(currentTrack.duration) || 0));
+                          const resumeSec = resolveResumeSecForTrack(currentTrack);
+                          saveTrackProgress(currentTrack, Math.max(pos, resumeSec), dur, false, { force: true, started: true });
+                        }
                       }}
                       onPause={(e) => {
                         setIsPlaying(false);
@@ -2426,8 +2548,8 @@ export default function App() {
                         const pos = transcodeOffsetSec + (v?.currentTime || 0);
                         const dur = knownVideoDurationSec > 0
                           ? knownVideoDurationSec
-                          : ((!isTranscodeActive && v && isFinite(v.duration) && v.duration > 0) ? v.duration : 0);
-                        if (v && currentTrack && pos >= 5 && dur > 0) {
+                          : ((!isTranscodeActive && v && isFinite(v.duration) && v.duration > 0) ? v.duration : (Number(currentTrack?.duration) || 0));
+                        if (v && currentTrack && pos >= 1) {
                           saveTrackProgress(currentTrack, pos, dur, false, { force: true });
                         }
                       }}
@@ -2435,14 +2557,20 @@ export default function App() {
                         const v = e.currentTarget;
                         const dur = knownVideoDurationSec > 0
                           ? knownVideoDurationSec
-                          : ((!isTranscodeActive && v && isFinite(v.duration) && v.duration > 0) ? v.duration : 0);
-                        if (currentTrack && dur > 0) saveTrackProgress(currentTrack, dur, dur, true, { force: true });
+                          : ((!isTranscodeActive && v && isFinite(v.duration) && v.duration > 0) ? v.duration : (Number(currentTrack?.duration) || 0));
+                        if (currentTrack) saveTrackProgress(currentTrack, dur || 100, dur || 100, true, { force: true });
                         handleTrackEnded();
                       }}
                       onError={(e) => {
                         const v = e.currentTarget;
                         const tcUrl = activeProbe?.transcodeUrl || currentTrack?.mediaService?.transcodeUrl;
                         if (v && tcUrl && !String(v.src).includes('/transcode/')) {
+                          const pend = pendingLocalSeekRef.current;
+                          const pendSec = typeof pend === 'number'
+                            ? pend
+                            : (pend && (!pend.trackId || pend.trackId === currentTrack?.id) ? Number(pend.positionSec) || 0 : 0);
+                          const fallbackOffset = pendSec > 0 ? Math.floor(pendSec) : resolveResumeSecForTrack(currentTrack);
+                          pendingLocalSeekRef.current = null;
                           showStatus(`Switching "${currentTrack.title}" to live H.264/AAC stream…`);
                           setPlaybackProbe(prev => ({
                             ...(prev && prev.trackId === currentTrack.id
@@ -2451,7 +2579,7 @@ export default function App() {
                             transcodeUrl: tcUrl,
                             needsTranscode: true,
                             forceTranscode: true,
-                            offsetSec: 0,
+                            offsetSec: fallbackOffset,
                           }));
                           setTimeout(() => { videoRef.current?.play().catch(() => {}); }, 60);
                         }
@@ -3116,6 +3244,37 @@ export default function App() {
               }}
             />
           </div>
+        )}
+
+        {/* TAB: WATCH HISTORY (Skinny Table View) */}
+        {activeTab === 'history' && (
+          <WatchHistoryTab
+            tracks={library.tracks}
+            stats={stats}
+            portableEntries={portableEntries}
+            currentTrack={currentTrack}
+            isPlaying={isPlaying}
+            onPlayTrack={(t) => {
+              playTrack(t);
+              setActiveTab('player');
+            }}
+            onStartOverTrack={(t) => {
+              playTrack(t, { startAt: 0 });
+              setActiveTab('player');
+            }}
+            onToggleWatched={setWatchedTracks}
+            onClearHistoryRow={handleClearWatchHistoryRow}
+            onOpenShow={(_track, key) => {
+              navigateShows({ section: 'tv_shows', detail: { type: 'album', key } });
+            }}
+            onOpenMovie={(_track, key) => {
+              navigateLibrary({ section: 'albums', detail: { type: 'album', key } });
+            }}
+            onRefreshHistory={async () => {
+              await loadStats();
+              showStatus('Synced latest watch history & progress.');
+            }}
+          />
         )}
 
         {/* TAB: CLOUD STORAGE (Data Sources FTP / SFTP) */}

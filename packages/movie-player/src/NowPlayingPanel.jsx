@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Icon } from './Icon.jsx';
-import { formatDuration, formatLongDuration, fold } from '../lib/library-index.js';
+import { formatDuration, formatLongDuration, fold, getTrackWatchState } from '../lib/library-index.js';
 import { useLibrary, trackMenuItems, Cover, TRACK_DRAG_TYPE } from './library-ui.jsx';
 import { Splitter, useColumns, useLayoutPref } from './resizable.jsx';
 
@@ -317,12 +317,13 @@ export default function NowPlayingPanel({
               const t = queue[qIdx];
               const pos = start + i;
               const isCurrent = qIdx === currentIndex;
+              const ws = getTrackWatchState(t, ctx.stats);
               return (
                 <div
                   key={`${qIdx}-${t.id || t.src}`}
-                  className={`np-row ${isCurrent ? 'current' : ''} ${selected.has(qIdx) ? 'selected' : ''} ${qIdx < currentIndex ? 'played' : ''}`}
+                  className={`np-row ${isCurrent ? 'current' : ''} ${selected.has(qIdx) ? 'selected' : ''} ${ws.completed ? 'played' : ''}`}
                   style={{ top: pos * ROW_HEIGHT, height: ROW_HEIGHT }}
-                  title={`${t.title}\n${t.artist || ''}${t.album ? ` — ${t.album}` : ''}`}
+                  title={`${t.title}\n${t.artist || ''}${t.album ? ` — ${t.album}` : ''}${ws.completed ? '\n✓ Watched' : ws.inProgress && ws.positionSec >= 1 ? `\n▶ Stopped at ${formatDuration(ws.positionSec)}` : ''}`}
                   draggable
                   onDragStart={(e) => handleDragStart(e, qIdx)}
                   onClick={(e) => handleClick(e, qIdx)}
@@ -332,9 +333,19 @@ export default function NowPlayingPanel({
                   <span className="np-col-state">
                     {isCurrent
                       ? (isPlaying ? <span className="eq-bars"><i></i><i></i><i></i></span> : <Icon name="play" size={10} />)
-                      : <span className="np-num">{qIdx + 1}</span>}
+                      : ws.completed
+                        ? <span className="np-watched-dot" title="Watched">✓</span>
+                        : <span className="np-num">{qIdx + 1}</span>}
                   </span>
-                  <span className="np-col-title">{t.title}</span>
+                  <span className="np-col-title">
+                    {t.title}
+                    {ws.completed && <span className="np-mini-badge watched">Watched</span>}
+                    {!ws.completed && ws.inProgress && (
+                      <span className="np-mini-badge resume">
+                        ▶ {ws.positionSec >= 1 ? formatDuration(ws.positionSec) : 'Started'}
+                      </span>
+                    )}
+                  </span>
                   <span className="np-col-artist">{t.artist}</span>
                   <span className="np-col-dur">{formatDuration(t.duration)}</span>
                 </div>

@@ -217,4 +217,67 @@ test('PublicMetadataService helpers strip HTML, clean titles, and expose overvie
   assert.equal(index.moviesOnly[0].imdbId, 'tt1160419');
 });
 
+test('MediaLibrary tracks every played episode state, remembers exact stop position (even <5s or before duration probe), and marks Watched cleanly', () => {
+  const fs = require('node:fs');
+  const os = require('node:os');
+  const path = require('node:path');
+  const { MediaLibrary } = require('./media-library');
+
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'robos-mp-watch-'));
+  try {
+    const lib = new MediaLibrary({ configDir: tmpDir });
+    lib.tracks = [
+      { id: 'fg_1', ...guessFromRemotePath('/downloads/shows/Family Guy/Season 21/Family Guy - S21E01 - Oscars Guy.mkv'), duration: 0 },
+      { id: 'fg_2', ...guessFromRemotePath('/downloads/shows/Family Guy/Season 21/Family Guy - S21E02 - Bend or Blockbuster.mkv'), duration: 1300 },
+    ];
+    const index = buildIndex(lib.tracks);
+    const show = index.tvShows[0];
+
+    // 1. Starting playback + recordPlay must NOT falsely mark episode as Watched
+    lib.recordPlay('fg_1');
+    lib.saveProgress('fg_1', { positionSec: 3, durationSec: 0, started: true });
+    let ep1Ws = getTrackWatchState(lib.tracks[0], lib.getStats());
+    assert.equal(ep1Ws.completed, false);
+    assert.equal(ep1Ws.inProgress, true);
+    assert.equal(ep1Ws.positionSec, 3);
+
+    // 2. Stopping mid-episode at 412s (6:52) remembers exact track position on both episode and show
+    lib.saveProgress('fg_1', { positionSec: 412, durationSec: 1298 });
+    ep1Ws = getTrackWatchState(lib.tracks[0], lib.getStats());
+    assert.equal(ep1Ws.inProgress, true);
+    assert.equal(ep1Ws.completed, false);
+    assert.equal(ep1Ws.positionSec, 412);
+    assert.equal(ep1Ws.progressPct, 32);
+
+    let showWs = getShowWatchState(show, lib.getStats());
+    assert.equal(showWs.hasActivity, true);
+    assert.equal(showWs.inProgress, true);
+    assert.equal(showWs.resumeTrack.id, 'fg_1');
+    assert.equal(showWs.resumePositionSec, 412);
+
+    // 3. Finishing episode (>= 92%) marks it Watched and advances show to S21E02 at 0:00
+    lib.saveProgress('fg_1', { positionSec: 1250, durationSec: 1298 });
+    ep1Ws = getTrackWatchState(lib.tracks[0], lib.getStats());
+    assert.equal(ep1Ws.completed, true);
+    assert.equal(ep1Ws.inProgress, false);
+    assert.equal(ep1Ws.positionSec, 0);
+
+    showWs = getShowWatchState(show, lib.getStats());
+    assert.equal(showWs.completedCount, 1);
+    assert.equal(showWs.resumeTrack.id, 'fg_2');
+    assert.equal(showWs.resumePositionSec, 0);
+
+    // 4. Clearing watch history removes watch state while preserving loved flag
+    lib.setLoved(['fg_1'], true);
+    lib.clearWatchHistory(['fg_1']);
+    ep1Ws = getTrackWatchState(lib.tracks[0], lib.getStats());
+    assert.equal(ep1Ws.completed, false);
+    assert.equal(ep1Ws.inProgress, false);
+    assert.equal(lib.getStats().fg_1.loved, true);
+  } finally {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
+});
+
+
 
