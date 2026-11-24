@@ -63,7 +63,12 @@ func _ready() -> void:
 		_build_online_page()
 		RTSNetwork.status_changed.connect(_update_online_status)
 	_build_campaign_page()
-	_first_button.grab_focus()
+	if SimEngine.has_meta("open_campaign_hub") and bool(SimEngine.get_meta("open_campaign_hub")):
+		SimEngine.remove_meta("open_campaign_hub")
+		_open_campaign()
+		_campaign.check_milestone_cutscene()
+	else:
+		_first_button.grab_focus()
 
 func waiting_on_title() -> bool:
 	return not _bypassing
@@ -440,6 +445,8 @@ func ui_state() -> Dictionary:
 		"campaign_difficulty": _campaign.current_difficulty() if _campaign else "normal",
 		"campaign_room": _campaign.current_room if _campaign else "bridge",
 		"campaign_console": _campaign.active_console if _campaign else "",
+		"campaign_cutscene_playing": _campaign.cutscene_theater.is_playing if _campaign and _campaign.cutscene_theater else false,
+		"campaign_cutscene_id": _campaign.cutscene_theater.current_movie_id if _campaign and _campaign.cutscene_theater and _campaign.cutscene_theater.is_playing else "",
 		"campaign_selected_mission": _campaign.mission_console.selected_index if _campaign and _campaign.mission_console else 0,
 		"campaign_credits": HubData.credits_available(),
 		"fullscreen": RTSDisplay.is_fullscreen(),

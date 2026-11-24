@@ -9,6 +9,8 @@ const ConsoleTheme = preload("res://scripts/campaign/RTSConsoleTheme.gd")
 const Showcase3D = preload("res://scripts/campaign/RTSUnitShowcase3D.gd")
 const MissionConsole = preload("res://scripts/campaign/RTSMissionConsole.gd")
 const TechConsole = preload("res://scripts/campaign/RTSTechConsole.gd")
+const CutsceneData = preload("res://scripts/campaign/RTSCutsceneData.gd")
+const CutsceneTheater = preload("res://scripts/campaign/RTSCutsceneTheater.gd")
 
 const ROOM_ORDER := ["armory", "bridge", "cantina", "laboratory"]
 const ROOM_TITLES := {
@@ -30,6 +32,7 @@ var active_console := ""
 var showcase: Node
 var mission_console: Control
 var tech_console: Control
+var cutscene_theater: Control
 
 var _rooms: Dictionary = {}
 var _nav_buttons: Dictionary = {}
@@ -115,12 +118,16 @@ func _populate_bridge(room: Control) -> void:
 	room.add_child(_holo_fx)
 
 	_bridge_map_hotspot = _add_hotspot(
-		room, Rect2(495, 425, 480, 385), "Mission Console", "Select Operation",
-		Vector2(0, -178), Vector2(0, -24), func(): open_console("mission_select")
+		room, Rect2(565, 435, 355, 375), "Mission Console", "Select Operation",
+		Vector2(0, -172), Vector2(0, -24), func(): open_console("mission_select")
 	)
 	_add_hotspot(
-		room, Rect2(835, 385, 165, 290), "Captain Vale", "Expedition Briefing",
-		Vector2(98, -118), Vector2(-12, -40), func(): open_console("mission_select")
+		room, Rect2(415, 405, 145, 350), "Prologue", "Ashfall Signal Movie",
+		Vector2(-75, -135), Vector2(10, -45), func(): trigger_cutscene("hub_prologue")
+	)
+	_add_hotspot(
+		room, Rect2(845, 385, 165, 290), "Captain Vale", "Strategic Cutscene",
+		Vector2(98, -118), Vector2(-12, -40), func(): trigger_cutscene("bridge_vale")
 	)
 	_add_hotspot(
 		room, Rect2(1210, 545, 445, 215), "Mutator Matrix", "Tactical Modifiers",
@@ -177,8 +184,12 @@ func _draw_bridge_holo() -> void:
 
 func _populate_armory(room: Control) -> void:
 	_add_hotspot(
-		room, Rect2(835, 600, 250, 265), "Armory Console", "Tech Purchase",
-		Vector2(0, -142), Vector2(0, -25), func(): open_console("armory")
+		room, Rect2(835, 600, 230, 265), "Armory Console", "Tech Purchase",
+		Vector2(-10, -142), Vector2(0, -25), func(): open_console("armory")
+	)
+	_add_hotspot(
+		room, Rect2(1070, 610, 175, 265), "Quartermaster Vane", "Bay 07 Cutscene",
+		Vector2(70, -135), Vector2(-15, -55), func(): trigger_cutscene("armory_intro")
 	)
 	_add_hotspot(
 		room, Rect2(130, 395, 420, 225), "Rail Skimmer", "Vehicles Tech",
@@ -211,20 +222,20 @@ func _populate_cantina(room: Control) -> void:
 		Vector2(85, 92), Vector2(0, -12), func(): open_console("cantina")
 	)
 	_add_hotspot(
-		room, Rect2(815, 415, 260, 455), "Corporal Rook", "Squad Veteran",
-		Vector2(-95, -195), Vector2(-10, -120), _speak_rook
+		room, Rect2(815, 415, 260, 455), "Corporal Rook", "Cantina Cutscene",
+		Vector2(-95, -195), Vector2(-10, -120), func(): trigger_cutscene("cantina_rook")
 	)
 	_add_hotspot(
-		room, Rect2(980, 140, 315, 225), "Frontier News", "Sector Broadcast",
-		Vector2(115, 118), Vector2(20, 45), _cycle_news_broadcast
+		room, Rect2(980, 140, 315, 225), "Frontier News", "Live News Cutscene",
+		Vector2(115, 118), Vector2(20, 45), func(): trigger_cutscene("frn_broadcast")
 	)
 	_add_hotspot(
 		room, Rect2(720, 170, 185, 235), "Jukebox", "Bloodlines Audio",
 		Vector2(-115, -55), Vector2(-5, 0), _pulse_jukebox
 	)
 	_add_hotspot(
-		room, Rect2(1395, 40, 430, 260), "Squadron Charter", "Service Record",
-		Vector2(-65, 145), Vector2(10, 40), _show_service_record
+		room, Rect2(1395, 40, 430, 260), "Cinema Archive", "Replay Cutscenes",
+		Vector2(-65, 145), Vector2(10, 40), func(): open_console("cutscenes")
 	)
 
 func _populate_laboratory(room: Control) -> void:
@@ -270,10 +281,10 @@ func _build_top_hud() -> void:
 	var ms_btn := _top_link_button("Mission Select (M)", func(): open_console("mission_select"))
 	tl_row.add_child(ms_btn)
 	_sep(tl_row)
+	tl_row.add_child(_top_link_button("Cutscenes (C)", func(): open_console("cutscenes")))
+	_sep(tl_row)
 	_top_mutator_btn = _top_link_button("Mutators (0)", func(): open_console("mutators"))
 	tl_row.add_child(_top_mutator_btn)
-	_sep(tl_row)
-	tl_row.add_child(_top_link_button("Service Log", _show_service_record))
 	_sep(tl_row)
 	tl_row.add_child(_top_link_button("Main Menu (Esc)", func(): back_to_title.emit()))
 
@@ -438,17 +449,36 @@ func _build_consoles() -> void:
 	tech_console.hide()
 	tech_console.state_changed.connect(refresh_hub_state)
 	tech_console.mutators_changed.connect(refresh_hub_state)
+	tech_console.cutscene_requested.connect(trigger_cutscene)
 	tech_console.closed.connect(close_console)
 	add_child(tech_console)
 
+	cutscene_theater = CutsceneTheater.new()
+	cutscene_theater.play_internal_voice = true
+	add_child(cutscene_theater)
+
+func trigger_cutscene(cutscene_id: String, ctx: Dictionary = {}) -> void:
+	if cutscene_theater == null:
+		return
+	mission_console.stop_audio()
+	if ctx.has("mission_index"):
+		cutscene_theater.play_movie_spec(CutsceneData.mission_intro_movie(int(ctx.mission_index)), true)
+	else:
+		cutscene_theater.play_movie_spec(CutsceneData.hub_cutscene(cutscene_id, ctx), true)
+
+func check_milestone_cutscene() -> void:
+	var milestone := CutsceneData.pending_milestone_cutscene()
+	if not milestone.is_empty():
+		trigger_cutscene(milestone)
+
 func open_hub() -> void:
 	close_console()
-	switch_room("bridge")
+	switch_room("bridge", false)
 	refresh_hub_state()
 	if _quick_deploy_btn:
 		_quick_deploy_btn.grab_focus()
 
-func switch_room(room_id: String) -> void:
+func switch_room(room_id: String, allow_room_cutscene: bool = true) -> void:
 	if not _rooms.has(room_id):
 		return
 	close_console()
@@ -461,8 +491,14 @@ func switch_room(room_id: String) -> void:
 		_nav_buttons[id].set_pressed_no_signal(active)
 		ConsoleTheme.apply_emerald_button(_nav_buttons[id], 19, active)
 	refresh_hub_state()
+	if allow_room_cutscene and is_visible_in_tree():
+		var intro_map := {"armory": "armory_intro", "cantina": "cantina_intro", "laboratory": "lab_intro"}
+		if intro_map.has(room_id) and not CutsceneData.has_seen(intro_map[room_id]):
+			trigger_cutscene(intro_map[room_id])
 
 func open_console(kind: String, arg1: String = "", arg2: String = "") -> void:
+	if cutscene_theater and cutscene_theater.is_playing:
+		cutscene_theater.skip()
 	_toast_panel.hide()
 	mission_console.stop_audio()
 	mission_console.hide()
@@ -483,6 +519,8 @@ func open_console(kind: String, arg1: String = "", arg2: String = "") -> void:
 			tech_console.open_laboratory(arg1 if not arg1.is_empty() else "brood")
 		"mutators":
 			tech_console.open_mutators()
+		"cutscenes":
+			tech_console.open_cutscenes()
 		_:
 			active_console = ""
 
@@ -498,16 +536,27 @@ func close_console() -> void:
 		_quick_deploy_btn.grab_focus()
 
 func handle_escape() -> bool:
+	if cutscene_theater and cutscene_theater.is_playing:
+		cutscene_theater.skip()
+		return true
 	if not active_console.is_empty():
 		close_console()
 		return true
 	return false
 
 func handle_shortcut(keycode: int) -> bool:
+	if cutscene_theater and cutscene_theater.is_playing:
+		if keycode in [KEY_SPACE, KEY_ENTER]:
+			cutscene_theater.skip()
+			return true
+		return false
 	if not active_console.is_empty():
 		return false
 	if keycode == KEY_M:
 		open_console("mission_select")
+		return true
+	if keycode == KEY_C:
+		open_console("cutscenes")
 		return true
 	return false
 
@@ -558,8 +607,10 @@ func unlocked_missions() -> Array:
 	return res
 
 func apply_control(request: Dictionary) -> void:
+	if request.get("skip_cutscene", false) and cutscene_theater and cutscene_theater.is_playing:
+		cutscene_theater.skip()
 	if request.has("hub_room"):
-		switch_room(str(request.hub_room))
+		switch_room(str(request.hub_room), bool(request.get("auto_cutscene", true)))
 	if request.has("hub_mission") and mission_console:
 		mission_console._select_mission(int(request.hub_mission))
 	if request.has("hub_console"):
@@ -568,6 +619,8 @@ func apply_control(request: Dictionary) -> void:
 			close_console()
 		else:
 			open_console(c, str(request.get("hub_category", "")), str(request.get("hub_unit", "")))
+	if request.has("play_cutscene"):
+		trigger_cutscene(str(request.play_cutscene), request.get("cutscene_ctx", {}))
 
 func _speak_rook() -> void:
 	var line: String = ROOK_LINES[_rook_cursor % ROOK_LINES.size()]

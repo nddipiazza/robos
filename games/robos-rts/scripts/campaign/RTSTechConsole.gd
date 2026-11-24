@@ -2,12 +2,14 @@ extends Control
 
 signal state_changed
 signal mutators_changed
+signal cutscene_requested(cutscene_id: String, ctx: Dictionary)
 signal closed
 
 const HubData = preload("res://scripts/engine/RTSCampaignHubData.gd")
 const Mutators = preload("res://scripts/engine/RTSCampaignMutators.gd")
 const MutatorIcon = preload("res://scripts/RTSMutatorIcon.gd")
 const ConsoleTheme = preload("res://scripts/campaign/RTSConsoleTheme.gd")
+const CutsceneData = preload("res://scripts/campaign/RTSCutsceneData.gd")
 
 var showcase: Node
 var close_button: Button
@@ -45,6 +47,8 @@ var _hover_tip_sub: Label
 
 var _mutator_buttons: Dictionary = {}
 var _mutator_count_label: Label
+var _archive_area: Control
+var _archive_list: GridContainer
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -71,6 +75,7 @@ func _ready() -> void:
 
 	_build_lower_deck()
 	_build_mutator_deck()
+	_build_archive_deck()
 	_build_hover_tooltip()
 
 	close_button = Button.new()
@@ -390,6 +395,7 @@ func open_armory(category_id: String = "", focus_unit_id: String = "") -> void:
 	_chassis.split_y = 564.0
 	_chassis.queue_redraw()
 	_mutator_area.hide()
+	_archive_area.hide()
 	_upper_area.show()
 	_lower_area.show()
 	if not category_id.is_empty():
@@ -416,6 +422,7 @@ func open_mercenaries() -> void:
 	_chassis.split_y = 564.0
 	_chassis.queue_redraw()
 	_mutator_area.hide()
+	_archive_area.hide()
 	_upper_area.show()
 	_lower_area.show()
 	_status_msg.text = ""
@@ -430,6 +437,7 @@ func open_laboratory(track: String = "brood") -> void:
 	_chassis.split_y = 564.0
 	_chassis.queue_redraw()
 	_mutator_area.hide()
+	_archive_area.hide()
 	_upper_area.show()
 	_lower_area.show()
 	_status_msg.text = ""
@@ -444,10 +452,102 @@ func open_mutators() -> void:
 	_chassis.queue_redraw()
 	_upper_area.hide()
 	_lower_area.hide()
+	_archive_area.hide()
 	_mutator_area.show()
 	_update_mutator_label()
 	show()
 	close_button.grab_focus()
+
+func open_cutscenes() -> void:
+	_mode = "cutscenes"
+	_chassis.header_title = "CINEMA ARCHIVE"
+	_chassis.split_y = 0.0
+	_chassis.queue_redraw()
+	_upper_area.hide()
+	_lower_area.hide()
+	_mutator_area.hide()
+	_rebuild_archive_list()
+	_archive_area.show()
+	show()
+	close_button.grab_focus()
+
+func _build_archive_deck() -> void:
+	_archive_area = Control.new()
+	_archive_area.position = Vector2(204, 152)
+	_archive_area.size = Vector2(1480, 790)
+	_archive_area.hide()
+	add_child(_archive_area)
+
+	var title := Label.new()
+	title.text = "CAMPAIGN CUTSCENES & PRE-MISSION MOVIES"
+	title.position = Vector2(8, 0)
+	title.add_theme_font_override("font", ConsoleTheme.title_font())
+	title.add_theme_font_size_override("font_size", 22)
+	title.add_theme_color_override("font_color", Color("#dff5ff"))
+	_archive_area.add_child(title)
+
+	var scroll := ScrollContainer.new()
+	scroll.position = Vector2(8, 46)
+	scroll.size = Vector2(1464, 736)
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_archive_area.add_child(scroll)
+
+	_archive_list = GridContainer.new()
+	_archive_list.columns = 3
+	_archive_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_archive_list.add_theme_constant_override("h_separation", 12)
+	_archive_list.add_theme_constant_override("v_separation", 10)
+	scroll.add_child(_archive_list)
+
+func _rebuild_archive_list() -> void:
+	for c in _archive_list.get_children():
+		c.queue_free()
+	for entry in CutsceneData.archive_entries():
+		var unlocked: bool = bool(entry.unlocked)
+		var card := PanelContainer.new()
+		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		card.custom_minimum_size = Vector2(468, 86)
+		card.add_theme_stylebox_override("panel", ConsoleTheme.style_box(
+			Color("#09161e") if unlocked else Color("#070e13"),
+			Color("#2f6878") if unlocked else Color("#1b303a"), 2, 3, 14, 10
+		))
+		_archive_list.add_child(card)
+
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 10)
+		card.add_child(row)
+
+		var vb := VBoxContainer.new()
+		vb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		vb.alignment = BoxContainer.ALIGNMENT_CENTER
+		vb.add_theme_constant_override("separation", 2)
+		row.add_child(vb)
+
+		var cat_l := Label.new()
+		cat_l.text = str(entry.category).to_upper()
+		cat_l.add_theme_font_override("font", ConsoleTheme.title_font())
+		cat_l.add_theme_font_size_override("font_size", 12)
+		cat_l.add_theme_color_override("font_color", Color("#56e885") if unlocked else Color("#526c78"))
+		vb.add_child(cat_l)
+
+		var name_l := Label.new()
+		name_l.text = str(entry.title)
+		name_l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		name_l.add_theme_font_override("font", ConsoleTheme.title_font())
+		name_l.add_theme_font_size_override("font_size", 16)
+		name_l.add_theme_color_override("font_color", Color("#edf8ff") if unlocked else Color("#66818f"))
+		vb.add_child(name_l)
+
+		var play_btn := Button.new()
+		play_btn.text = "PLAY ▸" if unlocked else "LOCKED"
+		play_btn.disabled = not unlocked
+		play_btn.custom_minimum_size = Vector2(106, 44)
+		play_btn.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		ConsoleTheme.apply_emerald_button(play_btn, 15, unlocked)
+		var entry_copy: Dictionary = entry.duplicate()
+		play_btn.pressed.connect(func():
+			cutscene_requested.emit(str(entry_copy.id), entry_copy))
+		row.add_child(play_btn)
 
 func _clear_upper() -> void:
 	_hide_tip()
@@ -842,20 +942,31 @@ func _refresh_lower_deck() -> void:
 
 func _on_purchase_pressed() -> void:
 	var res := {}
+	var cut_id := ""
+	var cut_ctx := {}
 	if _mode == "armory":
-		var upg: Dictionary = HubData.ARMORY_CATEGORIES[_cat_index].units[_unit_index].upgrades[_upg_index]
+		var unit_entry: Dictionary = HubData.ARMORY_CATEGORIES[_cat_index].units[_unit_index]
+		var upg: Dictionary = unit_entry.upgrades[_upg_index]
 		res = HubData.purchase_tech(str(upg.id))
+		cut_id = "tech_unlock"
+		cut_ctx = {"unit_id": str(unit_entry.unit_id), "title": str(upg.name), "summary": str(upg.summary)}
 	elif _mode == "cantina":
 		var merc: Dictionary = HubData.MERCENARIES[_merc_index]
 		res = HubData.hire_mercenary(str(merc.id))
+		cut_id = "merc_arrival"
+		cut_ctx = {"unit_id": str(merc.unit_id), "title": str(merc.name)}
 	elif _mode == "laboratory":
 		var choice: Dictionary = HubData.LAB_TRACKS[_lab_track].tiers[_lab_tier].choices[_lab_choice]
 		res = HubData.select_lab_perk(_lab_track, _lab_tier, str(choice.id))
+		cut_id = "lab_breakthrough"
+		cut_ctx = {"unit_id": str(choice.unit_id), "title": str(choice.name)}
 
 	if bool(res.get("ok", false)):
 		RTSAudio.play_ui("match_victory")
 		_status_msg.text = ""
 		state_changed.emit()
 		_rebuild_upper_deck()
+		if not cut_id.is_empty():
+			cutscene_requested.emit(cut_id, cut_ctx)
 	else:
 		_status_msg.text = str(res.get("error", "Action unavailable."))

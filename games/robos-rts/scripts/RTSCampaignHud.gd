@@ -1,6 +1,8 @@
 extends CanvasLayer
 
 const Campaign = preload("res://scripts/engine/RTSCampaign.gd")
+const CutsceneData = preload("res://scripts/campaign/RTSCutsceneData.gd")
+const CutsceneTheater = preload("res://scripts/campaign/RTSCutsceneTheater.gd")
 const CYAN := Color("#86e6f1")
 const GOLD := Color("#ffcd77")
 
@@ -41,6 +43,8 @@ var _camera_height := 40.0
 var _cinematic := false
 var _skipped := false
 var _reported_result := false
+var _intro_movie_played := false
+var _theater: Control
 
 func _ready() -> void:
 	layer = 9
@@ -87,7 +91,12 @@ func _ready() -> void:
 	_next = _button(buttons, "Next mission", _launch_next_mission)
 	_retry = _button(buttons, "Retry mission", open_restart_picker)
 	_button(buttons, "Main menu", _to_title)
+	_button(buttons, "Flagship hub", _to_flagship_hub)
 	_build_restart_picker()
+	_theater = CutsceneTheater.new()
+	_theater.play_internal_voice = false
+	_theater.movie_finished.connect(_on_movie_finished)
+	add_child(_theater)
 	_voice = AudioStreamPlayer.new()
 	_voice.bus = "SFX"
 	add_child(_voice)
@@ -164,10 +173,15 @@ func _bar(at: Vector2, size: Vector2) -> ColorRect:
 
 func reset() -> void:
 	_voice.stop()
+	if _theater:
+		_theater.stop_all_media()
+		_theater.is_playing = false
+		_theater.hide()
 	_cue_key = ""
 	_voice_started = false
 	_skipped = false
 	_reported_result = false
+	_intro_movie_played = false
 	_set_cinematic(false, false)
 	_objectives.hide()
 	_captions.hide()
@@ -181,6 +195,8 @@ func reset() -> void:
 func _process(_delta: float) -> void:
 	if SimEngine.campaign == null:
 		return
+	if _theater and _theater.is_playing:
+		SimEngine._accum_time = 0.0
 	state = SimEngine.campaign.snapshot(SimEngine, battle.viewing_player())
 	var finished: bool = state.status != "playing"
 	battle.world_3d.sync_campaign_pickups([] if finished else state.markers)
@@ -212,7 +228,8 @@ func _clock(seconds: int) -> String:
 func _update_cue(cue: Dictionary, finished: bool) -> void:
 	var key := "%s:%d" % [cue.id, cue.start_tick] if not cue.is_empty() else ""
 	if key != _cue_key:
-		_set_cinematic(false)
+		if not (_theater and _theater.is_playing):
+			_set_cinematic(false)
 		_voice.stop()
 		_voice_started = false
 		_cue_key = key
@@ -221,7 +238,14 @@ func _update_cue(cue: Dictionary, finished: bool) -> void:
 			_speaker.text = cue.speaker.to_upper()
 			_line.text = cue.text
 			_captions.reset_size()
-			_set_cinematic(not cue.point.is_empty() and not finished)
+			var play_intro := not _intro_movie_played and not finished and CutsceneData.is_opening_cue(str(cue.id)) and SimEngine.tick < 64
+			if play_intro:
+				_intro_movie_played = true
+				_set_cinematic(true)
+				if _theater and DisplayServer.get_name() != "headless":
+					_theater.play_movie_spec(CutsceneData.mission_intro_movie(SimEngine.campaign.mission_index), true)
+			else:
+				_set_cinematic(not cue.point.is_empty() and not finished)
 			var elapsed := float(SimEngine.tick - int(cue.start_tick)) * SimEngine.TICK_DT
 			if elapsed < 1.0 and RTSAudio.can_play_campaign_voice():
 				var voice := RTSAudio.load_campaign_voice(cue.id)
@@ -229,17 +253,30 @@ func _update_cue(cue: Dictionary, finished: bool) -> void:
 					_voice.stream = voice
 					_voice.play()
 					_voice_started = true
-	_voice.stream_paused = SimEngine.paused and not finished
-	_captions.visible = not key.is_empty() and not _skipped
-	_skip.visible = _cinematic
-	if _cinematic:
+	_voice.stream_paused = SimEngine.paused and not finished and not (_theater and _theater.is_playing)
+	var movie_active: bool = _theater != null and _theater.is_playing
+	_top_bar.visible = _cinematic and not movie_active
+	_bottom_bar.visible = _cinematic and not movie_active
+	_captions.visible = not key.is_empty() and not _skipped and not movie_active
+	_skip.visible = _cinematic and not movie_active
+	if _cinematic and not movie_active and not cue.is_empty() and not cue.point.is_empty():
 		_captions.position.y = 895
 		var elapsed := float(SimEngine.tick - int(cue.start_tick)) * SimEngine.TICK_DT
 		var blend := smoothstep(0.0, 1.35, elapsed)
 		var target := Vector2(cue.point[0], cue.point[1])
 		battle._focus_camera(_camera_start.lerp(target, blend), lerpf(_camera_height, 22.5, blend))
-	else:
+	elif not _cinematic:
 		_captions.position.y = 711
+
+func _on_movie_finished(_movie_id: String, skipped: bool) -> void:
+	if SimEngine.campaign != null and battle:
+		var pt := CutsceneData.landing_point(SimEngine.campaign.mission_index)
+		_camera_start = pt
+	if skipped:
+		_skipped = true
+		_voice.stop()
+		_captions.hide()
+	_set_cinematic(false)
 
 func _set_cinematic(active: bool, restore: bool = true) -> void:
 	if active and not _cinematic:
@@ -296,6 +333,9 @@ func cinematic() -> bool:
 	return _cinematic
 
 func skip_cinematic() -> void:
+	if _theater and _theater.is_playing:
+		_theater.skip()
+		return
 	if _cinematic:
 		_skipped = true
 		_voice.stop()
@@ -329,9 +369,19 @@ func _to_title() -> void:
 	SimEngine.title_battle_view.clear()
 	get_tree().change_scene_to_file("res://scenes/RTSStart.tscn")
 
+func _to_flagship_hub() -> void:
+	SimEngine.resume_from_title = false
+	SimEngine.title_battle_view.clear()
+	SimEngine.set_meta("open_campaign_hub", true)
+	get_tree().change_scene_to_file("res://scenes/RTSStart.tscn")
+
 func presentation_state() -> Dictionary:
+	var movie_active: bool = _theater != null and _theater.is_playing
 	return {
-		"cinematic": _cinematic, "caption_visible": _captions.visible,
+		"cinematic": _cinematic,
+		"caption_visible": _captions.visible or movie_active,
+		"movie_playing": movie_active,
+		"movie_id": _theater.current_movie_id if movie_active else "",
 		"voice_started": _voice_started, "result_visible": _result.visible,
 		"restart_visible": restart_picker_visible(),
 		"restart_difficulty": Campaign.DIFFICULTIES[_restart_difficulty.selected] if restart_picker_visible() else "",
