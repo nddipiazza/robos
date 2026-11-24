@@ -238,7 +238,13 @@ func _update_cue(cue: Dictionary, finished: bool) -> void:
 			_speaker.text = cue.speaker.to_upper()
 			_line.text = cue.text
 			_captions.reset_size()
-			var play_intro := not _intro_movie_played and not finished and CutsceneData.is_opening_cue(str(cue.id)) and SimEngine.tick < 64
+			var skip_m0 := false
+			if SimEngine.has_meta("skip_redundant_m0_movie"):
+				skip_m0 = bool(SimEngine.get_meta("skip_redundant_m0_movie")) and SimEngine.campaign.mission_index == 0
+				SimEngine.remove_meta("skip_redundant_m0_movie")
+			var play_intro := not _intro_movie_played and not skip_m0 and not finished and CutsceneData.is_opening_cue(str(cue.id)) and SimEngine.tick < 64
+			if skip_m0:
+				_intro_movie_played = true
 			if play_intro:
 				_intro_movie_played = true
 				_set_cinematic(true)

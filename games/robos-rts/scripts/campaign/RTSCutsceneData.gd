@@ -169,16 +169,25 @@ static func seen_cutscenes() -> Array[String]:
 		res.append(str(item))
 	return res
 
+const INTRO_SEEN_KEY := "intro_cinematic_v2"
+
 static func has_seen(id: String) -> bool:
-	return id in seen_cutscenes()
+	var key := INTRO_SEEN_KEY if id == "intro_cinematic" else id
+	return key in seen_cutscenes()
 
 static func mark_seen(id: String) -> void:
+	var key := INTRO_SEEN_KEY if id == "intro_cinematic" else id
 	var seen := seen_cutscenes()
-	if id in seen:
+	if key in seen:
 		return
-	seen.append(id)
+	seen.append(key)
 	var cfg := _load_config()
 	cfg.set_value("hub_cutscenes", "seen", seen)
+	cfg.save(Campaign._progress_path())
+
+static func reset_seen() -> void:
+	var cfg := _load_config()
+	cfg.set_value("hub_cutscenes", "seen", [])
 	cfg.save(Campaign._progress_path())
 
 static func is_opening_cue(cue_id: String) -> bool:
@@ -247,22 +256,31 @@ static func mission_intro_movie(mission_index: int) -> Dictionary:
 	var diorama_key: String = DIORAMA_KEYS[idx] if idx < DIORAMA_KEYS.size() else ""
 	var num_code := "%02d" % (idx + 1)
 
+	var pre_flagship := idx <= 2
+	var vesper_flyover_lines := [
+		"Skimming low under Directorate radar. Vesper Gate outskirts right ahead—prepare for combat drop.",
+		"Approaching the White Ridge excavation zone. Pioneers and base rigs are touching down at the staging camp.",
+		"Gnarl Brood signatures closing on Dawn Reach from every canyon! Hold that outpost until my Rampart can get back for extraction!",
+	]
+	var first_shot: Dictionary = {
+		"kind": "vesper_flyover" if pre_flagship else "orbital_fleet",
+		"mission_index": idx,
+		"duration": 4.5 if pre_flagship else 4.2,
+		"voice_cue": ("intro_vesper_%s" % num_code) if pre_flagship else ("intro_m%s_orbit" % num_code),
+		"telemetry": ("VESPER IV LOW APPROACH  //  %s" % str(meta.sector).to_upper()) if pre_flagship else ("MSV STARFALL  //  ORBITAL INSERTION  //  %s" % str(meta.planet_name)),
+		"speaker": "PILOT SABLE" if pre_flagship else "STARFALL HELM",
+		"portrait": "sable" if pre_flagship else "",
+		"line": vesper_flyover_lines[idx] if pre_flagship else ("Entering %s high orbit. Strike group cleared for atmospheric descent." % str(meta.sector)),
+	}
+
 	return {
 		"id": "mission_intro_%s" % num_code,
 		"title": "OPERATION %s  ·  %s" % [num_code, str(mission.title).to_upper()],
-		"voice_cue": "intro_m%s_orbit" % num_code,
+		"voice_cue": str(first_shot.voice_cue),
 		"planet": meta.planet,
 		"portrait": str(meta.portrait),
 		"shots": [
-			{
-				"kind": "orbital_fleet",
-				"duration": 4.2,
-				"voice_cue": "intro_m%s_orbit" % num_code,
-				"telemetry": "MSV STARFALL  //  ORBITAL INSERTION  //  %s" % str(meta.planet_name),
-				"speaker": "STARFALL HELM",
-				"portrait": "",
-				"line": "Entering %s high orbit. Strike group cleared for atmospheric descent." % str(meta.sector),
-			},
+			first_shot,
 			{
 				"kind": "plate",
 				"plate": "res://assets/ui/campaign/dropship_launch_bay.webp",
@@ -271,7 +289,7 @@ static func mission_intro_movie(mission_index: int) -> Dictionary:
 				"pan": Vector2(0.0, 14.0),
 				"duration": 5.2,
 				"voice_cue": bay_cue_id,
-				"telemetry": "LAUNCH BAY 02  //  %s" % str(mission.title).to_upper(),
+				"telemetry": ("VESPER DROP PAD  //  %s" % str(mission.title).to_upper()) if pre_flagship else ("LAUNCH BAY 02  //  %s" % str(mission.title).to_upper()),
 				"speaker": bay_speaker.to_upper(),
 				"portrait": bay_portrait,
 				"line": bay_text,
@@ -300,79 +318,59 @@ static func hub_cutscene(id: String, ctx: Dictionary = {}) -> Dictionary:
 		"intro_cinematic":
 			return {
 				"id": "intro_cinematic",
-				"title": "STARFALL COMMAND  ·  INTRO CINEMATIC",
-				"voice_cue": "intro_cine_1",
+				"title": "STARFALL COMMAND  ·  OPERATION: CUT THE SIGNAL",
+				"voice_cue": "intro_open_1",
 				"planet": HubData.mission_meta(0).planet,
 				"shots": [
 					{
-						"kind": "intro_gantry",
-						"duration": 5.4,
-						"voice_cue": "intro_cine_1",
-						"sfx_cues": [[0.10, "arc_welder"], [1.45, "siege_transform"], [2.85, "arc_welder"]],
-						"telemetry": "MSV STARFALL  //  BAY 07 ARMOR FORGE GANTRY",
+						"kind": "intro_occupation",
+						"duration": 6.6,
+						"voice_cue": "intro_open_1",
+						"sfx_cues": [[0.20, "radar_ping"], [2.20, "rifle_fire"]],
+						"telemetry": "COLONY OF VESPER GATE  ·  DIRECTORATE MARTIAL LAW — DAY 21",
+						"speaker": "ANCHOR KADE VANCE  ·  FRN SPECIAL REPORT",
+						"portrait": "",
+						"line": "Frontier News Special Report: Directorate garrisons have locked down the Vesper Gate subspace relay. Martial curfew is now total, and all off-world distress calls have been silenced.",
+					},
+					{
+						"kind": "intro_briefing",
+						"duration": 6.2,
+						"voice_cue": "intro_open_2",
+						"sfx_cues": [[0.15, "beacon_ready"]],
+						"telemetry": "OUTSKIRTS SAFEHOUSE  ·  INTERCEPTED RESISTANCE SIGNAL",
+						"speaker": "CORPORAL ROOK",
+						"portrait": "rook",
+						"line": "Don't buy the broadcast, Vale. They cut that relay so Vesper Gate can't call for help while Directorate convoys haul our people away.",
+					},
+					{
+						"kind": "intro_suitup",
+						"duration": 6.2,
+						"voice_cue": "intro_open_3",
+						"sfx_cues": [[0.12, "arc_welder"], [1.55, "siege_transform"], [2.95, "arc_welder"]],
+						"telemetry": "REBEL DROP BAY  ·  MERIDIAN MK-IV COMBAT ARMOR",
 						"speaker": "QUARTERMASTER VANE",
 						"portrait": "",
-						"line": "Reactor seals locked. Neosteel chestplate fused and pressurized. Bay Seven gantry is clear.",
+						"line": "Mark Four combat suit pressurized. Neosteel chestplate locked and sealed. Rifles are loaded and hot—suit's all yours, Captain.",
 					},
 					{
-						"kind": "intro_visor",
-						"duration": 5.2,
-						"voice_cue": "intro_cine_2",
-						"sfx_cues": [[0.14, "surge_activate"], [1.95, "unit_ready"]],
-						"telemetry": "POWER SUIT MK-IV  //  VISOR & WEAPON TELEMETRY ONLINE",
+						"kind": "intro_boarding",
+						"duration": 6.2,
+						"voice_cue": "intro_open_4",
+						"sfx_cues": [[0.12, "surge_activate"], [1.80, "transit_start"]],
+						"telemetry": "STAGING TARMAC  ·  VALE'S RIFLE SQUAD EMBARKING",
 						"speaker": "CAPTAIN VALE",
 						"portrait": "vale",
-						"line": "Seal the visor. Three weeks in the dark is long enough—it's time Vesper Gate heard from us.",
+						"line": "Seal the visor. Six rifles, one drop—we smash their roadblock, free the convoy, and tear that Directorate relay to the ground. On the Rampart, move!",
 					},
 					{
-						"kind": "intro_rollout",
-						"duration": 5.2,
-						"voice_cue": "intro_cine_3",
-						"sfx_cues": [[0.08, "silo_gate"], [1.10, "transit_start"], [2.25, "harrier_rockets"]],
-						"telemetry": "FLIGHT DECK 02  //  STRIKE GROUP ROLLOUT",
+						"kind": "intro_touchdown",
+						"duration": 6.0,
+						"voice_cue": "intro_open_5",
+						"sfx_cues": [[0.10, "transit_ready"], [1.45, "rifle_fire"], [2.60, "rifle_fire"]],
+						"telemetry": "VESPER GATE HIGHWAY  ·  MISSION 01 DROP ZONE",
 						"speaker": "PILOT SABLE",
 						"portrait": "sable",
-						"line": "Blast doors green! Armor columns rolling, Kestrel flight launching on my mark!",
-					},
-					{
-						"kind": "intro_warp",
-						"duration": 5.2,
-						"voice_cue": "intro_cine_4",
-						"sfx_cues": [[0.06, "dreadnought_jump"], [0.42, "dreadnought_arrival"], [2.10, "transit_ready"]],
-						"telemetry": "VESPER IV HIGH ORBIT  //  TASK FORCE TRANSLATION",
-						"speaker": "STARFALL HELM",
-						"portrait": "",
-						"line": "Starfall task force clear of warp! Drop-group Alpha detaching for atmospheric entry!",
-					},
-					{
-						"kind": "intro_swarm",
-						"duration": 5.4,
-						"voice_cue": "intro_cine_5",
-						"sfx_cues": [[0.12, "brood_egg_hatch"], [1.35, "chitin_cleave"], [2.45, "thorn_volley"]],
-						"telemetry": "DEEP-RIM BIOSCAN  //  GNARL BROOD EMERGENCE",
-						"speaker": "DR. ASTER",
-						"portrait": "aster",
-						"line": "Long-range bioscans are spiking across the Rim—the Gnarl Brood is waking beneath every frontier colony!",
-					},
-					{
-						"kind": "intro_concord",
-						"duration": 5.6,
-						"voice_cue": "intro_cine_6",
-						"sfx_cues": [[0.10, "archon_warp"], [1.15, "crown_lance"], [2.65, "prism_beam"]],
-						"telemetry": "SANCTUARY ORBITAL RING  //  AURELIAN PURIFICATION",
-						"speaker": "ANCHOR KADE VANCE",
-						"portrait": "",
-						"line": "Caught between Directorate martial law, the Brood tide, and ancient Aurelian fleets, the outer worlds face extinction.",
-					},
-					{
-						"kind": "intro_clash",
-						"duration": 6.0,
-						"voice_cue": "intro_cine_7",
-						"sfx_cues": [[0.15, "dreadnought_beam"], [1.20, "mortar_fire"], [1.95, "explosion_splash"], [3.10, "rifle_fire"]],
-						"telemetry": "OPERATION ASHFALL SIGNAL  //  ALL FORCES ENGAGE",
-						"speaker": "CAPTAIN VALE",
-						"portrait": "vale",
-						"line": "Let them all come. Load the Ramparts, lock your rifles, and follow me—we're taking our worlds back!",
+						"line": "Touching down on the Vesper Gate highway! Directorate roadblock dead ahead—ramp is green, Captain, go, go, go!",
 					},
 				],
 			}
@@ -551,10 +549,11 @@ static func hub_cutscene(id: String, ctx: Dictionary = {}) -> Dictionary:
 				],
 			}
 		"cantina_intro":
+			var early_vesper: bool = Campaign.MISSIONS[Campaign.DEFENSE].id not in completed
 			return {
 				"id": "cantina_intro",
-				"title": "DECK 04  ·  THE RUST & THRUSTER",
-				"voice_cue": "cantina_intro_1",
+				"title": "VESPER OUTPOST  ·  RESISTANCE SAFEHOUSE" if early_vesper else "DECK 04  ·  THE RUST & THRUSTER",
+				"voice_cue": "cantina_early_1" if early_vesper else "cantina_intro_1",
 				"planet": meta.planet,
 				"shots": [
 					{
@@ -563,12 +562,12 @@ static func hub_cutscene(id: String, ctx: Dictionary = {}) -> Dictionary:
 						"zoom_from": 1.10,
 						"zoom_to": 1.0,
 						"pan": Vector2(16.0, 0.0),
-						"duration": 5.8,
-						"voice_cue": "cantina_intro_1",
-						"telemetry": "MSV STARFALL  //  CREW LOUNGE & CONTRACT BOARD",
+						"duration": 5.6,
+						"voice_cue": "cantina_early_1" if early_vesper else "cantina_intro_1",
+						"telemetry": "VESPER IV  //  OUTSKIRTS RESISTANCE SAFEHOUSE" if early_vesper else "MSV STARFALL  //  CREW LOUNGE & CONTRACT BOARD",
 						"speaker": "CORPORAL ROOK",
 						"portrait": "rook",
-						"line": "Jukebox is warm, FRN's spinning propaganda on the screen, and the Rim's best mercenary crews are waiting at the holo-table.",
+						"line": "Welcome to the Vesper safehouse, Commander. Check the Job Board or hit Deploy whenever you're ready to roll out." if early_vesper else "Jukebox is warm, FRN's spinning propaganda on the screen, and the Rim's best mercenary crews are waiting at the holo-table.",
 					},
 				],
 			}

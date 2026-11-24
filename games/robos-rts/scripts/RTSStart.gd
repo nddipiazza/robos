@@ -9,6 +9,8 @@ const GameInput = preload("res://scripts/RTSGameInput.gd")
 const Campaign = preload("res://scripts/engine/RTSCampaign.gd")
 const HubData = preload("res://scripts/engine/RTSCampaignHubData.gd")
 const CampaignHub = preload("res://scripts/campaign/RTSCampaignHub.gd")
+const CutsceneData = preload("res://scripts/campaign/RTSCutsceneData.gd")
+const CutsceneTheater = preload("res://scripts/campaign/RTSCutsceneTheater.gd")
 const SCENARIOS := [
 	["starfall-canyon", "Starfall Canyon", "Three-faction showcase"],
 	["colony-macro-economy", "Colony Economy", "Gather, build, and train an army"],
@@ -42,6 +44,7 @@ var _menu_buttons: Dictionary = {}
 var _scenario_buttons: Dictionary = {}
 var _error: Label
 var _leave_confirmation: LeaveConfirmation
+var _menu_theater: Control
 
 func _ready() -> void:
 	if not SimEngine.startup_complete and _direct_launch():
@@ -138,9 +141,10 @@ func _build_main_page() -> void:
 	if not _first_button:
 		_first_button = campaign
 	_add_menu_button(buttons, "skirmish", "Skirmish", "1 vs. AI", func(): _open_options(MatchMenu.Layout.SKIRMISH, "skirmish"))
+	var side_col := _stack(_home, Vector2(660, 366), 430)
+	_add_menu_button(side_col, "intro_movie", "Intro Cinematic", "Opening movie", _play_standalone_intro)
 	if not OS.has_feature("web"):
-		var online := _stack(_home, Vector2(660, 440), 300)
-		_add_menu_button(online, "online", "Online 1v1", "", _open_online)
+		_add_menu_button(side_col, "online", "Online 1v1", "", _open_online)
 	_add_menu_button(buttons, "scenarios", "Scenarios", "Practice and showcases", _open_scenarios)
 	_add_menu_button(buttons, "editor", "Map Editor", "Create a battlefield", func(): _change_scene(EDITOR_SCENE))
 	var gap := Control.new()
@@ -268,13 +272,25 @@ func _build_campaign_page() -> void:
 	if _campaign:
 		_campaign.stop_all_audio()
 		_campaign.hide()
+	_menu_theater = CutsceneTheater.new()
+	_menu_theater.play_internal_voice = true
+	_menu_theater.movie_finished.connect(func(_id: String, _sk: bool):
+		if _page == "main" and _first_button:
+			_first_button.grab_focus())
+	add_child(_menu_theater)
 
-func _open_campaign() -> void:
+func _play_standalone_intro() -> void:
+	if _menu_theater:
+		_menu_theater.play_movie_spec(CutsceneData.hub_cutscene("intro_cinematic"), true)
+
+func _open_campaign(check_opening: bool = true) -> void:
 	_back_focus = _menu_buttons.campaign
 	_page = "campaign"
 	_home.hide()
 	_campaign.show()
 	_campaign.open_hub()
+	if check_opening and DisplayServer.get_name() != "headless" and Campaign.completed_missions().is_empty() and not CutsceneData.has_seen("intro_cinematic"):
+		_campaign.begin_opening_sequence()
 
 func _play_mission(index: int, difficulty: String, mutators: Array) -> void:
 	_confirm_replacing_battle("Start a campaign mission?", _start_mission.bind(index, difficulty, mutators))
@@ -362,6 +378,10 @@ func _open_options(layout: int, page: String) -> void:
 	_options.open_title_panel()
 
 func _show_home() -> void:
+	if _menu_theater:
+		_menu_theater.stop_all_media()
+		_menu_theater.is_playing = false
+		_menu_theater.hide()
 	if _online and _online.visible:
 		RTSNetwork.leave_match()
 		_online.hide()
@@ -404,6 +424,8 @@ func _resume() -> void:
 	_change_scene(BATTLE_SCENE)
 
 func _change_scene(path: String) -> void:
+	if _menu_theater:
+		_menu_theater.stop_all_media()
 	if not _leaving:
 		_leaving = true
 		get_tree().call_deferred("change_scene_to_file", path)
@@ -460,7 +482,7 @@ func ui_state() -> Dictionary:
 
 func apply_ui_state(request: Dictionary) -> Dictionary:
 	if request.get("page", "") == "campaign" and _page != "campaign":
-		_open_campaign()
+		_open_campaign(false)
 	if _campaign and _page == "campaign":
 		_campaign.apply_control(request)
 	return ui_state()

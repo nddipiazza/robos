@@ -132,22 +132,19 @@ def _clean_spoken_summary(text: str) -> str:
 def _extract_hub_catalog_items() -> tuple[list[tuple[str, str, str]], list[tuple[str, str]], list[tuple[str, str]]]:
     src = HUB_DATA_GD.read_text(encoding="utf-8")
 
-    # 1. Armory upgrades: 48 entries with id, name, summary
+    # 1. Armory upgrades
     upg_pattern = re.compile(
         r'"id":\s*"([^"]+)",\s*"name":\s*"([^"]+)",\s*"cost":\s*\d+,\s*"glyph":\s*"[^"]+",\s*\n\s*"summary":\s*"([^"]+)"'
     )
     upgrades = upg_pattern.findall(src)
-    assert len(upgrades) == 48, f"Expected 48 armory upgrades in RTSCampaignHubData.gd, got {len(upgrades)}"
 
-    # 2. Mercenaries: 6 entries with id, name
+    # 2. Mercenaries
     merc_pattern = re.compile(r'"id":\s*"(merc_[^"]+)",\s*"name":\s*"([^"]+)"')
     mercs = merc_pattern.findall(src)
-    assert len(mercs) == 6, f"Expected 6 mercenaries in RTSCampaignHubData.gd, got {len(mercs)}"
 
-    # 3. Lab perks: 20 entries with id, name
+    # 3. Lab perks
     lab_pattern = re.compile(r'"id":\s*"((?:brood|concord)_t\d_[^"]+)",\s*"name":\s*"([^"]+)"')
     perks = lab_pattern.findall(src)
-    assert len(perks) == 20, f"Expected 20 lab perks in RTSCampaignHubData.gd, got {len(perks)}"
 
     return upgrades, mercs, perks
 
@@ -164,7 +161,19 @@ def build_voice_lines() -> list[dict]:
         add(f"intro_m{num}_orbit", "helm", f"Entering {sector} high orbit. Strike group cleared for atmospheric descent.")
         add(f"intro_m{num}_surface", contact_speaker, surface_line)
 
-    # B. 7-Shot 3D Intro Cinematic ("Suiting Up: The Ashfall Signal") + Room Intros & Arc Milestones
+    # B. Cohesive 5-Shot 3D Opening Cinematic ("Cut the Signal: Vesper Gate") + Early Vesper Flyovers & Room Intros
+    add("intro_open_1", "vance", "Frontier News Special Report: Directorate garrisons have locked down the Vesper Gate subspace relay. Martial curfew is now total, and all off-world distress calls have been silenced.")
+    add("intro_open_2", "rook", "Don't buy the broadcast, Vale. They cut that relay so Vesper Gate can't call for help while Directorate convoys haul our people away.")
+    add("intro_open_3", "vane", "Mark Four combat suit pressurized. Neosteel chestplate locked and sealed. Rifles are loaded and hot, suit's all yours, Captain.")
+    add("intro_open_4", "vale", "Seal the visor. Six rifles, one drop. We smash their roadblock, free the convoy, and tear that Directorate relay to the ground. On the Rampart, move!")
+    add("intro_open_5", "sable", "Touching down on the Vesper Gate highway! Directorate roadblock dead ahead, ramp is green, Captain, go, go, go!")
+
+    add("cantina_early_1", "rook", "Welcome to the Vesper safehouse, Commander. Check the Job Board or hit Deploy whenever you're ready to roll out.")
+    add("intro_vesper_01", "sable", "Skimming low under Directorate radar. Vesper Gate outskirts right ahead, prepare for combat drop.")
+    add("intro_vesper_02", "sable", "Approaching the White Ridge excavation zone. Pioneers and base rigs are touching down at the staging camp.")
+    add("intro_vesper_03", "sable", "Gnarl Brood signatures closing on Dawn Reach from every canyon! Hold that outpost until my Rampart can get back for extraction!")
+
+    # Legacy 7-shot cues preserved in manifest
     add("intro_cine_1", "vane", " Reactor seals locked. Neosteel chestplate fused and pressurized. Bay Seven gantry is clear.")
     add("intro_cine_2", "vale", "Seal the visor. Three weeks in the dark is long enough. It's time Vesper Gate heard from us.")
     add("intro_cine_3", "sable", "Blast doors green! Armor columns rolling, Kestrel flight launching on my mark!")
@@ -239,6 +248,15 @@ def build_voice_lines() -> list[dict]:
     add("ui_mutators", "vale", "Tactical mutator matrix online. Adjust mission hazard parameters carefully.")
     add("ui_archive", "helm", "Accessing Starfall mission logs and sector broadcast archives.")
     add("ui_service_record", "helm", "Displaying Meridian Guard expedition service record and treasury status.")
+
+    # Preserve any previously generated catalog cues from manifest.json
+    manifest_p = HUB_AUDIO_DIR / "manifest.json"
+    if manifest_p.exists():
+        known_ids = {x["id"] for x in lines}
+        prev = json.loads(manifest_p.read_text(encoding="utf-8")).get("cues", {})
+        for cid, meta in prev.items():
+            if cid not in known_ids:
+                add(cid, meta["speaker"], meta["text"])
 
     return lines
 

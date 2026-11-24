@@ -164,6 +164,60 @@
       "duration": 4.862,
       "path": "res://assets/audio/campaign/hub/intro_m11_surface.wav"
     },
+    "intro_open_1": {
+      "speaker": "vance",
+      "text": "Frontier News Special Report: Directorate garrisons have locked down the Vesper Gate subspace relay. Martial curfew is now total, and all off-world distress calls have been silenced.",
+      "duration": 10.51,
+      "path": "res://assets/audio/campaign/hub/intro_open_1.wav"
+    },
+    "intro_open_2": {
+      "speaker": "rook",
+      "text": "Don't buy the broadcast, Vale. They cut that relay so Vesper Gate can't call for help while Directorate convoys haul our people away.",
+      "duration": 5.855,
+      "path": "res://assets/audio/campaign/hub/intro_open_2.wav"
+    },
+    "intro_open_3": {
+      "speaker": "vane",
+      "text": "Mark Four combat suit pressurized. Neosteel chestplate locked and sealed. Rifles are loaded and hot, suit's all yours, Captain.",
+      "duration": 9.161,
+      "path": "res://assets/audio/campaign/hub/intro_open_3.wav"
+    },
+    "intro_open_4": {
+      "speaker": "vale",
+      "text": "Seal the visor. Six rifles, one drop. We smash their roadblock, free the convoy, and tear that Directorate relay to the ground. On the Rampart, move!",
+      "duration": 10.712,
+      "path": "res://assets/audio/campaign/hub/intro_open_4.wav"
+    },
+    "intro_open_5": {
+      "speaker": "sable",
+      "text": "Touching down on the Vesper Gate highway! Directorate roadblock dead ahead, ramp is green, Captain, go, go, go!",
+      "duration": 6.926,
+      "path": "res://assets/audio/campaign/hub/intro_open_5.wav"
+    },
+    "cantina_early_1": {
+      "speaker": "rook",
+      "text": "Welcome to the Vesper safehouse, Commander. Check the Job Board or hit Deploy whenever you're ready to roll out.",
+      "duration": 4.788,
+      "path": "res://assets/audio/campaign/hub/cantina_early_1.wav"
+    },
+    "intro_vesper_01": {
+      "speaker": "sable",
+      "text": "Skimming low under Directorate radar. Vesper Gate outskirts right ahead, prepare for combat drop.",
+      "duration": 6.01,
+      "path": "res://assets/audio/campaign/hub/intro_vesper_01.wav"
+    },
+    "intro_vesper_02": {
+      "speaker": "sable",
+      "text": "Approaching the White Ridge excavation zone. Pioneers and base rigs are touching down at the staging camp.",
+      "duration": 5.856,
+      "path": "res://assets/audio/campaign/hub/intro_vesper_02.wav"
+    },
+    "intro_vesper_03": {
+      "speaker": "sable",
+      "text": "Gnarl Brood signatures closing on Dawn Reach from every canyon! Hold that outpost until my Rampart can get back for extraction!",
+      "duration": 6.811,
+      "path": "res://assets/audio/campaign/hub/intro_vesper_03.wav"
+    },
     "intro_cine_1": {
       "speaker": "vane",
       "text": " Reactor seals locked. Neosteel chestplate fused and pressurized. Bay Seven gantry is clear.",
@@ -884,42 +938,6 @@
       "duration": 5.784,
       "path": "res://assets/audio/campaign/hub/tech_bastion_plate.wav"
     },
-    "hire_merc_roadwardens": {
-      "speaker": "rook",
-      "text": "Bracken Roadwardens just docked in Bay Seven. Their dropships are standing by on our Contract Post frequency.",
-      "duration": 5.411,
-      "path": "res://assets/audio/campaign/hub/hire_merc_roadwardens.wav"
-    },
-    "hire_merc_ashhounds": {
-      "speaker": "rook",
-      "text": "Ashfall Hellhounds just docked in Bay Seven. Their dropships are standing by on our Contract Post frequency.",
-      "duration": 5.18,
-      "path": "res://assets/audio/campaign/hub/hire_merc_ashhounds.wav"
-    },
-    "hire_merc_ironbacks": {
-      "speaker": "rook",
-      "text": "Vesper Ironbacks just docked in Bay Seven. Their dropships are standing by on our Contract Post frequency.",
-      "duration": 5.236,
-      "path": "res://assets/audio/campaign/hub/hire_merc_ironbacks.wav"
-    },
-    "hire_merc_outriders": {
-      "speaker": "rook",
-      "text": "Tarsus Rail Raiders just docked in Bay Seven. Their dropships are standing by on our Contract Post frequency.",
-      "duration": 5.454,
-      "path": "res://assets/audio/campaign/hub/hire_merc_outriders.wav"
-    },
-    "hire_merc_deadfall": {
-      "speaker": "rook",
-      "text": "Deadfall Siege Battery just docked in Bay Seven. Their dropships are standing by on our Contract Post frequency.",
-      "duration": 5.372,
-      "path": "res://assets/audio/campaign/hub/hire_merc_deadfall.wav"
-    },
-    "hire_merc_angels": {
-      "speaker": "rook",
-      "text": "Duskwing Squadron just docked in Bay Seven. Their dropships are standing by on our Contract Post frequency.",
-      "duration": 5.081,
-      "path": "res://assets/audio/campaign/hub/hire_merc_angels.wav"
-    },
     "lab_brood_t1_bunker": {
       "speaker": "aster",
       "text": "Synthesis complete. Chitin-Lined Bunkers is now integrated into all Meridian deployments.",
@@ -1129,6 +1147,42 @@
       "text": "Displaying Meridian Guard expedition service record and treasury status.",
       "duration": 3.852,
       "path": "res://assets/audio/campaign/hub/ui_service_record.wav"
+    },
+    "hire_merc_roadwardens": {
+      "speaker": "rook",
+      "text": "Bracken Roadwardens just docked in Bay Seven. Their dropships are standing by on our Contract Post frequency.",
+      "duration": 5.411,
+      "path": "res://assets/audio/campaign/hub/hire_merc_roadwardens.wav"
+    },
+    "hire_merc_ashhounds": {
+      "speaker": "rook",
+      "text": "Ashfall Hellhounds just docked in Bay Seven. Their dropships are standing by on our Contract Post frequency.",
+      "duration": 5.18,
+      "path": "res://assets/audio/campaign/hub/hire_merc_ashhounds.wav"
+    },
+    "hire_merc_ironbacks": {
+      "speaker": "rook",
+      "text": "Vesper Ironbacks just docked in Bay Seven. Their dropships are standing by on our Contract Post frequency.",
+      "duration": 5.236,
+      "path": "res://assets/audio/campaign/hub/hire_merc_ironbacks.wav"
+    },
+    "hire_merc_outriders": {
+      "speaker": "rook",
+      "text": "Tarsus Rail Raiders just docked in Bay Seven. Their dropships are standing by on our Contract Post frequency.",
+      "duration": 5.454,
+      "path": "res://assets/audio/campaign/hub/hire_merc_outriders.wav"
+    },
+    "hire_merc_deadfall": {
+      "speaker": "rook",
+      "text": "Deadfall Siege Battery just docked in Bay Seven. Their dropships are standing by on our Contract Post frequency.",
+      "duration": 5.372,
+      "path": "res://assets/audio/campaign/hub/hire_merc_deadfall.wav"
+    },
+    "hire_merc_angels": {
+      "speaker": "rook",
+      "text": "Duskwing Squadron just docked in Bay Seven. Their dropships are standing by on our Contract Post frequency.",
+      "duration": 5.081,
+      "path": "res://assets/audio/campaign/hub/hire_merc_angels.wav"
     }
   }
 }

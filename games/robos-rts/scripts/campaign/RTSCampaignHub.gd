@@ -42,8 +42,11 @@ var _credits_label: Label
 var _research_pill: Label
 var _top_mutator_btn: Button
 var _bridge_map_hotspot: Control
+var _cantina_job_hotspot: Control
+var _quick_dock: HBoxContainer
 var _quick_deploy_title: Label
 var _quick_deploy_btn: Button
+var _opening_launch_pending := false
 var _holo_fx: Control
 var _toast_panel: PanelContainer
 var _toast_speaker: Label
@@ -137,42 +140,7 @@ func _populate_bridge(room: Control) -> void:
 		Vector2(28, -98), Vector2(-24, 12), func(): open_console("mutators")
 	)
 
-	# Lower-right emerald quick-action dock (styled like "Selling Artifacts" in Image 4!)
-	var quick_dock := HBoxContainer.new()
-	quick_dock.position = Vector2(1430, 902)
-	quick_dock.size = Vector2(462, 68)
-	quick_dock.alignment = BoxContainer.ALIGNMENT_END
-	quick_dock.add_theme_constant_override("separation", 12)
-	room.add_child(quick_dock)
 
-	var text_col := VBoxContainer.new()
-	text_col.alignment = BoxContainer.ALIGNMENT_CENTER
-	text_col.add_theme_constant_override("separation", 1)
-	quick_dock.add_child(text_col)
-
-	var q_eyebrow := Label.new()
-	q_eyebrow.text = "NEXT OPERATION"
-	q_eyebrow.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	q_eyebrow.add_theme_font_override("font", ConsoleTheme.title_font())
-	q_eyebrow.add_theme_font_size_override("font_size", 13)
-	q_eyebrow.add_theme_color_override("font_color", Color("#6cf596"))
-	text_col.add_child(q_eyebrow)
-
-	_quick_deploy_title = Label.new()
-	_quick_deploy_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	_quick_deploy_title.add_theme_font_override("font", ConsoleTheme.title_font())
-	_quick_deploy_title.add_theme_font_size_override("font_size", 20)
-	_quick_deploy_title.add_theme_color_override("font_color", Color("#eefaff"))
-	_quick_deploy_title.add_theme_color_override("font_outline_color", Color("#030a07"))
-	_quick_deploy_title.add_theme_constant_override("outline_size", 4)
-	text_col.add_child(_quick_deploy_title)
-
-	_quick_deploy_btn = Button.new()
-	_quick_deploy_btn.text = "DEPLOY ▸"
-	_quick_deploy_btn.custom_minimum_size = Vector2(146, 56)
-	ConsoleTheme.apply_emerald_button(_quick_deploy_btn, 19, true)
-	_quick_deploy_btn.pressed.connect(_trigger_quick_deploy)
-	quick_dock.add_child(_quick_deploy_btn)
 
 func _draw_bridge_holo() -> void:
 	if DisplayServer.get_name() == "headless":
@@ -239,6 +207,10 @@ func _populate_cantina(room: Control) -> void:
 	_add_hotspot(
 		room, Rect2(1395, 40, 430, 260), "Cinema Archive", "Replay Cutscenes",
 		Vector2(-65, 145), Vector2(10, 40), func(): open_console("cutscenes")
+	)
+	_cantina_job_hotspot = _add_hotspot(
+		room, Rect2(1310, 665, 420, 210), "Job Board", "Select Operation",
+		Vector2(-45, -108), Vector2(0, -15), func(): open_console("mission_select")
 	)
 
 func _populate_laboratory(room: Control) -> void:
@@ -326,6 +298,42 @@ func _build_top_hud() -> void:
 	_research_pill.add_theme_color_override("font_outline_color", Color("#030a08"))
 	_research_pill.add_theme_constant_override("outline_size", 3)
 	add_child(_research_pill)
+
+	_quick_dock = HBoxContainer.new()
+	_quick_dock.position = Vector2(1430, 902)
+	_quick_dock.size = Vector2(462, 68)
+	_quick_dock.alignment = BoxContainer.ALIGNMENT_END
+	_quick_dock.add_theme_constant_override("separation", 12)
+	add_child(_quick_dock)
+
+	var text_col := VBoxContainer.new()
+	text_col.alignment = BoxContainer.ALIGNMENT_CENTER
+	text_col.add_theme_constant_override("separation", 1)
+	_quick_dock.add_child(text_col)
+
+	var q_eyebrow := Label.new()
+	q_eyebrow.text = "NEXT OPERATION"
+	q_eyebrow.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	q_eyebrow.add_theme_font_override("font", ConsoleTheme.title_font())
+	q_eyebrow.add_theme_font_size_override("font_size", 13)
+	q_eyebrow.add_theme_color_override("font_color", Color("#6cf596"))
+	text_col.add_child(q_eyebrow)
+
+	_quick_deploy_title = Label.new()
+	_quick_deploy_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_quick_deploy_title.add_theme_font_override("font", ConsoleTheme.title_font())
+	_quick_deploy_title.add_theme_font_size_override("font_size", 20)
+	_quick_deploy_title.add_theme_color_override("font_color", Color("#eefaff"))
+	_quick_deploy_title.add_theme_color_override("font_outline_color", Color("#030a07"))
+	_quick_deploy_title.add_theme_constant_override("outline_size", 4)
+	text_col.add_child(_quick_deploy_title)
+
+	_quick_deploy_btn = Button.new()
+	_quick_deploy_btn.text = "DEPLOY ▸"
+	_quick_deploy_btn.custom_minimum_size = Vector2(146, 56)
+	ConsoleTheme.apply_emerald_button(_quick_deploy_btn, 19, true)
+	_quick_deploy_btn.pressed.connect(_trigger_quick_deploy)
+	_quick_dock.add_child(_quick_deploy_btn)
 
 func _top_link_button(label_text: String, cb: Callable) -> Button:
 	var b := Button.new()
@@ -488,7 +496,25 @@ func _build_consoles() -> void:
 
 	cutscene_theater = CutsceneTheater.new()
 	cutscene_theater.play_internal_voice = true
+	cutscene_theater.movie_finished.connect(_on_hub_movie_finished)
 	add_child(cutscene_theater)
+
+func begin_opening_sequence() -> void:
+	_opening_launch_pending = true
+	switch_room("cantina", false)
+	trigger_cutscene("intro_cinematic")
+	if cutscene_theater:
+		cutscene_theater.set_skip_label("START MISSION 01 ▸")
+
+func _on_hub_movie_finished(movie_id: String, _skipped: bool) -> void:
+	if movie_id == "intro_cinematic" and _opening_launch_pending:
+		_opening_launch_pending = false
+		if DisplayServer.get_name() != "headless":
+			SimEngine.set_meta("skip_redundant_m0_movie", true)
+			launch_mission.emit(0, current_difficulty(), selected_mutators())
+			return
+	if is_visible_in_tree() and _quick_deploy_btn and active_console.is_empty():
+		_quick_deploy_btn.grab_focus()
 
 func trigger_cutscene(cutscene_id: String, ctx: Dictionary = {}) -> void:
 	if cutscene_theater == null:
@@ -614,6 +640,8 @@ func refresh_hub_state() -> void:
 	var mut_count := selected_mutators().size()
 	if _top_mutator_btn:
 		_top_mutator_btn.text = "Mutators (%d)" % mut_count
+	if _quick_dock:
+		_quick_dock.visible = active_console.is_empty()
 	if mission_console:
 		mission_console.refresh_progress(mut_count)
 		var next_idx: int = mission_console.selected_index
@@ -623,6 +651,9 @@ func refresh_hub_state() -> void:
 		if _bridge_map_hotspot:
 			_bridge_map_hotspot.callout_subtitle = "%02d · %s" % [next_idx + 1, m_title]
 			_bridge_map_hotspot.queue_redraw()
+		if _cantina_job_hotspot:
+			_cantina_job_hotspot.callout_subtitle = "%02d · %s" % [next_idx + 1, m_title]
+			_cantina_job_hotspot.queue_redraw()
 
 func _trigger_quick_deploy() -> void:
 	mission_console.refresh_progress(selected_mutators().size())
@@ -652,6 +683,9 @@ func unlocked_missions() -> Array:
 	return res
 
 func apply_control(request: Dictionary) -> void:
+	if request.is_empty():
+		return
+	_opening_launch_pending = false
 	if request.get("skip_cutscene", false) and cutscene_theater and cutscene_theater.is_playing:
 		cutscene_theater.skip()
 	if request.has("hub_room"):

@@ -154,11 +154,12 @@ func _build_3d_stage() -> void:
 	_env.background_mode = Environment.BG_COLOR
 	_env.background_color = Color("#0b1522")
 	_env.tonemap_mode = Environment.TONE_MAPPER_ACES
-	_env.tonemap_exposure = 1.06
-	_env.tonemap_white = 4.5
+	_env.tonemap_exposure = 0.98
+	_env.tonemap_white = 4.8
 	_env.glow_enabled = true
-	_env.glow_intensity = 0.58
-	_env.glow_bloom = 0.18
+	_env.glow_hdr_threshold = 1.25
+	_env.glow_intensity = 0.34
+	_env.glow_bloom = 0.06
 	_env.glow_blend_mode = Environment.GLOW_BLEND_MODE_SOFTLIGHT
 	_env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	_env.ambient_light_color = Color("#9db8cc")
@@ -341,11 +342,15 @@ func _build_letterbox_chrome() -> void:
 
 	_skip_btn = Button.new()
 	_skip_btn.text = "SKIP MOVIE ▸"
-	_skip_btn.position = Vector2(1636, 966)
-	_skip_btn.size = Vector2(228, 48)
+	_skip_btn.position = Vector2(1620, 966)
+	_skip_btn.size = Vector2(244, 48)
 	ConsoleTheme.apply_emerald_button(_skip_btn, 18, false)
 	_skip_btn.pressed.connect(func(): skip())
 	add_child(_skip_btn)
+
+func set_skip_label(label_text: String) -> void:
+	if _skip_btn:
+		_skip_btn.text = label_text
 
 func _build_audio() -> void:
 	_voice_player = AudioStreamPlayer.new()
@@ -492,6 +497,8 @@ func finish_movie(skipped: bool) -> void:
 	var finished_id := current_movie_id
 	is_playing = false
 	stop_all_media()
+	if _skip_btn:
+		_skip_btn.text = "SKIP MOVIE ▸"
 	hide()
 	set_process(false)
 	movie_finished.emit(finished_id, skipped)
@@ -604,6 +611,10 @@ func _enter_shot(idx: int) -> void:
 				_vp.transparent_bg = true
 				_vp_container.show()
 				_stage_orbital_fleet()
+		"vesper_flyover":
+			if _vp_container:
+				_vp_container.show()
+				_stage_vesper_flyover(int(shot.get("mission_index", 0)))
 		"plate":
 			_plate_rect.texture = _load_tex(str(shot.get("plate", "")))
 			_plate_holder.show()
@@ -628,6 +639,26 @@ func _enter_shot(idx: int) -> void:
 			if _vp_container:
 				_vp_container.show()
 				_stage_unit_trial(str(shot.get("unit_id", "rifleman")), bool(shot.get("dropship_entry", false)))
+		"intro_occupation":
+			if _vp_container:
+				_vp_container.show()
+				_stage_intro_occupation()
+		"intro_briefing":
+			if _vp_container:
+				_vp_container.show()
+				_stage_intro_briefing()
+		"intro_suitup":
+			if _vp_container:
+				_vp_container.show()
+				_stage_intro_suitup()
+		"intro_boarding":
+			if _vp_container:
+				_vp_container.show()
+				_stage_intro_boarding()
+		"intro_touchdown":
+			if _vp_container:
+				_vp_container.show()
+				_stage_intro_touchdown()
 		"intro_gantry":
 			if _vp_container:
 				_vp_container.show()
@@ -779,15 +810,15 @@ func _clear_3d_stage() -> void:
 	if _key_light:
 		_key_light.rotation_degrees = Vector3(-42.0, -34.0, 0.0)
 		_key_light.light_color = Color("#fff0dc")
-		_key_light.light_energy = 1.4
+		_key_light.light_energy = 1.18
 	if _rim_light:
 		_rim_light.rotation_degrees = Vector3(-18.0, 145.0, 0.0)
 		_rim_light.light_color = Color("#46e8ff")
-		_rim_light.light_energy = 0.85
+		_rim_light.light_energy = 0.68
 	if _env:
 		_env.ambient_light_color = Color("#9db8cc")
-		_env.ambient_light_energy = 0.78
-		_env.glow_intensity = 0.58
+		_env.ambient_light_energy = 0.68
+		_env.glow_intensity = 0.34
 	if _world_root == null:
 		return
 	for child in _world_root.get_children():
@@ -1184,6 +1215,15 @@ func _animate_fx_items(delta: float, shot_u: float) -> void:
 				var door: Node3D = node
 				var open_u := smoothstep(0.02, 0.68, shot_u)
 				door.position = (fx.closed as Vector3).lerp(fx.opened as Vector3, open_u)
+			"spin_holo":
+				(node as Node3D).rotation.y += delta * float(fx.get("speed", 0.65))
+			"jammer_wave":
+				fx.age = float(fx.age) + delta
+				var j_frac := fmod(float(fx.age), 1.6) / 1.6
+				var j_s := lerpf(0.5, 6.5, j_frac)
+				(node as Node3D).scale = Vector3(j_s, j_s, j_s)
+				var jmat: StandardMaterial3D = fx.mat
+				jmat.albedo_color.a = (1.0 - j_frac) * 0.68
 			"expand_ring":
 				fx.life = float(fx.life) - delta
 				var life := float(fx.life)
@@ -1196,6 +1236,421 @@ func _animate_fx_items(delta: float, shot_u: float) -> void:
 					(node as Node3D).scale = Vector3(s, s, s)
 					var rmat: StandardMaterial3D = fx.mat
 					rmat.albedo_color.a = (1.0 - frac) * 0.88
+
+func _build_highway_strip(center: Vector3, length: float, width: float, yaw_rad: float = 0.0) -> Node3D:
+	var road_root := Node3D.new()
+	road_root.position = center
+	road_root.rotation.y = yaw_rad
+	var asphalt := Models.mat("cine_asphalt", Color("#252a30"), Color.BLACK, 1.0, 0.08, 0.88)
+	var curb_mat := Models.mat("cine_curb", Color("#56606b"), Color.BLACK, 1.0, 0.12, 0.78)
+	var stripe_mat := Models.mat("cine_road_stripe", Color("#e0b24c"), Color("#b88628"), 0.6, 0.0, 0.65)
+	Models.box(road_root, Vector3(width, 0.06, length), asphalt, Vector3(0.0, 0.03, 0.0))
+	Models.box(road_root, Vector3(0.36, 0.16, length), curb_mat, Vector3(-width * 0.5 - 0.18, 0.08, 0.0))
+	Models.box(road_root, Vector3(0.36, 0.16, length), curb_mat, Vector3(width * 0.5 + 0.18, 0.08, 0.0))
+	var dashes := int(length / 2.8)
+	for d_i in dashes:
+		var dz := -length * 0.5 + 1.4 + float(d_i) * 2.8
+		Models.box(road_root, Vector3(0.16, 0.07, 1.25), stripe_mat, Vector3(0.0, 0.04, dz))
+	_world_root.add_child(road_root)
+	return road_root
+
+func _add_jammer_ring(origin: Vector3, age_offset: float) -> void:
+	var ring_mi := MeshInstance3D.new()
+	var torus := TorusMesh.new()
+	torus.inner_radius = 0.72
+	torus.outer_radius = 0.88
+	ring_mi.mesh = torus
+	ring_mi.position = origin
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.albedo_color = Color(1.0, 0.24, 0.20, 0.65)
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	ring_mi.material_override = mat
+	_world_root.add_child(ring_mi)
+	_fx_items.append({"kind": "jammer_wave", "node": ring_mi, "mat": mat, "age": age_offset})
+
+func _stage_vesper_flyover(mission_idx: int) -> void:
+	_clear_3d_stage()
+	if _world_root == null:
+		return
+	_env.background_mode = Environment.BG_COLOR
+	_env.background_color = Color("#121d2b")
+	_env.fog_enabled = true
+	_env.fog_light_color = Color("#243648")
+	_env.fog_density = 0.016
+	_make_ground_plane("res://assets/terrain/badlands.webp", Color("#6a5646"), 0.90, 18.0, 220.0)
+	_build_highway_strip(Vector3(0.0, 0.0, -4.0), 64.0, 5.8, 0.35)
+	if mission_idx == 1:
+		_spawn_model("colony_hub", 1, Vector3(-5.5, 0.0, -8.5), Vector3(4, 0, 2), 0.95)
+		_spawn_model("silo", 1, Vector3(-9.5, 0.0, -6.5), Vector3(4, 0, 2), 0.95)
+	elif mission_idx == 2:
+		_spawn_model("field_bunker", 1, Vector3(-3.5, 0.0, -6.5), Vector3(6, 0, -2), 0.95)
+		_spawn_model("sentry_turret", 1, Vector3(3.2, 0.0, -8.5), Vector3(8, 0, -2), 0.95)
+	else:
+		_spawn_model("propaganda_statue", 2, Vector3(5.8, 0.0, -8.2), Vector3(-4, 0, 6), 0.95)
+		_spawn_model("sentry_turret", 2, Vector3(-4.6, 0.0, -9.4), Vector3(-2, 0, 6), 0.95)
+
+	for idx in 2:
+		var p := Vector3(-6.2 - float(idx) * 3.4, 3.8 + float(idx) * 0.7, 4.8 + float(idx) * 2.4)
+		var v := Vector3(2.2, -0.14, -1.55)
+		var ship := _spawn_model("rampart_transport", 1, p, p + v * 8.0, 0.92)
+		if ship:
+			_add_thruster_glow(ship)
+			_actors.append({"node": ship, "vel": v, "hover": true, "seed": float(idx) * 1.4, "fire_at": null})
+
+	_use_bezier_cam = true
+	_cam_from = Vector3(-11.8, 5.2, 12.6)
+	_cam_mid = Vector3(-7.4, 4.6, 9.8)
+	_cam_to = Vector3(-3.2, 4.2, 7.2)
+	_cam_look = Vector3(-2.5, 2.6, 1.2)
+	_cam_look_to = Vector3(2.4, 1.8, -5.2)
+	_fov_from = 40.0
+	_fov_to = 35.0
+
+# -----------------------------------------------------------------------------
+# Cohesive 5-Shot Opening Cinematic: "Operation: Cut the Signal" (Vesper Gate)
+# -----------------------------------------------------------------------------
+
+func _stage_intro_occupation() -> void:
+	_clear_3d_stage()
+	if _world_root == null:
+		return
+	_env.background_mode = Environment.BG_COLOR
+	_env.background_color = Color("#131a26")
+	_env.fog_enabled = true
+	_env.fog_light_color = Color("#262230")
+	_env.fog_density = 0.017
+	_env.ambient_light_color = Color("#8fa0b8")
+	_env.ambient_light_energy = 0.62
+	_key_light.light_color = Color("#ffd5b0")
+	_key_light.light_energy = 1.12
+	_key_light.rotation_degrees = Vector3(-34.0, -38.0, 0.0)
+	_rim_light.light_color = Color("#ff5648")
+	_rim_light.light_energy = 0.62
+
+	_make_ground_plane("res://assets/terrain/badlands.webp", Color("#594c44"), 0.90, 20.0, 220.0)
+	_build_highway_strip(Vector3(0.0, 0.0, -6.0), 58.0, 6.4, 0.0)
+
+	# Streetlamps & jersey barricades lining the occupied Vesper Gate avenue
+	var pole_mat := Models.mat("cine_pole_steel", Color("#2d3640"), Color.BLACK, 1.0, 0.55, 0.45)
+	var lamp_mat := Models.mat("cine_street_lamp", Color("#ffcf86"), Color("#ffaa44"), 1.6, 0.0, 0.3)
+	for z_lamp in [-14.0, -6.0, 2.0]:
+		for side in [-1.0, 1.0]:
+			Models.box(_world_root, Vector3(0.16, 3.8, 0.16), pole_mat, Vector3(side * 4.1, 1.9, z_lamp))
+			Models.box(_world_root, Vector3(0.75, 0.12, 0.22), pole_mat, Vector3(side * 3.75, 3.75, z_lamp))
+			Models.box(_world_root, Vector3(0.32, 0.10, 0.18), lamp_mat, Vector3(side * 3.55, 3.68, z_lamp))
+
+	# Occupied colony buildings behind Directorate roadblocks
+	_spawn_model("colony_hub", 1, Vector3(-10.2, 0.0, -7.5), Vector3(4, 0, -4), 0.92)
+	_spawn_model("silo", 1, Vector3(-9.4, 0.0, -1.2), Vector3(4, 0, -1), 0.95)
+	_spawn_model("silo", 1, Vector3(9.6, 0.0, -4.4), Vector3(-4, 0, -4), 0.95)
+	_spawn_model("field_bunker", 2, Vector3(-5.8, 0.0, -11.8), Vector3(0, 0, 6), 0.95)
+	_spawn_model("sentry_turret", 2, Vector3(5.6, 0.0, -11.8), Vector3(0, 0, 6), 0.95)
+
+	# Towering Directorate Propaganda Statues flanking the boulevard
+	_spawn_model("propaganda_statue", 2, Vector3(-5.2, 0.0, -3.2), Vector3(3, 0, 6), 1.05)
+	_spawn_model("propaganda_statue", 2, Vector3(5.2, 0.0, -8.4), Vector3(-3, 0, 6), 1.05)
+
+	# Directorate Subspace Relay HQ at the head of the avenue pulsing red jamming waves!
+	_spawn_model("muster_hall", 2, Vector3(0.0, 0.0, -20.5), Vector3(0, 0, 8), 1.08)
+	_spawn_model("radar_beacon", 2, Vector3(0.0, 0.0, -16.2), Vector3(0, 0, 8), 1.12)
+	_add_omni(Vector3(0.0, 3.8, -16.2), Color("#ff3b30"), 1.6, 14.0, 4.2)
+	_add_jammer_ring(Vector3(0.0, 3.4, -16.2), 0.0)
+	_add_jammer_ring(Vector3(0.0, 3.4, -16.2), 0.8)
+
+	# Detainee column: captured Vesper colonists marched down the road by crimson Directorate guards!
+	var marchers := [
+		{"u": "breacher", "o": 2, "p": Vector3(-1.1, 0.0, 2.2), "s": 0.98},
+		{"u": "breacher", "o": 2, "p": Vector3(1.1, 0.0, 2.2), "s": 0.98},
+		{"u": "pioneer", "o": 1, "p": Vector3(-0.75, 0.0, 4.2), "s": 0.92},
+		{"u": "pioneer", "o": 1, "p": Vector3(0.75, 0.0, 4.2), "s": 0.92},
+		{"u": "pioneer", "o": 1, "p": Vector3(-0.75, 0.0, 5.9), "s": 0.92},
+		{"u": "pioneer", "o": 1, "p": Vector3(0.75, 0.0, 5.9), "s": 0.92},
+		{"u": "rifleman", "o": 2, "p": Vector3(-1.45, 0.0, 7.6), "s": 0.98},
+		{"u": "rifleman", "o": 2, "p": Vector3(1.45, 0.0, 7.6), "s": 0.98},
+	]
+	for idx in marchers.size():
+		var mc: Dictionary = marchers[idx]
+		var mm := _spawn_model(str(mc.u), int(mc.o), mc.p, (mc.p as Vector3) + Vector3(0, 0, -10.0), float(mc.s))
+		if mm:
+			_actors.append({"node": mm, "vel": Vector3(0.0, 0.0, -0.82), "stride": true, "seed": float(idx) * 0.7, "fire_at": null})
+
+	# Camera: High-to-medium crane dolly descending past the Propaganda Statue along the occupied boulevard toward the Relay HQ
+	_use_bezier_cam = true
+	_cam_from = Vector3(-6.8, 6.4, 12.6)
+	_cam_mid = Vector3(-4.2, 4.2, 9.4)
+	_cam_to = Vector3(2.8, 3.1, 7.2)
+	_cam_look = Vector3(0.0, 1.6, -6.5)
+	_cam_look_to = Vector3(0.0, 2.1, -14.5)
+	_fov_from = 38.0
+	_fov_to = 34.0
+
+func _stage_intro_briefing() -> void:
+	_clear_3d_stage()
+	if _world_root == null:
+		return
+	_env.background_mode = Environment.BG_COLOR
+	_env.background_color = Color("#09111a")
+	_env.fog_enabled = true
+	_env.fog_light_color = Color("#10202e")
+	_env.fog_density = 0.020
+	_env.ambient_light_color = Color("#7da2be")
+	_env.ambient_light_energy = 0.58
+	_key_light.light_color = Color("#ffe2be")
+	_key_light.light_energy = 1.05
+	_key_light.rotation_degrees = Vector3(-38.0, -28.0, 0.0)
+	_rim_light.light_color = Color("#3ad8ff")
+	_rim_light.light_energy = 0.72
+
+	_make_ground_plane("res://assets/terrain/military-paving.webp", Color("#28333e"), 0.55, 18.0, 220.0)
+
+	# Outskirts safehouse command room walls, beams, and background gear
+	var wall_steel := Models.mat("cine_brief_steel", Color("#1e2730"), Color.BLACK, 1.0, 0.55, 0.45)
+	var holo_cyan := Models.mat("cine_holo_cyan", Color("#3cf0ff"), Color("#1cb8e8"), 1.6, 0.0, 0.25)
+	var holo_red := Models.mat("cine_holo_red", Color("#ff5248"), Color("#d92b2b"), 1.6, 0.0, 0.25)
+	var warm_strip := Models.mat("cine_brief_amber", Color("#ffb44c"), Color("#e08820"), 1.4, 0.0, 0.3)
+
+	Models.box(_world_root, Vector3(22.0, 6.5, 0.6), wall_steel, Vector3(0.0, 3.25, -9.8))
+	for x_col in [-7.5, -2.5, 2.5, 7.5]:
+		Models.box(_world_root, Vector3(0.48, 6.5, 0.65), wall_steel, Vector3(x_col, 3.25, -9.4))
+		Models.box(_world_root, Vector3(0.24, 0.16, 0.16), warm_strip, Vector3(x_col, 4.6, -9.0))
+	_spawn_model("research_module", 1, Vector3(-6.4, 0.0, -6.8), Vector3(0, 0, 4), 0.92)
+	_spawn_model("field_armory", 1, Vector3(6.8, 0.0, -6.8), Vector3(0, 0, 4), 0.90)
+
+	# Central Tactical Holo-Table projecting the Directorate Relay HQ & Vesper Gate road!
+	Models.cyl(_world_root, 1.65, 1.95, 0.86, wall_steel, Vector3(0.0, 0.43, 0.0), Vector3.ZERO, 20)
+	Models.ring(_world_root, 1.38, 1.56, holo_cyan, Vector3(0.0, 0.88, 0.0))
+	_add_omni(Vector3(0.0, 1.65, 0.0), Color("#3ce8ff"), 1.15, 6.0, 3.2)
+
+	var holo_proj := Node3D.new()
+	holo_proj.position = Vector3(0.0, 0.92, 0.0)
+	Models.box(holo_proj, Vector3(0.32, 0.04, 2.1), holo_cyan, Vector3(0.0, 0.05, 0.0))
+	Models.box(holo_proj, Vector3(0.52, 0.48, 0.52), holo_red, Vector3(0.0, 0.28, -0.58))
+	Models.cyl(holo_proj, 0.06, 0.14, 0.72, holo_red, Vector3(0.0, 0.66, -0.58), Vector3.ZERO, 10)
+	Models.ring(holo_proj, 0.36, 0.44, holo_red, Vector3(0.0, 0.92, -0.58))
+	_world_root.add_child(holo_proj)
+	_fx_items.append({"kind": "spin_holo", "node": holo_proj, "speed": 0.45})
+
+	# Captain Vale & Corporal Rook across the holo-table + background Riflemen prepping weapons
+	_spawn_model("rifleman", 1, Vector3(-2.15, 0.0, 0.25), Vector3(1.5, 0.0, -0.1), 1.08, true)
+	_spawn_model("breacher", 1, Vector3(2.15, 0.0, 0.35), Vector3(-1.5, 0.0, -0.1), 1.02)
+	_spawn_model("pioneer", 1, Vector3(-3.8, 0.0, -3.2), Vector3(0.0, 0.0, 0.0), 0.95)
+	_spawn_model("rifleman", 1, Vector3(3.6, 0.0, -3.0), Vector3(-1.0, 0.0, 0.0), 0.96)
+
+	# Camera: Smooth 100-degree orbital dolly gliding around the glowing holo-table from Rook to Captain Vale
+	_use_bezier_cam = true
+	_cam_from = Vector3(4.2, 2.75, 5.8)
+	_cam_mid = Vector3(0.2, 2.55, 6.4)
+	_cam_to = Vector3(-3.8, 2.45, 5.4)
+	_cam_look = Vector3(0.15, 1.35, -0.2)
+	_cam_look_to = Vector3(-0.65, 1.45, -0.1)
+	_fov_from = 36.0
+	_fov_to = 33.0
+
+func _stage_intro_suitup() -> void:
+	_clear_3d_stage()
+	if _world_root == null:
+		return
+	_env.background_mode = Environment.BG_COLOR
+	_env.background_color = Color("#0a121c")
+	_env.fog_enabled = true
+	_env.fog_light_color = Color("#132232")
+	_env.fog_density = 0.018
+	_env.ambient_light_color = Color("#89a6bf")
+	_env.ambient_light_energy = 0.62
+	_key_light.light_color = Color("#ffe4c4")
+	_key_light.light_energy = 1.02
+	_key_light.rotation_degrees = Vector3(-36.0, -35.0, 0.0)
+	_rim_light.light_color = Color("#42dcff")
+	_rim_light.light_energy = 0.68
+
+	_make_ground_plane("res://assets/terrain/military-paving.webp", Color("#2d3844"), 0.50, 18.0, 220.0)
+
+	# Raised circular Armor Forge Gantry with Pilot Sable's Rampart Dropship waiting directly behind!
+	var dark_steel := Models.mat("cine_suit_steel", Color("#242e38"), Color.BLACK, 1.0, 0.58, 0.42)
+	var cyan_emit := Models.mat("cine_suit_cyan", Color("#42ecff"), Color("#24b8e0"), 1.5, 0.0, 0.25)
+	var amber_emit := Models.mat("cine_suit_amber", Color("#ffae38"), Color("#d87c14"), 1.4, 0.0, 0.3)
+	Models.cyl(_world_root, 2.3, 2.7, 0.24, dark_steel, Vector3(0, 0.12, 0), Vector3.ZERO, 24)
+	Models.ring(_world_root, 1.88, 2.08, cyan_emit, Vector3(0, 0.25, 0))
+
+	for angle_deg in [44.0, 136.0, 224.0, 316.0]:
+		var rad := deg_to_rad(angle_deg)
+		var px := cos(rad) * 3.5
+		var pz := sin(rad) * 3.5
+		Models.box(_world_root, Vector3(0.38, 4.6, 0.38), dark_steel, Vector3(px, 2.3, pz))
+		Models.box(_world_root, Vector3(0.14, 0.28, 0.14), amber_emit, Vector3(px * 0.90, 3.5, pz * 0.90))
+
+	# Waiting Rampart Dropship & hangar bays clearly visible behind the gantry!
+	_spawn_model("rampart_transport", 1, Vector3(0.0, 0.55, -9.2), Vector3(4.0, 0.55, -5.0), 1.18)
+	_spawn_model("airframe_hangar", 1, Vector3(-9.2, 0.0, -10.2), Vector3(0, 0, 2), 0.98)
+	_spawn_model("workshop", 1, Vector3(9.2, 0.0, -10.2), Vector3(0, 0, 2), 0.98)
+
+	# Captain Vale on the forge pedestal + 2 Pioneer riggers finishing chestplate seals
+	_spawn_model("rifleman", 1, Vector3(0.0, 0.24, 0.0), Vector3(0.0, 0.24, 8.0), 1.08, true)
+	_spawn_model("pioneer", 1, Vector3(-2.15, 0.0, 0.55), Vector3(0.0, 0.24, 0.0), 0.94)
+	_spawn_model("pioneer", 1, Vector3(2.15, 0.0, 0.55), Vector3(0.0, 0.24, 0.0), 0.94)
+
+	# Hydraulic clamp arms retracting outward as seals lock
+	for side in [-1.0, 1.0]:
+		var arm_root := Node3D.new()
+		var p0 := Vector3(side * 1.05, 1.42, 0.0)
+		var p1 := Vector3(side * 2.75, 2.25, -0.35)
+		arm_root.position = p0
+		Models.box(arm_root, Vector3(1.20, 0.16, 0.24), dark_steel, Vector3(side * 0.52, 0.0, 0.0))
+		Models.box(arm_root, Vector3(0.18, 0.36, 0.30), cyan_emit, Vector3(0.0, -0.04, 0.0))
+		_world_root.add_child(arm_root)
+		_fx_items.append({"kind": "gantry_arm", "node": arm_root, "from_pos": p0, "to_pos": p1, "rot0": 0.0, "rot1": side * 24.0})
+
+	var spark_mat := StandardMaterial3D.new()
+	spark_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	spark_mat.albedo_color = Color("#ffd978")
+	for s_i in 14:
+		var sp := MeshInstance3D.new()
+		var sb := SphereMesh.new()
+		sb.radius = 0.035
+		sb.height = 0.07
+		sp.mesh = sb
+		sp.material_override = spark_mat
+		var side_s := -1.0 if (s_i % 2 == 0) else 1.0
+		var origin := Vector3(side_s * 0.62, 1.32, 0.32)
+		var vel := Vector3(side_s * (0.75 + float(s_i % 5) * 0.28), 1.1 + float(s_i % 3) * 0.38, 0.65 + float(s_i % 4) * 0.24)
+		_world_root.add_child(sp)
+		_fx_items.append({"kind": "spark", "node": sp, "origin": origin, "vel": vel, "age": float(s_i) * 0.08, "period": 0.64})
+
+	# Camera: Crisp medium-wide orbital rise framing Captain Vale cleanly with Sable's Rampart Dropship behind him
+	_use_bezier_cam = true
+	_cam_from = Vector3(-4.6, 2.15, 6.4)
+	_cam_mid = Vector3(0.0, 2.45, 7.2)
+	_cam_to = Vector3(4.2, 2.85, 6.0)
+	_cam_look = Vector3(0.0, 1.45, -1.2)
+	_cam_look_to = Vector3(0.0, 1.65, -2.6)
+	_fov_from = 38.0
+	_fov_to = 34.0
+
+func _stage_intro_boarding() -> void:
+	_clear_3d_stage()
+	if _world_root == null:
+		return
+	_env.background_mode = Environment.BG_COLOR
+	_env.background_color = Color("#0b1522")
+	_env.fog_enabled = true
+	_env.fog_light_color = Color("#16283a")
+	_env.fog_density = 0.016
+	_env.ambient_light_color = Color("#8aa8c4")
+	_env.ambient_light_energy = 0.65
+	_key_light.light_color = Color("#ffe6c8")
+	_key_light.light_energy = 1.12
+	_rim_light.light_color = Color("#46e4ff")
+	_rim_light.light_energy = 0.72
+
+	_make_ground_plane("res://assets/terrain/military-paving.webp", Color("#323e4a"), 0.52, 18.0, 220.0)
+
+	# Lit staging pad markings & perimeter buildings
+	var pad_green := Models.mat("cine_pad_green", Color("#46f28a"), Color("#26c468"), 1.6, 0.0, 0.25)
+	for i in 7:
+		var xx := -7.5 + float(i) * 2.5
+		Models.box(_world_root, Vector3(0.95, 0.05, 0.18), pad_green, Vector3(xx, 0.03, -3.2))
+		Models.box(_world_root, Vector3(0.95, 0.05, 0.18), pad_green, Vector3(xx, 0.03, 3.6))
+	_spawn_model("airframe_hangar", 1, Vector3(-10.5, 0.0, -7.2), Vector3(4, 0, 0), 1.0)
+	_spawn_model("silo", 1, Vector3(-12.2, 0.0, -1.8), Vector3(4, 0, 0), 0.95)
+
+	# Primary Rampart Dropship spooling thrusters on the pad + escort Rampart lifting off behind!
+	var main_ship := _spawn_model("rampart_transport", 1, Vector3(6.2, 0.85, 0.2), Vector3(14.0, 1.2, -1.5), 1.22)
+	if main_ship:
+		_actors.append({"node": main_ship, "vel": Vector3(0.0, 0.06, 0.0), "hover": true, "seed": 0.4, "fire_at": null})
+	var wing_ship := _spawn_model("rampart_transport", 1, Vector3(1.8, 3.2, -6.8), Vector3(14.0, 4.8, -8.0), 1.02)
+	if wing_ship:
+		_actors.append({"node": wing_ship, "vel": Vector3(1.45, 0.35, -0.45), "hover": true, "seed": 1.7, "fire_at": null})
+
+	# Captain Vale + his exact 6 Meridian Guard Riflemen double-timing in 2 crisp columns toward the Rampart!
+	var vale := _spawn_model("rifleman", 1, Vector3(-4.2, 0.0, 0.2), Vector3(6.2, 0.0, 0.2), 1.08, true)
+	if vale:
+		_actors.append({"node": vale, "vel": Vector3(0.82, 0.0, 0.0), "stride": true, "seed": 0.0, "fire_at": null})
+	for idx in 6:
+		var row := idx / 2
+		var side := -1.0 if (idx % 2 == 0) else 1.0
+		var rp := Vector3(-5.9 - float(row) * 1.75, 0.0, 0.2 + side * 1.05)
+		var rf := _spawn_model("rifleman", 1, rp, Vector3(6.2, 0.0, 0.2 + side * 0.4), 0.98)
+		if rf:
+			_actors.append({"node": rf, "vel": Vector3(0.84, 0.0, 0.0), "stride": true, "seed": float(idx) * 0.8, "fire_at": null})
+
+	# Camera: Tracking dolly beside Vale's 6-man squad, lifting into a crane sweep as the Ramparts spool for takeoff
+	_use_bezier_cam = true
+	_cam_from = Vector3(-6.8, 2.65, 7.6)
+	_cam_mid = Vector3(-2.2, 3.35, 8.6)
+	_cam_to = Vector3(2.4, 4.45, 9.2)
+	_cam_look = Vector3(-1.2, 1.25, 0.0)
+	_cam_look_to = Vector3(3.6, 1.65, -1.2)
+	_fov_from = 37.0
+	_fov_to = 39.0
+
+func _stage_intro_touchdown() -> void:
+	_clear_3d_stage()
+	if _world_root == null:
+		return
+	_env.background_mode = Environment.BG_COLOR
+	_env.background_color = Color("#121c28")
+	_env.fog_enabled = true
+	_env.fog_light_color = Color("#24303e")
+	_env.fog_density = 0.015
+	_env.ambient_light_color = Color("#9bb0c4")
+	_env.ambient_light_energy = 0.68
+	_key_light.light_color = Color("#ffdcb8")
+	_key_light.light_energy = 1.18
+	_rim_light.light_color = Color("#46e4ff")
+	_rim_light.light_energy = 0.65
+
+	# Exact 3D match to Mission 01 ("Cut the Signal") Vesper Gate outskirts highway & roadblock!
+	_make_ground_plane("res://assets/terrain/badlands.webp", Color("#685648"), 0.90, 18.0, 220.0)
+	_build_highway_strip(Vector3(0.0, 0.0, 0.0), 64.0, 6.2, -1.05)
+
+	# Directorate Checkpoint 01 ahead on the highway (+X, -Z): Propaganda Statue, barricades, 2 Riflemen & 1 Breacher!
+	var bar_steel := Models.mat("cine_chk_bar", Color("#3b282c"), Color.BLACK, 1.0, 0.45, 0.55)
+	Models.box(_world_root, Vector3(0.45, 0.85, 2.4), bar_steel, Vector3(5.6, 0.42, -1.4), Vector3(0, 0.52, 0))
+	Models.box(_world_root, Vector3(0.45, 0.85, 2.4), bar_steel, Vector3(6.8, 0.42, -4.2), Vector3(0, 0.52, 0))
+	_spawn_model("propaganda_statue", 2, Vector3(8.2, 0.0, -5.8), Vector3(-4, 0, 4), 1.05)
+
+	var chk_guards := [
+		{"u": "rifleman", "p": Vector3(6.8, 0.0, -1.8), "f": Vector3(-3.2, 0.8, 2.2)},
+		{"u": "rifleman", "p": Vector3(8.1, 0.0, -3.6), "f": Vector3(-4.4, 0.8, 3.4)},
+		{"u": "breacher", "p": Vector3(7.4, 0.0, -0.2), "f": Vector3(-2.6, 0.8, 1.4)},
+	]
+	for idx in chk_guards.size():
+		var cg: Dictionary = chk_guards[idx]
+		var gm := _spawn_model(str(cg.u), 2, cg.p, Vector3(-5.0, 0.0, 3.0), 0.98)
+		if gm:
+			_actors.append({"node": gm, "vel": Vector3.ZERO, "hover": false, "seed": float(idx), "fire_at": cg.f, "owner": 2})
+
+	# Pilot Sable's Rampart Dropship flaring onto the highway behind Captain Vale + his 6 Riflemen!
+	var dropship := _spawn_model("rampart_transport", 1, Vector3(-8.2, 3.6, 5.2), Vector3(4.0, 1.2, -2.0), 1.12)
+	if dropship:
+		_actors.append({"node": dropship, "vel": Vector3(0.75, -0.36, -0.42), "hover": true, "seed": 0.3, "fire_at": null})
+	_spawn_warp_ring(Vector3(-6.2, 0.12, 3.8), 4.2)
+
+	var vale := _spawn_model("rifleman", 1, Vector3(-2.6, 0.0, 1.6), Vector3(7.2, 0.0, -2.2), 1.08, true)
+	if vale:
+		_actors.append({"node": vale, "vel": Vector3(0.68, 0.0, -0.38), "stride": true, "seed": 0.2, "fire_at": Vector3(6.8, 0.8, -1.8), "owner": 1})
+	var squad_offsets := [
+		Vector3(-4.2, 0.0, 1.0), Vector3(-3.6, 0.0, 3.0),
+		Vector3(-5.5, 0.0, 1.8), Vector3(-4.9, 0.0, 3.8),
+		Vector3(-6.8, 0.0, 2.6), Vector3(-6.1, 0.0, 4.5),
+	]
+	for s_i in squad_offsets.size():
+		var rf := _spawn_model("rifleman", 1, squad_offsets[s_i], Vector3(7.2, 0.0, -2.2), 0.98)
+		if rf:
+			_actors.append({"node": rf, "vel": Vector3(0.72, 0.0, -0.40), "stride": true, "seed": float(s_i) * 0.9, "fire_at": Vector3(7.4, 0.8, -2.0), "owner": 1})
+
+	_tracer_timer = 0.08
+
+	# Camera: Swoops behind Sable's landing Rampart, then rises & pulls back into the RTS tactical camera angle for seamless Mission 01 handoff!
+	_use_bezier_cam = true
+	_cam_from = Vector3(-11.8, 4.2, 11.4)
+	_cam_mid = Vector3(-8.2, 6.8, 13.6)
+	_cam_to = Vector3(-4.6, 9.8, 15.6)
+	_cam_look = Vector3(-1.8, 1.6, 1.0)
+	_cam_look_to = Vector3(2.2, 1.8, -1.6)
+	_fov_from = 40.0
+	_fov_to = 36.0
 
 func _stage_intro_gantry() -> void:
 	_clear_3d_stage()
