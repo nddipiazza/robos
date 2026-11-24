@@ -555,8 +555,8 @@ fun AssistantTabScreen(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column(Modifier.weight(1f)) {
-                    Text("Wake Word Detection (\"Commander\")")
-                    MutedText("Triggers RobOS actions when a RobOS Server is connected.")
+                    Text("Wake Phrase (\"Commander, <command>\")")
+                    MutedText("Say \"Commander\" + your command together in one phrase. Standalone \"Commander\" is ignored to prevent false positives.")
                 }
                 Switch(
                     checked = config.wakeWordEnabled,

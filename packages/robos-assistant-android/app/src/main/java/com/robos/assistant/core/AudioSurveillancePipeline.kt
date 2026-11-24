@@ -390,16 +390,18 @@ data class WakeWordMatch(
 }
 
 /**
- * Wake-word parser matching `packages/voice-prompt/lib/wake-word.js` ("Commander").
+ * Wake-word parser matching `packages/voice-prompt/lib/wake-word.js` ("Commander, <command>").
+ * Anchored to the start of the utterance so mid-sentence mentions of "commander" in room
+ * conversation, TV shows, or games never cause false positives.
  */
 object WakeWordParser {
     private val PATTERNS = listOf(
         Regex(
-            "(?:^|\\b)(?:hello|hey|hi|ok|okay|yo)[,\\s.-]*commander\\b",
+            "^(?:(?:and|um|uh|so|well|oh)[,.\\s]+)?(?:hello|hey|hi|ok|okay|yo)[,\\s.-]*commander\\b",
             RegexOption.IGNORE_CASE,
         ),
         Regex(
-            "(?:^|\\b)commander\\b",
+            "^(?:(?:and|um|uh|so|well|oh)[,.\\s]+)?commander\\b",
             RegexOption.IGNORE_CASE,
         ),
     )
@@ -715,56 +717,6 @@ class SurveillanceCoordinator(
         armedTrigger = ""
     }
 
-    /**
-     * Zero-network-wait (< 190ms) reflex path when the on-device constrained grammar spotter
-     * confirms standalone `"Commander"` while connected to a RobOS Server:
-     * plays the RAM-cached `"Yes, Commander?"` WAV first, arms the follow-up command window,
-     * and persists the `.wav` surveillance clip immediately after.
-     */
-    suspend fun fastArmLocalCommanderWake(
-        config: AssistantConfig,
-        utterance: CapturedUtterance,
-        wakeAckWav: ByteArray,
-    ): AudioRecordingEntry {
-        val replyText = "Yes, Commander?"
-        armedTrigger = "Commander"
-        armedFollowupUntilEpochMs = System.currentTimeMillis() + FOLLOWUP_WINDOW_MS
-        if (config.speakServerReplies && wakeAckWav.size > 44) {
-            lastSpokenReplyLower = replyText.lowercase()
-            onSpeakWav(wakeAckWav, replyText)
-            armedFollowupUntilEpochMs = System.currentTimeMillis() + FOLLOWUP_WINDOW_MS
-        }
-        val id = buildRecordingId(utterance.startedEpochMs)
-        val wavBytes = WavCodec.encodePcm16Mono(utterance.pcm16le, utterance.sampleRate)
-        val saved = archiveStore.saveRecording(
-            wavBytes = wavBytes,
-            entryWithoutSize = AudioRecordingEntry(
-                id = id,
-                createdAtIso = Instant.ofEpochMilli(utterance.startedEpochMs).toString(),
-                epochMs = utterance.startedEpochMs,
-                room = config.room,
-                assistantName = config.assistantName,
-                wavFileName = "$id.wav",
-                durationMs = utterance.durationMs,
-                sizeBytes = wavBytes.size.toLong(),
-                peakDbFs = utterance.peakDbFs,
-                transcript = "Commander",
-                sttSource = "fast-wake-spotter",
-                wakeWordDetected = true,
-                wakeTrigger = "Commander",
-                commandQuery = "",
-                serverConnectedAtCapture = true,
-                actionStatus = ActionOutcomeStatus.AMBIENT_RECORDED,
-                actionSummary = "Instant Commander wake reflex — listening for command",
-                assistantReply = replyText,
-            ),
-            maxClips = config.retentionMaxClips,
-            maxMb = config.retentionMaxMb,
-        )
-        onEvent("wake_armed", saved)
-        return saved
-    }
-
     suspend fun handleCapturedUtterance(
         config: AssistantConfig,
         utterance: CapturedUtterance,
@@ -777,10 +729,9 @@ class SurveillanceCoordinator(
         val id = buildRecordingId(utterance.startedEpochMs)
         val wavBytes = WavCodec.encodePcm16Mono(utterance.pcm16le, utterance.sampleRate)
 
-        // Primary path when connected to RobOS Server: offload `.wav` to server Whisper + "Commander" router!
+        // Primary path when connected to RobOS Server: offload `.wav` to server Moonshine ASR + "Commander, <command>" router!
         if (serverOnline && serverAudioProcessor != null && rawTranscript.isBlank() && sttSource != "manual-ask") {
-            val wasFollowup = nowMs < armedFollowupUntilEpochMs
-            val prevTrigger = armedTrigger.ifBlank { "Commander" }
+            disarmFollowup()
             onEvent("processing_action", null)
 
             val srvRes = try {
@@ -788,8 +739,8 @@ class SurveillanceCoordinator(
                     config = config,
                     wavBytes = wavBytes,
                     fallbackTranscript = "",
-                    followupArmed = wasFollowup,
-                    armedTrigger = prevTrigger,
+                    followupArmed = false,
+                    armedTrigger = "",
                 )
             } catch (e: Exception) {
                 ServerAudioProcessResult(ok = false, error = e.message ?: "Server audio processing failed")
@@ -810,19 +761,16 @@ class SurveillanceCoordinator(
                     }
                 }
 
-                if (wasFollowup) {
-                    disarmFollowup()
-                }
-
-                if (!config.recordAllSpeech && !srvRes.wakeWordDetected) {
+                val hasRealCommand = srvRes.wakeWordDetected && !srvRes.greetingOnly && srvRes.query.isNotBlank()
+                if (!config.recordAllSpeech && !hasRealCommand) {
                     onEvent("ambient_skipped", null)
                     return null
                 }
 
                 val displayText = whisperText.ifBlank { "(audio event captured)" }
 
-                if (srvRes.greetingOnly) {
-                    val replyText = srvRes.response.ifBlank { "Yes, Commander?" }
+                // Standalone "Commander" without a command is treated strictly as quiet ambient speech (zero "Yes, Commander?", zero follow-up arming)
+                if (srvRes.greetingOnly || !hasRealCommand) {
                     val saved = archiveStore.saveRecording(
                         wavBytes = wavBytes,
                         entryWithoutSize = AudioRecordingEntry(
@@ -837,25 +785,18 @@ class SurveillanceCoordinator(
                             peakDbFs = utterance.peakDbFs,
                             transcript = displayText,
                             sttSource = srvRes.sttSource,
-                            wakeWordDetected = true,
-                            wakeTrigger = srvRes.trigger.ifBlank { "Commander" },
+                            wakeWordDetected = false,
+                            wakeTrigger = "",
                             commandQuery = "",
                             serverConnectedAtCapture = true,
                             actionStatus = ActionOutcomeStatus.AMBIENT_RECORDED,
-                            actionSummary = "Commander wake word heard — listening for command",
-                            assistantReply = replyText,
+                            actionSummary = "",
+                            assistantReply = "",
                         ),
                         maxClips = config.retentionMaxClips,
                         maxMb = config.retentionMaxMb,
                     )
-                    armedTrigger = srvRes.trigger.ifBlank { "Commander" }
-                    armedFollowupUntilEpochMs = System.currentTimeMillis() + FOLLOWUP_WINDOW_MS
-                    if (config.speakServerReplies && srvRes.audioWavBytes != null && srvRes.audioWavBytes.size > 44) {
-                        lastSpokenReplyLower = replyText.trim().lowercase()
-                        onSpeakWav(srvRes.audioWavBytes, replyText)
-                        armedFollowupUntilEpochMs = System.currentTimeMillis() + FOLLOWUP_WINDOW_MS
-                    }
-                    onEvent("wake_armed", saved)
+                    onEvent("recorded_ambient", saved)
                     return saved
                 }
 
@@ -928,90 +869,17 @@ class SurveillanceCoordinator(
             WakeWordMatch(matched = false)
         }
 
-        val followupActive = serverOnline && nowMs < armedFollowupUntilEpochMs && transcript.isNotBlank()
-        val wakeDetected = directWake.matched || followupActive
-        val effectiveTrigger = when {
-            directWake.matched -> directWake.trigger
-            followupActive -> armedTrigger.ifBlank { "Commander" }
-            else -> ""
-        }
-        val effectiveQuery = when {
-            directWake.matched -> directWake.query
-            followupActive -> transcript
-            else -> ""
-        }
-
-        if (followupActive) {
-            disarmFollowup()
-        }
+        // Require "Commander, <command>" together in a single phrase — ignore standalone "Commander"
+        val wakeDetected = directWake.matched && !directWake.isGreetingOnly && directWake.query.length >= 2
+        val effectiveTrigger = if (wakeDetected) directWake.trigger else ""
+        val effectiveQuery = if (wakeDetected) directWake.query else ""
+        disarmFollowup()
 
         if (!config.recordAllSpeech && !wakeDetected) {
             return null
         }
 
         val displayTranscript = transcript.ifBlank { "(speech audio captured — no intelligible words)" }
-
-        // Two-breath wake word ("Commander" followed by command) — ONLY arms when RobOS Server is connected!
-        if (directWake.matched && directWake.isGreetingOnly) {
-            if (serverOnline) {
-                armedFollowupUntilEpochMs = System.currentTimeMillis() + FOLLOWUP_WINDOW_MS
-                armedTrigger = directWake.trigger
-                val saved = archiveStore.saveRecording(
-                    wavBytes = wavBytes,
-                    entryWithoutSize = AudioRecordingEntry(
-                        id = id,
-                        createdAtIso = Instant.ofEpochMilli(utterance.startedEpochMs).toString(),
-                        epochMs = utterance.startedEpochMs,
-                        room = config.room,
-                        assistantName = config.assistantName,
-                        wavFileName = "$id.wav",
-                        durationMs = utterance.durationMs,
-                        sizeBytes = wavBytes.size.toLong(),
-                        peakDbFs = utterance.peakDbFs,
-                        transcript = displayTranscript,
-                        sttSource = sttSource,
-                        wakeWordDetected = true,
-                        wakeTrigger = directWake.trigger,
-                        commandQuery = "",
-                        serverConnectedAtCapture = true,
-                        actionStatus = ActionOutcomeStatus.AMBIENT_RECORDED,
-                        actionSummary = "Commander wake word heard — listening for command",
-                        assistantReply = "Yes, Commander?",
-                    ),
-                    maxClips = config.retentionMaxClips,
-                    maxMb = config.retentionMaxMb,
-                )
-                onEvent("wake_armed", saved)
-                return saved
-            } else {
-                val saved = archiveStore.saveRecording(
-                    wavBytes = wavBytes,
-                    entryWithoutSize = AudioRecordingEntry(
-                        id = id,
-                        createdAtIso = Instant.ofEpochMilli(utterance.startedEpochMs).toString(),
-                        epochMs = utterance.startedEpochMs,
-                        room = config.room,
-                        assistantName = config.assistantName,
-                        wavFileName = "$id.wav",
-                        durationMs = utterance.durationMs,
-                        sizeBytes = wavBytes.size.toLong(),
-                        peakDbFs = utterance.peakDbFs,
-                        transcript = displayTranscript,
-                        sttSource = sttSource,
-                        wakeWordDetected = true,
-                        wakeTrigger = directWake.trigger,
-                        commandQuery = "",
-                        serverConnectedAtCapture = false,
-                        actionStatus = ActionOutcomeStatus.SERVER_OFFLINE_RECORDED_ONLY,
-                        actionSummary = "RobOS server disconnected — recorded audio & text only",
-                    ),
-                    maxClips = config.retentionMaxClips,
-                    maxMb = config.retentionMaxMb,
-                )
-                onEvent("recorded_offline", saved)
-                return saved
-            }
-        }
 
         val initialStatus = when {
             wakeDetected && !serverOnline -> ActionOutcomeStatus.SERVER_OFFLINE_RECORDED_ONLY

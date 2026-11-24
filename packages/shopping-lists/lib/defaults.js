@@ -213,6 +213,7 @@ function normalizeShoppingVoiceTranscript(rawText) {
 
   // 1. De-hyphenate and normalize phonetic aliases for Grocery, Target, and Costco (e.g. "cost-co-shopping list", "tar-get-list", "grow-siri")
   s = s
+    .replace(/\bgrocery\s+labels?\b/gi, 'grocery list')
     .replace(/\bwheat\s+things\b/gi, 'Wheat Thins')
     .replace(/\b(?:cost|cos|cus|cuz|ros|pas|bos|kos)[\s\-_]*(?:co|go|ko|coe)\b/gi, 'costco')
     .replace(/\b(?:tar)[\s\-_]+(?:get|git|jet|ge)\b/gi, 'target')

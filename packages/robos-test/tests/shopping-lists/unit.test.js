@@ -693,6 +693,27 @@ describe('RobOS Shopping Lists — Store, Form Actions, Google Docs Sync & QR', 
       assert.equal(rVoiceHelp.ok, true);
       assert.equal(rVoiceHelp.skill, 'shopping-lists:guide');
       assert.match(rVoiceHelp.response, /Commander, add two gallons of milk/i);
+
+      // 8. Real-room STT edge cases: "at garbage bags" -> "Garbage bags", "grocery label" -> guide, standalone "Commander, undo", and mid-sentence "commander" rejection
+      const rAtStt = await askCommander('And commander at garbage bags to the Costco shopping list');
+      assert.equal(rAtStt.ok, true);
+      assert.equal(rAtStt.skill, 'shopping-lists:add');
+      assert.match(rAtStt.response, /Added 1 Garbage bags to Costco/i);
+
+      const rWhatKind = await askCommander('Commander, what kind of things can I do with grocery label?');
+      assert.equal(rWhatKind.ok, true);
+      assert.equal(rWhatKind.skill, 'shopping-lists:guide');
+
+      // Delete an item, then say bare "Commander, undo" without saying "grocery"
+      await askCommander('Commander, remove garbage bags from Costco');
+      const rBareUndo = await askCommander('Commander, undo');
+      assert.equal(rBareUndo.ok, true);
+      assert.equal(rBareUndo.skill, 'shopping-lists:undo');
+      assert.match(rBareUndo.response, /Undid: Removed "Garbage bags"/i);
+
+      // Mid-sentence "commander" in casual room speech MUST NOT trigger WakeWordDetector
+      const midSentence = detector.processText("There's no way I just did that so I'll watch one in commander tonight");
+      assert.equal(midSentence.matched, false);
     } finally {
       cleanup();
     }

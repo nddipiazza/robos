@@ -340,10 +340,12 @@ describe('Voice Prompt Unit Tests', () => {
         returnAudio: true,
         mockAudio: true,
       });
+      // Standalone "Commander" without a trailing command must NOT trigger wake action or speak "Yes, Commander?"
       assert.strictEqual(procWakeOnly.status, 200);
-      assert.strictEqual(procWakeOnly.data.wakeWordDetected, true);
+      assert.strictEqual(procWakeOnly.data.wakeWordDetected, false);
       assert.strictEqual(procWakeOnly.data.greetingOnly, true);
-      assert.strictEqual(procWakeOnly.data.response, 'Yes, Commander?');
+      assert.strictEqual(procWakeOnly.data.actionExecuted, false);
+      assert.strictEqual(procWakeOnly.data.response, undefined);
 
       const procCmd = await httpReq('POST', '/api/assistant/process-audio', {
         deviceUuid: 'phone-123',

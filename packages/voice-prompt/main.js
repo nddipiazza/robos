@@ -272,7 +272,13 @@ desktopAssistant.on('show-hud', (data) => {
 });
 
 wakeDetector.on('wake-word', async (data) => {
-  // Wake-word starts dictation & displays floating HUD
+  const q = String((data && data.query) || '').trim();
+  if (!q || /^(?:hi|hello|hey|howdy|what'?s\s+up|there)[!.?\s]*$/i.test(q)) {
+    // Never trigger on standalone "Commander" without an actual trailing command
+    wakeDetector.resetCooldown();
+    return;
+  }
+  // Wake-word + command starts execution & displays floating HUD
   if (sttEngine.isBackgroundMode()) {
     sttEngine.setBackgroundMode(false);
   }
@@ -1015,7 +1021,6 @@ function startApiServer(overridePort) {
         }
 
         const wakeEnabled = !body || body.wakeWordEnabled !== false;
-        const followupArmed = Boolean(body && body.followupArmed);
         const returnAudio = !body || body.returnAudio !== false;
         const speakOnServer = Boolean(body && body.speakOnServer);
 
@@ -1023,15 +1028,15 @@ function startApiServer(overridePort) {
           ? (new WakeWordDetector({ enabled: true, cooldownMs: 0 })).processText(transcript)
           : { matched: false, trigger: null, query: null };
 
-        const wakeDetected = Boolean(localWake.matched || followupArmed);
-        const trigger = localWake.matched
-          ? (localWake.trigger || 'Commander')
-          : (followupArmed ? String(body.armedTrigger || 'Commander') : '');
-        const query = localWake.matched
-          ? String(localWake.query || '').trim()
-          : (followupArmed ? transcript : '');
+        const trigger = localWake.matched ? (localWake.trigger || 'Commander') : '';
+        const query = localWake.matched ? String(localWake.query || '').trim() : '';
 
-        if (!wakeDetected) {
+        // Require "Commander, <command>" together in one phrase — never respond to standalone "Commander"
+        const isGreetingOnly = !query ||
+          /^(?:hi|hello|hey|howdy|what'?s\s+up|there|yes|yeah|um|uh)[!.?\s]*$/i.test(query) ||
+          query.replace(/[^a-z0-9]/gi, '').length < 2;
+
+        if (!localWake.matched || isGreetingOnly) {
           res.writeHead(200);
           return res.end(JSON.stringify({
             ok: true,
@@ -1039,44 +1044,8 @@ function startApiServer(overridePort) {
             transcript,
             sttSource,
             wakeWordDetected: false,
-            greetingOnly: false,
+            greetingOnly: Boolean(localWake.matched && isGreetingOnly),
             actionExecuted: false,
-          }));
-        }
-
-        const isGreetingOnly = localWake.matched && (!query || /^(?:hi|hello|hey|howdy|what'?s\s+up|there)[!.?\s]*$/i.test(query));
-        if (isGreetingOnly) {
-          const greetingText = 'Yes, Commander?';
-          let audioWavBase64 = '';
-          let audioDurationMs = 0;
-          let audioEngine = '';
-          if (returnAudio) {
-            try {
-              const synth = await ttsEngine.synthesize(greetingText, {
-                mockAudio: Boolean(body && body.mockAudio),
-              });
-              if (synth && synth.filePath && fs.existsSync(synth.filePath)) {
-                audioWavBase64 = fs.readFileSync(synth.filePath).toString('base64');
-                audioDurationMs = synth.durationMs || 0;
-                audioEngine = synth.engine || '';
-              }
-            } catch {}
-          }
-          res.writeHead(200);
-          return res.end(JSON.stringify({
-            ok: true,
-            isSpeech: true,
-            transcript,
-            sttSource,
-            wakeWordDetected: true,
-            greetingOnly: true,
-            actionExecuted: false,
-            trigger,
-            query: '',
-            response: greetingText,
-            audioWavBase64,
-            audioDurationMs,
-            audioEngine,
           }));
         }
 

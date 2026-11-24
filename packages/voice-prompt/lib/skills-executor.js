@@ -131,6 +131,25 @@ class SkillsExecutor {
       const { isLikelyShoppingVoiceCommand } = resolveShoppingMod('lib/text-commands');
       sharedShoppingMatcher = isLikelyShoppingVoiceCommand;
     } catch {}
+    const isShoppingUndo = /^(?:undo|undo\s+(?:that|it|last(?:\s+(?:action|change|edit))?))[.!?]*$/i.test(normalizedShoppingQuery);
+    if (isShoppingUndo) {
+      try {
+        const { createStore } = resolveShoppingMod('lib/store');
+        const { executeTextCommand } = resolveShoppingMod('lib/text-commands');
+        const store = createStore({ homeDir: this.homeDir, configDir: this.configDir });
+        if (store.getSnapshot().canUndo) {
+          const shopRes = await executeTextCommand(store, 'undo');
+          return {
+            ok: shopRes.ok,
+            skill: shopRes.skill || 'shopping-lists:undo',
+            actionDone: shopRes.spoken || shopRes.text,
+            response: shopRes.spoken || shopRes.text,
+            data: shopRes.data || null,
+          };
+        }
+      } catch {}
+    }
+
     const isShoppingCommand = (typeof sharedShoppingMatcher === 'function' && sharedShoppingMatcher(normalizedShoppingQuery))
       || /^\/shopping-lists?\b/i.test(normalizedShoppingQuery)
       || (/\b(?:shopping\s+lists?|groceries|grocery(?:\s+shopping)?(?:\s+lists?)?|target(?:\s+shopping)?(?:\s+lists?)?|costco(?:\s+shopping)?(?:\s+lists?)?|@(?:grocery|target|costco))\b/i.test(normalizedShoppingQuery)

@@ -353,8 +353,8 @@ async function executeTextCommand(store, rawInput, options = {}) {
     .replace(/^(?:can\s+you\s+|could\s+you\s+|would\s+you\s+)?(?:please\s+)?/i, '')
     .trim();
 
-  // 1. HELP / GUIDE / VOICE COMMAND CHEAT SHEET ("Commander, what can I say for grocery lists?")
-  if (/^(?:help|guide|commands|cheat\s*sheet|\?|(?:what\s+can\s+(?:i|we)\s+say|(?:voice|commander)\s+commands?)(?:\s+.*)?)$/i.test(cleanedInput)) {
+  // 1. HELP / GUIDE / VOICE COMMAND CHEAT SHEET ("Commander, what can I say for grocery lists?", "what kind of things can I do with grocery list?")
+  if (/^(?:help|guide|commands|cheat\s*sheet|\?|(?:what\s+(?:kind\s+of\s+things\s+|things\s+)?can\s+(?:i|we|you)\s+(?:say|do|ask)|how\s+do\s+(?:i|we)\s+use|(?:voice|commander)\s+commands?)(?:\s+.*)?)$/i.test(cleanedInput)) {
     const text = renderPrintableCommandGuideText();
     const spoken = 'You can say things like: Commander, add two gallons of milk and avocados to grocery; Commander, we are out of eggs; Commander, is milk on my grocery list; Commander, what do we need in Produce; Commander, add taco night to grocery; Commander, check off milk; Commander, move paper towels to Costco; Commander, how much is my grocery list; or Commander, clear checked items.';
     return {
@@ -872,13 +872,20 @@ async function executeTextCommand(store, rawInput, options = {}) {
     return { ok: true, skill: 'shopping-lists:remove', spoken: msg, text: msg, data: res };
   }
 
-  // 13. ADD ITEMS (Explicit "add ...", "we're out of ...", "running low on ...", "remind me to buy ...", "grab ...", or direct shorthand item string)
+  // Guard: never let unrecognized open-ended questions get added as fake grocery items!
+  if (/^(?:what|how|why|when|where|who|which|can\s+(?:i|we|you)|could\s+you|do\s+you)\b/i.test(cleanedInput)) {
+    const msg = 'Try saying "Commander, can you see my grocery list?", "Commander, add milk to grocery", or "Commander, what can I say for grocery lists?".';
+    return { ok: false, skill: 'shopping-lists:help', summary: msg, spoken: msg, text: msg };
+  }
+
+  // 13. ADD ITEMS (Explicit "add ...", "at <item> to <store>" STT mishearing, "we're out of ...", "running low on ...", "remind me to buy ...", "grab ...", or direct shorthand item string)
   const isOutPhrase = /\b(?:out\s+of|running\s+low\s+on|low\s+on)\b/i.test(cleanedInput);
   const addPayload = cleanedInput
     .replace(/^(?:(?:we(?:'re|\s+are)|i(?:'m|\s+am))\s+)?(?:just\s+)?(?:all\s+|almost\s+|nearly\s+)?(?:ran\s+)?out\s+of\s+/i, '')
     .replace(/^(?:(?:we(?:'re|\s+are)|i(?:'m|\s+am))\s+)?(?:running\s+)?low\s+on\s+/i, '')
     .replace(/^(?:don'?t\s+let\s+me\s+forget(?:\s+to\s+(?:buy|get|grab|pick\s+up))?|remind\s+me\s+to\s+(?:buy|get|grab|pick\s+up))\s+/i, '')
     .replace(/^(?:(?:we|i)\s+need(?:\s+to\s+(?:buy|get|grab|pick\s+up))?|add|plus|buy|get|grab|pick\s+up|put|need|\+)\s+/i, '')
+    .replace(/^at\s+(?=.+\b(?:to|on|in|for)\s+(?:my\s+|the\s+|our\s+)?(?:grocery|target|costco|shopping))/i, '')
     .trim();
 
   const isMultiChunk = /[,;\n]/.test(addPayload);
