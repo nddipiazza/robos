@@ -945,6 +945,21 @@ class CastService {
 
   _ensureRokuDevChannelLaunched(ip, ecpPort = 8060) {
     if (process.env.ROBOS_TEST === '1' || process.env.NODE_TEST_CONTEXT) return;
+    const postEcp = (ecpPath) => {
+      try {
+        const r = http.request({
+          hostname: ip,
+          port: ecpPort,
+          path: ecpPath,
+          method: 'POST',
+          headers: { 'Content-Length': '0' },
+          timeout: 1500,
+        }, (lRes) => { lRes.resume(); });
+        r.on('error', () => {});
+        r.on('timeout', () => { r.destroy(); });
+        r.end();
+      } catch {}
+    };
     try {
       const req = http.get({
         hostname: ip,
@@ -956,17 +971,11 @@ class CastService {
         res.on('data', (c) => { xml += c; });
         res.on('end', () => {
           if (!xml.includes('id="dev"')) {
-            const launchReq = http.request({
-              hostname: ip,
-              port: ecpPort,
-              path: '/launch/dev',
-              method: 'POST',
-              headers: { 'Content-Length': '0' },
-              timeout: 1500,
-            }, (lRes) => { lRes.resume(); });
-            launchReq.on('error', () => {});
-            launchReq.on('timeout', () => { launchReq.destroy(); });
-            launchReq.end();
+            postEcp('/keypress/PowerOn');
+            postEcp('/launch/dev');
+          } else if (xml.includes('<screensaver')) {
+            postEcp('/keypress/PowerOn');
+            postEcp('/keypress/Lit_%20');
           }
         });
       });

@@ -910,8 +910,11 @@ function findBestMediaMatches(cleanedCommand, tracks = [], {
         .sort((a, b) => (Number(a.episodeNumber) || 0) - (Number(b.episodeNumber) || 0));
 
       const queueTracks = seasonEps.length ? seasonEps : [best];
+      const epSub = best.episodeTitle && !/^episode\s*0*\d+$/i.test(String(best.episodeTitle).trim())
+        ? ` ("${best.episodeTitle}")`
+        : '';
       const epLabel = best.seasonNumber != null && best.episodeNumber != null
-        ? `Season ${best.seasonNumber} Episode ${best.episodeNumber}${best.episodeTitle ? ` ("${best.episodeTitle}")` : ''}`
+        ? `Season ${best.seasonNumber} Episode ${best.episodeNumber}${epSub}`
         : best.title;
       const showLabel = best.showName || best.artist || best.title;
 

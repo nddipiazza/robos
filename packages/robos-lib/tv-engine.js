@@ -1930,7 +1930,7 @@ sub pollDashboard()
         else if hasCinemaCast or Instr(1, raw, Chr(34) + "cinemaCastActive" + Chr(34) + ":true") > 0
             sleep(500)
         else
-            sleep(2500)
+            sleep(1000)
         end if
     end while
 end sub
@@ -3156,10 +3156,22 @@ sub playCinemaVideo(cinema as Object)
     if cinema.loadKey <> invalid then loadKey = cinema.loadKey.ToStr() else loadKey = cinema.mediaUrl.ToStr()
     if m.lastCinemaLoadKey <> loadKey
         m.lastCinemaLoadKey = loadKey
+        m.dismissedCinemaLoadKey = ""
+        m.localVideoPlaying = false
+        m.switchingCinemaLoad = true
         m.cinemaVideo.control = "stop"
+        m.cinemaVideo.content = invalid
+        if cinema.trackId <> invalid and cinema.trackId.ToStr() <> ""
+            m.currentPlayingTrackId = cleanAscii(cinema.trackId)
+        end if
+        if cinema.hlsUrl <> invalid and cinema.hlsUrl.ToStr() <> ""
+            m.currentPlayingHlsUrl = cleanAscii(cinema.hlsUrl)
+            m.triedHlsFallback = false
+        end if
         content = CreateObject("roSGNode", "ContentNode")
         content.url = cinema.mediaUrl
         if cinema.title <> invalid then content.title = cinema.title else content.title = "RobOS Movie Player"
+        m.currentPlayingTitle = content.title
         fmt = "mp4"
         if cinema.streamFormat <> invalid and cinema.streamFormat <> ""
             fmt = LCase(cinema.streamFormat.ToStr())
@@ -3167,12 +3179,16 @@ sub playCinemaVideo(cinema as Object)
             fmt = "mkv"
         end if
         content.streamFormat = fmt
+        startSec = 0
         if cinema.startAt <> invalid and cinema.startAt > 0
-            content.PlayStart = Int(cinema.startAt)
+            startSec = Int(cinema.startAt)
+            content.PlayStart = startSec
         end if
+        m.currentPlayingStartSec = startSec
         m.cinemaVideo.content = content
         m.cinemaVideo.setFocus(true)
         m.cinemaVideo.control = "play"
+        m.switchingCinemaLoad = false
         if cinema.seekKey <> invalid then m.lastCinemaSeekKey = cinema.seekKey.ToStr()
         return
     end if
@@ -4667,6 +4683,7 @@ sub playCinemaItemAtIndex(idx as Integer)
 end sub
 
 sub onCinemaVideoState()
+    if m.switchingCinemaLoad = true then return
     if m.cinemaVideo = invalid or m.cinemaVideoActive <> true then return
     st = m.cinemaVideo.state
     if st = "error" and m.triedHlsFallback <> true and m.currentPlayingHlsUrl <> invalid and m.currentPlayingHlsUrl <> ""
@@ -4746,9 +4763,6 @@ sub onPayloadUpdated()
         if json.cinemaCast.loadKey <> invalid then cKey = json.cinemaCast.loadKey.ToStr() else cKey = json.cinemaCast.mediaUrl.ToStr()
         if cKey <> "" and cKey <> m.dismissedCinemaLoadKey
             hideAppCastFrames()
-            if m.cinemaLibraryActive <> true and m.latestCinemaLibrary <> invalid
-                showCinemaLibrary(m.latestCinemaLibrary)
-            end if
             playCinemaVideo(json.cinemaCast)
             return
         end if

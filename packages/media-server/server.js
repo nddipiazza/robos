@@ -303,11 +303,11 @@ function createMediaServer(options = {}) {
         const knownRev = url.searchParams.get('knownRev') || '';
         const currentRev = `${store.catalogRevision}:${store.progressRevision}`;
         const castPayload = activeRokuCast && activeRokuCast.active ? activeRokuCast : null;
-        if (knownRev && knownRev === currentRev) {
+        if (knownRev && (knownRev === currentRev || castPayload)) {
           return sendJson(res, 200, {
             ok: true,
             unchanged: true,
-            rev: currentRev,
+            rev: knownRev === currentRev ? currentRev : knownRev,
             cinemaCast: castPayload,
           });
         }

@@ -120,34 +120,84 @@ function httpPostJson(urlStr, bodyObj, timeoutMs = 2500) {
   });
 }
 
-function ensureRokuChannelActive(ip, ecpPort = 8060) {
-  if (process.env.ROBOS_TEST === '1' || process.env.NODE_TEST_CONTEXT) return Promise.resolve(true);
+function getEcpXml(ip, ecpPort, ecpPath, timeoutMs = 1400) {
   return new Promise((resolve) => {
-    const postEcp = (ecpPath) => new Promise((done) => {
-      const req = http.request({ hostname: ip, port: ecpPort, path: ecpPath, method: 'POST', timeout: 1800 }, (res) => {
-        res.resume();
-        res.on('end', () => done(true));
-      });
-      req.on('error', () => done(false));
-      req.on('timeout', () => { req.destroy(); done(false); });
-      req.end();
-    });
-
-    const req = http.get({ hostname: ip, port: ecpPort, path: '/query/active-app', timeout: 1500 }, (res) => {
+    const req = http.get({ hostname: ip, port: ecpPort, path: ecpPath, timeout: timeoutMs }, (res) => {
       let xml = '';
       res.setEncoding('utf8');
       res.on('data', c => { xml += c; });
-      res.on('end', async () => {
-        if (!xml.includes('id="dev"')) {
-          await postEcp('/keypress/PowerOn');
-          await postEcp('/launch/dev');
-        }
-        resolve(true);
-      });
+      res.on('end', () => resolve(xml));
     });
-    req.on('error', () => resolve(false));
-    req.on('timeout', () => { req.destroy(); resolve(false); });
+    req.on('error', () => resolve(''));
+    req.on('timeout', () => { req.destroy(); resolve(''); });
   });
+}
+
+function postEcpKey(ip, ecpPort, ecpPath, timeoutMs = 1500) {
+  return new Promise((done) => {
+    const req = http.request({
+      hostname: ip,
+      port: ecpPort,
+      path: ecpPath,
+      method: 'POST',
+      headers: { 'Content-Length': '0' },
+      timeout: timeoutMs,
+    }, (res) => {
+      res.resume();
+      res.on('end', () => done(true));
+    });
+    req.on('error', () => done(false));
+    req.on('timeout', () => { req.destroy(); done(false); });
+    req.end();
+  });
+}
+
+async function ensureRokuChannelActive(ip, ecpPort = 8060, { expectPlayback = false, expectedLoadKey = '', configDir } = {}) {
+  if (process.env.ROBOS_TEST === '1' || process.env.NODE_TEST_CONTEXT) return true;
+  const xml = await getEcpXml(ip, ecpPort, '/query/active-app');
+  if (!xml) return false;
+
+  if (!xml.includes('id="dev"')) {
+    await postEcpKey(ip, ecpPort, '/keypress/PowerOn');
+    await postEcpKey(ip, ecpPort, '/launch/dev');
+    return true;
+  }
+
+  if (xml.includes('<screensaver')) {
+    await postEcpKey(ip, ecpPort, '/keypress/PowerOn');
+    await postEcpKey(ip, ecpPort, '/keypress/Lit_%20');
+  }
+
+  if (expectPlayback) {
+    // Self-healing watchdog: if a previous session was paused/frozen on Roku OS and the channel
+    // hasn't transitioned out of pause/screensaver after 1.8s, cleanly restart `dev` so it
+    // immediately loads `activeRokuCast` from `/api/roku-cinema`.
+    const watchdog = setTimeout(async () => {
+      try {
+        const cur = readHeadlessSession(configDir);
+        if (!cur || !cur.active || cur.castState?.paused) return;
+        if (expectedLoadKey && cur.castState?.loadKey && cur.castState.loadKey !== expectedLoadKey) return;
+        const [appXml, mpXml] = await Promise.all([
+          getEcpXml(ip, ecpPort, '/query/active-app'),
+          getEcpXml(ip, ecpPort, '/query/media-player'),
+        ]);
+        const stillScreensaver = appXml.includes('<screensaver');
+        const stateMatch = mpXml.match(/<player[^>]*state="([^"]+)"/);
+        const rState = stateMatch ? stateMatch[1] : '';
+        const durMatch = mpXml.match(/<duration>\s*(\d+)/);
+        const isKeepAlive = durMatch && Number(durMatch[1]) === 60000;
+        const stuck = stillScreensaver || !appXml.includes('id="dev"') || rState === 'pause' || rState === 'close' || rState === 'none' || isKeepAlive;
+        if (stuck) {
+          await postEcpKey(ip, ecpPort, '/keypress/PowerOn');
+          await postEcpKey(ip, ecpPort, '/keypress/Home');
+          await new Promise(r => setTimeout(r, 380));
+          await postEcpKey(ip, ecpPort, '/launch/dev');
+        }
+      } catch {}
+    }, 2000);
+    watchdog.unref?.();
+  }
+  return true;
 }
 
 function buildStreamTargetForTrack(track, configDir) {
@@ -259,8 +309,11 @@ async function playTracksHeadless({
 
   const resumeSec = resolveSavedResumeSec(first, startAt, dir);
   const loadKey = `headless-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+  const cleanEpSub = first.episodeTitle && !/^episode\s*0*\d+$/i.test(String(first.episodeTitle).trim())
+    ? ` — ${first.episodeTitle}`
+    : '';
   const displayTitle = first.showName && first.seasonNumber != null && first.episodeNumber != null
-    ? `${first.showName} · S${String(first.seasonNumber).padStart(2, '0')}E${String(first.episodeNumber).padStart(2, '0')}${first.episodeTitle ? ` — ${first.episodeTitle}` : ''}`
+    ? `${first.showName} · S${String(first.seasonNumber).padStart(2, '0')}E${String(first.episodeNumber).padStart(2, '0')}${cleanEpSub}`
     : (first.title || 'RobOS Movie Player');
 
   const castState = {
@@ -318,7 +371,11 @@ async function playTracksHeadless({
   await Promise.all(serverUrls.map(srv => httpPostJson(`${srv}/api/roku-cast`, castState)));
 
   if ((tvInfo.platformId || 'roku-os') === 'roku-os') {
-    await ensureRokuChannelActive(targetIp, tvInfo?.ports?.ecp || 8060);
+    await ensureRokuChannelActive(targetIp, tvInfo?.ports?.ecp || 8060, {
+      expectPlayback: true,
+      expectedLoadKey: loadKey,
+      configDir: dir,
+    });
   }
 
   return {
