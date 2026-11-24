@@ -228,12 +228,16 @@ function normalizeShoppingVoiceTranscript(rawText) {
   //    resolve [words] phonetically to target, costco, or default to grocery!
   if (
     (/\b(?:to|on|in|from|at|for)\s+(?:the\s+|my\s+|our\s+)?[a-z][a-z\s'\-]{1,32}?\s+lists?\b/i.test(s) ||
-      /^(?:(?:hey|hello|hi|ok|okay|yo)\s+(?:nabu|robos)[,.:;!\s]*)?(?:please\s+)?(?:add|put|buy|get|need|remove|delete|check(?:\s+off)?|uncheck|clear(?:\s+checked)?|what(?:'s|\s+is|\s+are)\s+on|show|read)\b/i.test(s)) &&
-    !/\b(?:task|tasks|todo|to-do|issue|issues|ticket|tickets|watch|movie|song|playlist)\b/i.test(s)
+      /^(?:(?:hey|hello|hi|ok|okay|yo)\s+(?:nabu|commander|robos)[,.:;!\s]*|commander[,.:;!\s]+)?(?:please\s+)?(?:add|put|buy|get|grab|pick\s+up|need|remove|delete|take|scratch|check(?:\s+off)?|cross\s+off|uncheck|clear(?:\s+checked)?|what(?:'s|\s+is|\s+are)\s+on|show|read|see|is|are|do\s+(?:we|i)\s+(?:have|need))\b/i.test(s)) &&
+    !/\b(?:task|tasks|todo|to-do|issue|issues|ticket|tickets|watch|movie|song|playlist)\b/i.test(s) &&
+    !/\b(?:create|make|start|new)\s+(?:a\s+)?(?:new\s+)?/i.test(s)
   ) {
     s = s.replace(
       /\b(to|on|in|from|at|for)\s+(?:the\s+|my\s+|our\s+)?([a-z][a-z\s'\-]{1,32}?)\s+(lists?)\b/gi,
       (full, prep, middle, listWord) => {
+        if (/\b(?:to|on|in|from|at|for)\b/i.test(middle)) {
+          return full;
+        }
         const m = middle.replace(/[\-_]+/g, ' ').replace(/\s+/g, ' ').trim().toLowerCase();
         if (/^(?:grocery|target|costco|shopping|(?:my|the|our)\s+(?:grocery|target|costco|shopping))$/.test(m)) {
           return full;
@@ -262,8 +266,178 @@ function detectTargetStoreId(chunk, defaultListId, availableListIds) {
 const WORD_QTY = {
   one: 1, two: 2, three: 3, four: 4, five: 5,
   six: 6, seven: 7, eight: 8, nine: 9, ten: 10,
-  eleven: 11, twelve: 12, dozen: 12,
+  eleven: 11, twelve: 12, dozen: 12, couple: 2, pair: 2,
+  thirteen: 13, fourteen: 14, fifteen: 15, sixteen: 16, twenty: 20,
 };
+
+/**
+ * Ready-made offline meal & household bundles triggered by `"Commander, add taco night..."` etc.
+ */
+const MEAL_BUNDLES = [
+  {
+    id: 'taco-night',
+    label: 'Taco Night',
+    defaultListId: 'grocery',
+    pattern: /\b(?:taco\s+night|tacos?\s+(?:kit|ingredients|stuff|supplies|dinner)|street\s+tacos?)\b/i,
+    items: [
+      { name: 'Ground Beef (85/15)', qty: 2, unit: 'lb', aisle: 'Meat & Seafood', estPrice: 6.49 },
+      { name: 'Corn & Flour Tortillas', qty: 2, unit: 'pack', aisle: 'Bakery', estPrice: 3.49 },
+      { name: 'Hass Avocados', qty: 4, unit: 'ea', aisle: 'Produce', estPrice: 1.50 },
+      { name: 'Fresh Cilantro', qty: 1, unit: 'bunch', aisle: 'Produce', estPrice: 1.29 },
+      { name: 'Limes', qty: 4, unit: 'ea', aisle: 'Produce', estPrice: 0.50 },
+      { name: 'Shredded Mexican Cheese', qty: 1, unit: 'bag', aisle: 'Dairy & Eggs', estPrice: 3.99 },
+      { name: 'Restaurant Salsa', qty: 1, unit: 'jar', aisle: 'Snacks', estPrice: 4.29 },
+    ],
+  },
+  {
+    id: 'pasta-night',
+    label: 'Pasta Night',
+    defaultListId: 'grocery',
+    pattern: /\b(?:pasta\s+night|spaghetti\s+night|pasta\s+(?:dinner|ingredients|kit|stuff))\b/i,
+    items: [
+      { name: 'Bronze-Cut Rigatoni Pasta', qty: 2, unit: 'box', aisle: 'Pantry & Dry Goods', estPrice: 2.79 },
+      { name: 'San Marzano Tomatoes', qty: 2, unit: 'ea', aisle: 'Pantry & Dry Goods', estPrice: 3.49 },
+      { name: 'Fresh Garlic', qty: 1, unit: 'ea', aisle: 'Produce', estPrice: 0.99 },
+      { name: 'Fresh Basil', qty: 1, unit: 'pack', aisle: 'Produce', estPrice: 2.99 },
+      { name: 'Parmigiano-Reggiano Wedge', qty: 1, unit: 'ea', aisle: 'Dairy & Eggs', estPrice: 6.99 },
+      { name: 'Sourdough Garlic Loaf', qty: 1, unit: 'ea', aisle: 'Bakery', estPrice: 4.99 },
+    ],
+  },
+  {
+    id: 'breakfast',
+    label: 'Breakfast Essentials',
+    defaultListId: 'grocery',
+    pattern: /\b(?:breakfast\s+(?:essentials|stuff|items|groceries|kit|supplies)|weekend\s+breakfast|brunch\s+(?:stuff|essentials|items))\b/i,
+    items: [
+      { name: 'Pasture-Raised Eggs (12ct)', qty: 1, unit: 'box', aisle: 'Dairy & Eggs', estPrice: 6.29, badge: 'organic' },
+      { name: 'Organic Whole Milk', qty: 1, unit: 'gal', aisle: 'Dairy & Eggs', estPrice: 5.49, badge: 'organic' },
+      { name: 'Thick-Cut Bacon', qty: 1, unit: 'pack', aisle: 'Meat & Seafood', estPrice: 6.99 },
+      { name: 'Sourdough Country Loaf', qty: 1, unit: 'ea', aisle: 'Bakery', estPrice: 5.99 },
+      { name: 'Salted Grass-Fed Butter', qty: 1, unit: 'pack', aisle: 'Dairy & Eggs', estPrice: 4.99 },
+      { name: 'Bananas', qty: 1, unit: 'bunch', aisle: 'Produce', estPrice: 1.89 },
+      { name: 'Cold Brew Coffee', qty: 1, unit: 'bottle', aisle: 'Beverages', estPrice: 4.99 },
+    ],
+  },
+  {
+    id: 'burger-night',
+    label: 'Burger & Grill Night',
+    defaultListId: 'grocery',
+    pattern: /\b(?:burger\s+night|burgers?\s+(?:kit|ingredients|stuff|night)|cookout\s+(?:stuff|items|essentials)|bbq\s+night)\b/i,
+    items: [
+      { name: 'Chuck Burger Patties', qty: 2, unit: 'lb', aisle: 'Meat & Seafood', estPrice: 7.49 },
+      { name: 'Brioche Burger Buns', qty: 1, unit: 'pack', aisle: 'Bakery', estPrice: 4.49 },
+      { name: 'Sharp Cheddar Slices', qty: 1, unit: 'pack', aisle: 'Dairy & Eggs', estPrice: 4.29 },
+      { name: 'Crisp Romaine Lettuce', qty: 1, unit: 'ea', aisle: 'Produce', estPrice: 2.49 },
+      { name: 'Vine-Ripened Tomatoes', qty: 2, unit: 'ea', aisle: 'Produce', estPrice: 1.29 },
+      { name: 'Red Onion', qty: 1, unit: 'ea', aisle: 'Produce', estPrice: 1.19 },
+    ],
+  },
+  {
+    id: 'pizza-night',
+    label: 'Pizza Night',
+    defaultListId: 'grocery',
+    pattern: /\b(?:pizza\s+night|homemade\s+pizza(?:\s+ingredients|\s+stuff|\s+kit)?)\b/i,
+    items: [
+      { name: 'Fresh Pizza Dough', qty: 2, unit: 'bag', aisle: 'Bakery', estPrice: 2.99 },
+      { name: 'Pizza Sauce', qty: 1, unit: 'jar', aisle: 'Pantry & Dry Goods', estPrice: 3.49 },
+      { name: 'Fresh Mozzarella', qty: 2, unit: 'pack', aisle: 'Dairy & Eggs', estPrice: 4.79 },
+      { name: 'Uncured Pepperoni', qty: 1, unit: 'pack', aisle: 'Meat & Seafood', estPrice: 5.29 },
+      { name: 'Fresh Basil', qty: 1, unit: 'pack', aisle: 'Produce', estPrice: 2.99 },
+    ],
+  },
+  {
+    id: 'smoothies',
+    label: 'Smoothie Pack',
+    defaultListId: 'grocery',
+    pattern: /\b(?:smoothies?\s+(?:ingredients|stuff|items|pack|kit)|protein\s+smoothies?)\b/i,
+    items: [
+      { name: 'Bananas', qty: 1, unit: 'bunch', aisle: 'Produce', estPrice: 1.89 },
+      { name: 'Frozen Mixed Berries', qty: 2, unit: 'bag', aisle: 'Frozen', estPrice: 4.99, badge: 'organic' },
+      { name: 'Baby Spinach', qty: 1, unit: 'bag', aisle: 'Produce', estPrice: 3.99, badge: 'organic' },
+      { name: 'Plain Greek Yogurt (32oz)', qty: 1, unit: 'ea', aisle: 'Dairy & Eggs', estPrice: 5.79 },
+      { name: 'Barista Oatmilk', qty: 1, unit: 'bottle', aisle: 'Dairy & Eggs', estPrice: 4.49 },
+    ],
+  },
+  {
+    id: 'stir-fry',
+    label: 'Stir Fry Night',
+    defaultListId: 'grocery',
+    pattern: /\b(?:stir[\s-]*fry\s+(?:night|ingredients|stuff|kit|dinner))\b/i,
+    items: [
+      { name: 'Boneless Chicken Thighs', qty: 2, unit: 'lb', aisle: 'Meat & Seafood', estPrice: 5.99 },
+      { name: 'Broccoli Crowns', qty: 2, unit: 'lb', aisle: 'Produce', estPrice: 2.49 },
+      { name: 'Red Bell Peppers', qty: 2, unit: 'ea', aisle: 'Produce', estPrice: 1.49 },
+      { name: 'Sugar Snap Peas', qty: 1, unit: 'bag', aisle: 'Produce', estPrice: 3.49 },
+      { name: 'Fresh Ginger & Garlic', qty: 1, unit: 'pack', aisle: 'Produce', estPrice: 2.49 },
+      { name: 'Jasmine Rice', qty: 1, unit: 'bag', aisle: 'Pantry & Dry Goods', estPrice: 4.99 },
+    ],
+  },
+  {
+    id: 'salad-kit',
+    label: 'Fresh Salad Bar',
+    defaultListId: 'grocery',
+    pattern: /\b(?:salad\s+(?:stuff|ingredients|fixings|items|bar|kit))\b/i,
+    items: [
+      { name: 'Organic Spring Mix', qty: 1, unit: 'box', aisle: 'Produce', estPrice: 4.49, badge: 'organic' },
+      { name: 'Cherry Tomatoes', qty: 1, unit: 'pack', aisle: 'Produce', estPrice: 3.49 },
+      { name: 'English Cucumber', qty: 2, unit: 'ea', aisle: 'Produce', estPrice: 1.79 },
+      { name: 'Hass Avocados', qty: 3, unit: 'ea', aisle: 'Produce', estPrice: 1.50 },
+      { name: 'Crumbled Feta Cheese', qty: 1, unit: 'pack', aisle: 'Dairy & Eggs', estPrice: 4.99 },
+    ],
+  },
+  {
+    id: 'lunchbox',
+    label: 'Sandwich & Lunchbox Essentials',
+    defaultListId: 'grocery',
+    pattern: /\b(?:(?:sandwich|lunchbox|school\s+lunch)\s+(?:essentials|stuff|items|makings|supplies|kit))\b/i,
+    items: [
+      { name: 'Sourdough Sandwich Bread', qty: 1, unit: 'ea', aisle: 'Bakery', estPrice: 5.49 },
+      { name: 'Roasted Sliced Turkey Breast', qty: 1, unit: 'pack', aisle: 'Meat & Seafood', estPrice: 6.99 },
+      { name: 'Sliced Havarti Cheese', qty: 1, unit: 'pack', aisle: 'Dairy & Eggs', estPrice: 4.49 },
+      { name: 'Honeycrisp Apples', qty: 6, unit: 'ea', aisle: 'Produce', estPrice: 0.99 },
+      { name: 'Baby Carrots & Hummus', qty: 1, unit: 'pack', aisle: 'Produce', estPrice: 4.99 },
+    ],
+  },
+  {
+    id: 'baking',
+    label: 'Baking Essentials',
+    defaultListId: 'grocery',
+    pattern: /\b(?:baking\s+(?:essentials|stuff|ingredients|supplies|kit))\b/i,
+    items: [
+      { name: 'Unbleached All-Purpose Flour', qty: 1, unit: 'bag', aisle: 'Pantry & Dry Goods', estPrice: 4.99 },
+      { name: 'Granulated Cane Sugar', qty: 1, unit: 'bag', aisle: 'Pantry & Dry Goods', estPrice: 3.99 },
+      { name: 'Dark Brown Sugar', qty: 1, unit: 'bag', aisle: 'Pantry & Dry Goods', estPrice: 3.49 },
+      { name: 'Unsalted Baking Butter', qty: 2, unit: 'pack', aisle: 'Dairy & Eggs', estPrice: 4.99 },
+      { name: 'Semi-Sweet Chocolate Chips', qty: 1, unit: 'bag', aisle: 'Pantry & Dry Goods', estPrice: 4.49 },
+    ],
+  },
+  {
+    id: 'party-snacks',
+    label: 'Game Night & Party Snacks',
+    defaultListId: 'grocery',
+    pattern: /\b(?:(?:game\s+night|movie\s+night|party)\s+(?:snacks|food|stuff|supplies)|snack\s+pack)\b/i,
+    items: [
+      { name: 'Tortilla Strips Chips', qty: 2, unit: 'bag', aisle: 'Snacks', estPrice: 3.99 },
+      { name: 'Fresh Guacamole & Salsa', qty: 1, unit: 'pack', aisle: 'Produce', estPrice: 6.49 },
+      { name: 'Sea Salt Pretzel Crisps', qty: 1, unit: 'bag', aisle: 'Snacks', estPrice: 3.99 },
+      { name: 'Classic Garlic Hummus', qty: 1, unit: 'ea', aisle: 'Dairy & Eggs', estPrice: 4.49 },
+      { name: 'Sparkling Water (12pk)', qty: 1, unit: 'case', aisle: 'Beverages', estPrice: 5.99 },
+    ],
+  },
+  {
+    id: 'sick-day',
+    label: 'Sick Day & Cold Care',
+    defaultListId: 'target',
+    pattern: /\b(?:(?:sick\s+day|cold\s+and\s+flu|flu\s+care|cold\s+care)\s*(?:kit|stuff|essentials|supplies|items)?)\b/i,
+    items: [
+      { name: 'Facial Tissues 4-Cube Pack', qty: 1, unit: 'pack', aisle: 'Household Essentials', estPrice: 6.99, badge: 'urgent' },
+      { name: 'Electrolyte Hydration Packets', qty: 1, unit: 'box', aisle: 'Health & Pharmacy', estPrice: 9.99 },
+      { name: 'Honey Lemon Throat Drops', qty: 1, unit: 'bag', aisle: 'Health & Pharmacy', estPrice: 4.49 },
+      { name: 'Chicken Noodle Soup', qty: 3, unit: 'ea', aisle: 'Market & Snacks', estPrice: 2.79 },
+      { name: 'Organic Ginger Herbal Tea', qty: 1, unit: 'box', aisle: 'Market & Snacks', estPrice: 4.99 },
+    ],
+  },
+];
 
 const COMPOUND_AND_ITEMS = [
   'mac and cheese',
@@ -369,22 +543,25 @@ function parseSmartItemsOffline(rawText, lists, defaultListId = 'grocery') {
       cleaned = cleaned.replace(priceMatch[0], ' ').replace(/\s+/g, ' ').trim();
     }
 
-    // Normalize leading word numbers ("two gal milk" -> "2 gal milk")
-    cleaned = cleaned.replace(/^(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|dozen)\b/i, (m) => String(WORD_QTY[m.toLowerCase()] || m));
+    // Normalize leading word numbers ("two gal milk" -> "2 gal milk", "a dozen eggs" -> "12 eggs", "a couple of avocados" -> "2 avocados")
+    cleaned = cleaned
+      .replace(/^(?:a\s+)?(dozen|couple|pair)\s+(?:of\s+)?/i, (_m, w) => `${WORD_QTY[w.toLowerCase()]} `)
+      .replace(/^(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|twenty)\b/i, (m) => String(WORD_QTY[m.toLowerCase()] || m))
+      .replace(/^(?:a|an)\s+(?=(?:gal|gallon|lb|pound|pack|case|bag|box|bunch|bottle|jar|carton|loaf|can|tub|container)\b)/i, '1 ');
 
     let qty = 1;
     let unit = 'ea';
-    const leadingQty = cleaned.match(/^(\d+(?:\.\d+)?)\s*(ea|packs?|lbs?|oz|gals?|gallons?|cases?|bags?|boxes|box|bunch(?:es)?|bottles?|jars?|ct|x)?\b\s*(?:of\s+)?(.+)$/i);
+    const leadingQty = cleaned.match(/^(\d+(?:\.\d+)?)\s*(ea|packs?|pkgs?|packages?|lbs?|pounds?|oz|ounces?|gals?|gallons?|cases?|bags?|boxes|box|cartons?|bunch(?:es)?|bottles?|jars?|cans?|loaves|loaf|tubs?|containers?|rolls?|ct|x)?\b\s*(?:of\s+)?(.+)$/i);
     if (leadingQty) {
       qty = Math.max(0.25, Number(leadingQty[1]) || 1);
       const rawUnit = (leadingQty[2] || '').toLowerCase();
       if (rawUnit.startsWith('gal')) unit = 'gal';
-      else if (rawUnit.startsWith('lb')) unit = 'lb';
-      else if (rawUnit === 'oz') unit = 'oz';
-      else if (rawUnit.startsWith('pack')) unit = 'pack';
+      else if (rawUnit.startsWith('lb') || rawUnit.startsWith('pound')) unit = 'lb';
+      else if (rawUnit === 'oz' || rawUnit.startsWith('ounce')) unit = 'oz';
+      else if (rawUnit.startsWith('pack') || rawUnit.startsWith('pkg') || rawUnit.startsWith('roll')) unit = 'pack';
       else if (rawUnit.startsWith('case')) unit = 'case';
       else if (rawUnit.startsWith('bag')) unit = 'bag';
-      else if (rawUnit.startsWith('box')) unit = 'box';
+      else if (rawUnit.startsWith('box') || rawUnit.startsWith('carton')) unit = 'box';
       else if (rawUnit.startsWith('bunch')) unit = 'bunch';
       else if (rawUnit.startsWith('bottle')) unit = 'bottle';
       else if (rawUnit.startsWith('jar')) unit = 'jar';
@@ -420,6 +597,7 @@ module.exports = {
   UNITS,
   BADGES,
   DEFAULT_LISTS,
+  MEAL_BUNDLES,
   detectAisle,
   normalizeShoppingVoiceTranscript,
   parseSmartItemsOffline,

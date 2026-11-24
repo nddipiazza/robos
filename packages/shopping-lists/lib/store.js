@@ -461,6 +461,56 @@ function createStore(options = {}) {
     return { removedCount: removed.length, state: getSnapshot() };
   }
 
+  function clearAllItems(listId) {
+    const list = findList(listId);
+    const removed = [...list.items];
+    if (!removed.length) return { removedCount: 0, state: getSnapshot() };
+    list.items = [];
+    pushUndo({
+      kind: 'remove-items',
+      listId: list.id,
+      label: `Cleared all ${removed.length} item${removed.length === 1 ? '' : 's'} in ${list.name}`,
+      items: removed,
+    });
+    list.updatedAt = new Date().toISOString();
+    persist({ reason: 'clear-all' });
+    return { removedCount: removed.length, state: getSnapshot() };
+  }
+
+  function moveItem(fromListId, itemId, toListId) {
+    const src = findList(fromListId);
+    const dst = findList(toListId);
+    if (src.id === dst.id) {
+      const item = src.items.find((it) => it.id === itemId);
+      if (!item) throw new Error('Item not found.');
+      return { item: { ...item }, fromList: src, toList: dst, sameList: true, state: getSnapshot() };
+    }
+    const idx = src.items.findIndex((it) => it.id === itemId);
+    if (idx === -1) throw new Error('Item not found.');
+    const [removed] = src.items.splice(idx, 1);
+    src.updatedAt = new Date().toISOString();
+    const added = addItem(dst.id, {
+      name: removed.name,
+      qty: removed.qty,
+      unit: removed.unit,
+      aisle: 'auto',
+      estPrice: removed.estPrice,
+      badge: removed.badge,
+      note: removed.note,
+      checked: removed.checked,
+    });
+    pushUndo({
+      kind: 'move-item',
+      fromListId: src.id,
+      toListId: dst.id,
+      movedItemId: added.item.id,
+      originalItem: removed,
+      label: `Moved "${removed.name}" from ${src.name} to ${dst.name}`,
+    });
+    persist({ reason: 'move-item' });
+    return { item: added.item, fromList: src, toList: dst, sameList: false, state: getSnapshot() };
+  }
+
   function checkAll(listId, checked = true) {
     const list = findList(listId);
     const nowIso = new Date().toISOString();
@@ -485,6 +535,17 @@ function createStore(options = {}) {
         if (!existingIds.has(item.id)) list.items.unshift(item);
       }
       list.updatedAt = new Date().toISOString();
+    } else if (entry.kind === 'move-item' && entry.originalItem) {
+      const src = state.lists.find((l) => l.id === entry.fromListId);
+      const dst = state.lists.find((l) => l.id === entry.toListId);
+      if (dst && entry.movedItemId) {
+        dst.items = dst.items.filter((i) => i.id !== entry.movedItemId);
+        dst.updatedAt = new Date().toISOString();
+      }
+      if (src && !src.items.some((i) => i.id === entry.originalItem.id)) {
+        src.items.unshift(entry.originalItem);
+        src.updatedAt = new Date().toISOString();
+      }
     }
     persist({ reason: 'undo' });
     return { restored: true, label: entry.label, state: getSnapshot() };
@@ -583,6 +644,8 @@ function createStore(options = {}) {
     updateItem,
     removeItem,
     clearChecked,
+    clearAllItems,
+    moveItem,
     checkAll,
     undo,
     smartBatchAdd,

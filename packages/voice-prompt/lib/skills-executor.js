@@ -112,6 +112,7 @@ class SkillsExecutor {
     // 1.5 Household Shopping Lists Skill (Grocery, Target, Costco)
     // Matches "/shopping-lists ...", "add 2 gal milk to grocery list", "what is on my costco list", "check off avocados on grocery", "remove tide pods from target", "add milk to the [anything] list"
     let normalizedShoppingQuery = query;
+    let sharedShoppingMatcher = null;
     const shoppingPkgDirs = [
       path.resolve(__dirname, '../../shopping-lists'),
       path.join(this.homeDir || os.homedir(), '.local/share/robos/shopping-lists'),
@@ -127,11 +128,14 @@ class SkillsExecutor {
     try {
       const { normalizeShoppingVoiceTranscript } = resolveShoppingMod('lib/defaults');
       normalizedShoppingQuery = normalizeShoppingVoiceTranscript(query);
+      const { isLikelyShoppingVoiceCommand } = resolveShoppingMod('lib/text-commands');
+      sharedShoppingMatcher = isLikelyShoppingVoiceCommand;
     } catch {}
-    const isShoppingCommand = /^\/shopping-lists?\b/i.test(normalizedShoppingQuery)
-      || (/\b(?:shopping\s+lists?|grocery(?:\s+shopping)?(?:\s+lists?)?|target(?:\s+shopping)?(?:\s+lists?)?|costco(?:\s+shopping)?(?:\s+lists?)?|@(?:grocery|target|costco))\b/i.test(normalizedShoppingQuery)
+    const isShoppingCommand = (typeof sharedShoppingMatcher === 'function' && sharedShoppingMatcher(normalizedShoppingQuery))
+      || /^\/shopping-lists?\b/i.test(normalizedShoppingQuery)
+      || (/\b(?:shopping\s+lists?|groceries|grocery(?:\s+shopping)?(?:\s+lists?)?|target(?:\s+shopping)?(?:\s+lists?)?|costco(?:\s+shopping)?(?:\s+lists?)?|@(?:grocery|target|costco))\b/i.test(normalizedShoppingQuery)
           && !/^(?:open|launch|start|switch\s+to)\s+(?:the\s+)?(?:robos\s+)?shopping\s+lists?(?:\s+app|\s+window)?$/i.test(normalizedShoppingQuery))
-      || (/\b(?:to|on|in|from|at|for)\s+(?:[a-z0-9'\-\s]{1,30}\s+)?lists?\b/i.test(normalizedShoppingQuery)
+      || (/\b(?:to|on|in|from|at|for|off)\s+(?:[a-z0-9'\-\s]{1,30}\s+)?lists?\b/i.test(normalizedShoppingQuery)
           && !/\b(?:task|tasks|todo|issue|issues|ticket|tickets|watch|movie|song|playlist)\b/i.test(normalizedShoppingQuery));
     if (isShoppingCommand) {
       try {

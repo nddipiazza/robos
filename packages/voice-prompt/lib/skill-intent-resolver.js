@@ -359,10 +359,16 @@ function matchPlatformSkills(text) {
 
   // Household Shopping Lists (Grocery, Target, Costco)
   const isOpenShoppingApp = /^(?:open|launch|start|switch\s+to)\s+(?:the\s+)?(?:robos\s+)?(?:household\s+)?shopping\s+lists?(?:\s+app|\s+window)?$/i.test(raw);
+  let matchedByShoppingLib = false;
+  try {
+    const { isLikelyShoppingVoiceCommand } = require('../../shopping-lists/lib/text-commands');
+    matchedByShoppingLib = isLikelyShoppingVoiceCommand(raw);
+  } catch {}
   if (
     !isOpenShoppingApp &&
-    (/\b(?:grocery|target|costco|shopping)\s+lists?\b/i.test(raw) ||
-      /\b(?:add|put|buy|need|get|remove|delete|drop|check|uncheck|done|bought|got|clear|show|list|read|sync)\b.+\b(?:to|on|in|from|at|for)\s+(?:my\s+|the\s+)?(?:grocery|target|costco)\b/i.test(raw) ||
+    (matchedByShoppingLib ||
+      /\b(?:grocery|target|costco|shopping)\s+lists?\b/i.test(raw) ||
+      /\b(?:add|put|buy|need|get|remove|delete|drop|check|uncheck|done|bought|got|clear|show|list|read|see|sync)\b.+\b(?:to|on|in|from|at|for|off)\s+(?:my\s+|the\s+)?(?:grocery|target|costco)\b/i.test(raw) ||
       /(?:^|\s)@(?:grocery|target|costco)\b/i.test(raw) ||
       /^(?:check\s+off|uncheck|mark\s+done|bought|got|clear\s+checked)\s+.+/i.test(raw))
   ) {

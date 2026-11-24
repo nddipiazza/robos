@@ -61,27 +61,36 @@ Use this shorthand in the **Smart Paste / AI Multi-Add** bar (Desktop & Mobile W
 
 ---
 
-## 3. Natural Voice & Text Commands (RobOS Voice / "Hey Nabu")
+## 3. "Commander" Voice & Natural Text Commands (RobOS Assistant / RobOS Voice)
 
-Say or type any of these natural phrases in **RobOS Voice**, **Home Speaker**, or the CLI:
+Say or type any of these natural phrases with **RobOS Assistant (`"Commander"`)**, **RobOS Voice**, **Home Speaker**, or the CLI:
 
-- **Add items**:
-  - `"Add 2 gallons of milk and 4 avocados to the grocery list"`
-  - `"Add laundry detergent to Target and rotisserie chicken to Costco"`
-- **Check / Uncheck items**:
-  - `"Check off avocados"` / `"Got rotisserie chicken on Costco"`
-  - `"Uncheck avocados on grocery"`
-- **Adjust quantities**:
-  - `"More avocados"` (`+1`) / `"Fewer avocados"` (`-1`)
-  - `"Set quantity of avocados to 6"` / `"Qty avocados +2"`
-- **Remove / Clear / Undo**:
-  - `"Remove Tide pods from Target"`
-  - `"Clear checked on grocery list"`
-  - `"Undo"`
-- **Ask status aloud**:
-  - `"What is on my Costco list?"`
-  - `"What do we need at Target?"`
-  - `"Show all shopping lists"`
+- **Read / Inspect lists & aisles**:
+  - `"Commander, can you see my grocery list?"` / `"Commander, what groceries do we need?"`
+  - `"Commander, read the full grocery list"` / `"Commander, read my grocery list by aisle"`
+  - `"Commander, what do we need in Produce?"` / `"Commander, what's in the dairy aisle?"`
+  - `"Commander, what's in my cart?"` / `"Commander, how much is my Costco list?"`
+  - `"Commander, what urgent items are on my grocery list?"` / `"Commander, any deals on Target?"`
+- **Check if an item is already on the list**:
+  - `"Commander, is milk on my grocery list?"` / `"Commander, do we need avocados?"`
+  - `"Commander, did I put paper towels on Target?"`
+- **Add items & kitchen out-of-stock triggers**:
+  - `"Commander, add 2 gallons of milk and 4 avocados to the grocery list"`
+  - `"Commander, we're out of eggs and butter"` / `"Commander, running low on olive oil"`
+  - `"Commander, remind me to buy sourdough bread"` / `"Commander, add laundry detergent to Target and rotisserie chicken to Costco"`
+- **Meal bundles & 1-sentence staples**:
+  - `"Commander, add taco night to my grocery list"` *(also `pasta night`, `breakfast essentials`, `burger night`, `pizza night`, `smoothie ingredients`, `stir fry night`, `salad stuff`, `lunchbox essentials`, `baking essentials`, `party snacks`, `sick day kit`)*
+  - `"Commander, add my grocery staples"` / `"Commander, what are my Costco staples?"`
+- **Check off, uncheck, move, annotate & adjust**:
+  - `"Commander, check off avocados and milk"` / `"Commander, I got the rotisserie chicken"`
+  - `"Commander, put milk back on my grocery list"`
+  - `"Commander, double the avocados"` / `"Commander, add 2 more avocados"` / `"Commander, set quantity of milk to 3"`
+  - `"Commander, move paper towels to Costco"`
+  - `"Commander, add a note to milk: get lactose free"` / `"Commander, mark eggs as urgent"` / `"Commander, set price of salmon to 12.99"`
+- **Remove, clear, custom lists & undo**:
+  - `"Commander, take Tide pods off Target"` / `"Commander, we don't need avocados anymore"`
+  - `"Commander, clear checked on grocery list"` / `"Commander, empty my grocery list"`
+  - `"Commander, create a Trader Joe's shopping list"` / `"Commander, undo"`
 
 ---
 

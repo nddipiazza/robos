@@ -500,6 +500,18 @@ const SKILL_VOICE_DEFINITIONS = [
       'what is on my target',
       'what is on my costco',
       'what is on my shopping',
+      'can you see my grocery list',
+      'read my grocery list',
+      'what groceries do we need',
+      'we are out of',
+      'running low on',
+      'add taco night',
+      'add pasta night',
+      'add breakfast essentials',
+      'add my grocery staples',
+      'what is in my cart',
+      'how much is my grocery list',
+      'how many items are on my grocery list',
       'show shopping lists',
       'list shopping lists',
       'sync shopping lists',
@@ -753,9 +765,9 @@ class VoiceCommandsRegistry {
     const raw = (transcript || '').trim();
     if (!raw) return { matched: false, rawTranscript: raw };
 
-    // Strip common conversational filler words at start ("ok nabu", "hey robos", "please", etc.)
+    // Strip common conversational filler words at start ("commander", "ok nabu", "hey robos", "please", etc.)
     let cleaned = raw
-      .replace(/^(?:hey|hello|hi|ok|okay)?\s*(?:nabu|na\s+bu|naboo|robos|rob\s+os|row\s+bose)?\s*[,;:]?\s*/i, '')
+      .replace(/^(?:hey|hello|hi|ok|okay)?\s*(?:commander|nabu|na\s+bu|naboo|robos|rob\s+os|row\s+bose)?\s*[,;:]?\s*/i, '')
       .replace(/^(?:please|can\s+you|could\s+you|would\s+you)?\s*/i, '')
       .trim();
 

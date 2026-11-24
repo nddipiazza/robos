@@ -409,7 +409,7 @@ describe('RobOS Shopping Lists — Store, Form Actions, Google Docs Sync & QR', 
 
     try {
       const detector = new WakeWordDetector();
-      const wakeMatch = detector.processText('Ok Nabu, add 2 gallons of whole milk and honeycrisp apples to my grocery list');
+      const wakeMatch = detector.processText('Commander, add 2 gallons of whole milk and honeycrisp apples to my grocery list');
       assert.equal(wakeMatch.matched, true);
       assert.match(wakeMatch.query, /add 2 gallons of whole milk/i);
 
@@ -533,8 +533,166 @@ describe('RobOS Shopping Lists — Store, Form Actions, Google Docs Sync & QR', 
       assert.match(rOffline.summary, /Added 3 bag Coffee beans to Costco/i);
       const costco = rOffline.state.lists.find((l) => l.id === 'costco');
       const groceryAfter = rOffline.state.lists.find((l) => l.id === 'grocery');
-      assert.ok(costco.items.some((i) => /coffee beans/i.test(i.name) && i.qty === 3));
+      assert.equal(costco.items.some((i) => /coffee beans/i.test(i.name) && i.qty === 3), true);
       assert.ok(groceryAfter.items.find((i) => /salsa/i.test(i.name))?.checked);
+    } finally {
+      cleanup();
+    }
+  });
+
+  it('handles full suite of "Commander, _____" grocery & shopping list voice commands end-to-end', async () => {
+    const { WakeWordDetector } = require('../../../voice-prompt/lib/wake-word');
+    const { SkillsExecutor } = require('../../../voice-prompt/lib/skills-executor');
+    const { isLikelyShoppingVoiceCommand } = require('../../../shopping-lists/lib/text-commands');
+    const { dir, cleanup } = makeTempStore();
+
+    try {
+      const detector = new WakeWordDetector();
+      const executor = new SkillsExecutor();
+      executor.homeDir = dir;
+      executor.configDir = dir;
+
+      const askCommander = async (utterance) => {
+        const w = detector.processText(utterance);
+        assert.equal(w.matched, true, `Wake word should match: ${utterance}`);
+        return executor.executeCommand(w.query, {});
+      };
+
+      // Non-shopping queries must NOT be hijacked by isLikelyShoppingVoiceCommand
+      assert.equal(isLikelyShoppingVoiceCommand('add a task to fix login'), false);
+      assert.equal(isLikelyShoppingVoiceCommand('check git status'), false);
+      assert.equal(isLikelyShoppingVoiceCommand('add 2 skeletons to room 1'), false);
+      assert.equal(isLikelyShoppingVoiceCommand('open shopping lists'), false);
+
+      // 1. Read / see grocery list & aisle-grouped / full readouts
+      const rSee = await askCommander('Commander, can you see my grocery list?');
+      assert.equal(rSee.ok, true);
+      assert.equal(rSee.skill, 'shopping-lists:list');
+      assert.match(rSee.response, /Grocery list has/i);
+
+      const rByAisle = await askCommander('Commander, read my grocery list by aisle');
+      assert.equal(rByAisle.ok, true);
+      assert.match(rByAisle.response, /Grocery list by aisle/i);
+      assert.match(rByAisle.response, /Produce:/i);
+
+      // 2. Item presence lookup ("is X on my grocery list?", "do we need X?", cross-store lookup, missing item)
+      const rHasYes = await askCommander('Commander, is milk on my grocery list?');
+      assert.equal(rHasYes.ok, true);
+      assert.equal(rHasYes.skill, 'shopping-lists:has-item');
+      assert.match(rHasYes.response, /Yes, Commander.*Organic Whole Milk.*Grocery/i);
+
+      const rHasCrossStore = await askCommander('Commander, is rotisserie chicken on my grocery list?');
+      assert.equal(rHasCrossStore.ok, true);
+      assert.equal(rHasCrossStore.skill, 'shopping-lists:has-item');
+      assert.match(rHasCrossStore.response, /isn't on Grocery, Commander, but you have.*Hot Rotisserie Chicken on your Costco list/i);
+
+      const rHasNo = await askCommander('Commander, do we have dragonfruit on my grocery list?');
+      assert.equal(rHasNo.ok, true);
+      assert.equal(rHasNo.skill, 'shopping-lists:has-item');
+      assert.match(rHasNo.response, /No, Commander.*dragonfruit/i);
+
+      // 3. Kitchen implicit out-of-stock & running-low triggers (without saying "grocery list")
+      const rOut = await askCommander("Commander, we're out of oatmilk");
+      assert.equal(rOut.ok, true);
+      assert.equal(rOut.skill, 'shopping-lists:add');
+      assert.match(rOut.response, /Got it, Commander.*Oatmilk to Grocery/i);
+
+      const rLow = await askCommander('Commander, running low on maple syrup');
+      assert.equal(rLow.ok, true);
+      assert.equal(rLow.skill, 'shopping-lists:add');
+      assert.match(rLow.response, /Maple syrup to Grocery/i);
+
+      // 4. Meal bundles & store staples
+      const rBundle = await askCommander('Commander, add taco night to my grocery list');
+      assert.equal(rBundle.ok, true);
+      assert.equal(rBundle.skill, 'shopping-lists:bundle');
+      assert.match(rBundle.response, /Added Taco Night/i);
+
+      const rStaplesInfo = await askCommander('Commander, what are my Costco staples?');
+      assert.equal(rStaplesInfo.ok, true);
+      assert.equal(rStaplesInfo.skill, 'shopping-lists:staples');
+      assert.match(rStaplesInfo.response, /Costco quick staples include/i);
+
+      // 5. Aisle query, badge/priority query, count/cost query, and in-cart query
+      const rAisle = await askCommander('Commander, what do we need in Produce on my grocery list?');
+      assert.equal(rAisle.ok, true);
+      assert.equal(rAisle.skill, 'shopping-lists:aisle');
+      assert.match(rAisle.response, /In Produce on your Grocery list/i);
+
+      const rUrgent = await askCommander('Commander, what urgent items are on my grocery list?');
+      assert.equal(rUrgent.ok, true);
+      assert.equal(rUrgent.skill, 'shopping-lists:filter-badge');
+      assert.match(rUrgent.response, /urgent must-have/i);
+
+      const rCost = await askCommander('Commander, how much is my Costco list?');
+      assert.equal(rCost.ok, true);
+      assert.equal(rCost.skill, 'shopping-lists:stats');
+      assert.match(rCost.response, /Costco list has .* left to buy/i);
+
+      // 6. Multi-item check-off, in-cart readout, quantity doubling, notes, badges, prices, and store move
+      const rMultiCheck = await askCommander('Commander, check off milk and avocados on my grocery list');
+      assert.equal(rMultiCheck.ok, true);
+      assert.equal(rMultiCheck.skill, 'shopping-lists:check');
+      assert.match(rMultiCheck.response, /Checked off 2 items/i);
+
+      const rInCart = await askCommander("Commander, what's in my cart on grocery?");
+      assert.equal(rInCart.ok, true);
+      assert.equal(rInCart.skill, 'shopping-lists:in-cart');
+      assert.match(rInCart.response, /checked off in your Grocery cart/i);
+
+      const rDouble = await askCommander('Commander, double the apples on my grocery list');
+      assert.equal(rDouble.ok, true);
+      assert.equal(rDouble.skill, 'shopping-lists:qty');
+      assert.match(rDouble.response, /Honeycrisp Apples.*12/i);
+
+      const rNote = await askCommander('Commander, add a note to sourdough on grocery: sliced thin');
+      assert.equal(rNote.ok, true);
+      assert.equal(rNote.skill, 'shopping-lists:note');
+      assert.match(rNote.response, /Added note "sliced thin"/i);
+
+      const rBadge = await askCommander('Commander, mark oatmilk as urgent on grocery');
+      assert.equal(rBadge.ok, true);
+      assert.equal(rBadge.skill, 'shopping-lists:badge');
+
+      const rPrice = await askCommander('Commander, set price of oatmilk to 4.79 on grocery');
+      assert.equal(rPrice.ok, true);
+      assert.equal(rPrice.skill, 'shopping-lists:price');
+      assert.match(rPrice.response, /\$4\.79/);
+
+      const rMove = await askCommander('Commander, move maple syrup from grocery to Costco');
+      assert.equal(rMove.ok, true);
+      assert.equal(rMove.skill, 'shopping-lists:move');
+      assert.match(rMove.response, /Moved "Maple syrup" from Grocery to Costco/i);
+
+      const rUndoMove = await askCommander('Commander, undo last grocery change');
+      assert.equal(rUndoMove.ok, true);
+      assert.equal(rUndoMove.skill, 'shopping-lists:undo');
+      assert.match(rUndoMove.response, /Undid: Moved "Maple syrup"/i);
+
+      // 7. Natural removal ("take X off"), custom store list creation, empty list + undo, and voice help
+      const rTakeOff = await askCommander('Commander, take oatmilk off my grocery list');
+      assert.equal(rTakeOff.ok, true);
+      assert.equal(rTakeOff.skill, 'shopping-lists:remove');
+      assert.match(rTakeOff.response, /Removed "Oatmilk" from Grocery/i);
+
+      const rNewList = await askCommander("Commander, create a Trader Joe's shopping list");
+      assert.equal(rNewList.ok, true);
+      assert.equal(rNewList.skill, 'shopping-lists:create-list');
+      assert.match(rNewList.response, /Created your new Trader Joe'S|Trader Joe's/i);
+
+      const rEmpty = await askCommander('Commander, empty my grocery list');
+      assert.equal(rEmpty.ok, true);
+      assert.equal(rEmpty.skill, 'shopping-lists:clear-all');
+      assert.match(rEmpty.response, /Cleared all .* from Grocery/i);
+
+      const rRestoreAll = await askCommander('Commander, undo that on my grocery list');
+      assert.equal(rRestoreAll.ok, true);
+      assert.equal(rRestoreAll.skill, 'shopping-lists:undo');
+
+      const rVoiceHelp = await askCommander('Commander, what can I say for grocery lists?');
+      assert.equal(rVoiceHelp.ok, true);
+      assert.equal(rVoiceHelp.skill, 'shopping-lists:guide');
+      assert.match(rVoiceHelp.response, /Commander, add two gallons of milk/i);
     } finally {
       cleanup();
     }
