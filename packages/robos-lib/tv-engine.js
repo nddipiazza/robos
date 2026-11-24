@@ -1833,6 +1833,7 @@ end sub
     <field id="mediaServerUrl" type="string" />
     <field id="knownRev" type="string" />
     <field id="progressUrl" type="string" />
+    <field id="castActionUrl" type="string" />
     <field id="payloadJson" type="string" alwaysNotify="true" />
     <field id="localFrameUri" type="string" alwaysNotify="true" />
   </interface>
@@ -1845,11 +1846,19 @@ end sub
 
 sub pollDashboard()
     lastProgUrl = ""
+    lastCastUrl = ""
     lastFrameSeq = -1
     localFileIdx = 0
     curRev = m.top.knownRev
     hadCinemaCast = false
     while true
+        cUrl = m.top.castActionUrl
+        if cUrl <> "" and cUrl <> lastCastUrl
+            lastCastUrl = cUrl
+            cHttp = CreateObject("roUrlTransfer")
+            cHttp.SetUrl(cUrl)
+            cHttp.GetToString()
+        end if
         pUrl = m.top.progressUrl
         if pUrl <> "" and pUrl <> lastProgUrl
             lastProgUrl = pUrl
@@ -2767,8 +2776,10 @@ sub init()
     m.cinemaCategories = m.movieCategories
     m.cinemaVideoActive = false
     m.lastCinemaLoadKey = ""
+    m.lastRemoteCastKey = ""
     m.dismissedCinemaLoadKey = ""
     m.lastCinemaSeekKey = ""
+    m.lastCinemaPauseKey = ""
     if m.cinemaVideo <> invalid
         m.cinemaVideo.observeField("state", "onCinemaVideoState")
     end if
@@ -2880,6 +2891,11 @@ sub onClockTick()
         vState = m.keepAliveVideo.state
         if vState = "finished" or vState = "stopped" or vState = "error"
             startKeepAliveVideo()
+        end if
+    end if
+    if m.cinemaVideoActive = true and m.cinemaVideo <> invalid
+        if m.cinemaVideo.hasFocus() <> true
+            m.cinemaVideo.setFocus(true)
         end if
     end if
     if m.cinemaVideoActive = true and m.cinemaVideo <> invalid and m.dashTask <> invalid and m.currentPlayingTrackId <> ""
@@ -3156,8 +3172,7 @@ sub playCinemaVideo(cinema as Object)
     if cinema.loadKey <> invalid then loadKey = cinema.loadKey.ToStr() else loadKey = cinema.mediaUrl.ToStr()
     if m.lastCinemaLoadKey <> loadKey
         m.lastCinemaLoadKey = loadKey
-        m.dismissedCinemaLoadKey = ""
-        m.localVideoPlaying = false
+        m.localVideoPlaying = (cinema.isLocal = true)
         m.switchingCinemaLoad = true
         m.cinemaVideo.control = "stop"
         m.cinemaVideo.content = invalid
@@ -3190,6 +3205,7 @@ sub playCinemaVideo(cinema as Object)
         m.cinemaVideo.control = "play"
         m.switchingCinemaLoad = false
         if cinema.seekKey <> invalid then m.lastCinemaSeekKey = cinema.seekKey.ToStr()
+        if cinema.pauseKey <> invalid then m.lastCinemaPauseKey = cinema.pauseKey.ToStr()
         return
     end if
     if cinema.seekKey <> invalid
@@ -3201,10 +3217,16 @@ sub playCinemaVideo(cinema as Object)
             end if
         end if
     end if
-    if cinema.paused = true
-        if m.cinemaVideo.state = "playing" then m.cinemaVideo.control = "pause"
-    else
-        if m.cinemaVideo.state = "paused" then m.cinemaVideo.control = "resume"
+    if cinema.pauseKey <> invalid
+        pk = cinema.pauseKey.ToStr()
+        if pk <> "" and pk <> m.lastCinemaPauseKey
+            m.lastCinemaPauseKey = pk
+            if cinema.paused = true
+                if m.cinemaVideo.state = "playing" then m.cinemaVideo.control = "pause"
+            else
+                if m.cinemaVideo.state = "paused" then m.cinemaVideo.control = "resume"
+            end if
+        end if
     end if
 end sub
 
@@ -4671,8 +4693,12 @@ sub playCinemaItemAtIndex(idx as Integer)
     end if
     m.currentPlayingTitle = playTitle
     m.currentPlayingStartSec = resumeSec
+    if m.dashTask <> invalid
+        m.dashTask.castActionUrl = "${progressBaseUrl}/api/roku-cast-clear?loadKey=all&seq=" + m.tickCount.ToStr()
+    end if
     playCinemaVideo({
         active: true,
+        isLocal: true,
         loadKey: "remote-" + idx.ToStr() + "-" + m.tickCount.ToStr(),
         mediaUrl: mv.streamUrl,
         streamFormat: fmt,
@@ -4686,10 +4712,17 @@ sub onCinemaVideoState()
     if m.switchingCinemaLoad = true then return
     if m.cinemaVideo = invalid or m.cinemaVideoActive <> true then return
     st = m.cinemaVideo.state
+    if st = "playing" or st = "buffering" or st = "paused"
+        if m.cinemaVideo.hasFocus() <> true
+            m.cinemaVideo.setFocus(true)
+        end if
+        return
+    end if
     if st = "error" and m.triedHlsFallback <> true and m.currentPlayingHlsUrl <> invalid and m.currentPlayingHlsUrl <> ""
         m.triedHlsFallback = true
         playCinemaVideo({
             active: true,
+            isLocal: m.localVideoPlaying,
             loadKey: "hls-fallback-" + m.tickCount.ToStr(),
             mediaUrl: m.currentPlayingHlsUrl,
             streamFormat: "hls",
@@ -4700,19 +4733,23 @@ sub onCinemaVideoState()
         return
     end if
     if st = "finished" or st = "error"
-        if st = "finished" and m.dashTask <> invalid and m.currentPlayingTrackId <> ""
-            m.dashTask.progressUrl = "${progressBaseUrl}/api/tv-progress?id=" + m.currentPlayingTrackId + "&watched=true&seq=" + m.tickCount.ToStr()
-            if m.currentPlayingItem <> invalid
-                m.currentPlayingItem.completed = true
-                m.currentPlayingItem.inProgress = false
-                m.currentPlayingItem.progressPct = 100
-                m.currentPlayingItem.positionSec = 0
+        if m.dashTask <> invalid
+            if st = "finished" and m.currentPlayingTrackId <> ""
+                m.dashTask.progressUrl = "${progressBaseUrl}/api/tv-progress?id=" + m.currentPlayingTrackId + "&watched=true&seq=" + m.tickCount.ToStr()
+                if m.currentPlayingItem <> invalid
+                    m.currentPlayingItem.completed = true
+                    m.currentPlayingItem.inProgress = false
+                    m.currentPlayingItem.progressPct = 100
+                    m.currentPlayingItem.positionSec = 0
+                end if
             end if
+            m.dashTask.castActionUrl = "${progressBaseUrl}/api/roku-cast-clear?loadKey=all&seq=" + m.tickCount.ToStr()
         end if
         m.currentPlayingTrackId = ""
         m.currentPlayingItem = invalid
-        m.dismissedCinemaLoadKey = m.lastCinemaLoadKey
+        if m.lastRemoteCastKey <> "" then m.dismissedCinemaLoadKey = m.lastRemoteCastKey else m.dismissedCinemaLoadKey = m.lastCinemaLoadKey
         m.localVideoPlaying = false
+        m.localLibraryOpened = true
         stopCinemaVideo()
         if m.cinemaLibraryActive <> true and m.latestCinemaLibrary <> invalid
             showCinemaLibrary(m.latestCinemaLibrary)
@@ -4755,16 +4792,26 @@ sub onPayloadUpdated()
     if json.cinemaLibrary <> invalid and json.cinemaLibrary.active = true
         hideAppCastFrames()
         showCinemaLibrary(json.cinemaLibrary)
-    else if m.cinemaLibraryActive = true and m.localLibraryOpened <> true
+    else if json.unchanged <> true and m.cinemaLibraryActive = true and m.localLibraryOpened <> true
         hideCinemaLibrary()
     end if
     if json.cinemaCast <> invalid and json.cinemaCast.active = true and json.cinemaCast.mediaUrl <> invalid
         cKey = ""
         if json.cinemaCast.loadKey <> invalid then cKey = json.cinemaCast.loadKey.ToStr() else cKey = json.cinemaCast.mediaUrl.ToStr()
         if cKey <> "" and cKey <> m.dismissedCinemaLoadKey
-            hideAppCastFrames()
-            playCinemaVideo(json.cinemaCast)
-            return
+            if cKey <> m.lastRemoteCastKey
+                m.lastRemoteCastKey = cKey
+                m.localLibraryOpened = true
+                hideAppCastFrames()
+                if m.cinemaLibraryActive <> true and m.latestCinemaLibrary <> invalid
+                    showCinemaLibrary(m.latestCinemaLibrary)
+                end if
+                playCinemaVideo(json.cinemaCast)
+                return
+            else if m.localVideoPlaying <> true and m.cinemaVideoActive = true
+                playCinemaVideo(json.cinemaCast)
+                return
+            end if
         end if
     else if m.cinemaVideoActive = true and m.localVideoPlaying <> true
         stopCinemaVideo()
@@ -5176,28 +5223,32 @@ function onKeyEvent(key as String, press as Boolean) as Boolean
     ' 1. Active Full-Screen Cinema Video Playback Controls
     if m.cinemaVideoActive = true
         if key = "back"
-            if m.cinemaVideo <> invalid and m.dashTask <> invalid and m.currentPlayingTrackId <> ""
-                posSec = Int(m.cinemaVideo.position)
-                durSec = Int(m.cinemaVideo.duration)
-                if posSec > 0
-                    m.dashTask.progressUrl = "${progressBaseUrl}/api/tv-progress?id=" + m.currentPlayingTrackId + "&positionSec=" + posSec.ToStr() + "&durationSec=" + durSec.ToStr() + "&seq=" + m.tickCount.ToStr()
-                    if m.currentPlayingItem <> invalid and posSec >= 5
-                        m.currentPlayingItem.positionSec = posSec
-                        m.currentPlayingItem.inProgress = true
-                        m.currentPlayingItem.completed = false
-                        if durSec > 0
-                            pct = Int(((posSec * 1.0) / (durSec * 1.0)) * 100)
-                            if pct < 1 then pct = 1
-                            if pct > 99 then pct = 99
-                            m.currentPlayingItem.progressPct = pct
+            if m.dashTask <> invalid
+                if m.cinemaVideo <> invalid and m.currentPlayingTrackId <> ""
+                    posSec = Int(m.cinemaVideo.position)
+                    durSec = Int(m.cinemaVideo.duration)
+                    if posSec > 0
+                        m.dashTask.progressUrl = "${progressBaseUrl}/api/tv-progress?id=" + m.currentPlayingTrackId + "&positionSec=" + posSec.ToStr() + "&durationSec=" + durSec.ToStr() + "&seq=" + m.tickCount.ToStr()
+                        if m.currentPlayingItem <> invalid and posSec >= 5
+                            m.currentPlayingItem.positionSec = posSec
+                            m.currentPlayingItem.inProgress = true
+                            m.currentPlayingItem.completed = false
+                            if durSec > 0
+                                pct = Int(((posSec * 1.0) / (durSec * 1.0)) * 100)
+                                if pct < 1 then pct = 1
+                                if pct > 99 then pct = 99
+                                m.currentPlayingItem.progressPct = pct
+                            end if
                         end if
                     end if
                 end if
+                m.dashTask.castActionUrl = "${progressBaseUrl}/api/roku-cast-clear?loadKey=all&seq=" + m.tickCount.ToStr()
             end if
             m.currentPlayingTrackId = ""
             m.currentPlayingItem = invalid
-            m.dismissedCinemaLoadKey = m.lastCinemaLoadKey
+            if m.lastRemoteCastKey <> "" then m.dismissedCinemaLoadKey = m.lastRemoteCastKey else m.dismissedCinemaLoadKey = m.lastCinemaLoadKey
             m.localVideoPlaying = false
+            m.localLibraryOpened = true
             stopCinemaVideo()
             if m.cinemaLibraryActive <> true and m.latestCinemaLibrary <> invalid
                 showCinemaLibrary(m.latestCinemaLibrary)
@@ -5206,6 +5257,26 @@ function onKeyEvent(key as String, press as Boolean) as Boolean
             m.top.setFocus(true)
             updateCinemaPaneFocusUi()
             return true
+        end if
+        if m.cinemaVideo <> invalid and m.cinemaVideo.hasFocus() <> true
+            m.cinemaVideo.setFocus(true)
+            if key = "play" or key = "OK"
+                if m.cinemaVideo.state = "playing" then m.cinemaVideo.control = "pause" else if m.cinemaVideo.state = "paused" then m.cinemaVideo.control = "resume"
+                return true
+            else if key = "right" or key = "fastforward"
+                m.cinemaVideo.seek = Int(m.cinemaVideo.position) + 15
+                return true
+            else if key = "left" or key = "rewind"
+                ns = Int(m.cinemaVideo.position) - 15
+                if ns < 0 then ns = 0
+                m.cinemaVideo.seek = ns
+                return true
+            else if key = "replay"
+                ns = Int(m.cinemaVideo.position) - 10
+                if ns < 0 then ns = 0
+                m.cinemaVideo.seek = ns
+                return true
+            end if
         end if
         return false
     end if

@@ -326,6 +326,14 @@ function createMediaServer(options = {}) {
         });
       }
 
+      if (req.method === 'GET' && pathname === '/api/roku-cast-clear') {
+        const lk = url.searchParams.get('loadKey') || '';
+        if (!lk || lk === 'all' || (activeRokuCast && activeRokuCast.loadKey === lk)) {
+          activeRokuCast = null;
+        }
+        return sendJson(res, 200, { ok: true, cinemaCast: activeRokuCast });
+      }
+
       if (pathname === '/api/roku-cast') {
         if (req.method === 'GET') {
           return sendJson(res, 200, { ok: true, cinemaCast: activeRokuCast });
@@ -337,11 +345,14 @@ function createMediaServer(options = {}) {
           } else if (activeRokuCast && !body.mediaUrl && (body.paused !== undefined || body.seekKey)) {
             activeRokuCast = {
               ...activeRokuCast,
-              ...(body.paused !== undefined ? { paused: Boolean(body.paused) } : {}),
+              ...(body.paused !== undefined ? {
+                paused: Boolean(body.paused),
+                pauseKey: body.pauseKey || `pause-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+              } : {}),
               ...(body.seekKey ? { seekKey: String(body.seekKey), seekSeconds: Number(body.seekSeconds) || 0 } : {}),
               updatedAt: new Date().toISOString(),
             };
-          } else {
+          } else if (body && body.mediaUrl) {
             activeRokuCast = {
               active: true,
               loadKey: body.loadKey || `cast-${Date.now()}`,
@@ -352,6 +363,7 @@ function createMediaServer(options = {}) {
               title: body.title || 'RobOS Movie Player',
               startAt: Number(body.startAt) || 0,
               paused: Boolean(body.paused),
+              pauseKey: '',
               seekKey: body.seekKey || '',
               seekSeconds: Number(body.seekSeconds) || 0,
               updatedAt: new Date().toISOString(),
