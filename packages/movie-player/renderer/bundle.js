@@ -22351,15 +22351,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
 
   // src/App.jsx
   var import_library_index8 = __toESM(require_library_index());
-  var DEFAULT_QUEUE = [
-    {
-      id: "default-1",
-      title: "RobOS Lo-Fi Synth Session",
-      artist: "Procedural Ambient Engine",
-      album: "RobOS Focus Series",
-      src: "https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=lofi-study-112191.mp3"
-    }
-  ];
+  var DEFAULT_QUEUE = [];
   var QUEUE_KEY = "robos-movie-player.queue.v1";
   var PLAYER_PREFS_KEY = "robos-movie-player.player-prefs.v1";
   var MAX_SAVED_QUEUE = 5e3;
@@ -22374,8 +22366,11 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
   }
   function restoredQueue() {
     const saved = loadJson(QUEUE_KEY);
-    if (saved && Array.isArray(saved.queue) && saved.queue.length) {
-      return { queue: saved.queue, index: Math.max(0, Math.min(saved.index || 0, saved.queue.length - 1)) };
+    if (saved && Array.isArray(saved.queue)) {
+      const clean = saved.queue.filter((t) => t && t.id !== "default-1");
+      if (clean.length) {
+        return { queue: clean, index: Math.max(0, Math.min(saved.index || 0, clean.length - 1)) };
+      }
     }
     return { queue: DEFAULT_QUEUE, index: 0 };
   }
@@ -22733,7 +22728,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
         if (lib && lib.tracks) {
           setLibrary(lib);
           if (lib.tracks.length > 0) {
-            setPlaylist((prev) => prev.length === 1 && prev[0].id === "default-1" ? lib.tracks.slice(0, 25) : prev);
+            setPlaylist((prev) => prev.length === 0 || prev.length === 1 && prev[0].id === "default-1" ? lib.tracks.slice(0, 25) : prev);
           }
         }
       } catch {
@@ -23121,6 +23116,21 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
       showStatus("Cleared other tracks from queue");
     };
     const currentTrack = playlist[currentTrackIndex] || playlist[0] || null;
+    (0, import_react25.useEffect)(() => {
+      if (outputTarget !== "local" || !currentTrack || isVideoTrack(currentTrack)) {
+        const a = playerRef.current?.audio?.current;
+        if (a) {
+          if (!a.paused) a.pause();
+          if (a.currentSrc) {
+            a.removeAttribute("src");
+            try {
+              a.load();
+            } catch {
+            }
+          }
+        }
+      }
+    }, [currentTrack, outputTarget]);
     const libraryById = (0, import_react25.useMemo)(() => new Map(library.tracks.map((t) => [t.id, t])), [library.tracks]);
     const resolveSrc = (t) => {
       if (!t) return "";
@@ -24587,7 +24597,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
           ] : void 0,
           showSkipControls: true,
           showJumpControls: false,
-          autoPlayAfterSrcChange: true,
+          autoPlayAfterSrcChange: isPlaying,
           onClickNext: handlePlayNext,
           onClickPrevious: handlePlayPrev,
           onEnded: () => {

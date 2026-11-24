@@ -374,6 +374,13 @@ class MediaLibrary {
             }
           }
         }
+        for (const pl of this.playlists) {
+          if (Array.isArray(pl.tracks)) {
+            const beforeLen = pl.tracks.length;
+            pl.tracks = pl.tracks.filter(t => t && t.id !== 'default-1');
+            if (pl.tracks.length !== beforeLen) plNeedsSave = true;
+          }
+        }
         if (plNeedsSave) {
           this._savePlaylists();
         }
@@ -383,27 +390,18 @@ class MediaLibrary {
           {
             id: 'pl_favorites',
             name: 'Favorites',
-            description: 'Starred tracks and favorite coding anthems',
+            description: 'Starred movies and favorite TV episodes',
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
             tracks: []
           },
           {
-            id: 'pl_focus',
-            name: 'Focus & Deep Work',
-            description: 'Synthesizers, ambient soundscapes, and instrumental flow sessions',
+            id: 'pl_watchlist',
+            name: 'Watch Later',
+            description: 'Movies and series queued up for movie night',
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
-            tracks: [
-              {
-                id: 'default-1',
-                title: 'RobOS Lo-Fi Synth Session',
-                artist: 'Procedural Ambient Engine',
-                album: 'RobOS Focus Series',
-                duration: 180,
-                src: 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=lofi-study-112191.mp3'
-              }
-            ]
+            tracks: []
           }
         ];
         this._savePlaylists();

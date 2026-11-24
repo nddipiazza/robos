@@ -21123,15 +21123,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
 
   // src/App.jsx
   var import_library_index7 = __toESM(require_library_index());
-  var DEFAULT_QUEUE = [
-    {
-      id: "default-1",
-      title: "RobOS Lo-Fi Synth Session",
-      artist: "Procedural Ambient Engine",
-      album: "RobOS Focus Series",
-      src: "https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=lofi-study-112191.mp3"
-    }
-  ];
+  var DEFAULT_QUEUE = [];
   var QUEUE_KEY = "robos-audio-player.queue.v1";
   var PLAYER_PREFS_KEY = "robos-audio-player.player-prefs.v1";
   var MAX_SAVED_QUEUE = 5e3;
@@ -21144,8 +21136,11 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
   }
   function restoredQueue() {
     const saved = loadJson(QUEUE_KEY);
-    if (saved && Array.isArray(saved.queue) && saved.queue.length) {
-      return { queue: saved.queue, index: Math.max(0, Math.min(saved.index || 0, saved.queue.length - 1)) };
+    if (saved && Array.isArray(saved.queue)) {
+      const clean = saved.queue.filter((t) => t && t.id !== "default-1");
+      if (clean.length) {
+        return { queue: clean, index: Math.max(0, Math.min(saved.index || 0, clean.length - 1)) };
+      }
     }
     return { queue: DEFAULT_QUEUE, index: 0 };
   }
@@ -21432,6 +21427,9 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
         const lib = await window.robosAudio.getLibrary();
         if (lib && lib.tracks) {
           setLibrary(lib);
+          if (lib.tracks.length > 0) {
+            setPlaylist((prev) => prev.length === 0 || prev.length === 1 && prev[0].id === "default-1" ? lib.tracks.slice(0, 25) : prev);
+          }
         }
       } catch {
       }
@@ -22828,7 +22826,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
           customControlsSection: outputTarget !== "local" ? [RHAP_UI.ADDITIONAL_CONTROLS, /* @__PURE__ */ import_react25.default.createElement(CastControls, { key: "cast-controls", onPrev: handlePlayPrev, onToggle: handleTogglePlayPause, onNext: handlePlayNext }), /* @__PURE__ */ import_react25.default.createElement("div", { key: "cast-spacer", className: "rhap_volume-controls" })] : void 0,
           showSkipControls: true,
           showJumpControls: false,
-          autoPlayAfterSrcChange: true,
+          autoPlayAfterSrcChange: isPlaying,
           onClickNext: handlePlayNext,
           onClickPrevious: handlePlayPrev,
           onEnded: () => {
