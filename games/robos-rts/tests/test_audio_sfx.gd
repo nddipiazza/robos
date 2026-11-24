@@ -465,6 +465,16 @@ func _test_campaign_voices() -> void:
 		assert(stream != null and stream.data.size() > 2000, "Missing campaign voice for %s" % cue_id)
 		assert(stream.get_length() <= float(campaign.CUES[cue_id][2]), "Campaign voice outlasts cue %s" % cue_id)
 
+	var hub_manifest_raw := FileAccess.get_file_as_string("res://assets/audio/campaign/hub/manifest.json")
+	assert(not hub_manifest_raw.is_empty(), "Missing campaign hub voice manifest.json")
+	var hub_manifest: Dictionary = JSON.parse_string(hub_manifest_raw)
+	var hub_cues: Dictionary = hub_manifest.get("cues", {})
+	assert(hub_cues.size() >= 170, "Expected >=170 pre-generated campaign hub & cutscene voice WAVs, got %d" % hub_cues.size())
+	for cue_id in hub_cues.keys():
+		var s: AudioStreamWAV = audio.load_campaign_voice(str(cue_id))
+		assert(s != null and s.data.size() > 4000, "Missing or invalid hub voice WAV for %s" % cue_id)
+		assert(s.mix_rate == 22050 and s.format == AudioStreamWAV.FORMAT_16_BITS, "Invalid PCM format on hub voice %s" % cue_id)
+
 func _test_captain_vale_voice() -> void:
 	assert(sim.start_campaign(0, "normal").ok)
 	var vale: Dictionary = sim.units[sim.campaign.tags_by_id["captain_vale"]]

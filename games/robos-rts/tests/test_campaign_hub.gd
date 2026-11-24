@@ -73,12 +73,47 @@ func _run() -> void:
 	_check(state.campaign_console == "cutscenes", "Cinema Archive console opens")
 	title._unhandled_key_input(esc_event)
 
-	# 4. Every mission (01..11) has a valid 3-shot Pre-Mission Movie & opening cue
+	# 4. Every mission (01..11) has a valid 3-shot Pre-Mission Movie & real voice WAVs on every shot + Mission Contact
+	var rts_audio := root.get_node("RTSAudio")
 	for idx in Campaign.MISSIONS.size():
 		var spec := CutsceneData.mission_intro_movie(idx)
 		var shots: Array = spec.get("shots", [])
-		_check(shots.size() == 3 and CutsceneData.is_opening_cue(str(spec.voice_cue)),
-			"Mission %02d has a 3-shot pre-mission movie and valid voice cue" % (idx + 1))
+		_check(shots.size() == 3, "Mission %02d has a 3-shot pre-mission movie" % (idx + 1))
+		for s_i in shots.size():
+			var scue := str(shots[s_i].get("voice_cue", ""))
+			var st: AudioStreamWAV = rts_audio.load_campaign_voice(scue)
+			_check(st != null and st.data.size() > 4000,
+				"Mission %02d shot %d (%s) loads real voice WAV" % [idx + 1, s_i + 1, scue])
+		var contact_cue := str(HubData.mission_meta(idx).voice_cue)
+		var cst: AudioStreamWAV = rts_audio.load_campaign_voice(contact_cue)
+		_check(cst != null and cst.data.size() > 4000,
+			"Mission %02d Mission Select contact (%s) loads real voice WAV" % [idx + 1, contact_cue])
+
+	# Verify every Hub cutscene, all 48 Armory upgrades, all 6 Mercenaries, all 20 Lab perks, & all UI hotspots have real WAVs
+	for cut_id in ["hub_prologue", "frn_broadcast", "cantina_rook", "bridge_vale", "armory_intro", "cantina_intro", "lab_intro", "arc_1_vesper", "arc_2_dawn", "arc_3_sanctuary", "arc_4_victory"]:
+		var cspec := CutsceneData.hub_cutscene(cut_id)
+		for shot in cspec.get("shots", []):
+			var vc := str(shot.get("voice_cue", ""))
+			var vst: AudioStreamWAV = rts_audio.load_campaign_voice(vc)
+			_check(vst != null and vst.data.size() > 4000, "Cutscene %s shot cue %s has real WAV" % [cut_id, vc])
+	for cat in HubData.ARMORY_CATEGORIES:
+		for unit_entry in cat.units:
+			for upg in unit_entry.upgrades:
+				var tspec := CutsceneData.hub_cutscene("tech_unlock", {"upg_id": upg.id, "unit_id": unit_entry.unit_id, "title": upg.name, "summary": upg.summary})
+				var tvc := str(tspec.shots[0].voice_cue)
+				_check(rts_audio.load_campaign_voice(tvc) != null, "Armory upgrade %s (%s) has real WAV" % [upg.id, tvc])
+	for merc in HubData.MERCENARIES:
+		var mspec := CutsceneData.hub_cutscene("merc_arrival", {"merc_id": merc.id, "unit_id": merc.unit_id, "title": merc.name})
+		var mvc := str(mspec.shots[0].voice_cue)
+		_check(rts_audio.load_campaign_voice(mvc) != null, "Mercenary %s (%s) has real WAV" % [merc.id, mvc])
+	for track_key in HubData.LAB_TRACKS:
+		for tier in HubData.LAB_TRACKS[track_key].tiers:
+			for choice in tier.choices:
+				var lspec := CutsceneData.hub_cutscene("lab_breakthrough", {"perk_id": choice.id, "unit_id": choice.unit_id, "title": choice.name})
+				var lvc := str(lspec.shots[0].voice_cue)
+				_check(rts_audio.load_campaign_voice(lvc) != null, "Lab perk %s (%s) has real WAV" % [choice.id, lvc])
+	for ui_cue in ["ui_armory_console", "ui_armory_rail_skimmer", "ui_armory_torchguard", "ui_armory_kestrel_interceptor", "ui_armory_warden_walker", "ui_armory_rampart_transport", "ui_armory_breacher", "ui_cantina_board", "ui_jukebox", "ui_lab_console", "ui_lab_brood", "ui_lab_concord", "ui_mutators", "ui_archive", "ui_service_record"]:
+		_check(rts_audio.load_campaign_voice(ui_cue) != null, "Hub UI interaction %s has real WAV" % ui_cue)
 
 	# 5. Mission Select Console & Escape hierarchy
 	state = title.apply_ui_state({"hub_console": "mission_select"})

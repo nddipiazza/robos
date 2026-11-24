@@ -94,7 +94,7 @@ func _ready() -> void:
 	_button(buttons, "Flagship hub", _to_flagship_hub)
 	_build_restart_picker()
 	_theater = CutsceneTheater.new()
-	_theater.play_internal_voice = false
+	_theater.play_internal_voice = true
 	_theater.movie_finished.connect(_on_movie_finished)
 	add_child(_theater)
 	_voice = AudioStreamPlayer.new()
@@ -244,10 +244,11 @@ func _update_cue(cue: Dictionary, finished: bool) -> void:
 				_set_cinematic(true)
 				if _theater and DisplayServer.get_name() != "headless":
 					_theater.play_movie_spec(CutsceneData.mission_intro_movie(SimEngine.campaign.mission_index), true)
+					_voice_started = _theater.voice_started
 			else:
 				_set_cinematic(not cue.point.is_empty() and not finished)
 			var elapsed := float(SimEngine.tick - int(cue.start_tick)) * SimEngine.TICK_DT
-			if elapsed < 1.0 and RTSAudio.can_play_campaign_voice():
+			if (not play_intro or DisplayServer.get_name() == "headless") and elapsed < 1.0 and RTSAudio.can_play_campaign_voice():
 				var voice := RTSAudio.load_campaign_voice(cue.id)
 				if voice != null:
 					_voice.stream = voice

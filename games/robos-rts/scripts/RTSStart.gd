@@ -265,7 +265,9 @@ func _build_campaign_page() -> void:
 	_campaign.launch_mission.connect(_play_mission)
 	_campaign.back_to_title.connect(_show_home)
 	add_child(_campaign)
-	_campaign.hide()
+	if _campaign:
+		_campaign.stop_all_audio()
+		_campaign.hide()
 
 func _open_campaign() -> void:
 	_back_focus = _menu_buttons.campaign
@@ -278,6 +280,8 @@ func _play_mission(index: int, difficulty: String, mutators: Array) -> void:
 	_confirm_replacing_battle("Start a campaign mission?", _start_mission.bind(index, difficulty, mutators))
 
 func _start_mission(index: int, difficulty: String, mutators: Array) -> void:
+	if _campaign:
+		_campaign.stop_all_audio()
 	var result := SimEngine.start_campaign(index, difficulty, mutators)
 	if not result.ok:
 		_campaign.set_launch_error(result.error)
@@ -366,7 +370,9 @@ func _show_home() -> void:
 		_options.queue_free()
 		_options = null
 	_scenarios.hide()
-	_campaign.hide()
+	if _campaign:
+		_campaign.stop_all_audio()
+		_campaign.hide()
 	_page = "main"
 	_home.show()
 	if _back_focus:

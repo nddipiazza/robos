@@ -539,7 +539,15 @@ func record_mix(action: String) -> Dictionary:
 	return {"ok": error == OK, "error": error_string(error), "seconds": stream.get_length()}
 
 func load_campaign_voice(cue_id: String) -> AudioStreamWAV:
-	return _parse_riff_wav(FileAccess.get_file_as_bytes("res://assets/audio/campaign/%s.wav" % cue_id))
+	if cue_id.is_empty():
+		return null
+	var direct_path := "res://assets/audio/campaign/%s.wav" % cue_id
+	if FileAccess.file_exists(direct_path):
+		return _parse_riff_wav(FileAccess.get_file_as_bytes(direct_path))
+	var hub_path := "res://assets/audio/campaign/hub/%s.wav" % cue_id
+	if FileAccess.file_exists(hub_path):
+		return _parse_riff_wav(FileAccess.get_file_as_bytes(hub_path))
+	return null
 
 func _load_wav_stream(path: String, fallback_key: String = "") -> AudioStreamWAV:
 	if FileAccess.file_exists(path):

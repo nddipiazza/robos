@@ -949,17 +949,17 @@ func _on_purchase_pressed() -> void:
 		var upg: Dictionary = unit_entry.upgrades[_upg_index]
 		res = HubData.purchase_tech(str(upg.id))
 		cut_id = "tech_unlock"
-		cut_ctx = {"unit_id": str(unit_entry.unit_id), "title": str(upg.name), "summary": str(upg.summary)}
+		cut_ctx = {"upg_id": str(upg.id), "unit_id": str(unit_entry.unit_id), "title": str(upg.name), "summary": str(upg.summary)}
 	elif _mode == "cantina":
 		var merc: Dictionary = HubData.MERCENARIES[_merc_index]
 		res = HubData.hire_mercenary(str(merc.id))
 		cut_id = "merc_arrival"
-		cut_ctx = {"unit_id": str(merc.unit_id), "title": str(merc.name)}
+		cut_ctx = {"merc_id": str(merc.id), "unit_id": str(merc.unit_id), "title": str(merc.name)}
 	elif _mode == "laboratory":
 		var choice: Dictionary = HubData.LAB_TRACKS[_lab_track].tiers[_lab_tier].choices[_lab_choice]
 		res = HubData.select_lab_perk(_lab_track, _lab_tier, str(choice.id))
 		cut_id = "lab_breakthrough"
-		cut_ctx = {"unit_id": str(choice.unit_id), "title": str(choice.name)}
+		cut_ctx = {"perk_id": str(choice.id), "unit_id": str(choice.unit_id), "title": str(choice.name)}
 
 	if bool(res.get("ok", false)):
 		RTSAudio.play_ui("match_victory")

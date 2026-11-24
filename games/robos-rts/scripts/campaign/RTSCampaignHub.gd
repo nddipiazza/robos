@@ -28,11 +28,13 @@ const ROOM_ART := {
 
 var current_room := "bridge"
 var active_console := ""
+var last_hub_voice_cue := ""
 
 var showcase: Node
 var mission_console: Control
 var tech_console: Control
 var cutscene_theater: Control
+var _hub_voice: AudioStreamPlayer
 
 var _rooms: Dictionary = {}
 var _nav_buttons: Dictionary = {}
@@ -73,6 +75,7 @@ func _ready() -> void:
 	_build_top_hud()
 	_build_bottom_nav()
 	_build_toast()
+	_build_audio()
 	_build_consoles()
 
 	switch_room("bridge")
@@ -241,15 +244,15 @@ func _populate_cantina(room: Control) -> void:
 func _populate_laboratory(room: Control) -> void:
 	_add_hotspot(
 		room, Rect2(770, 470, 590, 370), "Dr. Aster", "Research Console",
-		Vector2(10, -178), Vector2(0, -25), func(): open_console("laboratory", "brood")
+		Vector2(10, -178), Vector2(0, -25), func(): open_console("laboratory", "brood", "console")
 	)
 	_add_hotspot(
 		room, Rect2(355, 155, 320, 610), "Brood Specimen", "Xenobiology Track",
-		Vector2(0, 292), Vector2(0, 80), func(): open_console("laboratory", "brood")
+		Vector2(0, 292), Vector2(0, 80), func(): open_console("laboratory", "brood", "brood")
 	)
 	_add_hotspot(
 		room, Rect2(1425, 265, 345, 435), "Concord Relic", "Relic Resonance Track",
-		Vector2(0, 218), Vector2(0, 10), func(): open_console("laboratory", "concord")
+		Vector2(0, 218), Vector2(0, 10), func(): open_console("laboratory", "concord", "concord")
 	)
 
 func _add_hotspot(
@@ -434,11 +437,41 @@ func _show_toast(speaker: String, body: String, duration: float = 6.0) -> void:
 	_toast_timer = duration
 	_toast_panel.show()
 
+func _build_audio() -> void:
+	_hub_voice = AudioStreamPlayer.new()
+	_hub_voice.bus = "SFX"
+	add_child(_hub_voice)
+	RTSMusic.watch_campaign_voice(_hub_voice)
+
+func stop_hub_voice() -> void:
+	if _hub_voice and _hub_voice.playing:
+		_hub_voice.stop()
+
+func stop_all_audio() -> void:
+	stop_hub_voice()
+	if mission_console:
+		mission_console.stop_audio()
+	if cutscene_theater:
+		cutscene_theater.stop_all_media()
+
+func play_hub_voice(cue_id: String) -> void:
+	if cue_id.is_empty():
+		return
+	var stream := RTSAudio.load_campaign_voice(cue_id)
+	if stream == null:
+		return
+	last_hub_voice_cue = cue_id
+	stop_hub_voice()
+	if RTSAudio.can_play_campaign_voice():
+		_hub_voice.stream = stream
+		_hub_voice.play()
+
 func _build_consoles() -> void:
 	mission_console = MissionConsole.new()
 	mission_console.showcase = showcase
 	mission_console.hide()
 	mission_console.launch_requested.connect(func(idx: int, diff: String):
+		stop_all_audio()
 		launch_mission.emit(idx, diff, selected_mutators()))
 	mission_console.mutators_requested.connect(func(): open_console("mutators"))
 	mission_console.closed.connect(close_console)
@@ -460,6 +493,7 @@ func _build_consoles() -> void:
 func trigger_cutscene(cutscene_id: String, ctx: Dictionary = {}) -> void:
 	if cutscene_theater == null:
 		return
+	stop_hub_voice()
 	mission_console.stop_audio()
 	if ctx.has("mission_index"):
 		cutscene_theater.play_movie_spec(CutsceneData.mission_intro_movie(int(ctx.mission_index)), true)
@@ -499,6 +533,7 @@ func switch_room(room_id: String, allow_room_cutscene: bool = true) -> void:
 func open_console(kind: String, arg1: String = "", arg2: String = "") -> void:
 	if cutscene_theater and cutscene_theater.is_playing:
 		cutscene_theater.skip()
+	stop_hub_voice()
 	_toast_panel.hide()
 	mission_console.stop_audio()
 	mission_console.hide()
@@ -512,15 +547,25 @@ func open_console(kind: String, arg1: String = "", arg2: String = "") -> void:
 		"armory", "tech_purchase":
 			active_console = "tech_purchase"
 			tech_console.open_armory(arg1, arg2)
+			var armory_cue := "ui_armory_%s" % arg2 if not arg2.is_empty() else "ui_armory_console"
+			if RTSAudio.load_campaign_voice(armory_cue) == null:
+				armory_cue = "ui_armory_console"
+			play_hub_voice(armory_cue)
 		"cantina", "mercenaries":
 			active_console = "mercenaries"
 			tech_console.open_mercenaries()
+			play_hub_voice("ui_cantina_board")
 		"laboratory":
-			tech_console.open_laboratory(arg1 if not arg1.is_empty() else "brood")
+			var track := arg1 if not arg1.is_empty() else "brood"
+			tech_console.open_laboratory(track)
+			var lab_cue := "ui_lab_brood" if arg2 == "brood" else ("ui_lab_concord" if arg2 == "concord" else "ui_lab_console")
+			play_hub_voice(lab_cue)
 		"mutators":
 			tech_console.open_mutators()
+			play_hub_voice("ui_mutators")
 		"cutscenes":
 			tech_console.open_cutscenes()
+			play_hub_voice("ui_archive")
 		_:
 			active_console = ""
 
@@ -637,9 +682,11 @@ func _cycle_news_broadcast() -> void:
 
 func _pulse_jukebox() -> void:
 	RTSMusic.seek_for_capture(18.0)
+	play_hub_voice("ui_jukebox")
 	_show_toast("CANTINA JUKEBOX", "Now Playing: %s  ·  Master %d%%" % [RTSMusic.CREDIT, RTSMusic.volume_percent], 5.0)
 
 func _show_service_record() -> void:
+	play_hub_voice("ui_service_record")
 	var done := Campaign.completed_missions().size()
 	var bought := HubData.purchased_techs().size()
 	var hired := HubData.hired_mercenaries().size()

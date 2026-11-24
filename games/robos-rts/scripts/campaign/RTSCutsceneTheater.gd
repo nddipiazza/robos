@@ -10,11 +10,14 @@ const CutsceneData = preload("res://scripts/campaign/RTSCutsceneData.gd")
 var play_internal_voice := true
 var is_playing := false
 var current_movie_id := ""
+var voice_started := false
+var last_voice_cue_id := ""
 
 var _movie: Dictionary = {}
 var _shots: Array = []
 var _shot_index := 0
 var _shot_elapsed := 0.0
+var _active_shot_duration := 3.2
 var _total_elapsed := 0.0
 var _total_duration := 1.0
 var _using_ogv := false
@@ -326,6 +329,7 @@ func _build_audio() -> void:
 	_voice_player = AudioStreamPlayer.new()
 	_voice_player.bus = "SFX"
 	add_child(_voice_player)
+	RTSMusic.watch_campaign_voice(_voice_player)
 
 	_sfx_player = AudioStreamPlayer.new()
 	_sfx_player.bus = "SFX"
@@ -390,13 +394,21 @@ func play_movie_spec(spec: Dictionary, mark_as_seen: bool = true) -> void:
 		CutsceneData.mark_seen(current_movie_id)
 
 	is_playing = true
+	voice_started = false
+	last_voice_cue_id = ""
 	_shots = spec.get("shots", [])
 	_shot_index = 0
 	_shot_elapsed = 0.0
 	_total_elapsed = 0.0
 	_total_duration = 0.1
 	for s in _shots:
-		_total_duration += float(s.get("duration", 3.2))
+		var base_d := float(s.get("duration", 3.2))
+		var scue := str(s.get("voice_cue", ""))
+		if not scue.is_empty():
+			var st := RTSAudio.load_campaign_voice(scue)
+			if st != null:
+				base_d = maxf(base_d, st.get_length() + 0.45)
+		_total_duration += base_d
 
 	_top_title.text = str(spec.get("title", "STARFALL COMMAND"))
 	show()
@@ -404,6 +416,10 @@ func play_movie_spec(spec: Dictionary, mark_as_seen: bool = true) -> void:
 		_skip_btn.grab_focus()
 
 	if DisplayServer.get_name() == "headless":
+		var head_cue := str(_shots[0].get("voice_cue", spec.get("voice_cue", ""))) if not _shots.is_empty() else str(spec.get("voice_cue", ""))
+		if not head_cue.is_empty() and RTSAudio.load_campaign_voice(head_cue) != null:
+			last_voice_cue_id = head_cue
+			voice_started = RTSAudio.can_play_campaign_voice()
 		set_process(true)
 		return
 
@@ -424,12 +440,6 @@ func play_movie_spec(spec: Dictionary, mark_as_seen: bool = true) -> void:
 	if RTSAudio.can_play_campaign_voice():
 		_sfx_player.stream = _make_cinema_boom_wav()
 		_sfx_player.play()
-		var cue_id := str(spec.get("voice_cue", ""))
-		if play_internal_voice and not cue_id.is_empty():
-			var v_stream := RTSAudio.load_campaign_voice(cue_id)
-			if v_stream != null:
-				_voice_player.stream = v_stream
-				_voice_player.play()
 
 	var ogv_path := _resolve_ogv_override(current_movie_id)
 	_using_ogv = not ogv_path.is_empty()
@@ -494,7 +504,7 @@ func _process(delta: float) -> void:
 
 	_shot_elapsed += delta
 	var shot: Dictionary = _shots[_shot_index]
-	var dur := maxf(0.2, float(shot.get("duration", 3.2)))
+	var dur := maxf(0.2, _active_shot_duration)
 	var progress := clampf(_shot_elapsed / dur, 0.0, 1.0)
 	_animate_active_shot(shot, delta, progress)
 
@@ -510,11 +520,27 @@ func _enter_shot(idx: int) -> void:
 	_flash_rect.color.a = 0.28 if idx > 0 else 0.45
 
 	var shot: Dictionary = _shots[idx]
+	_active_shot_duration = maxf(0.2, float(shot.get("duration", 3.2)))
+	if _voice_player and _voice_player.playing:
+		_voice_player.stop()
+	var shot_cue := str(shot.get("voice_cue", ""))
+	if shot_cue.is_empty() and idx == 0:
+		shot_cue = str(_movie.get("voice_cue", ""))
+	if not shot_cue.is_empty():
+		var v_stream := RTSAudio.load_campaign_voice(shot_cue)
+		if v_stream != null:
+			last_voice_cue_id = shot_cue
+			_active_shot_duration = maxf(_active_shot_duration, v_stream.get_length() + 0.45)
+			if play_internal_voice and RTSAudio.can_play_campaign_voice():
+				_voice_player.stream = v_stream
+				_voice_player.play()
+				voice_started = true
+
 	_top_telemetry.text = str(shot.get("telemetry", ""))
 	_speaker_label.text = str(shot.get("speaker", ""))
 	_subtitle_label.text = str(shot.get("line", ""))
 
-	var portrait_id := str(shot.get("portrait", _movie.get("portrait", "")))
+	var portrait_id := str(shot.get("portrait", "")) if shot.has("portrait") else str(_movie.get("portrait", ""))
 	if portrait_id.is_empty():
 		_portrait_box.hide()
 		_speaker_label.position.x = 56

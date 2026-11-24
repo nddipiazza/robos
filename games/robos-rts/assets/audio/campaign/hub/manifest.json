@@ -1,0 +1,1092 @@
+{
+  "sample_rate": 22050,
+  "format": "pcm_s16le_mono",
+  "profiles": {
+    "vale": {
+      "name": "Captain Vale",
+      "source": "res://assets/audio/campaign/arrival.wav"
+    },
+    "sable": {
+      "name": "Pilot Sable",
+      "source": "res://assets/audio/campaign/siege.wav"
+    },
+    "aster": {
+      "name": "Dr. Aster",
+      "source": "res://assets/audio/campaign/evac_settlement.wav"
+    },
+    "rook": {
+      "name": "Corporal Rook",
+      "source": "res://assets/audio/campaign/camp_siege.wav"
+    },
+    "vane": {
+      "name": "Quartermaster Vane",
+      "source": "Qwen3-TTS VoiceDesign (Bay 07 Chief Engineer)"
+    },
+    "vance": {
+      "name": "Anchor Kade Vance",
+      "source": "Qwen3-TTS VoiceDesign (FRN Interstellar Anchor)"
+    },
+    "helm": {
+      "name": "Starfall Helm",
+      "source": "Qwen3-TTS VoiceDesign (MSV Starfall Navigation)"
+    }
+  },
+  "cues": {
+    "intro_m01_orbit": {
+      "speaker": "helm",
+      "text": "Entering Vesper Gate Colony high orbit. Strike group cleared for atmospheric descent.",
+      "duration": 5.046,
+      "path": "res://assets/audio/campaign/hub/intro_m01_orbit.wav"
+    },
+    "intro_m01_surface": {
+      "speaker": "vale",
+      "text": "Lead Vale's squad through Vesper Gate and bring that Directorate relay down.",
+      "duration": 3.932,
+      "path": "res://assets/audio/campaign/hub/intro_m01_surface.wav"
+    },
+    "intro_m02_orbit": {
+      "speaker": "helm",
+      "text": "Entering White Ridge Excavation high orbit. Strike group cleared for atmospheric descent.",
+      "duration": 4.956,
+      "path": "res://assets/audio/campaign/hub/intro_m02_orbit.wav"
+    },
+    "intro_m02_surface": {
+      "speaker": "vale",
+      "text": "Build up our base, hold off the Directorate raids, and seize the artifact at White Ridge.",
+      "duration": 4.93,
+      "path": "res://assets/audio/campaign/hub/intro_m02_surface.wav"
+    },
+    "intro_m03_orbit": {
+      "speaker": "helm",
+      "text": "Entering Twilight Crossing high orbit. Strike group cleared for atmospheric descent.",
+      "duration": 4.467,
+      "path": "res://assets/audio/campaign/hub/intro_m03_orbit.wav"
+    },
+    "intro_m03_surface": {
+      "speaker": "sable",
+      "text": "Defend the bridges and keep the Colony Hub standing until my rescue ship arrives.",
+      "duration": 4.433,
+      "path": "res://assets/audio/campaign/hub/intro_m03_surface.wav"
+    },
+    "intro_m04_orbit": {
+      "speaker": "helm",
+      "text": "Entering Bracken Evacuation Corridor high orbit. Strike group cleared for atmospheric descent.",
+      "duration": 5.269,
+      "path": "res://assets/audio/campaign/hub/intro_m04_orbit.wav"
+    },
+    "intro_m04_surface": {
+      "speaker": "aster",
+      "text": "Escort Bracken's colonist trucks up the northern road to the evacuation ships.",
+      "duration": 4.426,
+      "path": "res://assets/audio/campaign/hub/intro_m04_surface.wav"
+    },
+    "intro_m05_orbit": {
+      "speaker": "helm",
+      "text": "Entering Ashfall Settlement high orbit. Strike group cleared for atmospheric descent.",
+      "duration": 4.605,
+      "path": "res://assets/audio/campaign/hub/intro_m05_orbit.wav"
+    },
+    "intro_m05_surface": {
+      "speaker": "vale",
+      "text": "Clear the infected settlement while we have daylight, and defend the barricades after dark.",
+      "duration": 4.61,
+      "path": "res://assets/audio/campaign/hub/intro_m05_surface.wav"
+    },
+    "intro_m06_orbit": {
+      "speaker": "helm",
+      "text": "Entering Redstone Tectonic Basin high orbit. Strike group cleared for atmospheric descent.",
+      "duration": 5.197,
+      "path": "res://assets/audio/campaign/hub/intro_m06_orbit.wav"
+    },
+    "intro_m06_surface": {
+      "speaker": "sable",
+      "text": "Stockpile crystal between lava surges, pull crews to high ground on my mark, and find the missing miners.",
+      "duration": 5.776,
+      "path": "res://assets/audio/campaign/hub/intro_m06_surface.wav"
+    },
+    "intro_m07_orbit": {
+      "speaker": "helm",
+      "text": "Entering Talion Sunken Temple high orbit. Strike group cleared for atmospheric descent.",
+      "duration": 4.88,
+      "path": "res://assets/audio/campaign/hub/intro_m07_orbit.wav"
+    },
+    "intro_m07_surface": {
+      "speaker": "vale",
+      "text": "Push to the sunken shrine ahead of the Brood and break the relic's Concord guardians.",
+      "duration": 4.103,
+      "path": "res://assets/audio/campaign/hub/intro_m07_surface.wav"
+    },
+    "intro_m08_orbit": {
+      "speaker": "helm",
+      "text": "Entering Sanctuary Orbital Ring high orbit. Strike group cleared for atmospheric descent.",
+      "duration": 5.12,
+      "path": "res://assets/audio/campaign/hub/intro_m08_orbit.wav"
+    },
+    "intro_m08_surface": {
+      "speaker": "aster",
+      "text": "Shatter all three orbital shield links so our interceptors can bring down the Purifier warship.",
+      "duration": 4.944,
+      "path": "res://assets/audio/campaign/hub/intro_m08_surface.wav"
+    },
+    "intro_m09_orbit": {
+      "speaker": "helm",
+      "text": "Entering Tarsus Freight Line high orbit. Strike group cleared for atmospheric descent.",
+      "duration": 4.747,
+      "path": "res://assets/audio/campaign/hub/intro_m09_orbit.wav"
+    },
+    "intro_m09_surface": {
+      "speaker": "rook",
+      "text": "Recover those abandoned Rail Skimmers and stop eight Directorate freight trains across the depot lines.",
+      "duration": 4.565,
+      "path": "res://assets/audio/campaign/hub/intro_m09_surface.wav"
+    },
+    "intro_m10_orbit": {
+      "speaker": "helm",
+      "text": "Entering Verdant Canopy high orbit. Strike group cleared for atmospheric descent.",
+      "duration": 4.962,
+      "path": "res://assets/audio/campaign/hub/intro_m10_orbit.wav"
+    },
+    "intro_m10_surface": {
+      "speaker": "aster",
+      "text": "Escort Pioneers to the jungle vents and bring seven Aether canisters safely back to the Hub.",
+      "duration": 5.291,
+      "path": "res://assets/audio/campaign/hub/intro_m10_surface.wav"
+    },
+    "intro_m11_orbit": {
+      "speaker": "helm",
+      "text": "Entering Aurelia Sealed Vault high orbit. Strike group cleared for atmospheric descent.",
+      "duration": 5.138,
+      "path": "res://assets/audio/campaign/hub/intro_m11_orbit.wav"
+    },
+    "intro_m11_surface": {
+      "speaker": "vale",
+      "text": "Reclaim the Helix laser drill and hold every approach while it cuts open the Concord vault.",
+      "duration": 4.862,
+      "path": "res://assets/audio/campaign/hub/intro_m11_surface.wav"
+    },
+    "prologue_1": {
+      "speaker": "vale",
+      "text": "Three weeks ago the Directorate cut every subspace relay along the Rim and left the outer colonies in the dark.",
+      "duration": 5.564,
+      "path": "res://assets/audio/campaign/hub/prologue_1.wav"
+    },
+    "prologue_2": {
+      "speaker": "vance",
+      "text": "Directorate High Command insists the Vesper comms shutdown is routine maintenance, even as renegade flotillas gather in orbit.",
+      "duration": 7.983,
+      "path": "res://assets/audio/campaign/hub/prologue_2.wav"
+    },
+    "prologue_3": {
+      "speaker": "vale",
+      "text": "Prep the Ramparts. We break the relay at Vesper Gate first, then we bring every stranded colony home.",
+      "duration": 5.894,
+      "path": "res://assets/audio/campaign/hub/prologue_3.wav"
+    },
+    "armory_intro_1": {
+      "speaker": "vane",
+      "text": "Welcome to Bay Seven, Commander. Every credit you pull off Directorate contracts goes straight into heavier steel and hotter barrels.",
+      "duration": 7.102,
+      "path": "res://assets/audio/campaign/hub/armory_intro_1.wav"
+    },
+    "armory_intro_2": {
+      "speaker": "vane",
+      "text": "Step up to the Armory Console whenever you're ready to refit infantry suits, walkers, or starfighters.",
+      "duration": 5.228,
+      "path": "res://assets/audio/campaign/hub/armory_intro_2.wav"
+    },
+    "cantina_intro_1": {
+      "speaker": "rook",
+      "text": "Jukebox is warm, F R N is spinning propaganda on the screen, and the Rim's best mercenary crews are waiting at the holo-table.",
+      "duration": 6.214,
+      "path": "res://assets/audio/campaign/hub/cantina_intro_1.wav"
+    },
+    "lab_intro_1": {
+      "speaker": "aster",
+      "text": "Gnarl Brood tissue adapts under fire, and Concord crystal matrices store immense harmonic energy. Bring me samples from the field and we will turn both to our advantage.",
+      "duration": 10.06,
+      "path": "res://assets/audio/campaign/hub/lab_intro_1.wav"
+    },
+    "arc1_1": {
+      "speaker": "vance",
+      "text": "Subspace traffic is pouring out of Vesper Gate tonight after Captain Vale's raiders toppled the central Directorate relay tower.",
+      "duration": 7.628,
+      "path": "res://assets/audio/campaign/hub/arc1_1.wav"
+    },
+    "arc1_2": {
+      "speaker": "vale",
+      "text": "With the blackout broken, we intercepted Directorate traffic from White Ridge. They've dug up an ancient artifact, and something else is waking up.",
+      "duration": 7.28,
+      "path": "res://assets/audio/campaign/hub/arc1_2.wav"
+    },
+    "arc2_1": {
+      "speaker": "sable",
+      "text": "Last Rampart is aboard, Commander! Dawn Reach has fallen to the Gnarl Brood. Distress beacons are lighting up all along the Bracken corridor.",
+      "duration": 8.662,
+      "path": "res://assets/audio/campaign/hub/arc2_1.wav"
+    },
+    "arc2_2": {
+      "speaker": "aster",
+      "text": "Doctor Aster here. Thousands of colonists at Bracken and Ashfall will be overrun unless we escort their convoys out immediately.",
+      "duration": 7.576,
+      "path": "res://assets/audio/campaign/hub/arc2_2.wav"
+    },
+    "arc3_1": {
+      "speaker": "sable",
+      "text": "Direct hit on the Concord Purifier core! Outer colony fleets are rallying to the Starfall's transponder.",
+      "duration": 5.992,
+      "path": "res://assets/audio/campaign/hub/arc3_1.wav"
+    },
+    "arc3_2": {
+      "speaker": "vale",
+      "text": "Only Tarsus, Bel'Verdant, and the sealed vault on Aurelia Prime stand between the Rim and lasting freedom.",
+      "duration": 6.05,
+      "path": "res://assets/audio/campaign/hub/arc3_2.wav"
+    },
+    "arc4_1": {
+      "speaker": "vale",
+      "text": "The vault seal is down, the Directorate line is broken, and the frontier worlds answer to no one but themselves.",
+      "duration": 5.798,
+      "path": "res://assets/audio/campaign/hub/arc4_1.wav"
+    },
+    "arc4_2": {
+      "speaker": "sable",
+      "text": "All colonies reporting clear skies, Commander. It was an honor flying the Ashfall Signal with you.",
+      "duration": 5.655,
+      "path": "res://assets/audio/campaign/hub/arc4_2.wav"
+    },
+    "cantina_rook_1": {
+      "speaker": "rook",
+      "text": "Half the frontier mercs on this deck owe Vale their lives. Put credits on the table and they'll drop into hell beside us.",
+      "duration": 5.593,
+      "path": "res://assets/audio/campaign/hub/cantina_rook_1.wav"
+    },
+    "rook_sector_01": {
+      "speaker": "rook",
+      "text": "Next drop at Vesper Gate Colony won't be a parade. Hit Bay Seven for plating upgrades before we launch.",
+      "duration": 5.097,
+      "path": "res://assets/audio/campaign/hub/rook_sector_01.wav"
+    },
+    "rook_sector_02": {
+      "speaker": "rook",
+      "text": "Next drop at White Ridge Excavation won't be a parade. Hit Bay Seven for plating upgrades before we launch.",
+      "duration": 5.454,
+      "path": "res://assets/audio/campaign/hub/rook_sector_02.wav"
+    },
+    "rook_sector_03": {
+      "speaker": "rook",
+      "text": "Next drop at Twilight Crossing won't be a parade. Hit Bay Seven for plating upgrades before we launch.",
+      "duration": 4.936,
+      "path": "res://assets/audio/campaign/hub/rook_sector_03.wav"
+    },
+    "rook_sector_04": {
+      "speaker": "rook",
+      "text": "Next drop at Bracken Evacuation Corridor won't be a parade. Hit Bay Seven for plating upgrades before we launch.",
+      "duration": 5.853,
+      "path": "res://assets/audio/campaign/hub/rook_sector_04.wav"
+    },
+    "rook_sector_05": {
+      "speaker": "rook",
+      "text": "Next drop at Ashfall Settlement won't be a parade. Hit Bay Seven for plating upgrades before we launch.",
+      "duration": 5.033,
+      "path": "res://assets/audio/campaign/hub/rook_sector_05.wav"
+    },
+    "rook_sector_06": {
+      "speaker": "rook",
+      "text": "Next drop at Redstone Tectonic Basin won't be a parade. Hit Bay Seven for plating upgrades before we launch.",
+      "duration": 5.494,
+      "path": "res://assets/audio/campaign/hub/rook_sector_06.wav"
+    },
+    "rook_sector_07": {
+      "speaker": "rook",
+      "text": "Next drop at Talion Sunken Temple won't be a parade. Hit Bay Seven for plating upgrades before we launch.",
+      "duration": 5.303,
+      "path": "res://assets/audio/campaign/hub/rook_sector_07.wav"
+    },
+    "rook_sector_08": {
+      "speaker": "rook",
+      "text": "Next drop at Sanctuary Orbital Ring won't be a parade. Hit Bay Seven for plating upgrades before we launch.",
+      "duration": 5.453,
+      "path": "res://assets/audio/campaign/hub/rook_sector_08.wav"
+    },
+    "rook_sector_09": {
+      "speaker": "rook",
+      "text": "Next drop at Tarsus Freight Line won't be a parade. Hit Bay Seven for plating upgrades before we launch.",
+      "duration": 5.307,
+      "path": "res://assets/audio/campaign/hub/rook_sector_09.wav"
+    },
+    "rook_sector_10": {
+      "speaker": "rook",
+      "text": "Next drop at Verdant Canopy won't be a parade. Hit Bay Seven for plating upgrades before we launch.",
+      "duration": 4.756,
+      "path": "res://assets/audio/campaign/hub/rook_sector_10.wav"
+    },
+    "rook_sector_11": {
+      "speaker": "rook",
+      "text": "Next drop at Aurelia Sealed Vault won't be a parade. Hit Bay Seven for plating upgrades before we launch.",
+      "duration": 5.458,
+      "path": "res://assets/audio/campaign/hub/rook_sector_11.wav"
+    },
+    "vale_bridge_03": {
+      "speaker": "vale",
+      "text": "Gnarl Brood packs are converging on Dawn Reach. Hold those bridges until Sable's Rampart can pull everyone out.",
+      "duration": 6.241,
+      "path": "res://assets/audio/campaign/hub/vale_bridge_03.wav"
+    },
+    "vale_bridge_04": {
+      "speaker": "vale",
+      "text": "Bracken's colonists are out of time. Get down to the highway and escort Doctor Aster's convoy to the evac ships.",
+      "duration": 6.304,
+      "path": "res://assets/audio/campaign/hub/vale_bridge_04.wav"
+    },
+    "vale_bridge_08": {
+      "speaker": "vale",
+      "text": "A Concord Purifier warship is moving over the Sanctuary colonies. Crack its three shield links and clear the sky.",
+      "duration": 7.106,
+      "path": "res://assets/audio/campaign/hub/vale_bridge_08.wav"
+    },
+    "vale_bridge_10": {
+      "speaker": "vale",
+      "text": "We need high-purity Aether from Bel'Verdant's jungle vents before we push on Aurelia Prime. Cover our Pioneers.",
+      "duration": 6.455,
+      "path": "res://assets/audio/campaign/hub/vale_bridge_10.wav"
+    },
+    "sable_course_01": {
+      "speaker": "sable",
+      "text": "Course plotted for Vesper Gate Colony. Dropships are fueled and awaiting your launch order on the Mission Console.",
+      "duration": 6.182,
+      "path": "res://assets/audio/campaign/hub/sable_course_01.wav"
+    },
+    "sable_course_02": {
+      "speaker": "sable",
+      "text": "Course plotted for White Ridge Excavation. Dropships are fueled and awaiting your launch order on the Mission Console.",
+      "duration": 6.266,
+      "path": "res://assets/audio/campaign/hub/sable_course_02.wav"
+    },
+    "sable_course_03": {
+      "speaker": "sable",
+      "text": "Course plotted for Twilight Crossing. Dropships are fueled and awaiting your launch order on the Mission Console.",
+      "duration": 5.37,
+      "path": "res://assets/audio/campaign/hub/sable_course_03.wav"
+    },
+    "sable_course_04": {
+      "speaker": "sable",
+      "text": "Course plotted for Bracken Evacuation Corridor. Dropships are fueled and awaiting your launch order on the Mission Console.",
+      "duration": 6.637,
+      "path": "res://assets/audio/campaign/hub/sable_course_04.wav"
+    },
+    "sable_course_05": {
+      "speaker": "sable",
+      "text": "Course plotted for Ashfall Settlement. Dropships are fueled and awaiting your launch order on the Mission Console.",
+      "duration": 5.895,
+      "path": "res://assets/audio/campaign/hub/sable_course_05.wav"
+    },
+    "sable_course_06": {
+      "speaker": "sable",
+      "text": "Course plotted for Redstone Tectonic Basin. Dropships are fueled and awaiting your launch order on the Mission Console.",
+      "duration": 6.063,
+      "path": "res://assets/audio/campaign/hub/sable_course_06.wav"
+    },
+    "sable_course_07": {
+      "speaker": "sable",
+      "text": "Course plotted for Talion Sunken Temple. Dropships are fueled and awaiting your launch order on the Mission Console.",
+      "duration": 5.772,
+      "path": "res://assets/audio/campaign/hub/sable_course_07.wav"
+    },
+    "sable_course_08": {
+      "speaker": "sable",
+      "text": "Course plotted for Sanctuary Orbital Ring. Dropships are fueled and awaiting your launch order on the Mission Console.",
+      "duration": 5.966,
+      "path": "res://assets/audio/campaign/hub/sable_course_08.wav"
+    },
+    "sable_course_09": {
+      "speaker": "sable",
+      "text": "Course plotted for Tarsus Freight Line. Dropships are fueled and awaiting your launch order on the Mission Console.",
+      "duration": 5.603,
+      "path": "res://assets/audio/campaign/hub/sable_course_09.wav"
+    },
+    "sable_course_10": {
+      "speaker": "sable",
+      "text": "Course plotted for Verdant Canopy. Dropships are fueled and awaiting your launch order on the Mission Console.",
+      "duration": 5.418,
+      "path": "res://assets/audio/campaign/hub/sable_course_10.wav"
+    },
+    "sable_course_11": {
+      "speaker": "sable",
+      "text": "Course plotted for Aurelia Sealed Vault. Dropships are fueled and awaiting your launch order on the Mission Console.",
+      "duration": 6.499,
+      "path": "res://assets/audio/campaign/hub/sable_course_11.wav"
+    },
+    "frn_news_00": {
+      "speaker": "vance",
+      "text": "Directorate forces have imposed a total communications blackout over Vesper Gate, as Captain Vale's renegade flotilla drops out of warp in high orbit.",
+      "duration": 9.296,
+      "path": "res://assets/audio/campaign/hub/frn_news_00.wav"
+    },
+    "frn_news_01": {
+      "speaker": "vance",
+      "text": "Breaking news from Vesper Gate: the central Directorate relay tower has fallen, and colonial resistance fighters are rallying to the Meridian Guard banner.",
+      "duration": 9.353,
+      "path": "res://assets/audio/campaign/hub/frn_news_01.wav"
+    },
+    "frn_news_02": {
+      "speaker": "vance",
+      "text": "Sources confirm a Directorate excavation at White Ridge has been overrun following a fierce raid, with an ancient Aurelian Concord relic reported missing.",
+      "duration": 10.686,
+      "path": "res://assets/audio/campaign/hub/frn_news_02.wav"
+    },
+    "frn_news_03": {
+      "speaker": "vance",
+      "text": "Pilot Sable has executed a daring twilight extraction at Dawn Reach, pulling the Meridian garrison out moments before Gnarl Brood swarms overran the outer bridges.",
+      "duration": 10.841,
+      "path": "res://assets/audio/campaign/hub/frn_news_03.wav"
+    },
+    "frn_news_04": {
+      "speaker": "vance",
+      "text": "Over fifty colonist transports have safely cleared the Bracken corridor tonight, escaping off-world despite relentless Gnarl Brood ambushes along the northern highway.",
+      "duration": 10.221,
+      "path": "res://assets/audio/campaign/hub/frn_news_04.wav"
+    },
+    "frn_news_05": {
+      "speaker": "vance",
+      "text": "Quarantine protocols have been lifted over Ashfall Haven after Meridian Guard containment teams completed a multi-day purge of the blighted districts.",
+      "duration": 9.12,
+      "path": "res://assets/audio/campaign/hub/frn_news_05.wav"
+    },
+    "frn_news_06": {
+      "speaker": "vance",
+      "text": "Tectonic instability has peaked across Redstone Basin, yet Meridian prospectors managed to haul out a record crystal stockpile between lethal magma surges.",
+      "duration": 10.425,
+      "path": "res://assets/audio/campaign/hub/frn_news_06.wav"
+    },
+    "frn_news_07": {
+      "speaker": "vance",
+      "text": "A Meridian strike team has recovered a second sunken relic on Talion, defeating ancient Concord war-constructs just ahead of advancing Brood packs.",
+      "duration": 9.497,
+      "path": "res://assets/audio/campaign/hub/frn_news_07.wav"
+    },
+    "frn_news_08": {
+      "speaker": "vance",
+      "text": "Celebrations are erupting across Sanctuary tonight after Kestrel squadrons shattered a Concord Purifier's shield links and brought the warship down in flames.",
+      "duration": 10.187,
+      "path": "res://assets/audio/campaign/hub/frn_news_08.wav"
+    },
+    "frn_news_09": {
+      "speaker": "vance",
+      "text": "Directorate supply lines on Tarsus are in ruins after Rail Skimmer outriders intercepted and destroyed eight armored freight trains across three depot tracks.",
+      "duration": 9.941,
+      "path": "res://assets/audio/campaign/hub/frn_news_09.wav"
+    },
+    "frn_news_10": {
+      "speaker": "vance",
+      "text": "Doctor Aster's science teams on Bel'Verdant have secured seven high-purity Aether canisters from the jungle vents despite heavy Aurelian air patrols.",
+      "duration": 9.335,
+      "path": "res://assets/audio/campaign/hub/frn_news_10.wav"
+    },
+    "frn_news_11": {
+      "speaker": "vance",
+      "text": "Historic bulletin from Aurelia Prime: the Helix laser drill has breached the sealed vault, breaking the Directorate's grip and uniting the free frontier.",
+      "duration": 10.212,
+      "path": "res://assets/audio/campaign/hub/frn_news_11.wav"
+    },
+    "frn_drone_01": {
+      "speaker": "vance",
+      "text": "Orbital drone footage confirms heavy engagements across Vesper Gate Colony as Meridian Guard forces press deeper into the sector.",
+      "duration": 8.636,
+      "path": "res://assets/audio/campaign/hub/frn_drone_01.wav"
+    },
+    "frn_drone_02": {
+      "speaker": "vance",
+      "text": "Orbital drone footage confirms heavy engagements across White Ridge Excavation as Meridian Guard forces press deeper into the sector.",
+      "duration": 8.317,
+      "path": "res://assets/audio/campaign/hub/frn_drone_02.wav"
+    },
+    "frn_drone_03": {
+      "speaker": "vance",
+      "text": "Orbital drone footage confirms heavy engagements across Twilight Crossing as Meridian Guard forces press deeper into the sector.",
+      "duration": 7.755,
+      "path": "res://assets/audio/campaign/hub/frn_drone_03.wav"
+    },
+    "frn_drone_04": {
+      "speaker": "vance",
+      "text": "Orbital drone footage confirms heavy engagements across Bracken Evacuation Corridor as Meridian Guard forces press deeper into the sector.",
+      "duration": 9.177,
+      "path": "res://assets/audio/campaign/hub/frn_drone_04.wav"
+    },
+    "frn_drone_05": {
+      "speaker": "vance",
+      "text": "Orbital drone footage confirms heavy engagements across Ashfall Settlement as Meridian Guard forces press deeper into the sector.",
+      "duration": 8.02,
+      "path": "res://assets/audio/campaign/hub/frn_drone_05.wav"
+    },
+    "frn_drone_06": {
+      "speaker": "vance",
+      "text": "Orbital drone footage confirms heavy engagements across Redstone Tectonic Basin as Meridian Guard forces press deeper into the sector.",
+      "duration": 7.955,
+      "path": "res://assets/audio/campaign/hub/frn_drone_06.wav"
+    },
+    "frn_drone_07": {
+      "speaker": "vance",
+      "text": "Orbital drone footage confirms heavy engagements across Talion Sunken Temple as Meridian Guard forces press deeper into the sector.",
+      "duration": 8.317,
+      "path": "res://assets/audio/campaign/hub/frn_drone_07.wav"
+    },
+    "frn_drone_08": {
+      "speaker": "vance",
+      "text": "Orbital drone footage confirms heavy engagements across Sanctuary Orbital Ring as Meridian Guard forces press deeper into the sector.",
+      "duration": 9.081,
+      "path": "res://assets/audio/campaign/hub/frn_drone_08.wav"
+    },
+    "frn_drone_09": {
+      "speaker": "vance",
+      "text": "Orbital drone footage confirms heavy engagements across Tarsus Freight Line as Meridian Guard forces press deeper into the sector.",
+      "duration": 8.155,
+      "path": "res://assets/audio/campaign/hub/frn_drone_09.wav"
+    },
+    "frn_drone_10": {
+      "speaker": "vance",
+      "text": "Orbital drone footage confirms heavy engagements across Verdant Canopy as Meridian Guard forces press deeper into the sector.",
+      "duration": 8.205,
+      "path": "res://assets/audio/campaign/hub/frn_drone_10.wav"
+    },
+    "frn_drone_11": {
+      "speaker": "vance",
+      "text": "Orbital drone footage confirms heavy engagements across Aurelia Sealed Vault as Meridian Guard forces press deeper into the sector.",
+      "duration": 9.063,
+      "path": "res://assets/audio/campaign/hub/frn_drone_11.wav"
+    },
+    "tech_hub_plating": {
+      "speaker": "vane",
+      "text": "Neosteel Bulkheads installed across the fleet. plus 2 Colony Hub armor and fire suppression.",
+      "duration": 5.765,
+      "path": "res://assets/audio/campaign/hub/tech_hub_plating.wav"
+    },
+    "tech_hub_servos": {
+      "speaker": "vane",
+      "text": "Dual Arc Gantries installed across the fleet. Allows two Pioneers to accelerate structure assembly.",
+      "duration": 6.402,
+      "path": "res://assets/audio/campaign/hub/tech_hub_servos.wav"
+    },
+    "tech_bunker_ports": {
+      "speaker": "vane",
+      "text": "Stabilized Firing Ports installed across the fleet. plus 1 weapon range for garrisoned infantry.",
+      "duration": 4.893,
+      "path": "res://assets/audio/campaign/hub/tech_bunker_ports.wav"
+    },
+    "tech_bunker_casemate": {
+      "speaker": "vane",
+      "text": "Expanded Casemate installed across the fleet. plus 2 infantry capacity and plus 150 Bunker hit points.",
+      "duration": 7.45,
+      "path": "res://assets/audio/campaign/hub/tech_bunker_casemate.wav"
+    },
+    "tech_turret_salvo": {
+      "speaker": "vane",
+      "text": "Tempest Micro-Pods installed across the fleet. Fires secondary anti-air micro-missiles per volley.",
+      "duration": 6.367,
+      "path": "res://assets/audio/campaign/hub/tech_turret_salvo.wav"
+    },
+    "tech_turret_housing": {
+      "speaker": "vane",
+      "text": "Titanium Gimbal installed across the fleet. plus 75 hit points and plus 2 Turret base armor.",
+      "duration": 6.035,
+      "path": "res://assets/audio/campaign/hub/tech_turret_housing.wav"
+    },
+    "tech_silo_hydraulics": {
+      "speaker": "vane",
+      "text": "Rapid Gate Actuators installed across the fleet. Instant gate retraction and 35 percent faster construction.",
+      "duration": 6.724,
+      "path": "res://assets/audio/campaign/hub/tech_silo_hydraulics.wav"
+    },
+    "tech_silo_stores": {
+      "speaker": "vane",
+      "text": "Deep-Core Lockers installed across the fleet. plus 2 additional supply provided per Provision Silo.",
+      "duration": 6.697,
+      "path": "res://assets/audio/campaign/hub/tech_silo_stores.wav"
+    },
+    "tech_pioneer_welders": {
+      "speaker": "vane",
+      "text": "Twin-Fusion Torches installed across the fleet. Pioneers repair mechanical units twice as fast.",
+      "duration": 5.98,
+      "path": "res://assets/audio/campaign/hub/tech_pioneer_welders.wav"
+    },
+    "tech_pioneer_rig": {
+      "speaker": "vane",
+      "text": "Exo-Frame Harness installed across the fleet. plus 15 Pioneer hit points against raids.",
+      "duration": 5.588,
+      "path": "res://assets/audio/campaign/hub/tech_pioneer_rig.wav"
+    },
+    "tech_rifle_shield": {
+      "speaker": "vane",
+      "text": "Ballistic Riot Shield installed across the fleet. Riflemen gain plus 10 permanent maximum hit points.",
+      "duration": 5.937,
+      "path": "res://assets/audio/campaign/hub/tech_rifle_shield.wav"
+    },
+    "tech_rifle_surge": {
+      "speaker": "vane",
+      "text": "Filtered Surge Ampoules installed across the fleet. Surge Injector costs 50 percent less health and lasts longer.",
+      "duration": 6.238,
+      "path": "res://assets/audio/campaign/hub/tech_rifle_surge.wav"
+    },
+    "tech_medic_injector": {
+      "speaker": "vane",
+      "text": "Nano-Suture Beam installed across the fleet. Restores biological health 30 percent faster.",
+      "duration": 5.745,
+      "path": "res://assets/audio/campaign/hub/tech_medic_injector.wav"
+    },
+    "tech_medic_cells": {
+      "speaker": "vane",
+      "text": "Capacitor Caduceus installed across the fleet. plus 50 starting energy and reduced heal drain.",
+      "duration": 5.79,
+      "path": "res://assets/audio/campaign/hub/tech_medic_cells.wav"
+    },
+    "tech_torch_nozzles": {
+      "speaker": "vane",
+      "text": "Pyro-Gel Accelerant installed across the fleet. Widens Twin Flame Jet sweep area by 40 percent.",
+      "duration": 5.95,
+      "path": "res://assets/audio/campaign/hub/tech_torch_nozzles.wav"
+    },
+    "tech_torch_suit": {
+      "speaker": "vane",
+      "text": "Juggernaut Ceramite installed across the fleet. plus 2 base armor against melee and light fire.",
+      "duration": 5.703,
+      "path": "res://assets/audio/campaign/hub/tech_torch_suit.wav"
+    },
+    "tech_scout_thrusters": {
+      "speaker": "vane",
+      "text": "Overcharged Jump-Jets installed across the fleet. plus 20 percent movement speed and faster out-of-combat regen.",
+      "duration": 6.638,
+      "path": "res://assets/audio/campaign/hub/tech_scout_thrusters.wav"
+    },
+    "tech_scout_charges": {
+      "speaker": "vane",
+      "text": "Shaped Detonation Packs installed across the fleet. Ridge Charges deal plus 50 percent damage to structures.",
+      "duration": 6.237,
+      "path": "res://assets/audio/campaign/hub/tech_scout_charges.wav"
+    },
+    "tech_breacher_shells": {
+      "speaker": "vane",
+      "text": "Shockwave Sabots installed across the fleet. Concussive slow splashes to nearby hostile units.",
+      "duration": 6.145,
+      "path": "res://assets/audio/campaign/hub/tech_breacher_shells.wav"
+    },
+    "tech_breacher_foam": {
+      "speaker": "vane",
+      "text": "Kinetic Trauma Liner installed across the fleet. Breachers gain plus 25 maximum hit points.",
+      "duration": 5.968,
+      "path": "res://assets/audio/campaign/hub/tech_breacher_foam.wav"
+    },
+    "tech_cinder_napalm": {
+      "speaker": "vane",
+      "text": "Blue-Core Igniter installed across the fleet. plus 10 bonus damage versus Light targets.",
+      "duration": 5.226,
+      "path": "res://assets/audio/campaign/hub/tech_cinder_napalm.wav"
+    },
+    "tech_cinder_tires": {
+      "speaker": "vane",
+      "text": "Torsion Bogie Drive installed across the fleet. Increases road and canyon acceleration.",
+      "duration": 4.898,
+      "path": "res://assets/audio/campaign/hub/tech_cinder_tires.wav"
+    },
+    "tech_skimmer_coils": {
+      "speaker": "vane",
+      "text": "Tri-Lithium Rails installed across the fleet. plus 2 Skimmer Railgun firing range.",
+      "duration": 5.556,
+      "path": "res://assets/audio/campaign/hub/tech_skimmer_coils.wav"
+    },
+    "tech_skimmer_hull": {
+      "speaker": "vane",
+      "text": "Flux-Skirt Plating installed across the fleet. plus 50 maximum Rail Skimmer hit points.",
+      "duration": 6.001,
+      "path": "res://assets/audio/campaign/hub/tech_skimmer_hull.wav"
+    },
+    "tech_walker_lock": {
+      "speaker": "vane",
+      "text": "Dual-Target Fire Control installed across the fleet. Fires autocannons and air missiles simultaneously.",
+      "duration": 6.147,
+      "path": "res://assets/audio/campaign/hub/tech_walker_lock.wav"
+    },
+    "tech_walker_optics": {
+      "speaker": "vane",
+      "text": "Ares Horizon Radar installed across the fleet. plus 3 missile range and plus 1 autocannon range.",
+      "duration": 6.552,
+      "path": "res://assets/audio/campaign/hub/tech_walker_optics.wav"
+    },
+    "tech_howitzer_shells": {
+      "speaker": "vane",
+      "text": "Maelstrom Siege Rounds installed across the fleet. plus 20 primary impact damage in Emplaced Mode.",
+      "duration": 5.918,
+      "path": "res://assets/audio/campaign/hub/tech_howitzer_shells.wav"
+    },
+    "tech_howitzer_fuze": {
+      "speaker": "vane",
+      "text": "IFF Smart-Fuze installed across the fleet. Reduces splash damage to friendly troops by 75 percent.",
+      "duration": 7.088,
+      "path": "res://assets/audio/campaign/hub/tech_howitzer_fuze.wav"
+    },
+    "tech_atlas_cannons": {
+      "speaker": "vane",
+      "text": "330mm Strike Cannons installed across the fleet. Unlocks devastating stun barrage against structures.",
+      "duration": 7.561,
+      "path": "res://assets/audio/campaign/hub/tech_atlas_cannons.wav"
+    },
+    "tech_atlas_core": {
+      "speaker": "vane",
+      "text": "Self-Righting Gyros installed across the fleet. plus 150 hit points and emergency field reboot system.",
+      "duration": 6.486,
+      "path": "res://assets/audio/campaign/hub/tech_atlas_core.wav"
+    },
+    "tech_rampart_winch": {
+      "speaker": "vane",
+      "text": "Rapid Drop Cradles installed across the fleet. Deploys embarked squads instantaneously.",
+      "duration": 5.619,
+      "path": "res://assets/audio/campaign/hub/tech_rampart_winch.wav"
+    },
+    "tech_rampart_burners": {
+      "speaker": "vane",
+      "text": "Twin-Vector Burners installed across the fleet. plus 25 percent Rampart cruise and boost speed.",
+      "duration": 6.335,
+      "path": "res://assets/audio/campaign/hub/tech_rampart_burners.wav"
+    },
+    "tech_sentry_drone": {
+      "speaker": "vane",
+      "text": "Laser Defense Matrix installed across the fleet. Intercepts hostile ranged projectiles in radius.",
+      "duration": 5.838,
+      "path": "res://assets/audio/campaign/hub/tech_sentry_drone.wav"
+    },
+    "tech_sentry_reactor": {
+      "speaker": "vane",
+      "text": "Beamed Core Cells installed across the fleet. plus 50 maximum energy and faster recharge.",
+      "duration": 5.402,
+      "path": "res://assets/audio/campaign/hub/tech_sentry_reactor.wav"
+    },
+    "tech_kestrel_ripwave": {
+      "speaker": "vane",
+      "text": "Ripwave Missile Pods installed across the fleet. Fires area-damage anti-air missile volleys.",
+      "duration": 5.218,
+      "path": "res://assets/audio/campaign/hub/tech_kestrel_ripwave.wav"
+    },
+    "tech_kestrel_phobos": {
+      "speaker": "vane",
+      "text": "Phobos Targeting Suite installed across the fleet. plus 2 air-to-air weapon range.",
+      "duration": 5.037,
+      "path": "res://assets/audio/campaign/hub/tech_kestrel_phobos.wav"
+    },
+    "tech_harrier_shock": {
+      "speaker": "vane",
+      "text": "Shockwave Rocket Line installed across the fleet. Ground-attack rockets deal linear splash damage.",
+      "duration": 5.757,
+      "path": "res://assets/audio/campaign/hub/tech_harrier_shock.wav"
+    },
+    "tech_harrier_cloak": {
+      "speaker": "vane",
+      "text": "Thermal Baffling installed across the fleet. Doubles stealth flight duration.",
+      "duration": 3.827,
+      "path": "res://assets/audio/campaign/hub/tech_harrier_cloak.wav"
+    },
+    "tech_dread_lance": {
+      "speaker": "vane",
+      "text": "Axial Plasma Batteries installed across the fleet. plus 25 percent main battery fire rate and lance charge.",
+      "duration": 6.822,
+      "path": "res://assets/audio/campaign/hub/tech_dread_lance.wav"
+    },
+    "tech_dread_matrix": {
+      "speaker": "vane",
+      "text": "Aegis Deflector Grid installed across the fleet. Absorbs up to 200 burst damage when triggered.",
+      "duration": 5.797,
+      "path": "res://assets/audio/campaign/hub/tech_dread_matrix.wav"
+    },
+    "tech_shade_ocular": {
+      "speaker": "vane",
+      "text": "Ocular Telemetry installed across the fleet. plus 3 sight radius and plus 2 sniper range.",
+      "duration": 5.987,
+      "path": "res://assets/audio/campaign/hub/tech_shade_ocular.wav"
+    },
+    "tech_shade_suit": {
+      "speaker": "vane",
+      "text": "Permanent Veil Cell installed across the fleet. Cloaking no longer drains continuous energy.",
+      "duration": 5.023,
+      "path": "res://assets/audio/campaign/hub/tech_shade_suit.wav"
+    },
+    "tech_mine_claws": {
+      "speaker": "vane",
+      "text": "Auger Digging Claws installed across the fleet. Burrows and rearms 50 percent faster.",
+      "duration": 5.261,
+      "path": "res://assets/audio/campaign/hub/tech_mine_claws.wav"
+    },
+    "tech_mine_payload": {
+      "speaker": "vane",
+      "text": "Cerberus Warhead installed across the fleet. plus 30 percent trigger and blast splash radius.",
+      "duration": 5.707,
+      "path": "res://assets/audio/campaign/hub/tech_mine_payload.wav"
+    },
+    "tech_rover_lock": {
+      "speaker": "vane",
+      "text": "Mag-Field Accelerators installed across the fleet. plus 25 percent lock-on missile damage versus Armored.",
+      "duration": 6.231,
+      "path": "res://assets/audio/campaign/hub/tech_rover_lock.wav"
+    },
+    "tech_rover_drive": {
+      "speaker": "vane",
+      "text": "Overdrive Gyros installed across the fleet. Increases reverse-kiting tracking speed.",
+      "duration": 5.676,
+      "path": "res://assets/audio/campaign/hub/tech_rover_drive.wav"
+    },
+    "tech_bastion_rail": {
+      "speaker": "vane",
+      "text": "Twin Siege Breeches installed across the fleet. plus 20 percent anti-surface fire rate.",
+      "duration": 5.117,
+      "path": "res://assets/audio/campaign/hub/tech_bastion_rail.wav"
+    },
+    "tech_bastion_plate": {
+      "speaker": "vane",
+      "text": "Fortress Anchor installed across the fleet. plus 200 hit points and plus 2 structural armor.",
+      "duration": 5.784,
+      "path": "res://assets/audio/campaign/hub/tech_bastion_plate.wav"
+    },
+    "hire_merc_roadwardens": {
+      "speaker": "rook",
+      "text": "Bracken Roadwardens just docked in Bay Seven. Their dropships are standing by on our Contract Post frequency.",
+      "duration": 5.411,
+      "path": "res://assets/audio/campaign/hub/hire_merc_roadwardens.wav"
+    },
+    "hire_merc_ashhounds": {
+      "speaker": "rook",
+      "text": "Ashfall Hellhounds just docked in Bay Seven. Their dropships are standing by on our Contract Post frequency.",
+      "duration": 5.18,
+      "path": "res://assets/audio/campaign/hub/hire_merc_ashhounds.wav"
+    },
+    "hire_merc_ironbacks": {
+      "speaker": "rook",
+      "text": "Vesper Ironbacks just docked in Bay Seven. Their dropships are standing by on our Contract Post frequency.",
+      "duration": 5.236,
+      "path": "res://assets/audio/campaign/hub/hire_merc_ironbacks.wav"
+    },
+    "hire_merc_outriders": {
+      "speaker": "rook",
+      "text": "Tarsus Rail Raiders just docked in Bay Seven. Their dropships are standing by on our Contract Post frequency.",
+      "duration": 5.454,
+      "path": "res://assets/audio/campaign/hub/hire_merc_outriders.wav"
+    },
+    "hire_merc_deadfall": {
+      "speaker": "rook",
+      "text": "Deadfall Siege Battery just docked in Bay Seven. Their dropships are standing by on our Contract Post frequency.",
+      "duration": 5.372,
+      "path": "res://assets/audio/campaign/hub/hire_merc_deadfall.wav"
+    },
+    "hire_merc_angels": {
+      "speaker": "rook",
+      "text": "Duskwing Squadron just docked in Bay Seven. Their dropships are standing by on our Contract Post frequency.",
+      "duration": 5.081,
+      "path": "res://assets/audio/campaign/hub/hire_merc_angels.wav"
+    },
+    "lab_brood_t1_bunker": {
+      "speaker": "aster",
+      "text": "Synthesis complete. Chitin-Lined Bunkers is now integrated into all Meridian deployments.",
+      "duration": 5.44,
+      "path": "res://assets/audio/campaign/hub/lab_brood_t1_bunker.wav"
+    },
+    "lab_brood_t1_shrike": {
+      "speaker": "aster",
+      "text": "Synthesis complete. Automated Roof Gun is now integrated into all Meridian deployments.",
+      "duration": 5.895,
+      "path": "res://assets/audio/campaign/hub/lab_brood_t1_shrike.wav"
+    },
+    "lab_brood_t2_med": {
+      "speaker": "aster",
+      "text": "Synthesis complete. Enzymatic Trauma Packs is now integrated into all Meridian deployments.",
+      "duration": 6.312,
+      "path": "res://assets/audio/campaign/hub/lab_brood_t2_med.wav"
+    },
+    "lab_brood_t2_hull": {
+      "speaker": "aster",
+      "text": "Synthesis complete. Resilient Bio-Sealant is now integrated into all Meridian deployments.",
+      "duration": 5.902,
+      "path": "res://assets/audio/campaign/hub/lab_brood_t2_hull.wav"
+    },
+    "lab_brood_t3_supply": {
+      "speaker": "aster",
+      "text": "Synthesis complete. Rapid Orbital Silos is now integrated into all Meridian deployments.",
+      "duration": 6.413,
+      "path": "res://assets/audio/campaign/hub/lab_brood_t3_supply.wav"
+    },
+    "lab_brood_t3_cargo": {
+      "speaker": "aster",
+      "text": "Synthesis complete. Reinforced Troop Hold is now integrated into all Meridian deployments.",
+      "duration": 5.629,
+      "path": "res://assets/audio/campaign/hub/lab_brood_t3_cargo.wav"
+    },
+    "lab_brood_t4_energy": {
+      "speaker": "aster",
+      "text": "Synthesis complete. Cellular Bio-Capacitors is now integrated into all Meridian deployments.",
+      "duration": 6.039,
+      "path": "res://assets/audio/campaign/hub/lab_brood_t4_energy.wav"
+    },
+    "lab_brood_t4_regen": {
+      "speaker": "aster",
+      "text": "Synthesis complete. Regenerative Bio-Steel is now integrated into all Meridian deployments.",
+      "duration": 5.68,
+      "path": "res://assets/audio/campaign/hub/lab_brood_t4_regen.wav"
+    },
+    "lab_brood_t5_disruptor": {
+      "speaker": "aster",
+      "text": "Synthesis complete. Synaptic Disruptor Tower is now integrated into all Meridian deployments.",
+      "duration": 5.587,
+      "path": "res://assets/audio/campaign/hub/lab_brood_t5_disruptor.wav"
+    },
+    "lab_brood_t5_nova": {
+      "speaker": "aster",
+      "text": "Synthesis complete. Neuro-Shock Emitter is now integrated into all Meridian deployments.",
+      "duration": 5.473,
+      "path": "res://assets/audio/campaign/hub/lab_brood_t5_nova.wav"
+    },
+    "lab_concord_t1_cap": {
+      "speaker": "aster",
+      "text": "Synthesis complete. Ultra-Capacitors is now integrated into all Meridian deployments.",
+      "duration": 5.298,
+      "path": "res://assets/audio/campaign/hub/lab_concord_t1_cap.wav"
+    },
+    "lab_concord_t1_vanadium": {
+      "speaker": "aster",
+      "text": "Synthesis complete. Vanadium Lattice is now integrated into all Meridian deployments.",
+      "duration": 5.313,
+      "path": "res://assets/audio/campaign/hub/lab_concord_t1_vanadium.wav"
+    },
+    "lab_concord_t2_aether": {
+      "speaker": "aster",
+      "text": "Synthesis complete. Micro-Filtered Taps is now integrated into all Meridian deployments.",
+      "duration": 5.706,
+      "path": "res://assets/audio/campaign/hub/lab_concord_t2_aether.wav"
+    },
+    "lab_concord_t2_relay": {
+      "speaker": "aster",
+      "text": "Synthesis complete. Harmonic Sensor Net is now integrated into all Meridian deployments.",
+      "duration": 5.801,
+      "path": "res://assets/audio/campaign/hub/lab_concord_t2_relay.wav"
+    },
+    "lab_concord_t3_auto": {
+      "speaker": "aster",
+      "text": "Synthesis complete. Autonomous Aether Siphon is now integrated into all Meridian deployments.",
+      "duration": 5.797,
+      "path": "res://assets/audio/campaign/hub/lab_concord_t3_auto.wav"
+    },
+    "lab_concord_t3_twin": {
+      "speaker": "aster",
+      "text": "Synthesis complete. Dual-Core Hub Queue is now integrated into all Meridian deployments.",
+      "duration": 5.974,
+      "path": "res://assets/audio/campaign/hub/lab_concord_t3_twin.wav"
+    },
+    "lab_concord_t4_sentry": {
+      "speaker": "aster",
+      "text": "Synthesis complete. Lumen Sky Sentry is now integrated into all Meridian deployments.",
+      "duration": 5.847,
+      "path": "res://assets/audio/campaign/hub/lab_concord_t4_sentry.wav"
+    },
+    "lab_concord_t4_module": {
+      "speaker": "aster",
+      "text": "Synthesis complete. Unified Tech-Fabricator is now integrated into all Meridian deployments.",
+      "duration": 5.76,
+      "path": "res://assets/audio/campaign/hub/lab_concord_t4_module.wav"
+    },
+    "lab_concord_t5_drop": {
+      "speaker": "aster",
+      "text": "Synthesis complete. Orbital Drop Beacons is now integrated into all Meridian deployments.",
+      "duration": 5.616,
+      "path": "res://assets/audio/campaign/hub/lab_concord_t5_drop.wav"
+    },
+    "lab_concord_t5_matrix": {
+      "speaker": "aster",
+      "text": "Synthesis complete. Aegis Phase Matrix is now integrated into all Meridian deployments.",
+      "duration": 5.778,
+      "path": "res://assets/audio/campaign/hub/lab_concord_t5_matrix.wav"
+    },
+    "ui_armory_console": {
+      "speaker": "vane",
+      "text": "Pulling up the Bay Seven schematics. Pick your hardware, Commander.",
+      "duration": 3.684,
+      "path": "res://assets/audio/campaign/hub/ui_armory_console.wav"
+    },
+    "ui_armory_rail_skimmer": {
+      "speaker": "vane",
+      "text": "Rail Skimmer hover-tank. Fast magnetic cushion and a heavy railgun that fires on the move.",
+      "duration": 6.231,
+      "path": "res://assets/audio/campaign/hub/ui_armory_rail_skimmer.wav"
+    },
+    "ui_armory_torchguard": {
+      "speaker": "vane",
+      "text": "Torchguard close-assault suit. Twin hypergolic burners built to clear infested lanes.",
+      "duration": 5.659,
+      "path": "res://assets/audio/campaign/hub/ui_armory_torchguard.wav"
+    },
+    "ui_armory_kestrel_interceptor": {
+      "speaker": "vane",
+      "text": "Kestrel Interceptor. Twin-vector air superiority frame ready for missile pod refits.",
+      "duration": 5.978,
+      "path": "res://assets/audio/campaign/hub/ui_armory_kestrel_interceptor.wav"
+    },
+    "ui_armory_warden_walker": {
+      "speaker": "vane",
+      "text": "Warden Walker. All-terrain combat mech packing twin autocannons and escort missiles.",
+      "duration": 5.451,
+      "path": "res://assets/audio/campaign/hub/ui_armory_warden_walker.wav"
+    },
+    "ui_armory_rampart_transport": {
+      "speaker": "vane",
+      "text": "Rampart Dropship. Armored orbital transport that gets our squads in and out alive.",
+      "duration": 4.682,
+      "path": "res://assets/audio/campaign/hub/ui_armory_rampart_transport.wav"
+    },
+    "ui_armory_breacher": {
+      "speaker": "vane",
+      "text": "Breacher shock armor. Concussive shells that crack heavy plating and stall enemy columns.",
+      "duration": 5.891,
+      "path": "res://assets/audio/campaign/hub/ui_armory_breacher.wav"
+    },
+    "ui_cantina_board": {
+      "speaker": "rook",
+      "text": "Contract board is live. Every mercenary company listed here is cleared for orbital drop.",
+      "duration": 4.486,
+      "path": "res://assets/audio/campaign/hub/ui_cantina_board.wav"
+    },
+    "ui_jukebox": {
+      "speaker": "rook",
+      "text": "Now that's a classic frontier tune. Turn it up.",
+      "duration": 2.329,
+      "path": "res://assets/audio/campaign/hub/ui_jukebox.wav"
+    },
+    "ui_lab_console": {
+      "speaker": "aster",
+      "text": "Research console online. Select a xenobiology or relic tier to review.",
+      "duration": 4.939,
+      "path": "res://assets/audio/campaign/hub/ui_lab_console.wav"
+    },
+    "ui_lab_brood": {
+      "speaker": "aster",
+      "text": "Remarkable carapace density on this Gnarl Brood specimen. Let's put those samples to work.",
+      "duration": 5.37,
+      "path": "res://assets/audio/campaign/hub/ui_lab_brood.wav"
+    },
+    "ui_lab_concord": {
+      "speaker": "aster",
+      "text": "The Aurelian relic is resonating cleanly. Ready to channel its harmonic lattice.",
+      "duration": 5.118,
+      "path": "res://assets/audio/campaign/hub/ui_lab_concord.wav"
+    },
+    "ui_mutators": {
+      "speaker": "vale",
+      "text": "Tactical mutator matrix online. Adjust mission hazard parameters carefully.",
+      "duration": 4.398,
+      "path": "res://assets/audio/campaign/hub/ui_mutators.wav"
+    },
+    "ui_archive": {
+      "speaker": "helm",
+      "text": "Accessing Starfall mission logs and sector broadcast archives.",
+      "duration": 3.73,
+      "path": "res://assets/audio/campaign/hub/ui_archive.wav"
+    },
+    "ui_service_record": {
+      "speaker": "helm",
+      "text": "Displaying Meridian Guard expedition service record and treasury status.",
+      "duration": 3.852,
+      "path": "res://assets/audio/campaign/hub/ui_service_record.wav"
+    }
+  }
+}
