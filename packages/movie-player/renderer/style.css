@@ -4039,3 +4039,160 @@ body.is-resizing, body.is-resizing * { cursor: col-resize !important; user-selec
   color: #fca5a5;
 }
 
+/* ── Embedded Live Video PiP (replaces thumbnail when browsing away from Now Playing) ── */
+
+.player-deck-container.pip-host-only {
+  height: 0 !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: visible !important;
+  pointer-events: none;
+}
+
+.player-deck-container.pip-host-only > .deck-card {
+  height: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+  background: transparent !important;
+  gap: 0 !important;
+}
+
+.player-deck-container.pip-host-only > .deck-card > :not(.cinema-stage-box) {
+  display: none !important;
+}
+
+.cinema-stage-box.is-embedded-pip {
+  position: fixed !important;
+  margin: 0 !important;
+  border-radius: 7px !important;
+  border: 1px solid rgba(232, 163, 61, 0.55) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.72) !important;
+  background: #050404 !important;
+  z-index: 140 !important;
+  pointer-events: auto !important;
+  overflow: hidden !important;
+  cursor: pointer;
+}
+
+.cinema-stage-box.is-embedded-pip .cinema-video-el {
+  width: 100% !important;
+  height: 100% !important;
+  max-height: none !important;
+  aspect-ratio: auto !important;
+  object-fit: contain;
+}
+
+.np-current.has-pip {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 7px;
+  padding: 8px;
+}
+
+.np-pip-slot {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 7px;
+  background: #050404;
+  flex-shrink: 0;
+}
+
+.mini-player-bar.has-embedded-pip {
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+
+.mini-art.is-pip-slot {
+  width: 152px !important;
+  height: 86px !important;
+  border-radius: 7px !important;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: #050404;
+}
+
+.mini-bar-pip-slot {
+  width: 152px;
+  height: 86px;
+  border-radius: 7px;
+  background: #050404;
+}
+
+.mini-art.is-pip-docked {
+  width: auto !important;
+  height: auto !important;
+  background: transparent !important;
+  border: none !important;
+}
+
+.mini-pip-indicator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 9px;
+  border-radius: 6px;
+  background: rgba(232, 163, 61, 0.16);
+  border: 1px solid rgba(232, 163, 61, 0.45);
+  color: #fcd34d;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.embedded-pip-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 6px 7px;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.62) 0%, rgba(0, 0, 0, 0) 46%);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.cinema-stage-box.is-embedded-pip:hover .embedded-pip-overlay {
+  opacity: 1;
+}
+
+.embedded-pip-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(17, 14, 11, 0.85);
+  border: 1px solid rgba(232, 163, 61, 0.5);
+  color: #fcd34d;
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-weight: 800;
+}
+
+.embedded-pip-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.embedded-pip-btn {
+  padding: 2px 7px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  background: rgba(17, 14, 11, 0.86);
+  color: #f8fafc;
+  font-size: 0.68rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.embedded-pip-btn:hover {
+  background: var(--accent, #e8a33d);
+  border-color: var(--accent, #e8a33d);
+  color: #110e0b;
+}
+
+

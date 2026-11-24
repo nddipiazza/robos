@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef, useMemo, useCallback } from 'react';
 import AudioPlayer, { RHAP_UI } from 'react-h5-audio-player';
 import { Icon } from './Icon.jsx';
 import CloudBrowser from './CloudBrowser.jsx';
@@ -108,6 +108,8 @@ export default function App() {
 
   const playerRef = useRef(null);
   const videoRef = useRef(null);
+  const pipSlotRef = useRef(null);
+  const [pipRect, setPipRect] = useState(null);
   const [videoFit, setVideoFit] = useState('contain');
   const getMediaEl = () => (isVideoTrack(latestRef.current.currentTrack) && videoRef.current) ? videoRef.current : playerRef.current?.audio?.current;
   const audioCtxRef = useRef(null);
@@ -971,6 +973,50 @@ export default function App() {
     }
     return rawResolvedSrc;
   })();
+
+  const embeddedPipActive = Boolean(
+    activeTab !== 'player' &&
+    isPlaying &&
+    outputTarget === 'local' &&
+    isVideoTrack(currentTrack)
+  );
+
+  useLayoutEffect(() => {
+    if (!embeddedPipActive) {
+      setPipRect(null);
+      return undefined;
+    }
+    let rafId = null;
+    const measure = () => {
+      const el = pipSlotRef.current;
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      if (r.width <= 0 || r.height <= 0) return;
+      setPipRect((prev) => {
+        const top = Math.round(r.top);
+        const left = Math.round(r.left);
+        const width = Math.round(r.width);
+        const height = Math.round(r.height);
+        if (prev && prev.top === top && prev.left === left && prev.width === width && prev.height === height) {
+          return prev;
+        }
+        return { top, left, width, height };
+      });
+    };
+    measure();
+    rafId = requestAnimationFrame(measure);
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(measure) : null;
+    if (ro) {
+      if (pipSlotRef.current) ro.observe(pipSlotRef.current);
+      if (document.body) ro.observe(document.body);
+    }
+    window.addEventListener('resize', measure);
+    return () => {
+      if (rafId) cancelAnimationFrame(rafId);
+      if (ro) ro.disconnect();
+      window.removeEventListener('resize', measure);
+    };
+  }, [embeddedPipActive, dockCollapsed, activeTab, currentTrack?.id]);
 
   const seekVideoTo = useCallback((rawTarget) => {
     const v = videoRef.current;
@@ -2416,7 +2462,10 @@ export default function App() {
         )}
 
         {/* TAB 1: NOW PLAYING */}
-        <div className="player-deck-container" style={{ display: activeTab === 'player' ? 'block' : 'none' }}>
+        <div
+          className={`player-deck-container ${embeddedPipActive ? 'pip-host-only' : ''}`}
+          style={{ display: (activeTab === 'player' || embeddedPipActive) ? 'block' : 'none' }}
+        >
           <div className="deck-card">
               {/* Active Cast Routing Bar */}
               {(outputTarget !== 'local' || activeCastSession) && (
@@ -2453,9 +2502,16 @@ export default function App() {
                 </div>
               )}
 
-              {/* Cinema Video Stage */}
+              {/* Cinema Video Stage (morphs into embedded PiP slot when browsing other tabs while playing) */}
               {isVideoTrack(currentTrack) && (
-                <div className="cinema-stage-box">
+                <div
+                  className={`cinema-stage-box ${embeddedPipActive ? 'is-embedded-pip' : ''}`}
+                  style={embeddedPipActive
+                    ? (pipRect
+                      ? { top: `${pipRect.top}px`, left: `${pipRect.left}px`, width: `${pipRect.width}px`, height: `${pipRect.height}px` }
+                      : { opacity: 0, pointerEvents: 'none' })
+                    : undefined}
+                >
                   {outputTarget === 'local' ? (
                     <>
                     <video
@@ -2464,15 +2520,23 @@ export default function App() {
                       className={`cinema-video-el fit-${videoFit}`}
                       src={activeVideoSrc}
                       poster={artUrlFor(artBase.local, currentTrack?.artId) || undefined}
-                      controls={!isTranscodeActive}
+                      controls={!isTranscodeActive && !embeddedPipActive}
                       playsInline
                       crossOrigin="anonymous"
                       onClick={() => {
+                        if (embeddedPipActive) {
+                          setActiveTab('player');
+                          return;
+                        }
                         if (!isTranscodeActive || !videoRef.current) return;
                         if (videoRef.current.paused) { videoRef.current.play().catch(() => {}); setIsPlaying(true); }
                         else { videoRef.current.pause(); setIsPlaying(false); }
                       }}
                       onDoubleClick={(e) => {
+                        if (embeddedPipActive) {
+                          setActiveTab('player');
+                          return;
+                        }
                         if (!isTranscodeActive) return;
                         if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
                         else e.currentTarget.parentElement?.requestFullscreen?.().catch(() => {});
@@ -2589,7 +2653,34 @@ export default function App() {
                         <track kind="subtitles" src={activeProbe.subtitlesUrl} srcLang="en" label="English" />
                       )}
                     </video>
-                    {isTranscodeActive && (
+                    {embeddedPipActive && (
+                      <div
+                        className="embedded-pip-overlay"
+                        onClick={() => setActiveTab('player')}
+                        title="Click to return to Cinema Stage"
+                      >
+                        <span className="embedded-pip-badge">● LIVE PiP</span>
+                        <div className="embedded-pip-actions" onClick={(e) => e.stopPropagation()}>
+                          <button
+                            type="button"
+                            className="embedded-pip-btn"
+                            title="Pause playback"
+                            onClick={handleTogglePlayPause}
+                          >
+                            ⏸
+                          </button>
+                          <button
+                            type="button"
+                            className="embedded-pip-btn"
+                            title="Expand to Cinema Stage"
+                            onClick={() => setActiveTab('player')}
+                          >
+                            ⤢ Stage
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                    {isTranscodeActive && !embeddedPipActive && (
                       <div
                         className="cinema-transcode-controls"
                         style={{
@@ -2691,6 +2782,7 @@ export default function App() {
                       </div>
                     </div>
                   )}
+                  {!embeddedPipActive && (
                   <div className="cinema-stage-toolbar">
                     <span className="cinema-stage-badge">
                       🎬 {currentTrack?.title || 'Cinema Stage'} {currentTrack?.year ? `(${currentTrack.year})` : ''}
@@ -2782,6 +2874,7 @@ export default function App() {
                       </button>
                     </div>
                   </div>
+                  )}
                 </div>
               )}
 
@@ -3449,15 +3542,27 @@ export default function App() {
           onSettings: () => setShowDjSettings(true),
           onAiPlaylist: () => setShowAiPlaylist(true),
         }}
+        showEmbeddedPip={embeddedPipActive && !dockCollapsed}
+        pipSlotRef={!dockCollapsed ? pipSlotRef : null}
       />
       </div>
 
       {/* Persistent Bottom Mini-Player when browsing library/playlists/etc */}
       {activeTab !== 'player' && currentTrack && (
-        <footer className="mini-player-bar">
+        <footer className={`mini-player-bar ${embeddedPipActive && dockCollapsed ? 'has-embedded-pip' : ''}`}>
           <div className="mini-player-info" onClick={() => setActiveTab('player')}>
-            <div className="mini-art">
-              <Cover artId={currentTrack.artId} name={currentTrack.album || currentTrack.title} size={38} />
+            <div className={`mini-art ${embeddedPipActive ? (dockCollapsed ? 'is-pip-slot' : 'is-pip-docked') : ''}`}>
+              {embeddedPipActive ? (
+                dockCollapsed ? (
+                  <div id="embedded-pip-slot" ref={pipSlotRef} className="mini-bar-pip-slot" />
+                ) : (
+                  <div className="mini-pip-indicator" title="Video playing in embedded PiP — click for Cinema Stage">
+                    <span>● PiP</span>
+                  </div>
+                )
+              ) : (
+                <Cover artId={currentTrack.artId} name={currentTrack.album || currentTrack.title} size={38} />
+              )}
             </div>
             <div className="mini-text">
               <span className="mini-title">{currentTrack.title}</span>
@@ -3477,7 +3582,16 @@ export default function App() {
             </div>
             {outputTarget !== 'local'
               ? <CastProgress onSeek={handleCastSeek} />
-              : <MiniProgress trackId={currentTrack?.id || currentTrack?.filePath} getAudio={getMediaEl} />}
+              : (
+                <MiniProgress
+                  trackId={`${currentTrack?.id || currentTrack?.filePath || ''}:${transcodeOffsetSec}`}
+                  getAudio={getMediaEl}
+                  knownDuration={knownVideoDurationSec}
+                  offsetSec={transcodeOffsetSec}
+                  isTranscode={isTranscodeActive}
+                  onSeekOverride={isTranscodeActive ? seekVideoTo : null}
+                />
+              )}
           </div>
           <div className="mini-player-right">
             <span className="badge mini-badge">Output: {getSpeakerName(outputTarget)}</span>

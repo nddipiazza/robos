@@ -21184,7 +21184,9 @@
     repeat,
     onToggleShuffle,
     onCycleRepeat,
-    dj = null
+    dj = null,
+    showEmbeddedPip = false,
+    pipSlotRef = null
   }) {
     const ctx = useLibrary();
     const { isPlaying, actions, openMenu } = ctx;
@@ -21371,7 +21373,16 @@
         max: dockMaxWidth,
         defaultWidth: DOCK_WIDTH
       }
-    ), /* @__PURE__ */ import_react18.default.createElement("div", { className: "np-head" }, /* @__PURE__ */ import_react18.default.createElement("div", { className: "np-head-title" }, /* @__PURE__ */ import_react18.default.createElement(Icon2, { name: "list", size: 15 }), /* @__PURE__ */ import_react18.default.createElement("span", null, "Watch Queue"), /* @__PURE__ */ import_react18.default.createElement("span", { className: "np-count" }, queue.length.toLocaleString())), /* @__PURE__ */ import_react18.default.createElement("button", { id: "btn-collapse-queue-panel", className: "btn-icon-only small", title: "Hide panel", onClick: onToggleCollapsed }, /* @__PURE__ */ import_react18.default.createElement(Icon2, { name: "chevron", size: 14 }))), current && /* @__PURE__ */ import_react18.default.createElement("div", { className: "np-current", onDoubleClick: () => locateCurrent(true), title: "Double-click to locate in the list" }, /* @__PURE__ */ import_react18.default.createElement(Cover, { artId: current.artId, name: current.album || current.title, size: 44 }), /* @__PURE__ */ import_react18.default.createElement("div", { className: "np-current-text" }, /* @__PURE__ */ import_react18.default.createElement("span", { className: "np-current-title" }, current.title), /* @__PURE__ */ import_react18.default.createElement("span", { className: "np-current-sub" }, /* @__PURE__ */ import_react18.default.createElement("a", { className: "link", onClick: () => actions.goToArtist(current.artist) }, current.artist || "Feature Film"), current.album ? /* @__PURE__ */ import_react18.default.createElement(import_react18.default.Fragment, null, " \xB7 ", /* @__PURE__ */ import_react18.default.createElement("a", { className: "link", onClick: () => actions.goToAlbumOf(current) }, current.album)) : null))), dj && dj.speaking && /* @__PURE__ */ import_react18.default.createElement("div", { className: "np-dj-banner", role: "status" }, /* @__PURE__ */ import_react18.default.createElement(Icon2, { name: "mic", size: 15 }), /* @__PURE__ */ import_react18.default.createElement("div", { className: "np-dj-text" }, /* @__PURE__ */ import_react18.default.createElement("span", { className: "np-dj-label" }, dj.speaking.warming ? "Cinema Host is warming up\u2026" : dj.speaking.preview ? "Cinema Host preview" : "Cinema Host on the mic"), /* @__PURE__ */ import_react18.default.createElement("span", { className: "np-dj-line" }, dj.speaking.text)), /* @__PURE__ */ import_react18.default.createElement("button", { id: "btn-dj-skip", className: "btn-chip", onClick: dj.onSkip, title: dj.speaking.preview ? "Stop the preview" : "Skip the host and play the next movie" }, dj.speaking.preview ? "Stop" : "Skip")), /* @__PURE__ */ import_react18.default.createElement("div", { className: "np-filter search-box" }, /* @__PURE__ */ import_react18.default.createElement(Icon2, { name: "search", size: 13 }), /* @__PURE__ */ import_react18.default.createElement(
+    ), /* @__PURE__ */ import_react18.default.createElement("div", { className: "np-head" }, /* @__PURE__ */ import_react18.default.createElement("div", { className: "np-head-title" }, /* @__PURE__ */ import_react18.default.createElement(Icon2, { name: "list", size: 15 }), /* @__PURE__ */ import_react18.default.createElement("span", null, "Watch Queue"), /* @__PURE__ */ import_react18.default.createElement("span", { className: "np-count" }, queue.length.toLocaleString())), /* @__PURE__ */ import_react18.default.createElement("button", { id: "btn-collapse-queue-panel", className: "btn-icon-only small", title: "Hide panel", onClick: onToggleCollapsed }, /* @__PURE__ */ import_react18.default.createElement(Icon2, { name: "chevron", size: 14 }))), current && /* @__PURE__ */ import_react18.default.createElement(
+      "div",
+      {
+        className: `np-current ${showEmbeddedPip ? "has-pip" : ""}`,
+        onDoubleClick: () => locateCurrent(true),
+        title: "Double-click to locate in the list"
+      },
+      showEmbeddedPip ? /* @__PURE__ */ import_react18.default.createElement("div", { id: "embedded-pip-slot", ref: pipSlotRef, className: "np-pip-slot" }) : /* @__PURE__ */ import_react18.default.createElement(Cover, { artId: current.artId, name: current.album || current.title, size: 44 }),
+      /* @__PURE__ */ import_react18.default.createElement("div", { className: "np-current-text" }, /* @__PURE__ */ import_react18.default.createElement("span", { className: "np-current-title" }, current.title), /* @__PURE__ */ import_react18.default.createElement("span", { className: "np-current-sub" }, /* @__PURE__ */ import_react18.default.createElement("a", { className: "link", onClick: () => actions.goToArtist(current.artist) }, current.artist || "Feature Film"), current.album ? /* @__PURE__ */ import_react18.default.createElement(import_react18.default.Fragment, null, " \xB7 ", /* @__PURE__ */ import_react18.default.createElement("a", { className: "link", onClick: () => actions.goToAlbumOf(current) }, current.album)) : null))
+    ), dj && dj.speaking && /* @__PURE__ */ import_react18.default.createElement("div", { className: "np-dj-banner", role: "status" }, /* @__PURE__ */ import_react18.default.createElement(Icon2, { name: "mic", size: 15 }), /* @__PURE__ */ import_react18.default.createElement("div", { className: "np-dj-text" }, /* @__PURE__ */ import_react18.default.createElement("span", { className: "np-dj-label" }, dj.speaking.warming ? "Cinema Host is warming up\u2026" : dj.speaking.preview ? "Cinema Host preview" : "Cinema Host on the mic"), /* @__PURE__ */ import_react18.default.createElement("span", { className: "np-dj-line" }, dj.speaking.text)), /* @__PURE__ */ import_react18.default.createElement("button", { id: "btn-dj-skip", className: "btn-chip", onClick: dj.onSkip, title: dj.speaking.preview ? "Stop the preview" : "Skip the host and play the next movie" }, dj.speaking.preview ? "Stop" : "Skip")), /* @__PURE__ */ import_react18.default.createElement("div", { className: "np-filter search-box" }, /* @__PURE__ */ import_react18.default.createElement(Icon2, { name: "search", size: 13 }), /* @__PURE__ */ import_react18.default.createElement(
       "input",
       {
         id: "queue-filter",
@@ -22783,6 +22794,8 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
     const [quickPlaylistName, setQuickPlaylistName] = (0, import_react26.useState)("");
     const playerRef = (0, import_react26.useRef)(null);
     const videoRef = (0, import_react26.useRef)(null);
+    const pipSlotRef = (0, import_react26.useRef)(null);
+    const [pipRect, setPipRect] = (0, import_react26.useState)(null);
     const [videoFit, setVideoFit] = (0, import_react26.useState)("contain");
     const getMediaEl = () => isVideoTrack(latestRef.current.currentTrack) && videoRef.current ? videoRef.current : playerRef.current?.audio?.current;
     const audioCtxRef = (0, import_react26.useRef)(null);
@@ -23575,6 +23588,45 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
       }
       return rawResolvedSrc;
     })();
+    const embeddedPipActive = Boolean(
+      activeTab !== "player" && isPlaying && outputTarget === "local" && isVideoTrack(currentTrack)
+    );
+    (0, import_react26.useLayoutEffect)(() => {
+      if (!embeddedPipActive) {
+        setPipRect(null);
+        return void 0;
+      }
+      let rafId = null;
+      const measure = () => {
+        const el = pipSlotRef.current;
+        if (!el) return;
+        const r = el.getBoundingClientRect();
+        if (r.width <= 0 || r.height <= 0) return;
+        setPipRect((prev) => {
+          const top = Math.round(r.top);
+          const left = Math.round(r.left);
+          const width = Math.round(r.width);
+          const height = Math.round(r.height);
+          if (prev && prev.top === top && prev.left === left && prev.width === width && prev.height === height) {
+            return prev;
+          }
+          return { top, left, width, height };
+        });
+      };
+      measure();
+      rafId = requestAnimationFrame(measure);
+      const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(measure) : null;
+      if (ro) {
+        if (pipSlotRef.current) ro.observe(pipSlotRef.current);
+        if (document.body) ro.observe(document.body);
+      }
+      window.addEventListener("resize", measure);
+      return () => {
+        if (rafId) cancelAnimationFrame(rafId);
+        if (ro) ro.disconnect();
+        window.removeEventListener("resize", measure);
+      };
+    }, [embeddedPipActive, dockCollapsed, activeTab, currentTrack?.id]);
     const seekVideoTo = (0, import_react26.useCallback)((rawTarget) => {
       const v = videoRef.current;
       const maxDur = knownVideoDurationSec || (v && isFinite(v.duration) && v.duration > 0 ? v.duration : 0);
@@ -24899,448 +24951,498 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
             width: `${metadataFetchStatus?.total > 0 ? Math.min(100, Math.round((metadataFetchStatus.current || 0) / metadataFetchStatus.total * 100)) : 100}%`
           }
         }
-      )), /* @__PURE__ */ import_react26.default.createElement("button", { className: "btn-cancel-scan", onClick: handleCancelPublicMetadata }, "Cancel")), /* @__PURE__ */ import_react26.default.createElement("div", { className: "player-deck-container", style: { display: activeTab === "player" ? "block" : "none" } }, /* @__PURE__ */ import_react26.default.createElement("div", { className: "deck-card" }, (outputTarget !== "local" || activeCastSession) && /* @__PURE__ */ import_react26.default.createElement("div", { className: "active-cast-bar" }, /* @__PURE__ */ import_react26.default.createElement("div", { className: "cast-bar-indicator" }, /* @__PURE__ */ import_react26.default.createElement(
-        "span",
-        {
-          className: "cast-pulse-dot",
-          style: { background: activeCastSession?.isPaused ? "#eab308" : "#22c55e" }
-        }
-      ), /* @__PURE__ */ import_react26.default.createElement("span", null, activeCastSession ? `Casting "${activeCastSession.title || currentTrack?.title || "Movie"}" to ${getSpeakerName(activeCastSession.ip)}${activeCastSession.isPaused ? " (Paused)" : " (Live)"}` : `Output routed to ${getSpeakerName(outputTarget)} (Local desktop muted)`)), /* @__PURE__ */ import_react26.default.createElement("div", { className: "cast-bar-controls" }, activeCastSession && /* @__PURE__ */ import_react26.default.createElement("button", { className: "btn-chip", onClick: handleToggleCastPause }, activeCastSession.isPaused ? "Resume cast" : "Pause cast"), /* @__PURE__ */ import_react26.default.createElement(
-        "button",
-        {
-          className: "btn-chip btn-stop-cast",
-          onClick: () => handleStopCast(activeCastSession?.ip || (outputTarget !== "local" ? outputTarget : speakers[0]?.ip))
-        },
-        "Stop Cast"
-      ), outputTarget !== "local" && /* @__PURE__ */ import_react26.default.createElement("button", { className: "btn-chip", onClick: () => {
-        setOutputTarget("local");
-        handleStopCast();
-      } }, "Switch to Local Desktop"))), isVideoTrack(currentTrack) && /* @__PURE__ */ import_react26.default.createElement("div", { className: "cinema-stage-box" }, outputTarget === "local" ? /* @__PURE__ */ import_react26.default.createElement(import_react26.default.Fragment, null, /* @__PURE__ */ import_react26.default.createElement(
-        "video",
-        {
-          id: "cinema-video-element",
-          ref: videoRef,
-          className: `cinema-video-el fit-${videoFit}`,
-          src: activeVideoSrc,
-          poster: artUrlFor(artBase.local, currentTrack?.artId) || void 0,
-          controls: !isTranscodeActive,
-          playsInline: true,
-          crossOrigin: "anonymous",
-          onClick: () => {
-            if (!isTranscodeActive || !videoRef.current) return;
-            if (videoRef.current.paused) {
-              videoRef.current.play().catch(() => {
-              });
-              setIsPlaying(true);
-            } else {
-              videoRef.current.pause();
-              setIsPlaying(false);
-            }
-          },
-          onDoubleClick: (e) => {
-            if (!isTranscodeActive) return;
-            if (document.fullscreenElement) document.exitFullscreen().catch(() => {
-            });
-            else e.currentTarget.parentElement?.requestFullscreen?.().catch(() => {
-            });
-          },
-          onLoadedMetadata: (e) => {
-            const d = e.currentTarget?.duration;
-            if (!isTranscodeActive && d && isFinite(d) && d > 0) {
-              if (currentTrack && !currentTrack.duration) currentTrack.duration = d;
-            }
-            const pend = pendingLocalSeekRef.current;
-            const at = typeof pend === "number" ? pend : pend && (!pend.trackId || pend.trackId === currentTrack?.id) ? Number(pend.positionSec) || 0 : null;
-            if (at != null && at > 0 && e.currentTarget) {
-              pendingLocalSeekRef.current = null;
-              if (isTranscodeActive) {
-                seekVideoTo(at);
-              } else {
-                e.currentTarget.currentTime = at;
-              }
-            }
-          },
-          onDurationChange: (e) => {
-            const d = e.currentTarget?.duration;
-            if (!isTranscodeActive && d && isFinite(d) && d > 0) {
-              if (currentTrack && !currentTrack.duration) currentTrack.duration = d;
-            }
-          },
-          onTimeUpdate: (e) => {
-            const v = e.currentTarget;
-            if (!v || !currentTrack) return;
-            const pos = transcodeOffsetSec + (v.currentTime || 0);
-            const dur = knownVideoDurationSec > 0 ? knownVideoDurationSec : !isTranscodeActive && isFinite(v.duration) && v.duration > 0 ? v.duration : Number(currentTrack.duration) || 0;
-            const key = `${currentTrackIndex}:${currentTrack.id || currentTrack.src}`;
-            if (playedRef.current.key !== key) playedRef.current = { key, counted: false };
-            if (!playedRef.current.counted && pos >= Math.min(30, (dur || 60) / 2)) {
-              playedRef.current.counted = true;
-              recordPlay(currentTrack);
-            }
-            if (pos >= 1) {
-              saveTrackProgress(currentTrack, pos, dur, false);
-            }
-          },
-          onSeeked: (e) => {
-            const v = e.currentTarget;
-            const sec = transcodeOffsetSec + (v?.currentTime || 0);
-            const dur = knownVideoDurationSec > 0 ? knownVideoDurationSec : !isTranscodeActive && v && isFinite(v.duration) && v.duration > 0 ? v.duration : Number(currentTrack?.duration) || 0;
-            if (currentTrack && sec >= 1) {
-              saveTrackProgress(currentTrack, sec, dur, false, { force: true });
-            }
-          },
-          onPlay: (e) => {
-            setIsPlaying(true);
-            if (!currentTrack?.id) return;
-            const st = stats[currentTrack.id] || {};
-            if (!st.completed && !st.inProgress) {
-              const v = e.currentTarget;
-              const pos = transcodeOffsetSec + (v?.currentTime || 0);
-              const dur = knownVideoDurationSec > 0 ? knownVideoDurationSec : !isTranscodeActive && v && isFinite(v.duration) && v.duration > 0 ? v.duration : Number(currentTrack.duration) || 0;
-              const resumeSec = resolveResumeSecForTrack(currentTrack);
-              saveTrackProgress(currentTrack, Math.max(pos, resumeSec), dur, false, { force: true, started: true });
-            }
-          },
-          onPause: (e) => {
-            setIsPlaying(false);
-            const v = e.currentTarget;
-            const pos = transcodeOffsetSec + (v?.currentTime || 0);
-            const dur = knownVideoDurationSec > 0 ? knownVideoDurationSec : !isTranscodeActive && v && isFinite(v.duration) && v.duration > 0 ? v.duration : Number(currentTrack?.duration) || 0;
-            if (v && currentTrack && pos >= 1) {
-              saveTrackProgress(currentTrack, pos, dur, false, { force: true });
-            }
-          },
-          onEnded: (e) => {
-            const v = e.currentTarget;
-            const dur = knownVideoDurationSec > 0 ? knownVideoDurationSec : !isTranscodeActive && v && isFinite(v.duration) && v.duration > 0 ? v.duration : Number(currentTrack?.duration) || 0;
-            if (currentTrack) saveTrackProgress(currentTrack, dur || 100, dur || 100, true, { force: true });
-            handleTrackEnded();
-          },
-          onError: (e) => {
-            const v = e.currentTarget;
-            const tcUrl = activeProbe?.transcodeUrl || currentTrack?.mediaService?.transcodeUrl;
-            if (v && tcUrl && !String(v.src).includes("/transcode/")) {
-              const pend = pendingLocalSeekRef.current;
-              const pendSec = typeof pend === "number" ? pend : pend && (!pend.trackId || pend.trackId === currentTrack?.id) ? Number(pend.positionSec) || 0 : 0;
-              const fallbackOffset = pendSec > 0 ? Math.floor(pendSec) : resolveResumeSecForTrack(currentTrack);
-              pendingLocalSeekRef.current = null;
-              showStatus(`Switching "${currentTrack.title}" to live H.264/AAC stream\u2026`);
-              setPlaybackProbe((prev) => ({
-                ...prev && prev.trackId === currentTrack.id ? prev : { trackId: currentTrack.id, durationSec: knownVideoDurationSec },
-                transcodeUrl: tcUrl,
-                needsTranscode: true,
-                forceTranscode: true,
-                offsetSec: fallbackOffset
-              }));
-              setTimeout(() => {
-                videoRef.current?.play().catch(() => {
-                });
-              }, 60);
-            }
-          }
-        },
-        activeProbe?.hasSubtitles && activeProbe?.subtitlesUrl && /* @__PURE__ */ import_react26.default.createElement("track", { kind: "subtitles", src: activeProbe.subtitlesUrl, srcLang: "en", label: "English" })
-      ), isTranscodeActive && /* @__PURE__ */ import_react26.default.createElement(
+      )), /* @__PURE__ */ import_react26.default.createElement("button", { className: "btn-cancel-scan", onClick: handleCancelPublicMetadata }, "Cancel")), /* @__PURE__ */ import_react26.default.createElement(
         "div",
         {
-          className: "cinema-transcode-controls",
-          style: {
-            display: "flex",
-            alignItems: "center",
-            gap: "10px",
-            padding: "8px 14px",
-            background: "rgba(10, 14, 24, 0.94)",
-            borderTop: "1px solid rgba(232, 163, 61, 0.22)"
-          }
+          className: `player-deck-container ${embeddedPipActive ? "pip-host-only" : ""}`,
+          style: { display: activeTab === "player" || embeddedPipActive ? "block" : "none" }
         },
-        /* @__PURE__ */ import_react26.default.createElement(
+        /* @__PURE__ */ import_react26.default.createElement("div", { className: "deck-card" }, (outputTarget !== "local" || activeCastSession) && /* @__PURE__ */ import_react26.default.createElement("div", { className: "active-cast-bar" }, /* @__PURE__ */ import_react26.default.createElement("div", { className: "cast-bar-indicator" }, /* @__PURE__ */ import_react26.default.createElement(
+          "span",
+          {
+            className: "cast-pulse-dot",
+            style: { background: activeCastSession?.isPaused ? "#eab308" : "#22c55e" }
+          }
+        ), /* @__PURE__ */ import_react26.default.createElement("span", null, activeCastSession ? `Casting "${activeCastSession.title || currentTrack?.title || "Movie"}" to ${getSpeakerName(activeCastSession.ip)}${activeCastSession.isPaused ? " (Paused)" : " (Live)"}` : `Output routed to ${getSpeakerName(outputTarget)} (Local desktop muted)`)), /* @__PURE__ */ import_react26.default.createElement("div", { className: "cast-bar-controls" }, activeCastSession && /* @__PURE__ */ import_react26.default.createElement("button", { className: "btn-chip", onClick: handleToggleCastPause }, activeCastSession.isPaused ? "Resume cast" : "Pause cast"), /* @__PURE__ */ import_react26.default.createElement(
           "button",
           {
-            type: "button",
-            className: "btn-chip",
-            onClick: () => {
-              const v = videoRef.current;
-              if (!v) return;
-              if (v.paused) {
-                v.play().catch(() => {
-                });
-                setIsPlaying(true);
-              } else {
-                v.pause();
-                setIsPlaying(false);
-              }
-            },
-            title: isPlaying ? "Pause" : "Play"
+            className: "btn-chip btn-stop-cast",
+            onClick: () => handleStopCast(activeCastSession?.ip || (outputTarget !== "local" ? outputTarget : speakers[0]?.ip))
           },
-          isPlaying ? "\u23F8" : "\u25B6"
-        ),
-        /* @__PURE__ */ import_react26.default.createElement(
-          "button",
+          "Stop Cast"
+        ), outputTarget !== "local" && /* @__PURE__ */ import_react26.default.createElement("button", { className: "btn-chip", onClick: () => {
+          setOutputTarget("local");
+          handleStopCast();
+        } }, "Switch to Local Desktop"))), isVideoTrack(currentTrack) && /* @__PURE__ */ import_react26.default.createElement(
+          "div",
           {
-            type: "button",
-            className: "btn-chip",
-            onClick: () => seekVideoTo(transcodeOffsetSec + (videoRef.current?.currentTime || 0) - 15),
-            title: "Rewind 15s"
+            className: `cinema-stage-box ${embeddedPipActive ? "is-embedded-pip" : ""}`,
+            style: embeddedPipActive ? pipRect ? { top: `${pipRect.top}px`, left: `${pipRect.left}px`, width: `${pipRect.width}px`, height: `${pipRect.height}px` } : { opacity: 0, pointerEvents: "none" } : void 0
           },
-          "-15s"
-        ),
-        /* @__PURE__ */ import_react26.default.createElement(
-          "button",
-          {
-            type: "button",
-            className: "btn-chip",
-            onClick: () => seekVideoTo(transcodeOffsetSec + (videoRef.current?.currentTime || 0) + 15),
-            title: "Forward 15s"
-          },
-          "+15s"
-        ),
-        /* @__PURE__ */ import_react26.default.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ import_react26.default.createElement(
-          MiniProgress,
-          {
-            trackId: `${currentTrack?.id || ""}:${transcodeOffsetSec}`,
-            getAudio: () => videoRef.current,
-            knownDuration: knownVideoDurationSec,
-            offsetSec: transcodeOffsetSec,
-            isTranscode: true,
-            onSeekOverride: seekVideoTo
-          }
-        )),
-        /* @__PURE__ */ import_react26.default.createElement(
-          "button",
-          {
-            type: "button",
-            className: "btn-chip",
-            onClick: (e) => {
-              const box = e.currentTarget.closest(".cinema-stage-box");
-              if (document.fullscreenElement) document.exitFullscreen().catch(() => {
-              });
-              else box?.requestFullscreen?.().catch(() => {
-              });
-            },
-            title: "Toggle Fullscreen"
-          },
-          "\u26F6"
-        )
-      )) : /* @__PURE__ */ import_react26.default.createElement(
-        "div",
-        {
-          id: "cinema-cast-stage",
-          className: "cinema-video-el",
-          style: {
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "14px",
-            padding: "28px",
-            background: "radial-gradient(circle at center, rgba(232,163,61,0.12) 0%, rgba(10,12,18,0.96) 75%)",
-            textAlign: "center",
-            minHeight: "260px"
-          }
-        },
-        artUrlFor(artBase.local, currentTrack?.artId) && /* @__PURE__ */ import_react26.default.createElement(
-          "img",
-          {
-            src: artUrlFor(artBase.local, currentTrack?.artId),
-            alt: "",
-            style: {
-              maxHeight: "160px",
-              borderRadius: "8px",
-              boxShadow: "0 8px 24px rgba(0,0,0,0.6)",
-              objectFit: "cover"
-            }
-          }
-        ),
-        /* @__PURE__ */ import_react26.default.createElement("div", { style: { fontSize: "16px", fontWeight: 700, color: "#f8fafc" } }, "\u{1F4FA} Playing on ", getSpeakerName(outputTarget)),
-        /* @__PURE__ */ import_react26.default.createElement("div", { style: { fontSize: "13px", color: "#94a3b8", maxWidth: "520px" } }, currentTrack?.title, " \u2014 Local desktop video decoding is paused while casting so your Smart TV gets 100% of stream bandwidth with zero stutter.")
-      ), /* @__PURE__ */ import_react26.default.createElement("div", { className: "cinema-stage-toolbar" }, /* @__PURE__ */ import_react26.default.createElement("span", { className: "cinema-stage-badge" }, "\u{1F3AC} ", currentTrack?.title || "Cinema Stage", " ", currentTrack?.year ? `(${currentTrack.year})` : ""), /* @__PURE__ */ import_react26.default.createElement("div", { className: "cinema-stage-actions" }, /* @__PURE__ */ import_react26.default.createElement(
-        "button",
-        {
-          type: "button",
-          className: "btn-chip",
-          onClick: () => setVideoFit((f) => f === "contain" ? "cover" : "contain"),
-          title: "Toggle widescreen aspect fit"
-        },
-        "Fit: ",
-        videoFit === "contain" ? "Letterbox" : "Fill"
-      ), /* @__PURE__ */ import_react26.default.createElement(
-        "button",
-        {
-          type: "button",
-          className: "btn-chip",
-          onClick: () => {
-            if (videoRef.current && document.pictureInPictureEnabled) {
-              if (document.pictureInPictureElement) document.exitPictureInPicture().catch(() => {
-              });
-              else videoRef.current.requestPictureInPicture().catch(() => {
-              });
-            }
-          },
-          title: "Toggle Picture-in-Picture"
-        },
-        "PiP"
-      ), speakers.length > 0 && /* @__PURE__ */ import_react26.default.createElement(import_react26.default.Fragment, null, /* @__PURE__ */ import_react26.default.createElement(
-        "button",
-        {
-          type: "button",
-          className: "btn-chip",
-          style: { borderColor: "#e8a33d", color: "#e8a33d" },
-          onClick: () => {
-            const target = outputTarget !== "local" ? outputTarget : speakers[0].ip;
-            setOutputTarget(target);
-            const v = videoRef.current;
-            const from = v ? v.currentTime : 0;
-            if (v) {
-              v.pause();
-              v.muted = true;
-            }
-            if (currentTrack) {
-              castTrack(target, currentTrack, { startAt: from > 1 ? from : 0 });
-              setIsPlaying(true);
-            }
-          },
-          title: `Cast movie to ${getSpeakerName(outputTarget !== "local" ? outputTarget : speakers[0].ip)}`
-        },
-        "\u{1F4FA} Cast to ",
-        outputTarget !== "local" ? getSpeakerName(outputTarget) : speakers[0].name
-      ), /* @__PURE__ */ import_react26.default.createElement(
-        "button",
-        {
-          type: "button",
-          className: "btn-chip",
-          style: { borderColor: "#38bdf8", color: "#38bdf8" },
-          onClick: async () => {
-            const target = outputTarget !== "local" ? outputTarget : speakers[0].ip;
-            if (window.robosAudio?.launchTvLibrary) {
-              const res = await window.robosAudio.launchTvLibrary(target);
-              if (res && res.ok) {
-                showStatus(`\u{1F4FA} 10-Foot Movie Library opened on ${getSpeakerName(target)}! Use your TV remote D-Pad (Up/Down/OK) to browse & play.`);
-              }
-            }
-          },
-          title: "Open the interactive 10-foot Movie Library on your Smart TV so you can browse and play movies with your physical TV remote"
-        },
-        "\u{1F3AE} TV Library (Remote UI)"
-      ), /* @__PURE__ */ import_react26.default.createElement(
-        "button",
-        {
-          type: "button",
-          className: "btn-chip btn-stop-cast",
-          onClick: () => {
-            const target = activeCastSession?.ip || (outputTarget !== "local" ? outputTarget : speakers[0].ip);
-            setOutputTarget("local");
-            handleStopCast(target);
-          },
-          title: `Stop movie playback on ${getSpeakerName(activeCastSession?.ip || (outputTarget !== "local" ? outputTarget : speakers[0].ip))}`
-        },
-        "\u23F9 Stop TV"
-      )), /* @__PURE__ */ import_react26.default.createElement(
-        "button",
-        {
-          type: "button",
-          className: "btn-chip",
-          onClick: () => {
-            const v = videoRef.current;
-            if (v && v.requestFullscreen) v.requestFullscreen().catch(() => {
-            });
-          },
-          title: "Fullscreen video"
-        },
-        "Fullscreen"
-      )))), /* @__PURE__ */ import_react26.default.createElement("div", { className: "track-hero" }, /* @__PURE__ */ import_react26.default.createElement("div", { className: "album-art-box" }, /* @__PURE__ */ import_react26.default.createElement(Cover, { artId: currentTrack?.artId, name: currentTrack?.album || currentTrack?.title, icon: currentTrack?.artId ? null : "disc" })), /* @__PURE__ */ import_react26.default.createElement("div", { className: "track-details" }, /* @__PURE__ */ import_react26.default.createElement("h2", { id: "track-title" }, currentTrack?.title || "No Track Selected", currentTrack && /* @__PURE__ */ import_react26.default.createElement(LoveButton, { track: currentTrack, size: 16 })), /* @__PURE__ */ import_react26.default.createElement("p", { id: "track-artist" }, /* @__PURE__ */ import_react26.default.createElement("a", { className: "link", onClick: () => currentTrack && goToArtist(currentTrack.artist) }, currentTrack?.artist || "Unknown Artist"), " ", "\u2022", " ", /* @__PURE__ */ import_react26.default.createElement("a", { className: "link", onClick: () => currentTrack && goToAlbumOf(currentTrack) }, currentTrack?.album || "RobOS Library")), /* @__PURE__ */ import_react26.default.createElement("div", { className: "track-meta-pills" }, /* @__PURE__ */ import_react26.default.createElement("span", { className: "badge" }, "Output: ", getSpeakerName(outputTarget)), activeCastSession && /* @__PURE__ */ import_react26.default.createElement("span", { className: "badge", style: { color: "#22c55e", borderColor: "#22c55e" } }, activeCastSession.isPaused ? "Cast Paused" : "Casting Active"), currentTrack?.genre && /* @__PURE__ */ import_react26.default.createElement("span", { className: "badge link", onClick: () => goToGenre(currentTrack.genre) }, currentTrack.genre), currentTrack?.year && /* @__PURE__ */ import_react26.default.createElement("span", { className: "badge" }, currentTrack.year))), /* @__PURE__ */ import_react26.default.createElement("div", { className: "hero-quick-actions" }, /* @__PURE__ */ import_react26.default.createElement("button", { className: "btn-secondary", onClick: handleSelectFolder, title: "Add folder via file manager" }, "Add Folder"), /* @__PURE__ */ import_react26.default.createElement("button", { className: "btn-secondary", onClick: handleAddFiles, title: "Add files" }, "Add Files"))), /* @__PURE__ */ import_react26.default.createElement("div", { className: "react-h5-wrapper" }, /* @__PURE__ */ import_react26.default.createElement(
-        es_default,
-        {
-          ref: playerRef,
-          src: outputTarget === "local" && !isVideoTrack(currentTrack) ? resolveSrc(currentTrack) : void 0,
-          onLoadedMetaData: () => {
-            const at = pendingLocalSeekRef.current;
-            const a = getMediaEl();
-            if (at != null && a) {
-              pendingLocalSeekRef.current = null;
-              a.currentTime = at;
-            }
-          },
-          customProgressBarSection: outputTarget !== "local" ? [/* @__PURE__ */ import_react26.default.createElement(CastProgress, { key: "cast-progress", className: "mini-progress rhap-cast-progress", id: "cast-progress", onSeek: handleCastSeek })] : isVideoTrack(currentTrack) ? [/* @__PURE__ */ import_react26.default.createElement(
-            MiniProgress,
+          outputTarget === "local" ? /* @__PURE__ */ import_react26.default.createElement(import_react26.default.Fragment, null, /* @__PURE__ */ import_react26.default.createElement(
+            "video",
             {
-              key: "video-progress",
-              trackId: `${currentTrack?.id || currentTrack?.filePath || ""}:${transcodeOffsetSec}`,
-              getAudio: () => videoRef.current,
-              knownDuration: knownVideoDurationSec,
-              offsetSec: transcodeOffsetSec,
-              isTranscode: isTranscodeActive,
-              onSeekOverride: seekVideoTo
-            }
-          )] : void 0,
-          customControlsSection: outputTarget !== "local" || isVideoTrack(currentTrack) ? [
-            RHAP_UI.ADDITIONAL_CONTROLS,
-            /* @__PURE__ */ import_react26.default.createElement("div", { key: "video-cast-controls", className: "rhap_main-controls" }, /* @__PURE__ */ import_react26.default.createElement("button", { type: "button", className: "rhap_button-clear rhap_main-controls-button rhap_skip-button", "aria-label": "Previous", onClick: handlePlayPrev }, /* @__PURE__ */ import_react26.default.createElement(Icon2, { name: "prev", size: 24 })), /* @__PURE__ */ import_react26.default.createElement(
-              "button",
-              {
-                type: "button",
-                id: "cast-play-pause",
-                className: "rhap_button-clear rhap_main-controls-button rhap_play-pause-button",
-                "aria-label": isPlaying ? "Pause" : "Play",
-                onClick: () => {
-                  if (outputTarget === "local" && isVideoTrack(currentTrack) && videoRef.current) {
-                    if (videoRef.current.paused) {
-                      videoRef.current.play().catch(() => {
-                      });
-                      setIsPlaying(true);
-                    } else {
-                      videoRef.current.pause();
-                      setIsPlaying(false);
-                    }
+              id: "cinema-video-element",
+              ref: videoRef,
+              className: `cinema-video-el fit-${videoFit}`,
+              src: activeVideoSrc,
+              poster: artUrlFor(artBase.local, currentTrack?.artId) || void 0,
+              controls: !isTranscodeActive && !embeddedPipActive,
+              playsInline: true,
+              crossOrigin: "anonymous",
+              onClick: () => {
+                if (embeddedPipActive) {
+                  setActiveTab("player");
+                  return;
+                }
+                if (!isTranscodeActive || !videoRef.current) return;
+                if (videoRef.current.paused) {
+                  videoRef.current.play().catch(() => {
+                  });
+                  setIsPlaying(true);
+                } else {
+                  videoRef.current.pause();
+                  setIsPlaying(false);
+                }
+              },
+              onDoubleClick: (e) => {
+                if (embeddedPipActive) {
+                  setActiveTab("player");
+                  return;
+                }
+                if (!isTranscodeActive) return;
+                if (document.fullscreenElement) document.exitFullscreen().catch(() => {
+                });
+                else e.currentTarget.parentElement?.requestFullscreen?.().catch(() => {
+                });
+              },
+              onLoadedMetadata: (e) => {
+                const d = e.currentTarget?.duration;
+                if (!isTranscodeActive && d && isFinite(d) && d > 0) {
+                  if (currentTrack && !currentTrack.duration) currentTrack.duration = d;
+                }
+                const pend = pendingLocalSeekRef.current;
+                const at = typeof pend === "number" ? pend : pend && (!pend.trackId || pend.trackId === currentTrack?.id) ? Number(pend.positionSec) || 0 : null;
+                if (at != null && at > 0 && e.currentTarget) {
+                  pendingLocalSeekRef.current = null;
+                  if (isTranscodeActive) {
+                    seekVideoTo(at);
                   } else {
-                    handleTogglePlayPause();
+                    e.currentTarget.currentTime = at;
                   }
                 }
               },
-              /* @__PURE__ */ import_react26.default.createElement(Icon2, { name: isPlaying ? "pause" : "play", size: 34 })
-            ), /* @__PURE__ */ import_react26.default.createElement("button", { type: "button", className: "rhap_button-clear rhap_main-controls-button rhap_skip-button", "aria-label": "Next", onClick: handlePlayNext }, /* @__PURE__ */ import_react26.default.createElement(Icon2, { name: "next", size: 24 }))),
-            /* @__PURE__ */ import_react26.default.createElement("div", { key: "cast-spacer", className: "rhap_volume-controls" })
-          ] : void 0,
-          showSkipControls: true,
-          showJumpControls: false,
-          autoPlayAfterSrcChange: isPlaying,
-          onClickNext: handlePlayNext,
-          onClickPrevious: handlePlayPrev,
-          onEnded: () => {
-            if (outputTarget === "local") handleTrackEnded();
-          },
-          onPlay: handlePlayerPlay,
-          onPause: handlePlayerPause,
-          onError: (e) => {
-            if (!currentTrack || outputTarget !== "local") return;
-            console.warn("[AudioPlayer] Audio playback error:", e);
-            setIsPlaying(false);
-            showStatus("Playback error: Track file may be missing, network drive unmounted, or format unsupported.");
-          },
-          className: "robos-rhap-theme",
-          customIcons: {
-            play: /* @__PURE__ */ import_react26.default.createElement(Icon2, { name: "play", size: 34 }),
-            pause: /* @__PURE__ */ import_react26.default.createElement(Icon2, { name: "pause", size: 34 }),
-            previous: /* @__PURE__ */ import_react26.default.createElement(Icon2, { name: "prev", size: 24 }),
-            next: /* @__PURE__ */ import_react26.default.createElement(Icon2, { name: "next", size: 24 }),
-            volume: /* @__PURE__ */ import_react26.default.createElement(Icon2, { name: "volume", size: 20 }),
-            volumeMute: /* @__PURE__ */ import_react26.default.createElement(Icon2, { name: "volumeMute", size: 20 })
-          },
-          layout: "stacked",
-          customAdditionalControls: [],
-          muted: outputTarget !== "local"
-        }
-      )), /* @__PURE__ */ import_react26.default.createElement(
-        Lyrics,
-        {
-          track: currentTrack,
-          getTime: () => outputTarget !== "local" ? castClock.now() : isTranscodeActive ? transcodeOffsetSec + (getMediaEl()?.currentTime || 0) : getMediaEl()?.currentTime ?? null,
-          onSeek: (t) => {
-            if (outputTarget !== "local") handleCastSeek(t);
-            else if (isVideoTrack(currentTrack)) seekVideoTo(t);
-            else if (getMediaEl()) getMediaEl().currentTime = t;
+              onDurationChange: (e) => {
+                const d = e.currentTarget?.duration;
+                if (!isTranscodeActive && d && isFinite(d) && d > 0) {
+                  if (currentTrack && !currentTrack.duration) currentTrack.duration = d;
+                }
+              },
+              onTimeUpdate: (e) => {
+                const v = e.currentTarget;
+                if (!v || !currentTrack) return;
+                const pos = transcodeOffsetSec + (v.currentTime || 0);
+                const dur = knownVideoDurationSec > 0 ? knownVideoDurationSec : !isTranscodeActive && isFinite(v.duration) && v.duration > 0 ? v.duration : Number(currentTrack.duration) || 0;
+                const key = `${currentTrackIndex}:${currentTrack.id || currentTrack.src}`;
+                if (playedRef.current.key !== key) playedRef.current = { key, counted: false };
+                if (!playedRef.current.counted && pos >= Math.min(30, (dur || 60) / 2)) {
+                  playedRef.current.counted = true;
+                  recordPlay(currentTrack);
+                }
+                if (pos >= 1) {
+                  saveTrackProgress(currentTrack, pos, dur, false);
+                }
+              },
+              onSeeked: (e) => {
+                const v = e.currentTarget;
+                const sec = transcodeOffsetSec + (v?.currentTime || 0);
+                const dur = knownVideoDurationSec > 0 ? knownVideoDurationSec : !isTranscodeActive && v && isFinite(v.duration) && v.duration > 0 ? v.duration : Number(currentTrack?.duration) || 0;
+                if (currentTrack && sec >= 1) {
+                  saveTrackProgress(currentTrack, sec, dur, false, { force: true });
+                }
+              },
+              onPlay: (e) => {
+                setIsPlaying(true);
+                if (!currentTrack?.id) return;
+                const st = stats[currentTrack.id] || {};
+                if (!st.completed && !st.inProgress) {
+                  const v = e.currentTarget;
+                  const pos = transcodeOffsetSec + (v?.currentTime || 0);
+                  const dur = knownVideoDurationSec > 0 ? knownVideoDurationSec : !isTranscodeActive && v && isFinite(v.duration) && v.duration > 0 ? v.duration : Number(currentTrack.duration) || 0;
+                  const resumeSec = resolveResumeSecForTrack(currentTrack);
+                  saveTrackProgress(currentTrack, Math.max(pos, resumeSec), dur, false, { force: true, started: true });
+                }
+              },
+              onPause: (e) => {
+                setIsPlaying(false);
+                const v = e.currentTarget;
+                const pos = transcodeOffsetSec + (v?.currentTime || 0);
+                const dur = knownVideoDurationSec > 0 ? knownVideoDurationSec : !isTranscodeActive && v && isFinite(v.duration) && v.duration > 0 ? v.duration : Number(currentTrack?.duration) || 0;
+                if (v && currentTrack && pos >= 1) {
+                  saveTrackProgress(currentTrack, pos, dur, false, { force: true });
+                }
+              },
+              onEnded: (e) => {
+                const v = e.currentTarget;
+                const dur = knownVideoDurationSec > 0 ? knownVideoDurationSec : !isTranscodeActive && v && isFinite(v.duration) && v.duration > 0 ? v.duration : Number(currentTrack?.duration) || 0;
+                if (currentTrack) saveTrackProgress(currentTrack, dur || 100, dur || 100, true, { force: true });
+                handleTrackEnded();
+              },
+              onError: (e) => {
+                const v = e.currentTarget;
+                const tcUrl = activeProbe?.transcodeUrl || currentTrack?.mediaService?.transcodeUrl;
+                if (v && tcUrl && !String(v.src).includes("/transcode/")) {
+                  const pend = pendingLocalSeekRef.current;
+                  const pendSec = typeof pend === "number" ? pend : pend && (!pend.trackId || pend.trackId === currentTrack?.id) ? Number(pend.positionSec) || 0 : 0;
+                  const fallbackOffset = pendSec > 0 ? Math.floor(pendSec) : resolveResumeSecForTrack(currentTrack);
+                  pendingLocalSeekRef.current = null;
+                  showStatus(`Switching "${currentTrack.title}" to live H.264/AAC stream\u2026`);
+                  setPlaybackProbe((prev) => ({
+                    ...prev && prev.trackId === currentTrack.id ? prev : { trackId: currentTrack.id, durationSec: knownVideoDurationSec },
+                    transcodeUrl: tcUrl,
+                    needsTranscode: true,
+                    forceTranscode: true,
+                    offsetSec: fallbackOffset
+                  }));
+                  setTimeout(() => {
+                    videoRef.current?.play().catch(() => {
+                    });
+                  }, 60);
+                }
+              }
+            },
+            activeProbe?.hasSubtitles && activeProbe?.subtitlesUrl && /* @__PURE__ */ import_react26.default.createElement("track", { kind: "subtitles", src: activeProbe.subtitlesUrl, srcLang: "en", label: "English" })
+          ), embeddedPipActive && /* @__PURE__ */ import_react26.default.createElement(
+            "div",
+            {
+              className: "embedded-pip-overlay",
+              onClick: () => setActiveTab("player"),
+              title: "Click to return to Cinema Stage"
+            },
+            /* @__PURE__ */ import_react26.default.createElement("span", { className: "embedded-pip-badge" }, "\u25CF LIVE PiP"),
+            /* @__PURE__ */ import_react26.default.createElement("div", { className: "embedded-pip-actions", onClick: (e) => e.stopPropagation() }, /* @__PURE__ */ import_react26.default.createElement(
+              "button",
+              {
+                type: "button",
+                className: "embedded-pip-btn",
+                title: "Pause playback",
+                onClick: handleTogglePlayPause
+              },
+              "\u23F8"
+            ), /* @__PURE__ */ import_react26.default.createElement(
+              "button",
+              {
+                type: "button",
+                className: "embedded-pip-btn",
+                title: "Expand to Cinema Stage",
+                onClick: () => setActiveTab("player")
+              },
+              "\u2922 Stage"
+            ))
+          ), isTranscodeActive && !embeddedPipActive && /* @__PURE__ */ import_react26.default.createElement(
+            "div",
+            {
+              className: "cinema-transcode-controls",
+              style: {
+                display: "flex",
+                alignItems: "center",
+                gap: "10px",
+                padding: "8px 14px",
+                background: "rgba(10, 14, 24, 0.94)",
+                borderTop: "1px solid rgba(232, 163, 61, 0.22)"
+              }
+            },
+            /* @__PURE__ */ import_react26.default.createElement(
+              "button",
+              {
+                type: "button",
+                className: "btn-chip",
+                onClick: () => {
+                  const v = videoRef.current;
+                  if (!v) return;
+                  if (v.paused) {
+                    v.play().catch(() => {
+                    });
+                    setIsPlaying(true);
+                  } else {
+                    v.pause();
+                    setIsPlaying(false);
+                  }
+                },
+                title: isPlaying ? "Pause" : "Play"
+              },
+              isPlaying ? "\u23F8" : "\u25B6"
+            ),
+            /* @__PURE__ */ import_react26.default.createElement(
+              "button",
+              {
+                type: "button",
+                className: "btn-chip",
+                onClick: () => seekVideoTo(transcodeOffsetSec + (videoRef.current?.currentTime || 0) - 15),
+                title: "Rewind 15s"
+              },
+              "-15s"
+            ),
+            /* @__PURE__ */ import_react26.default.createElement(
+              "button",
+              {
+                type: "button",
+                className: "btn-chip",
+                onClick: () => seekVideoTo(transcodeOffsetSec + (videoRef.current?.currentTime || 0) + 15),
+                title: "Forward 15s"
+              },
+              "+15s"
+            ),
+            /* @__PURE__ */ import_react26.default.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ import_react26.default.createElement(
+              MiniProgress,
+              {
+                trackId: `${currentTrack?.id || ""}:${transcodeOffsetSec}`,
+                getAudio: () => videoRef.current,
+                knownDuration: knownVideoDurationSec,
+                offsetSec: transcodeOffsetSec,
+                isTranscode: true,
+                onSeekOverride: seekVideoTo
+              }
+            )),
+            /* @__PURE__ */ import_react26.default.createElement(
+              "button",
+              {
+                type: "button",
+                className: "btn-chip",
+                onClick: (e) => {
+                  const box = e.currentTarget.closest(".cinema-stage-box");
+                  if (document.fullscreenElement) document.exitFullscreen().catch(() => {
+                  });
+                  else box?.requestFullscreen?.().catch(() => {
+                  });
+                },
+                title: "Toggle Fullscreen"
+              },
+              "\u26F6"
+            )
+          )) : /* @__PURE__ */ import_react26.default.createElement(
+            "div",
+            {
+              id: "cinema-cast-stage",
+              className: "cinema-video-el",
+              style: {
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "14px",
+                padding: "28px",
+                background: "radial-gradient(circle at center, rgba(232,163,61,0.12) 0%, rgba(10,12,18,0.96) 75%)",
+                textAlign: "center",
+                minHeight: "260px"
+              }
+            },
+            artUrlFor(artBase.local, currentTrack?.artId) && /* @__PURE__ */ import_react26.default.createElement(
+              "img",
+              {
+                src: artUrlFor(artBase.local, currentTrack?.artId),
+                alt: "",
+                style: {
+                  maxHeight: "160px",
+                  borderRadius: "8px",
+                  boxShadow: "0 8px 24px rgba(0,0,0,0.6)",
+                  objectFit: "cover"
+                }
+              }
+            ),
+            /* @__PURE__ */ import_react26.default.createElement("div", { style: { fontSize: "16px", fontWeight: 700, color: "#f8fafc" } }, "\u{1F4FA} Playing on ", getSpeakerName(outputTarget)),
+            /* @__PURE__ */ import_react26.default.createElement("div", { style: { fontSize: "13px", color: "#94a3b8", maxWidth: "520px" } }, currentTrack?.title, " \u2014 Local desktop video decoding is paused while casting so your Smart TV gets 100% of stream bandwidth with zero stutter.")
+          ),
+          !embeddedPipActive && /* @__PURE__ */ import_react26.default.createElement("div", { className: "cinema-stage-toolbar" }, /* @__PURE__ */ import_react26.default.createElement("span", { className: "cinema-stage-badge" }, "\u{1F3AC} ", currentTrack?.title || "Cinema Stage", " ", currentTrack?.year ? `(${currentTrack.year})` : ""), /* @__PURE__ */ import_react26.default.createElement("div", { className: "cinema-stage-actions" }, /* @__PURE__ */ import_react26.default.createElement(
+            "button",
+            {
+              type: "button",
+              className: "btn-chip",
+              onClick: () => setVideoFit((f) => f === "contain" ? "cover" : "contain"),
+              title: "Toggle widescreen aspect fit"
+            },
+            "Fit: ",
+            videoFit === "contain" ? "Letterbox" : "Fill"
+          ), /* @__PURE__ */ import_react26.default.createElement(
+            "button",
+            {
+              type: "button",
+              className: "btn-chip",
+              onClick: () => {
+                if (videoRef.current && document.pictureInPictureEnabled) {
+                  if (document.pictureInPictureElement) document.exitPictureInPicture().catch(() => {
+                  });
+                  else videoRef.current.requestPictureInPicture().catch(() => {
+                  });
+                }
+              },
+              title: "Toggle Picture-in-Picture"
+            },
+            "PiP"
+          ), speakers.length > 0 && /* @__PURE__ */ import_react26.default.createElement(import_react26.default.Fragment, null, /* @__PURE__ */ import_react26.default.createElement(
+            "button",
+            {
+              type: "button",
+              className: "btn-chip",
+              style: { borderColor: "#e8a33d", color: "#e8a33d" },
+              onClick: () => {
+                const target = outputTarget !== "local" ? outputTarget : speakers[0].ip;
+                setOutputTarget(target);
+                const v = videoRef.current;
+                const from = v ? v.currentTime : 0;
+                if (v) {
+                  v.pause();
+                  v.muted = true;
+                }
+                if (currentTrack) {
+                  castTrack(target, currentTrack, { startAt: from > 1 ? from : 0 });
+                  setIsPlaying(true);
+                }
+              },
+              title: `Cast movie to ${getSpeakerName(outputTarget !== "local" ? outputTarget : speakers[0].ip)}`
+            },
+            "\u{1F4FA} Cast to ",
+            outputTarget !== "local" ? getSpeakerName(outputTarget) : speakers[0].name
+          ), /* @__PURE__ */ import_react26.default.createElement(
+            "button",
+            {
+              type: "button",
+              className: "btn-chip",
+              style: { borderColor: "#38bdf8", color: "#38bdf8" },
+              onClick: async () => {
+                const target = outputTarget !== "local" ? outputTarget : speakers[0].ip;
+                if (window.robosAudio?.launchTvLibrary) {
+                  const res = await window.robosAudio.launchTvLibrary(target);
+                  if (res && res.ok) {
+                    showStatus(`\u{1F4FA} 10-Foot Movie Library opened on ${getSpeakerName(target)}! Use your TV remote D-Pad (Up/Down/OK) to browse & play.`);
+                  }
+                }
+              },
+              title: "Open the interactive 10-foot Movie Library on your Smart TV so you can browse and play movies with your physical TV remote"
+            },
+            "\u{1F3AE} TV Library (Remote UI)"
+          ), /* @__PURE__ */ import_react26.default.createElement(
+            "button",
+            {
+              type: "button",
+              className: "btn-chip btn-stop-cast",
+              onClick: () => {
+                const target = activeCastSession?.ip || (outputTarget !== "local" ? outputTarget : speakers[0].ip);
+                setOutputTarget("local");
+                handleStopCast(target);
+              },
+              title: `Stop movie playback on ${getSpeakerName(activeCastSession?.ip || (outputTarget !== "local" ? outputTarget : speakers[0].ip))}`
+            },
+            "\u23F9 Stop TV"
+          )), /* @__PURE__ */ import_react26.default.createElement(
+            "button",
+            {
+              type: "button",
+              className: "btn-chip",
+              onClick: () => {
+                const v = videoRef.current;
+                if (v && v.requestFullscreen) v.requestFullscreen().catch(() => {
+                });
+              },
+              title: "Fullscreen video"
+            },
+            "Fullscreen"
+          )))
+        ), /* @__PURE__ */ import_react26.default.createElement("div", { className: "track-hero" }, /* @__PURE__ */ import_react26.default.createElement("div", { className: "album-art-box" }, /* @__PURE__ */ import_react26.default.createElement(Cover, { artId: currentTrack?.artId, name: currentTrack?.album || currentTrack?.title, icon: currentTrack?.artId ? null : "disc" })), /* @__PURE__ */ import_react26.default.createElement("div", { className: "track-details" }, /* @__PURE__ */ import_react26.default.createElement("h2", { id: "track-title" }, currentTrack?.title || "No Track Selected", currentTrack && /* @__PURE__ */ import_react26.default.createElement(LoveButton, { track: currentTrack, size: 16 })), /* @__PURE__ */ import_react26.default.createElement("p", { id: "track-artist" }, /* @__PURE__ */ import_react26.default.createElement("a", { className: "link", onClick: () => currentTrack && goToArtist(currentTrack.artist) }, currentTrack?.artist || "Unknown Artist"), " ", "\u2022", " ", /* @__PURE__ */ import_react26.default.createElement("a", { className: "link", onClick: () => currentTrack && goToAlbumOf(currentTrack) }, currentTrack?.album || "RobOS Library")), /* @__PURE__ */ import_react26.default.createElement("div", { className: "track-meta-pills" }, /* @__PURE__ */ import_react26.default.createElement("span", { className: "badge" }, "Output: ", getSpeakerName(outputTarget)), activeCastSession && /* @__PURE__ */ import_react26.default.createElement("span", { className: "badge", style: { color: "#22c55e", borderColor: "#22c55e" } }, activeCastSession.isPaused ? "Cast Paused" : "Casting Active"), currentTrack?.genre && /* @__PURE__ */ import_react26.default.createElement("span", { className: "badge link", onClick: () => goToGenre(currentTrack.genre) }, currentTrack.genre), currentTrack?.year && /* @__PURE__ */ import_react26.default.createElement("span", { className: "badge" }, currentTrack.year))), /* @__PURE__ */ import_react26.default.createElement("div", { className: "hero-quick-actions" }, /* @__PURE__ */ import_react26.default.createElement("button", { className: "btn-secondary", onClick: handleSelectFolder, title: "Add folder via file manager" }, "Add Folder"), /* @__PURE__ */ import_react26.default.createElement("button", { className: "btn-secondary", onClick: handleAddFiles, title: "Add files" }, "Add Files"))), /* @__PURE__ */ import_react26.default.createElement("div", { className: "react-h5-wrapper" }, /* @__PURE__ */ import_react26.default.createElement(
+          es_default,
+          {
+            ref: playerRef,
+            src: outputTarget === "local" && !isVideoTrack(currentTrack) ? resolveSrc(currentTrack) : void 0,
+            onLoadedMetaData: () => {
+              const at = pendingLocalSeekRef.current;
+              const a = getMediaEl();
+              if (at != null && a) {
+                pendingLocalSeekRef.current = null;
+                a.currentTime = at;
+              }
+            },
+            customProgressBarSection: outputTarget !== "local" ? [/* @__PURE__ */ import_react26.default.createElement(CastProgress, { key: "cast-progress", className: "mini-progress rhap-cast-progress", id: "cast-progress", onSeek: handleCastSeek })] : isVideoTrack(currentTrack) ? [/* @__PURE__ */ import_react26.default.createElement(
+              MiniProgress,
+              {
+                key: "video-progress",
+                trackId: `${currentTrack?.id || currentTrack?.filePath || ""}:${transcodeOffsetSec}`,
+                getAudio: () => videoRef.current,
+                knownDuration: knownVideoDurationSec,
+                offsetSec: transcodeOffsetSec,
+                isTranscode: isTranscodeActive,
+                onSeekOverride: seekVideoTo
+              }
+            )] : void 0,
+            customControlsSection: outputTarget !== "local" || isVideoTrack(currentTrack) ? [
+              RHAP_UI.ADDITIONAL_CONTROLS,
+              /* @__PURE__ */ import_react26.default.createElement("div", { key: "video-cast-controls", className: "rhap_main-controls" }, /* @__PURE__ */ import_react26.default.createElement("button", { type: "button", className: "rhap_button-clear rhap_main-controls-button rhap_skip-button", "aria-label": "Previous", onClick: handlePlayPrev }, /* @__PURE__ */ import_react26.default.createElement(Icon2, { name: "prev", size: 24 })), /* @__PURE__ */ import_react26.default.createElement(
+                "button",
+                {
+                  type: "button",
+                  id: "cast-play-pause",
+                  className: "rhap_button-clear rhap_main-controls-button rhap_play-pause-button",
+                  "aria-label": isPlaying ? "Pause" : "Play",
+                  onClick: () => {
+                    if (outputTarget === "local" && isVideoTrack(currentTrack) && videoRef.current) {
+                      if (videoRef.current.paused) {
+                        videoRef.current.play().catch(() => {
+                        });
+                        setIsPlaying(true);
+                      } else {
+                        videoRef.current.pause();
+                        setIsPlaying(false);
+                      }
+                    } else {
+                      handleTogglePlayPause();
+                    }
+                  }
+                },
+                /* @__PURE__ */ import_react26.default.createElement(Icon2, { name: isPlaying ? "pause" : "play", size: 34 })
+              ), /* @__PURE__ */ import_react26.default.createElement("button", { type: "button", className: "rhap_button-clear rhap_main-controls-button rhap_skip-button", "aria-label": "Next", onClick: handlePlayNext }, /* @__PURE__ */ import_react26.default.createElement(Icon2, { name: "next", size: 24 }))),
+              /* @__PURE__ */ import_react26.default.createElement("div", { key: "cast-spacer", className: "rhap_volume-controls" })
+            ] : void 0,
+            showSkipControls: true,
+            showJumpControls: false,
+            autoPlayAfterSrcChange: isPlaying,
+            onClickNext: handlePlayNext,
+            onClickPrevious: handlePlayPrev,
+            onEnded: () => {
+              if (outputTarget === "local") handleTrackEnded();
+            },
+            onPlay: handlePlayerPlay,
+            onPause: handlePlayerPause,
+            onError: (e) => {
+              if (!currentTrack || outputTarget !== "local") return;
+              console.warn("[AudioPlayer] Audio playback error:", e);
+              setIsPlaying(false);
+              showStatus("Playback error: Track file may be missing, network drive unmounted, or format unsupported.");
+            },
+            className: "robos-rhap-theme",
+            customIcons: {
+              play: /* @__PURE__ */ import_react26.default.createElement(Icon2, { name: "play", size: 34 }),
+              pause: /* @__PURE__ */ import_react26.default.createElement(Icon2, { name: "pause", size: 34 }),
+              previous: /* @__PURE__ */ import_react26.default.createElement(Icon2, { name: "prev", size: 24 }),
+              next: /* @__PURE__ */ import_react26.default.createElement(Icon2, { name: "next", size: 24 }),
+              volume: /* @__PURE__ */ import_react26.default.createElement(Icon2, { name: "volume", size: 20 }),
+              volumeMute: /* @__PURE__ */ import_react26.default.createElement(Icon2, { name: "volumeMute", size: 20 })
+            },
+            layout: "stacked",
+            customAdditionalControls: [],
+            muted: outputTarget !== "local"
           }
-        }
-      ))), activeTab === "playlists" && /* @__PURE__ */ import_react26.default.createElement("div", { className: "playlists-view-container" }, /* @__PURE__ */ import_react26.default.createElement("div", { className: "playlists-header" }, /* @__PURE__ */ import_react26.default.createElement("div", { className: "playlists-title-group" }, /* @__PURE__ */ import_react26.default.createElement("h3", null, "Custom Watchlists (", playlists.length, ")"), /* @__PURE__ */ import_react26.default.createElement("p", { className: "subtitle" }, "Curate custom movie & show watchlists, import/export M3U queues, and cast directly to Smart TVs")), /* @__PURE__ */ import_react26.default.createElement("div", { className: "playlists-header-actions" }, /* @__PURE__ */ import_react26.default.createElement(
+        )), /* @__PURE__ */ import_react26.default.createElement(
+          Lyrics,
+          {
+            track: currentTrack,
+            getTime: () => outputTarget !== "local" ? castClock.now() : isTranscodeActive ? transcodeOffsetSec + (getMediaEl()?.currentTime || 0) : getMediaEl()?.currentTime ?? null,
+            onSeek: (t) => {
+              if (outputTarget !== "local") handleCastSeek(t);
+              else if (isVideoTrack(currentTrack)) seekVideoTo(t);
+              else if (getMediaEl()) getMediaEl().currentTime = t;
+            }
+          }
+        ))
+      ), activeTab === "playlists" && /* @__PURE__ */ import_react26.default.createElement("div", { className: "playlists-view-container" }, /* @__PURE__ */ import_react26.default.createElement("div", { className: "playlists-header" }, /* @__PURE__ */ import_react26.default.createElement("div", { className: "playlists-title-group" }, /* @__PURE__ */ import_react26.default.createElement("h3", null, "Custom Watchlists (", playlists.length, ")"), /* @__PURE__ */ import_react26.default.createElement("p", { className: "subtitle" }, "Curate custom movie & show watchlists, import/export M3U queues, and cast directly to Smart TVs")), /* @__PURE__ */ import_react26.default.createElement("div", { className: "playlists-header-actions" }, /* @__PURE__ */ import_react26.default.createElement(
         "button",
         {
           id: "btn-create-playlist",
@@ -25691,10 +25793,22 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
             onPreview: handleDjPreview,
             onSettings: () => setShowDjSettings(true),
             onAiPlaylist: () => setShowAiPlaylist(true)
-          }
+          },
+          showEmbeddedPip: embeddedPipActive && !dockCollapsed,
+          pipSlotRef: !dockCollapsed ? pipSlotRef : null
         }
       )),
-      activeTab !== "player" && currentTrack && /* @__PURE__ */ import_react26.default.createElement("footer", { className: "mini-player-bar" }, /* @__PURE__ */ import_react26.default.createElement("div", { className: "mini-player-info", onClick: () => setActiveTab("player") }, /* @__PURE__ */ import_react26.default.createElement("div", { className: "mini-art" }, /* @__PURE__ */ import_react26.default.createElement(Cover, { artId: currentTrack.artId, name: currentTrack.album || currentTrack.title, size: 38 })), /* @__PURE__ */ import_react26.default.createElement("div", { className: "mini-text" }, /* @__PURE__ */ import_react26.default.createElement("span", { className: "mini-title" }, currentTrack.title), /* @__PURE__ */ import_react26.default.createElement("span", { className: "mini-artist" }, currentTrack.artist || "Unknown", " \u2022 ", currentTrack.album || ""))), /* @__PURE__ */ import_react26.default.createElement(LoveButton, { track: currentTrack, size: 15 }), /* @__PURE__ */ import_react26.default.createElement("div", { className: "mini-player-center" }, /* @__PURE__ */ import_react26.default.createElement("div", { className: "mini-player-controls" }, /* @__PURE__ */ import_react26.default.createElement("button", { className: `mini-ctrl-btn mini-mode ${shuffleMode ? "on" : ""}`, title: shuffleMode ? "Random: on" : "Random: off", onClick: toggleShuffleMode }, /* @__PURE__ */ import_react26.default.createElement(Icon2, { name: "shuffle", size: 15 })), /* @__PURE__ */ import_react26.default.createElement("button", { className: "mini-ctrl-btn", title: "Previous (Ctrl+\u2190)", onClick: handlePlayPrev }, /* @__PURE__ */ import_react26.default.createElement(Icon2, { name: "prev", size: 18 })), /* @__PURE__ */ import_react26.default.createElement("button", { className: "mini-ctrl-btn mini-btn-play", title: isPlaying ? "Pause (Space)" : "Play (Space)", onClick: handleTogglePlayPause }, /* @__PURE__ */ import_react26.default.createElement(Icon2, { name: isPlaying ? "pause" : "play", size: 18 })), /* @__PURE__ */ import_react26.default.createElement("button", { className: "mini-ctrl-btn", title: "Next (Ctrl+\u2192)", onClick: handlePlayNext }, /* @__PURE__ */ import_react26.default.createElement(Icon2, { name: "next", size: 18 })), /* @__PURE__ */ import_react26.default.createElement("button", { className: `mini-ctrl-btn mini-mode ${repeatMode !== "off" ? "on" : ""}`, title: `Repeat: ${repeatMode}`, onClick: cycleRepeat }, /* @__PURE__ */ import_react26.default.createElement(Icon2, { name: repeatMode === "one" ? "repeatOne" : "repeat", size: 15 }))), outputTarget !== "local" ? /* @__PURE__ */ import_react26.default.createElement(CastProgress, { onSeek: handleCastSeek }) : /* @__PURE__ */ import_react26.default.createElement(MiniProgress, { trackId: currentTrack?.id || currentTrack?.filePath, getAudio: getMediaEl })), /* @__PURE__ */ import_react26.default.createElement("div", { className: "mini-player-right" }, /* @__PURE__ */ import_react26.default.createElement("span", { className: "badge mini-badge" }, "Output: ", getSpeakerName(outputTarget)), /* @__PURE__ */ import_react26.default.createElement("button", { id: "btn-mini-now-playing", className: "btn-chip", onClick: () => setActiveTab("player") }, "Now Playing"))),
+      activeTab !== "player" && currentTrack && /* @__PURE__ */ import_react26.default.createElement("footer", { className: `mini-player-bar ${embeddedPipActive && dockCollapsed ? "has-embedded-pip" : ""}` }, /* @__PURE__ */ import_react26.default.createElement("div", { className: "mini-player-info", onClick: () => setActiveTab("player") }, /* @__PURE__ */ import_react26.default.createElement("div", { className: `mini-art ${embeddedPipActive ? dockCollapsed ? "is-pip-slot" : "is-pip-docked" : ""}` }, embeddedPipActive ? dockCollapsed ? /* @__PURE__ */ import_react26.default.createElement("div", { id: "embedded-pip-slot", ref: pipSlotRef, className: "mini-bar-pip-slot" }) : /* @__PURE__ */ import_react26.default.createElement("div", { className: "mini-pip-indicator", title: "Video playing in embedded PiP \u2014 click for Cinema Stage" }, /* @__PURE__ */ import_react26.default.createElement("span", null, "\u25CF PiP")) : /* @__PURE__ */ import_react26.default.createElement(Cover, { artId: currentTrack.artId, name: currentTrack.album || currentTrack.title, size: 38 })), /* @__PURE__ */ import_react26.default.createElement("div", { className: "mini-text" }, /* @__PURE__ */ import_react26.default.createElement("span", { className: "mini-title" }, currentTrack.title), /* @__PURE__ */ import_react26.default.createElement("span", { className: "mini-artist" }, currentTrack.artist || "Unknown", " \u2022 ", currentTrack.album || ""))), /* @__PURE__ */ import_react26.default.createElement(LoveButton, { track: currentTrack, size: 15 }), /* @__PURE__ */ import_react26.default.createElement("div", { className: "mini-player-center" }, /* @__PURE__ */ import_react26.default.createElement("div", { className: "mini-player-controls" }, /* @__PURE__ */ import_react26.default.createElement("button", { className: `mini-ctrl-btn mini-mode ${shuffleMode ? "on" : ""}`, title: shuffleMode ? "Random: on" : "Random: off", onClick: toggleShuffleMode }, /* @__PURE__ */ import_react26.default.createElement(Icon2, { name: "shuffle", size: 15 })), /* @__PURE__ */ import_react26.default.createElement("button", { className: "mini-ctrl-btn", title: "Previous (Ctrl+\u2190)", onClick: handlePlayPrev }, /* @__PURE__ */ import_react26.default.createElement(Icon2, { name: "prev", size: 18 })), /* @__PURE__ */ import_react26.default.createElement("button", { className: "mini-ctrl-btn mini-btn-play", title: isPlaying ? "Pause (Space)" : "Play (Space)", onClick: handleTogglePlayPause }, /* @__PURE__ */ import_react26.default.createElement(Icon2, { name: isPlaying ? "pause" : "play", size: 18 })), /* @__PURE__ */ import_react26.default.createElement("button", { className: "mini-ctrl-btn", title: "Next (Ctrl+\u2192)", onClick: handlePlayNext }, /* @__PURE__ */ import_react26.default.createElement(Icon2, { name: "next", size: 18 })), /* @__PURE__ */ import_react26.default.createElement("button", { className: `mini-ctrl-btn mini-mode ${repeatMode !== "off" ? "on" : ""}`, title: `Repeat: ${repeatMode}`, onClick: cycleRepeat }, /* @__PURE__ */ import_react26.default.createElement(Icon2, { name: repeatMode === "one" ? "repeatOne" : "repeat", size: 15 }))), outputTarget !== "local" ? /* @__PURE__ */ import_react26.default.createElement(CastProgress, { onSeek: handleCastSeek }) : /* @__PURE__ */ import_react26.default.createElement(
+        MiniProgress,
+        {
+          trackId: `${currentTrack?.id || currentTrack?.filePath || ""}:${transcodeOffsetSec}`,
+          getAudio: getMediaEl,
+          knownDuration: knownVideoDurationSec,
+          offsetSec: transcodeOffsetSec,
+          isTranscode: isTranscodeActive,
+          onSeekOverride: isTranscodeActive ? seekVideoTo : null
+        }
+      )), /* @__PURE__ */ import_react26.default.createElement("div", { className: "mini-player-right" }, /* @__PURE__ */ import_react26.default.createElement("span", { className: "badge mini-badge" }, "Output: ", getSpeakerName(outputTarget)), /* @__PURE__ */ import_react26.default.createElement("button", { id: "btn-mini-now-playing", className: "btn-chip", onClick: () => setActiveTab("player") }, "Now Playing"))),
       showAiPlaylist && /* @__PURE__ */ import_react26.default.createElement(
         AiPlaylistModal,
         {

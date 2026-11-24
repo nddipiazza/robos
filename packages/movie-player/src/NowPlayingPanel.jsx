@@ -45,6 +45,8 @@ export default function NowPlayingPanel({
   onToggleShuffle,
   onCycleRepeat,
   dj = null,
+  showEmbeddedPip = false,
+  pipSlotRef = null,
 }) {
   const ctx = useLibrary();
   const { isPlaying, actions, openMenu } = ctx;
@@ -254,8 +256,16 @@ export default function NowPlayingPanel({
       </div>
 
       {current && (
-        <div className="np-current" onDoubleClick={() => locateCurrent(true)} title="Double-click to locate in the list">
-          <Cover artId={current.artId} name={current.album || current.title} size={44} />
+        <div
+          className={`np-current ${showEmbeddedPip ? 'has-pip' : ''}`}
+          onDoubleClick={() => locateCurrent(true)}
+          title="Double-click to locate in the list"
+        >
+          {showEmbeddedPip ? (
+            <div id="embedded-pip-slot" ref={pipSlotRef} className="np-pip-slot" />
+          ) : (
+            <Cover artId={current.artId} name={current.album || current.title} size={44} />
+          )}
           <div className="np-current-text">
             <span className="np-current-title">{current.title}</span>
             <span className="np-current-sub">
