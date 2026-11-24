@@ -32,6 +32,32 @@ function requireShared(name) {
 const configSyncAuto = requireShared('config-sync-auto');
 const mediaServiceClient = requireShared('media-service-client');
 
+if (process.argv.includes('--reset-players')) {
+  mediaServiceClient.resetAndLoadPlayerLibraries()
+    .then((res) => {
+      console.log(JSON.stringify(res, null, 2));
+      process.exit(res.ok ? 0 : 1);
+    })
+    .catch((err) => {
+      console.error('[RobOS Preferences Sync] reset failed:', err.message);
+      process.exit(1);
+    });
+  return;
+}
+
+if (process.argv.includes('--sync-once')) {
+  mediaServiceClient.syncMediaServicesToLocalApps({ force: true })
+    .then((res) => {
+      console.log(JSON.stringify(res, null, 2));
+      process.exit(res.ok ? 0 : 1);
+    })
+    .catch((err) => {
+      console.error('[RobOS Preferences Sync] sync failed:', err.message);
+      process.exit(1);
+    });
+  return;
+}
+
 const vaultLoop = configSyncAuto.startAutoSync({
   loginDelayMs: 3000,
   log: (msg) => console.log(`[RobOS Preferences Sync] vault: ${msg}`),

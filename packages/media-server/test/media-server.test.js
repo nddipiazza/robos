@@ -314,4 +314,42 @@ test('RobOS Media Server indexes movies, shows, music, books & courses, serves H
   await sync.applyVaultSync({ homeDir: serverHome });
   const clientAuto = await auto.runAutoSync({ homeDir: clientHome, force: true });
   assert.equal(clientAuto.outcome, 'synced');
+
+  // 5. Verify resetAndLoadPlayerLibraries wipes legacy folders/playlists/stats/caches
+  //    while preserving audio-devices.json, and avoids Data Sources Google Drive clutter.
+  fs.writeFileSync(path.join(clientConfigDir, 'audio-devices.json'), JSON.stringify({ output: 'scarlett' }));
+  fs.writeFileSync(path.join(clientConfigDir, 'movie-playlists.json'), JSON.stringify([{ id: 'pl_old', name: 'Old' }]));
+  fs.writeFileSync(path.join(clientConfigDir, 'audio-playlists.json'), JSON.stringify([{ id: 'pl_old_a', name: 'Old Audio' }]));
+  fs.writeFileSync(path.join(clientConfigDir, 'movie-folders.json'), JSON.stringify([
+    { id: 'fld_legacy_sftp', kind: 'cloud', connectionId: 'sftp-1', path: '/downloads/movies', syncEnabled: true },
+  ]));
+  fs.writeFileSync(path.join(clientConfigDir, 'movie-library.json'), JSON.stringify({
+    tracks: [{ id: 'legacy_track_1', filePath: '/old/sftp/movie.mkv', title: 'Stale SFTP Movie' }],
+  }));
+
+  const resetRes = await mediaClient.resetAndLoadPlayerLibraries({ homeDir: clientHome });
+  assert.equal(resetRes.ok, true);
+  assert.equal(fs.existsSync(path.join(clientConfigDir, 'movie-playlists.json')), false);
+  assert.equal(fs.existsSync(path.join(clientConfigDir, 'audio-playlists.json')), false);
+  assert.equal(fs.existsSync(path.join(clientConfigDir, 'audio-devices.json')), true);
+
+  const cleanMovieLib = new MovieMediaLibrary({ configDir: clientConfigDir });
+  const cleanMovieFolders = new MovieLibraryFolders({
+    mediaLibrary: cleanMovieLib,
+    cloud: {
+      listConnections: () => [{
+        id: 'gdrive-1',
+        name: 'Google Drive',
+        driverType: 'gdrive',
+        browsable: true,
+        folders: [{ folderId: 'root', label: 'My Drive', remotePath: '/' }],
+      }],
+    },
+    configDir: clientConfigDir,
+  });
+  const afterResetMovieFolders = cleanMovieFolders.list();
+  assert.equal(afterResetMovieFolders.length, 1);
+  assert.equal(afterResetMovieFolders[0].kind, 'media-service');
+  assert.equal(cleanMovieLib.tracks.length, 4);
+  assert.ok(!cleanMovieLib.tracks.some(tr => tr.title === 'Stale SFTP Movie'));
 });

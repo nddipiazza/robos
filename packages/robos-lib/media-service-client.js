@@ -167,6 +167,7 @@ function loadMediaServersConfig(opts = {}) {
   return {
     version: 1,
     autoSyncPlayers: raw.autoSyncPlayers !== false,
+    ...(raw.autoImportDataSources !== undefined ? { autoImportDataSources: Boolean(raw.autoImportDataSources) } : {}),
     defaultServerId: raw.defaultServerId || (raw.servers?.[0]?.id ?? null),
     servers: Array.isArray(raw.servers) ? raw.servers : [],
   };
@@ -176,6 +177,7 @@ function saveMediaServersConfig(cfg, opts = {}) {
   const normalized = {
     version: 1,
     autoSyncPlayers: cfg.autoSyncPlayers !== false,
+    ...(cfg.autoImportDataSources !== undefined ? { autoImportDataSources: Boolean(cfg.autoImportDataSources) } : {}),
     defaultServerId: cfg.defaultServerId || (cfg.servers?.[0]?.id ?? null),
     servers: Array.isArray(cfg.servers) ? cfg.servers : [],
   };
@@ -752,6 +754,77 @@ async function syncMediaServicesToLocalApps(opts = {}) {
   return { ok: true, syncedServers: results };
 }
 
+/**
+ * Completely clears all legacy Movie Player and Audio Player folders, libraries,
+ * playlists, stats, caches, watch/play history, and Electron userData, while
+ * preserving `media-servers.json` and hardware `audio-devices.json`, then reloads
+ * fresh libraries from configured RobOS Media Services.
+ */
+async function resetAndLoadPlayerLibraries(opts = {}) {
+  const cfgDir = configDirOf(opts);
+  const baseHome = opts.homeDir
+    ? opts.homeDir
+    : (opts.configDir ? null : (process.env.HOME || os.homedir()));
+  const cacheRoot = opts.cacheDir || (baseHome ? path.join(baseHome, '.cache', 'robos') : null);
+
+  const removedPaths = [];
+  const rmTarget = (target) => {
+    if (!target || !fs.existsSync(target)) return;
+    fs.rmSync(target, { recursive: true, force: true });
+    removedPaths.push(target);
+  };
+
+  const configTargets = [
+    'movie-folders.json',
+    'movie-library.json',
+    'movie-playlists.json',
+    'movie-track-stats.json',
+    'movie-public-metadata-cache.json',
+    'movie-cache-settings.json',
+    'movie-player-control.json',
+    'movie-player',
+    'movie-subtitles',
+    'audio-folders.json',
+    'audio-library.json',
+    'audio-playlists.json',
+    'audio-track-stats.json',
+    'audio-cache-settings.json',
+    'audio-player-control.json',
+    'audio-lyrics',
+    'books-library.json',
+    path.join('media-history', 'movie-player.json'),
+    path.join('media-history', 'audio-player.json'),
+    'media-service-sync-state.json',
+    'media-service-streams',
+    'peer-streams',
+    path.join('electron', 'robos-movie-player'),
+    path.join('electron', 'robos-audio-player'),
+  ];
+  for (const rel of configTargets) {
+    rmTarget(path.join(cfgDir, rel));
+  }
+
+  if (cacheRoot) {
+    for (const rel of ['movie-player', 'audio-player', 'movie-subtitles', 'cloud-metadata-cache.json']) {
+      rmTarget(path.join(cacheRoot, rel));
+    }
+  }
+
+  if (baseHome && opts.clearElectronUserData !== false) {
+    for (const dirName of ['robos-movie-player', 'robos-audio-player']) {
+      rmTarget(path.join(baseHome, '.config', dirName));
+    }
+  }
+
+  const syncResult = await syncMediaServicesToLocalApps({ ...opts, force: true });
+  return {
+    ok: true,
+    removedCount: removedPaths.length,
+    removedPaths,
+    syncResult,
+  };
+}
+
 function startMediaServiceAutoSync(opts = {}) {
   const cfgDir = configDirOf(opts);
   const log = opts.log || (() => {});
@@ -835,5 +908,6 @@ module.exports = {
   fetchMovieCatalogTracks,
   fetchAudioCatalogTracks,
   syncMediaServicesToLocalApps,
+  resetAndLoadPlayerLibraries,
   startMediaServiceAutoSync,
 };

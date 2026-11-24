@@ -84,8 +84,26 @@ class LibraryFolders {
     return false;
   }
 
+  _shouldAutoImportDataSources() {
+    try {
+      const file = path.join(this.configDir, 'media-servers.json');
+      if (!fs.existsSync(file)) return true;
+      const cfg = JSON.parse(fs.readFileSync(file, 'utf8'));
+      if (!cfg) return true;
+      if (cfg.autoImportDataSources === true) return true;
+      if (cfg.autoImportDataSources === false) return false;
+      if (cfg.autoSyncPlayers !== false && Array.isArray(cfg.servers) && cfg.servers.some(s => s && s.enabled !== false && s.autoConnectAudioPlayer !== false && s.url)) {
+        return false;
+      }
+      return true;
+    } catch {
+      return true;
+    }
+  }
+
   _syncWithDataSources(connections) {
     if (!Array.isArray(connections) || !connections.length) return;
+    if (!this._shouldAutoImportDataSources()) return;
     let changed = false;
 
     for (const conn of connections) {
