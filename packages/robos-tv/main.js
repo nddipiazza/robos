@@ -360,3 +360,11 @@ ipcMain.handle('tv:castTabloToTv', async (_e, opts) => {
   return tvEngine.castTabloToTv(opts || {});
 });
 
+ipcMain.handle('tv:installRokuMoviePlayer', async (_e, opts) => {
+  try {
+    return await tvEngine.installRokuMoviePlayer(opts || {});
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+

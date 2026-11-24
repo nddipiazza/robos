@@ -913,6 +913,33 @@ class CastService {
         };
       }
       fs.writeFileSync(cfgPath, JSON.stringify(raw, null, 2));
+      this._pushRokuCastToMediaServers(next);
+    } catch {}
+  }
+
+  _pushRokuCastToMediaServers(castState) {
+    if (process.env.ROBOS_TEST === '1' || process.env.NODE_TEST_CONTEXT) return;
+    try {
+      const msPath = path.join(os.homedir(), '.config', 'robos', 'media-servers.json');
+      if (!fs.existsSync(msPath)) return;
+      const cfg = JSON.parse(fs.readFileSync(msPath, 'utf8'));
+      for (const srv of cfg.servers || []) {
+        if (!srv || srv.enabled === false || !srv.url) continue;
+        const u = new URL(`${String(srv.url).replace(/\/+$/, '')}/api/roku-cast`);
+        const payload = JSON.stringify(castState || { active: false });
+        const req = http.request({
+          hostname: u.hostname,
+          port: Number(u.port) || 19234,
+          path: u.pathname,
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(payload) },
+          timeout: 1500,
+        }, (res) => res.resume());
+        req.on('error', () => {});
+        req.on('timeout', () => req.destroy());
+        req.write(payload);
+        req.end();
+      }
     } catch {}
   }
 

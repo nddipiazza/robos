@@ -18,6 +18,8 @@ const {
   streamFileWithRanges,
   streamTranscodedVideo,
   streamTranscodedAudio,
+  serveHlsPlaylist,
+  serveHlsSegment,
   serveSubtitlesVtt,
   serveItemArtwork,
 } = require('./lib/transcoder');
@@ -91,6 +93,7 @@ function createMediaServer(options = {}) {
   const store = options.store || new MediaCatalogStore(options);
   const artCacheDir = path.join(store.cacheDir, 'art');
   const sseClients = new Map(); // sessionId -> res
+  let activeRokuCast = null;
 
   const baseUrlForReq = (req) => {
     const hdrHost = req?.headers?.host;
@@ -124,7 +127,7 @@ function createMediaServer(options = {}) {
 
       // Optional bearer token check if configured
       const requiredToken = process.env.ROBOS_MEDIA_SERVER_TOKEN || store.config.authToken || '';
-      if (requiredToken && pathname.startsWith('/api/') && pathname !== '/api/health' && pathname !== '/api/info' && !pathname.startsWith('/api/art/') && !pathname.startsWith('/api/subtitles/') && !pathname.startsWith('/api/playback-info/')) {
+      if (requiredToken && pathname.startsWith('/api/') && pathname !== '/api/health' && pathname !== '/api/info' && !pathname.startsWith('/api/art/') && !pathname.startsWith('/api/subtitles/') && !pathname.startsWith('/api/playback-info/') && !pathname.startsWith('/api/roku-cinema') && !pathname.startsWith('/api/tv-progress')) {
         const provided = (req.headers.authorization || '').replace(/^Bearer\s+/i, '').trim()
           || req.headers['x-robos-token']
           || url.searchParams.get('token')
@@ -293,6 +296,80 @@ function createMediaServer(options = {}) {
           totalCount: vidRes.total,
           items: vidRes.items,
         });
+      }
+
+      // Dedicated 10-Foot Roku SceneGraph Cinema+ Feed (Grouped Movies + TV Series + Watch Progress + Active Cast)
+      if (req.method === 'GET' && pathname === '/api/roku-cinema') {
+        const knownRev = url.searchParams.get('knownRev') || '';
+        const currentRev = `${store.catalogRevision}:${store.progressRevision}`;
+        const castPayload = activeRokuCast && activeRokuCast.active ? activeRokuCast : null;
+        if (knownRev && knownRev === currentRev) {
+          return sendJson(res, 200, {
+            ok: true,
+            unchanged: true,
+            rev: currentRev,
+            cinemaCast: castPayload,
+          });
+        }
+        const lib = store.getRokuCinemaLibrary(baseUrl);
+        return sendJson(res, 200, {
+          ok: true,
+          rev: lib.rev,
+          serverName: store.config.serverName,
+          counts: lib.counts,
+          cinemaLibrary: {
+            active: true,
+            defaultTab: url.searchParams.get('tab') || 'movies',
+            items: lib.items,
+          },
+          cinemaCast: castPayload,
+        });
+      }
+
+      if (pathname === '/api/roku-cast') {
+        if (req.method === 'GET') {
+          return sendJson(res, 200, { ok: true, cinemaCast: activeRokuCast });
+        }
+        if (req.method === 'POST') {
+          const body = await readJsonBody(req);
+          if (body && body.active === false) {
+            activeRokuCast = null;
+          } else {
+            activeRokuCast = {
+              active: true,
+              loadKey: body.loadKey || `cast-${Date.now()}`,
+              mediaUrl: body.mediaUrl || '',
+              streamFormat: body.streamFormat || 'mp4',
+              title: body.title || 'RobOS Movie Player',
+              startAt: Number(body.startAt) || 0,
+              paused: Boolean(body.paused),
+              seekKey: body.seekKey || '',
+              seekSeconds: Number(body.seekSeconds) || 0,
+              updatedAt: new Date().toISOString(),
+            };
+          }
+          return sendJson(res, 200, { ok: true, cinemaCast: activeRokuCast });
+        }
+        if (req.method === 'DELETE') {
+          activeRokuCast = null;
+          return sendJson(res, 200, { ok: true, cinemaCast: null });
+        }
+      }
+
+      if (req.method === 'GET' && pathname === '/api/tv-progress') {
+        const id = url.searchParams.get('id') || '';
+        if (!id) return sendJson(res, 400, { ok: false, error: 'id required' });
+        const watched = url.searchParams.get('watched') === 'true';
+        const pos = Number(url.searchParams.get('positionSec') || 0);
+        const dur = Number(url.searchParams.get('durationSec') || 0);
+        const entry = store.updateProgress({
+          itemId: id,
+          positionSec: pos,
+          durationSec: dur,
+          completed: watched,
+          deviceName: url.searchParams.get('device') || 'Roku TV',
+        });
+        return sendJson(res, 200, { ok: true, entry });
       }
 
       if (req.method === 'GET' && pathname === '/api/shows') {
@@ -479,6 +556,24 @@ function createMediaServer(options = {}) {
         if (!raw) return sendJson(res, 404, { ok: false, error: 'Item not found' });
         streamTranscodedAudio(req, res, raw);
         return;
+      }
+
+      if ((req.method === 'GET' || req.method === 'HEAD') && pathname.startsWith('/hls/')) {
+        const parts = pathname.slice('/hls/'.length).split('/').filter(Boolean);
+        const id = decodeURIComponent(parts[0] || '');
+        const sub = parts[1] || 'index.m3u8';
+        const raw = store.byId.get(id);
+        if (!raw) return sendJson(res, 404, { ok: false, error: 'Item not found' });
+        if (sub.endsWith('.m3u8')) {
+          await serveHlsPlaylist(res, raw, baseUrl);
+          return;
+        }
+        const segMatch = sub.match(/^seg_(\d+)\.ts$/i);
+        if (segMatch) {
+          await serveHlsSegment(req, res, raw, Number(segMatch[1]));
+          return;
+        }
+        return sendJson(res, 404, { ok: false, error: 'Unknown HLS segment' });
       }
 
       return sendJson(res, 404, { ok: false, error: `Unknown endpoint: ${pathname}` });

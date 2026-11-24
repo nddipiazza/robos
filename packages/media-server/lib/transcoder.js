@@ -375,12 +375,12 @@ async function serveItemArtwork(res, item, artCacheDir) {
     }
   }
 
-  // 4. Extract video thumbnail frame with FFmpeg at ~10% / 45s into the video
+  // 4. Extract video thumbnail frame with FFmpeg at ~35s (falling back to 2s for short clips)
   if (HAS_FFMPEG && (item.mediaType === 'movie' || item.mediaType === 'tv' || item.mediaType === 'education') && fs.existsSync(item.filePath)) {
-    const generated = await new Promise((resolve) => {
+    const extractAt = (seekSec) => new Promise((resolve) => {
       execFile('ffmpeg', [
         '-y', '-hide_banner', '-loglevel', 'error',
-        '-ss', '35',
+        '-ss', String(seekSec),
         '-i', item.filePath,
         '-frames:v', '1',
         '-vf', 'scale=480:-2',
@@ -391,6 +391,7 @@ async function serveItemArtwork(res, item, artCacheDir) {
         else resolve(false);
       });
     });
+    const generated = (await extractAt(35)) || (await extractAt(2));
     if (generated) {
       try { return sendBuf(fs.readFileSync(cachedJpg), 'image/jpeg'); } catch {}
     }
@@ -439,6 +440,86 @@ async function analyzePlaybackSupport(filePath, fallbackNeedsTranscode = false) 
   };
 }
 
+const HLS_SEG_DURATION = 6;
+
+async function serveHlsPlaylist(res, item, baseUrl = '') {
+  const probe = await probeMediaFile(item.filePath);
+  const dur = Math.max(HLS_SEG_DURATION, Number(probe?.durationSec) || Number(item.duration) || 1800);
+  const segCount = Math.max(1, Math.ceil(dur / HLS_SEG_DURATION));
+  const cleanBase = String(baseUrl || '').replace(/\/+$/, '');
+  const lines = [
+    '#EXTM3U',
+    '#EXT-X-VERSION:3',
+    '#EXT-X-PLAYLIST-TYPE:VOD',
+    `#EXT-X-TARGETDURATION:${HLS_SEG_DURATION}`,
+    '#EXT-X-MEDIA-SEQUENCE:0',
+  ];
+  for (let i = 0; i < segCount; i++) {
+    const segDur = (i === segCount - 1)
+      ? Math.max(0.5, dur - i * HLS_SEG_DURATION)
+      : HLS_SEG_DURATION;
+    lines.push(`#EXTINF:${segDur.toFixed(3)},`);
+    lines.push(`${cleanBase}/hls/${encodeURIComponent(item.id)}/seg_${i}.ts`);
+  }
+  lines.push('#EXT-X-ENDLIST');
+  res.writeHead(200, {
+    'Content-Type': 'application/vnd.apple.mpegurl',
+    'Access-Control-Allow-Origin': '*',
+    'Cache-Control': 'no-cache',
+  });
+  res.end(lines.join('\n') + '\n');
+}
+
+async function serveHlsSegment(req, res, item, segIndex) {
+  if (!HAS_FFMPEG) {
+    res.writeHead(501, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ error: 'FFmpeg not available' }));
+    return;
+  }
+  const probe = await probeMediaFile(item.filePath);
+  const vCodec = probe?.video?.codec || '';
+  const pixFmt = probe?.video?.pixFmt || '';
+  const canCopyVideo = vCodec === 'h264' && !String(pixFmt).includes('10');
+  const startSec = Math.max(0, Number(segIndex) || 0) * HLS_SEG_DURATION;
+
+  const args = [
+    '-hide_banner', '-loglevel', 'error',
+    '-ss', String(startSec),
+    '-i', item.filePath,
+    '-t', String(HLS_SEG_DURATION),
+    '-map', '0:v:0',
+    '-map', '0:a:0?',
+  ];
+  if (canCopyVideo) {
+    args.push('-c:v', 'copy');
+  } else {
+    args.push('-c:v', 'libx264', '-preset', 'veryfast', '-crf', '22', '-pix_fmt', 'yuv420p', '-g', '48');
+  }
+  args.push(
+    '-c:a', 'aac', '-ac', '2', '-b:a', '192k',
+    '-sn',
+    '-output_ts_offset', String(startSec),
+    '-f', 'mpegts',
+    'pipe:1'
+  );
+
+  res.writeHead(200, {
+    'Content-Type': 'video/mp2t',
+    'Access-Control-Allow-Origin': '*',
+    'Cache-Control': 'public, max-age=600',
+  });
+  if (req.method === 'HEAD') {
+    res.end();
+    return;
+  }
+  const proc = spawn('ffmpeg', args, { stdio: ['ignore', 'pipe', 'ignore'] });
+  const killProc = () => { try { proc.kill('SIGKILL'); } catch {} };
+  req.on('close', killProc);
+  res.on('close', killProc);
+  proc.on('error', () => { if (!res.headersSent) res.writeHead(500); res.end(); });
+  proc.stdout.pipe(res);
+}
+
 module.exports = {
   HAS_FFMPEG,
   HAS_FFPROBE,
@@ -447,6 +528,8 @@ module.exports = {
   streamFileWithRanges,
   streamTranscodedVideo,
   streamTranscodedAudio,
+  serveHlsPlaylist,
+  serveHlsSegment,
   serveSubtitlesVtt,
   serveItemArtwork,
   srtToVtt,

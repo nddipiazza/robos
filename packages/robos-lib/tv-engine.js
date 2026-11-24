@@ -24,8 +24,121 @@ const os = require('node:os');
 const http = require('node:http');
 const net = require('node:net');
 const crypto = require('node:crypto');
+const zlib = require('node:zlib');
 const { spawnSync, exec } = require('node:child_process');
 const tabloClient = require('./tablo-client');
+
+function resolveConfiguredMediaServerUrl(configDir) {
+  try {
+    const dir = configDir || process.env.ROBOS_CONFIG_DIR || path.join(os.homedir(), '.config', 'robos');
+    const file = path.join(dir, 'media-servers.json');
+    if (!fs.existsSync(file)) return '';
+    const cfg = JSON.parse(fs.readFileSync(file, 'utf8'));
+    if (!cfg || !Array.isArray(cfg.servers)) return '';
+    const srv = cfg.servers.find(s => s && s.id === cfg.defaultServerId && s.enabled !== false && s.url)
+      || cfg.servers.find(s => s && s.enabled !== false && s.url);
+    return srv ? String(srv.url).trim().replace(/\/+$/, '') : '';
+  } catch {
+    return '';
+  }
+}
+
+function buildCinemaPosterPng(width, height) {
+  const crcTable = (() => {
+    const t = new Uint32Array(256);
+    for (let n = 0; n < 256; n++) {
+      let c = n;
+      for (let k = 0; k < 8; k++) c = (c & 1) ? (0xedb88320 ^ (c >>> 1)) : (c >>> 1);
+      t[n] = c >>> 0;
+    }
+    return t;
+  })();
+  const crc32 = (buf) => {
+    let c = 0xffffffff;
+    for (let i = 0; i < buf.length; i++) c = crcTable[(c ^ buf[i]) & 0xff] ^ (c >>> 8);
+    return (c ^ 0xffffffff) >>> 0;
+  };
+  const chunk = (type, data) => {
+    const tb = Buffer.from(type, 'ascii');
+    const out = Buffer.alloc(12 + data.length);
+    out.writeUInt32BE(data.length, 0);
+    tb.copy(out, 4);
+    data.copy(out, 8);
+    out.writeUInt32BE(crc32(Buffer.concat([tb, data])), 8 + data.length);
+    return out;
+  };
+
+  const stride = 1 + width * 4;
+  const raw = Buffer.alloc(stride * height);
+  const cx = width / 2;
+  const cy = height / 2;
+  const radius = Math.min(width, height) * 0.28;
+  const border = Math.max(3, Math.round(Math.min(width, height) * 0.028));
+  const sprocketW = Math.max(8, Math.round(width * 0.055));
+
+  for (let y = 0; y < height; y++) {
+    const rowOff = y * stride;
+    raw[rowOff] = 0;
+    for (let x = 0; x < width; x++) {
+      let r = 17, g = 14, b = 11; // Warm obsidian #110E0B
+      // Subtle radial theater glow
+      const dx = x - cx;
+      const dy = y - cy;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < radius * 1.65) {
+        const glow = Math.max(0, 1 - dist / (radius * 1.65));
+        r = Math.min(255, Math.round(r + 38 * glow));
+        g = Math.min(255, Math.round(g + 24 * glow));
+        b = Math.min(255, Math.round(b + 10 * glow));
+      }
+      // Outer gold frame (#E8A33D) & top cyan stripe (#00BCD4)
+      if (y < border * 2 && y >= border) {
+        r = 0; g = 188; b = 212;
+      } else if (x < border || x >= width - border || y < border || y >= height - border) {
+        r = 232; g = 163; b = 61;
+      } else if (x < border + sprocketW || x >= width - border - sprocketW) {
+        // Filmstrip side rails & sprocket holes
+        const period = Math.max(18, Math.round(height / 8));
+        const inHole = (y % period) >= Math.round(period * 0.28) && (y % period) <= Math.round(period * 0.72)
+          && x >= border + Math.round(sprocketW * 0.22) && x <= width - border - Math.round(sprocketW * 0.22);
+        if (inHole) { r = 42; g = 33; b = 22; }
+        else { r = 26; g = 20; b = 14; }
+      }
+      // Center gold ring + cinema Play triangle
+      if (Math.abs(dist - radius) <= Math.max(2, border * 0.75)) {
+        r = 232; g = 163; b = 61;
+      } else if (dist < radius) {
+        r = 28; g = 22; b = 16;
+        const tx = (x - (cx - radius * 0.26)) / (radius * 0.68);
+        const ty = Math.abs(y - cy) / (radius * 0.42);
+        if (tx >= 0 && tx <= 1 && ty <= (1 - tx)) {
+          r = 252; g = 211; b = 77; // Bright cinema gold #FCD34D
+        }
+      }
+      const p = rowOff + 1 + x * 4;
+      raw[p] = r;
+      raw[p + 1] = g;
+      raw[p + 2] = b;
+      raw[p + 3] = 255;
+    }
+  }
+
+  const ihdr = Buffer.alloc(13);
+  ihdr.writeUInt32BE(width, 0);
+  ihdr.writeUInt32BE(height, 4);
+  ihdr[8] = 8;
+  ihdr[9] = 6; // RGBA
+  ihdr[10] = 0;
+  ihdr[11] = 0;
+  ihdr[12] = 0;
+
+  return Buffer.concat([
+    Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]),
+    chunk('IHDR', ihdr),
+    chunk('IDAT', zlib.deflateSync(raw, { level: 6 })),
+    chunk('IEND', Buffer.alloc(0)),
+  ]);
+}
 
 const DEFAULT_PORTAL_PORT = 19210;
 
@@ -1145,6 +1258,7 @@ function renderTenFootPortalHtml({ hostIp, portalPort, activeTileId = 'portal-ho
 function generateSideloadPackage({
   platformId,
   outputDir,
+  configDir = '',
   hostIp = '192.168.1.100',
   portalPort = DEFAULT_PORTAL_PORT,
   tvIp = '',
@@ -1152,6 +1266,11 @@ function generateSideloadPackage({
   appId = 'com.robos.tv',
   version = '1.0.0',
   webosPassphrase = '',
+  channelMode = 'auto',
+  mediaServerUrl = '',
+  preloadedCinemaItems = null,
+  preloadedCinemaRev = '',
+  rokuDevPassword = '',
 }) {
   const portalUrl = `http://${hostIp}:${portalPort}`;
   const targetDir = path.join(outputDir, platformId);
@@ -1671,7 +1790,30 @@ tizen run -p robostv001.RobOSTV
 ${tailLabels}`;
     }).join('\n');
 
-    const manifest = `title=${appName}\nsubtitle=RobOS 10-Foot Smart TV & Live Dashboards Suite\nmajor_version=1\nminor_version=3\nbuild_version=1\nui_resolutions=fhd\n`;
+    const resolvedCfgDir = configDir || process.env.ROBOS_CONFIG_DIR || path.join(os.homedir(), '.config', 'robos');
+    const effectiveMediaServerUrl = String(mediaServerUrl || resolveConfiguredMediaServerUrl(resolvedCfgDir) || '').replace(/\/+$/, '');
+    const isMoviePlayerChannel = channelMode === 'movie-player' || /movie player/i.test(appName);
+    const effectiveChannelTitle = isMoviePlayerChannel ? (appName === 'RobOS TV' ? 'RobOS Movie Player' : appName) : appName;
+    const effectiveSubtitle = isMoviePlayerChannel
+      ? 'Movies, TV Shows & DVR Streaming from RobOS Media Server'
+      : 'RobOS 10-Foot Smart TV & Live Dashboards Suite';
+    const progressBaseUrl = effectiveMediaServerUrl || portalUrl;
+
+    const manifest = [
+      `title=${effectiveChannelTitle}`,
+      `subtitle=${effectiveSubtitle}`,
+      `major_version=${isMoviePlayerChannel ? 2 : 1}`,
+      `minor_version=${isMoviePlayerChannel ? 0 : 3}`,
+      `build_version=1`,
+      `ui_resolutions=fhd`,
+      `mm_icon_focus_fhd=pkg:/images/channel-poster_fhd.png`,
+      `mm_icon_focus_hd=pkg:/images/channel-poster_hd.png`,
+      `mm_icon_side_hd=pkg:/images/channel-poster_sd.png`,
+      `splash_screen_fhd=pkg:/images/splash_fhd.png`,
+      `splash_color=#110E0B`,
+      `splash_min_time=250`,
+      '',
+    ].join('\n');
     const mainBrs = `sub Main()
     screen = CreateObject("roSGScreen")
     m.port = CreateObject("roMessagePort")
@@ -1688,6 +1830,8 @@ end sub
 <component name="DashboardTask" extends="Task">
   <interface>
     <field id="apiUrl" type="string" />
+    <field id="mediaServerUrl" type="string" />
+    <field id="knownRev" type="string" />
     <field id="progressUrl" type="string" />
     <field id="payloadJson" type="string" alwaysNotify="true" />
     <field id="localFrameUri" type="string" alwaysNotify="true" />
@@ -1703,6 +1847,8 @@ sub pollDashboard()
     lastProgUrl = ""
     lastFrameSeq = -1
     localFileIdx = 0
+    curRev = m.top.knownRev
+    hadCinemaCast = false
     while true
         pUrl = m.top.progressUrl
         if pUrl <> "" and pUrl <> lastProgUrl
@@ -1712,9 +1858,33 @@ sub pollDashboard()
             pHttp.GetToString()
         end if
         raw = ""
+        msUrl = m.top.mediaServerUrl
         url = m.top.apiUrl
         isAppCast = false
-        if url <> ""
+        hasCinemaCast = false
+        if msUrl <> ""
+            msPollUrl = msUrl + "/api/roku-cinema"
+            if curRev <> ""
+                msPollUrl = msPollUrl + "?knownRev=" + curRev
+            end if
+            msHttp = CreateObject("roUrlTransfer")
+            msHttp.SetUrl(msPollUrl)
+            msRaw = msHttp.GetToString()
+            if msRaw <> ""
+                hasCinemaCast = (Instr(1, msRaw, Chr(34) + "cinemaCast" + Chr(34) + ":{") > 0)
+                isUnchanged = (Instr(1, msRaw, Chr(34) + "unchanged" + Chr(34) + ":true") > 0)
+                if not isUnchanged
+                    parsedMs = ParseJson(msRaw)
+                    if parsedMs <> invalid and parsedMs.rev <> invalid
+                        curRev = parsedMs.rev.ToStr()
+                    end if
+                    m.top.payloadJson = msRaw
+                else if hasCinemaCast or hadCinemaCast
+                    m.top.payloadJson = msRaw
+                end if
+                hadCinemaCast = hasCinemaCast
+            end if
+        else if url <> ""
             pollUrl = url
             if lastFrameSeq >= 0
                 sep = "?"
@@ -1757,10 +1927,10 @@ sub pollDashboard()
         end if
         if isAppCast
             sleep(15)
-        else if Instr(1, raw, Chr(34) + "cinemaCastActive" + Chr(34) + ":true") > 0
+        else if hasCinemaCast or Instr(1, raw, Chr(34) + "cinemaCastActive" + Chr(34) + ":true") > 0
             sleep(500)
         else
-            sleep(2000)
+            sleep(2500)
         end if
     end while
 end sub
@@ -1775,9 +1945,10 @@ end sub
       ? `SLIDESHOW: ${ssSlideNum}/${ssTotal} (${ssInterval}s) - Next in ${ssRem}s`
       : `SINGLE DASHBOARD (Slideshow Off)`;
 
-    let initialCinemaLibActive = false;
+    let initialCinemaLibActive = isMoviePlayerChannel;
     let initialCinemaLibDefaultTab = 'movies';
     let initialCinemaLibItems = [];
+    let initialCinemaRev = preloadedCinemaRev || '';
     const toCleanAsciiObj = (val) => {
       if (typeof val === 'string') {
         return val
@@ -1797,7 +1968,7 @@ end sub
       if (!item || typeof item !== 'object') return item;
       const fixUrl = (u) => {
         if (!u || typeof u !== 'string') return u;
-        return u.replace(/^http:\/\/(\d+\.\d+\.\d+\.\d+|localhost|127\.0\.0\.1):(\d+)\//i, `http://${targetHost}:$2/`);
+        return u.replace(/^http:\/\/(localhost|127\.0\.0\.1):(\d+)\//i, `http://${targetHost}:$2/`);
       };
       const cleaned = toCleanAsciiObj(item);
       const out = {
@@ -1806,33 +1977,40 @@ end sub
         coverUrl: fixUrl(cleaned.coverUrl),
         thumbnailUrl: fixUrl(cleaned.thumbnailUrl),
         streamUrl: fixUrl(cleaned.streamUrl),
+        hlsUrl: fixUrl(cleaned.hlsUrl),
       };
       if (Array.isArray(cleaned.episodes)) {
         out.episodes = cleaned.episodes.map((ep) => ({
           ...ep,
           artUrl: fixUrl(ep.artUrl) || out.artUrl,
           streamUrl: fixUrl(ep.streamUrl),
+          hlsUrl: fixUrl(ep.hlsUrl),
         }));
       }
       return out;
     };
     try {
-      const cfgFile = path.join(process.env.ROBOS_CONFIG_DIR || path.join(os.homedir(), '.config', 'robos'), 'tv-studio.json');
-      if (fs.existsSync(cfgFile)) {
-        const stDisk = JSON.parse(fs.readFileSync(cfgFile, 'utf8'));
+      const cfgFile = path.join(resolvedCfgDir, 'tv-studio.json');
+      const stDisk = fs.existsSync(cfgFile) ? JSON.parse(fs.readFileSync(cfgFile, 'utf8')) : {};
+      const tabloSnap = Array.isArray(stDisk.tabloCinemaItemsSnapshot) ? stDisk.tabloCinemaItemsSnapshot : [];
+      if (Array.isArray(preloadedCinemaItems) && preloadedCinemaItems.length > 0) {
+        const hasTabloAlready = preloadedCinemaItems.some(it => it && (it.isTablo || it.mediaType === 'tablo'));
+        const merged = hasTabloAlready ? preloadedCinemaItems : [...preloadedCinemaItems, ...tabloSnap];
+        initialCinemaLibItems = merged.map((it) => rewriteCinemaItemHost(it, hostIp));
+      } else if (stDisk) {
         const baseMovies = Array.isArray(stDisk.moviePlayerLibrarySnapshot)
           ? stDisk.moviePlayerLibrarySnapshot.filter((it) => it && !it.isTablo && it.mediaType !== 'tablo')
           : [];
-        const tabloSnap = Array.isArray(stDisk.tabloCinemaItemsSnapshot) ? stDisk.tabloCinemaItemsSnapshot : [];
         initialCinemaLibItems = [...baseMovies, ...tabloSnap].map((it) => rewriteCinemaItemHost(it, hostIp));
-        if (stDisk.activeCinemaLibrary && stDisk.activeCinemaLibrary.defaultTab) {
+        if (!isMoviePlayerChannel && stDisk.activeCinemaLibrary && stDisk.activeCinemaLibrary.defaultTab) {
           initialCinemaLibDefaultTab = String(stDisk.activeCinemaLibrary.defaultTab);
         }
         const hasActiveAppCast = Object.values(stDisk.appCasts || {}).some((c) => c && c.active);
         if (
-          !hasActiveAppCast &&
-          ((stDisk.activeCinemaLibrary && stDisk.activeCinemaLibrary.active !== false) ||
-            (stDisk.activeCinemaCast && stDisk.activeCinemaCast.active !== false))
+          isMoviePlayerChannel ||
+          (!hasActiveAppCast &&
+            ((stDisk.activeCinemaLibrary && stDisk.activeCinemaLibrary.active !== false) ||
+              (stDisk.activeCinemaCast && stDisk.activeCinemaCast.active !== false)))
         ) {
           initialCinemaLibActive = true;
         }
@@ -2055,7 +2233,7 @@ ${voiceSlide2RowsXml}
       <Rectangle id="wallCardBg0" translation="[852, 914]" width="154" height="110" color="0x2B2114FF" />
       <Rectangle translation="[860, 922]" width="44" height="64" color="0xE8A33DFF" />
       <Label translation="[860, 944]" scale="[0.58, 0.58]" width="74" height="28" numLines="1" horizAlign="center" color="0x110E0BFF" text="FILM" />
-      <Poster id="wallCardPoster0" translation="[860, 922]" width="44" height="64" loadDisplayMode="scaleToZoom" />
+      <Poster id="wallCardPoster0" translation="[860, 922]" width="44" height="64" loadWidth="88" loadHeight="128" loadDisplayMode="scaleToZoom" />
       <Label id="wallCardTitle0" translation="[912, 926]" scale="[0.46, 0.46]" width="190" height="44" wrap="true" numLines="2" color="0xFCD34DFF" text="MOVIES" />
       <Label id="wallCardSub0" translation="[860, 994]" scale="[0.40, 0.40]" width="340" height="22" numLines="1" color="0xF1E9DCFF" text="107 Feature Films" />
 
@@ -2063,7 +2241,7 @@ ${voiceSlide2RowsXml}
       <Rectangle id="wallCardBg1" translation="[1020, 914]" width="154" height="110" color="0x132536FF" />
       <Rectangle translation="[1028, 922]" width="44" height="64" color="0x38BDF8FF" />
       <Label translation="[1028, 944]" scale="[0.58, 0.58]" width="74" height="28" numLines="1" horizAlign="center" color="0x090D16FF" text="SHOW" />
-      <Poster id="wallCardPoster1" translation="[1028, 922]" width="44" height="64" loadDisplayMode="scaleToZoom" />
+      <Poster id="wallCardPoster1" translation="[1028, 922]" width="44" height="64" loadWidth="88" loadHeight="128" loadDisplayMode="scaleToZoom" />
       <Label id="wallCardTitle1" translation="[1080, 926]" scale="[0.46, 0.46]" width="190" height="44" wrap="true" numLines="2" color="0x67E8F9FF" text="TV SHOWS" />
       <Label id="wallCardSub1" translation="[1028, 994]" scale="[0.40, 0.40]" width="340" height="22" numLines="1" color="0xE2E8F0FF" text="48 Series | Seasons" />
 
@@ -2071,7 +2249,7 @@ ${voiceSlide2RowsXml}
       <Rectangle id="wallCardBg2" translation="[1188, 914]" width="154" height="110" color="0x0F2938FF" />
       <Rectangle translation="[1196, 922]" width="44" height="64" color="0x00BCD4FF" />
       <Label translation="[1196, 944]" scale="[0.58, 0.58]" width="74" height="28" numLines="1" horizAlign="center" color="0x090D16FF" text="DVR" />
-      <Poster id="wallCardPoster2" translation="[1196, 922]" width="44" height="64" loadDisplayMode="scaleToZoom" />
+      <Poster id="wallCardPoster2" translation="[1196, 922]" width="44" height="64" loadWidth="88" loadHeight="128" loadDisplayMode="scaleToZoom" />
       <Label id="wallCardTitle2" translation="[1248, 926]" scale="[0.46, 0.46]" width="190" height="44" wrap="true" numLines="2" color="0x67E8F9FF" text="TABLO DVR" />
       <Label id="wallCardSub2" translation="[1196, 994]" scale="[0.40, 0.40]" width="340" height="22" numLines="1" color="0xA5F3FCFF" text="OTA Recordings" />
 
@@ -2123,7 +2301,7 @@ ${voiceSlide2RowsXml}
       <Rectangle id="cinemaTabMoviesStripe" translation="[258, 74]" width="342" height="6" color="0xFCD34DFF" />
       <Rectangle id="cinemaTabMoviesArtBg" translation="[266, 18]" width="42" height="56" color="0xE8A33DFF" />
       <Label translation="[266, 36]" scale="[0.52, 0.52]" width="80" height="24" numLines="1" horizAlign="center" color="0x110E0BFF" text="FILM" />
-      <Poster id="cinemaTabMoviesPoster" translation="[266, 18]" width="42" height="56" loadDisplayMode="scaleToZoom" />
+      <Poster id="cinemaTabMoviesPoster" translation="[266, 18]" width="42" height="56" loadWidth="84" loadHeight="112" loadDisplayMode="scaleToZoom" />
       <Label id="cinemaTabMoviesLabel" translation="[318, 20]" scale="[0.58, 0.58]" width="320" height="30" numLines="1" color="0xFCD34DFF" text="MOVIES" />
       <Label id="cinemaTabMoviesSub" translation="[318, 48]" scale="[0.43, 0.43]" width="430" height="24" numLines="1" color="0xF1E9DCFF" text="107 Feature Films  |  4K &amp; BluRay" />
       <Rectangle id="cinemaTabMoviesPillBg" translation="[508, 22]" width="84" height="26" color="0xE8A33DFF" />
@@ -2135,7 +2313,7 @@ ${voiceSlide2RowsXml}
       <Rectangle id="cinemaTabShowsStripe" translation="[620, 74]" width="348" height="6" color="0x2E261EFF" />
       <Rectangle id="cinemaTabShowsArtBg" translation="[628, 18]" width="42" height="56" color="0x38BDF8FF" />
       <Label translation="[628, 36]" scale="[0.52, 0.52]" width="80" height="24" numLines="1" horizAlign="center" color="0x090D16FF" text="SHOW" />
-      <Poster id="cinemaTabShowsPoster" translation="[628, 18]" width="42" height="56" loadDisplayMode="scaleToZoom" />
+      <Poster id="cinemaTabShowsPoster" translation="[628, 18]" width="42" height="56" loadWidth="84" loadHeight="112" loadDisplayMode="scaleToZoom" />
       <Label id="cinemaTabShowsLabel" translation="[680, 20]" scale="[0.58, 0.58]" width="330" height="30" numLines="1" color="0x94A3B8FF" text="TV SHOWS" />
       <Label id="cinemaTabShowsSub" translation="[680, 48]" scale="[0.43, 0.43]" width="430" height="24" numLines="1" color="0xA89F91FF" text="48 Series  |  Seasons &amp; Episodes" />
       <Rectangle id="cinemaTabShowsPillBg" translation="[876, 22]" width="84" height="26" color="0x261F18FF" />
@@ -2148,7 +2326,7 @@ ${voiceSlide2RowsXml}
         <Rectangle id="cinemaTabTabloStripe" translation="[988, 74]" width="408" height="6" color="0x00BCD4FF" />
         <Rectangle id="cinemaTabTabloArtBg" translation="[996, 18]" width="56" height="56" color="0x00BCD4FF" />
         <Label translation="[996, 36]" scale="[0.52, 0.52]" width="106" height="24" numLines="1" horizAlign="center" color="0x090D16FF" text="DVR" />
-        <Poster id="cinemaTabTabloPoster" translation="[996, 18]" width="56" height="56" loadDisplayMode="scaleToZoom" />
+        <Poster id="cinemaTabTabloPoster" translation="[996, 18]" width="56" height="56" loadWidth="112" loadHeight="112" loadDisplayMode="scaleToZoom" />
         <Label id="cinemaTabTabloLabel" translation="[1062, 20]" scale="[0.58, 0.58]" width="400" height="30" numLines="1" color="0x67E8F9FF" text="TABLO DVR" />
         <Label id="cinemaTabTabloSub" translation="[1062, 48]" scale="[0.43, 0.43]" width="520" height="24" numLines="1" color="0xA5F3FCFF" text="OTA Recordings" />
         <Rectangle id="cinemaTabTabloPillBg" translation="[1304, 22]" width="84" height="26" color="0x00BCD4FF" />
@@ -2161,7 +2339,7 @@ ${voiceSlide2RowsXml}
         <Rectangle id="cinemaTabBackBg" translation="[988, 14]" width="408" height="66" color="0x132536FF" />
         <Rectangle translation="[996, 18]" width="42" height="56" color="0x38BDF8FF" />
         <Label translation="[996, 36]" scale="[0.56, 0.56]" width="74" height="24" numLines="1" horizAlign="center" color="0x090D16FF" text="ALL" />
-        <Poster id="cinemaTabBackPoster" translation="[996, 18]" width="42" height="56" loadDisplayMode="scaleToZoom" />
+        <Poster id="cinemaTabBackPoster" translation="[996, 18]" width="42" height="56" loadWidth="84" loadHeight="112" loadDisplayMode="scaleToZoom" />
         <Label id="cinemaTabBackLabel" translation="[1050, 20]" scale="[0.56, 0.56]" width="420" height="28" numLines="1" color="0x67E8F9FF" text="ALL TV SHOWS" />
         <Label id="cinemaTabBackSub" translation="[1050, 48]" scale="[0.44, 0.44]" width="480" height="22" numLines="1" color="0xE2E8F0FF" text="Back to 48 Series Grid" />
       </Group>
@@ -2189,7 +2367,7 @@ ${voiceSlide2RowsXml}
       <Label id="cinemaHeroPosterMonogram" translation="[56, 192]" scale="[1.35, 1.35]" width="130" height="56" numLines="1" horizAlign="center" color="0xFCD34DFF" text="RC" />
       <Label id="cinemaHeroPosterFallbackTitle" translation="[62, 276]" scale="[0.46, 0.46]" width="356" height="48" numLines="2" horizAlign="center" color="0xF8FAFCFF" text="RobOS Cinema" />
       <Label id="cinemaHeroPosterFallbackYear" translation="[62, 344]" scale="[0.44, 0.44]" width="356" height="24" numLines="1" horizAlign="center" color="0xE8A33DFF" text="1080p HD" />
-      <Poster id="cinemaLibPoster" translation="[56, 118]" width="176" height="260" loadDisplayMode="scaleToZoom" />
+      <Poster id="cinemaLibPoster" translation="[56, 118]" width="176" height="260" loadWidth="352" loadHeight="520" loadDisplayMode="scaleToZoom" />
       <Rectangle id="cinemaHeroProgTrack" translation="[56, 370]" width="176" height="8" color="0x090807FF" visible="false" />
       <Rectangle id="cinemaHeroProgFill" translation="[56, 370]" width="0" height="8" color="0xE8A33DFF" visible="false" />
 
@@ -2238,7 +2416,7 @@ ${voiceSlide2RowsXml}
         <Rectangle id="cinemaHeroThumbBorder" translation="[1400, 112]" width="472" height="268" color="0x00BCD4FF" />
         <Rectangle translation="[1404, 116]" width="464" height="260" color="0x090D16FF" />
         <Label translation="[1404, 224]" scale="[0.58, 0.58]" width="800" height="30" numLines="1" horizAlign="center" color="0x38BDF8FF" text="TABLO DVR RECORDING THUMBNAIL" />
-        <Poster id="cinemaHeroThumbPoster" translation="[1404, 116]" width="464" height="260" loadDisplayMode="scaleToZoom" />
+        <Poster id="cinemaHeroThumbPoster" translation="[1404, 116]" width="464" height="260" loadWidth="640" loadHeight="360" loadDisplayMode="scaleToZoom" />
         <Rectangle translation="[1404, 344]" width="464" height="32" color="0x090D16D8" />
         <Label id="cinemaHeroThumbCaption" translation="[1414, 350]" scale="[0.43, 0.43]" width="1040" height="22" numLines="1" color="0x67E8F9FF" text="TABLO RECORDING THUMBNAIL" />
       </Group>
@@ -2260,7 +2438,7 @@ ${voiceSlide2RowsXml}
         <Rectangle id="cinemaCatCardActiveBar0" translation="[50, 531]" width="292" height="5" color="0xE8A33DFF" />
         <Rectangle id="cinemaCatCardArtBg0" translation="[62, 448]" width="54" height="80" color="0x3B2314FF" />
         <Label id="cinemaCatCardMono0" translation="[62, 476]" scale="[0.58, 0.58]" width="92" height="26" numLines="1" horizAlign="center" color="0xFCD34DFF" text="ALL" />
-        <Poster id="cinemaCatCardPoster0" translation="[62, 448]" width="54" height="80" loadDisplayMode="scaleToZoom" />
+        <Poster id="cinemaCatCardPoster0" translation="[62, 448]" width="54" height="80" loadWidth="108" loadHeight="160" loadDisplayMode="scaleToZoom" />
         <Label id="cinemaCatCardTag0" translation="[126, 450]" scale="[0.40, 0.40]" width="500" height="20" numLines="1" color="0x67E8F9FF" text="COLLECTION" />
         <Label id="cinemaCatCardTitle0" translation="[126, 470]" scale="[0.50, 0.50]" width="410" height="36" wrap="true" numLines="2" color="0xF8FAFCFF" text="All Movies" />
         <Label id="cinemaCatCardCount0" translation="[126, 508]" scale="[0.44, 0.44]" width="450" height="22" numLines="1" color="0xFCD34DFF" text="107 Films" />
@@ -2271,7 +2449,7 @@ ${voiceSlide2RowsXml}
         <Rectangle id="cinemaCatCardActiveBar1" translation="[354, 531]" width="292" height="5" color="0x2E261EFF" />
         <Rectangle id="cinemaCatCardArtBg1" translation="[366, 448]" width="54" height="80" color="0x172554FF" />
         <Label id="cinemaCatCardMono1" translation="[366, 476]" scale="[0.58, 0.58]" width="92" height="26" numLines="1" horizAlign="center" color="0x67E8F9FF" text="GO" />
-        <Poster id="cinemaCatCardPoster1" translation="[366, 448]" width="54" height="80" loadDisplayMode="scaleToZoom" />
+        <Poster id="cinemaCatCardPoster1" translation="[366, 448]" width="54" height="80" loadWidth="108" loadHeight="160" loadDisplayMode="scaleToZoom" />
         <Label id="cinemaCatCardTag1" translation="[430, 450]" scale="[0.40, 0.40]" width="500" height="20" numLines="1" color="0x67E8F9FF" text="WATCHLIST" />
         <Label id="cinemaCatCardTitle1" translation="[430, 470]" scale="[0.50, 0.50]" width="410" height="36" wrap="true" numLines="2" color="0xF8FAFCFF" text="Continue Watching" />
         <Label id="cinemaCatCardCount1" translation="[430, 508]" scale="[0.44, 0.44]" width="450" height="22" numLines="1" color="0xA89F91FF" text="In Progress" />
@@ -2282,7 +2460,7 @@ ${voiceSlide2RowsXml}
         <Rectangle id="cinemaCatCardActiveBar2" translation="[658, 531]" width="292" height="5" color="0x2E261EFF" />
         <Rectangle id="cinemaCatCardArtBg2" translation="[670, 448]" width="54" height="80" color="0x31102FFF" />
         <Label id="cinemaCatCardMono2" translation="[670, 476]" scale="[0.58, 0.58]" width="92" height="26" numLines="1" horizAlign="center" color="0xD8B4FEFF" text="BOX" />
-        <Poster id="cinemaCatCardPoster2" translation="[670, 448]" width="54" height="80" loadDisplayMode="scaleToZoom" />
+        <Poster id="cinemaCatCardPoster2" translation="[670, 448]" width="54" height="80" loadWidth="108" loadHeight="160" loadDisplayMode="scaleToZoom" />
         <Label id="cinemaCatCardTag2" translation="[734, 450]" scale="[0.40, 0.40]" width="500" height="20" numLines="1" color="0x67E8F9FF" text="BOX SETS" />
         <Label id="cinemaCatCardTitle2" translation="[734, 470]" scale="[0.50, 0.50]" width="410" height="36" wrap="true" numLines="2" color="0xF8FAFCFF" text="Franchises" />
         <Label id="cinemaCatCardCount2" translation="[734, 508]" scale="[0.44, 0.44]" width="450" height="22" numLines="1" color="0xA89F91FF" text="Collections" />
@@ -2293,7 +2471,7 @@ ${voiceSlide2RowsXml}
         <Rectangle id="cinemaCatCardActiveBar3" translation="[962, 531]" width="292" height="5" color="0x2E261EFF" />
         <Rectangle id="cinemaCatCardArtBg3" translation="[974, 448]" width="54" height="80" color="0x1E293BFF" />
         <Label id="cinemaCatCardMono3" translation="[974, 476]" scale="[0.58, 0.58]" width="92" height="26" numLines="1" horizAlign="center" color="0x67E8F9FF" text="SCI" />
-        <Poster id="cinemaCatCardPoster3" translation="[974, 448]" width="54" height="80" loadDisplayMode="scaleToZoom" />
+        <Poster id="cinemaCatCardPoster3" translation="[974, 448]" width="54" height="80" loadWidth="108" loadHeight="160" loadDisplayMode="scaleToZoom" />
         <Label id="cinemaCatCardTag3" translation="[1038, 450]" scale="[0.40, 0.40]" width="500" height="20" numLines="1" color="0x67E8F9FF" text="GENRE" />
         <Label id="cinemaCatCardTitle3" translation="[1038, 470]" scale="[0.50, 0.50]" width="410" height="36" wrap="true" numLines="2" color="0xF8FAFCFF" text="Sci-Fi &amp; Fantasy" />
         <Label id="cinemaCatCardCount3" translation="[1038, 508]" scale="[0.44, 0.44]" width="450" height="22" numLines="1" color="0xA89F91FF" text="Films" />
@@ -2304,7 +2482,7 @@ ${voiceSlide2RowsXml}
         <Rectangle id="cinemaCatCardActiveBar4" translation="[1266, 531]" width="292" height="5" color="0x2E261EFF" />
         <Rectangle id="cinemaCatCardArtBg4" translation="[1278, 448]" width="54" height="80" color="0x431407FF" />
         <Label id="cinemaCatCardMono4" translation="[1278, 476]" scale="[0.58, 0.58]" width="92" height="26" numLines="1" horizAlign="center" color="0xFCD34DFF" text="ACT" />
-        <Poster id="cinemaCatCardPoster4" translation="[1278, 448]" width="54" height="80" loadDisplayMode="scaleToZoom" />
+        <Poster id="cinemaCatCardPoster4" translation="[1278, 448]" width="54" height="80" loadWidth="108" loadHeight="160" loadDisplayMode="scaleToZoom" />
         <Label id="cinemaCatCardTag4" translation="[1342, 450]" scale="[0.40, 0.40]" width="500" height="20" numLines="1" color="0x67E8F9FF" text="GENRE" />
         <Label id="cinemaCatCardTitle4" translation="[1342, 470]" scale="[0.50, 0.50]" width="410" height="36" wrap="true" numLines="2" color="0xF8FAFCFF" text="Action &amp; Adventure" />
         <Label id="cinemaCatCardCount4" translation="[1342, 508]" scale="[0.44, 0.44]" width="450" height="22" numLines="1" color="0xA89F91FF" text="Films" />
@@ -2315,7 +2493,7 @@ ${voiceSlide2RowsXml}
         <Rectangle id="cinemaCatCardActiveBar5" translation="[1570, 531]" width="292" height="5" color="0x2E261EFF" />
         <Rectangle id="cinemaCatCardArtBg5" translation="[1582, 448]" width="54" height="80" color="0x450A0AFF" />
         <Label id="cinemaCatCardMono5" translation="[1582, 476]" scale="[0.58, 0.58]" width="92" height="26" numLines="1" horizAlign="center" color="0xFCA5A5FF" text="HOR" />
-        <Poster id="cinemaCatCardPoster5" translation="[1582, 448]" width="54" height="80" loadDisplayMode="scaleToZoom" />
+        <Poster id="cinemaCatCardPoster5" translation="[1582, 448]" width="54" height="80" loadWidth="108" loadHeight="160" loadDisplayMode="scaleToZoom" />
         <Label id="cinemaCatCardTag5" translation="[1646, 450]" scale="[0.40, 0.40]" width="500" height="20" numLines="1" color="0x67E8F9FF" text="GENRE" />
         <Label id="cinemaCatCardTitle5" translation="[1646, 470]" scale="[0.50, 0.50]" width="410" height="36" wrap="true" numLines="2" color="0xF8FAFCFF" text="Horror" />
         <Label id="cinemaCatCardCount5" translation="[1646, 508]" scale="[0.44, 0.44]" width="450" height="22" numLines="1" color="0xA89F91FF" text="Films" />
@@ -2336,7 +2514,7 @@ ${voiceSlide2RowsXml}
         <Rectangle id="cinemaCardBg0" translation="[54, 600]" width="284" height="400" color="0x1E1914FF" />
         <Rectangle id="cinemaCardArtBg0" translation="[62, 608]" width="268" height="304" color="0x2D1B36FF" />
         <Label id="cinemaCardMono0" translation="[62, 736]" scale="[1.40, 1.40]" width="190" height="54" numLines="1" horizAlign="center" color="0xFCD34DFF" text="M1" />
-        <Poster id="cinemaCardPoster0" translation="[62, 608]" width="268" height="304" loadDisplayMode="scaleToZoom" />
+        <Poster id="cinemaCardPoster0" translation="[62, 608]" width="268" height="304" loadWidth="360" loadHeight="480" loadDisplayMode="scaleToZoom" />
         <Rectangle id="cinemaCardPillBg0" translation="[196, 616]" width="126" height="26" color="0x110E0BE6" />
         <Label id="cinemaCardBadge0" translation="[200, 621]" scale="[0.42, 0.42]" width="280" height="20" numLines="1" horizAlign="center" color="0xFCD34DFF" text="2024 | * 8.4" />
         <Rectangle id="cinemaCardProgTrack0" translation="[62, 906]" width="268" height="6" color="0x090807FF" visible="false" />
@@ -2350,7 +2528,7 @@ ${voiceSlide2RowsXml}
         <Rectangle id="cinemaCardBg1" translation="[358, 600]" width="284" height="400" color="0x1E1914FF" />
         <Rectangle id="cinemaCardArtBg1" translation="[366, 608]" width="268" height="304" color="0x1E293BFF" />
         <Label id="cinemaCardMono1" translation="[366, 736]" scale="[1.40, 1.40]" width="190" height="54" numLines="1" horizAlign="center" color="0xFCD34DFF" text="M2" />
-        <Poster id="cinemaCardPoster1" translation="[366, 608]" width="268" height="304" loadDisplayMode="scaleToZoom" />
+        <Poster id="cinemaCardPoster1" translation="[366, 608]" width="268" height="304" loadWidth="360" loadHeight="480" loadDisplayMode="scaleToZoom" />
         <Rectangle id="cinemaCardPillBg1" translation="[500, 616]" width="126" height="26" color="0x110E0BE6" />
         <Label id="cinemaCardBadge1" translation="[504, 621]" scale="[0.42, 0.42]" width="280" height="20" numLines="1" horizAlign="center" color="0xFCD34DFF" text="2024 | * 8.4" />
         <Rectangle id="cinemaCardProgTrack1" translation="[366, 906]" width="268" height="6" color="0x090807FF" visible="false" />
@@ -2364,7 +2542,7 @@ ${voiceSlide2RowsXml}
         <Rectangle id="cinemaCardBg2" translation="[662, 600]" width="284" height="400" color="0x1E1914FF" />
         <Rectangle id="cinemaCardArtBg2" translation="[670, 608]" width="268" height="304" color="0x31102FFF" />
         <Label id="cinemaCardMono2" translation="[670, 736]" scale="[1.40, 1.40]" width="190" height="54" numLines="1" horizAlign="center" color="0xFCD34DFF" text="M3" />
-        <Poster id="cinemaCardPoster2" translation="[670, 608]" width="268" height="304" loadDisplayMode="scaleToZoom" />
+        <Poster id="cinemaCardPoster2" translation="[670, 608]" width="268" height="304" loadWidth="360" loadHeight="480" loadDisplayMode="scaleToZoom" />
         <Rectangle id="cinemaCardPillBg2" translation="[804, 616]" width="126" height="26" color="0x110E0BE6" />
         <Label id="cinemaCardBadge2" translation="[808, 621]" scale="[0.42, 0.42]" width="280" height="20" numLines="1" horizAlign="center" color="0xFCD34DFF" text="2024 | * 8.4" />
         <Rectangle id="cinemaCardProgTrack2" translation="[670, 906]" width="268" height="6" color="0x090807FF" visible="false" />
@@ -2378,7 +2556,7 @@ ${voiceSlide2RowsXml}
         <Rectangle id="cinemaCardBg3" translation="[966, 600]" width="284" height="400" color="0x1E1914FF" />
         <Rectangle id="cinemaCardArtBg3" translation="[974, 608]" width="268" height="304" color="0x142E24FF" />
         <Label id="cinemaCardMono3" translation="[974, 736]" scale="[1.40, 1.40]" width="190" height="54" numLines="1" horizAlign="center" color="0xFCD34DFF" text="M4" />
-        <Poster id="cinemaCardPoster3" translation="[974, 608]" width="268" height="304" loadDisplayMode="scaleToZoom" />
+        <Poster id="cinemaCardPoster3" translation="[974, 608]" width="268" height="304" loadWidth="360" loadHeight="480" loadDisplayMode="scaleToZoom" />
         <Rectangle id="cinemaCardPillBg3" translation="[1108, 616]" width="126" height="26" color="0x110E0BE6" />
         <Label id="cinemaCardBadge3" translation="[1112, 621]" scale="[0.42, 0.42]" width="280" height="20" numLines="1" horizAlign="center" color="0xFCD34DFF" text="2024 | * 8.4" />
         <Rectangle id="cinemaCardProgTrack3" translation="[974, 906]" width="268" height="6" color="0x090807FF" visible="false" />
@@ -2392,7 +2570,7 @@ ${voiceSlide2RowsXml}
         <Rectangle id="cinemaCardBg4" translation="[1270, 600]" width="284" height="400" color="0x1E1914FF" />
         <Rectangle id="cinemaCardArtBg4" translation="[1278, 608]" width="268" height="304" color="0x3B1D1DFF" />
         <Label id="cinemaCardMono4" translation="[1278, 736]" scale="[1.40, 1.40]" width="190" height="54" numLines="1" horizAlign="center" color="0xFCD34DFF" text="M5" />
-        <Poster id="cinemaCardPoster4" translation="[1278, 608]" width="268" height="304" loadDisplayMode="scaleToZoom" />
+        <Poster id="cinemaCardPoster4" translation="[1278, 608]" width="268" height="304" loadWidth="360" loadHeight="480" loadDisplayMode="scaleToZoom" />
         <Rectangle id="cinemaCardPillBg4" translation="[1412, 616]" width="126" height="26" color="0x110E0BE6" />
         <Label id="cinemaCardBadge4" translation="[1416, 621]" scale="[0.42, 0.42]" width="280" height="20" numLines="1" horizAlign="center" color="0xFCD34DFF" text="2024 | * 8.4" />
         <Rectangle id="cinemaCardProgTrack4" translation="[1278, 906]" width="268" height="6" color="0x090807FF" visible="false" />
@@ -2406,7 +2584,7 @@ ${voiceSlide2RowsXml}
         <Rectangle id="cinemaCardBg5" translation="[1574, 600]" width="284" height="400" color="0x1E1914FF" />
         <Rectangle id="cinemaCardArtBg5" translation="[1582, 608]" width="268" height="304" color="0x172554FF" />
         <Label id="cinemaCardMono5" translation="[1582, 736]" scale="[1.40, 1.40]" width="190" height="54" numLines="1" horizAlign="center" color="0xFCD34DFF" text="M6" />
-        <Poster id="cinemaCardPoster5" translation="[1582, 608]" width="268" height="304" loadDisplayMode="scaleToZoom" />
+        <Poster id="cinemaCardPoster5" translation="[1582, 608]" width="268" height="304" loadWidth="360" loadHeight="480" loadDisplayMode="scaleToZoom" />
         <Rectangle id="cinemaCardPillBg5" translation="[1716, 616]" width="126" height="26" color="0x110E0BE6" />
         <Label id="cinemaCardBadge5" translation="[1720, 621]" scale="[0.42, 0.42]" width="280" height="20" numLines="1" horizAlign="center" color="0xFCD34DFF" text="2024 | * 8.4" />
         <Rectangle id="cinemaCardProgTrack5" translation="[1582, 906]" width="268" height="6" color="0x090807FF" visible="false" />
@@ -2624,12 +2802,21 @@ sub init()
     ]
     m.top.setFocus(true)
 
+    m.bundledTabloItems = []
     initLibRaw = ReadAsciiFile("pkg:/source/cinema-library.json")
+    initKnownRev = ""
     if initLibRaw <> ""
         initLibObj = ParseJson(initLibRaw)
         if initLibObj <> invalid and initLibObj.items <> invalid
+            for each initIt in initLibObj.items
+                if initIt <> invalid and ((initIt.isTablo = true) or (initIt.mediaType <> invalid and initIt.mediaType = "tablo"))
+                    m.bundledTabloItems.Push(initIt)
+                end if
+            end for
             m.latestCinemaLibrary = initLibObj
+            if initLibObj.rev <> invalid then initKnownRev = initLibObj.rev.ToStr()
             if initLibObj.active = true
+                m.localLibraryOpened = true
                 showCinemaLibrary(initLibObj)
             end if
         end if
@@ -2638,6 +2825,8 @@ sub init()
 
     m.dashTask = CreateObject("roSGNode", "DashboardTask")
     m.dashTask.apiUrl = "${portalUrl}/api/dashboard-cast"
+    m.dashTask.mediaServerUrl = "${effectiveMediaServerUrl}"
+    m.dashTask.knownRev = initKnownRev
     m.dashTask.observeField("payloadJson", "onPayloadUpdated")
     m.dashTask.observeField("localFrameUri", "onLocalFrameReady")
     m.dashTask.control = "RUN"
@@ -2698,7 +2887,7 @@ sub onClockTick()
             posSec = Int(m.cinemaVideo.position)
             durSec = Int(m.cinemaVideo.duration)
             if posSec > 0
-                m.dashTask.progressUrl = "${portalUrl}/api/tv-progress?id=" + m.currentPlayingTrackId + "&positionSec=" + posSec.ToStr() + "&durationSec=" + durSec.ToStr() + "&seq=" + m.tickCount.ToStr()
+                m.dashTask.progressUrl = "${progressBaseUrl}/api/tv-progress?id=" + m.currentPlayingTrackId + "&positionSec=" + posSec.ToStr() + "&durationSec=" + durSec.ToStr() + "&seq=" + m.tickCount.ToStr()
             end if
         end if
     end if
@@ -3089,15 +3278,12 @@ function cinemaClassifyItem(mv as Object) as Object
         if primaryGenre = "" then primaryGenre = "Tablo OTA DVR"
         bgCol = "0x0F2938FF"
         barCol = "0x00BCD4FF"
-        if m.fs = invalid then m.fs = CreateObject("roFileSystem")
-        if m.fs <> invalid
-            if mv.pkgThumbUri <> invalid and mv.pkgThumbUri <> "" and m.fs.Exists(mv.pkgThumbUri)
-                mv.artUrl = mv.pkgThumbUri
-                mv.thumbnailUrl = mv.pkgThumbUri
-            end if
-            if mv.pkgCoverUri <> invalid and mv.pkgCoverUri <> "" and m.fs.Exists(mv.pkgCoverUri)
-                mv.coverUrl = mv.pkgCoverUri
-            end if
+        if mv.pkgThumbUri <> invalid and mv.pkgThumbUri <> ""
+            mv.artUrl = mv.pkgThumbUri
+            mv.thumbnailUrl = mv.pkgThumbUri
+        end if
+        if mv.pkgCoverUri <> invalid and mv.pkgCoverUri <> ""
+            mv.coverUrl = mv.pkgCoverUri
         end if
     else if isTv
         primaryGenre = "TV Series"
@@ -4448,9 +4634,14 @@ sub playCinemaItemAtIndex(idx as Integer)
         trackId = cleanAscii(mv.id)
     end if
     m.currentPlayingTrackId = trackId
+    m.currentPlayingItem = mv
+    m.currentPlayingHlsUrl = cleanAscii(mv.hlsUrl)
+    m.triedHlsFallback = false
     fmt = "mp4"
     if mv.streamFormat <> invalid and mv.streamFormat <> ""
         fmt = LCase(mv.streamFormat.ToStr())
+    else if Instr(1, LCase(mv.streamUrl.ToStr()), ".m3u8") > 0
+        fmt = "hls"
     else if Instr(1, LCase(mv.streamUrl.ToStr()), ".mkv") > 0
         fmt = "mkv"
     end if
@@ -4462,6 +4653,8 @@ sub playCinemaItemAtIndex(idx as Integer)
     if m.activeShowGroup <> invalid and mv.episodeCode <> invalid
         playTitle = cleanAscii(m.activeShowGroup.title) + " - " + cleanAscii(mv.episodeCode) + " " + cleanAscii(mv.episodeTitle)
     end if
+    m.currentPlayingTitle = playTitle
+    m.currentPlayingStartSec = resumeSec
     playCinemaVideo({
         active: true,
         loadKey: "remote-" + idx.ToStr() + "-" + m.tickCount.ToStr(),
@@ -4476,11 +4669,31 @@ end sub
 sub onCinemaVideoState()
     if m.cinemaVideo = invalid or m.cinemaVideoActive <> true then return
     st = m.cinemaVideo.state
+    if st = "error" and m.triedHlsFallback <> true and m.currentPlayingHlsUrl <> invalid and m.currentPlayingHlsUrl <> ""
+        m.triedHlsFallback = true
+        playCinemaVideo({
+            active: true,
+            loadKey: "hls-fallback-" + m.tickCount.ToStr(),
+            mediaUrl: m.currentPlayingHlsUrl,
+            streamFormat: "hls",
+            title: m.currentPlayingTitle,
+            startAt: m.currentPlayingStartSec,
+            paused: false
+        })
+        return
+    end if
     if st = "finished" or st = "error"
         if st = "finished" and m.dashTask <> invalid and m.currentPlayingTrackId <> ""
-            m.dashTask.progressUrl = "${portalUrl}/api/tv-progress?id=" + m.currentPlayingTrackId + "&watched=true&seq=" + m.tickCount.ToStr()
+            m.dashTask.progressUrl = "${progressBaseUrl}/api/tv-progress?id=" + m.currentPlayingTrackId + "&watched=true&seq=" + m.tickCount.ToStr()
+            if m.currentPlayingItem <> invalid
+                m.currentPlayingItem.completed = true
+                m.currentPlayingItem.inProgress = false
+                m.currentPlayingItem.progressPct = 100
+                m.currentPlayingItem.positionSec = 0
+            end if
         end if
         m.currentPlayingTrackId = ""
+        m.currentPlayingItem = invalid
         m.dismissedCinemaLoadKey = m.lastCinemaLoadKey
         m.localVideoPlaying = false
         stopCinemaVideo()
@@ -4499,6 +4712,20 @@ sub onPayloadUpdated()
     json = ParseJson(raw)
     if json = invalid then return
     if json.cinemaLibrary <> invalid and json.cinemaLibrary.items <> invalid
+        if m.bundledTabloItems <> invalid and m.bundledTabloItems.Count() > 0
+            hasTabloInUpdate = false
+            for each upIt in json.cinemaLibrary.items
+                if upIt <> invalid and ((upIt.isTablo = true) or (upIt.mediaType <> invalid and upIt.mediaType = "tablo"))
+                    hasTabloInUpdate = true
+                    exit for
+                end if
+            end for
+            if not hasTabloInUpdate
+                for each tbIt in m.bundledTabloItems
+                    json.cinemaLibrary.items.Push(tbIt)
+                end for
+            end if
+        end if
         m.latestCinemaLibrary = json.cinemaLibrary
     end if
     if json.appCast <> invalid and json.appCast.active = true and json.appCast.frameUrl <> invalid
@@ -4939,10 +5166,22 @@ function onKeyEvent(key as String, press as Boolean) as Boolean
                 posSec = Int(m.cinemaVideo.position)
                 durSec = Int(m.cinemaVideo.duration)
                 if posSec > 0
-                    m.dashTask.progressUrl = "${portalUrl}/api/tv-progress?id=" + m.currentPlayingTrackId + "&positionSec=" + posSec.ToStr() + "&durationSec=" + durSec.ToStr() + "&seq=" + m.tickCount.ToStr()
+                    m.dashTask.progressUrl = "${progressBaseUrl}/api/tv-progress?id=" + m.currentPlayingTrackId + "&positionSec=" + posSec.ToStr() + "&durationSec=" + durSec.ToStr() + "&seq=" + m.tickCount.ToStr()
+                    if m.currentPlayingItem <> invalid and posSec >= 5
+                        m.currentPlayingItem.positionSec = posSec
+                        m.currentPlayingItem.inProgress = true
+                        m.currentPlayingItem.completed = false
+                        if durSec > 0
+                            pct = Int(((posSec * 1.0) / (durSec * 1.0)) * 100)
+                            if pct < 1 then pct = 1
+                            if pct > 99 then pct = 99
+                            m.currentPlayingItem.progressPct = pct
+                        end if
+                    end if
                 end if
             end if
             m.currentPlayingTrackId = ""
+            m.currentPlayingItem = invalid
             m.dismissedCinemaLoadKey = m.lastCinemaLoadKey
             m.localVideoPlaying = false
             stopCinemaVideo()
@@ -5228,6 +5467,19 @@ end function
     const imagesDir = path.join(targetDir, 'images');
     fs.mkdirSync(imagesDir, { recursive: true });
     try {
+      for (const [imgName, w, h] of [
+        ['channel-poster_fhd.png', 540, 405],
+        ['channel-poster_hd.png', 290, 218],
+        ['channel-poster_sd.png', 214, 144],
+        ['splash_fhd.png', 640, 360],
+      ]) {
+        const imgFull = path.join(imagesDir, imgName);
+        fs.writeFileSync(imgFull, buildCinemaPosterPng(w, h));
+        filesCreated.push(imgFull);
+      }
+    } catch {}
+    const bundledPkgImageUris = new Set();
+    try {
       const tabloCacheDir = path.join(os.homedir(), '.cache', 'robos', 'tablo-images');
       if (fs.existsSync(tabloCacheDir)) {
         for (const f of fs.readdirSync(tabloCacheDir)) {
@@ -5236,10 +5488,16 @@ end function
             const destImg = path.join(imagesDir, `tablo-${m[1]}.jpg`);
             fs.copyFileSync(path.join(tabloCacheDir, f), destImg);
             filesCreated.push(destImg);
+            bundledPkgImageUris.add(`pkg:/images/tablo-${m[1]}.jpg`);
           }
         }
       }
     } catch {}
+    for (const it of initialCinemaLibItems) {
+      if (!it || typeof it !== 'object') continue;
+      if (it.pkgThumbUri && !bundledPkgImageUris.has(it.pkgThumbUri)) delete it.pkgThumbUri;
+      if (it.pkgCoverUri && !bundledPkgImageUris.has(it.pkgCoverUri)) delete it.pkgCoverUri;
+    }
 
     write('manifest', manifest);
     write('source/Main.brs', mainBrs);
@@ -5247,6 +5505,7 @@ end function
       'source/cinema-library.json',
       JSON.stringify({
         active: initialCinemaLibActive,
+        rev: initialCinemaRev,
         defaultTab: initialCinemaLibDefaultTab,
         items: initialCinemaLibItems,
       })
@@ -5255,13 +5514,14 @@ end function
     write('components/DashboardTask.brs', dashboardTaskBrs);
     write('components/MainScene.xml', mainSceneXml);
     write('components/MainScene.brs', mainSceneBrs);
+    const defaultPass = rokuDevPassword || 'robos';
     write(
       'sideload-roku.sh',
       `#!/usr/bin/env bash
 set -euo pipefail
 TV_IP="${tvIp}"
 ROKU_USER="\${ROKU_DEV_USER:-rokudev}"
-ROKU_PASS="\${ROKU_DEV_PASS:-robos}"
+ROKU_PASS="\${ROKU_DEV_PASS:-${defaultPass}}"
 
 rm -f robos-tv-roku.zip
 zip -r -q robos-tv-roku.zip manifest source components images
@@ -5270,7 +5530,7 @@ curl --user "$ROKU_USER:$ROKU_PASS" --digest -s -S \\
   -F "mysubmit=Install" \\
   -F "archive=@robos-tv-roku.zip" \\
   "http://$TV_IP/plugin_install" | grep -i -E "Install Success|Application Received|font color" || true
-echo "[RobOS TV] Sideload complete! RobOS TV is now open on your Roku screen."
+echo "[RobOS TV] Sideload complete! ${effectiveChannelTitle} is now open on your Roku screen."
 `,
       true
     );
@@ -6996,12 +7256,18 @@ function createTvEngine({
     const pkgResult = generateSideloadPackage({
       platformId,
       outputDir: options.outputDir || packagesOutDir,
+      configDir: resolvedConfigDir,
       hostIp,
       portalPort: boundPort,
       tvIp,
       appName: options.appName || 'RobOS TV',
       appId: options.appId || 'com.robos.tv',
       webosPassphrase: options.webosPassphrase || '',
+      channelMode: options.channelMode || 'auto',
+      mediaServerUrl: options.mediaServerUrl || '',
+      preloadedCinemaItems: options.preloadedCinemaItems || null,
+      preloadedCinemaRev: options.preloadedCinemaRev || '',
+      rokuDevPassword: options.rokuDevPassword || '',
     });
 
     const record = {
@@ -7770,6 +8036,148 @@ function createTvEngine({
     };
   }
 
+  /**
+   * Builds, sideloads, and launches the standalone Plex-style "RobOS Movie Player"
+   * Roku OS channel backed directly by the configured RobOS Media Server (:19234).
+   */
+  async function installRokuMoviePlayer(options = {}) {
+    loadState();
+    const tv = state.tvs.find((t) => t.id === options.tvId)
+      || state.tvs.find((t) => options.tvIp && t.ip === options.tvIp)
+      || state.tvs.find((t) => t.platformId === 'roku-os')
+      || (options.tvIp ? { id: `tv-roku-${options.tvIp}`, name: `Roku TV (${options.tvIp})`, ip: options.tvIp, platformId: 'roku-os' } : null);
+    if (!tv || !tv.ip) {
+      return { ok: false, error: 'No Roku TV configured. Pair your Roku TV or pass tvIp.' };
+    }
+
+    const serverUrl = String(options.mediaServerUrl || resolveConfiguredMediaServerUrl(resolvedConfigDir) || '').replace(/\/+$/, '');
+    if (!serverUrl) {
+      return { ok: false, error: 'No RobOS Media Server configured in RobOS Preferences (media-servers.json).' };
+    }
+
+    // Fetch live grouped Movies & TV Series feed directly from RobOS Media Server
+    let liveFeed = null;
+    try {
+      liveFeed = await new Promise((resolve, reject) => {
+        const req = http.get(`${serverUrl}/api/roku-cinema`, { timeout: 10000 }, (res) => {
+          const chunks = [];
+          res.on('data', c => chunks.push(c));
+          res.on('end', () => {
+            try {
+              const j = JSON.parse(Buffer.concat(chunks).toString('utf8'));
+              if (res.statusCode >= 400 || !j?.ok) reject(new Error(j?.error || `HTTP ${res.statusCode}`));
+              else resolve(j);
+            } catch (err) {
+              reject(err);
+            }
+          });
+        });
+        req.on('timeout', () => { req.destroy(); reject(new Error('RobOS Media Server timed out')); });
+        req.on('error', reject);
+      });
+    } catch (err) {
+      return { ok: false, error: `Could not reach RobOS Media Server at ${serverUrl}: ${err.message}` };
+    }
+
+    // Also refresh Tablo DVR snapshot if a Tablo is configured on the LAN
+    if (state.tabloIp) {
+      try { await refreshTabloCinemaSnapshot({ ip: state.tabloIp, port: state.tabloPort }); } catch {}
+    }
+
+    // Clear any stale appCast on this TV so nothing overrides Movie Player
+    if (state.appCasts && state.appCasts[tv.id]) {
+      state.appCasts[tv.id] = { ...state.appCasts[tv.id], active: false };
+    }
+    state.activeCinemaCast = { active: false };
+    state.activeCinemaLibrary = {
+      active: true,
+      defaultTab: options.defaultTab || 'movies',
+      tvId: tv.id,
+      tvName: tv.name,
+      tvIp: tv.ip,
+      platformId: 'roku-os',
+      mediaServerUrl: serverUrl,
+      castAt: new Date().toISOString(),
+    };
+    state.lastRemoteKey = `INSTALL RobOS Movie Player (${liveFeed.counts?.movies || 0} Movies, ${liveFeed.counts?.shows || 0} Shows) → ${tv.name}`;
+    saveState({ overwriteCinemaState: true });
+
+    const preloadedItems = Array.isArray(liveFeed.cinemaLibrary?.items) ? liveFeed.cinemaLibrary.items : [];
+    const pkg = buildTvPackage({
+      platformId: 'roku-os',
+      tvId: tv.id,
+      tvIp: tv.ip,
+      appName: options.appName || 'RobOS Movie Player',
+      channelMode: 'movie-player',
+      mediaServerUrl: serverUrl,
+      preloadedCinemaItems: preloadedItems,
+      preloadedCinemaRev: liveFeed.rev || '',
+      rokuDevPassword: options.rokuDevPassword || process.env.ROBOS_DEV_PASS || process.env.ROKU_DEV_PASS || 'robos',
+      outputDir: options.outputDir,
+    });
+
+    let sideloaded = false;
+    let sideloadOutput = '';
+    if (options.sideload !== false && process.env.ROBOS_TEST !== '1' && !process.env.NODE_TEST_CONTEXT) {
+      const env = {
+        ...process.env,
+        ROKU_DEV_USER: options.rokuDevUser || process.env.ROKU_DEV_USER || 'rokudev',
+        ROKU_DEV_PASS: options.rokuDevPassword || process.env.ROKU_DEV_PASS || 'robos',
+      };
+      const sl = spawnSync('bash', ['sideload-roku.sh'], {
+        cwd: pkg.targetDir,
+        env,
+        timeout: 20000,
+        encoding: 'utf8',
+      });
+      sideloadOutput = `${sl.stdout || ''}${sl.stderr || ''}`.trim();
+      sideloaded = sl.status === 0 && /Install Success|Application Received|Identical to previous/i.test(sideloadOutput);
+
+      // Ensure the newly installed dev channel is foregrounded on screen
+      await new Promise((resolve) => {
+        const req = http.request({
+          hostname: tv.ip,
+          port: 8060,
+          path: '/launch/dev',
+          method: 'POST',
+          agent: false,
+          headers: { 'Content-Length': '0', Connection: 'close' },
+          timeout: 2500,
+        }, (res) => { res.resume(); resolve(res.statusCode); });
+        req.on('error', () => resolve(0));
+        req.on('timeout', () => { req.destroy(); resolve(0); });
+        req.end();
+      });
+
+      if (sideloaded && tv) {
+        const tbCnt = Array.isArray(state.tabloCinemaItemsSnapshot) ? state.tabloCinemaItemsSnapshot.length : 0;
+        tv.sideloadStatus = `RobOS Movie Player Installed (${liveFeed.counts?.movies || 0} Movies · ${liveFeed.counts?.shows || 0} Shows${tbCnt > 0 ? ` · ${tbCnt} DVR` : ''})`;
+        saveState();
+      }
+    }
+
+    const tabloCount = Array.isArray(state.tabloCinemaItemsSnapshot) ? state.tabloCinemaItemsSnapshot.length : 0;
+    const mergedCounts = {
+      ...(liveFeed.counts || {}),
+      tablo: Math.max(Number(liveFeed.counts?.tablo || 0), tabloCount),
+    };
+
+    return {
+      ok: options.sideload === false ? true : sideloaded,
+      sideloaded,
+      sideloadOutput,
+      tv,
+      mediaServerUrl: serverUrl,
+      serverName: liveFeed.serverName || 'RobOS Media Server',
+      counts: mergedCounts,
+      targetDir: pkg.targetDir,
+      zipPath: path.join(pkg.targetDir, 'robos-tv-roku.zip'),
+      message: sideloaded
+        ? `Installed & launched RobOS Movie Player on ${tv.name} (${tv.ip}) connected to ${serverUrl} (${mergedCounts.movies || 0} Movies, ${mergedCounts.shows || 0} TV Shows / ${mergedCounts.episodes || 0} Episodes${mergedCounts.tablo > 0 ? `, ${mergedCounts.tablo} Tablo DVR Recordings` : ''}).`
+        : `Built RobOS Movie Player package at ${pkg.targetDir}${options.sideload === false ? '' : ` (sideload output: ${sideloadOutput || 'check Roku Developer Mode password'})`}.`,
+    };
+  }
+
   return {
     startPortalServer,
     stopPortalServer,
@@ -7781,6 +8189,7 @@ function createTvEngine({
     removeTv,
     scanLanForTvs,
     buildTvPackage,
+    installRokuMoviePlayer,
     renewWebosDevSession,
     sendRemoteKey,
     queryRokuPowerMode,

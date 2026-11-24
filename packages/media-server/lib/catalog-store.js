@@ -103,6 +103,7 @@ class MediaCatalogStore {
     this.byId = new Map();
     this.byPath = new Map();
     this.catalogRevision = 1;
+    this.progressRevision = 1;
     this.updatedAt = new Date().toISOString();
     this.progress = this._readJson(this.progressFile, {});
     this.playlists = this._readJson(this.playlistsFile, []);
@@ -775,8 +776,151 @@ class MediaCatalogStore {
       deviceName: deviceName || os.hostname(),
     };
     this.progress[key] = entry;
+    this.progressRevision += 1;
     this._writeJsonAtomic(this.progressFile, this.progress);
     return entry;
+  }
+
+  /**
+   * Builds the grouped, ASCII-clean 10-foot Roku Cinema+ catalog:
+   * - Movies (individual feature films)
+   * - TV Shows (grouped `isShowGroup: true` Series with sorted `episodes` array)
+   * - Optional extraItems (e.g., Tablo OTA DVR recordings)
+   */
+  getRokuCinemaLibrary(baseUrl = '', { extraItems = [] } = {}) {
+    const b = String(baseUrl || '').replace(/\/+$/, '');
+    const cleanStr = (v) => String(v || '')
+      .replace(/[—–·•]/g, '-')
+      .replace(/[^\x20-\x7E]+/g, '')
+      .replace(/^[-_.\s]+/, '')
+      .trim();
+
+    const rokuFormatAndUrl = (it) => {
+      const ext = String(it.ext || '.mp4').toLowerCase();
+      const hlsUrl = `${b}/hls/${encodeURIComponent(it.id)}/index.m3u8`;
+      if (['.avi', '.wmv', '.flv', '.mpg', '.mpeg', '.ts', '.m2ts'].includes(ext)) {
+        return { streamFormat: 'hls', streamUrl: hlsUrl, hlsUrl };
+      }
+      const fmt = ext === '.mkv' ? 'mkv' : 'mp4';
+      return {
+        streamFormat: fmt,
+        streamUrl: `${b}/stream/${encodeURIComponent(it.id)}${ext}`,
+        hlsUrl,
+      };
+    };
+
+    const progFor = (it) => {
+      const p = this.progress[it.mediaKey] || this.progress[it.id] || null;
+      if (!p) return { inProgress: false, completed: false, positionSec: 0, progressPct: 0 };
+      const pos = Number(p.positionSec) || 0;
+      const dur = Number(p.durationSec) || Number(it.duration) || 0;
+      const pct = p.completed ? 100 : (dur > 0 ? Math.min(99, Math.max(1, Math.round((pos / dur) * 100))) : (p.inProgress ? 15 : 0));
+      return {
+        inProgress: Boolean(p.inProgress),
+        completed: Boolean(p.completed),
+        positionSec: pos,
+        progressPct: pct,
+      };
+    };
+
+    const movieItems = this.items
+      .filter(it => it.mediaType === 'movie')
+      .sort((a, bIt) => cleanStr(a.title).localeCompare(cleanStr(bIt.title)))
+      .map((it, idx) => {
+        const { streamFormat, streamUrl, hlsUrl } = rokuFormatAndUrl(it);
+        const p = progFor(it);
+        return {
+          index: idx + 1,
+          id: it.id,
+          repTrackId: it.id,
+          title: cleanStr(it.title) || 'Untitled Film',
+          artist: cleanStr(it.qualityBadge || it.artist || '1080p HD'),
+          album: cleanStr(it.title),
+          mediaType: 'movie',
+          isShowGroup: false,
+          genre: cleanStr(it.genre || 'Movies & Cinema'),
+          year: it.year || null,
+          qualityBadge: cleanStr(it.qualityBadge || '1080p HD'),
+          overview: cleanStr(it.overview || ''),
+          artUrl: `${b}/api/art/${encodeURIComponent(it.id)}.jpg`,
+          streamUrl,
+          hlsUrl,
+          streamFormat,
+          ...p,
+        };
+      });
+
+    const shows = this.listShows(b);
+    const showItems = shows.map((sh) => {
+      const flatEps = [];
+      let inProgressCount = 0;
+      for (const season of sh.seasons) {
+        for (const ep of season.episodes) {
+          const raw = this.byId.get(ep.id) || ep;
+          const { streamFormat, streamUrl, hlsUrl } = rokuFormatAndUrl(raw);
+          const p = progFor(raw);
+          if (p.inProgress) inProgressCount += 1;
+          flatEps.push({
+            id: ep.id,
+            repTrackId: ep.id,
+            title: cleanStr(ep.title),
+            seasonNumber: ep.seasonNumber || 1,
+            episodeNumber: ep.episodeNumber || 1,
+            episodeCode: cleanStr(ep.episodeCode || `S${String(ep.seasonNumber || 1).padStart(2, '0')}E${String(ep.episodeNumber || 1).padStart(2, '0')}`),
+            episodeTitle: cleanStr(ep.episodeTitle || `Episode ${ep.episodeNumber || 1}`),
+            artUrl: `${b}/api/art/${encodeURIComponent(ep.id)}.jpg`,
+            streamUrl,
+            hlsUrl,
+            streamFormat,
+            ...p,
+          });
+        }
+      }
+      const nextEp = flatEps.find(e => e.inProgress)
+        || flatEps.find(e => !e.completed)
+        || flatEps[0]
+        || null;
+
+      return {
+        id: `show_${sh.slug}`,
+        repTrackId: nextEp ? nextEp.id : `show_${sh.slug}`,
+        title: cleanStr(sh.showName),
+        artist: `${sh.seasonCount} Seasons - ${sh.episodeCount} Episodes`,
+        album: cleanStr(sh.showName),
+        mediaType: 'tv',
+        isShowGroup: true,
+        showName: cleanStr(sh.showName),
+        seasonCount: sh.seasonCount,
+        episodeCount: sh.episodeCount,
+        watchedCount: sh.watchedCount || 0,
+        inProgressCount,
+        inProgress: inProgressCount > 0,
+        progressPct: nextEp?.inProgress ? nextEp.progressPct : 0,
+        positionSec: nextEp?.inProgress ? nextEp.positionSec : 0,
+        episodeCode: nextEp ? nextEp.episodeCode : 'S01E01',
+        episodeTitle: nextEp ? nextEp.episodeTitle : 'Episode 1',
+        year: sh.year || null,
+        genre: cleanStr(sh.genre || 'TV Series'),
+        qualityBadge: 'HD Series',
+        overview: `${cleanStr(sh.showName)} - ${sh.seasonCount} Season${sh.seasonCount === 1 ? '' : 's'}, ${sh.episodeCount} Episode${sh.episodeCount === 1 ? '' : 's'} streaming directly from RobOS Media Server.`,
+        artUrl: sh.artUrl,
+        streamUrl: nextEp ? nextEp.streamUrl : '',
+        hlsUrl: nextEp ? nextEp.hlsUrl : '',
+        streamFormat: nextEp ? nextEp.streamFormat : 'mp4',
+        episodes: flatEps,
+      };
+    });
+
+    return {
+      rev: `${this.catalogRevision}:${this.progressRevision}`,
+      counts: {
+        movies: movieItems.length,
+        shows: showItems.length,
+        episodes: showItems.reduce((acc, s) => acc + s.episodeCount, 0),
+        tablo: Array.isArray(extraItems) ? extraItems.length : 0,
+      },
+      items: [...movieItems, ...showItems, ...(Array.isArray(extraItems) ? extraItems : [])],
+    };
   }
 
   getContinueItems({ limit = 20, baseUrl = '' } = {}) {

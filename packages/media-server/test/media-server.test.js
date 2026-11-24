@@ -365,4 +365,37 @@ test('RobOS Media Server indexes movies, shows, music, books & courses, serves H
   assert.equal(afterResetMovieFolders[0].kind, 'media-service');
   assert.equal(cleanMovieLib.tracks.length, 4);
   assert.ok(!cleanMovieLib.tracks.some(tr => tr.title === 'Stale SFTP Movie'));
+
+  // 6. Verify Roku Cinema grouped feed (/api/roku-cinema), /api/tv-progress, and Roku Movie Player package builder
+  const rokuRes = await httpGetRaw(`${serverUrl}/api/roku-cinema`);
+  assert.equal(rokuRes.status, 200);
+  const rokuFeed = JSON.parse(rokuRes.body.toString('utf8'));
+  assert.equal(rokuFeed.ok, true);
+  assert.equal(rokuFeed.counts.movies, 2);
+  assert.equal(rokuFeed.counts.shows, 1);
+  assert.equal(rokuFeed.counts.episodes, 2);
+  const houseShow = rokuFeed.cinemaLibrary.items.find(it => it.isShowGroup && it.title === 'House');
+  assert.ok(houseShow);
+  assert.equal(houseShow.episodes.length, 2);
+
+  const unchangedRes = await httpGetRaw(`${serverUrl}/api/roku-cinema?knownRev=${encodeURIComponent(rokuFeed.rev)}`);
+  assert.equal(JSON.parse(unchangedRes.body.toString('utf8')).unchanged, true);
+
+  const progRes = await httpGetRaw(`${serverUrl}/api/tv-progress?id=${encodeURIComponent(movieItem.id)}&positionSec=600&durationSec=1800`);
+  assert.equal(progRes.status, 200);
+  assert.equal(JSON.parse(progRes.body.toString('utf8')).entry.inProgress, true);
+
+  const { createTvEngine } = require('../../robos-lib/tv-engine');
+  const tvEng = createTvEngine({ configDir: clientConfigDir });
+  const rokuBuild = await tvEng.installRokuMoviePlayer({
+    tvIp: '192.0.2.15',
+    mediaServerUrl: serverUrl,
+    sideload: false,
+  });
+  assert.equal(rokuBuild.ok, true);
+  const manifestTxt = fs.readFileSync(path.join(rokuBuild.targetDir, 'manifest'), 'utf8');
+  assert.match(manifestTxt, /title=RobOS Movie Player/);
+  const embeddedLib = JSON.parse(fs.readFileSync(path.join(rokuBuild.targetDir, 'source', 'cinema-library.json'), 'utf8'));
+  assert.equal(embeddedLib.active, true);
+  assert.equal(embeddedLib.items.length, 3); // 2 movies + 1 grouped TV series
 });

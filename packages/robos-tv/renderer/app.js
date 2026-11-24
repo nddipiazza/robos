@@ -950,6 +950,27 @@ async function init() {
     };
   }
 
+  const installMovieBtn = document.getElementById('btn-install-roku-movie-player');
+  if (installMovieBtn && typeof window.robosTv?.installRokuMoviePlayer === 'function') {
+    installMovieBtn.onclick = async () => {
+      installMovieBtn.disabled = true;
+      installMovieBtn.textContent = 'Installing RobOS Movie Player on Roku TV…';
+      try {
+        const tvIp = document.getElementById('input-builder-tv-ip')?.value?.trim() || '';
+        const res = await window.robosTv.installRokuMoviePlayer({ tvIp });
+        if (res && res.ok) {
+          await refreshAll();
+          showBanner(res.message);
+        } else {
+          showBanner((res && res.error) || (res && res.message) || 'Could not install RobOS Movie Player on Roku TV', true);
+        }
+      } finally {
+        installMovieBtn.disabled = false;
+        installMovieBtn.textContent = '🎬 Install RobOS Movie Player on Roku TV';
+      }
+    };
+  }
+
   const tabloCastRokuBtn = document.getElementById('btn-tablo-cast-roku');
   if (tabloCastRokuBtn) {
     tabloCastRokuBtn.onclick = async () => {

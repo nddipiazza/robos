@@ -24,4 +24,5 @@ contextBridge.exposeInMainWorld('robosTv', {
   setTabloDevice: (opts) => ipcRenderer.invoke('tv:setTabloDevice', opts),
   openTabloExternal: (opts) => ipcRenderer.invoke('tv:openTabloExternal', opts),
   castTabloToTv: (opts) => ipcRenderer.invoke('tv:castTabloToTv', opts),
+  installRokuMoviePlayer: (opts) => ipcRenderer.invoke('tv:installRokuMoviePlayer', opts),
 });
