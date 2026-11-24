@@ -237,6 +237,19 @@ test('RobOS Media Server indexes movies, shows, music, books & courses, serves H
   assert.match(subRes.body.toString('utf8'), /WEBVTT/);
   assert.match(subRes.body.toString('utf8'), /Whatever it takes/);
 
+  const pbInfoRes = await httpGetRaw(`${serverUrl}/api/playback-info/${movieItem.id}`);
+  assert.equal(pbInfoRes.status, 200);
+  const pbInfo = JSON.parse(pbInfoRes.body.toString('utf8'));
+  assert.equal(pbInfo.ok, true);
+  assert.equal(pbInfo.id, movieItem.id);
+  assert.equal(pbInfo.hasSubtitles, true);
+
+  const { parseTvEpisode } = require('../lib/media-parser');
+  const fgEp = parseTvEpisode('/downloads/shows/Family.Guy.S21/Family.Guy.S21E01.720p.DSNP.WEBRip.x264-GalaxyTV.mkv', '/downloads/shows');
+  assert.equal(fgEp.showName, 'Family Guy');
+  assert.equal(fgEp.episodeCode, 'S21E01');
+  assert.equal(fgEp.episodeTitle, '');
+
   // 2. Save RobOS Media Service in Server's Preferences and sync to Config Sync Vault
   await mediaClient.saveMediaServer(
     { url: serverUrl, name: 'RobOS Server Cinema & Music' },

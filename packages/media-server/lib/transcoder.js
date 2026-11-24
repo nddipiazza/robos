@@ -202,8 +202,10 @@ async function streamTranscodedVideo(req, res, item, { startSec = 0, quality = '
   res.writeHead(200, {
     'Content-Type': 'video/mp4',
     'Access-Control-Allow-Origin': '*',
+    'Access-Control-Expose-Headers': 'X-Media-Duration, X-RobOS-Transcode-Mode',
     'Cache-Control': 'no-store',
     'X-RobOS-Transcode-Mode': canCopyVideo ? 'remux-h264-aac' : 'transcode-x264-aac',
+    ...(probe?.durationSec > 0 ? { 'X-Media-Duration': String(probe.durationSec) } : {}),
   });
 
   if (req.method === 'HEAD') {
@@ -398,10 +400,50 @@ async function serveItemArtwork(res, item, artCacheDir) {
   return sendBuf(Buffer.from(generatePosterSvg(item), 'utf8'), 'image/svg+xml');
 }
 
+const DIRECT_VIDEO_CONTAINERS = new Set(['.mp4', '.m4v', '.webm', '.mkv', '.ogv']);
+const DIRECT_VIDEO_CODECS = new Set(['h264', 'vp8', 'vp9', 'av1', 'theora']);
+const DIRECT_AUDIO_CODECS = new Set(['aac', 'mp3', 'opus', 'vorbis', 'flac', 'pcm_s16le', 'pcm_s24le', 'pcm_f32le']);
+
+async function analyzePlaybackSupport(filePath, fallbackNeedsTranscode = false) {
+  const ext = path.extname(String(filePath || '')).toLowerCase();
+  const probe = await probeMediaFile(filePath);
+  if (!probe) {
+    const canDirect = DIRECT_VIDEO_CONTAINERS.has(ext) && !fallbackNeedsTranscode;
+    return {
+      durationSec: 0,
+      canDirectPlay: canDirect,
+      needsTranscode: !canDirect,
+      hasSubtitles: false,
+      video: null,
+      audio: [],
+      subtitles: [],
+    };
+  }
+  const v = probe.video;
+  const a0 = probe.audio?.[0] || null;
+  const videoOk = !v || (
+    DIRECT_VIDEO_CODECS.has(String(v.codec || '').toLowerCase())
+    && !(String(v.codec || '').toLowerCase() === 'h264' && String(v.pixFmt || '').includes('10'))
+  );
+  const audioOk = !a0 || DIRECT_AUDIO_CODECS.has(String(a0.codec || '').toLowerCase());
+  const canDirectPlay = DIRECT_VIDEO_CONTAINERS.has(ext) && videoOk && audioOk;
+
+  return {
+    durationSec: Number(probe.durationSec) || 0,
+    canDirectPlay,
+    needsTranscode: !canDirectPlay,
+    hasSubtitles: Array.isArray(probe.subtitles) && probe.subtitles.length > 0,
+    video: v,
+    audio: probe.audio || [],
+    subtitles: probe.subtitles || [],
+  };
+}
+
 module.exports = {
   HAS_FFMPEG,
   HAS_FFPROBE,
   probeMediaFile,
+  analyzePlaybackSupport,
   streamFileWithRanges,
   streamTranscodedVideo,
   streamTranscodedAudio,

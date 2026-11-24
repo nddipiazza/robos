@@ -407,15 +407,17 @@ class MediaCatalogStore {
     };
 
     try {
+      const originalItems = this.items.slice();
       const targetIds = new Set(targets.map(s => s.id));
-      const keptOtherServices = this.items.filter(i => !targetIds.has(i.serviceId));
+      const keptOtherServices = originalItems.filter(i => !targetIds.has(i.serviceId));
+      const completedServiceIds = new Set();
       const nextServiceItems = [];
       let added = 0;
       let updated = 0;
 
       if (force) {
         for (const id of targetIds) {
-          for (const it of this.items) {
+          for (const it of originalItems) {
             if (it.serviceId === id) this.byPath.delete(it.filePath);
           }
         }
@@ -452,20 +454,23 @@ class MediaCatalogStore {
             await new Promise(r => setImmediate(r));
           }
           if (i > 0 && i % 1500 === 0) {
-            this.items = keptOtherServices.concat(nextServiceItems);
+            const pendingOld = originalItems.filter(it => targetIds.has(it.serviceId) && !completedServiceIds.has(it.serviceId) && it.serviceId !== svc.id);
+            this.items = keptOtherServices.concat(pendingOld, nextServiceItems);
             this._rebuildMaps();
           }
         }
+        completedServiceIds.add(svc.id);
         svc.lastScannedAt = new Date().toISOString();
-        // Publish completed service items immediately so Movies/Shows/Books are live while Music scans
-        this.items = keptOtherServices.concat(nextServiceItems);
+        // Publish completed service items while preserving items from services not yet scanned
+        const pendingOld = originalItems.filter(it => targetIds.has(it.serviceId) && !completedServiceIds.has(it.serviceId));
+        this.items = keptOtherServices.concat(pendingOld, nextServiceItems);
         this._rebuildMaps();
       }
 
-      const prevTargetCount = this.items.length - keptOtherServices.length;
+      const prevTargetCount = originalItems.length - keptOtherServices.length;
       const seenTargetPaths = new Set(nextServiceItems.map(i => i.filePath));
       let removed = 0;
-      for (const old of this.items) {
+      for (const old of originalItems) {
         if (targetIds.has(old.serviceId) && !seenTargetPaths.has(old.filePath)) removed += 1;
       }
 

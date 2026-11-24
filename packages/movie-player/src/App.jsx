@@ -873,6 +873,126 @@ export default function App() {
     return t.src || (t.filePath ? fileUrl(t.filePath) : '');
   };
 
+  const [playbackProbe, setPlaybackProbe] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    const ms = currentTrack?.mediaService;
+    if (!currentTrack || !isVideoTrack(currentTrack) || !ms?.endpoint || !ms?.remoteItemId) {
+      setPlaybackProbe(null);
+      return undefined;
+    }
+    const trackId = currentTrack.id;
+    const url = `${String(ms.endpoint).replace(/\/+$/, '')}/api/playback-info/${encodeURIComponent(ms.remoteItemId)}`;
+    fetch(url)
+      .then(r => (r.ok ? r.json() : null))
+      .then((info) => {
+        if (cancelled || !info || !info.ok) return;
+        const dur = Number(info.durationSec) || 0;
+        if (dur > 0 && currentTrack) {
+          currentTrack.duration = dur;
+        }
+        let initialOffset = 0;
+        if (info.needsTranscode && pendingLocalSeekRef.current != null && pendingLocalSeekRef.current > 0) {
+          initialOffset = Math.floor(pendingLocalSeekRef.current);
+          pendingLocalSeekRef.current = null;
+        }
+        setPlaybackProbe((prev) => {
+          if (prev && prev.trackId === trackId && prev.forceTranscode) {
+            return { ...prev, ...info, needsTranscode: true, durationSec: dur || prev.durationSec || 0 };
+          }
+          return {
+            trackId,
+            durationSec: dur,
+            canDirectPlay: Boolean(info.canDirectPlay),
+            needsTranscode: Boolean(info.needsTranscode),
+            directStreamUrl: info.directStreamUrl || ms.directStreamUrl || null,
+            transcodeUrl: info.transcodeUrl || ms.transcodeUrl || null,
+            subtitlesUrl: info.subtitlesUrl || ms.subtitlesUrl || null,
+            hasSubtitles: Boolean(info.hasSubtitles),
+            offsetSec: initialOffset,
+            forceTranscode: false,
+          };
+        });
+        if (latestRef.current.isPlaying && info.needsTranscode) {
+          setTimeout(() => { videoRef.current?.play().catch(() => {}); }, 60);
+        }
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [currentTrack?.id, currentTrack?.mediaService?.remoteItemId]);
+
+  const activeProbe = playbackProbe && playbackProbe.trackId === currentTrack?.id ? playbackProbe : null;
+  const rawResolvedSrc = resolveSrc(currentTrack);
+  const isTranscodeActive = Boolean(
+    isVideoTrack(currentTrack) && (
+      activeProbe?.forceTranscode ||
+      activeProbe?.needsTranscode ||
+      (!activeProbe && String(rawResolvedSrc).includes('/transcode/'))
+    )
+  );
+  const transcodeOffsetSec = isTranscodeActive ? (Number(activeProbe?.offsetSec) || 0) : 0;
+  const knownVideoDurationSec = Number(activeProbe?.durationSec) > 0
+    ? Number(activeProbe.durationSec)
+    : (Number(currentTrack?.duration) > 0 ? Number(currentTrack.duration) : 0);
+
+  const activeVideoSrc = (() => {
+    if (!currentTrack || !isVideoTrack(currentTrack)) return '';
+    if (activeProbe) {
+      if (isTranscodeActive && activeProbe.transcodeUrl) {
+        return transcodeOffsetSec > 0
+          ? `${activeProbe.transcodeUrl}?start=${Math.floor(transcodeOffsetSec)}`
+          : activeProbe.transcodeUrl;
+      }
+      if (!isTranscodeActive && activeProbe.directStreamUrl) {
+        return activeProbe.directStreamUrl;
+      }
+    }
+    if (isTranscodeActive && transcodeOffsetSec > 0 && rawResolvedSrc.includes('/transcode/')) {
+      const cleanBase = rawResolvedSrc.split('?')[0];
+      return `${cleanBase}?start=${Math.floor(transcodeOffsetSec)}`;
+    }
+    return rawResolvedSrc;
+  })();
+
+  const seekVideoTo = useCallback((rawTarget) => {
+    const v = videoRef.current;
+    const maxDur = knownVideoDurationSec || (v && isFinite(v.duration) && v.duration > 0 ? v.duration : 0);
+    const target = Math.max(0, maxDur > 0 ? Math.min(Number(rawTarget) || 0, Math.max(0, maxDur - 0.5)) : (Number(rawTarget) || 0));
+    if (!isTranscodeActive) {
+      if (v) v.currentTime = target;
+      return;
+    }
+    if (v && target >= transcodeOffsetSec) {
+      const rel = target - transcodeOffsetSec;
+      let bufEnd = 0;
+      try {
+        if (v.buffered && v.buffered.length > 0) {
+          bufEnd = v.buffered.end(v.buffered.length - 1);
+        }
+      } catch {}
+      if (rel <= Math.max(0, bufEnd - 1.0)) {
+        v.currentTime = rel;
+        return;
+      }
+    }
+    const tcBase = (activeProbe?.transcodeUrl || currentTrack?.mediaService?.transcodeUrl || rawResolvedSrc || '').split('?')[0];
+    if (tcBase && tcBase.includes('/transcode/')) {
+      setPlaybackProbe(prev => ({
+        ...(prev && prev.trackId === currentTrack?.id
+          ? prev
+          : { trackId: currentTrack?.id, durationSec: knownVideoDurationSec, transcodeUrl: tcBase }),
+        needsTranscode: true,
+        forceTranscode: true,
+        offsetSec: Math.floor(target),
+      }));
+      setIsPlaying(true);
+      setTimeout(() => { videoRef.current?.play().catch(() => {}); }, 60);
+    } else if (v) {
+      v.currentTime = target;
+    }
+  }, [isTranscodeActive, knownVideoDurationSec, transcodeOffsetSec, activeProbe, currentTrack, rawResolvedSrc]);
+
   const handleStopCast = async (targetIp = null) => {
     const ipToStop = targetIp || activeCastSession?.ip || (outputTarget !== 'local' ? outputTarget : null);
     showStatus(`Stopping playback on ${ipToStop ? getSpeakerName(ipToStop) : 'speakers'}...`);
@@ -2229,51 +2349,71 @@ export default function App() {
               {isVideoTrack(currentTrack) && (
                 <div className="cinema-stage-box">
                   {outputTarget === 'local' ? (
+                    <>
                     <video
                       id="cinema-video-element"
                       ref={videoRef}
                       className={`cinema-video-el fit-${videoFit}`}
-                      src={resolveSrc(currentTrack)}
+                      src={activeVideoSrc}
                       poster={artUrlFor(artBase.local, currentTrack?.artId) || undefined}
-                      controls
+                      controls={!isTranscodeActive}
                       playsInline
+                      crossOrigin="anonymous"
+                      onClick={() => {
+                        if (!isTranscodeActive || !videoRef.current) return;
+                        if (videoRef.current.paused) { videoRef.current.play().catch(() => {}); setIsPlaying(true); }
+                        else { videoRef.current.pause(); setIsPlaying(false); }
+                      }}
+                      onDoubleClick={(e) => {
+                        if (!isTranscodeActive) return;
+                        if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+                        else e.currentTarget.parentElement?.requestFullscreen?.().catch(() => {});
+                      }}
                       onLoadedMetadata={(e) => {
                         const d = e.currentTarget?.duration;
-                        if (d && isFinite(d) && d > 0) {
+                        if (!isTranscodeActive && d && isFinite(d) && d > 0) {
                           if (currentTrack && !currentTrack.duration) currentTrack.duration = d;
                         }
                         const at = pendingLocalSeekRef.current;
                         if (at != null && e.currentTarget) {
                           pendingLocalSeekRef.current = null;
-                          e.currentTarget.currentTime = at;
+                          if (isTranscodeActive) {
+                            seekVideoTo(at);
+                          } else {
+                            e.currentTarget.currentTime = at;
+                          }
                         }
                       }}
                       onDurationChange={(e) => {
                         const d = e.currentTarget?.duration;
-                        if (d && isFinite(d) && d > 0) {
+                        if (!isTranscodeActive && d && isFinite(d) && d > 0) {
                           if (currentTrack && !currentTrack.duration) currentTrack.duration = d;
                         }
                       }}
                       onTimeUpdate={(e) => {
                         const v = e.currentTarget;
                         if (!v || !currentTrack) return;
-                        const pos = v.currentTime || 0;
-                        const dur = (isFinite(v.duration) && v.duration > 0) ? v.duration : (currentTrack.duration || 0);
+                        const pos = transcodeOffsetSec + (v.currentTime || 0);
+                        const dur = knownVideoDurationSec > 0
+                          ? knownVideoDurationSec
+                          : ((!isTranscodeActive && isFinite(v.duration) && v.duration > 0) ? v.duration : 0);
                         const key = `${currentTrackIndex}:${currentTrack.id || currentTrack.src}`;
                         if (playedRef.current.key !== key) playedRef.current = { key, counted: false };
                         if (!playedRef.current.counted && pos >= Math.min(30, (dur || 60) / 2)) {
                           playedRef.current.counted = true;
                           recordPlay(currentTrack);
                         }
-                        if (pos >= 5) {
+                        if (pos >= 5 && dur > 0) {
                           saveTrackProgress(currentTrack, pos, dur, false);
                         }
                       }}
                       onSeeked={(e) => {
                         const v = e.currentTarget;
-                        const sec = v?.currentTime || 0;
-                        if (currentTrack && sec >= 5) {
-                          const dur = (v && isFinite(v.duration) && v.duration > 0) ? v.duration : (currentTrack.duration || 0);
+                        const sec = transcodeOffsetSec + (v?.currentTime || 0);
+                        const dur = knownVideoDurationSec > 0
+                          ? knownVideoDurationSec
+                          : ((!isTranscodeActive && v && isFinite(v.duration) && v.duration > 0) ? v.duration : 0);
+                        if (currentTrack && sec >= 5 && dur > 0) {
                           saveTrackProgress(currentTrack, sec, dur, false, { force: true });
                         }
                       }}
@@ -2283,27 +2423,110 @@ export default function App() {
                       onPause={(e) => {
                         setIsPlaying(false);
                         const v = e.currentTarget;
-                        if (v && currentTrack && (v.currentTime || 0) >= 5) {
-                          const dur = (isFinite(v.duration) && v.duration > 0) ? v.duration : (currentTrack.duration || 0);
-                          saveTrackProgress(currentTrack, v.currentTime, dur, false, { force: true });
+                        const pos = transcodeOffsetSec + (v?.currentTime || 0);
+                        const dur = knownVideoDurationSec > 0
+                          ? knownVideoDurationSec
+                          : ((!isTranscodeActive && v && isFinite(v.duration) && v.duration > 0) ? v.duration : 0);
+                        if (v && currentTrack && pos >= 5 && dur > 0) {
+                          saveTrackProgress(currentTrack, pos, dur, false, { force: true });
                         }
                       }}
                       onEnded={(e) => {
                         const v = e.currentTarget;
-                        const dur = (v && isFinite(v.duration) && v.duration > 0) ? v.duration : (currentTrack?.duration || 0);
-                        if (currentTrack) saveTrackProgress(currentTrack, dur, dur, true, { force: true });
+                        const dur = knownVideoDurationSec > 0
+                          ? knownVideoDurationSec
+                          : ((!isTranscodeActive && v && isFinite(v.duration) && v.duration > 0) ? v.duration : 0);
+                        if (currentTrack && dur > 0) saveTrackProgress(currentTrack, dur, dur, true, { force: true });
                         handleTrackEnded();
                       }}
                       onError={(e) => {
                         const v = e.currentTarget;
-                        const tcUrl = currentTrack?.mediaService?.transcodeUrl;
-                        if (v && tcUrl && v.src !== tcUrl && !String(v.src).includes('/transcode/')) {
+                        const tcUrl = activeProbe?.transcodeUrl || currentTrack?.mediaService?.transcodeUrl;
+                        if (v && tcUrl && !String(v.src).includes('/transcode/')) {
                           showStatus(`Switching "${currentTrack.title}" to live H.264/AAC stream…`);
-                          v.src = tcUrl;
-                          v.play().catch(() => {});
+                          setPlaybackProbe(prev => ({
+                            ...(prev && prev.trackId === currentTrack.id
+                              ? prev
+                              : { trackId: currentTrack.id, durationSec: knownVideoDurationSec }),
+                            transcodeUrl: tcUrl,
+                            needsTranscode: true,
+                            forceTranscode: true,
+                            offsetSec: 0,
+                          }));
+                          setTimeout(() => { videoRef.current?.play().catch(() => {}); }, 60);
                         }
                       }}
-                    />
+                    >
+                      {activeProbe?.hasSubtitles && activeProbe?.subtitlesUrl && (
+                        <track kind="subtitles" src={activeProbe.subtitlesUrl} srcLang="en" label="English" />
+                      )}
+                    </video>
+                    {isTranscodeActive && (
+                      <div
+                        className="cinema-transcode-controls"
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '10px',
+                          padding: '8px 14px',
+                          background: 'rgba(10, 14, 24, 0.94)',
+                          borderTop: '1px solid rgba(232, 163, 61, 0.22)',
+                        }}
+                      >
+                        <button
+                          type="button"
+                          className="btn-chip"
+                          onClick={() => {
+                            const v = videoRef.current;
+                            if (!v) return;
+                            if (v.paused) { v.play().catch(() => {}); setIsPlaying(true); }
+                            else { v.pause(); setIsPlaying(false); }
+                          }}
+                          title={isPlaying ? 'Pause' : 'Play'}
+                        >
+                          {isPlaying ? '⏸' : '▶'}
+                        </button>
+                        <button
+                          type="button"
+                          className="btn-chip"
+                          onClick={() => seekVideoTo((transcodeOffsetSec + (videoRef.current?.currentTime || 0)) - 15)}
+                          title="Rewind 15s"
+                        >
+                          -15s
+                        </button>
+                        <button
+                          type="button"
+                          className="btn-chip"
+                          onClick={() => seekVideoTo((transcodeOffsetSec + (videoRef.current?.currentTime || 0)) + 15)}
+                          title="Forward 15s"
+                        >
+                          +15s
+                        </button>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <MiniProgress
+                            trackId={`${currentTrack?.id || ''}:${transcodeOffsetSec}`}
+                            getAudio={() => videoRef.current}
+                            knownDuration={knownVideoDurationSec}
+                            offsetSec={transcodeOffsetSec}
+                            isTranscode={true}
+                            onSeekOverride={seekVideoTo}
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          className="btn-chip"
+                          onClick={(e) => {
+                            const box = e.currentTarget.closest('.cinema-stage-box');
+                            if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+                            else box?.requestFullscreen?.().catch(() => {});
+                          }}
+                          title="Toggle Fullscreen"
+                        >
+                          ⛶
+                        </button>
+                      </div>
+                    )}
+                    </>
                   ) : (
                     <div
                       id="cinema-cast-stage"
@@ -2484,7 +2707,15 @@ export default function App() {
                   customProgressBarSection={outputTarget !== 'local'
                     ? [<CastProgress key="cast-progress" className="mini-progress rhap-cast-progress" id="cast-progress" onSeek={handleCastSeek} />]
                     : isVideoTrack(currentTrack)
-                      ? [<MiniProgress key="video-progress" trackId={currentTrack?.id || currentTrack?.filePath} getAudio={() => videoRef.current} />]
+                      ? [<MiniProgress
+                          key="video-progress"
+                          trackId={`${currentTrack?.id || currentTrack?.filePath || ''}:${transcodeOffsetSec}`}
+                          getAudio={() => videoRef.current}
+                          knownDuration={knownVideoDurationSec}
+                          offsetSec={transcodeOffsetSec}
+                          isTranscode={isTranscodeActive}
+                          onSeekOverride={seekVideoTo}
+                        />]
                       : undefined}
                   customControlsSection={(outputTarget !== 'local' || isVideoTrack(currentTrack))
                     ? [
@@ -2545,9 +2776,12 @@ export default function App() {
 
               <Lyrics
                 track={currentTrack}
-                getTime={() => (outputTarget !== 'local' ? castClock.now() : getMediaEl()?.currentTime ?? null)}
+                getTime={() => (outputTarget !== 'local'
+                  ? castClock.now()
+                  : (isTranscodeActive ? transcodeOffsetSec + (getMediaEl()?.currentTime || 0) : (getMediaEl()?.currentTime ?? null)))}
                 onSeek={(t) => {
                   if (outputTarget !== 'local') handleCastSeek(t);
+                  else if (isVideoTrack(currentTrack)) seekVideoTo(t);
                   else if (getMediaEl()) getMediaEl().currentTime = t;
                 }}
               />
@@ -3301,17 +3535,23 @@ function CastControls({ onPrev, onToggle, onNext }) {
 
 // Seek bar for the mini player. Subscribes to the audio/video element itself so the
 // rest of the app doesn't re-render on every timeupdate.
-function MiniProgress({ getAudio, trackId }) {
-  const [time, setTime] = useState({ current: 0, duration: 0 });
+function MiniProgress({ getAudio, trackId, knownDuration = 0, offsetSec = 0, isTranscode = false, onSeekOverride = null }) {
+  const [time, setTime] = useState({ current: offsetSec || 0, duration: knownDuration || 0 });
   const [dragging, setDragging] = useState(null);
+  const dragRef = useRef(null);
   useEffect(() => {
     let attached = null;
     let pollTimer = null;
     const update = () => {
       const el = getAudio();
-      if (!el) return;
-      const d = (isFinite(el.duration) && el.duration > 0) ? el.duration : 0;
-      setTime({ current: el.currentTime || 0, duration: d });
+      if (!el) {
+        if (knownDuration > 0) setTime(prev => ({ ...prev, duration: knownDuration }));
+        return;
+      }
+      const rawDur = (!isTranscode && isFinite(el.duration) && el.duration > 0) ? el.duration : 0;
+      const d = knownDuration > 0 ? knownDuration : rawDur;
+      const cur = (Number(offsetSec) || 0) + (el.currentTime || 0);
+      setTime({ current: cur, duration: d });
     };
     const attach = () => {
       const el = getAudio();
@@ -3346,7 +3586,7 @@ function MiniProgress({ getAudio, trackId }) {
         attached.removeEventListener('emptied', update);
       }
     };
-  }, [getAudio, trackId]);
+  }, [getAudio, trackId, knownDuration, offsetSec, isTranscode]);
 
   const fmt = (sec) => {
     if (!sec || !isFinite(sec)) return '0:00';
@@ -3359,8 +3599,25 @@ function MiniProgress({ getAudio, trackId }) {
     }
     return `${m}:${ss < 10 ? '0' : ''}${ss}`;
   };
+  const commitSeek = (target) => {
+    if (onSeekOverride) {
+      onSeekOverride(target);
+    } else {
+      const audio = getAudio();
+      if (audio) audio.currentTime = target;
+    }
+  };
+  const finishDrag = () => {
+    const target = dragRef.current;
+    dragRef.current = null;
+    setDragging(null);
+    if (target != null && isTranscode) {
+      commitSeek(target);
+    }
+  };
+  const effectiveDuration = knownDuration > 0 ? knownDuration : time.duration;
   const val = dragging != null ? dragging : time.current;
-  const maxVal = time.duration > 0 ? time.duration : Math.max(val, 1);
+  const maxVal = effectiveDuration > 0 ? effectiveDuration : Math.max(val, 1);
   const pct = maxVal ? (Math.min(val, maxVal) / maxVal) * 100 : 0;
   return (
     <div className="mini-progress">
@@ -3375,16 +3632,19 @@ function MiniProgress({ getAudio, trackId }) {
         aria-label="Seek"
         onChange={(e) => {
           const next = Number(e.target.value);
+          dragRef.current = next;
           setDragging(next);
           setTime(prev => ({ ...prev, current: next }));
-          const audio = getAudio();
-          if (audio) audio.currentTime = next;
+          if (!isTranscode) {
+            commitSeek(next);
+          }
         }}
-        onMouseUp={() => setDragging(null)}
-        onTouchEnd={() => setDragging(null)}
-        onKeyUp={() => setDragging(null)}
+        onPointerUp={finishDrag}
+        onMouseUp={finishDrag}
+        onTouchEnd={finishDrag}
+        onKeyUp={finishDrag}
       />
-      <span>{fmt(time.duration)}</span>
+      <span>{fmt(effectiveDuration)}</span>
     </div>
   );
 }

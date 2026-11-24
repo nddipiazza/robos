@@ -93,19 +93,25 @@ function isSampleFile(filePath, sizeBytes = 0) {
   return false;
 }
 
-function cleanSceneTitle(raw) {
+function cleanSceneTitle(raw, { allowEmpty = false } = {}) {
   let s = String(raw || '')
     .replace(/^www\.[a-z0-9.-]+\s*-\s*/i, '')
     .replace(/\[[^\]]*\]/g, ' ')
     .replace(/\([^)]*(?:1080p|720p|2160p|WEBRip|WEB-DL|BluRay|x264|x265|HEVC|YTS|RARBG|Garshasp)[^)]*\)/gi, ' ');
   s = s.replace(/[._]+/g, ' ');
+  // If string starts directly with a quality/source token (e.g. after S01E01), strip everything from there
+  if (/^\s*(?:2160p|4k|1080p|720p|480p|bluray|blu-ray|bdrip|brrip|web-?dl|webrip|hdrip|dvdrip|hdtv|x264|x265|h\.?264|h\.?265|hevc|proper|repack)\b/i.test(s)) {
+    return allowEmpty ? '' : String(raw || '').trim();
+  }
   // Cut at quality / release token if there is a title before it
   const cutMatch = s.match(/^(.+?)\s+(?:2160p|4k|1080p|720p|480p|bluray|blu-ray|bdrip|brrip|web-?dl|webrip|hdrip|dvdrip|hdtv)\b/i);
   if (cutMatch && cutMatch[1].trim().length >= 2) {
     s = cutMatch[1];
   }
   s = s.replace(RELEASE_NOISE_RE, ' ');
-  s = s.replace(/\s*-\s*$/, '').replace(/\s+/g, ' ').trim();
+  s = s.replace(/(?:^|\s)-[A-Za-z0-9]+$/, ' ');
+  s = s.replace(/^[-–\s]+|[-–\s]+$/g, '').replace(/\s+/g, ' ').trim();
+  if (allowEmpty) return s;
   return s || String(raw || '').trim();
 }
 
@@ -164,7 +170,6 @@ function inferNeedsWebTranscode(filePath, qualityInfo = {}) {
   if (['.avi', '.ts', '.m2ts', '.mpg', '.mpeg', '.wmv', '.flv'].includes(ext)) return true;
   if (qualityInfo.videoCodec === 'HEVC' || qualityInfo.videoCodec === 'MPEG-4') return true;
   if (['AC3', 'EAC3', 'DTS', 'TrueHD', 'Atmos'].includes(qualityInfo.audioCodec)) return true;
-  if (ext === '.mkv') return true; // Remuxing MKV to fragmented MP4 guarantees audio + subtitle compatibility in all browsers
   return false;
 }
 
@@ -219,7 +224,7 @@ function parseTvEpisode(filePath, rootDir) {
   // Extract episode title if present before quality tags
   let episodeTitle = '';
   if (afterSe) {
-    const cleanedAfter = cleanSceneTitle(afterSe);
+    const cleanedAfter = cleanSceneTitle(afterSe, { allowEmpty: true });
     if (cleanedAfter && !/^\d{3,4}p$/i.test(cleanedAfter) && cleanedAfter.toLowerCase() !== showName.toLowerCase()) {
       episodeTitle = cleanedAfter;
     }
@@ -660,7 +665,7 @@ function parseVideoItem(filePath, rootDir, stat, serviceKind = 'movies') {
     const seasonNumber = tv?.seasonNumber ?? 1;
     const episodeNumber = tv?.episodeNumber ?? 1;
     const episodeCode = tv?.episodeCode || `S${String(seasonNumber).padStart(2, '0')}E${String(episodeNumber).padStart(2, '0')}`;
-    const episodeTitle = tv?.episodeTitle || cleanSceneTitle(base);
+    const episodeTitle = tv ? tv.episodeTitle : cleanSceneTitle(base);
     const genres = inferVideoGenres(showName, rootDir || '');
     return {
       mediaType: 'tv',

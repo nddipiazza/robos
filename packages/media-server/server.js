@@ -14,6 +14,7 @@ const crypto = require('node:crypto');
 const { MediaCatalogStore } = require('./lib/catalog-store');
 const {
   probeMediaFile,
+  analyzePlaybackSupport,
   streamFileWithRanges,
   streamTranscodedVideo,
   streamTranscodedAudio,
@@ -123,7 +124,7 @@ function createMediaServer(options = {}) {
 
       // Optional bearer token check if configured
       const requiredToken = process.env.ROBOS_MEDIA_SERVER_TOKEN || store.config.authToken || '';
-      if (requiredToken && pathname.startsWith('/api/') && pathname !== '/api/health' && pathname !== '/api/info' && !pathname.startsWith('/api/art/') && !pathname.startsWith('/api/subtitles/')) {
+      if (requiredToken && pathname.startsWith('/api/') && pathname !== '/api/health' && pathname !== '/api/info' && !pathname.startsWith('/api/art/') && !pathname.startsWith('/api/subtitles/') && !pathname.startsWith('/api/playback-info/')) {
         const provided = (req.headers.authorization || '').replace(/^Bearer\s+/i, '').trim()
           || req.headers['x-robos-token']
           || url.searchParams.get('token')
@@ -323,6 +324,30 @@ function createMediaServer(options = {}) {
         if (!raw) return sendJson(res, 404, { ok: false, error: 'Item not found' });
         const probe = await probeMediaFile(raw.filePath);
         return sendJson(res, 200, { ok: true, id, probe });
+      }
+
+      if (req.method === 'GET' && pathname.startsWith('/api/playback-info/')) {
+        const id = cleanItemId(pathname.slice('/api/playback-info/'.length));
+        const raw = store.byId.get(id);
+        if (!raw) return sendJson(res, 404, { ok: false, error: 'Item not found' });
+        const analysis = await analyzePlaybackSupport(raw.filePath, Boolean(raw.needsTranscode));
+        if (analysis.durationSec > 0) raw.duration = Math.round(analysis.durationSec);
+        raw.needsTranscode = analysis.needsTranscode;
+        const hydrated = store.hydrateItem(raw, baseUrl);
+        return sendJson(res, 200, {
+          ok: true,
+          id: raw.id,
+          durationSec: analysis.durationSec,
+          canDirectPlay: analysis.canDirectPlay,
+          needsTranscode: analysis.needsTranscode,
+          recommendedUrl: analysis.canDirectPlay ? hydrated.directStreamUrl : hydrated.transcodeUrl,
+          directStreamUrl: hydrated.directStreamUrl,
+          transcodeUrl: hydrated.transcodeUrl,
+          subtitlesUrl: hydrated.subtitlesUrl,
+          hasSubtitles: analysis.hasSubtitles || Boolean(raw.sidecarSubtitle),
+          video: analysis.video,
+          audio: analysis.audio,
+        });
       }
 
       // ── Books Reader Endpoints ─────────────────────────────────────────────
