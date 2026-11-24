@@ -323,6 +323,15 @@ function resolveTargetDevice(deviceQuery, { configDir = path.join(os.homedir(), 
       score: 160,
     };
   }
+  if (/^(?:all\s+(?:smart\s+)?tvs|every\s+(?:smart\s+)?tv|all\s+screens)$/i.test(qRaw)) {
+    return {
+      ip: 'all',
+      id: 'all',
+      name: 'All Smart TVs',
+      deviceType: 'tv',
+      score: 160,
+    };
+  }
 
   const list = Array.isArray(devices) ? devices : loadCastDevices(configDir);
   if (!list.length) return null;
@@ -342,6 +351,7 @@ function resolveTargetDevice(deviceQuery, { configDir = path.join(os.homedir(), 
 
     const nameTokens = nameNorm.split(' ').filter(Boolean);
     const allDevTokens = combinedNorm.split(' ').filter(Boolean);
+    const specificDevNameTokens = nameTokens.filter(t => !LOW_IDF_WORDS.has(t) && !['tv', 'television', 'smart', 'speaker', 'speakers'].includes(t));
 
     let score = 0;
 
@@ -350,6 +360,9 @@ function resolveTargetDevice(deviceQuery, { configDir = path.join(os.homedir(), 
       score += 170;
     } else if (` ${nameNorm} `.includes(` ${qRaw} `) || ` ${combinedNorm} `.includes(` ${qRaw} `)) {
       score += 125;
+    } else if (specificDevNameTokens.length > 0 && specificDevNameTokens.every(dt => tokenSimilarity(dt, qTokens) >= 0.88)) {
+      // Custom-named RobOS Smart TVs (e.g. "Garage Projector", "Studio Wall Display") match even without hardcoded cue words
+      score += 135;
     }
 
     // Platform / brand keyword shortcuts ("on the roku", "on the tcl", "on the bravia", "on the kitchen", "on leo's speaker")
@@ -428,8 +441,8 @@ function extractDeviceFromCommand(cleanedCommand, { configDir = path.join(os.hom
   // Check trailing "on (the|my|our)? <device>" or "to (the|my|our)? <device>"
   // Use a non-greedy prefix `.+?` so we capture the trailing device phrase cleanly
   const patterns = [
-    /^(.+?)\s+(?:on|to)\s+(?:the\s+|my\s+|our\s+)?([a-z0-9\s"'.-]+?)(?:\s+(?:right\s+now|please|for\s+me))?$/i,
-    /^(.+?)\s+in\s+(?:the\s+)?((?:living\s+room|basement|kitchen|master\s+bedroom|bedroom)(?:\s+(?:tv|roku|speaker|clock))?)(?:\s+(?:right\s+now|please|for\s+me))?$/i,
+    /^(.+?)\s+(?:on|to|onto)\s+(?:the\s+|my\s+|our\s+)?["“”']?([a-z0-9\s"“”'.-]+?)["“”']?(?:\s+(?:right\s+now|please|for\s+me|for\s+us))?$/i,
+    /^(.+?)\s+in\s+(?:the\s+)?["“”']?((?:living\s+room|basement|kitchen|master\s+bedroom|bedroom|studio|office)(?:\s+(?:tv|roku|oled|display|speaker|clock))?)["“”']?(?:\s+(?:right\s+now|please|for\s+me))?$/i,
   ];
 
   for (const re of patterns) {
@@ -1104,27 +1117,38 @@ const CONTINUE_PATTERNS = [
   /^(?:whats|what\s+is)\s+(?:on\s+)?(?:my|our)\s+continue\s+watching(?:\s+list)?$/,
 ];
 const NEXT_EPISODE_PATTERNS = [
-  /^(?:play|watch|put\s+on|start)\s+(?:the\s+)?next\s+episode\s+(?:of|in)\s+(.+)$/,
+  /^(?:play|watch|put\s+on|start)\s+(?:the\s+)?next\s+episode\s+(?:of|in|for)\s+(.+)$/,
   /^(?:continue|resume|keep)\s+watching\s+(.+)$/,
+  /^resume\s+(?:the\s+(?:show|series)\s+)?(.+)$/,
   /^(?:pick\s+up|start)\s+(.+?)\s+where\s+(?:we|i)\s+left\s+off$/,
 ];
 
 function cleanWatchTitle(t) {
   return String(t || '')
     .replace(/^(?:the\s+(?:show|series|tv\s+show|movie|film)\s+|(?:show|series|movie|film)\s+)/, '')
-    .replace(/\s+(?:yet|already|again|please|now|right\s+now|on\s+(?:the\s+)?(?:tv|roku|chromecast|television))$/, '')
+    .replace(/\s+(?:yet|already|again|please|now|right\s+now|on\s+(?:the\s+)?(?:tv|roku|roku\s+tv|chromecast|television))$/, '')
     .replace(/\s+(?:on|at|in|with)$/, '')
     .trim();
 }
 
 /** "what season of breaking bad did we leave off on" → { type: 'watch-status', scope: 'show', title: 'breaking bad' } */
-function parseWatchStatusQuery(cleanedText) {
-  const q = foldText(cleanedText).replace(/\s+(?:please|robos|nabu)$/, '');
-  if (!q) return null;
-  for (const re of CONTINUE_PATTERNS) if (re.test(q)) return { type: 'watch-status', scope: 'continue', title: '' };
-  for (const re of NEXT_EPISODE_PATTERNS) { const m = q.match(re); if (m && cleanWatchTitle(m[1])) return { type: 'play-next-episode', title: cleanWatchTitle(m[1]) }; }
-  for (const re of WATCH_STATUS_PATTERNS) { const m = q.match(re); if (m && cleanWatchTitle(m[1])) return { type: 'watch-status', scope: 'show', title: cleanWatchTitle(m[1]) }; }
-  for (const re of MOVIE_STATUS_PATTERNS) { const m = q.match(re); if (m && cleanWatchTitle(m[1])) return { type: 'watch-status', scope: /\b(?:movie|film)\b/.test(q) ? 'movie' : 'any', title: cleanWatchTitle(m[1]) }; }
+function parseWatchStatusQuery(cleanedText, { configDir = path.join(os.homedir(), '.config', 'robos'), devices = null } = {}) {
+  const { mediaCommand, targetDevice } = extractDeviceFromCommand(cleanedText, { configDir, devices });
+  const qFull = foldText(cleanedText).replace(/\s+(?:please|robos|nabu)$/, '');
+  const qMedia = foldText(mediaCommand).replace(/\s+(?:please|robos|nabu)$/, '');
+  if (!qFull) return null;
+  for (const re of CONTINUE_PATTERNS) if (re.test(qFull)) return { type: 'watch-status', scope: 'continue', title: '' };
+  for (const re of NEXT_EPISODE_PATTERNS) {
+    const m = qMedia.match(re) || qFull.match(re);
+    if (m && cleanWatchTitle(m[1])) {
+      const cand = cleanWatchTitle(m[1]);
+      // Don't hijack bare "resume playback" / "resume music" / "resume movie"
+      if (/^(?:playback|playing|music|song|track|movie|video|it|this)$/.test(cand)) continue;
+      return { type: 'play-next-episode', title: cand, targetDevice: targetDevice || null };
+    }
+  }
+  for (const re of WATCH_STATUS_PATTERNS) { const m = qFull.match(re); if (m && cleanWatchTitle(m[1])) return { type: 'watch-status', scope: 'show', title: cleanWatchTitle(m[1]) }; }
+  for (const re of MOVIE_STATUS_PATTERNS) { const m = qFull.match(re); if (m && cleanWatchTitle(m[1])) return { type: 'watch-status', scope: /\b(?:movie|film)\b/.test(qFull) ? 'movie' : 'any', title: cleanWatchTitle(m[1]) }; }
   return null;
 }
 
@@ -1359,6 +1383,498 @@ async function answerWatchStatus(intent, { configDir } = {}) {
   return { ok: Boolean(res.ok), response: res.spoken || res.error || 'I could not find that in your watch history.', data: res };
 }
 
+// ── Cinema & Named RobOS Smart TV Voice Commands ─────────────────────────────
+
+const GENRE_SYNONYMS = {
+  'sci fi': ['sci fi', 'scifi', 'science fiction'],
+  'science fiction': ['sci fi', 'scifi', 'science fiction'],
+  scary: ['horror', 'thriller'],
+  horror: ['horror'],
+  funny: ['comedy'],
+  comedy: ['comedy'],
+  animated: ['animation', 'animated', 'family'],
+  animation: ['animation', 'animated'],
+  kids: ['family', 'animation', 'kids', 'children'],
+  family: ['family', 'animation'],
+  action: ['action', 'adventure'],
+  adventure: ['adventure', 'action'],
+  thriller: ['thriller', 'mystery', 'suspense'],
+  drama: ['drama'],
+  fantasy: ['fantasy'],
+  romance: ['romance', 'romantic'],
+  documentary: ['documentary'],
+};
+
+function shuffleCopy(arr) {
+  const copy = [...arr];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
+
+function readWatchedKeyAndTrackSets(configDir) {
+  const watchedIds = new Set();
+  const watchedKeys = new Set();
+  try {
+    const statsRaw = JSON.parse(fs.readFileSync(path.join(configDir, 'movie-track-stats.json'), 'utf8'));
+    for (const [id, st] of Object.entries(statsRaw?.tracks || {})) {
+      if (st && st.completed) watchedIds.add(id);
+    }
+  } catch {}
+  try {
+    const histRaw = JSON.parse(fs.readFileSync(path.join(configDir, 'media-history', 'movie-player.json'), 'utf8'));
+    for (const [k, ent] of Object.entries(histRaw?.entries || {})) {
+      if (ent && ent.completed) watchedKeys.add(k);
+    }
+  } catch {}
+  return { watchedIds, watchedKeys };
+}
+
+function findShowEpisodePool(showQuery, movieTracks = [], { seasonNumber = null } = {}) {
+  let canonicalShowPartsFn = null;
+  try {
+    canonicalShowPartsFn = require('../../robos-lib/watch-history-import').canonicalShowParts;
+  } catch {}
+  let historyLib = null;
+  try {
+    historyLib = require('../../robos-lib/media-history');
+  } catch {}
+
+  const tvTracks = (Array.isArray(movieTracks) ? movieTracks : []).filter(t =>
+    t && (t.mediaType === 'tv' || (t.showName && t.seasonNumber != null && t.episodeNumber != null))
+  );
+  if (!tvTracks.length) return { ok: false, error: 'Your TV show library is empty.' };
+
+  const distinctShows = [...new Set(tvTracks.map(t => String(t.showName || t.album || '').trim()).filter(Boolean))];
+  const qNorm = normalizeNumberTokens(showQuery);
+
+  // Match best show name via media-history bestMatch + tokenSimilarity
+  let bestName = null;
+  let bestScore = 0;
+  for (const name of distinctShows) {
+    const s1 = historyLib ? historyLib.titleScore(showQuery, name) : 0;
+    const nNorm = normalizeNumberTokens(name);
+    const s2 = nNorm === qNorm ? 1.0 : jaroWinkler(qNorm, nNorm) * 0.85;
+    const sc = Math.max(s1, s2);
+    if (sc > bestScore) {
+      bestScore = sc;
+      bestName = name;
+    }
+  }
+  if (!bestName || bestScore < 0.5) {
+    return { ok: false, error: `Could not find a TV show matching "${showQuery}" in your library.` };
+  }
+
+  const matchedParts = canonicalShowPartsFn ? canonicalShowPartsFn(bestName) : { base: foldText(bestName), aliases: [foldText(bestName)] };
+  const targetAliases = new Set(matchedParts.aliases || [matchedParts.base]);
+
+  // Gather episodes across all folder variants of the same canonical show, deduplicating by (season, episode)
+  const byEp = new Map();
+  for (const t of tvTracks) {
+    const sName = String(t.showName || t.album || '').trim();
+    const parts = canonicalShowPartsFn ? canonicalShowPartsFn(sName) : { aliases: [foldText(sName)] };
+    const sharesAlias = (parts.aliases || []).some(a => targetAliases.has(a));
+    if (!sharesAlias) continue;
+    const s = Number(t.seasonNumber ?? t.discNumber ?? 1);
+    const e = Number(t.episodeNumber ?? t.trackNumber ?? 1);
+    if (seasonNumber != null && s !== Number(seasonNumber)) continue;
+    const k = `${s}:${e}`;
+    if (!byEp.has(k)) {
+      byEp.set(k, t);
+    } else {
+      // Prefer track whose showName is cleanest (shortest) or has episodeTitle
+      const cur = byEp.get(k);
+      if ((!cur.episodeTitle && t.episodeTitle) || String(t.showName || '').length < String(cur.showName || '').length) {
+        byEp.set(k, t);
+      }
+    }
+  }
+
+  const episodes = [...byEp.values()].sort((a, b) =>
+    (Number(a.seasonNumber || 1) - Number(b.seasonNumber || 1)) ||
+    (Number(a.episodeNumber || 1) - Number(b.episodeNumber || 1))
+  );
+
+  // Pick cleanest display label (e.g. "House" over "House (2004) Season 1-8 S01-S08")
+  const candidateLabels = [...new Set(episodes.map(t => String(t.showName || '').trim()).filter(Boolean))]
+    .sort((a, b) => a.length - b.length);
+  const showLabel = candidateLabels[0] || bestName;
+
+  if (!episodes.length) {
+    return {
+      ok: false,
+      show: showLabel,
+      error: seasonNumber != null
+        ? `Could not find Season ${seasonNumber} of ${showLabel} in your library.`
+        : `No episodes of ${showLabel} were found in your library.`,
+    };
+  }
+
+  return { ok: true, show: showLabel, episodes };
+}
+
+/**
+ * Parses specialized Movie Player & Named Smart TV voice commands:
+ *   - "play a random episode of House on the Roku TV"
+ *   - "play a random unwatched episode of Family Guy on Basement TV"
+ *   - "play a random [horror / 90s / unwatched] movie on the Roku TV"
+ *   - "play the latest / newest episode of Ghosts on the Roku TV"
+ *   - "play the first episode / pilot of Firefly on the Roku TV" / "start Severance from the beginning on the Roku TV"
+ *   - "move playback to the Roku TV" / "stop casting" / "open the movie library on the Roku TV" / "list my smart tvs"
+ */
+function parseCinemaSpecialCommand(cleanedText, {
+  configDir = path.join(os.homedir(), '.config', 'robos'),
+  devices = null,
+  movieTracks = null,
+} = {}) {
+  const list = Array.isArray(devices) ? devices : loadCastDevices(configDir);
+  const qFull = foldText(cleanedText).replace(/\s+(?:please|right\s+now|now|for\s+me|for\s+us)$/, '').trim();
+  if (!qFull) return null;
+
+  // 1. Smart TV discovery ("list my smart tvs", "what smart tvs are paired")
+  if (/^(?:list|show|what\s+are|read)\s+(?:(?:my|our|the)\s+)?(?:paired\s+|configured\s+|available\s+)?(?:robos\s+)?smart\s+tvs?$/.test(qFull) ||
+      /^(?:what|which)\s+(?:robos\s+)?smart\s+tvs?\s+(?:do\s+(?:i|we)\s+have|are\s+(?:paired|available|connected|online))$/.test(qFull)) {
+    return { type: 'smart-tv-control', action: 'list-tvs' };
+  }
+
+  // 2. Stop casting / return playback to computer ("stop casting", "disconnect from the roku tv", "move playback to this computer")
+  const { mediaCommand, targetDevice } = extractDeviceFromCommand(cleanedText, { configDir, devices: list });
+  const qMedia = foldText(mediaCommand).replace(/\s+(?:please|right\s+now|now|for\s+me|for\s+us)$/, '').trim();
+
+  if (/^(?:stop|end|cancel|quit)\s+(?:casting|tv\s+cast|smart\s+tv(?:\s+playback)?)$/.test(qMedia) ||
+      /^(?:stop|end|cancel)\s+casting$/.test(qFull) ||
+      /^disconnect\s+(?:from\s+)?(?:the\s+|my\s+|our\s+)?.+$/.test(qFull) && (targetDevice || /\b(?:tv|roku|oled|chromecast|cast)\b/.test(qFull))) {
+    return { type: 'smart-tv-control', action: 'stop-cast', targetDevice: targetDevice || null };
+  }
+  if (targetDevice && targetDevice.ip === 'local' &&
+      /^(?:move|switch|bring|transfer|send)\s+(?:(?:the|my|our|current)\s+)?(?:playback|movie|show|episode|video|it|this)(?:\s+back)?$/.test(qMedia)) {
+    return { type: 'smart-tv-control', action: 'transfer-to-local', targetDevice };
+  }
+
+  // 3. Open 10-foot Movie Library on Named Smart TV ("open the movie library on the roku tv", "launch robos movie player on basement tv")
+  if (targetDevice && targetDevice.ip !== 'local' && targetDevice.deviceType === 'tv') {
+    if (/^(?:open|launch|show|display|bring\s+up)\s+(?:the\s+)?(?:robos\s+)?(?:movie\s+library|cinema\s+library|tv\s+library|movie\s+player|movies\s+browser|library)$/.test(qMedia)) {
+      return { type: 'smart-tv-control', action: 'open-tv-library', targetDevice };
+    }
+    // 4. Transfer live playback to Named Smart TV ("move playback to the roku tv", "cast this to the roku tv", "send this movie to basement tv")
+    if (/^(?:move|switch|send|cast|transfer|put)\s+(?:(?:the|my|our|current)\s+)?(?:playback|movie|show|episode|video|stream|this|it)$/.test(qMedia) ||
+        /^switch\s+output$/.test(qMedia)) {
+      return { type: 'smart-tv-control', action: 'transfer-to-tv', targetDevice };
+    }
+  }
+
+  // 5. Random Episode of a TV Show ("play a random [unwatched] episode of House [Season 3] [on the Roku TV]")
+  const PLAY_LEAD = String.raw`(?:play|playing|plays|place|watch|put\s+on|start|pick|choose|give\s+(?:me|us)|throw\s+on)`;
+  const UNWATCHED_OPT = String.raw`(?:(unwatched|new|unseen)\s+)?`;
+
+  const randEpPatterns = [
+    // "play a random [unwatched] [season N] episode of {show}"
+    new RegExp(String.raw`^${PLAY_LEAD}\s+(?:a\s+|an\s+|some\s+)?random\s+${UNWATCHED_OPT}(?:season\s+(\w+)\s+)?episodes?\s+(?:of|in|from|for)\s+(.+)$`),
+    // "play an unwatched / new episode of {show}" (without word "random" -> picks random unwatched or next? Wait: "random unwatched" handled above; "a random ... episode" below)
+    new RegExp(String.raw`^surprise\s+(?:me|us)\s+with\s+(?:a\s+|an\s+)?(?:random\s+)?${UNWATCHED_OPT}(?:season\s+(\w+)\s+)?episodes?\s+(?:of|in|from|for)\s+(.+)$`),
+  ];
+  for (const re of randEpPatterns) {
+    const m = qMedia.match(re);
+    if (m) {
+      const unwatchedOnly = Boolean(m[1]);
+      const seasonPrefix = m[2] ? Number(WORD_NUMBERS[m[2]] || m[2]) : null;
+      const se = parseSeasonEpisode(m[3]);
+      const showClean = cleanWatchTitle(se.strippedText);
+      if (showClean) {
+        return {
+          type: 'cinema-special',
+          mode: 'random-episode',
+          unwatchedOnly,
+          show: showClean,
+          seasonNumber: Number.isFinite(seasonPrefix) ? seasonPrefix : se.seasonNumber,
+          targetDevice: targetDevice || null,
+        };
+      }
+    }
+  }
+
+  // "play a random [unwatched] {show} episode"
+  const randShowEpAlt = qMedia.match(new RegExp(String.raw`^${PLAY_LEAD}\s+(?:a\s+|an\s+)?random\s+${UNWATCHED_OPT}(.+?)\s+episodes?$`));
+  if (randShowEpAlt && cleanWatchTitle(randShowEpAlt[2])) {
+    const se = parseSeasonEpisode(randShowEpAlt[2]);
+    return {
+      type: 'cinema-special',
+      mode: 'random-episode',
+      unwatchedOnly: Boolean(randShowEpAlt[1]),
+      show: cleanWatchTitle(se.strippedText),
+      seasonNumber: se.seasonNumber,
+      targetDevice: targetDevice || null,
+    };
+  }
+
+  // "shuffle [unwatched] episodes of {show} [season N]" or "shuffle {show} on the Roku TV"
+  const shuffleEpsMatch = qMedia.match(/^shuffle\s+(?:all\s+)?(?:(unwatched|new|unseen)\s+)?(?:(?:the\s+)?episodes?\s+(?:of|in|from|for)\s+)?(.+)$/);
+  if (shuffleEpsMatch) {
+    const unwatchedOnly = Boolean(shuffleEpsMatch[1]);
+    const explicitEps = /\bepisodes?\b/.test(qMedia);
+    const se = parseSeasonEpisode(shuffleEpsMatch[2]);
+    const showCand = cleanWatchTitle(se.strippedText);
+    if (showCand && (explicitEps || se.seasonNumber != null || (targetDevice && targetDevice.deviceType === 'tv'))) {
+      const tracksCheck = Array.isArray(movieTracks) ? movieTracks : loadLibraryTracks('movie', configDir);
+      const pool = findShowEpisodePool(showCand, tracksCheck, { seasonNumber: se.seasonNumber });
+      if (pool.ok) {
+        return {
+          type: 'cinema-special',
+          mode: 'random-episode',
+          unwatchedOnly,
+          show: showCand,
+          seasonNumber: se.seasonNumber,
+          targetDevice: targetDevice || null,
+        };
+      }
+    }
+  }
+
+  // 6. Random Movie ("play a random [unwatched] [horror / 90s] movie [on the Roku TV]")
+  const randMoviePatterns = [
+    new RegExp(String.raw`^${PLAY_LEAD}\s+(?:a\s+|an\s+)?random\s+${UNWATCHED_OPT}(?:([a-z0-9\s]+?)\s+)?(?:movie|film)s?$`),
+    /^surprise\s+(?:me|us)\s+with\s+(?:a\s+|an\s+)?(?:(unwatched|new|unseen)\s+)?(?:([a-z0-9\s]+?)\s+)?(?:movie|film)$/,
+  ];
+  for (const re of randMoviePatterns) {
+    const m = qMedia.match(re);
+    if (m) {
+      return {
+        type: 'cinema-special',
+        mode: 'random-movie',
+        unwatchedOnly: Boolean(m[1]),
+        filterPhrase: (m[2] || '').trim() || null,
+        targetDevice: targetDevice || null,
+      };
+    }
+  }
+
+  // 7. Latest / Newest Episode ("play the latest/newest episode of {show} [on the Roku TV]")
+  const latestMatch = qMedia.match(new RegExp(String.raw`^${PLAY_LEAD}\s+(?:the\s+)?(?:latest|newest|most\s+recent)\s+episode\s+(?:of|in|from|for)\s+(.+)$`));
+  if (latestMatch && cleanWatchTitle(latestMatch[1])) {
+    return {
+      type: 'cinema-special',
+      mode: 'latest-episode',
+      show: cleanWatchTitle(latestMatch[1]),
+      targetDevice: targetDevice || null,
+    };
+  }
+
+  // 8. First Episode / Pilot / Start From Beginning ("play the pilot of House on the Roku TV", "start Severance from the beginning on the Roku TV")
+  const firstPatterns = [
+    new RegExp(String.raw`^${PLAY_LEAD}\s+(?:the\s+)?(?:very\s+first\s+episode|first\s+episode|pilot(?:\s+episode)?)\s+(?:of|in|from|for)\s+(.+)$`),
+    /^(?:start|play|watch|restart|begin)\s+(.+?)\s+from\s+(?:the\s+)?(?:very\s+)?(?:beginning|start|first\s+episode|episode\s+(?:1|one))$/,
+  ];
+  for (const re of firstPatterns) {
+    const m = qMedia.match(re);
+    if (m && cleanWatchTitle(m[1])) {
+      return {
+        type: 'cinema-special',
+        mode: 'from-beginning',
+        title: cleanWatchTitle(m[1]),
+        targetDevice: targetDevice || null,
+      };
+    }
+  }
+
+  return null;
+}
+
+function resolveCinemaSpecialPlayback(intent, movieTracks = [], { configDir = path.join(os.homedir(), '.config', 'robos') } = {}) {
+  const targetDevice = intent.targetDevice || null;
+  const targetIp = targetDevice ? targetDevice.ip : null;
+  const deviceSuffix = targetDevice && targetDevice.ip !== 'local'
+    ? ` on ${targetDevice.name}`
+    : ' in RobOS Movie Player';
+  let historyLib = null;
+  try { historyLib = require('../../robos-lib/media-history'); } catch {}
+
+  if (intent.mode === 'random-episode') {
+    const poolRes = findShowEpisodePool(intent.show, movieTracks, { seasonNumber: intent.seasonNumber });
+    if (!poolRes.ok) return { ok: false, error: poolRes.error };
+
+    let candidates = poolRes.episodes;
+    let unwatchedFallbackNote = '';
+    if (intent.unwatchedOnly) {
+      const { watchedIds, watchedKeys } = readWatchedKeyAndTrackSets(configDir);
+      const unwatched = candidates.filter(t => {
+        if (watchedIds.has(t.id)) return false;
+        const pk = historyLib ? historyLib.mediaKey(t) : null;
+        if (pk && watchedKeys.has(pk)) return false;
+        return true;
+      });
+      if (unwatched.length > 0) {
+        candidates = unwatched;
+      } else {
+        unwatchedFallbackNote = ' (all episodes are already watched, so picking from the full series)';
+      }
+    }
+
+    const shuffled = shuffleCopy(candidates);
+    const chosen = shuffled[0];
+    const s = Number(chosen.seasonNumber ?? 1);
+    const e = Number(chosen.episodeNumber ?? 1);
+    const cleanEpTitle = chosen.episodeTitle && !/^episode\s+\d+$/i.test(chosen.episodeTitle)
+      ? ` ("${chosen.episodeTitle}")`
+      : '';
+    const seasonNote = intent.seasonNumber != null ? ` Season ${intent.seasonNumber}` : '';
+    const unwatchedNote = intent.unwatchedOnly && !unwatchedFallbackNote ? ' unwatched' : '';
+
+    return {
+      ok: true,
+      kind: 'movie',
+      matchType: 'tv-random-episode',
+      bestTrack: chosen,
+      tracks: shuffled.slice(0, 40),
+      shuffle: false,
+      keepFirst: true,
+      startAt: 0,
+      targetDevice,
+      targetIp,
+      summaryText: `Playing a random${unwatchedNote} episode of ${poolRes.show}${seasonNote}: Season ${s}, Episode ${e}${cleanEpTitle}${deviceSuffix}${unwatchedFallbackNote}.`,
+    };
+  }
+
+  if (intent.mode === 'random-movie') {
+    const allMovies = (Array.isArray(movieTracks) ? movieTracks : []).filter(t => t && t.mediaType === 'movie');
+    if (!allMovies.length) return { ok: false, error: 'Your movie library is empty.' };
+
+    // Exclude numbered tutorial/course videos (e.g. "001 Section Intro") when real feature films exist
+    const featureFilms = allMovies.filter(t => !/^\d{3}\s/.test(String(t.title || '').trim()));
+    let pool = featureFilms.length ? featureFilms : allMovies;
+
+    let filterDesc = '';
+    if (intent.filterPhrase) {
+      const fp = foldText(intent.filterPhrase);
+      const decadeMatch = fp.match(/^(?:19|20)?(\d0)s$/);
+      if (decadeMatch) {
+        const twoDigit = Number(decadeMatch[1]);
+        const startYear = fp.length >= 5 ? Number(fp.slice(0, 4)) : (twoDigit >= 30 ? 1900 + twoDigit : 2000 + twoDigit);
+        const byDecade = pool.filter(t => Number(t.year) >= startYear && Number(t.year) < startYear + 10);
+        if (!byDecade.length) {
+          return { ok: false, error: `Could not find any ${intent.filterPhrase} movies in your library.` };
+        }
+        pool = byDecade;
+        filterDesc = ` ${intent.filterPhrase}`;
+      } else {
+        const expanded = GENRE_SYNONYMS[fp] || [fp];
+        const byGenre = pool.filter(t => {
+          const hay = foldText(`${t.genre || ''} ${(t.tags || []).join(' ')} ${t.overview || ''} ${t.title || ''}`);
+          return expanded.some(term => hay.includes(term));
+        });
+        if (!byGenre.length) {
+          return { ok: false, error: `Could not find any "${intent.filterPhrase}" movies in your library.` };
+        }
+        pool = byGenre;
+        filterDesc = ` ${intent.filterPhrase}`;
+      }
+    }
+
+    if (intent.unwatchedOnly) {
+      const { watchedIds, watchedKeys } = readWatchedKeyAndTrackSets(configDir);
+      const unwatched = pool.filter(t => {
+        if (watchedIds.has(t.id)) return false;
+        const pk = historyLib ? historyLib.mediaKey(t) : null;
+        if (pk && watchedKeys.has(pk)) return false;
+        return true;
+      });
+      if (unwatched.length) pool = unwatched;
+    }
+
+    const shuffled = shuffleCopy(pool);
+    const chosen = shuffled[0];
+    const unwatchedLabel = intent.unwatchedOnly ? ' unwatched' : '';
+    return {
+      ok: true,
+      kind: 'movie',
+      matchType: 'random-movie',
+      bestTrack: chosen,
+      tracks: [chosen],
+      shuffle: false,
+      keepFirst: true,
+      startAt: 0,
+      targetDevice,
+      targetIp,
+      summaryText: `Playing a random${unwatchedLabel}${filterDesc} movie: "${chosen.title}"${chosen.year ? ` (${chosen.year})` : ''}${deviceSuffix}.`,
+    };
+  }
+
+  if (intent.mode === 'latest-episode') {
+    const poolRes = findShowEpisodePool(intent.show, movieTracks);
+    if (!poolRes.ok) return { ok: false, error: poolRes.error };
+    const latest = poolRes.episodes[poolRes.episodes.length - 1];
+    const s = Number(latest.seasonNumber ?? 1);
+    const e = Number(latest.episodeNumber ?? 1);
+    const cleanEpTitle = latest.episodeTitle && !/^episode\s+\d+$/i.test(latest.episodeTitle)
+      ? ` ("${latest.episodeTitle}")`
+      : '';
+    return {
+      ok: true,
+      kind: 'movie',
+      matchType: 'tv-latest-episode',
+      bestTrack: latest,
+      tracks: [latest],
+      shuffle: false,
+      keepFirst: true,
+      startAt: null,
+      targetDevice,
+      targetIp,
+      summaryText: `Playing the latest episode of ${poolRes.show}: Season ${s}, Episode ${e}${cleanEpTitle}${deviceSuffix}.`,
+    };
+  }
+
+  if (intent.mode === 'from-beginning') {
+    // Check if title matches a TV show first; otherwise match a Movie and start at 0:00
+    const poolRes = findShowEpisodePool(intent.title, movieTracks);
+    if (poolRes.ok && poolRes.episodes.length) {
+      const regularEps = poolRes.episodes.filter(t => Number(t.seasonNumber ?? 1) >= 1);
+      const list = regularEps.length ? regularEps : poolRes.episodes;
+      const first = list[0];
+      const firstSeason = list.filter(t => Number(t.seasonNumber) === Number(first.seasonNumber));
+      const s = Number(first.seasonNumber ?? 1);
+      const e = Number(first.episodeNumber ?? 1);
+      const cleanEpTitle = first.episodeTitle && !/^episode\s+\d+$/i.test(first.episodeTitle)
+        ? ` ("${first.episodeTitle}")`
+        : '';
+      return {
+        ok: true,
+        kind: 'movie',
+        matchType: 'tv-first-episode',
+        bestTrack: first,
+        tracks: firstSeason.slice(0, 30),
+        shuffle: false,
+        keepFirst: true,
+        startAt: 0,
+        targetDevice,
+        targetIp,
+        summaryText: `Starting ${poolRes.show} from the beginning: Season ${s}, Episode ${e}${cleanEpTitle}${deviceSuffix}.`,
+      };
+    }
+
+    const movieHit = findBestMediaMatches(`play movie ${intent.title}`, movieTracks, { kind: 'movie', configDir });
+    if (movieHit.ok && movieHit.bestTrack) {
+      const m = movieHit.bestTrack;
+      return {
+        ok: true,
+        kind: 'movie',
+        matchType: 'movie',
+        bestTrack: m,
+        tracks: [m],
+        shuffle: false,
+        keepFirst: true,
+        startAt: 0,
+        targetDevice,
+        targetIp,
+        summaryText: `Starting "${m.title}"${m.year ? ` (${m.year})` : ''} from the beginning${deviceSuffix}.`,
+      };
+    }
+    return { ok: false, error: `Could not find "${intent.title}" in your movie or TV library.` };
+  }
+
+  return { ok: false, error: 'Unsupported cinema voice command.' };
+}
+
 /**
  * Classify whether a cleaned voice command is a media transport command, a movie play
  * command, a music/media play command (including phonetic ASR mishearings like "place some..."
@@ -1371,18 +1887,27 @@ function classifyVoiceCommand(cleanedText, { audioTracks = null, movieTracks = n
   const words = q.split(' ').filter(Boolean);
   const firstWord = words[0] || '';
 
-  // 1. Transport controls (exact or phonetic Jaro-Winkler match)
-  if (/^(?:pause|paws|pos|pause\s+(?:the\s+)?(?:music|song|movie|video|playback)|hold\s+on)$/.test(q)) {
-    return { type: 'transport', action: 'pause' };
+  // 1. Transport controls (exact, phonetic, or Smart TV scoped like "pause on the roku tv", "next episode", "start over")
+  const { mediaCommand: transportCore, targetDevice: transportDevice } = extractDeviceFromCommand(cleanedText, { configDir });
+  const qTransport = foldText(transportCore);
+  const preferMovieTransport = Boolean(
+    /\b(?:movie|film|episode|show|series|video|cinema)\b/.test(qTransport) ||
+    (transportDevice && transportDevice.deviceType === 'tv')
+  );
+  if (/^(?:pause|paws|pos|pause\s+(?:the\s+)?(?:music|song|movie|episode|show|video|playback)|hold\s+on)$/.test(qTransport)) {
+    return { type: 'transport', action: 'pause', preferMoviePlayer: preferMovieTransport, targetDevice: transportDevice || null };
   }
-  if (/^(?:resume|continue|unpause|(?:resume|continue)\s+(?:the\s+)?(?:music|song|movie|video|playback)|keep\s+playing)$/.test(q)) {
-    return { type: 'transport', action: 'resume' };
+  if (/^(?:resume|continue|unpause|(?:resume|continue)\s+(?:the\s+)?(?:music|song|movie|episode|show|video|playback)|keep\s+playing)$/.test(qTransport)) {
+    return { type: 'transport', action: 'resume', preferMoviePlayer: preferMovieTransport, targetDevice: transportDevice || null };
   }
-  if (/^(?:next|skip|next\s+(?:song|track|movie|video)|skip\s+(?:this\s+)?(?:song|track))$/.test(q)) {
-    return { type: 'transport', action: 'next' };
+  if (/^(?:next|skip|next\s+(?:song|track|movie|episode|video)|skip\s+(?:this\s+)?(?:song|track|episode|movie))$/.test(qTransport)) {
+    return { type: 'transport', action: 'next', preferMoviePlayer: preferMovieTransport, targetDevice: transportDevice || null };
   }
-  if (/^(?:previous|prev|go\s+back|previous\s+(?:song|track|movie|video)|last\s+(?:song|track))$/.test(q)) {
-    return { type: 'transport', action: 'previous' };
+  if (/^(?:previous|prev|go\s+back|previous\s+(?:song|track|movie|episode|video)|last\s+(?:song|track|episode))$/.test(qTransport)) {
+    return { type: 'transport', action: 'previous', preferMoviePlayer: preferMovieTransport, targetDevice: transportDevice || null };
+  }
+  if (/^(?:start\s+over|restart|restart\s+(?:this\s+|the\s+)?(?:movie|episode|video|song|track))$/.test(qTransport)) {
+    return { type: 'transport', action: 'restart', preferMoviePlayer: preferMovieTransport || !/\b(?:song|track)\b/.test(qTransport), targetDevice: transportDevice || null };
   }
 
   // 1.5 Voice Identity & Spoken Voice Onboarding intents
@@ -1397,8 +1922,12 @@ function classifyVoiceCommand(cleanedText, { audioTracks = null, movieTracks = n
   // 1.6 Watchlist management ("remove X from watch list", "mark all episodes of X as new", "my current episode of X is S02E04") & Watch status
   const watchlistIntent = parseWatchlistCommand(cleanedText);
   if (watchlistIntent) return { ...watchlistIntent, query: cleanedText };
-  const watchIntent = parseWatchStatusQuery(cleanedText);
+  const watchIntent = parseWatchStatusQuery(cleanedText, { configDir });
   if (watchIntent) return { ...watchIntent, query: cleanedText };
+
+  // 1.7 Specialized Cinema & Named Smart TV Commands ("play a random episode of House on the Roku TV", "move playback to the Roku TV", etc.)
+  const cinemaSpecial = parseCinemaSpecialCommand(cleanedText, { configDir, movieTracks });
+  if (cinemaSpecial) return { ...cinemaSpecial, query: cleanedText };
 
   // 2. If it's a genuine Tabletop Quest Editor command ("place 2 skeletons in room 1"), let Tabletop handle it
   if (isGenuineTabletopCommand(q)) {
@@ -1695,23 +2224,183 @@ async function executeNabuCommand(rawTranscript, {
     const watch = requireMediaWatch();
     if (!watch) return { ok: false, skill: 'media-next-episode', cleanedCommand: cleaned, robosUser: activeUser, response: 'RobOS media history is not installed on this computer.' };
     if (autoLaunchPlayers) await ensureMediaPlayerRunning('movie-player', createMoviePlayerClient, { configDir });
-    const { targetDevice } = extractDeviceFromCommand(cleaned, { configDir, devices: castDevices });
-    const res = await watch.playNextEpisode({ show: intent.title, targetIp: (targetDevice && targetDevice.ip) || null, configDir });
+    const targetDev = intent.targetDevice || extractDeviceFromCommand(cleaned, { configDir, devices: castDevices }).targetDevice;
+    const res = await watch.playNextEpisode({ show: intent.title, targetIp: (targetDev && targetDev.ip) || null, configDir });
+    const tvNote = targetDev && targetDev.ip !== 'local' && res && res.ok ? ` Casting to ${targetDev.name}.` : '';
     return {
       ok: Boolean(res.ok), skill: 'media-next-episode', cleanedCommand: cleaned, robosUser: activeUser,
-      response: res.spoken || res.error || `I could not start ${intent.title}.`, data: res,
+      targetDevice: targetDev || null,
+      targetIp: targetDev ? targetDev.ip : null,
+      response: ((res.spoken || res.error || `I could not start ${intent.title}.`) + tvNote).trim(),
+      data: { ...(res || {}), targetDevice: targetDev || null, targetIp: targetDev ? targetDev.ip : null },
     };
   }
 
-  // ── 1. Transport controls (pause / resume / next / previous) ────────────────
+  // ── 0.7 Smart TV Session Controls (list TVs, open 10-foot library, transfer playback, stop casting) ──
+  if (intent.type === 'smart-tv-control') {
+    if (intent.action === 'list-tvs') {
+      const tvs = castDevices.filter(d => d.deviceType === 'tv');
+      if (!tvs.length) {
+        return {
+          ok: true,
+          skill: 'smart-tv-control',
+          cleanedCommand: cleaned,
+          robosUser: activeUser,
+          response: 'No RobOS Smart TVs are paired yet. Open RobOS Smart TV Studio to pair a TV.',
+          data: { tvs: [] },
+        };
+      }
+      const names = tvs.map(t => `${t.name} (${t.ip})`).join(', ');
+      return {
+        ok: true,
+        skill: 'smart-tv-control',
+        cleanedCommand: cleaned,
+        robosUser: activeUser,
+        response: `You have ${tvs.length} paired RobOS Smart TV${tvs.length === 1 ? '' : 's'}: ${names}.`,
+        data: { tvs },
+      };
+    }
+
+    if (intent.action === 'open-tv-library') {
+      const dev = intent.targetDevice;
+      let res = null;
+      if (autoLaunchPlayers) {
+        const client = await ensureMediaPlayerRunning('movie-player', createMoviePlayerClient, { configDir });
+        if (typeof client.openTvLibrary === 'function') {
+          res = await client.openTvLibrary({ targetIp: dev.ip, robosUser: activeUser });
+        }
+      }
+      return {
+        ok: !res || res.ok !== false,
+        skill: 'smart-tv-control',
+        cleanedCommand: cleaned,
+        robosUser: activeUser,
+        targetDevice: dev,
+        targetIp: dev.ip,
+        response: `Opened the RobOS Movie Player library on ${dev.name}.`,
+        data: { ...(res || {}), targetDevice: dev, targetIp: dev.ip },
+      };
+    }
+
+    if (intent.action === 'transfer-to-tv') {
+      const dev = intent.targetDevice;
+      const client = createMoviePlayerClient({ configDir });
+      if (!client.running()) {
+        return {
+          ok: false,
+          skill: 'smart-tv-control',
+          cleanedCommand: cleaned,
+          robosUser: activeUser,
+          response: 'RobOS Movie Player is not currently playing anything to transfer.',
+        };
+      }
+      const res = typeof client.transferOutput === 'function'
+        ? await client.transferOutput({ targetIp: dev.ip, robosUser: activeUser })
+        : { ok: false, error: 'Transfer unavailable' };
+      return {
+        ok: Boolean(res && res.ok !== false),
+        skill: 'smart-tv-control',
+        cleanedCommand: cleaned,
+        robosUser: activeUser,
+        targetDevice: dev,
+        targetIp: dev.ip,
+        response: res && res.ok !== false
+          ? `Moved playback to ${dev.name}.`
+          : (res?.error || `Could not move playback to ${dev.name}.`),
+        data: { ...(res || {}), targetDevice: dev, targetIp: dev.ip },
+      };
+    }
+
+    if (intent.action === 'stop-cast' || intent.action === 'transfer-to-local') {
+      const client = createMoviePlayerClient({ configDir });
+      let res = { ok: true };
+      if (client.running()) {
+        res = intent.action === 'transfer-to-local' && typeof client.transferOutput === 'function'
+          ? await client.transferOutput({ targetIp: 'local', robosUser: activeUser })
+          : (typeof client.stopCast === 'function' ? await client.stopCast({ targetIp: intent.targetDevice?.ip || null }) : { ok: true });
+      }
+      return {
+        ok: Boolean(res && res.ok !== false),
+        skill: 'smart-tv-control',
+        cleanedCommand: cleaned,
+        robosUser: activeUser,
+        response: intent.action === 'transfer-to-local'
+          ? 'Moved playback back to this computer.'
+          : `Stopped Smart TV casting${intent.targetDevice && intent.targetDevice.ip !== 'local' ? ` on ${intent.targetDevice.name}` : ''}.`,
+        data: res || {},
+      };
+    }
+  }
+
+  // ── 0.8 Specialized Cinema Playback (Random Episode / Unwatched / Random Movie / Latest / From Beginning) ──
+  if (intent.type === 'cinema-special') {
+    const match = resolveCinemaSpecialPlayback(intent, movieTracks, { configDir });
+    if (!match.ok) {
+      return {
+        ok: false,
+        skill: 'movie-play',
+        cleanedCommand: cleaned,
+        robosUser: activeUser,
+        response: match.error || 'I could not find matching movies or episodes in your library.',
+      };
+    }
+    let playResult = null;
+    if (autoLaunchPlayers) {
+      const client = await ensureMediaPlayerRunning('movie-player', createMoviePlayerClient, { configDir });
+      playResult = await client.play({
+        trackIds: match.tracks.map(t => t.id),
+        shuffle: false,
+        keepFirst: Boolean(match.keepFirst),
+        startAt: match.startAt !== undefined ? match.startAt : null,
+        targetIp: match.targetIp || null,
+        robosUser: activeUser,
+      });
+    }
+    return {
+      ok: true,
+      skill: 'movie-play',
+      cleanedCommand: cleaned,
+      robosUser: activeUser,
+      matchType: match.matchType,
+      bestTrack: match.bestTrack,
+      trackCount: match.tracks.length,
+      targetDevice: match.targetDevice || null,
+      targetIp: match.targetIp || null,
+      playResult,
+      response: match.summaryText,
+      data: {
+        kind: 'movie',
+        matchType: match.matchType,
+        bestTrack: match.bestTrack,
+        trackIds: match.tracks.map(t => t.id),
+        targetDevice: match.targetDevice || null,
+        targetIp: match.targetIp || null,
+        robosUser: activeUser,
+      },
+    };
+  }
+
+  // ── 1. Transport controls (pause / resume / next / previous / restart) ──────
   if (intent.type === 'transport') {
     const audioClient = createAudioPlayerClient({ configDir });
     const movieClient = createMoviePlayerClient({ configDir });
     let targetClient = null;
     let targetName = 'Audio Player';
 
-    if (audioClient.running()) targetClient = audioClient;
-    else if (movieClient.running()) {
+    if (intent.preferMoviePlayer && movieClient.running()) {
+      targetClient = movieClient;
+      targetName = 'Movie Player';
+    } else if (movieClient.running() && audioClient.running()) {
+      const [mSt, aSt] = await Promise.all([movieClient.status(), audioClient.status()]);
+      if (mSt?.playing && !aSt?.playing) {
+        targetClient = movieClient;
+        targetName = 'Movie Player';
+      } else {
+        targetClient = audioClient;
+      }
+    } else if (audioClient.running()) {
+      targetClient = audioClient;
+    } else if (movieClient.running()) {
       targetClient = movieClient;
       targetName = 'Movie Player';
     }
@@ -1726,12 +2415,16 @@ async function executeNabuCommand(rawTranscript, {
       };
     }
 
-    const res = await targetClient[intent.action]({ robosUser: activeUser });
+    const res = typeof targetClient[intent.action] === 'function'
+      ? await targetClient[intent.action]({ robosUser: activeUser })
+      : { ok: false, error: `${intent.action} not supported` };
+    const devLabel = intent.targetDevice && intent.targetDevice.ip !== 'local' ? ` on ${intent.targetDevice.name}` : ` in ${targetName}`;
     const actionLabels = {
-      pause: `Paused ${targetName}.`,
-      resume: `Resumed playback in ${targetName}.`,
-      next: `Skipped to the next track in ${targetName}.`,
-      previous: `Went back to the previous track in ${targetName}.`,
+      pause: `Paused playback${devLabel}.`,
+      resume: `Resumed playback${devLabel}.`,
+      next: `Skipped to the next item${devLabel}.`,
+      previous: `Went back to the previous item${devLabel}.`,
+      restart: `Restarted from the beginning${devLabel}.`,
     };
     return {
       ok: Boolean(res && res.ok !== false),
@@ -1832,6 +2525,9 @@ module.exports = {
   answerWatchStatus,
   parseWatchlistCommand,
   executeWatchlistCommand,
+  parseCinemaSpecialCommand,
+  resolveCinemaSpecialPlayback,
+  findShowEpisodePool,
   stripWakePhrase,
   phoneticCode,
   jaroWinkler,

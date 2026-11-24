@@ -4251,4 +4251,128 @@ body.is-resizing, body.is-resizing * { cursor: col-resize !important; user-selec
   padding: 12px;
 }
 
+.voice-commands-modal {
+  width: min(860px, 94vw);
+  max-height: 86vh;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.vc-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.vc-modal-header h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.vc-try-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.vc-try-form {
+  flex: 1 1 360px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.vc-try-form input {
+  flex: 1;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(0, 0, 0, 0.35);
+  color: #f8fafc;
+  font-size: 0.8rem;
+}
+
+.vc-tv-picker {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.74rem;
+  color: #cbd5e1;
+}
+
+.vc-tv-picker select {
+  padding: 5px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(17, 14, 11, 0.9);
+  color: #f8fafc;
+  font-size: 0.75rem;
+}
+
+.vc-categories-scroll {
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-right: 4px;
+}
+
+.vc-category h4 {
+  margin: 0 0 6px;
+  font-size: 0.76rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--accent, #e8a33d);
+}
+
+.vc-cmd-list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.vc-cmd-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.vc-cmd-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.vc-cmd-text code {
+  font-size: 0.79rem;
+  color: #fde68a;
+  word-break: break-word;
+}
+
+.vc-cmd-text span {
+  font-size: 0.72rem;
+  color: #94a3b8;
+}
+
+.vc-run-btn {
+  padding: 4px 10px;
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
+
 

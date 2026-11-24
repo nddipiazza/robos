@@ -638,4 +638,108 @@ describe('Movie Player watchlist & episode cursor skills (CLI, MCP, and RobOS Vo
       fs.rmSync(tmp, { recursive: true, force: true });
     }
   });
+
+  it('routes random episode, unwatched, genre movie, pilot/latest, and Smart TV handoff voice commands to named RobOS Smart TVs', async () => {
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'robos-smarttv-voice-'));
+    const configDir = path.join(tmp, '.config', 'robos');
+    fs.mkdirSync(configDir, { recursive: true });
+
+    // Configure named RobOS Smart TVs (including custom names without hardcoded cue words)
+    fs.writeFileSync(path.join(configDir, 'tv-studio.json'), JSON.stringify({
+      portalPort: 19210,
+      tvs: [
+        {
+          id: 'tv-livingroom-tcl-roku',
+          name: '65" TCL Roku TV (Living room)',
+          ip: '192.168.1.15',
+          platformId: 'roku-os',
+          platformName: 'Roku OS TV & Streaming Players',
+          model: 'TCL 65S425',
+          ecpDeviceInfo: { modelName: '65S425' },
+        },
+        {
+          id: 'tv-garage-proj',
+          name: 'Garage Projector',
+          ip: '192.168.1.88',
+          platformId: 'android-tv',
+          platformName: 'Google TV',
+          model: 'Epson 4K',
+          lastSeen: new Date().toISOString(),
+        },
+      ],
+    }, null, 2));
+
+    const movieTracks = [
+      { id: 'house-101', filePath: '/tv/House/S01E01.mkv', title: 'House S01E01', mediaType: 'tv', showName: 'House', seasonNumber: 1, episodeNumber: 1, episodeTitle: 'Pilot', duration: 2640 },
+      { id: 'house-205', filePath: '/tv/House2/S02E05.mkv', title: 'House S02E05', mediaType: 'tv', showName: 'House (2004) Season 1-8 S01-S08', seasonNumber: 2, episodeNumber: 5, episodeTitle: 'Daddy\'s Boy', duration: 2640 },
+      { id: 'house-312', filePath: '/tv/House3/S03E12.mkv', title: 'House S03E12', mediaType: 'tv', showName: 'House, M D', seasonNumber: 3, episodeNumber: 12, episodeTitle: 'One Day, One Room', duration: 2640 },
+      { id: 'mov-course', filePath: '/courses/001 Intro.mp4', title: '001 Course Structure and Projects', year: 2023, mediaType: 'movie', genre: 'Education', duration: 300 },
+      { id: 'mov-alien', filePath: '/movies/Alien.1979.mkv', title: 'Alien', year: 1979, mediaType: 'movie', genre: 'Horror, Sci-Fi', duration: 7020 },
+      { id: 'mov-matrix', filePath: '/movies/Matrix.1999.mkv', title: 'The Matrix', year: 1999, mediaType: 'movie', genre: 'Action, Sci-Fi', duration: 8160 },
+    ];
+    fs.writeFileSync(path.join(configDir, 'movie-library.json'), JSON.stringify({ updatedAt: new Date().toISOString(), tracks: movieTracks }));
+    // Mark S01E01 & S02E05 watched so S03E12 is the only unwatched episode of House!
+    fs.writeFileSync(path.join(configDir, 'movie-track-stats.json'), JSON.stringify({
+      updatedAt: new Date().toISOString(),
+      tracks: {
+        'house-101': { completed: true, plays: 1, lastPlayed: '2026-11-01T00:00:00Z' },
+        'house-205': { completed: true, plays: 1, lastPlayed: '2026-11-02T00:00:00Z' },
+      },
+    }));
+
+    try {
+      // 1. "play a random episode of house on the "roku tv""
+      const randHouse = await nabu.executeNabuCommand('play a random episode of house on the "roku tv"', {
+        configDir,
+        autoLaunchPlayers: false,
+      });
+      assert.equal(randHouse.ok, true);
+      assert.equal(randHouse.skill, 'movie-play');
+      assert.equal(randHouse.matchType, 'tv-random-episode');
+      assert.equal(randHouse.targetIp, '192.168.1.15');
+      assert.match(randHouse.response, /65" TCL Roku TV \(Living room\)/);
+      assert.ok(['house-101', 'house-205', 'house-312'].includes(randHouse.bestTrack.id));
+
+      // 2. "play a random unwatched episode of House on Garage Projector" (custom TV name + unwatched filter!)
+      const unwatchedHouse = await nabu.executeNabuCommand('play a random unwatched episode of House on Garage Projector', {
+        configDir,
+        autoLaunchPlayers: false,
+      });
+      assert.equal(unwatchedHouse.ok, true);
+      assert.equal(unwatchedHouse.targetIp, '192.168.1.88');
+      assert.equal(unwatchedHouse.bestTrack.id, 'house-312', 'picks the only unwatched episode across all House folder variants');
+
+      // 3. "play a random 90s movie on the Roku TV" -> picks The Matrix (1999), never 001 Course clip!
+      const rand90s = await nabu.executeNabuCommand('play a random 90s movie on the Roku TV', {
+        configDir,
+        autoLaunchPlayers: false,
+      });
+      assert.equal(rand90s.ok, true);
+      assert.equal(rand90s.bestTrack.id, 'mov-matrix');
+      assert.equal(rand90s.targetIp, '192.168.1.15');
+
+      // 4. "play the pilot of House on the Roku TV" & "play the latest episode of House on the Roku TV"
+      const pilot = await nabu.executeNabuCommand('play the pilot of House on the Roku TV', { configDir, autoLaunchPlayers: false });
+      assert.equal(pilot.ok, true);
+      assert.equal(pilot.bestTrack.id, 'house-101');
+      assert.equal(pilot.targetIp, '192.168.1.15');
+
+      const latest = await nabu.executeNabuCommand('play the latest episode of House on the Roku TV', { configDir, autoLaunchPlayers: false });
+      assert.equal(latest.ok, true);
+      assert.equal(latest.bestTrack.id, 'house-312');
+      assert.equal(latest.targetIp, '192.168.1.15');
+
+      // 5. "list my smart tvs" & "open the movie library on the Roku TV"
+      const tvList = await nabu.executeNabuCommand('list my smart tvs', { configDir, autoLaunchPlayers: false });
+      assert.equal(tvList.ok, true);
+      assert.match(tvList.response, /65" TCL Roku TV/);
+      assert.match(tvList.response, /Garage Projector/);
+
+      const openLib = await nabu.executeNabuCommand('open the movie library on the Roku TV', { configDir, autoLaunchPlayers: false });
+      assert.equal(openLib.ok, true);
+      assert.equal(openLib.targetIp, '192.168.1.15');
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  });
 });

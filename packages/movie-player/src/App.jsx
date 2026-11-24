@@ -10,6 +10,7 @@ import TrackInfo from './TrackInfo.jsx';
 import { AiPlaylistModal, DjSettingsModal } from './AiPlaylist.jsx';
 import { AiFixMetadataModal } from './AiFixMetadata.jsx';
 import MediaServiceModal from './MediaServiceModal.jsx';
+import VoiceCommandsModal from './VoiceCommandsModal.jsx';
 import { Splitter, useColumns, useLayoutPref } from './resizable.jsx';
 import { castClock, CastProgress, useCastPlaying } from './castClock.jsx';
 import { useVirtualDj } from './useVirtualDj.js';
@@ -489,6 +490,7 @@ export default function App() {
   };
 
   const [showMediaServiceModal, setShowMediaServiceModal] = useState(false);
+  const [showVoiceCommandsModal, setShowVoiceCommandsModal] = useState(false);
 
   const handleAddMediaService = async (endpoint, label) => {
     showStatus('Connecting to RobOS Media Service and syncing Movies & TV Shows...');
@@ -1950,7 +1952,7 @@ export default function App() {
           }
           return { ok: true, playing: true, robosUser: activeRobosUser || null };
         },
-        playFromControl: async ({ tracks, shuffle, targetIp, robosUser } = {}) => {
+        playFromControl: async ({ tracks, shuffle, keepFirst = false, startAt = null, targetIp, robosUser } = {}) => {
           if (!Array.isArray(tracks) || !tracks.length) return { ok: false, error: 'No movies given' };
           if (robosUser) {
             setActiveRobosUser(robosUser);
@@ -1958,8 +1960,9 @@ export default function App() {
           if (targetIp && targetIp !== 'local') {
             const list = tracks.map(t => ({ ...t }));
             if (shuffle) {
-              for (let i = list.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
+              const startIdx = keepFirst ? 1 : 0;
+              for (let i = list.length - 1; i > startIdx; i--) {
+                const j = startIdx + Math.floor(Math.random() * (i - startIdx + 1));
                 [list[i], list[j]] = [list[j], list[i]];
               }
             }
@@ -1967,11 +1970,12 @@ export default function App() {
             if (first.filePath && !first.cloud && window.robosAudio?.ensureFileAccessible) {
               window.robosAudio.ensureFileAccessible(first.filePath).catch(() => {});
             }
+            const resumeSec = resolveResumeSecForTrack(first, startAt);
             setOutputTarget(targetIp);
             setPlaylist(list);
             setCurrentTrackIndex(0);
             shuffleHistoryRef.current = [];
-            await castTrack(targetIp, first);
+            await castTrack(targetIp, first, { startAt: resumeSec });
             playerRef.current?.audio?.current?.pause();
             if (videoRef.current) videoRef.current.pause();
             setIsPlaying(true);
@@ -1989,8 +1993,9 @@ export default function App() {
           }
           if (targetIp === 'local' && outputTarget !== 'local') {
             setOutputTarget('local');
+            if (activeCastSession) handleStopCast();
           }
-          playTracks(tracks, 0, { shuffle: !!shuffle });
+          playTracks(tracks, 0, { shuffle: shuffle && !keepFirst, startAt });
           if (robosUser?.name) {
             showStatus(`🎙️ Playing for ${robosUser.name}: ${tracks[0].title}`);
           }
@@ -2009,6 +2014,36 @@ export default function App() {
         },
         previousTrack: async () => {
           handlePlayPrev();
+          return { ok: true };
+        },
+        restartTrack: async () => {
+          restartCurrent();
+          return { ok: true };
+        },
+        transferOutput: async ({ targetIp = 'local' } = {}) => {
+          const song = playlist[currentTrackIndex];
+          if (!song) return { ok: false, error: 'Nothing is currently playing in RobOS Movie Player.' };
+          const audio = getMediaEl();
+          if (targetIp === 'local') {
+            if (outputTarget !== 'local') pendingLocalSeekRef.current = castClock.now();
+            setOutputTarget('local');
+            if (activeCastSession) await handleStopCast();
+            if (audio) audio.muted = false;
+            return { ok: true, targetIp: 'local' };
+          }
+          const from = outputTarget === 'local' && audio ? audio.currentTime : castClock.now();
+          if (audio) { audio.pause(); audio.muted = true; }
+          if (videoRef.current) { videoRef.current.pause(); videoRef.current.muted = true; }
+          setOutputTarget(targetIp);
+          await castTrack(targetIp, song, { startAt: from > 1 ? from : 0 });
+          setIsPlaying(true);
+          return { ok: true, targetIp, startAt: Math.round(from || 0) };
+        },
+        stopCast: async () => {
+          if (activeCastSession || outputTarget !== 'local') {
+            await handleStopCast();
+            setOutputTarget('local');
+          }
           return { ok: true };
         },
       };
@@ -2343,6 +2378,15 @@ export default function App() {
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21h5v-5"/></svg>
               <span>Scan Smart TVs</span>
+            </button>
+            <button
+              id="btn-voice-commands"
+              className="btn-icon"
+              onClick={() => setShowVoiceCommandsModal(true)}
+              title="View & test RobOS Voice Assistant commands for Movie Player & Named Smart TVs"
+            >
+              <Icon name="mic" size={15} />
+              <span>Voice Commands</span>
             </button>
           </div>
         </div>
@@ -3631,6 +3675,19 @@ export default function App() {
           onClose={() => setShowAiPlaylist(false)}
           onPlay={handleAiPlaylistPlay}
           onSave={handleAiPlaylistSave}
+        />
+      )}
+
+      {showVoiceCommandsModal && (
+        <VoiceCommandsModal
+          speakers={speakers}
+          onRunCommand={async (phrase) => {
+            const res = await window.robosAudio?.runVoiceCommand?.(phrase);
+            if (res?.response) showStatus(`🎙️ ${res.response}`);
+            await loadStats();
+            return res;
+          }}
+          onClose={() => setShowVoiceCommandsModal(false)}
         />
       )}
 

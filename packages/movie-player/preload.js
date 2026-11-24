@@ -48,6 +48,7 @@ contextBridge.exposeInMainWorld('robosAudio', {
   mediaSyncStatus: () => ipcRenderer.invoke('audio:media-sync-status'),
   mediaSyncNow: () => ipcRenderer.invoke('audio:media-sync-now'),
   watchStatus: (show) => ipcRenderer.invoke('audio:watch-status', show),
+  runVoiceCommand: (text) => ipcRenderer.invoke('audio:run-voice-command', text),
   continueWatching: (limit) => ipcRenderer.invoke('audio:continue-watching', limit),
   recordPlay: (trackId) => ipcRenderer.invoke('audio:record-play', trackId),
   setLoved: (ids, loved) => ipcRenderer.invoke('audio:set-loved', { ids, loved }),

@@ -83,8 +83,8 @@ class SkillsExecutor {
         };
       }
       const mediaIntent = classifyVoiceCommand(cleanedMedia, { configDir: this.configDir });
-      // "what season of The Office did we leave off on?", "continue watching The Office", and watchlist management too.
-      if (['play-movie', 'play-media', 'transport', 'watch-status', 'play-next-episode', 'movie-watchlist'].includes(mediaIntent.type)) {
+      // "what season of The Office did we leave off on?", "play a random episode of House on the Roku TV", and watchlist management too.
+      if (['play-movie', 'play-media', 'transport', 'watch-status', 'play-next-episode', 'movie-watchlist', 'cinema-special', 'smart-tv-control'].includes(mediaIntent.type)) {
         const res = await executeNabuCommand(cleanedMedia, { skillsExecutor: this, configDir: this.configDir });
         return {
           ok: res.ok,
@@ -915,11 +915,13 @@ class SkillsExecutor {
     // Household Shopping Lists & Google Calendar commands
     if (/\b(?:shopping\s+lists?|grocery|target\s+list|costco|calendar|calendars|appointment|appointments)\b/i.test(query)) return true;
 
-    // Movie Player Watchlist, Episode Cursor & Watch Status commands
+    // Movie Player Watchlist, Episode Cursor, Random/Smart-TV Cinema & Watch Status commands
     try {
-      const { parseWatchlistCommand, parseWatchStatusQuery, stripWakePhrase } = require('../../home-speaker/lib/nabu-command-router');
+      const { parseWatchlistCommand, parseWatchStatusQuery, parseCinemaSpecialCommand, classifyVoiceCommand, stripWakePhrase } = require('../../home-speaker/lib/nabu-command-router');
       const cleanedQ = stripWakePhrase(query);
-      if (parseWatchlistCommand(cleanedQ) || parseWatchStatusQuery(cleanedQ)) return true;
+      if (parseWatchlistCommand(cleanedQ) || parseWatchStatusQuery(cleanedQ) || parseCinemaSpecialCommand(cleanedQ)) return true;
+      const cls = classifyVoiceCommand(cleanedQ);
+      if (['play-movie', 'play-media', 'transport', 'cinema-special', 'smart-tv-control'].includes(cls.type)) return true;
     } catch {}
     if (/\b(?:watch\s*lists?|watchlists?|current\s+episode\s+(?:of|in|for)\s+\S+\s+(?:is|to)\s+\S+|mark\s+(?:all\s+)?episodes?\s+(?:of|in|for)\s+\S+\s+(?:as\s+)?(?:new|unwatched|watched))\b/i.test(query)) return true;
 

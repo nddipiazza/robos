@@ -568,19 +568,22 @@ const controlHandlers = {
         tracks = body.tracks.map(t => (t && byId.get(t.id)) || t).filter(Boolean);
       }
       if (!tracks.length) return { ok: false, error: 'No matching movies to play' };
-      if (mainWindow && !mainWindow.isDestroyed()) {
+      if ((!body.targetIp || body.targetIp === 'local') && mainWindow && !mainWindow.isDestroyed()) {
         if (mainWindow.isMinimized()) mainWindow.restore();
         mainWindow.show();
       }
       return askRenderer('play', {
         tracks,
         shuffle: Boolean(body.shuffle),
+        keepFirst: Boolean(body.keepFirst),
+        startAt: body.startAt !== undefined ? body.startAt : null,
         targetIp: body.targetIp || null,
         robosUser: body.robosUser || null,
       });
     },
     next: (body = {}) => askRenderer('next', { robosUser: body.robosUser || null }),
     previous: (body = {}) => askRenderer('previous', { robosUser: body.robosUser || null }),
+    restart: (body = {}) => askRenderer('restart', { robosUser: body.robosUser || null }),
     pause: (body = {}) => askRenderer('pause', { robosUser: body.robosUser || null }),
     resume: (body = {}) => askRenderer('resume', { robosUser: body.robosUser || null }),
 };
@@ -621,6 +624,38 @@ controlHandlers.actions = {
   '/api/set-current-episode': (body) => setShowCurrentEpisode(body),
   '/api/import-watch-history': (body) => runWatchHistoryImport(body),
   '/api/play-next-episode': (body) => playNextEpisode(body),
+  '/api/transfer-output': (body) => askRenderer('transfer-output', { targetIp: body.targetIp || 'local', robosUser: body.robosUser || null }),
+  '/api/stop-cast': (body) => askRenderer('stop-cast', { targetIp: body.targetIp || null, robosUser: body.robosUser || null }),
+  '/api/open-tv-library': async (body = {}) => {
+    const ip = String(body.targetIp || '').trim();
+    if (!ip) return { ok: false, error: 'No Smart TV IP specified' };
+    try {
+      refreshCloudTrackUrls();
+      castService._saveStreamServerEndpoint();
+      const cfgPath = path.join(os.homedir(), '.config', 'robos', 'tv-studio.json');
+      if (fs.existsSync(cfgPath)) {
+        const raw = JSON.parse(fs.readFileSync(cfgPath, 'utf8'));
+        const tvInfo = castService.speakers.get(ip) || (raw.tvs || []).find(t => t.ip === ip) || { ip, name: `Smart TV (${ip})`, platformId: 'roku-os' };
+        raw.activeCinemaLibrary = {
+          active: true,
+          tvIp: ip,
+          tvId: tvInfo.id || `tv-${ip}`,
+          tvName: tvInfo.name || ip,
+          platformId: tvInfo.platformId || 'roku-os',
+          openedAt: new Date().toISOString(),
+        };
+        if (raw.activeCinemaCast) raw.activeCinemaCast.active = false;
+        fs.writeFileSync(cfgPath, JSON.stringify(raw, null, 2));
+        castService._pushRokuCastToMediaServers({ active: false });
+        if (tvInfo.platformId === 'roku-os') {
+          castService._ensureRokuDevChannelLaunched(ip, tvInfo?.ports?.ecp || 8060);
+        }
+      }
+      return { ok: true, ip, totalMovies: mediaLibrary.tracks.length };
+    } catch (err) {
+      return { ok: false, error: err.message };
+    }
+  },
   '/api/media-sync-now': async () => ({ ok: true, ...(mediaSync ? await mediaSync.runNow('manual') : { outcome: 'unavailable' }) }),
   '/api/media-service-reload': async () => {
     mediaLibrary._loadCache();
@@ -1663,6 +1698,20 @@ ipcMain.handle('audio:clear-watch-history', async (_evt, { ids = [], keys = [] }
 
 // Watch status for the renderer (the same answers as the control API and the media MCP server).
 ipcMain.handle('audio:watch-status', async (_evt, show) => { try { return controlHandlers.queries['/api/watch-status']({ show }); } catch (err) { return { ok: false, error: err.message }; } });
+ipcMain.handle('audio:run-voice-command', async (_evt, rawCommand = '') => {
+  try {
+    const router = requireShared('home-speaker/lib/nabu-command-router');
+    if (!router || typeof router.executeNabuCommand !== 'function') {
+      return { ok: false, error: 'RobOS Voice router is not installed.' };
+    }
+    return await router.executeNabuCommand(String(rawCommand || ''), {
+      configDir: CONFIG_DIR,
+      autoLaunchPlayers: true,
+    });
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
 ipcMain.handle('audio:continue-watching', async (_evt, limit) => { try { return controlHandlers.queries['/api/continue-watching']({ limit }); } catch (err) { return { ok: false, error: err.message }; } });
 ipcMain.handle('audio:media-sync-status', async () => controlHandlers.queries['/api/media-sync']());
 ipcMain.handle('audio:media-sync-now', async () => controlHandlers.actions['/api/media-sync-now']());

@@ -157,8 +157,39 @@ export function useSpeakerTakeover({ getPlayer, showStatus }) {
     return { ok: false, error: 'previousTrack unavailable' };
   }, [getPlayer]);
 
+  const restart = useCallback(async (payload = {}) => {
+    const p = getPlayer();
+    if (payload.robosUser && typeof p.setRobosUser === 'function') p.setRobosUser(payload.robosUser);
+    if (typeof p.restartTrack === 'function') return p.restartTrack(payload);
+    return { ok: false, error: 'restartTrack unavailable' };
+  }, [getPlayer]);
+
+  const transferOutput = useCallback(async (payload = {}) => {
+    const p = getPlayer();
+    if (payload.robosUser && typeof p.setRobosUser === 'function') p.setRobosUser(payload.robosUser);
+    if (typeof p.transferOutput === 'function') return p.transferOutput(payload);
+    return { ok: false, error: 'transferOutput unavailable' };
+  }, [getPlayer]);
+
+  const stopCast = useCallback(async (payload = {}) => {
+    const p = getPlayer();
+    if (typeof p.stopCast === 'function') return p.stopCast(payload);
+    return { ok: false, error: 'stopCast unavailable' };
+  }, [getPlayer]);
+
   const handlers = useRef({});
-  handlers.current = { status, 'speak-clip': speakClip, play, next, previous, pause, resume };
+  handlers.current = {
+    status,
+    'speak-clip': speakClip,
+    play,
+    next,
+    previous,
+    restart,
+    pause,
+    resume,
+    'transfer-output': transferOutput,
+    'stop-cast': stopCast,
+  };
   useEffect(() => {
     if (!window.robosAudio?.onControlRequest) return undefined;
     return window.robosAudio.onControlRequest((action, payload) => {

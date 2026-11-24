@@ -135,6 +135,9 @@ function createControlServer({ handlers, configDir = defaultConfigDir(), port = 
     if (url.pathname === '/api/previous' && typeof handlers.previous === 'function') {
       return [200, await handlers.previous(body || {})];
     }
+    if (url.pathname === '/api/restart' && typeof handlers.restart === 'function') {
+      return [200, await handlers.restart(body || {})];
+    }
     if (url.pathname === '/api/pause') return [200, await handlers.pause(body || {})];
     if (url.pathname === '/api/resume') return [200, await handlers.resume(body || {})];
     return [404, { ok: false, error: 'Not found' }];
@@ -243,8 +246,12 @@ function createAudioPlayerClient({ configDir = defaultConfigDir(), timeoutMs = 8
     play: (opts = {}) => call('POST', '/api/play', opts),
     next: (opts = {}) => call('POST', '/api/next', opts),
     previous: (opts = {}) => call('POST', '/api/previous', opts),
+    restart: (opts = {}) => call('POST', '/api/restart', opts),
     pause: (opts = {}) => call('POST', '/api/pause', opts),
     resume: (opts = {}) => call('POST', '/api/resume', opts),
+    transferOutput: (opts = {}) => call('POST', '/api/transfer-output', opts),
+    openTvLibrary: (opts = {}) => call('POST', '/api/open-tv-library', opts),
+    stopCast: (opts = {}) => call('POST', '/api/stop-cast', opts),
     // Movie Player watch status & watchlist actions (null when the app is not running).
     watchStatus: (show) => call('GET', `/api/watch-status?show=${encodeURIComponent(show || '')}`),
     movieStatus: (title) => call('GET', `/api/movie-status?title=${encodeURIComponent(title || '')}`),

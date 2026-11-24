@@ -94,6 +94,15 @@ Both **RobOS Voice Desktop Assistant** (`packages/voice-prompt`, port `:19188`, 
   - *"Update The Office to season 3 episode 5"*
   - *"We are on season 2 episode 3 of Breaking Bad"*
   - *"Mark Severance watched up until S02E04"*
+- **Random Episodes, Random Movies & Named Smart TV Casting**:
+  - *"Play a random episode of House on the Roku TV"*
+  - *"Play a random unwatched episode of Family Guy on the Roku TV"*
+  - *"Play a random episode of House season 3 on Basement TV"*
+  - *"Play a random [unwatched / horror / sci-fi / 90s] movie on the Roku TV"*
+  - *"Continue watching House on the Roku TV"* / *"Play the next episode of Severance on Living Room OLED"*
+  - *"Play the latest episode of Ghosts on the Roku TV"* / *"Play the pilot of Firefly on the Roku TV"*
+  - *"Move playback to the Roku TV"* / *"Move playback to this computer"* / *"Stop casting"*
+  - *"Open the movie library on the Roku TV"* / *"List my Smart TVs"*
 
 Test via the RobOS Voice CLI:
 
