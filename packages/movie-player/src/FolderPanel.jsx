@@ -9,6 +9,7 @@ const when = (iso) => {
 
 const providerLabel = (protocol) => {
   const p = (protocol || '').toLowerCase();
+  if (p === 'media-service') return 'RobOS Media Service';
   if (p === 'p2p') return 'RobOS P2P mTLS 1.3';
   if (p === 'gdrive') return 'Google Drive';
   if (p === 'onedrive') return 'OneDrive';
@@ -33,7 +34,7 @@ export function formatFolderMediaSummary(f) {
   return parts.join(' · ');
 }
 
-export default function FolderPanel({ folders, activeId, onSelect, onAddLocal, onAddCloud, onAddPeer, onRescan, onRename, onRemove, onEnabled, busyId }) {
+export default function FolderPanel({ folders, activeId, onSelect, onAddLocal, onAddCloud, onAddPeer, onOpenMediaService, onRescan, onRename, onRemove, onEnabled, busyId }) {
   const [confirmId, setConfirmId] = useState(null);
   const [alsoTracks, setAlsoTracks] = useState(true);
   const [editId, setEditId] = useState(null);
@@ -72,6 +73,16 @@ export default function FolderPanel({ folders, activeId, onSelect, onAddLocal, o
       <div className="folder-panel-head">
         <span>Library Folders ({folders.length})</span>
         <div className="folder-head-actions">
+          {onOpenMediaService && (
+            <button
+              className="row-btn"
+              style={{ color: '#67e8f9', borderColor: 'rgba(0,188,212,0.55)', fontWeight: 600 }}
+              title="Connect to a RobOS Media Server (Movies, TV Shows, MCP)"
+              onClick={onOpenMediaService}
+            >
+              + Media Service
+            </button>
+          )}
           <button className="row-btn" title="Add a folder from this computer" onClick={onAddLocal}>+ Local</button>
           <button className="row-btn" title="Browse Cloud Storage folders" onClick={onAddCloud}>+ Cloud</button>
           {onAddPeer && (
@@ -129,7 +140,7 @@ export default function FolderPanel({ folders, activeId, onSelect, onAddLocal, o
       {folders.map(f => (
         <div key={f.id} className={`folder-item ${activeId === f.id ? 'active' : ''} ${f.available ? '' : 'unavailable'}`}>
           <div className="folder-row" onClick={() => onSelect(f.id)}>
-            <Icon name={f.kind === 'cloud' || f.kind === 'peer' ? 'cloud' : 'folder'} size={15} />
+            <Icon name={f.kind === 'cloud' || f.kind === 'peer' || f.kind === 'media-service' ? 'cloud' : 'folder'} size={15} />
             <div className="folder-text">
               {editId === f.id ? (
                 <input className="folder-edit" autoFocus value={editValue}
@@ -142,12 +153,14 @@ export default function FolderPanel({ folders, activeId, onSelect, onAddLocal, o
                   {f.label}
                 </span>
               )}
-              <span className="folder-sub" title={f.kind === 'cloud' || f.kind === 'peer' ? `${providerLabel(f.protocol)} · ${f.connectionName || ''} (${f.path})` : f.path}>
-                {f.kind === 'peer'
-                  ? `RobOS P2P mTLS 1.3 · ${f.endpoint || f.path}`
-                  : f.kind === 'cloud'
-                    ? (f.connectionMissing ? 'Connection removed from Data Sources' : `${providerLabel(f.protocol)} · ${f.connectionName}`)
-                    : (f.available ? f.path : `${f.path} (not found)`)}
+              <span className="folder-sub" title={f.kind === 'cloud' || f.kind === 'peer' || f.kind === 'media-service' ? `${providerLabel(f.protocol)} · ${f.connectionName || ''} (${f.path})` : f.path}>
+                {f.kind === 'media-service'
+                  ? `RobOS Media Service (MCP) · ${f.endpoint || f.path}`
+                  : f.kind === 'peer'
+                    ? `RobOS P2P mTLS 1.3 · ${f.endpoint || f.path}`
+                    : f.kind === 'cloud'
+                      ? (f.connectionMissing ? 'Connection removed from Data Sources' : `${providerLabel(f.protocol)} · ${f.connectionName}`)
+                      : (f.available ? f.path : `${f.path} (not found)`)}
               </span>
               <span className="folder-sub">
                 <strong>{formatFolderMediaSummary(f)}</strong> · {when(f.lastSynced)}

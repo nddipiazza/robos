@@ -771,6 +771,22 @@
       "robos:schemaOrgType": "https://schema.org/ControlAction",
       "robos:targetId": "voice-prompt",
       "robos:targetType": "app"
+    },
+    {
+      "@id": "urn:robos:desktop-app:media-server",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:DesktopApp",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:title": "RobOS Media Server",
+      "dcterms:description": "Unified web media streaming service, live FFmpeg H.264/AAC remux and transcode engine, WebVTT subtitle extractor, built-in EPUB and PDF reader, and Model Context Protocol (MCP) server for movies, TV shows, music, books, and courses, kept automatically synced to Movie Player and Audio Player across RobOS machines by RobOS Preferences.",
+      "robos:desktopFramework": "Electron",
+      "robos:namespace": "robos.applications",
+      "robos:package": "applications",
+      "robos:repository": "packages/media-server",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:technology": "Node.js HTTP 206 Byte-Range Streaming / FFmpeg Live Transcoding / EPUB & PDF Reader / MCP HTTP & Stdio / Electron 28"
     }
   ],
   "@id": "urn:robos:package:applications",

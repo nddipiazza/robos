@@ -84,6 +84,11 @@ async function attempt(home, opts) {
     if (!plan.actions.length) return { outcome: 'up-to-date' };
     try {
       const r = await sync.applyVaultSync({ homeDir: home, fetchImpl: opts.fetchImpl });
+      if (Array.isArray(r.pulled) && r.pulled.includes('config/media-servers.json')) {
+        try {
+          await require('./media-service-client').syncMediaServicesToLocalApps({ homeDir: home, force: true });
+        } catch {}
+      }
       return { outcome: 'synced', generation: r.generation, pushed: r.pushed, pulled: r.pulled, deleted: [...r.deletedLocal, ...r.deletedRemote], restorePointId: r.restorePointId };
     } catch (err) {
       if (err.code === 'CONFLICTS') return { outcome: 'conflicts', conflicts: err.conflicts };

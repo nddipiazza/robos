@@ -16,9 +16,9 @@ const CATEGORIES = [
   {
     id: 'preferences',
     label: 'Preferences',
-    description: 'RobOS Preferences, the active coding agent, voice prompts and notification preferences.',
+    description: 'RobOS Preferences, RobOS Media Services, the active coding agent, voice prompts and notification preferences.',
     include: [
-      'config/settings.json', 'config/preferences.json', 'config/ai-provider.json',
+      'config/settings.json', 'config/preferences.json', 'config/media-servers.json', 'config/ai-provider.json',
       'config/voice-prompt-prefs.json', 'config/voice-prompts.json', 'config/notification-prefs.json',
       'config/desktop-pinned.json', 'config/widgets.json', 'config/icon-registry.json',
       'config/desktop-customizer/**', 'config/file-explorer-nav.json',
@@ -162,8 +162,9 @@ const EXCLUDE = [
   'config/movie-player/active-peer-bridge.json',
   // The players' library indexes and per-file stats name files by their path on this computer
   // (tens of MB, rewritten during every scan). What follows you instead: the folders, the
-  // playlists and config/media-history/*.json, keyed by show/season/episode, movie or song.
-  'config/movie-library.json', 'config/audio-library.json',
+  // playlists, config/media-servers.json, and config/media-history/*.json.
+  'config/movie-library.json', 'config/audio-library.json', 'config/books-library.json',
+  'config/media-service-sync-state.json', 'config/media-server/catalog.json',
   'config/movie-track-stats.json', 'config/audio-track-stats.json',
   'config/movie-player-control.json', 'config/audio-player-control.json',
   // The LG ThinQ personal access token stays on the computer it was entered on.
@@ -212,6 +213,7 @@ const LOCAL_KEYS = {
   'config/cloud-folders.json': ['syncedAt', 'localPath'],
   'config/movie-folders.json': ['lastSynced', 'syncError', 'aliasRoots'],
   'config/audio-folders.json': ['lastSynced', 'syncError', 'aliasRoots'],
+  'config/media-servers.json': ['lastCheckedAt', 'lastSyncAt', 'online', 'lastStatus', 'cachedCounts', 'remoteServices'],
   'config/tv-studio.json': ['lastRemoteKey', 'webosSessionRemainingHours', 'webosLastRenewedAt', 'activeTileId', 'activeDashboardCast', 'appCasts', 'activeCinemaCast', 'moviePlayerServer', 'moviePlayerLibrarySnapshot', 'activeCinemaLibrary', 'tabloCinemaItemsSnapshot'],
   'config/dashboards.json': ['lastCastTvId', 'lastCastAt'],
   'config/app-mesh/mesh-state.json': ['listenHost', 'listenPort', 'tunnels'],
@@ -273,6 +275,7 @@ const FILE_LABELS = {
   'config/smart-lights.json': 'Smart Home',
   'config/tv-studio.json': 'Smart TV Studio',
   'config/settings.json': 'RobOS Preferences',
+  'config/media-servers.json': 'RobOS Media Services',
   'config/movie-folders.json': 'Movie Player',
   'config/audio-folders.json': 'Audio Player',
 };

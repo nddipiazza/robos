@@ -37,4 +37,12 @@ contextBridge.exposeInMainWorld('api', {
   setFocusriteControl: payload => ipcRenderer.invoke('audio-devices-set-hardware-control', payload),
   testAudioInput: payload => ipcRenderer.invoke('audio-devices-test-input', payload),
   playAudioTestTone: payload => ipcRenderer.invoke('audio-devices-play-tone', payload),
+  mediaServices: () => ipcRenderer.invoke('media-services-list'),
+  saveMediaService: srv => ipcRenderer.invoke('media-services-save', srv),
+  deleteMediaService: id => ipcRenderer.invoke('media-services-delete', id),
+  discoverMediaServices: () => ipcRenderer.invoke('media-services-discover'),
+  probeMediaService: url => ipcRenderer.invoke('media-services-probe', url),
+  syncMediaServicesNow: () => ipcRenderer.invoke('media-services-sync-now'),
+  setMediaServicesAutoSync: enabled => ipcRenderer.invoke('media-services-set-auto-sync', enabled),
+  openExternalUrl: url => ipcRenderer.invoke('open-external-url', url),
 });

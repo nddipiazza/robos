@@ -141,6 +141,7 @@ const PORT_REGISTRY = {
   'shopping-lists':    19224,
   'game-theater':      19227,
   'daw-studio':        19232,
+  'media-server':      19233,
 };
 
 

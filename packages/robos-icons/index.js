@@ -72,6 +72,12 @@ const BUILTIN_APPS = [
     iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/><polygon points="10 10 15 12 10 14 10 10" fill="#00bcd4"/></svg>'
   },
   {
+    appId: 'media-server',
+    label: 'RobOS Media Server',
+    category: 'System',
+    iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="#00bcd4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="7" width="36" height="11" rx="2.5"/><rect x="6" y="21" width="36" height="11" rx="2.5"/><circle cx="12" cy="12.5" r="1.5" fill="#00bcd4"/><circle cx="12" cy="26.5" r="1.5" fill="#22c55e" stroke="#22c55e"/><line x1="18" y1="12.5" x2="26" y2="12.5"/><line x1="18" y1="26.5" x2="24" y2="26.5"/><polygon points="32 23.5 37 26.5 32 29.5 32 23.5" fill="#00bcd4"/><path d="M14 38h20"/><path d="M24 32v6"/><circle cx="24" cy="38" r="2" fill="#00bcd4"/></svg>'
+  },
+  {
     appId: 'automation-studio',
     label: 'Automation Studio',
     category: 'Development',

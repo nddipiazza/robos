@@ -13,7 +13,7 @@ async function init() {
   _settings = await window.api.loadSettings();
   renderSidebar();
   renderSections();
-  await Promise.all([loadAudioDevices(), loadConfigSync(), loadCloudAccounts(), loadGithubAccounts(), loadOvpnAccounts(), loadAiApiStatus()]);
+  await Promise.all([loadAudioDevices(), loadMediaServices(), loadConfigSync(), loadCloudAccounts(), loadGithubAccounts(), loadOvpnAccounts(), loadAiApiStatus()]);
 }
 
 function renderSidebar() {
@@ -59,6 +59,7 @@ function renderSections() {
   const el = document.getElementById('sections');
   el.innerHTML = _schema.sections.map(section => {
     if (section.id === 'audio_devices') return audioDevicesSection();
+    if (section.id === 'media_services') return mediaServicesSection();
     if (section.id === 'config_sync') return configSyncSection();
     if (section.id === 'cloud_accounts') return cloudAccountSection();
     if (section.id === 'github_accounts') return githubAccountSection();
@@ -958,4 +959,221 @@ async function loadAudioDevices() {
   document.getElementById('btn-audio-rescan')?.addEventListener('click', refresh);
   document.getElementById('btn-open-daw-studio')?.addEventListener('click', () => window.api.launchRobosApp('daw-studio'));
   await refresh();
+}
+
+/* ── RobOS Media Services (Movies, TV Shows, Music, Books & MCP) ──────── */
+function mediaServicesSection() {
+  return `<section class="section" id="section-media_services">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:8px;">
+      <h2 class="section-title" style="margin-bottom:0;">RobOS Media Services</h2>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button type="button" class="btn" id="btn-ms-discover">Discover on LAN</button>
+        <button type="button" class="btn" id="btn-ms-sync-now">Sync Players &amp; MCP Now</button>
+        <button type="button" class="btn btn-primary" id="btn-open-media-server-app">Open Media Server Console</button>
+      </div>
+    </div>
+    <p class="section-description">Connect to a <strong>RobOS Media Server</strong> (<code>:19234</code>) serving Movies, TV Shows, Music, Books, Courses, and MCP. RobOS Preferences backs up this connection in Config Sync and automatically keeps <strong>RobOS Movie Player</strong>, <strong>RobOS Audio Player</strong>, and <strong>MCP Manager</strong> populated on every RobOS machine — no local library creation required.</p>
+    <div style="margin:10px 0 14px;">
+      <label style="display:inline-flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
+        <input type="checkbox" id="ms-auto-sync-players" checked />
+        <span><strong>Automatically keep Movie Player, Audio Player, Books &amp; MCP updated</strong> when new media is added on the server</span>
+      </label>
+    </div>
+    <div id="ms-servers-list-wrap"></div>
+    <div id="ms-discovered-wrap" style="margin-bottom:10px;"></div>
+    <div class="field-row">
+      <div class="field-copy">
+        <label class="field-label" for="ms-url-input">Media Server URL or IP</label>
+        <p class="field-description">Example: <code>http://192.168.1.25:19234</code> (MCP is auto-registered at <code>/mcp</code>).</p>
+      </div>
+      <div class="field-input"><input type="text" class="text-input" id="ms-url-input" placeholder="http://192.168.1.25:19234" /></div>
+    </div>
+    <div class="field-row">
+      <div class="field-copy">
+        <label class="field-label" for="ms-name-input">Friendly Label (optional)</label>
+        <p class="field-description">Shown as the “RobOS Media Service” source in Movie Player and Audio Player.</p>
+      </div>
+      <div class="field-input"><input type="text" class="text-input" id="ms-name-input" placeholder="RobOS Home Media Server" /></div>
+    </div>
+    <div class="section-actions">
+      <button type="button" class="btn btn-primary" id="btn-ms-save">Connect &amp; Sync Media Service</button>
+      <button type="button" class="btn" id="btn-ms-test">Test Server &amp; MCP</button>
+    </div>
+    <p class="section-status" id="ms-status" role="status" aria-live="polite">Loading RobOS Media Services…</p>
+  </section>`;
+}
+
+function renderMediaServicesList(state) {
+  const wrap = document.getElementById('ms-servers-list-wrap');
+  const autoBox = document.getElementById('ms-auto-sync-players');
+  if (!wrap) return;
+  if (autoBox && state && state.autoSyncPlayers !== undefined) {
+    autoBox.checked = Boolean(state.autoSyncPlayers);
+  }
+  const servers = state?.servers || [];
+  if (!servers.length) {
+    wrap.innerHTML = `<div style="padding:10px 12px;border:1px solid #29323e;border-radius:6px;color:var(--muted);font-size:13px;margin-bottom:12px;">No RobOS Media Service connected yet. Click <strong>Discover on LAN</strong> or enter your RobOS Server address (e.g. <code>http://192.168.1.25:19234</code>) below.</div>`;
+    return;
+  }
+  wrap.innerHTML = `<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;">` +
+    servers.map(s => {
+      const c = s.cachedCounts || {};
+      const countsSummary = s.online
+        ? `${(c.movies || 0).toLocaleString()} Movies · ${(c.shows || 0).toLocaleString()} Shows (${(c.episodes || 0).toLocaleString()} Eps) · ${(c.musicTracks || 0).toLocaleString()} Songs · ${(c.books || 0).toLocaleString()} Books`
+        : (s.lastStatus || 'Offline or unreachable');
+      return `
+        <div class="ms-server-row" data-ms-id="${esc(s.id)}" style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border:1px solid ${s.online ? '#2e5964' : '#29323e'};background:${s.online ? '#112229' : '#0d1117'};border-radius:6px;flex-wrap:wrap;">
+          <div>
+            <div style="font-weight:600;font-size:13.5px;">
+              ${esc(s.name || s.url)}
+              ${s.online
+                ? `<span style="font-size:11px;padding:2px 7px;border-radius:10px;background:#153626;color:#94e6b5;margin-left:6px;">● Online</span>`
+                : `<span style="font-size:11px;padding:2px 7px;border-radius:10px;background:#3b1d1d;color:#f87171;margin-left:6px;">Offline</span>`}
+              <span style="font-size:11px;padding:2px 7px;border-radius:10px;background:#1f2937;color:#55d6e5;margin-left:4px;">MCP Active</span>
+            </div>
+            <div style="font-size:12px;color:var(--muted);margin-top:4px;">
+              Endpoint: <code>${esc(s.url)}</code> · MCP: <code>${esc(s.mcpUrl || (s.url + '/mcp'))}</code>
+            </div>
+            <div style="font-size:12px;color:#cbd5e1;margin-top:3px;">${esc(countsSummary)}</div>
+          </div>
+          <div style="display:flex;gap:6px;flex:none;">
+            <button type="button" class="btn" data-ms-open-web="${esc(s.url)}">Open Web UI</button>
+            <button type="button" class="btn" data-ms-delete="${esc(s.id)}">Disconnect</button>
+          </div>
+        </div>
+      `;
+    }).join('') +
+    `</div>`;
+
+  wrap.querySelectorAll('[data-ms-open-web]').forEach(btn => {
+    btn.onclick = () => window.api.openExternalUrl(btn.dataset.msOpenWeb);
+  });
+  wrap.querySelectorAll('[data-ms-delete]').forEach(btn => {
+    btn.onclick = async () => {
+      const statusEl = document.getElementById('ms-status');
+      btn.disabled = true;
+      const res = await window.api.deleteMediaService(btn.dataset.msDelete);
+      if (res?.ok) {
+        renderMediaServicesList(res);
+        if (statusEl) statusEl.textContent = 'Disconnected RobOS Media Service and removed its streamed catalog.';
+      } else {
+        btn.disabled = false;
+        if (statusEl) statusEl.textContent = `Error: ${res?.error || 'Failed'}`;
+      }
+    };
+  });
+}
+
+async function loadMediaServices() {
+  const statusEl = document.getElementById('ms-status');
+  if (!statusEl || !window.api?.mediaServices) return;
+
+  try {
+    const state = await window.api.mediaServices();
+    renderMediaServicesList(state);
+    statusEl.textContent = state.servers?.length
+      ? `${state.servers.length} RobOS Media Service(s) configured and synced with Movie Player, Audio Player & MCP.`
+      : 'Connect a RobOS Media Server to automatically populate Movie Player, Audio Player, and MCP across your machines.';
+  } catch (err) {
+    statusEl.textContent = err.message;
+  }
+
+  document.getElementById('ms-auto-sync-players')?.addEventListener('change', async (e) => {
+    const res = await window.api.setMediaServicesAutoSync(e.target.checked);
+    if (res?.ok) {
+      statusEl.textContent = e.target.checked
+        ? '✓ Auto-sync enabled: Movie Player, Audio Player, Books & MCP stay updated automatically.'
+        : 'Auto-sync paused.';
+    }
+  });
+
+  document.getElementById('btn-ms-save')?.addEventListener('click', async (e) => {
+    const btn = e.currentTarget;
+    const url = document.getElementById('ms-url-input').value.trim();
+    const name = document.getElementById('ms-name-input').value.trim();
+    if (!url) { statusEl.textContent = 'Enter a RobOS Media Server URL or IP address first.'; return; }
+    btn.disabled = true;
+    statusEl.textContent = 'Connecting to RobOS Media Server and syncing Movie Player, Audio Player & MCP…';
+    const res = await window.api.saveMediaService({ url, name: name || undefined });
+    btn.disabled = false;
+    if (!res?.ok) {
+      statusEl.textContent = `Connection error: ${res?.error || 'Failed'}`;
+      return;
+    }
+    document.getElementById('ms-url-input').value = '';
+    document.getElementById('ms-name-input').value = '';
+    renderMediaServicesList(res);
+    statusEl.textContent = `✓ Connected ${res.server?.name || url}! Movie Player, Audio Player, Books, and MCP are now synced.`;
+  });
+
+  document.getElementById('btn-ms-test')?.addEventListener('click', async (e) => {
+    const btn = e.currentTarget;
+    const url = document.getElementById('ms-url-input').value.trim();
+    if (!url) { statusEl.textContent = 'Enter a URL or IP to test.'; return; }
+    btn.disabled = true;
+    statusEl.textContent = 'Probing RobOS Media Server & MCP endpoint…';
+    const res = await window.api.probeMediaService(url);
+    btn.disabled = false;
+    if (res?.ok) {
+      const c = res.counts || {};
+      statusEl.textContent = `✓ Reachable: ${res.serverName} (${c.movies || 0} movies, ${c.shows || 0} shows, ${c.musicTracks || 0} songs, ${c.books || 0} books · MCP active at ${res.mcpUrl}).`;
+    } else {
+      statusEl.textContent = `Could not reach Media Server: ${res?.error || 'Unreachable'}`;
+    }
+  });
+
+  document.getElementById('btn-ms-discover')?.addEventListener('click', async (e) => {
+    const btn = e.currentTarget;
+    const discWrap = document.getElementById('ms-discovered-wrap');
+    btn.disabled = true;
+    statusEl.textContent = 'Scanning local network for RobOS Media Servers (:19234)…';
+    const res = await window.api.discoverMediaServices();
+    btn.disabled = false;
+    const found = res?.servers || [];
+    if (!found.length) {
+      discWrap.innerHTML = '';
+      statusEl.textContent = 'No RobOS Media Servers discovered automatically on LAN. Enter an IP/URL below.';
+      return;
+    }
+    statusEl.textContent = `Discovered ${found.length} RobOS Media Server(s) on LAN! Click Connect to add.`;
+    discWrap.innerHTML = found.map(f => `
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border:1px dashed #00bcd4;border-radius:6px;margin-bottom:6px;background:rgba(0,188,212,0.06);">
+        <div style="font-size:12.5px;">
+          <strong>${esc(f.serverName)}</strong> — <code>${esc(f.url)}</code>
+          <span style="color:var(--muted);margin-left:6px;">(${f.counts?.movies || 0} movies · ${f.counts?.shows || 0} shows · ${f.counts?.musicTracks || 0} songs · ${f.counts?.books || 0} books)</span>
+        </div>
+        <button type="button" class="btn btn-primary" data-ms-connect-url="${esc(f.url)}" data-ms-connect-name="${esc(f.serverName)}">Connect</button>
+      </div>
+    `).join('');
+    discWrap.querySelectorAll('[data-ms-connect-url]').forEach(b => {
+      b.onclick = async () => {
+        b.disabled = true;
+        statusEl.textContent = `Connecting ${b.dataset.msConnectName}…`;
+        const saved = await window.api.saveMediaService({ url: b.dataset.msConnectUrl, name: b.dataset.msConnectName });
+        discWrap.innerHTML = '';
+        if (saved?.ok) {
+          renderMediaServicesList(saved);
+          statusEl.textContent = `✓ Connected ${b.dataset.msConnectName} and populated Movie Player, Audio Player & MCP!`;
+        }
+      };
+    });
+  });
+
+  document.getElementById('btn-ms-sync-now')?.addEventListener('click', async (e) => {
+    const btn = e.currentTarget;
+    btn.disabled = true;
+    statusEl.textContent = 'Refreshing catalogs from RobOS Media Server(s)…';
+    const res = await window.api.syncMediaServicesNow();
+    btn.disabled = false;
+    if (res?.ok) {
+      renderMediaServicesList(res);
+      statusEl.textContent = '✓ Synced Movie Player, Audio Player, Books & MCP catalogs.';
+    } else {
+      statusEl.textContent = `Sync error: ${res?.error || 'Failed'}`;
+    }
+  });
+
+  document.getElementById('btn-open-media-server-app')?.addEventListener('click', () => {
+    window.api.launchRobosApp('media-server');
+  });
 }

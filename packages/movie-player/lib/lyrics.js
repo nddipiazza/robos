@@ -138,6 +138,17 @@ async function queryLrclib({ artist, album, title, duration }) {
 async function getLyrics(track) {
   if (!track || !track.title) return { found: false };
 
+  if (track.mediaService?.subtitlesUrl) {
+    try {
+      const res = await fetch(track.mediaService.subtitlesUrl, { signal: AbortSignal.timeout(5000) });
+      if (res.ok) {
+        const text = await res.text();
+        const lines = parseSrtOrVtt(text);
+        if (lines.length) return { found: true, source: 'subtitles', synced: lines };
+      }
+    } catch {}
+  }
+
   if (track.filePath) {
     for (const ext of ['.srt', '.vtt', '.en.srt', '.en.vtt']) {
       const subFile = track.filePath.replace(/\.[^./\\]+$/, ext);

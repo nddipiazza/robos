@@ -89,7 +89,7 @@ class MediaLibrary {
             seenIds.add(track.id);
 
             const properSrc = this._toSafeFileUrl(track.filePath);
-            if (!track.cloud && track.src !== properSrc) {
+            if (!track.cloud && !track.mediaService && track.src !== properSrc) {
               track.src = properSrc;
               needsSave = true;
             }

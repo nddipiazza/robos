@@ -6,13 +6,39 @@
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
+const http = require('http');
+const https = require('https');
+const crypto = require('crypto');
+
+let _mediaServiceClient = null;
+for (const p of [
+  process.env.ROBOS_LIB_PATH && path.join(process.env.ROBOS_LIB_PATH, 'media-service-client'),
+  path.resolve(__dirname, '..', '..', 'robos-lib', 'media-service-client'),
+  '/usr/local/share/robos/robos-lib/media-service-client',
+].filter(Boolean)) {
+  try { _mediaServiceClient = require(p); break; } catch {}
+}
+
+function normalizeEndpointUrl(raw) {
+  let s = String(raw || '').trim().replace(/\/+$/, '');
+  if (!s) return 'http://127.0.0.1:19234';
+  if (!/^https?:\/\//i.test(s)) s = `http://${s}`;
+  try {
+    const u = new URL(s);
+    if (!u.port && u.protocol === 'http:') u.port = '19234';
+    return u.origin;
+  } catch {
+    return s;
+  }
+}
 
 class LibraryFolders {
   constructor({ mediaLibrary, cloud, castService, configDir }) {
     this.mediaLibrary = mediaLibrary;
     this.cloud = cloud;
     this.castService = castService || null;
-    this.file = path.join(configDir || path.join(process.env.HOME || os.homedir(), '.config', 'robos'), 'audio-folders.json');
+    this.configDir = configDir || path.join(process.env.HOME || os.homedir(), '.config', 'robos');
+    this.file = path.join(this.configDir, 'audio-folders.json');
     this.folders = this._load();
     this.syncs = new Map();
   }
@@ -35,6 +61,12 @@ class LibraryFolders {
 
   // Directory on this machine that holds the folder's audio files.
   localRoot(folder) {
+    if (folder.kind === 'media-service') {
+      const url = normalizeEndpointUrl(folder.endpoint || folder.path);
+      if (_mediaServiceClient) return _mediaServiceClient.virtualRootForServer(this.configDir, url, 'audio');
+      const safe = url.replace(/[^a-zA-Z0-9._-]+/g, '_');
+      return path.resolve(path.join(this.configDir, 'media-service-streams', `audio_${safe}`));
+    }
     return path.resolve(folder.kind === 'cloud' ? this.cloud.localDirFor(folder.connectionId, folder.path) : folder.path);
   }
 
@@ -111,13 +143,50 @@ class LibraryFolders {
     if (changed) this._save();
   }
 
+  _syncWithMediaServers() {
+    try {
+      const file = path.join(this.configDir, 'media-servers.json');
+      if (!fs.existsSync(file)) return;
+      const cfg = JSON.parse(fs.readFileSync(file, 'utf8'));
+      if (!cfg || cfg.autoSyncPlayers === false || !Array.isArray(cfg.servers)) return;
+      let changed = false;
+      for (const srv of cfg.servers) {
+        if (!srv || srv.enabled === false || srv.autoConnectAudioPlayer === false || !srv.url) continue;
+        const endpoint = normalizeEndpointUrl(srv.url);
+        const detId = _mediaServiceClient
+          ? _mediaServiceClient.deterministicFolderId(endpoint, 'audio')
+          : `fld_ms_audio_${crypto.createHash('sha1').update(endpoint.toLowerCase()).digest('hex').slice(0, 10)}`;
+        const existing = this.folders.find(
+          f => f.id === detId || (f.kind === 'media-service' && normalizeEndpointUrl(f.endpoint || f.path) === endpoint)
+        );
+        if (!existing) {
+          this.folders.push({
+            id: detId,
+            label: srv.name ? `${srv.name} (Music)` : `RobOS Media Service (${endpoint.replace(/^https?:\/\//, '')})`,
+            kind: 'media-service',
+            endpoint,
+            path: endpoint,
+            serverId: srv.id || null,
+            syncEnabled: true,
+            lastSynced: null,
+          });
+          changed = true;
+        }
+      }
+      if (changed) this._save();
+    } catch {}
+  }
+
   list() {
     const connections = this.cloud.listConnections();
     this._syncWithDataSources(connections);
+    this._syncWithMediaServers();
     // Collapse old duplicate records without deleting their music or cache files.
     const unique = new Map();
     this.folders = this.folders.filter(f => {
-      const key = f.kind === 'cloud' ? this.cloudIdentity(f.connectionId, f.path, connections) : `local:${f.path}`;
+      const key = f.kind === 'media-service'
+        ? `media-service:${normalizeEndpointUrl(f.endpoint || f.path).toLowerCase()}`
+        : (f.kind === 'cloud' ? this.cloudIdentity(f.connectionId, f.path, connections) : `local:${f.path}`);
       const kept = unique.get(key);
       if (!kept) { unique.set(key, f); return true; }
       kept.aliasRoots = [...new Set([...(kept.aliasRoots || []), this.localRoot(f), ...(f.aliasRoots || [])])];
@@ -137,26 +206,35 @@ class LibraryFolders {
         localRoot: this.localRoot(f),
         legacyRootDir,
         trackCount: this.mediaLibrary.tracks.filter(t => this._owns(f, t.filePath)).length,
-        connectionName: conn ? conn.name : null,
+        connectionName: f.kind === 'media-service' ? (f.serverName || 'RobOS Media Server') : (conn ? conn.name : null),
         connectionMissing: f.kind === 'cloud' && !conn,
-        protocol: conn ? conn.driverType : null,
-        available: f.kind === 'local' ? fs.existsSync(f.path) : !!conn,
+        protocol: f.kind === 'media-service' ? 'media-service' : (conn ? conn.driverType : null),
+        available: f.kind === 'media-service' ? true : (f.kind === 'local' ? fs.existsSync(f.path) : !!conn),
       };
     });
   }
 
   add(spec) {
-    const norm = spec.kind === 'cloud'
-      ? { kind: 'cloud', connectionId: spec.connectionId, path: path.posix.normalize('/' + (spec.path || '/')) }
-      : { kind: 'local', path: path.resolve(spec.path) };
+    const norm = spec.kind === 'media-service'
+      ? { kind: 'media-service', endpoint: normalizeEndpointUrl(spec.endpoint || spec.path || 'http://127.0.0.1:19234'), path: normalizeEndpointUrl(spec.endpoint || spec.path || 'http://127.0.0.1:19234') }
+      : (spec.kind === 'cloud'
+        ? { kind: 'cloud', connectionId: spec.connectionId, path: path.posix.normalize('/' + (spec.path || '/')) }
+        : { kind: 'local', path: path.resolve(spec.path) });
     const connections = this.cloud.listConnections();
     const existing = this.folders.find(f => norm.kind === 'cloud'
       ? this._sameCloudFolder(f, norm.connectionId, norm.path, connections)
-      : f.kind === norm.kind && f.path === norm.path);
-    if (existing) { existing.syncEnabled = true; this._save(); return existing; }
+      : (norm.kind === 'media-service'
+        ? (f.kind === 'media-service' && normalizeEndpointUrl(f.endpoint || f.path) === norm.endpoint)
+        : f.kind === norm.kind && f.path === norm.path));
+    if (existing) { existing.syncEnabled = true; if (spec.label) existing.label = spec.label; this._save(); return existing; }
+    const detId = norm.kind === 'media-service'
+      ? (_mediaServiceClient ? _mediaServiceClient.deterministicFolderId(norm.endpoint, 'audio') : `fld_ms_audio_${crypto.createHash('sha1').update(norm.endpoint.toLowerCase()).digest('hex').slice(0, 10)}`)
+      : `fld_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
     const folder = {
-      id: `fld_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`,
-      label: spec.label || (path.basename(norm.path) || norm.path),
+      id: detId,
+      label: spec.label || (norm.kind === 'media-service'
+        ? `RobOS Media Service (${norm.endpoint.replace(/^https?:\/\//, '')})`
+        : (path.basename(norm.path) || norm.path)),
       addedAt: new Date().toISOString(),
       lastSynced: null,
       syncEnabled: true,
@@ -290,6 +368,118 @@ class LibraryFolders {
     delete f.syncError;
     this.markSynced(id);
     return { added: added.length, removed };
+  }
+
+  syncMediaService(id, onProgress) {
+    if (this.syncs.has(id)) return this.syncs.get(id);
+    const pending = this._syncMediaService(id, onProgress).catch(err => {
+      const folder = this.get(id);
+      if (folder) { folder.syncError = err.message; this._save(); }
+      throw err;
+    }).finally(() => this.syncs.delete(id));
+    this.syncs.set(id, pending);
+    return pending;
+  }
+
+  async _syncMediaService(id, onProgress) {
+    const f = this.get(id);
+    if (!f || f.kind !== 'media-service') throw new Error('Not a RobOS Media Service folder');
+    const endpoint = normalizeEndpointUrl(f.endpoint || f.path);
+    const rootDir = this.localRoot(f);
+    if (typeof onProgress === 'function') {
+      onProgress({ phase: 'connecting', current: 0, total: 1, file: endpoint });
+    }
+
+    let info, fetchedTracks;
+    if (_mediaServiceClient) {
+      const res = await _mediaServiceClient.fetchAudioCatalogTracks(endpoint, {
+        folderId: f.id,
+        virtualRoot: rootDir,
+        serverName: f.label,
+      });
+      info = res.info;
+      fetchedTracks = res.tracks;
+    } else {
+      const catalogUrl = `${endpoint}/api/catalog?type=music`;
+      const cat = await new Promise((resolve, reject) => {
+        const mod = catalogUrl.startsWith('https:') ? https : http;
+        const req = mod.get(catalogUrl, { timeout: 10000 }, (res) => {
+          if (res.statusCode && res.statusCode >= 400) {
+            res.resume();
+            return reject(new Error(`Media Server returned HTTP ${res.statusCode}`));
+          }
+          let body = '';
+          res.on('data', c => body += c);
+          res.on('end', () => {
+            try { resolve(JSON.parse(body)); } catch (e) { reject(e); }
+          });
+        });
+        req.on('timeout', () => { req.destroy(); reject(new Error('Media Server timed out')); });
+        req.on('error', reject);
+      });
+      info = { serverName: 'RobOS Media Server' };
+      fetchedTracks = (cat.items || []).map((item) => {
+        const ext = item.ext || '.mp3';
+        const localPath = path.join(rootDir, `${item.id}${ext}`);
+        return {
+          id: typeof this.mediaLibrary._generateTrackId === 'function' ? this.mediaLibrary._generateTrackId(localPath) : `ms_${item.id}`,
+          filePath: localPath,
+          src: item.streamUrl || `${endpoint}/stream/${encodeURIComponent(item.id)}${ext}`,
+          title: item.title,
+          artist: item.artist || 'Unknown Artist',
+          albumArtist: item.albumArtist || item.artist || 'Unknown Artist',
+          album: item.album || 'Singles',
+          genre: item.genre || 'Music',
+          year: item.year || null,
+          trackNumber: item.trackNumber || null,
+          discNumber: item.discNumber || null,
+          lossless: Boolean(item.lossless),
+          codec: item.codec || ext.slice(1).toUpperCase(),
+          artId: item.artUrl || `${endpoint}/api/art/${encodeURIComponent(item.id)}.jpg`,
+          addedAt: item.addedAt || new Date().toISOString(),
+          mediaService: {
+            folderId: f.id,
+            endpoint,
+            remoteItemId: item.id,
+            streamUrl: item.streamUrl || `${endpoint}/stream/${encodeURIComponent(item.id)}${ext}`,
+          },
+        };
+      });
+    }
+
+    if (info?.serverName) {
+      f.serverName = info.serverName;
+      if (f.label.startsWith('RobOS Media Service (')) {
+        f.label = `${info.serverName} (Music)`;
+      }
+    }
+
+    const ml = this.mediaLibrary;
+    const existingByPath = new Map(ml.tracks.map(t => [t.filePath, t]));
+    const nextTracks = [];
+    let addedCount = 0;
+
+    for (const t of fetchedTracks) {
+      const prev = existingByPath.get(t.filePath);
+      if (prev) {
+        t.addedAt = prev.addedAt || t.addedAt;
+      } else {
+        addedCount += 1;
+      }
+      nextTracks.push(t);
+    }
+
+    const otherTracks = ml.tracks.filter(t => !this._owns(f, t.filePath));
+    const removed = (ml.tracks.length - otherTracks.length) - (nextTracks.length - addedCount);
+    ml.tracks = otherTracks.concat(nextTracks);
+    ml._rebuildIndexes();
+    ml._saveCache();
+    delete f.syncError;
+    this.markSynced(id);
+    if (typeof onProgress === 'function') {
+      onProgress({ phase: 'complete', current: nextTracks.length, total: nextTracks.length, file: '' });
+    }
+    return { added: addedCount, removed: Math.max(0, removed), total: nextTracks.length };
   }
 
   remove(id, removeTracks) {

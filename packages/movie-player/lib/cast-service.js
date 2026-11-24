@@ -240,6 +240,8 @@ class CastService {
           streamUrl = `http://${reqHost}/cloud-stream/${encodeURIComponent(track.id)}.${streamFormat}`;
         } else if (track.filePath && fs.existsSync(track.filePath)) {
           streamUrl = this.registerFile(track.filePath, null, reqHost);
+        } else if (track.mediaService?.streamUrl || track.src) {
+          streamUrl = track.mediaService?.streamUrl || track.src;
         }
         const st = (this.mediaLibrary && this.mediaLibrary.stats && this.mediaLibrary.stats[track.id]) || {};
         const startAt = explicitStart != null
@@ -525,7 +527,7 @@ class CastService {
       progressPct,
       inProgress,
       completed,
-      artUrl: t.artId ? `http://${baseHost}/art/${encodeURIComponent(t.artId)}.jpg` : '',
+      artUrl: t.artId ? (/^https?:\/\//i.test(t.artId) ? t.artId : `http://${baseHost}/art/${encodeURIComponent(t.artId)}.jpg`) : '',
       streamFormat,
       streamUrl: t.cloud
         ? `http://${baseHost}/cloud-stream/${encodeURIComponent(t.id)}.${streamFormat}`
@@ -613,7 +615,7 @@ class CastService {
       const showRating = bestEpWithRating.rating || repFormatted.rating || null;
       const showNetwork = String(bestEpWithNetwork.network || repFormatted.network || '').slice(0, 36);
       const showArtUrl = bestEpWithArt.artId
-        ? `http://${baseHost}/art/${encodeURIComponent(bestEpWithArt.artId)}.jpg`
+        ? (/^https?:\/\//i.test(bestEpWithArt.artId) ? bestEpWithArt.artId : `http://${baseHost}/art/${encodeURIComponent(bestEpWithArt.artId)}.jpg`)
         : repFormatted.artUrl;
 
       // Select up to 120 episodes for the interactive Roku season/episode browser

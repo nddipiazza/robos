@@ -94,6 +94,7 @@ const libraryFolders = new LibraryFolders({ mediaLibrary, cloud, castService });
 // folders, playlists and that history synced with it (robos-lib/media-cloud-sync).
 const mediaHistoryLib = requireShared('robos-lib/media-history');
 const mediaCloudSyncLib = requireShared('robos-lib/media-cloud-sync');
+const mediaServiceClientLib = requireShared('robos-lib/media-service-client');
 let mediaSync = null;
 if (mediaHistoryLib) {
   try {
@@ -115,9 +116,9 @@ function onVaultPulled(rels) {
     mediaLibrary._loadPlaylists();
     sendToWindow('audio:playlists-updated', mediaLibrary.getPlaylists());
   }
-  if (rels.includes('config/audio-folders.json')) {
+  if (rels.includes('config/audio-folders.json') || rels.includes('config/media-servers.json')) {
     libraryFolders.folders = libraryFolders._load();
-    const fresh = libraryFolders.list().filter(f => f.syncEnabled !== false && f.trackCount === 0);
+    const fresh = libraryFolders.list().filter(f => f.syncEnabled !== false && (f.trackCount === 0 || f.kind === 'media-service'));
     scanLocalFolders(fresh);
     syncCloudFolders(fresh)
       .catch(err => console.warn('[AudioPlayer] Indexing folders from the vault failed:', err.message))
@@ -331,6 +332,13 @@ controlHandlers.queries = {
 };
 controlHandlers.actions = {
   '/api/media-sync-now': async () => ({ ok: true, ...(mediaSync ? await mediaSync.runNow('manual') : { outcome: 'unavailable' }) }),
+  '/api/media-service-reload': async () => {
+    mediaLibrary._loadCache();
+    libraryFolders.folders = libraryFolders._load();
+    libraryFolders.list();
+    sendToWindow('audio:folders-updated', folderState({ withLibrary: true }));
+    return { ok: true, totalTracks: mediaLibrary.tracks.length };
+  },
 };
 
 const controlServer = createControlServer({
@@ -425,10 +433,12 @@ ipcMain.handle('audio:cast-file', async (_evt, { ip, filePath, metadata }) => {
       }
       streamUrl = castService.registerFile(filePath);
     } else {
-      // Check if it's a cloud track that should be streamed on demand
-      const cloudTrack = mediaLibrary.tracks.find(t => t.filePath === filePath && t.cloud);
-      if (!cloudTrack) throw new Error('File does not exist: ' + filePath);
-      streamUrl = castService.getCloudStreamUrl(cloudTrack.id, true);
+      // Check if it's a cloud or RobOS Media Service track that should be streamed on demand
+      const remoteTrack = mediaLibrary.tracks.find(t => t.filePath === filePath && (t.cloud || t.mediaService));
+      if (!remoteTrack) throw new Error('File does not exist: ' + filePath);
+      streamUrl = remoteTrack.cloud
+        ? castService.getCloudStreamUrl(remoteTrack.id, true)
+        : (remoteTrack.mediaService?.streamUrl || remoteTrack.src);
     }
     const meta = { ...(metadata || {}), contentType: (metadata && metadata.contentType) || (fs.existsSync(filePath) ? sniffAudioType(filePath) : audioMimeType(filePath)) };
     return await castService.castMediaUrl(ip, streamUrl, meta, (status) => {
@@ -545,8 +555,8 @@ ipcMain.handle('audio:ensure-file-accessible', async (_evt, filePath) => {
     cloud.touchCacheFile(filePath);
     return true;
   }
-  const cloudTrack = mediaLibrary.tracks.find(t => t.filePath === filePath && t.cloud);
-  if (cloudTrack) return true; // Will be streamed on demand via /cloud-stream/:trackId
+  const remoteTrack = mediaLibrary.tracks.find(t => t.filePath === filePath && (t.cloud || t.mediaService));
+  if (remoteTrack) return true; // Will be streamed on demand via /cloud-stream/:trackId or RobOS Media Service
   return ensureFileAccessible(filePath);
 });
 
@@ -654,6 +664,14 @@ async function syncCloudFolders(folders) {
       results.push({ id: f.id, error: err.message });
     }
   }
+  for (const f of folders.filter(x => x.kind === 'media-service')) {
+    try {
+      results.push({ id: f.id, ...(await libraryFolders.syncMediaService(f.id, (p) => sendToWindow('audio:cloud-progress', { ...p, folder: f.label }))) });
+    } catch (err) {
+      f.syncError = err.message;
+      results.push({ id: f.id, error: err.message });
+    }
+  }
   readCloudTagsInBackground();
   applyHistoryFromOtherComputers();
   return results;
@@ -688,6 +706,41 @@ ipcMain.handle('audio:folders-add-cloud', async (_evt, { connectionId, path: rem
   try {
     const folder = libraryFolders.add({ kind: 'cloud', connectionId, path: remotePath, label });
     const [result] = await syncCloudFolders([folder]);
+    if (result && result.error) return { ok: false, error: result.error, ...folderState({ withLibrary: true }) };
+    return { ok: true, ...result, ...folderState({ withLibrary: true }) };
+  } catch (err) {
+    return { ok: false, error: err.message, ...folderState() };
+  }
+});
+
+ipcMain.handle('audio:media-services-list', async () => {
+  try {
+    if (!mediaServiceClientLib) return { ok: true, servers: [] };
+    return await mediaServiceClientLib.listMediaServers();
+  } catch (err) {
+    return { ok: false, error: err.message, servers: [] };
+  }
+});
+
+ipcMain.handle('audio:media-services-discover', async () => {
+  try {
+    if (!mediaServiceClientLib) return { ok: true, servers: [] };
+    return await mediaServiceClientLib.discoverMediaServersOnLan();
+  } catch (err) {
+    return { ok: false, error: err.message, servers: [] };
+  }
+});
+
+ipcMain.handle('audio:folders-add-media-service', async (_evt, { endpoint, label } = {}) => {
+  try {
+    const rawEndpoint = String(endpoint || '').trim();
+    if (!rawEndpoint) throw new Error('Enter a RobOS Media Server URL or IP address');
+    if (mediaServiceClientLib) {
+      await mediaServiceClientLib.saveMediaServer({ url: rawEndpoint, name: label || undefined }, { syncNow: false });
+    }
+    const folder = libraryFolders.add({ kind: 'media-service', endpoint: rawEndpoint, label });
+    const [result] = await syncCloudFolders([folder]);
+    if (mediaSync) mediaSync.notifyLocalChange();
     if (result && result.error) return { ok: false, error: result.error, ...folderState({ withLibrary: true }) };
     return { ok: true, ...result, ...folderState({ withLibrary: true }) };
   } catch (err) {

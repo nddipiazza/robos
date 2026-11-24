@@ -125,7 +125,7 @@ export default function Library({
 
   let body;
   if (!tracks.length) {
-    body = <EmptyLibrary onAddFolder={onAddFolder} onAddFiles={onAddFiles} onCloud={folderProps.onAddCloud} isScanning={isScanning} />;
+    body = <EmptyLibrary onAddFolder={onAddFolder} onAddFiles={onAddFiles} onCloud={folderProps.onAddCloud} onMediaService={folderProps.onOpenMediaService} isScanning={isScanning} />;
   } else if (searching) {
     body = results ? <SearchResults results={results} go={go} /> : null;
   } else if (detail) {
@@ -286,14 +286,19 @@ function titleFor(nav, index) {
   return (all.find(s => s.id === (nav.section || 'albums')) || {}).label || 'Library';
 }
 
-function EmptyLibrary({ onAddFolder, onAddFiles, onCloud, isScanning }) {
+function EmptyLibrary({ onAddFolder, onAddFiles, onCloud, onMediaService, isScanning }) {
   return (
     <div className="lib-empty">
       <Icon name="library" size={40} />
       <h3>{isScanning ? 'Indexing your music…' : 'Your library is empty'}</h3>
-      <p>Add a music folder from this computer, link a cloud folder, or drag &amp; drop folders and files anywhere in this window.</p>
+      <p>Connect to your <strong>RobOS Media Service</strong> (managed automatically by RobOS Preferences), add a local folder, or link Cloud storage.</p>
       <div className="lib-empty-actions">
-        <button className="btn-accent" onClick={onAddFolder}><Icon name="folder" size={14} /> Add folder</button>
+        {onMediaService && (
+          <button className="btn-accent" id="btn-empty-media-service" onClick={onMediaService}>
+            <Icon name="cloud" size={14} /> RobOS Media Service
+          </button>
+        )}
+        <button className={onMediaService ? 'btn-secondary' : 'btn-accent'} onClick={onAddFolder}><Icon name="folder" size={14} /> Add folder</button>
         <button className="btn-secondary" onClick={onAddFiles}>Add files</button>
         <button className="btn-secondary" onClick={onCloud}><Icon name="cloud" size={14} /> Cloud storage</button>
       </div>

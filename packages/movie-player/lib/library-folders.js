@@ -8,8 +8,31 @@ const os = require('os');
 const path = require('path');
 const http = require('http');
 const https = require('https');
+const crypto = require('crypto');
 const { summarizeMediaBreakdown } = require('./library-index');
 const { upgradeTrackVideoGrouping, isSampleVideoPath } = require('./track-metadata');
+
+let _mediaServiceClient = null;
+for (const p of [
+  process.env.ROBOS_LIB_PATH && path.join(process.env.ROBOS_LIB_PATH, 'media-service-client'),
+  path.resolve(__dirname, '..', '..', 'robos-lib', 'media-service-client'),
+  '/usr/local/share/robos/robos-lib/media-service-client',
+].filter(Boolean)) {
+  try { _mediaServiceClient = require(p); break; } catch {}
+}
+
+function normalizeEndpointUrl(raw) {
+  let s = String(raw || '').trim().replace(/\/+$/, '');
+  if (!s) return 'http://127.0.0.1:19234';
+  if (!/^https?:\/\//i.test(s)) s = `http://${s}`;
+  try {
+    const u = new URL(s);
+    if (!u.port && u.protocol === 'http:') u.port = '19234';
+    return u.origin;
+  } catch {
+    return s;
+  }
+}
 
 class LibraryFolders {
   constructor({ mediaLibrary, cloud, castService, configDir }) {
@@ -40,6 +63,12 @@ class LibraryFolders {
 
   // Directory on this machine that holds the folder's audio/video files.
   localRoot(folder) {
+    if (folder.kind === 'media-service') {
+      const url = normalizeEndpointUrl(folder.endpoint || folder.path);
+      if (_mediaServiceClient) return _mediaServiceClient.virtualRootForServer(this.configDir, url, 'movie');
+      const safe = url.replace(/[^a-zA-Z0-9._-]+/g, '_');
+      return path.resolve(path.join(this.configDir, 'media-service-streams', `movie_${safe}`));
+    }
     if (folder.kind === 'peer') {
       const safeEndpoint = String(folder.endpoint || folder.path || 'peer').replace(/[^a-zA-Z0-9._-]+/g, '_');
       return path.resolve(path.join(this.configDir, 'peer-streams', safeEndpoint));
@@ -120,15 +149,52 @@ class LibraryFolders {
     if (changed) this._save();
   }
 
+  _syncWithMediaServers() {
+    try {
+      const file = path.join(this.configDir, 'media-servers.json');
+      if (!fs.existsSync(file)) return;
+      const cfg = JSON.parse(fs.readFileSync(file, 'utf8'));
+      if (!cfg || cfg.autoSyncPlayers === false || !Array.isArray(cfg.servers)) return;
+      let changed = false;
+      for (const srv of cfg.servers) {
+        if (!srv || srv.enabled === false || srv.autoConnectMoviePlayer === false || !srv.url) continue;
+        const endpoint = normalizeEndpointUrl(srv.url);
+        const detId = _mediaServiceClient
+          ? _mediaServiceClient.deterministicFolderId(endpoint, 'movie')
+          : `fld_ms_movie_${crypto.createHash('sha1').update(endpoint.toLowerCase()).digest('hex').slice(0, 10)}`;
+        const existing = this.folders.find(
+          f => f.id === detId || (f.kind === 'media-service' && normalizeEndpointUrl(f.endpoint || f.path) === endpoint)
+        );
+        if (!existing) {
+          this.folders.push({
+            id: detId,
+            label: srv.name ? `${srv.name} (Movies & Shows)` : `RobOS Media Service (${endpoint.replace(/^https?:\/\//, '')})`,
+            kind: 'media-service',
+            endpoint,
+            path: endpoint,
+            serverId: srv.id || null,
+            syncEnabled: true,
+            lastSynced: null,
+          });
+          changed = true;
+        }
+      }
+      if (changed) this._save();
+    } catch {}
+  }
+
   list() {
     const connections = this.cloud.listConnections();
     this._syncWithDataSources(connections);
+    this._syncWithMediaServers();
     // Collapse old duplicate records without deleting their music or cache files.
     const unique = new Map();
     this.folders = this.folders.filter(f => {
-      const key = f.kind === 'peer'
-        ? `peer:${String(f.endpoint || f.path || '').toLowerCase()}`
-        : (f.kind === 'cloud' ? this.cloudIdentity(f.connectionId, f.path, connections) : `local:${f.path}`);
+      const key = f.kind === 'media-service'
+        ? `media-service:${normalizeEndpointUrl(f.endpoint || f.path).toLowerCase()}`
+        : f.kind === 'peer'
+          ? `peer:${String(f.endpoint || f.path || '').toLowerCase()}`
+          : (f.kind === 'cloud' ? this.cloudIdentity(f.connectionId, f.path, connections) : `local:${f.path}`);
       const kept = unique.get(key);
       if (!kept) { unique.set(key, f); return true; }
       kept.aliasRoots = [...new Set([...(kept.aliasRoots || []), this.localRoot(f), ...(f.aliasRoots || [])])];
@@ -155,10 +221,14 @@ class LibraryFolders {
         seasonCount: breakdown.seasonCount,
         episodeCount: breakdown.episodeCount,
         shows: breakdown.shows,
-        connectionName: f.kind === 'peer' ? (f.peerNodeName || 'RobOS Private Network') : (conn ? conn.name : null),
+        connectionName: f.kind === 'media-service'
+          ? (f.serverName || 'RobOS Media Server')
+          : f.kind === 'peer'
+            ? (f.peerNodeName || 'RobOS Private Network')
+            : (conn ? conn.name : null),
         connectionMissing: f.kind === 'cloud' && !conn,
-        protocol: f.kind === 'peer' ? 'p2p' : (conn ? conn.driverType : null),
-        available: f.kind === 'peer' ? true : (f.kind === 'local' ? fs.existsSync(f.path) : !!conn),
+        protocol: f.kind === 'media-service' ? 'media-service' : (f.kind === 'peer' ? 'p2p' : (conn ? conn.driverType : null)),
+        available: (f.kind === 'media-service' || f.kind === 'peer') ? true : (f.kind === 'local' ? fs.existsSync(f.path) : !!conn),
       };
     }).sort((a, b) => {
       const aActive = a.syncEnabled !== false ? 1 : 0;
@@ -173,7 +243,10 @@ class LibraryFolders {
 
   add(spec) {
     let norm;
-    if (spec.kind === 'peer') {
+    if (spec.kind === 'media-service') {
+      const endpoint = normalizeEndpointUrl(spec.endpoint || spec.path || 'http://127.0.0.1:19234');
+      norm = { kind: 'media-service', endpoint, path: endpoint };
+    } else if (spec.kind === 'peer') {
       const rawEndpoint = String(spec.endpoint || spec.path || 'http://127.0.0.1:19215').trim().replace(/\/+$/, '');
       const endpoint = /^https?:\/\//i.test(rawEndpoint) ? rawEndpoint : `http://${rawEndpoint}`;
       norm = { kind: 'peer', endpoint, path: endpoint };
@@ -185,13 +258,22 @@ class LibraryFolders {
     const connections = this.cloud.listConnections();
     const existing = this.folders.find(f => norm.kind === 'cloud'
       ? this._sameCloudFolder(f, norm.connectionId, norm.path, connections)
-      : (norm.kind === 'peer'
-        ? (f.kind === 'peer' && String(f.endpoint || f.path).toLowerCase() === norm.endpoint.toLowerCase())
-        : (f.kind === norm.kind && f.path === norm.path)));
-    if (existing) { existing.syncEnabled = true; this._save(); return existing; }
+      : (norm.kind === 'media-service'
+        ? (f.kind === 'media-service' && normalizeEndpointUrl(f.endpoint || f.path) === norm.endpoint)
+        : (norm.kind === 'peer'
+          ? (f.kind === 'peer' && String(f.endpoint || f.path).toLowerCase() === norm.endpoint.toLowerCase())
+          : (f.kind === norm.kind && f.path === norm.path))));
+    if (existing) { existing.syncEnabled = true; if (spec.label) existing.label = spec.label; this._save(); return existing; }
+    const detId = norm.kind === 'media-service'
+      ? (_mediaServiceClient ? _mediaServiceClient.deterministicFolderId(norm.endpoint, 'movie') : `fld_ms_movie_${crypto.createHash('sha1').update(norm.endpoint.toLowerCase()).digest('hex').slice(0, 10)}`)
+      : `fld_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
     const folder = {
-      id: `fld_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`,
-      label: spec.label || (norm.kind === 'peer' ? `P2P Stream (${norm.endpoint.replace(/^https?:\/\//, '')})` : (path.basename(norm.path) || norm.path)),
+      id: detId,
+      label: spec.label || (norm.kind === 'media-service'
+        ? `RobOS Media Service (${norm.endpoint.replace(/^https?:\/\//, '')})`
+        : norm.kind === 'peer'
+          ? `P2P Stream (${norm.endpoint.replace(/^https?:\/\//, '')})`
+          : (path.basename(norm.path) || norm.path)),
       addedAt: new Date().toISOString(),
       lastSynced: null,
       syncEnabled: true,
@@ -469,6 +551,124 @@ class LibraryFolders {
       onProgress({ phase: 'complete', current: flatItems.length, total: flatItems.length, file: '' });
     }
     return { added: added.length, removed, total: flatItems.length };
+  }
+
+  syncMediaService(id, onProgress) {
+    if (this.syncs.has(id)) return this.syncs.get(id);
+    const pending = this._syncMediaService(id, onProgress).catch(err => {
+      const folder = this.get(id);
+      if (folder) { folder.syncError = err.message; this._save(); }
+      throw err;
+    }).finally(() => this.syncs.delete(id));
+    this.syncs.set(id, pending);
+    return pending;
+  }
+
+  async _syncMediaService(id, onProgress) {
+    const f = this.get(id);
+    if (!f || f.kind !== 'media-service') throw new Error('Not a RobOS Media Service folder');
+    const endpoint = normalizeEndpointUrl(f.endpoint || f.path);
+    const rootDir = this.localRoot(f);
+    if (typeof onProgress === 'function') {
+      onProgress({ phase: 'connecting', current: 0, total: 1, file: endpoint });
+    }
+
+    let info, fetchedTracks;
+    if (_mediaServiceClient) {
+      const res = await _mediaServiceClient.fetchMovieCatalogTracks(endpoint, {
+        folderId: f.id,
+        virtualRoot: rootDir,
+        serverName: f.label,
+      });
+      info = res.info;
+      fetchedTracks = res.tracks;
+    } else {
+      const catalogUrl = `${endpoint}/api/catalog?type=movie,tv,education`;
+      const cat = await new Promise((resolve, reject) => {
+        const mod = catalogUrl.startsWith('https:') ? https : http;
+        const req = mod.get(catalogUrl, { timeout: 10000 }, (res) => {
+          if (res.statusCode && res.statusCode >= 400) {
+            res.resume();
+            return reject(new Error(`Media Server returned HTTP ${res.statusCode}`));
+          }
+          let body = '';
+          res.on('data', c => body += c);
+          res.on('end', () => {
+            try { resolve(JSON.parse(body)); } catch (e) { reject(e); }
+          });
+        });
+        req.on('timeout', () => { req.destroy(); reject(new Error('Media Server timed out')); });
+        req.on('error', reject);
+      });
+      info = { serverName: 'RobOS Media Server' };
+      fetchedTracks = (cat.items || []).map((item) => {
+        const ext = item.ext || '.mp4';
+        const localPath = path.join(rootDir, `${item.id}${ext}`);
+        return {
+          id: typeof this.mediaLibrary._generateTrackId === 'function' ? this.mediaLibrary._generateTrackId(localPath) : `ms_${item.id}`,
+          filePath: localPath,
+          src: item.streamUrl || `${endpoint}/stream/${encodeURIComponent(item.id)}${ext}`,
+          title: item.title,
+          artist: item.artist || 'RobOS Media Server',
+          album: item.showName || item.album || item.title,
+          mediaType: item.mediaType === 'tv' ? 'tv' : 'movie',
+          showName: item.showName || '',
+          seasonNumber: item.seasonNumber ?? null,
+          episodeNumber: item.episodeNumber ?? null,
+          episodeCode: item.episodeCode || '',
+          episodeTitle: item.episodeTitle || '',
+          genre: item.genre || 'Movies',
+          genres: item.genres || [item.genre || 'Movies'],
+          year: item.year || null,
+          overview: item.overview || '',
+          artId: item.artUrl || `${endpoint}/api/art/${encodeURIComponent(item.id)}.jpg`,
+          addedAt: item.addedAt || new Date().toISOString(),
+          mediaService: {
+            folderId: f.id,
+            endpoint,
+            remoteItemId: item.id,
+            streamUrl: item.streamUrl || `${endpoint}/stream/${encodeURIComponent(item.id)}${ext}`,
+            transcodeUrl: item.transcodeUrl || `${endpoint}/transcode/${encodeURIComponent(item.id)}.mp4`,
+            artUrl: item.artUrl || `${endpoint}/api/art/${encodeURIComponent(item.id)}.jpg`,
+          },
+        };
+      });
+    }
+
+    if (info?.serverName) {
+      f.serverName = info.serverName;
+      if (f.label.startsWith('RobOS Media Service (')) {
+        f.label = `${info.serverName} (Movies & Shows)`;
+      }
+    }
+
+    const ml = this.mediaLibrary;
+    const existingByPath = new Map(ml.tracks.map(t => [t.filePath, t]));
+    const nextTracks = [];
+    let addedCount = 0;
+
+    for (const t of fetchedTracks) {
+      const prev = existingByPath.get(t.filePath);
+      if (prev) {
+        t.addedAt = prev.addedAt || t.addedAt;
+      } else {
+        addedCount += 1;
+      }
+      upgradeTrackVideoGrouping(t);
+      nextTracks.push(t);
+    }
+
+    const otherTracks = ml.tracks.filter(t => !this._owns(f, t.filePath));
+    const removed = (ml.tracks.length - otherTracks.length) - (nextTracks.length - addedCount);
+    ml.tracks = otherTracks.concat(nextTracks);
+    ml._rebuildIndexes();
+    ml._saveCache();
+    delete f.syncError;
+    this.markSynced(id);
+    if (typeof onProgress === 'function') {
+      onProgress({ phase: 'complete', current: nextTracks.length, total: nextTracks.length, file: '' });
+    }
+    return { added: addedCount, removed: Math.max(0, removed), total: nextTracks.length };
   }
 
   remove(id, removeTracks) {

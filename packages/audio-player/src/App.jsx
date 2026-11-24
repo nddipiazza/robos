@@ -8,6 +8,7 @@ import NowPlayingPanel from './NowPlayingPanel.jsx';
 import TrackInfo from './TrackInfo.jsx';
 import { AiPlaylistModal, DjSettingsModal } from './AiPlaylist.jsx';
 import { AiFixMetadataModal } from './AiFixMetadata.jsx';
+import MediaServiceModal from './MediaServiceModal.jsx';
 import { Splitter, useColumns, useLayoutPref } from './resizable.jsx';
 import { castClock, CastProgress, useCastPlaying } from './castClock.jsx';
 import { useVirtualDj } from './useVirtualDj.js';
@@ -386,6 +387,20 @@ export default function App() {
     }
   };
 
+  const [showMediaServiceModal, setShowMediaServiceModal] = useState(false);
+
+  const handleAddMediaService = async (endpoint, label) => {
+    showStatus('Connecting to RobOS Media Service and syncing Music library...');
+    const res = await window.robosAudio.addMediaService(endpoint, label);
+    applyFolderState(res);
+    if (res && res.ok) {
+      showStatus(`✓ Connected to RobOS Media Service (${res.total ?? res.added ?? 0} songs ready)!`);
+    } else {
+      showStatus(`Media Service error: ${res?.error || 'Unreachable'}`);
+    }
+    return res;
+  };
+
   const handleCancelScan = async () => {
     try {
       await window.robosAudio.cancelLibraryScan();
@@ -740,7 +755,7 @@ export default function App() {
   // so always prefer the library's fresh URL for cloud tracks.
   const resolveSrc = (t) => {
     if (!t) return '';
-    if (t.cloud) {
+    if (t.cloud || t.mediaService) {
       const fresh = libraryById.get(t.id);
       if (fresh && fresh.src) return fresh.src;
     }
@@ -1677,8 +1692,17 @@ export default function App() {
             </span>
           )}
           <button
-            id="btn-header-add-folder"
+            id="btn-header-media-service"
             className="btn-accent"
+            onClick={() => setShowMediaServiceModal(true)}
+            title="Connect to a RobOS Media Server (Music, Albums, MCP)"
+          >
+            <Icon name="cloud" size={15} />
+            <span>RobOS Media Service</span>
+          </button>
+          <button
+            id="btn-header-add-folder"
+            className="btn-secondary"
             onClick={handleSelectFolder}
             title="Open built-in system file manager to add music folder"
           >
@@ -2273,6 +2297,7 @@ export default function App() {
               folderProps={{
                 onAddLocal: handleSelectFolder,
                 onAddCloud: () => setActiveTab('cloud'),
+                onOpenMediaService: () => setShowMediaServiceModal(true),
                 onRescan: handleRescanFolder,
                 onEnabled: handleFolderEnabled,
                 onRename: handleRenameFolder,
@@ -2607,6 +2632,12 @@ export default function App() {
         </div>
       )}
 
+      <MediaServiceModal
+        open={showMediaServiceModal}
+        onClose={() => setShowMediaServiceModal(false)}
+        onConnect={handleAddMediaService}
+        appKind="audio"
+      />
       <ContextMenu menu={menu} onClose={closeMenu} />
       {infoTrack && <TrackInfo track={infoTrack} onClose={() => setInfoTrack(null)} />}
 

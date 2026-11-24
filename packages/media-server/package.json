@@ -1,0 +1,19 @@
+{
+  "name": "robos-media-server",
+  "version": "0.1.0",
+  "description": "RobOS Media Server — unified web media streaming service, transcode engine, eBook reader, and Model Context Protocol (MCP) server for movies, TV shows, music, books, and courses",
+  "main": "main.js",
+  "bin": {
+    "robos-media-server": "./bin/robos-media-server.js",
+    "robos-media-server-mcp": "./bin/media-server-mcp.js"
+  },
+  "scripts": {
+    "start": "electron . --no-sandbox --disable-gpu --disable-dev-shm-usage",
+    "serve": "node server.js",
+    "mcp": "node bin/media-server-mcp.js",
+    "test": "node --test test/*.test.js"
+  },
+  "dependencies": {
+    "electron": "^28.0.0"
+  }
+}

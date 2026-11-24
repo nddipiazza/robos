@@ -519,6 +519,19 @@ function parseVideoMediaInfo(rawName, parentDir = '', grandParentDir = '', fullP
  */
 function upgradeTrackVideoGrouping(track) {
   if (!track) return false;
+  if (track.mediaService) {
+    let changed = false;
+    const set = (k, v) => { if (v !== undefined && track[k] !== v) { track[k] = v; changed = true; } };
+    if (track.mediaType === 'tv' && track.showName) {
+      set('album', track.showName);
+      set('albumArtist', track.showName);
+      set('discNumber', track.seasonNumber || 1);
+      set('trackNumber', track.episodeNumber || 1);
+    } else {
+      set('mediaType', 'movie');
+    }
+    return changed;
+  }
   const filePath = String(track.cloud?.remotePath || track.filePath || '');
   const ext = path.extname(filePath).toLowerCase();
   if (ext && !VIDEO_EXTENSIONS.has(ext)) return false;

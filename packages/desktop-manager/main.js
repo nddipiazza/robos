@@ -81,6 +81,7 @@ function listDesktops() {
 const APPS = [
   { id: 'auto-center', label: 'Auto Center', icon: '🚘', desc: 'Vehicle catalog and maintenance', category: 'RobOS Auto' },
   { id: 'daw-studio', label: 'RobOS DAW Studio', icon: '🎚️', desc: 'Multi-track DAW & Focusrite Pro-Audio recording studio', category: 'RobOS System' },
+  { id: 'media-server', label: 'RobOS Media Server', icon: '🎬', desc: 'Unified web media streaming server, eBook reader & MCP for movies, TV shows, music & books', category: 'RobOS System' },
   { id: 'shopping-lists', label: 'RobOS Shopping Lists', icon: '🛒', desc: 'Household shopping lists for Grocery, Target & Costco with Google Docs sync', category: 'RobOS Household' },
   // System
   { id: 'notifications',           label: 'Notifications',          icon: '🔔', desc: 'System notifications',            category: 'RobOS System' },
@@ -143,6 +144,7 @@ function mkBin(id, opts = {}) {
 const APP_BINS = {
   'auto-center': mkBin('auto-center'),
   'daw-studio': mkBin('daw-studio'),
+  'media-server': mkBin('media-server'),
   'shopping-lists': mkBin('shopping-lists'),
   // System / always-present
   'notifications':           mkBin('notifications', { keepAlive: true }),
@@ -426,6 +428,7 @@ function startPassLockMonitor() {
 // after edits. Conflicts are never applied here: they become a notification.
 
 let configSyncAuto = null;
+let mediaServiceAuto = null;
 
 function startConfigSyncAuto() {
   for (const p of [
@@ -435,9 +438,21 @@ function startConfigSyncAuto() {
   ].filter(Boolean)) {
     try {
       configSyncAuto = require(p).startAutoSync({ log: msg => console.log(`[dm] config-sync ${msg}`) });
-      return;
+      break;
     } catch (err) {
-      if (err.code !== 'MODULE_NOT_FOUND') { console.error('[dm] config-sync auto failed to start:', err.message); return; }
+      if (err.code !== 'MODULE_NOT_FOUND') { console.error('[dm] config-sync auto failed to start:', err.message); break; }
+    }
+  }
+  for (const p of [
+    process.env.ROBOS_LIB_PATH && path.join(process.env.ROBOS_LIB_PATH, 'media-service-client'),
+    path.resolve(__dirname, '..', 'robos-lib', 'media-service-client'),
+    '/usr/local/share/robos/robos-lib/media-service-client',
+  ].filter(Boolean)) {
+    try {
+      mediaServiceAuto = require(p).startMediaServiceAutoSync({ log: msg => console.log(`[dm] media-service ${msg}`) });
+      break;
+    } catch (err) {
+      if (err.code !== 'MODULE_NOT_FOUND') { console.error('[dm] media-service auto failed to start:', err.message); break; }
     }
   }
 }

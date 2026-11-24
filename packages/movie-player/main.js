@@ -101,6 +101,8 @@ const publicMetadata = new PublicMetadataService({ mediaLibrary, castService });
 // its folders, playlists and that history synced with it (robos-lib/media-cloud-sync).
 const mediaHistoryLib = requireShared('robos-lib/media-history');
 const mediaCloudSyncLib = requireShared('robos-lib/media-cloud-sync');
+const mediaServiceClientLib = requireShared('robos-lib/media-service-client');
+const CONFIG_DIR = path.join(process.env.HOME || os.homedir(), '.config', 'robos');
 let mediaSync = null;
 if (mediaHistoryLib) {
   try {
@@ -122,10 +124,10 @@ function onVaultPulled(rels) {
     mediaLibrary._loadPlaylists();
     sendToWindow('audio:playlists-updated', mediaLibrary.getPlaylists());
   }
-  if (rels.includes('config/movie-folders.json')) {
+  if (rels.includes('config/movie-folders.json') || rels.includes('config/media-servers.json')) {
     libraryFolders.folders = libraryFolders._load();
-    // A folder added on the other computer has no tracks here yet: index it now.
-    const fresh = libraryFolders.list().filter(f => f.syncEnabled !== false && f.trackCount === 0);
+    // A folder or RobOS Media Service added on the other computer has no tracks here yet: index it now.
+    const fresh = libraryFolders.list().filter(f => f.syncEnabled !== false && (f.trackCount === 0 || f.kind === 'media-service'));
     scanLocalFolders(fresh);
     syncCloudFolders(fresh)
       .catch(err => console.warn('[MoviePlayer] Indexing folders from the vault failed:', err.message))
@@ -277,7 +279,7 @@ function createWindow() {
       return true;
     });
     scanLocalFolders(targets);
-    if (targets.some(f => f.kind === 'cloud')) {
+    if (targets.some(f => f.kind === 'cloud' || f.kind === 'peer' || f.kind === 'media-service')) {
       syncCloudFolders(targets).then(() => {
         sendToWindow('audio:folders-updated', folderState({ withLibrary: true }));
       }).catch(err => console.error('Startup folder check failed:', err.message));
@@ -405,6 +407,13 @@ controlHandlers.actions = {
   '/api/set-watched': (body) => setShowWatched(body),
   '/api/play-next-episode': (body) => playNextEpisode(body),
   '/api/media-sync-now': async () => ({ ok: true, ...(mediaSync ? await mediaSync.runNow('manual') : { outcome: 'unavailable' }) }),
+  '/api/media-service-reload': async () => {
+    mediaLibrary._loadCache();
+    libraryFolders.folders = libraryFolders._load();
+    libraryFolders.list();
+    sendToWindow('audio:folders-updated', folderState({ withLibrary: true }));
+    return { ok: true, totalTracks: mediaLibrary.tracks.length };
+  },
 };
 
 const controlServer = createControlServer({
@@ -574,10 +583,12 @@ ipcMain.handle('audio:cast-file', async (_evt, { ip, filePath, metadata }) => {
       }
       streamUrl = castService.registerFile(filePath);
     } else {
-      // Check if it's a cloud track that should be streamed on demand
-      const cloudTrack = mediaLibrary.tracks.find(t => t.filePath === filePath && t.cloud);
-      if (!cloudTrack) throw new Error('File does not exist: ' + filePath);
-      streamUrl = castService.getCloudStreamUrl(cloudTrack.id, true);
+      // Check if it's a cloud, P2P, or RobOS Media Service track that should be streamed on demand
+      const remoteTrack = mediaLibrary.tracks.find(t => t.filePath === filePath && (t.cloud || t.peerStream || t.mediaService));
+      if (!remoteTrack) throw new Error('File does not exist: ' + filePath);
+      streamUrl = remoteTrack.cloud
+        ? castService.getCloudStreamUrl(remoteTrack.id, true)
+        : (remoteTrack.mediaService?.streamUrl || remoteTrack.peerStream?.streamUrl || remoteTrack.src);
     }
     const meta = { ...(metadata || {}), contentType: (metadata && metadata.contentType) || (fs.existsSync(filePath) ? sniffAudioType(filePath) : audioMimeType(filePath)) };
     return await castService.castMediaUrl(ip, streamUrl, meta, (status) => {
@@ -694,7 +705,7 @@ ipcMain.handle('audio:ensure-file-accessible', async (_evt, filePath) => {
     cloud.touchCacheFile(filePath);
     return true;
   }
-  const remoteTrack = mediaLibrary.tracks.find(t => t.filePath === filePath && (t.cloud || t.peerStream));
+  const remoteTrack = mediaLibrary.tracks.find(t => t.filePath === filePath && (t.cloud || t.peerStream || t.mediaService));
   if (remoteTrack) return true; // Streamed on demand via /cloud-stream/:trackId or P2P /media/:id
   return ensureFileAccessible(filePath);
 });
@@ -826,6 +837,14 @@ async function syncCloudFolders(folders) {
       results.push({ id: f.id, error: err.message });
     }
   }
+  for (const f of folders.filter(x => x.kind === 'media-service')) {
+    try {
+      results.push({ id: f.id, ...(await libraryFolders.syncMediaService(f.id, (p) => sendToWindow('audio:cloud-progress', { ...p, folder: f.label }))) });
+    } catch (err) {
+      f.syncError = err.message;
+      results.push({ id: f.id, error: err.message });
+    }
+  }
   readCloudTagsInBackground();
   applyHistoryFromOtherComputers();
   maybeAutoFetchPublicMetadata();
@@ -920,6 +939,41 @@ ipcMain.handle('audio:folders-add-peer', async (_evt, { endpoint, label } = {}) 
 
     const folder = libraryFolders.add({ kind: 'peer', endpoint: targetEndpoint, label: targetLabel });
     const [result] = await syncCloudFolders([folder]);
+    if (result && result.error) return { ok: false, error: result.error, ...folderState({ withLibrary: true }) };
+    return { ok: true, ...result, ...folderState({ withLibrary: true }) };
+  } catch (err) {
+    return { ok: false, error: err.message, ...folderState() };
+  }
+});
+
+ipcMain.handle('audio:media-services-list', async () => {
+  try {
+    if (!mediaServiceClientLib) return { ok: true, servers: [] };
+    return await mediaServiceClientLib.listMediaServers();
+  } catch (err) {
+    return { ok: false, error: err.message, servers: [] };
+  }
+});
+
+ipcMain.handle('audio:media-services-discover', async () => {
+  try {
+    if (!mediaServiceClientLib) return { ok: true, servers: [] };
+    return await mediaServiceClientLib.discoverMediaServersOnLan();
+  } catch (err) {
+    return { ok: false, error: err.message, servers: [] };
+  }
+});
+
+ipcMain.handle('audio:folders-add-media-service', async (_evt, { endpoint, label } = {}) => {
+  try {
+    const rawEndpoint = String(endpoint || '').trim();
+    if (!rawEndpoint) throw new Error('Enter a RobOS Media Server URL or IP address');
+    if (mediaServiceClientLib) {
+      await mediaServiceClientLib.saveMediaServer({ url: rawEndpoint, name: label || undefined }, { syncNow: false });
+    }
+    const folder = libraryFolders.add({ kind: 'media-service', endpoint: rawEndpoint, label });
+    const [result] = await syncCloudFolders([folder]);
+    if (mediaSync) mediaSync.notifyLocalChange();
     if (result && result.error) return { ok: false, error: result.error, ...folderState({ withLibrary: true }) };
     return { ok: true, ...result, ...folderState({ withLibrary: true }) };
   } catch (err) {

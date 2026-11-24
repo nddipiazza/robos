@@ -8,6 +8,7 @@ import NowPlayingPanel from './NowPlayingPanel.jsx';
 import TrackInfo from './TrackInfo.jsx';
 import { AiPlaylistModal, DjSettingsModal } from './AiPlaylist.jsx';
 import { AiFixMetadataModal } from './AiFixMetadata.jsx';
+import MediaServiceModal from './MediaServiceModal.jsx';
 import { Splitter, useColumns, useLayoutPref } from './resizable.jsx';
 import { castClock, CastProgress, useCastPlaying } from './castClock.jsx';
 import { useVirtualDj } from './useVirtualDj.js';
@@ -28,7 +29,7 @@ const QUEUE_KEY = 'robos-movie-player.queue.v1';
 const PLAYER_PREFS_KEY = 'robos-movie-player.player-prefs.v1';
 const MAX_SAVED_QUEUE = 5000;
 const VIDEO_EXT_RE = /\.(mp4|mkv|webm|mov|m4v|avi|ogv|ts|m2ts|mpg|mpeg|flv|wmv|3gp)(\?|$)/i;
-const isVideoTrack = (t) => !!(t && (VIDEO_EXT_RE.test(t.filePath || '') || VIDEO_EXT_RE.test(t.src || '') || t.genre === 'Movies'));
+const isVideoTrack = (t) => !!(t && (t.mediaType === 'movie' || t.mediaType === 'tv' || VIDEO_EXT_RE.test(t.filePath || '') || VIDEO_EXT_RE.test(t.src || '') || t.genre === 'Movies'));
 
 function loadJson(key) {
   try { return JSON.parse(localStorage.getItem(key)); } catch { return null; }
@@ -477,6 +478,20 @@ export default function App() {
     }
   };
 
+  const [showMediaServiceModal, setShowMediaServiceModal] = useState(false);
+
+  const handleAddMediaService = async (endpoint, label) => {
+    showStatus('Connecting to RobOS Media Service and syncing Movies & TV Shows...');
+    const res = await window.robosAudio.addMediaService(endpoint, label);
+    applyFolderState(res);
+    if (res && res.ok) {
+      showStatus(`✓ Connected to RobOS Media Service (${res.total ?? res.added ?? 0} movies & episodes ready)!`);
+    } else {
+      showStatus(`Media Service error: ${res?.error || 'Unreachable'}`);
+    }
+    return res;
+  };
+
   const handleCancelScan = async () => {
     try {
       await window.robosAudio.cancelLibraryScan();
@@ -843,7 +858,7 @@ export default function App() {
   // so always prefer the library's fresh URL for cloud tracks.
   const resolveSrc = (t) => {
     if (!t) return '';
-    if (t.cloud || t.peerStream) {
+    if (t.cloud || t.peerStream || t.mediaService) {
       const fresh = libraryById.get(t.id);
       if (fresh && fresh.src) return fresh.src;
     }
@@ -1965,8 +1980,17 @@ export default function App() {
             </span>
           )}
           <button
-            id="btn-header-add-folder"
+            id="btn-header-media-service"
             className="btn-accent"
+            onClick={() => setShowMediaServiceModal(true)}
+            title="Connect to a RobOS Media Server (Movies, TV Shows, MCP)"
+          >
+            <Icon name="cloud" size={15} />
+            <span>RobOS Media Service</span>
+          </button>
+          <button
+            id="btn-header-add-folder"
+            className="btn-secondary"
             onClick={handleSelectFolder}
             title="Open built-in system file manager to add movie folder"
           >
@@ -2261,6 +2285,15 @@ export default function App() {
                         const dur = (v && isFinite(v.duration) && v.duration > 0) ? v.duration : (currentTrack?.duration || 0);
                         if (currentTrack) saveTrackProgress(currentTrack, dur, dur, true, { force: true });
                         handleTrackEnded();
+                      }}
+                      onError={(e) => {
+                        const v = e.currentTarget;
+                        const tcUrl = currentTrack?.mediaService?.transcodeUrl;
+                        if (v && tcUrl && v.src !== tcUrl && !String(v.src).includes('/transcode/')) {
+                          showStatus(`Switching "${currentTrack.title}" to live H.264/AAC stream…`);
+                          v.src = tcUrl;
+                          v.play().catch(() => {});
+                        }
                       }}
                     />
                   ) : (
@@ -2832,6 +2865,7 @@ export default function App() {
                 onAddLocal: handleSelectFolder,
                 onAddCloud: () => setActiveTab('cloud'),
                 onAddPeer: handleAddPeerFolder,
+                onOpenMediaService: () => setShowMediaServiceModal(true),
                 onRescan: handleRescanFolder,
                 onEnabled: handleFolderEnabled,
                 onRename: handleRenameFolder,
@@ -3227,6 +3261,12 @@ export default function App() {
         </div>
       )}
 
+      <MediaServiceModal
+        open={showMediaServiceModal}
+        onClose={() => setShowMediaServiceModal(false)}
+        onConnect={handleAddMediaService}
+        appKind="movie"
+      />
       <ContextMenu menu={menu} onClose={closeMenu} />
       {infoTrack && <TrackInfo track={infoTrack} onClose={() => setInfoTrack(null)} />}
 

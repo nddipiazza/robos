@@ -19,7 +19,9 @@ export const sameTrack = (a, b) => !!(a && b && (
 ));
 
 export function artUrlFor(artBase, artId) {
-  return artBase && artId ? `${artBase}${artId}.jpg` : null;
+  if (!artId) return null;
+  if (/^https?:\/\//i.test(artId)) return artId;
+  return artBase ? `${artBase}${artId}.jpg` : null;
 }
 
 function hashHue(text) {

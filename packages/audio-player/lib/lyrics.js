@@ -117,6 +117,17 @@ async function queryLrclib({ artist, album, title, duration }) {
 async function getLyrics(track) {
   if (!track || !track.title) return { found: false };
 
+  if (track.mediaService?.lyricsUrl) {
+    try {
+      const res = await fetch(track.mediaService.lyricsUrl, { signal: AbortSignal.timeout(4000) });
+      if (res.ok) {
+        const text = await res.text();
+        const lines = parseLrc(text);
+        if (lines.length) return { found: true, source: 'file', synced: lines };
+      }
+    } catch {}
+  }
+
   if (track.filePath) {
     const sidecar = track.filePath.replace(/\.[^./\\]+$/, '.lrc');
     try {

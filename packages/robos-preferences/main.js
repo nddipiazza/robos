@@ -140,6 +140,7 @@ function syncSettingsToKGraph(settings) {
 const SETTINGS_SCHEMA = {
   sections: [
     { id: 'audio_devices', label: 'Audio Devices', fields: [] },
+    { id: 'media_services', label: 'RobOS Media Services', fields: [] },
     { id: 'config_sync', label: 'Config Sync & Sharing', fields: [] },
     { id: 'cloud_accounts', label: 'Cloud Suite Accounts', fields: [] },
     { id: 'github_accounts', label: 'GitHub accounts', fields: [] },
@@ -296,16 +297,33 @@ app.whenReady().then(() => {
 
   if (_debugServer) _debugServer.startDebugServer(win, 19116);
 
-  // On Linux, Desktop Manager keeps the backup vault synced in the background. Windows and
-  // macOS have no Desktop Manager, so Preferences does it while it is open (the media players
-  // sync their own library and watch history whenever they run).
-  if (process.platform !== 'linux' && !process.env.ROBOS_TEST) {
-    try { autoSync = configSyncAutoLib()?.startAutoSync({ log: m => console.log('[ConfigSync]', m) }) || null; } catch (error) { console.warn('[ConfigSync] background sync unavailable:', error.message); }
+  // On Linux inside the RobOS Desktop Shell, Desktop Manager keeps the backup vault synced in
+  // the background. On standalone Linux GNOME, Windows and macOS (where Desktop Manager is not
+  // running), Preferences runs background vault sync + RobOS Media Service auto-sync directly.
+  if (!process.env.ROBOS_TEST && !process.env.ROBOS_TEST_MODE) {
+    const dmSocketExists = (() => {
+      try {
+        const rt = process.env.XDG_RUNTIME_DIR || (process.getuid ? `/run/user/${process.getuid()}` : '');
+        return Boolean(rt && fs.existsSync(path.join(rt, 'robos-dm.sock')));
+      } catch { return false; }
+    })();
+    if (process.platform !== 'linux' || !dmSocketExists) {
+      try { autoSync = configSyncAutoLib()?.startAutoSync({ log: m => console.log('[ConfigSync]', m) }) || null; } catch (error) { console.warn('[ConfigSync] background sync unavailable:', error.message); }
+    }
+    try {
+      mediaServiceSyncLoop = mediaServiceLib()?.startMediaServiceAutoSync({ log: m => console.log('[MediaServices]', m) }) || null;
+    } catch (error) {
+      console.warn('[MediaServices] background sync unavailable:', error.message);
+    }
   }
 });
 
 let autoSync = null;
-app.on('before-quit', () => { try { autoSync?.stop(); } catch {} });
+let mediaServiceSyncLoop = null;
+app.on('before-quit', () => {
+  try { autoSync?.stop(); } catch {}
+  try { mediaServiceSyncLoop?.stop(); } catch {}
+});
 app.on('window-all-closed', () => app.quit());
 app.on('second-instance', () => {
   if (win && !win.isDestroyed?.()) {
@@ -516,6 +534,9 @@ for (const name of CONFIG_SYNC_CALLS) {
       const result = await configSyncLib()[name](callOpts);
       // A sync from here settles what background sync was waiting on ("Config Sync needs you").
       if (name === 'applyVaultSync') { try { configSyncAutoLib()?.clearAttention({}); } catch {} }
+      if (name === 'applyVaultSync' || name === 'joinShare' || name === 'updateSubscription') {
+        try { await mediaServiceLib()?.syncMediaServicesToLocalApps({ force: true }); } catch {}
+      }
       return Array.isArray(result) ? { ok: true, items: result } : result;
     } catch (error) {
       return { ok: false, error: error.message, code: error.code || null, conflicts: error.conflicts || null };
@@ -654,5 +675,86 @@ ipcMain.handle('launch-robos-app', async (_, appId) => {
     });
     child.unref();
     return { ok: true, appId };
+  } catch (error) { return { ok: false, error: error.message }; }
+});
+
+// ── RobOS Media Services (robos-lib/media-service-client) ────────────────────
+function mediaServiceLib() {
+  for (const p of [
+    process.env.ROBOS_LIB_PATH && path.join(process.env.ROBOS_LIB_PATH, 'media-service-client'),
+    path.resolve(__dirname, '..', 'robos-lib', 'media-service-client'),
+    '/usr/local/share/robos/robos-lib/media-service-client',
+  ].filter(Boolean)) {
+    try { return require(p); } catch {}
+  }
+  return null;
+}
+
+ipcMain.handle('media-services-list', async () => {
+  try {
+    const lib = mediaServiceLib();
+    if (!lib) throw new Error('media-service-client library is not installed.');
+    return await lib.listMediaServers();
+  } catch (error) { return { ok: false, error: error.message }; }
+});
+
+ipcMain.handle('media-services-save', async (_, serverInput) => {
+  try {
+    const lib = mediaServiceLib();
+    if (!lib) throw new Error('media-service-client library is not installed.');
+    return await lib.saveMediaServer(serverInput || {});
+  } catch (error) { return { ok: false, error: error.message }; }
+});
+
+ipcMain.handle('media-services-delete', async (_, serverId) => {
+  try {
+    const lib = mediaServiceLib();
+    if (!lib) throw new Error('media-service-client library is not installed.');
+    return await lib.removeMediaServer(serverId);
+  } catch (error) { return { ok: false, error: error.message }; }
+});
+
+ipcMain.handle('media-services-discover', async () => {
+  try {
+    const lib = mediaServiceLib();
+    if (!lib) throw new Error('media-service-client library is not installed.');
+    return await lib.discoverMediaServersOnLan();
+  } catch (error) { return { ok: false, error: error.message }; }
+});
+
+ipcMain.handle('media-services-probe', async (_, url) => {
+  try {
+    const lib = mediaServiceLib();
+    if (!lib) throw new Error('media-service-client library is not installed.');
+    return await lib.probeMediaServer(url);
+  } catch (error) { return { ok: false, error: error.message }; }
+});
+
+ipcMain.handle('media-services-sync-now', async () => {
+  try {
+    const lib = mediaServiceLib();
+    if (!lib) throw new Error('media-service-client library is not installed.');
+    const syncRes = await lib.syncMediaServicesToLocalApps({ force: true });
+    const listRes = await lib.listMediaServers();
+    return { ...listRes, syncResult: syncRes };
+  } catch (error) { return { ok: false, error: error.message }; }
+});
+
+ipcMain.handle('media-services-set-auto-sync', async (_, enabled) => {
+  try {
+    const lib = mediaServiceLib();
+    if (!lib) throw new Error('media-service-client library is not installed.');
+    lib.setAutoSyncPlayers(Boolean(enabled));
+    return await lib.listMediaServers({ probe: false });
+  } catch (error) { return { ok: false, error: error.message }; }
+});
+
+ipcMain.handle('open-external-url', async (_, url) => {
+  try {
+    if (/^https?:\/\//i.test(String(url || ''))) {
+      await require('electron').shell.openExternal(url);
+      return { ok: true };
+    }
+    return { ok: false, error: 'Invalid URL' };
   } catch (error) { return { ok: false, error: error.message }; }
 });

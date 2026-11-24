@@ -395,5 +395,10 @@ packages:
     type: "robos:DesktopApp"
     repository: "packages/game-theater"
     technology: "Electron 28 / Godot 4.3 HTTPS Web Client & Dynamic GDScript / RFC 6455 WebSocket Multiplayer Server / Google Drive v3 Per-Player Google Doc Launchers / robos-lib ai-agent"
+  - id: "urn:robos:desktop-app:media-server"
+    title: "RobOS Media Server"
+    type: "robos:DesktopApp"
+    repository: "packages/media-server"
+    technology: "Node.js HTTP 206 Byte-Range Streaming / FFmpeg Live H.264+AAC Transcoding / Built-in EPUB & PDF Reader / Model Context Protocol (MCP HTTP & Stdio) / Electron 28"
 
 
