@@ -29,14 +29,27 @@ var _plate_rect: TextureRect
 var _vp_container: SubViewportContainer
 var _vp: SubViewport
 var _cam: Camera3D
+var _key_light: DirectionalLight3D
+var _rim_light: DirectionalLight3D
 var _world_root: Node3D
 var _env: Environment
 var _actors: Array[Dictionary] = []
 var _tracers: Array[Dictionary] = []
+var _fx_items: Array[Dictionary] = []
+var _pending_sfx: Array[Dictionary] = []
 var _tracer_timer := 0.0
+var _shell_timer := 0.0
 var _cam_from := Vector3(-8, 4.5, 8.5)
+var _cam_mid := Vector3(-6, 4.0, 7.1)
 var _cam_to := Vector3(-4, 3.5, 5.8)
 var _cam_look := Vector3.ZERO
+var _cam_look_to := Vector3.ZERO
+var _fov_from := 35.0
+var _fov_to := 35.0
+var _roll_from := 0.0
+var _roll_to := 0.0
+var _shake_amp := 0.0
+var _use_bezier_cam := false
 
 var _frn_overlay: Control
 var _frn_headline: Label
@@ -54,6 +67,7 @@ var _progress_fill: ColorRect
 var _skip_btn: Button
 var _voice_player: AudioStreamPlayer
 var _sfx_player: AudioStreamPlayer
+var _foley_player: AudioStreamPlayer
 var _tex_cache: Dictionary = {}
 
 func _ready() -> void:
@@ -130,15 +144,22 @@ func _build_3d_stage() -> void:
 	add_child(_vp_container)
 
 	_vp = SubViewport.new()
-	_vp.size = Vector2i(1280, 720)
+	_vp.size = Vector2i(1920, 1080)
 	_vp.own_world_3d = true
-	_vp.msaa_3d = Viewport.MSAA_2X
+	_vp.msaa_3d = Viewport.MSAA_4X
 	_vp.render_target_update_mode = SubViewport.UPDATE_DISABLED
 	_vp_container.add_child(_vp)
 
 	_env = Environment.new()
 	_env.background_mode = Environment.BG_COLOR
 	_env.background_color = Color("#0b1522")
+	_env.tonemap_mode = Environment.TONE_MAPPER_ACES
+	_env.tonemap_exposure = 1.06
+	_env.tonemap_white = 4.5
+	_env.glow_enabled = true
+	_env.glow_intensity = 0.58
+	_env.glow_bloom = 0.18
+	_env.glow_blend_mode = Environment.GLOW_BLEND_MODE_SOFTLIGHT
 	_env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	_env.ambient_light_color = Color("#9db8cc")
 	_env.ambient_light_energy = 0.78
@@ -149,17 +170,18 @@ func _build_3d_stage() -> void:
 	we.environment = _env
 	_vp.add_child(we)
 
-	var key_light := DirectionalLight3D.new()
-	key_light.rotation_degrees = Vector3(-42.0, -34.0, 0.0)
-	key_light.light_color = Color("#fff0dc")
-	key_light.light_energy = 1.4
-	_vp.add_child(key_light)
+	_key_light = DirectionalLight3D.new()
+	_key_light.rotation_degrees = Vector3(-42.0, -34.0, 0.0)
+	_key_light.light_color = Color("#fff0dc")
+	_key_light.light_energy = 1.4
+	_key_light.shadow_enabled = true
+	_vp.add_child(_key_light)
 
-	var rim_light := DirectionalLight3D.new()
-	rim_light.rotation_degrees = Vector3(-18.0, 145.0, 0.0)
-	rim_light.light_color = Color("#46e8ff")
-	rim_light.light_energy = 0.85
-	_vp.add_child(rim_light)
+	_rim_light = DirectionalLight3D.new()
+	_rim_light.rotation_degrees = Vector3(-18.0, 145.0, 0.0)
+	_rim_light.light_color = Color("#46e8ff")
+	_rim_light.light_energy = 0.85
+	_vp.add_child(_rim_light)
 
 	_cam = Camera3D.new()
 	_cam.fov = 35.0
@@ -336,6 +358,11 @@ func _build_audio() -> void:
 	_sfx_player.volume_db = -10.0
 	add_child(_sfx_player)
 
+	_foley_player = AudioStreamPlayer.new()
+	_foley_player.bus = "SFX"
+	_foley_player.volume_db = -7.5
+	add_child(_foley_player)
+
 func _make_cinema_boom_wav() -> AudioStreamWAV:
 	# Synthesizes a warm low-frequency orbital thruster & warp-in cinema swell
 	var rate := 22050
@@ -474,8 +501,11 @@ func stop_all_media() -> void:
 		_voice_player.stop()
 	if _sfx_player and _sfx_player.playing:
 		_sfx_player.stop()
+	if _foley_player and _foley_player.playing:
+		_foley_player.stop()
 	if _ogv_player and _ogv_player.is_playing():
 		_ogv_player.stop()
+	_pending_sfx.clear()
 	if _vp:
 		_vp.render_target_update_mode = SubViewport.UPDATE_DISABLED
 	_clear_3d_stage()
@@ -536,6 +566,11 @@ func _enter_shot(idx: int) -> void:
 				_voice_player.play()
 				voice_started = true
 
+	_pending_sfx.clear()
+	for sfx_pair in shot.get("sfx_cues", []):
+		if sfx_pair is Array and sfx_pair.size() >= 2:
+			_pending_sfx.append({"at": float(sfx_pair[0]), "sfx": str(sfx_pair[1]), "played": false})
+
 	_top_telemetry.text = str(shot.get("telemetry", ""))
 	_speaker_label.text = str(shot.get("speaker", ""))
 	_subtitle_label.text = str(shot.get("line", ""))
@@ -593,8 +628,49 @@ func _enter_shot(idx: int) -> void:
 			if _vp_container:
 				_vp_container.show()
 				_stage_unit_trial(str(shot.get("unit_id", "rifleman")), bool(shot.get("dropship_entry", false)))
+		"intro_gantry":
+			if _vp_container:
+				_vp_container.show()
+				_stage_intro_gantry()
+		"intro_visor":
+			if _vp_container:
+				_vp_container.show()
+				_stage_intro_visor()
+		"intro_rollout":
+			_planet_bg.show()
+			if _vp_container:
+				_vp.transparent_bg = true
+				_vp_container.show()
+				_stage_intro_rollout()
+		"intro_warp":
+			_planet_bg.show()
+			if _vp_container:
+				_vp.transparent_bg = true
+				_vp_container.show()
+				_stage_intro_warp()
+		"intro_swarm":
+			if _vp_container:
+				_vp_container.show()
+				_stage_intro_swarm()
+		"intro_concord":
+			if _vp_container:
+				_vp_container.show()
+				_stage_intro_concord()
+		"intro_clash":
+			if _vp_container:
+				_vp_container.show()
+				_stage_intro_clash()
 
 func _animate_active_shot(shot: Dictionary, delta: float, progress: float) -> void:
+	for sc in _pending_sfx:
+		if not bool(sc.played) and _shot_elapsed >= float(sc.at):
+			sc.played = true
+			if play_internal_voice and RTSAudio.can_play_campaign_voice() and _foley_player:
+				var fstream: AudioStreamWAV = RTSAudio.get_stream(str(sc.sfx))
+				if fstream != null:
+					_foley_player.stream = fstream
+					_foley_player.play()
+
 	var kind := str(shot.get("kind", "plate"))
 	if kind == "plate":
 		var z0 := float(shot.get("zoom_from", 1.0))
@@ -608,20 +684,74 @@ func _animate_active_shot(shot: Dictionary, delta: float, progress: float) -> vo
 	if DisplayServer.get_name() == "headless" or _cam == null:
 		return
 
-	_cam.position = _cam_from.lerp(_cam_to, smoothstep(0.0, 1.0, progress))
-	_cam.look_at(_cam_look, Vector3.UP)
+	var u := smoothstep(0.0, 1.0, progress)
+	var cam_pos: Vector3
+	var look_pt: Vector3
+	if _use_bezier_cam:
+		var q0 := _cam_from.lerp(_cam_mid, u)
+		var q1 := _cam_mid.lerp(_cam_to, u)
+		cam_pos = q0.lerp(q1, u)
+		look_pt = _cam_look.lerp(_cam_look_to, u)
+	else:
+		cam_pos = _cam_from.lerp(_cam_to, u)
+		look_pt = _cam_look
+
+	# Subtle handheld breath + battle impact camera shake
+	var sway := Vector3(
+		sin(_total_elapsed * 1.9) * 0.035,
+		cos(_total_elapsed * 2.3) * 0.025,
+		sin(_total_elapsed * 1.5) * 0.025
+	)
+	if _shake_amp > 0.001:
+		sway += Vector3(
+			sin(_total_elapsed * 37.0) * _shake_amp,
+			cos(_total_elapsed * 43.0) * _shake_amp * 0.8,
+			sin(_total_elapsed * 29.0) * _shake_amp * 0.5
+		)
+		_shake_amp = maxf(0.0, _shake_amp - delta * 0.55)
+
+	_cam.fov = lerpf(_fov_from, _fov_to, u)
+	_cam.position = cam_pos + sway
+	if _cam.position.distance_squared_to(look_pt) > 0.01:
+		_cam.look_at(look_pt, Vector3.UP)
+	var roll_deg := lerpf(_roll_from, _roll_to, u)
+	if absf(roll_deg) > 0.01:
+		_cam.rotate_object_local(Vector3.FORWARD, deg_to_rad(roll_deg))
 
 	for actor in _actors:
 		var node: Node3D = actor.node
 		if not is_instance_valid(node):
 			continue
+		if actor.has("warp_at"):
+			var w_at := float(actor.warp_at)
+			var base_s := float(actor.get("base_scale", 1.0))
+			if _shot_elapsed < w_at:
+				node.visible = false
+				continue
+			if not node.visible:
+				node.visible = true
+				_spawn_warp_ring(node.position, base_s * 3.2)
+				_shake_amp = maxf(_shake_amp, 0.14)
+			var wt := clampf((_shot_elapsed - w_at) / 0.20, 0.0, 1.0)
+			var stretch := lerpf(4.6, 1.0, smoothstep(0.0, 1.0, wt))
+			node.scale = Vector3(base_s * stretch, base_s, base_s)
 		node.position += (actor.vel as Vector3) * delta
 		if actor.get("hover", false):
 			node.position.y += sin(_total_elapsed * 3.4 + float(actor.seed)) * 0.008
+		if actor.get("stride", false):
+			node.position.y = absf(sin(_total_elapsed * 5.2 + float(actor.seed))) * 0.06
+
+	_animate_fx_items(delta, u)
+
+	if _shell_timer > 0.0:
+		_shell_timer -= delta
+		if _shell_timer <= 0.0:
+			_shell_timer = 0.72
+			_spawn_artillery_blast()
 
 	_tracer_timer -= delta
 	if _tracer_timer <= 0.0:
-		_tracer_timer = 0.24
+		_tracer_timer = 0.22
 		_spawn_tracer_bursts()
 
 	for i in range(_tracers.size() - 1, -1, -1):
@@ -638,6 +768,26 @@ func _animate_active_shot(shot: Dictionary, delta: float, progress: float) -> vo
 func _clear_3d_stage() -> void:
 	_actors.clear()
 	_tracers.clear()
+	_fx_items.clear()
+	_shell_timer = 0.0
+	_fov_from = 35.0
+	_fov_to = 35.0
+	_roll_from = 0.0
+	_roll_to = 0.0
+	_shake_amp = 0.0
+	_use_bezier_cam = false
+	if _key_light:
+		_key_light.rotation_degrees = Vector3(-42.0, -34.0, 0.0)
+		_key_light.light_color = Color("#fff0dc")
+		_key_light.light_energy = 1.4
+	if _rim_light:
+		_rim_light.rotation_degrees = Vector3(-18.0, 145.0, 0.0)
+		_rim_light.light_color = Color("#46e8ff")
+		_rim_light.light_energy = 0.85
+	if _env:
+		_env.ambient_light_color = Color("#9db8cc")
+		_env.ambient_light_energy = 0.78
+		_env.glow_intensity = 0.58
 	if _world_root == null:
 		return
 	for child in _world_root.get_children():
@@ -662,7 +812,7 @@ func _stage_orbital_fleet() -> void:
 		var uid: String = f.unit
 		if not RTSData.units.has(uid):
 			continue
-		var m: Node3D = Models.build(uid, 1, false)
+		var m: Node3D = Models.build(uid, 1)
 		m.position = f.pos
 		m.rotation = Vector3(-0.08, -0.48, -0.06)
 		var s := float(f.scale)
@@ -746,7 +896,7 @@ func _stage_diorama(diorama_key: String) -> void:
 		var uid: String = str(a.unit)
 		if not RTSData.units.has(uid):
 			continue
-		var m: Node3D = Models.build(uid, int(a.owner), uid == "rifleman" and idx == 1)
+		var m: Node3D = Models.build(uid, int(a.owner))
 		m.position = a.pos
 		m.rotation.y = float(a.get("yaw", 0.0))
 		if a.get("flame", false):
@@ -788,7 +938,7 @@ func _stage_unit_trial(unit_id: String, dropship_entry: bool) -> void:
 	_world_root.add_child(ground)
 
 	if dropship_entry and RTSData.units.has("rampart_transport"):
-		var ship: Node3D = Models.build("rampart_transport", 1, false)
+		var ship: Node3D = Models.build("rampart_transport", 1)
 		ship.position = Vector3(-2.8, 3.8, -1.6)
 		ship.rotation.y = -0.35
 		_add_thruster_glow(ship)
@@ -799,7 +949,7 @@ func _stage_unit_trial(unit_id: String, dropship_entry: bool) -> void:
 	var count := 1 if bool(def.get("is_structure", false)) or float(def.get("radius", 1.0)) > 1.25 else 3
 	var offsets := [Vector3(0, 0, 0), Vector3(-1.8, 0, 1.1), Vector3(1.6, 0, -1.1)]
 	for i in count:
-		var u: Node3D = Models.build(unit_id, 1, false)
+		var u: Node3D = Models.build(unit_id, 1)
 		u.position = offsets[i] + (Vector3(0, 2.2, 0) if unit_id in ["kestrel_interceptor", "rampart_transport", "sky_sentry", "night_harrier", "dreadnought"] else Vector3.ZERO)
 		u.rotation.y = -0.45
 		if unit_id in ["torchguard", "cinder_runner"]:
@@ -871,3 +1021,676 @@ func _spawn_tracer_bursts() -> void:
 		bolt.material_override = mat
 		_world_root.add_child(bolt)
 		_tracers.append({"node": bolt, "from": start_p, "to": tgt, "life": 0.22, "max_life": 0.22})
+
+# =============================================================================
+# Real-Time Godot 4 3D Intro Cinematic Stage Builders & VFX
+# =============================================================================
+
+static func _yaw_toward(from_pos: Vector3, to_pos: Vector3) -> float:
+	var d := to_pos - from_pos
+	if Vector2(d.x, d.z).length_squared() < 0.0001:
+		return 0.0
+	return atan2(-d.z, d.x)
+
+func _spawn_model(
+	uid: String, owner_id: int, pos: Vector3, face_target: Vector3,
+	scl: float = 1.0, is_vale: bool = false
+) -> Node3D:
+	if _world_root == null:
+		return null
+	if not RTSData.units.has(uid) and uid not in Models.BAKED_MODELS:
+		return null
+	var m: Node3D = Models.build("captain_vale" if is_vale else uid, owner_id)
+	if m == null:
+		return null
+	m.position = pos
+	m.rotation.y = _yaw_toward(pos, face_target)
+	m.scale = Vector3(scl, scl, scl)
+	_world_root.add_child(m)
+	return m
+
+func _add_omni(pos: Vector3, col: Color, energy: float, rng: float, pulse_speed: float = 0.0) -> OmniLight3D:
+	var l := OmniLight3D.new()
+	l.position = pos
+	l.light_color = col
+	l.light_energy = energy
+	l.omni_range = rng
+	_world_root.add_child(l)
+	if pulse_speed > 0.0:
+		_fx_items.append({"kind": "pulse_light", "node": l, "base": energy, "speed": pulse_speed})
+	return l
+
+func _make_ground_plane(tex_path: String, tint: Color, roughness_val: float = 0.85, uv_tile: float = 18.0, sz: float = 220.0) -> MeshInstance3D:
+	var ground := MeshInstance3D.new()
+	var plane := PlaneMesh.new()
+	plane.size = Vector2(sz, sz)
+	ground.mesh = plane
+	var gmat := StandardMaterial3D.new()
+	var tex := _load_tex(tex_path)
+	if tex:
+		gmat.albedo_texture = tex
+		gmat.uv1_scale = Vector3(uv_tile, uv_tile, 1.0)
+	gmat.albedo_color = tint
+	gmat.roughness = roughness_val
+	gmat.metallic = 0.22 if roughness_val < 0.6 else 0.05
+	ground.material_override = gmat
+	_world_root.add_child(ground)
+
+	# Distant horizon canyon silhouettes so terrain never shows a hard square edge
+	var rmat := StandardMaterial3D.new()
+	rmat.albedo_color = tint.darkened(0.45)
+	rmat.roughness = 0.96
+	for h_spec in [
+		[Vector3(38.0, 7.5, 9.0), Vector3(-24.0, 3.2, -36.0), 0.22],
+		[Vector3(42.0, 9.5, 10.0), Vector3(16.0, 4.2, -39.0), -0.18],
+		[Vector3(32.0, 6.5, 8.0), Vector3(36.0, 2.8, -24.0), -0.55],
+		[Vector3(32.0, 6.0, 8.0), Vector3(-36.0, 2.6, -22.0), 0.52],
+	]:
+		var ridge := MeshInstance3D.new()
+		var rb := BoxMesh.new()
+		rb.size = h_spec[0]
+		ridge.mesh = rb
+		ridge.position = h_spec[1]
+		ridge.rotation.y = float(h_spec[2])
+		ridge.material_override = rmat
+		_world_root.add_child(ridge)
+	return ground
+
+func _spawn_warp_ring(at_pos: Vector3, max_scale: float = 3.2) -> void:
+	if _world_root == null:
+		return
+	var ring_mi := MeshInstance3D.new()
+	var torus := TorusMesh.new()
+	torus.inner_radius = 0.65
+	torus.outer_radius = 0.92
+	ring_mi.mesh = torus
+	ring_mi.position = at_pos
+	ring_mi.rotation_degrees = Vector3(78.0, 22.0, 0.0)
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.albedo_color = Color(0.45, 0.96, 1.0, 0.92)
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	ring_mi.material_override = mat
+	_world_root.add_child(ring_mi)
+	_fx_items.append({"kind": "expand_ring", "node": ring_mi, "mat": mat, "life": 0.65, "max_life": 0.65, "max_scale": max_scale})
+
+func _spawn_artillery_blast() -> void:
+	if _world_root == null:
+		return
+	var idx := int(_total_elapsed * 10.0) % 4
+	var blast_pts := [
+		Vector3(3.4, 0.35, -1.2),
+		Vector3(5.2, 0.35, 1.4),
+		Vector3(2.2, 0.35, -3.4),
+		Vector3(6.4, 0.35, -2.6),
+	]
+	var pt: Vector3 = blast_pts[idx]
+	var sphere_mi := MeshInstance3D.new()
+	var sm := SphereMesh.new()
+	sm.radius = 0.55
+	sm.height = 1.1
+	sphere_mi.mesh = sm
+	sphere_mi.position = pt
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.albedo_color = Color(1.0, 0.62, 0.18, 0.92)
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	sphere_mi.material_override = mat
+	_world_root.add_child(sphere_mi)
+	_fx_items.append({"kind": "expand_ring", "node": sphere_mi, "mat": mat, "life": 0.52, "max_life": 0.52, "max_scale": 3.8})
+	_shake_amp = maxf(_shake_amp, 0.11)
+
+func _animate_fx_items(delta: float, shot_u: float) -> void:
+	for i in range(_fx_items.size() - 1, -1, -1):
+		var fx: Dictionary = _fx_items[i]
+		var kind := str(fx.kind)
+		var node = fx.get("node", null)
+		if node == null or not is_instance_valid(node):
+			_fx_items.remove_at(i)
+			continue
+		match kind:
+			"pulse_light":
+				var l: OmniLight3D = node
+				var spd := float(fx.speed)
+				l.light_energy = float(fx.base) * (0.55 + 0.65 * absf(sin(_total_elapsed * spd)))
+			"gantry_arm":
+				var arm: Node3D = node
+				var retract := smoothstep(0.18, 0.88, shot_u)
+				arm.position = (fx.from_pos as Vector3).lerp(fx.to_pos as Vector3, retract)
+				arm.rotation_degrees.z = lerpf(float(fx.rot0), float(fx.rot1), retract)
+			"spark":
+				var sp: Node3D = node
+				fx.age = float(fx.age) + delta
+				var age := float(fx.age)
+				var period := float(fx.period)
+				var local_t := fmod(age, period) / period
+				var origin: Vector3 = fx.origin
+				var vel: Vector3 = fx.vel
+				sp.position = origin + vel * local_t + Vector3(0.0, -2.4 * local_t * local_t, 0.0)
+				var sc := maxf(0.05, 1.0 - local_t)
+				sp.scale = Vector3(sc, sc, sc)
+			"visor_glow":
+				var vg: MeshInstance3D = node
+				var vmat: StandardMaterial3D = fx.mat
+				var ign := smoothstep(0.08, 0.45, shot_u)
+				vmat.albedo_color.a = lerpf(0.15, 0.96, ign)
+				vg.scale = Vector3.ONE * lerpf(0.75, 1.12, ign)
+			"steam":
+				var st: Node3D = node
+				st.position += Vector3(0.08, 0.55, 0.04) * delta
+				if st.position.y > 3.2:
+					st.position.y = 0.15
+			"blast_door":
+				var door: Node3D = node
+				var open_u := smoothstep(0.02, 0.68, shot_u)
+				door.position = (fx.closed as Vector3).lerp(fx.opened as Vector3, open_u)
+			"expand_ring":
+				fx.life = float(fx.life) - delta
+				var life := float(fx.life)
+				if life <= 0.0:
+					(node as Node).queue_free()
+					_fx_items.remove_at(i)
+				else:
+					var frac := 1.0 - life / float(fx.max_life)
+					var s := lerpf(0.35, float(fx.max_scale), smoothstep(0.0, 1.0, frac))
+					(node as Node3D).scale = Vector3(s, s, s)
+					var rmat: StandardMaterial3D = fx.mat
+					rmat.albedo_color.a = (1.0 - frac) * 0.88
+
+func _stage_intro_gantry() -> void:
+	_clear_3d_stage()
+	if _world_root == null:
+		return
+	_env.background_mode = Environment.BG_COLOR
+	_env.background_color = Color("#060b12")
+	_env.fog_enabled = true
+	_env.fog_light_color = Color("#101d2b")
+	_env.fog_density = 0.028
+	_env.ambient_light_energy = 0.48
+	_env.glow_intensity = 0.82
+	_key_light.light_color = Color("#ffbe78")
+	_key_light.light_energy = 1.55
+	_key_light.rotation_degrees = Vector3(-35.0, -48.0, 0.0)
+	_rim_light.light_color = Color("#38e8ff")
+	_rim_light.light_energy = 1.35
+
+	_make_ground_plane("res://assets/terrain/military-paving.webp", Color("#2a3540"), 0.45, 18.0, 220.0)
+
+	# Raised circular Forge Gantry Pedestal + glowing power ring
+	var dark_steel := Models.mat("cine_gantry_steel", Color("#232c36"), Color.BLACK, 1.0, 0.65, 0.35)
+	var cyan_emit := Models.mat("cine_gantry_cyan", Color("#4af0ff"), Color("#38e8ff"), 2.2, 0.1, 0.2)
+	var amber_emit := Models.mat("cine_gantry_amber", Color("#ffae38"), Color("#ff9418"), 2.0, 0.1, 0.2)
+	Models.cyl(_world_root, 2.5, 2.9, 0.28, dark_steel, Vector3(0, 0.14, 0), Vector3.ZERO, 24)
+	Models.ring(_world_root, 2.05, 2.30, cyan_emit, Vector3(0, 0.29, 0))
+	Models.ring(_world_root, 2.85, 3.15, dark_steel, Vector3(0, 4.45, 0))
+
+	# 4 heavy gantry pillars around the suit-up bay
+	for angle_deg in [42.0, 138.0, 222.0, 318.0]:
+		var rad := deg_to_rad(angle_deg)
+		var px := cos(rad) * 3.8
+		var pz := sin(rad) * 3.8
+		Models.box(_world_root, Vector3(0.42, 4.8, 0.42), dark_steel, Vector3(px, 2.4, pz))
+		Models.box(_world_root, Vector3(0.14, 0.32, 0.14), amber_emit, Vector3(px * 0.90, 3.6, pz * 0.90))
+
+	# Background Bay 07 machinery constructed from real Godot 4 game structures
+	_spawn_model("vehicle_armory", 1, Vector3(-9.2, 0.0, -10.8), Vector3(0, 0, 2), 1.0)
+	_spawn_model("workshop", 1, Vector3(9.4, 0.0, -10.6), Vector3(0, 0, 2), 1.0)
+	_spawn_model("fabrication_module", 1, Vector3(0.0, 0.0, -13.5), Vector3(0, 0, 4), 1.1)
+	_spawn_model("atlas_walker", 1, Vector3(-6.4, 0.0, -6.2), Vector3(0, 0, 4), 0.85)
+	_spawn_model("warden_walker", 1, Vector3(6.6, 0.0, -6.0), Vector3(0, 0, 4), 0.90)
+
+	# Hero on pedestal: Captain Vale's gold-trimmed power armor + 2 Pioneer welders
+	_spawn_model("rifleman", 1, Vector3(0.0, 0.28, 0.0), Vector3(0.0, 0.28, 6.0), 1.08, true)
+	_spawn_model("pioneer", 1, Vector3(-2.35, 0.28, 0.65), Vector3(0.0, 0.28, 0.0), 0.92)
+	_spawn_model("pioneer", 1, Vector3(2.35, 0.28, 0.65), Vector3(0.0, 0.28, 0.0), 0.92)
+
+	# Articulated mechanical clamp arms that retract outward as armor seals lock
+	for side in [-1.0, 1.0]:
+		var arm_root := Node3D.new()
+		var p0 := Vector3(side * 1.15, 1.45, 0.0)
+		var p1 := Vector3(side * 2.85, 2.25, -0.35)
+		arm_root.position = p0
+		Models.box(arm_root, Vector3(1.25, 0.18, 0.28), dark_steel, Vector3(side * 0.55, 0.0, 0.0))
+		Models.box(arm_root, Vector3(0.20, 0.42, 0.36), cyan_emit, Vector3(0.0, -0.05, 0.0))
+		_world_root.add_child(arm_root)
+		_fx_items.append({"kind": "gantry_arm", "node": arm_root, "from_pos": p0, "to_pos": p1, "rot0": 0.0, "rot1": side * 24.0})
+
+	# Pulsing arc-welder lights + flying welding sparks
+	_add_omni(Vector3(-0.95, 1.45, 0.55), Color("#62f4ff"), 2.4, 6.5, 21.0)
+	_add_omni(Vector3(0.95, 1.45, 0.55), Color("#ffba52"), 2.1, 6.5, 17.0)
+	var spark_mat := StandardMaterial3D.new()
+	spark_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	spark_mat.albedo_color = Color("#ffe082")
+	for s_i in 18:
+		var sp := MeshInstance3D.new()
+		var sb := SphereMesh.new()
+		sb.radius = 0.04
+		sb.height = 0.08
+		sp.mesh = sb
+		sp.material_override = spark_mat
+		var side_s := -1.0 if (s_i % 2 == 0) else 1.0
+		var origin := Vector3(side_s * 0.65, 1.35, 0.35)
+		var vel := Vector3(side_s * (0.8 + float(s_i % 5) * 0.32), 1.2 + float(s_i % 3) * 0.45, 0.7 + float(s_i % 4) * 0.28)
+		_world_root.add_child(sp)
+		_fx_items.append({"kind": "spark", "node": sp, "origin": origin, "vel": vel, "age": float(s_i) * 0.07, "period": 0.62})
+
+	# Fancy Camera: Wide-to-medium 150-degree sweeping orbital crane around the entire suit-up gantry!
+	_use_bezier_cam = true
+	_cam_from = Vector3(-5.2, 1.45, 5.2)
+	_cam_mid = Vector3(0.25, 2.35, 7.2)
+	_cam_to = Vector3(5.2, 3.35, 5.0)
+	_cam_look = Vector3(0.0, 1.35, -0.4)
+	_cam_look_to = Vector3(0.0, 1.75, -1.2)
+	_fov_from = 36.0
+	_fov_to = 40.0
+	_roll_from = -4.5
+	_roll_to = 2.5
+
+func _stage_intro_visor() -> void:
+	_clear_3d_stage()
+	if _world_root == null:
+		return
+	_env.background_mode = Environment.BG_COLOR
+	_env.background_color = Color("#050a12")
+	_env.fog_enabled = true
+	_env.fog_light_color = Color("#0e2030")
+	_env.fog_density = 0.024
+	_env.ambient_light_energy = 0.48
+	_env.glow_intensity = 0.78
+	_key_light.light_color = Color("#cceeff")
+	_key_light.light_energy = 1.35
+	_key_light.rotation_degrees = Vector3(-28.0, 26.0, 0.0)
+	_rim_light.light_color = Color("#ffb84d")
+	_rim_light.light_energy = 1.35
+
+	_make_ground_plane("res://assets/terrain/military-paving.webp", Color("#222c36"), 0.42, 18.0, 220.0)
+
+	# Hero squad V-formation: Captain Vale in front, Breachers & striding Atlas Walker looming behind!
+	var vale := _spawn_model("rifleman", 1, Vector3(0.0, 0.0, 1.2), Vector3(0.35, 0.0, 8.0), 1.15, true)
+	var b_left := _spawn_model("breacher", 1, Vector3(-2.6, 0.0, -1.4), Vector3(-2.0, 0.0, 8.0), 1.02)
+	var b_right := _spawn_model("breacher", 1, Vector3(2.6, 0.0, -1.6), Vector3(2.0, 0.0, 8.0), 1.02)
+	var atlas := _spawn_model("atlas_walker", 1, Vector3(-0.6, 0.0, -8.2), Vector3(-0.2, 0.0, 8.0), 0.92)
+	_spawn_model("torchguard", 1, Vector3(4.4, 0.0, -3.8), Vector3(3.6, 0.0, 8.0), 1.02)
+	_spawn_model("warden_walker", 1, Vector3(-5.2, 0.0, -5.6), Vector3(-3.8, 0.0, 8.0), 0.95)
+
+	if b_left:
+		_actors.append({"node": b_left, "vel": Vector3(0.0, 0.0, 0.28), "stride": true, "seed": 0.4, "fire_at": null})
+	if b_right:
+		_actors.append({"node": b_right, "vel": Vector3(0.0, 0.0, 0.28), "stride": true, "seed": 1.9, "fire_at": null})
+	if atlas:
+		_actors.append({"node": atlas, "vel": Vector3(0.0, 0.0, 0.52), "stride": true, "seed": 0.0, "fire_at": null})
+
+	# Glowing HUD visor ignition strip on Captain Vale's helmet
+	if vale:
+		var v_mi := MeshInstance3D.new()
+		var vbox := BoxMesh.new()
+		vbox.size = Vector3(0.18, 0.09, 0.28)
+		v_mi.mesh = vbox
+		v_mi.position = Vector3(0.16, 1.48, 0.0)
+		var vmat := StandardMaterial3D.new()
+		vmat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		vmat.albedo_color = Color(0.38, 0.95, 1.0, 0.2)
+		vmat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		v_mi.material_override = vmat
+		vale.add_child(v_mi)
+		_fx_items.append({"kind": "visor_glow", "node": v_mi, "mat": vmat})
+		_add_omni(Vector3(0.15, 2.25, 2.25), Color("#46eeff"), 1.8, 5.5, 6.0)
+
+	# Flagship hangar architecture & glowing deck guide-strips framing the squad
+	var arch_steel := Models.mat("cine_visor_steel", Color("#1e2730"), Color.BLACK, 1.0, 0.62, 0.38)
+	var strip_cyan := Models.mat("cine_visor_cyan", Color("#38e8ff"), Color("#2ad8ff"), 2.1, 0.0, 0.2)
+	_spawn_model("airframe_hangar", 1, Vector3(-8.4, 0.0, -13.5), Vector3(0, 0, 8), 1.05)
+	_spawn_model("vehicle_armory", 1, Vector3(8.6, 0.0, -13.5), Vector3(0, 0, 8), 1.05)
+	for z_rib in [-2.0, -6.5, -11.0]:
+		Models.box(_world_root, Vector3(0.45, 6.2, 0.45), arch_steel, Vector3(-7.2, 3.1, z_rib))
+		Models.box(_world_root, Vector3(0.45, 6.2, 0.45), arch_steel, Vector3(7.2, 3.1, z_rib))
+		Models.box(_world_root, Vector3(15.2, 0.38, 0.48), arch_steel, Vector3(0.0, 6.1, z_rib))
+	for z_strip in range(-6, 5, 2):
+		Models.box(_world_root, Vector3(0.14, 0.04, 0.95), strip_cyan, Vector3(-1.55, 0.02, float(z_strip)))
+		Models.box(_world_root, Vector3(0.14, 0.04, 0.95), strip_cyan, Vector3(1.55, 0.02, float(z_strip)))
+
+	# Fancy Camera: Heroic low push-in + telephoto FOV rack framing Vale's visor in front of Breachers & Atlas Walker!
+	_use_bezier_cam = true
+	_cam_from = Vector3(3.85, 1.65, 8.2)
+	_cam_mid = Vector3(1.25, 1.95, 6.4)
+	_cam_to = Vector3(-0.65, 2.10, 5.1)
+	_cam_look = Vector3(-0.15, 1.65, -1.2)
+	_cam_look_to = Vector3(0.0, 1.75, 0.2)
+	_fov_from = 40.0
+	_fov_to = 29.0
+	_roll_from = 3.5
+	_roll_to = -1.5
+
+func _stage_intro_rollout() -> void:
+	_clear_3d_stage()
+	if _world_root == null:
+		return
+	# Planet background shows through open blast doors in -Z!
+	_env.background_mode = Environment.BG_CLEAR_COLOR
+	_env.fog_enabled = false
+	_env.glow_intensity = 0.72
+	_key_light.light_color = Color("#ffe8c8")
+	_key_light.light_energy = 1.5
+	_rim_light.light_color = Color("#48f0ff")
+	_rim_light.light_energy = 1.15
+
+	# Flight deck runway slab stopping at z = -9.5 so open space + planet appear beyond!
+	var deck_steel := Models.mat("cine_deck_floor", Color("#26303a"), Color.BLACK, 1.0, 0.55, 0.42)
+	var strip_green := Models.mat("cine_deck_green", Color("#44ff88"), Color("#38ff7a"), 2.4, 0.0, 0.2)
+	Models.box(_world_root, Vector3(22.0, 0.4, 22.0), deck_steel, Vector3(0.0, -0.2, 1.5))
+	Models.box(_world_root, Vector3(24.0, 0.6, 16.0), deck_steel, Vector3(0.0, 6.4, 0.5))
+	for z_i in 8:
+		var zz := 7.0 - float(z_i) * 2.1
+		Models.box(_world_root, Vector3(0.18, 0.06, 0.9), strip_green, Vector3(-2.8, 0.04, zz))
+		Models.box(_world_root, Vector3(0.18, 0.06, 0.9), strip_green, Vector3(2.8, 0.04, zz))
+
+	# Hangar side walls & Airframe Hangar structures
+	_spawn_model("airframe_hangar", 1, Vector3(-6.8, 0.0, 1.2), Vector3(0, 0, 1.2), 1.1)
+	_spawn_model("airframe_hangar", 1, Vector3(6.8, 0.0, 1.2), Vector3(0, 0, 1.2), 1.1)
+
+	# Twin sliding armored blast doors parting to reveal planet in space!
+	var door_mat := Models.mat("cine_blast_door", Color("#323e4a"), Color.BLACK, 1.0, 0.65, 0.38)
+	var warn_mat := Models.mat("cine_door_warn", Color("#ff9d2e"), Color("#ff8811"), 2.0, 0.1, 0.3)
+	for side in [-1.0, 1.0]:
+		var door := Node3D.new()
+		var closed_p := Vector3(side * 3.1, 3.0, -8.8)
+		var opened_p := Vector3(side * 9.6, 3.0, -8.8)
+		door.position = closed_p
+		Models.box(door, Vector3(6.2, 6.2, 0.55), door_mat)
+		Models.box(door, Vector3(0.28, 5.6, 0.62), warn_mat, Vector3(-side * 2.85, 0.0, 0.0))
+		_world_root.add_child(door)
+		_fx_items.append({"kind": "blast_door", "node": door, "closed": closed_p, "opened": opened_p})
+
+	# Speeding ground column rolling toward the open launch bay (-Z)
+	var ground_col := [
+		{"u": "cinder_runner", "p": Vector3(-1.1, 0.0, 4.2), "v": Vector3(0, 0, -3.5), "s": 1.1},
+		{"u": "cinder_runner", "p": Vector3(1.3, 0.0, 5.6), "v": Vector3(0, 0, -3.6), "s": 1.1},
+		{"u": "vortex_rover", "p": Vector3(-1.5, 0.0, 7.6), "v": Vector3(0, 0, -3.3), "s": 1.05},
+		{"u": "warden_walker", "p": Vector3(1.6, 0.0, 2.2), "v": Vector3(0, 0, -2.1), "s": 1.05},
+	]
+	for g in ground_col:
+		var gm := _spawn_model(str(g.u), 1, g.p, (g.p as Vector3) + Vector3(0, 0, -10.0), float(g.s))
+		if gm:
+			_actors.append({"node": gm, "vel": g.v, "hover": false, "seed": 0.0, "fire_at": null})
+
+	# Screaming Kestrel & Night Harrier strike wing launching overhead out into space!
+	var air_wing := [
+		{"u": "kestrel_interceptor", "p": Vector3(0.0, 2.8, 7.5), "v": Vector3(0.0, 0.28, -7.6), "s": 0.95},
+		{"u": "kestrel_interceptor", "p": Vector3(-1.9, 3.2, 9.2), "v": Vector3(-0.15, 0.30, -7.6), "s": 0.92},
+		{"u": "kestrel_interceptor", "p": Vector3(1.9, 3.2, 9.2), "v": Vector3(0.15, 0.30, -7.6), "s": 0.92},
+		{"u": "night_harrier", "p": Vector3(-0.9, 3.9, 11.8), "v": Vector3(-0.1, 0.25, -7.2), "s": 0.95},
+		{"u": "night_harrier", "p": Vector3(0.9, 3.9, 11.8), "v": Vector3(0.1, 0.25, -7.2), "s": 0.95},
+	]
+	for a in air_wing:
+		var am := _spawn_model(str(a.u), 1, a.p, (a.p as Vector3) + Vector3(0, 0.4, -12.0), float(a.s))
+		if am:
+			_add_thruster_glow(am)
+			_actors.append({"node": am, "vel": a.v, "hover": true, "seed": 1.2, "fire_at": null})
+
+	# Fancy Camera: Low-slung Dutch-tilted chase cam skimming beside Cinder Runners, tilting up as Kestrels roar out!
+	_use_bezier_cam = true
+	_cam_from = Vector3(-3.6, 2.05, 8.6)
+	_cam_mid = Vector3(-2.1, 2.55, 4.4)
+	_cam_to = Vector3(-0.8, 3.05, 0.2)
+	_cam_look = Vector3(0.2, 1.45, -4.5)
+	_cam_look_to = Vector3(0.2, 2.65, -14.0)
+	_fov_from = 46.0
+	_fov_to = 38.0
+	_roll_from = -6.0
+	_roll_to = 3.0
+
+func _stage_intro_warp() -> void:
+	_clear_3d_stage()
+	if _world_root == null:
+		return
+	_env.background_mode = Environment.BG_CLEAR_COLOR
+	_env.fog_enabled = false
+	_env.glow_intensity = 0.85
+	_key_light.light_color = Color("#fff4e4")
+	_key_light.light_energy = 1.6
+	_rim_light.light_color = Color("#4cf2ff")
+	_rim_light.light_energy = 1.3
+
+	# Staggered hyperspace warp-in armada snapping into Vesper high orbit!
+	var armada := [
+		{"u": "dreadnought", "p": Vector3(-5.8, 0.7, 2.2), "v": Vector3(1.35, -0.05, -0.55), "s": 0.68, "w": 0.08},
+		{"u": "dreadnought", "p": Vector3(-9.2, 2.4, -1.6), "v": Vector3(1.25, -0.04, -0.50), "s": 0.48, "w": 0.34},
+		{"u": "watchkeeper", "p": Vector3(-3.4, 2.1, 3.6), "v": Vector3(1.45, -0.06, -0.58), "s": 0.55, "w": 0.48},
+		{"u": "rampart_transport", "p": Vector3(-2.6, -0.9, 3.4), "v": Vector3(1.75, -0.22, -0.72), "s": 0.52, "w": 0.62},
+		{"u": "rampart_transport", "p": Vector3(-5.0, -1.4, 4.2), "v": Vector3(1.72, -0.22, -0.72), "s": 0.52, "w": 0.74},
+		{"u": "sky_sentry", "p": Vector3(-1.6, 0.4, 4.6), "v": Vector3(1.85, -0.14, -0.75), "s": 0.50, "w": 0.86},
+		{"u": "kestrel_interceptor", "p": Vector3(-1.2, 1.5, 2.6), "v": Vector3(2.25, -0.12, -0.88), "s": 0.48, "w": 0.95},
+		{"u": "kestrel_interceptor", "p": Vector3(-2.4, 1.9, 1.2), "v": Vector3(2.25, -0.12, -0.88), "s": 0.48, "w": 1.02},
+	]
+	for idx in armada.size():
+		var a: Dictionary = armada[idx]
+		var target_dir := (a.p as Vector3) + (a.v as Vector3) * 10.0
+		var sm := _spawn_model(str(a.u), 1, a.p, target_dir, float(a.s))
+		if sm:
+			sm.visible = false
+			_add_thruster_glow(sm)
+			_actors.append({
+				"node": sm, "vel": a.v, "hover": true, "seed": idx * 1.3,
+				"warp_at": float(a.w), "base_scale": float(a.s), "fire_at": null,
+			})
+
+	# Fancy Camera: Floating orbital whip-pan as MSV Starfall snaps out of warp right past the lens!
+	_use_bezier_cam = true
+	_cam_from = Vector3(-12.2, 0.8, 9.8)
+	_cam_mid = Vector3(-9.8, 1.6, 10.6)
+	_cam_to = Vector3(-7.2, 2.3, 9.4)
+	_cam_look = Vector3(-4.4, 0.7, 1.8)
+	_cam_look_to = Vector3(1.4, -0.3, -1.6)
+	_fov_from = 45.0
+	_fov_to = 35.0
+	_roll_from = 6.0
+	_roll_to = -3.0
+
+func _stage_intro_swarm() -> void:
+	_clear_3d_stage()
+	if _world_root == null:
+		return
+	_env.background_mode = Environment.BG_COLOR
+	_env.background_color = Color("#180710")
+	_env.fog_enabled = true
+	_env.fog_light_color = Color("#34101e")
+	_env.fog_density = 0.030
+	_env.ambient_light_color = Color("#9e5c78")
+	_env.ambient_light_energy = 0.55
+	_env.glow_intensity = 0.78
+	_key_light.light_color = Color("#ff7b54")
+	_key_light.light_energy = 1.45
+	_rim_light.light_color = Color("#b4ff38")
+	_rim_light.light_energy = 1.15
+
+	_make_ground_plane("res://assets/terrain/badlands.webp", Color("#4a2630"), 0.92, 18.0, 220.0)
+	_add_omni(Vector3(0.0, 3.2, -9.0), Color("#a8ff2e"), 2.0, 16.0, 4.5)
+
+	# Living Gnarl Brood hive structures in the background canyon
+	_spawn_model("brood_hive", 2, Vector3(0.0, 0.0, -16.5), Vector3(0, 0, 8), 1.0)
+	_spawn_model("greater_blight_spire", 2, Vector3(-9.4, 0.0, -14.5), Vector3(0, 0, 8), 0.95)
+	_spawn_model("bile_warren", 2, Vector3(9.2, 0.0, -14.0), Vector3(0, 0, 8), 0.95)
+	_spawn_model("tunnel_mouth", 2, Vector3(-4.8, 0.0, -9.5), Vector3(0, 0, 8), 0.95)
+
+	# Surging ground & aerial Gnarl Brood swarm charging toward +Z!
+	var brood_tide := [
+		{"u": "carapace_bulwark", "p": Vector3(0.0, 0.0, -6.2), "v": Vector3(0.0, 0.0, 1.45), "s": 0.95, "air": false},
+		{"u": "rupture_crawler", "p": Vector3(-4.6, 0.0, -7.2), "v": Vector3(0.15, 0.0, 1.55), "s": 0.90, "air": false},
+		{"u": "spine_ambusher", "p": Vector3(4.6, 0.0, -6.8), "v": Vector3(-0.15, 0.0, 1.65), "s": 0.90, "air": false},
+		{"u": "blight_hurler", "p": Vector3(-7.2, 0.0, -9.2), "v": Vector3(0.1, 0.0, 1.45), "s": 0.92, "air": false},
+		{"u": "skitterling", "p": Vector3(-2.2, 0.0, -2.8), "v": Vector3(-0.1, 0.0, 2.25), "s": 0.95, "air": false},
+		{"u": "skitterling", "p": Vector3(2.1, 0.0, -2.6), "v": Vector3(0.1, 0.0, 2.35), "s": 0.95, "air": false},
+		{"u": "skitterling", "p": Vector3(0.1, 0.0, -1.4), "v": Vector3(0.0, 0.0, 2.45), "s": 0.95, "air": false},
+		{"u": "skitterling", "p": Vector3(-4.3, 0.0, -3.2), "v": Vector3(-0.2, 0.0, 2.30), "s": 0.95, "air": false},
+		{"u": "skitterling", "p": Vector3(4.2, 0.0, -3.1), "v": Vector3(0.2, 0.0, 2.30), "s": 0.95, "air": false},
+		{"u": "brood_siege_flyer", "p": Vector3(-3.4, 3.8, -9.8), "v": Vector3(0.1, -0.04, 1.9), "s": 0.88, "air": true},
+		{"u": "corrosion_flyer", "p": Vector3(3.8, 3.5, -8.2), "v": Vector3(-0.1, -0.04, 2.1), "s": 0.88, "air": true},
+		{"u": "needlewing", "p": Vector3(0.4, 3.1, -5.2), "v": Vector3(0.0, -0.03, 2.6), "s": 0.92, "air": true},
+		{"u": "needlewing", "p": Vector3(-4.8, 3.3, -5.8), "v": Vector3(0.2, -0.03, 2.6), "s": 0.92, "air": true},
+	]
+	for idx in brood_tide.size():
+		var b: Dictionary = brood_tide[idx]
+		var bm := _spawn_model(str(b.u), 2, b.p, (b.p as Vector3) + (b.v as Vector3) * 8.0, float(b.s))
+		if bm:
+			_actors.append({
+				"node": bm, "vel": b.v, "hover": bool(b.air), "stride": not bool(b.air),
+				"seed": idx * 0.9, "fire_at": null,
+			})
+
+	# Fancy Camera: High crane dive plummeting to a Dutch-tilted tracking shot ahead of the charging Swarm!
+	_use_bezier_cam = true
+	_cam_from = Vector3(8.5, 9.8, 10.5)
+	_cam_mid = Vector3(2.8, 4.2, 13.5)
+	_cam_to = Vector3(-3.2, 2.4, 15.8)
+	_cam_look = Vector3(0.0, 1.8, -7.5)
+	_cam_look_to = Vector3(0.0, 1.8, -0.5)
+	_fov_from = 44.0
+	_fov_to = 36.0
+	_roll_from = -7.5
+	_roll_to = 5.5
+
+func _stage_intro_concord() -> void:
+	_clear_3d_stage()
+	if _world_root == null:
+		return
+	_env.background_mode = Environment.BG_COLOR
+	_env.background_color = Color("#061322")
+	_env.fog_enabled = true
+	_env.fog_light_color = Color("#0f2a46")
+	_env.fog_density = 0.020
+	_env.ambient_light_color = Color("#6cb8e6")
+	_env.ambient_light_energy = 0.62
+	_env.glow_intensity = 0.72
+	_key_light.light_color = Color("#ffe596")
+	_key_light.light_energy = 1.45
+	_rim_light.light_color = Color("#52f2ff")
+	_rim_light.light_energy = 1.25
+
+	_make_ground_plane("res://assets/terrain/military-paving.webp", Color("#1d3348"), 0.38, 18.0, 220.0)
+	_add_omni(Vector3(0.0, 2.2, -3.5), Color("#58f6ff"), 2.2, 16.0, 5.0)
+
+	# Ancient Aurelian Concord architecture
+	_spawn_model("concord_core", 3, Vector3(0.0, 0.0, -17.5), Vector3(0, 0, 8), 1.0)
+	_spawn_model("fleet_spire", 3, Vector3(-10.5, 0.0, -14.0), Vector3(0, 0, 8), 0.95)
+	_spawn_model("star_assembly", 3, Vector3(10.5, 0.0, -14.0), Vector3(0, 0, 8), 0.95)
+	_spawn_model("aether_prism", 3, Vector3(-6.2, 0.2, -5.5), Vector3(0, 0, 8), 0.95)
+	_spawn_model("aether_prism", 3, Vector3(6.2, 0.2, -5.5), Vector3(0, 0, 8), 0.95)
+
+	# Towering Spire Walkers, Lattice Archon, Bastion Walker & Sunblade phalanx + Crownspire orbital beam!
+	var crown := _spawn_model("crownspire", 3, Vector3(0.0, 5.6, -5.5), Vector3(0.0, 5.2, 8.0), 0.88)
+	var carrier := _spawn_model("fleet_carrier", 3, Vector3(-6.4, 5.2, -8.2), Vector3(-2.8, 4.8, 8.0), 0.85)
+	if crown:
+		_actors.append({"node": crown, "vel": Vector3(0.0, 0.0, 0.35), "hover": true, "seed": 0.3, "fire_at": null})
+	if carrier:
+		_actors.append({"node": carrier, "vel": Vector3(0.1, 0.0, 0.35), "hover": true, "seed": 1.7, "fire_at": null})
+
+	# Searing vertical orbital purification lance from Crownspire to sanctuary floor!
+	_spawn_beam(Vector3(0.0, 5.4, -5.0), Vector3(0.0, 0.0, -3.5))
+	_spawn_warp_ring(Vector3(0.0, 0.15, -3.5), 5.2)
+
+	var phalanx := [
+		{"u": "lattice_archon", "p": Vector3(0.0, 0.0, -1.8), "v": Vector3(0, 0, 0.45), "s": 0.78},
+		{"u": "spire_walker", "p": Vector3(-5.2, 0.0, -4.2), "v": Vector3(0, 0, 0.55), "s": 0.92},
+		{"u": "bastion_walker", "p": Vector3(5.2, 0.0, -4.0), "v": Vector3(0, 0, 0.55), "s": 0.95},
+		{"u": "sunblade", "p": Vector3(-2.6, 0.0, 1.4), "v": Vector3(0, 0, 0.75), "s": 0.98},
+		{"u": "sunblade", "p": Vector3(2.6, 0.0, 1.4), "v": Vector3(0, 0, 0.75), "s": 0.98},
+	]
+	for idx in phalanx.size():
+		var c: Dictionary = phalanx[idx]
+		var cm := _spawn_model(str(c.u), 3, c.p, (c.p as Vector3) + Vector3(0, 0, 10.0), float(c.s))
+		if cm:
+			_actors.append({"node": cm, "vel": c.v, "hover": false, "stride": true, "seed": idx * 1.1, "fire_at": null})
+
+	# Fancy Camera: Wide sweeping pedestal behind the Sunblades tilting up along the Spire Walkers to the Crownspire!
+	_use_bezier_cam = true
+	_cam_from = Vector3(-7.6, 2.15, 12.8)
+	_cam_mid = Vector3(0.4, 3.65, 14.4)
+	_cam_to = Vector3(7.6, 5.45, 12.4)
+	_cam_look = Vector3(0.0, 1.95, -2.2)
+	_cam_look_to = Vector3(0.0, 4.85, -4.8)
+	_fov_from = 38.0
+	_fov_to = 43.0
+	_roll_from = 4.0
+	_roll_to = -3.5
+
+func _stage_intro_clash() -> void:
+	_clear_3d_stage()
+	if _world_root == null:
+		return
+	_env.background_mode = Environment.BG_COLOR
+	_env.background_color = Color("#0c1420")
+	_env.fog_enabled = true
+	_env.fog_light_color = Color("#1e2836")
+	_env.fog_density = 0.018
+	_env.ambient_light_color = Color("#9ab4cc")
+	_env.ambient_light_energy = 0.68
+	_env.glow_intensity = 0.78
+	_key_light.light_color = Color("#ffcf96")
+	_key_light.light_energy = 1.55
+	_rim_light.light_color = Color("#46ebff")
+	_rim_light.light_energy = 1.25
+
+	_make_ground_plane("res://assets/terrain/badlands.webp", Color("#4e423a"), 0.88, 18.0, 220.0)
+
+	# Meridian Guard fortified battle-line on the left (-X) engaging combined threats across a wide killzone (+X)!
+	_spawn_model("fortified_hub", 1, Vector3(-14.5, 0.0, -4.8), Vector3(8, 0, -1), 0.95)
+	var b1 := _spawn_model("field_bunker", 1, Vector3(-8.4, 0.0, 2.8), Vector3(8, 0, 0), 0.98)
+	var b2 := _spawn_model("bastion_turret", 1, Vector3(-9.6, 0.0, -3.4), Vector3(8, 0, -1), 0.98)
+	_spawn_model("howitzer_emplaced", 1, Vector3(-12.2, 0.0, 3.8), Vector3(8, 0, 0), 1.0)
+	var atlas := _spawn_model("atlas_walker", 1, Vector3(-6.2, 0.0, -1.6), Vector3(8, 0, -0.5), 0.92)
+	var vale := _spawn_model("rifleman", 1, Vector3(-3.8, 0.0, 3.4), Vector3(8, 0, 0.5), 1.08, true)
+	var tg := _spawn_model("torchguard", 1, Vector3(-3.2, 0.0, 0.8), Vector3(8, 0, 0.2), 1.05)
+	if tg:
+		_attach_flame_plume(tg)
+
+	# MSV Starfall Dreadnought descending overhead & firing its axial siege beam across no-man's-land!
+	var dread := _spawn_model("dreadnought", 1, Vector3(-6.4, 4.7, -3.0), Vector3(7.5, 1.0, -1.6), 0.72)
+	if dread:
+		_add_thruster_glow(dread)
+		_actors.append({"node": dread, "vel": Vector3(0.45, -0.03, 0.04), "hover": true, "seed": 0.5, "fire_at": Vector3(7.4, 1.2, -1.6), "owner": 1})
+	_spawn_beam(Vector3(-4.0, 4.3, -2.8), Vector3(7.4, 0.6, -1.6))
+
+	if b1:
+		_actors.append({"node": b1, "vel": Vector3.ZERO, "hover": false, "seed": 0.1, "fire_at": Vector3(6.8, 0.8, 1.6), "owner": 1})
+	if b2:
+		_actors.append({"node": b2, "vel": Vector3.ZERO, "hover": false, "seed": 0.6, "fire_at": Vector3(7.6, 0.9, -2.2), "owner": 1})
+	if atlas:
+		_actors.append({"node": atlas, "vel": Vector3(0.32, 0.0, 0.0), "stride": true, "seed": 0.8, "fire_at": Vector3(8.2, 1.1, -0.8), "owner": 1})
+	if vale:
+		_actors.append({"node": vale, "vel": Vector3(0.42, 0.0, -0.05), "stride": true, "seed": 1.4, "fire_at": Vector3(6.2, 0.8, 2.2), "owner": 1})
+
+	for r_i in 3:
+		var rf := _spawn_model("rifleman", 1, Vector3(-4.8 - float(r_i) * 1.1, 0.0, 4.4 - float(r_i) * 0.9), Vector3(8, 0, 1), 1.0)
+		if rf:
+			_actors.append({"node": rf, "vel": Vector3(0.45, 0.0, -0.05), "stride": true, "seed": float(r_i), "fire_at": Vector3(6.8, 0.8, 1.2), "owner": 1})
+
+	# Hostile Directorate, Brood & Concord forces converging from +X across no-man's-land
+	_spawn_model("propaganda_statue", 2, Vector3(13.5, 0.0, -5.2), Vector3(-8, 0, 0), 1.0)
+	var foes := [
+		{"u": "carapace_bulwark", "o": 2, "p": Vector3(7.8, 0.0, -1.8), "v": Vector3(-0.55, 0, 0.08), "f": Vector3(-6.2, 0.9, -1.6)},
+		{"u": "spire_walker", "o": 3, "p": Vector3(10.4, 0.0, 1.8), "v": Vector3(-0.48, 0, -0.05), "f": Vector3(-8.4, 0.9, 2.8)},
+		{"u": "skitterling", "o": 2, "p": Vector3(4.6, 0.0, 2.2), "v": Vector3(-1.25, 0, 0.12), "f": null},
+		{"u": "skitterling", "o": 2, "p": Vector3(5.6, 0.0, 0.4), "v": Vector3(-1.25, 0, 0.05), "f": null},
+		{"u": "breacher", "o": 2, "p": Vector3(7.2, 0.0, 3.6), "v": Vector3(-0.48, 0, 0.0), "f": Vector3(-3.8, 0.8, 3.4)},
+	]
+	for idx in foes.size():
+		var foe: Dictionary = foes[idx]
+		var fm := _spawn_model(str(foe.u), int(foe.o), foe.p, Vector3(-8, 0, 0), 0.95)
+		if fm:
+			_actors.append({"node": fm, "vel": foe.v, "stride": true, "seed": idx * 1.2, "fire_at": foe.f, "owner": int(foe.o)})
+
+	_tracer_timer = 0.05
+	_shell_timer = 0.25
+	_spawn_artillery_blast()
+
+	# Fancy Camera: Wide sweeping helicopter crane from behind Meridian lines out over the entire raging battlefield!
+	_use_bezier_cam = true
+	_cam_from = Vector3(-9.2, 2.85, 11.8)
+	_cam_mid = Vector3(-3.2, 6.45, 16.2)
+	_cam_to = Vector3(3.2, 9.45, 17.4)
+	_cam_look = Vector3(0.8, 1.65, 0.4)
+	_cam_look_to = Vector3(0.5, 2.35, -1.2)
+	_fov_from = 36.0
+	_fov_to = 43.0
+	_roll_from = -3.0
+	_roll_to = 1.5

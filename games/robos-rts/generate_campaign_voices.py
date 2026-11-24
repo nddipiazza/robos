@@ -164,7 +164,15 @@ def build_voice_lines() -> list[dict]:
         add(f"intro_m{num}_orbit", "helm", f"Entering {sector} high orbit. Strike group cleared for atmospheric descent.")
         add(f"intro_m{num}_surface", contact_speaker, surface_line)
 
-    # B. Prologue, Room Intros, & Story Arc Milestones
+    # B. 7-Shot 3D Intro Cinematic ("Suiting Up: The Ashfall Signal") + Room Intros & Arc Milestones
+    add("intro_cine_1", "vane", " Reactor seals locked. Neosteel chestplate fused and pressurized. Bay Seven gantry is clear.")
+    add("intro_cine_2", "vale", "Seal the visor. Three weeks in the dark is long enough. It's time Vesper Gate heard from us.")
+    add("intro_cine_3", "sable", "Blast doors green! Armor columns rolling, Kestrel flight launching on my mark!")
+    add("intro_cine_4", "helm", "Starfall task force clear of warp! Drop-group Alpha detaching for atmospheric entry!")
+    add("intro_cine_5", "aster", "Long-range bioscans are spiking across the Rim. The Gnarl Brood is waking beneath every frontier colony!")
+    add("intro_cine_6", "vance", "Caught between Directorate martial law, the Brood tide, and ancient Aurelian fleets, the outer worlds face extinction.")
+    add("intro_cine_7", "vale", "Let them all come. Load the Ramparts, lock your rifles, and follow me. We're taking our worlds back!")
+
     add("prologue_1", "vale", "Three weeks ago the Directorate cut every subspace relay along the Rim and left the outer colonies in the dark.")
     add("prologue_2", "vance", "Directorate High Command insists the Vesper comms shutdown is routine maintenance, even as renegade flotillas gather in orbit.")
     add("prologue_3", "vale", "Prep the Ramparts. We break the relay at Vesper Gate first, then we bring every stranded colony home.")

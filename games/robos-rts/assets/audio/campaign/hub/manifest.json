@@ -164,6 +164,48 @@
       "duration": 4.862,
       "path": "res://assets/audio/campaign/hub/intro_m11_surface.wav"
     },
+    "intro_cine_1": {
+      "speaker": "vane",
+      "text": " Reactor seals locked. Neosteel chestplate fused and pressurized. Bay Seven gantry is clear.",
+      "duration": 6.281,
+      "path": "res://assets/audio/campaign/hub/intro_cine_1.wav"
+    },
+    "intro_cine_2": {
+      "speaker": "vale",
+      "text": "Seal the visor. Three weeks in the dark is long enough. It's time Vesper Gate heard from us.",
+      "duration": 5.656,
+      "path": "res://assets/audio/campaign/hub/intro_cine_2.wav"
+    },
+    "intro_cine_3": {
+      "speaker": "sable",
+      "text": "Blast doors green! Armor columns rolling, Kestrel flight launching on my mark!",
+      "duration": 4.639,
+      "path": "res://assets/audio/campaign/hub/intro_cine_3.wav"
+    },
+    "intro_cine_4": {
+      "speaker": "helm",
+      "text": "Starfall task force clear of warp! Drop-group Alpha detaching for atmospheric entry!",
+      "duration": 5.04,
+      "path": "res://assets/audio/campaign/hub/intro_cine_4.wav"
+    },
+    "intro_cine_5": {
+      "speaker": "aster",
+      "text": "Long-range bioscans are spiking across the Rim. The Gnarl Brood is waking beneath every frontier colony!",
+      "duration": 6.632,
+      "path": "res://assets/audio/campaign/hub/intro_cine_5.wav"
+    },
+    "intro_cine_6": {
+      "speaker": "vance",
+      "text": "Caught between Directorate martial law, the Brood tide, and ancient Aurelian fleets, the outer worlds face extinction.",
+      "duration": 7.69,
+      "path": "res://assets/audio/campaign/hub/intro_cine_6.wav"
+    },
+    "intro_cine_7": {
+      "speaker": "vale",
+      "text": "Let them all come. Load the Ramparts, lock your rifles, and follow me. We're taking our worlds back!",
+      "duration": 6.376,
+      "path": "res://assets/audio/campaign/hub/intro_cine_7.wav"
+    },
     "prologue_1": {
       "speaker": "vale",
       "text": "Three weeks ago the Directorate cut every subspace relay along the Rim and left the outer colonies in the dark.",

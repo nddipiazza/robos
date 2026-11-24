@@ -239,12 +239,12 @@ static func mission_intro_movie(mission_index: int) -> Dictionary:
 	var idx := clampi(mission_index, 0, Campaign.MISSIONS.size() - 1)
 	var mission: Dictionary = Campaign.MISSIONS[idx]
 	var meta := HubData.mission_meta(idx)
-	var bay_cue_id: String = OPENING_CUES[idx]
+	var bay_cue_id: String = OPENING_CUES[idx] if idx < OPENING_CUES.size() else str(meta.voice_cue)
 	var bay_cue_line: Array = Campaign.CUES.get(bay_cue_id, [meta.contact, mission.brief, 7.5])
 	var bay_speaker := str(bay_cue_line[0])
 	var bay_portrait := _portrait_for_speaker(bay_speaker)
 	var bay_text := str(bay_cue_line[1])
-	var diorama_key: String = DIORAMA_KEYS[idx]
+	var diorama_key: String = DIORAMA_KEYS[idx] if idx < DIORAMA_KEYS.size() else ""
 	var num_code := "%02d" % (idx + 1)
 
 	return {
@@ -277,14 +277,15 @@ static func mission_intro_movie(mission_index: int) -> Dictionary:
 				"line": bay_text,
 			},
 			{
-				"kind": "diorama_3d",
+				"kind": "diorama_3d" if not diorama_key.is_empty() else "unit_trial_3d",
 				"diorama": diorama_key,
+				"unit_id": str(meta.tech_unit) if not str(meta.tech_unit).is_empty() else "rifleman",
 				"duration": 5.0,
 				"voice_cue": "intro_m%s_surface" % num_code,
 				"telemetry": "SURFACE CONTACT  //  %s" % str(meta.sector).to_upper(),
 				"speaker": str(meta.contact).to_upper(),
 				"portrait": str(meta.portrait),
-				"line": SURFACE_CALLOUTS[idx],
+				"line": SURFACE_CALLOUTS[idx] if idx < SURFACE_CALLOUTS.size() else str(mission.brief),
 			},
 		],
 	}
@@ -296,6 +297,85 @@ static func hub_cutscene(id: String, ctx: Dictionary = {}) -> Dictionary:
 	var meta := HubData.mission_meta(next_idx)
 
 	match id:
+		"intro_cinematic":
+			return {
+				"id": "intro_cinematic",
+				"title": "STARFALL COMMAND  ·  INTRO CINEMATIC",
+				"voice_cue": "intro_cine_1",
+				"planet": HubData.mission_meta(0).planet,
+				"shots": [
+					{
+						"kind": "intro_gantry",
+						"duration": 5.4,
+						"voice_cue": "intro_cine_1",
+						"sfx_cues": [[0.10, "arc_welder"], [1.45, "siege_transform"], [2.85, "arc_welder"]],
+						"telemetry": "MSV STARFALL  //  BAY 07 ARMOR FORGE GANTRY",
+						"speaker": "QUARTERMASTER VANE",
+						"portrait": "",
+						"line": "Reactor seals locked. Neosteel chestplate fused and pressurized. Bay Seven gantry is clear.",
+					},
+					{
+						"kind": "intro_visor",
+						"duration": 5.2,
+						"voice_cue": "intro_cine_2",
+						"sfx_cues": [[0.14, "surge_activate"], [1.95, "unit_ready"]],
+						"telemetry": "POWER SUIT MK-IV  //  VISOR & WEAPON TELEMETRY ONLINE",
+						"speaker": "CAPTAIN VALE",
+						"portrait": "vale",
+						"line": "Seal the visor. Three weeks in the dark is long enough—it's time Vesper Gate heard from us.",
+					},
+					{
+						"kind": "intro_rollout",
+						"duration": 5.2,
+						"voice_cue": "intro_cine_3",
+						"sfx_cues": [[0.08, "silo_gate"], [1.10, "transit_start"], [2.25, "harrier_rockets"]],
+						"telemetry": "FLIGHT DECK 02  //  STRIKE GROUP ROLLOUT",
+						"speaker": "PILOT SABLE",
+						"portrait": "sable",
+						"line": "Blast doors green! Armor columns rolling, Kestrel flight launching on my mark!",
+					},
+					{
+						"kind": "intro_warp",
+						"duration": 5.2,
+						"voice_cue": "intro_cine_4",
+						"sfx_cues": [[0.06, "dreadnought_jump"], [0.42, "dreadnought_arrival"], [2.10, "transit_ready"]],
+						"telemetry": "VESPER IV HIGH ORBIT  //  TASK FORCE TRANSLATION",
+						"speaker": "STARFALL HELM",
+						"portrait": "",
+						"line": "Starfall task force clear of warp! Drop-group Alpha detaching for atmospheric entry!",
+					},
+					{
+						"kind": "intro_swarm",
+						"duration": 5.4,
+						"voice_cue": "intro_cine_5",
+						"sfx_cues": [[0.12, "brood_egg_hatch"], [1.35, "chitin_cleave"], [2.45, "thorn_volley"]],
+						"telemetry": "DEEP-RIM BIOSCAN  //  GNARL BROOD EMERGENCE",
+						"speaker": "DR. ASTER",
+						"portrait": "aster",
+						"line": "Long-range bioscans are spiking across the Rim—the Gnarl Brood is waking beneath every frontier colony!",
+					},
+					{
+						"kind": "intro_concord",
+						"duration": 5.6,
+						"voice_cue": "intro_cine_6",
+						"sfx_cues": [[0.10, "archon_warp"], [1.15, "crown_lance"], [2.65, "prism_beam"]],
+						"telemetry": "SANCTUARY ORBITAL RING  //  AURELIAN PURIFICATION",
+						"speaker": "ANCHOR KADE VANCE",
+						"portrait": "",
+						"line": "Caught between Directorate martial law, the Brood tide, and ancient Aurelian fleets, the outer worlds face extinction.",
+					},
+					{
+						"kind": "intro_clash",
+						"duration": 6.0,
+						"voice_cue": "intro_cine_7",
+						"sfx_cues": [[0.15, "dreadnought_beam"], [1.20, "mortar_fire"], [1.95, "explosion_splash"], [3.10, "rifle_fire"]],
+						"telemetry": "OPERATION ASHFALL SIGNAL  //  ALL FORCES ENGAGE",
+						"speaker": "CAPTAIN VALE",
+						"portrait": "vale",
+						"line": "Let them all come. Load the Ramparts, lock your rifles, and follow me—we're taking our worlds back!",
+					},
+				],
+			}
 		"hub_prologue":
 			return {
 				"id": "hub_prologue",
@@ -352,18 +432,18 @@ static func hub_cutscene(id: String, ctx: Dictionary = {}) -> Dictionary:
 				"shots": [
 					{
 						"kind": "frn_broadcast",
-						"diorama": DIORAMA_KEYS[feed_idx],
+						"diorama": DIORAMA_KEYS[clampi(feed_idx, 0, DIORAMA_KEYS.size() - 1)],
 						"duration": 6.2,
 						"voice_cue": "frn_news_%s" % news_code,
 						"headline": str(headline_pair[0]),
 						"ticker": str(headline_pair[1]),
 						"telemetry": "FRN STUDIO 01  //  LIVE SECTOR FEED",
 						"speaker": "ANCHOR KADE VANCE  ·  FRN LIVE",
-						"line": FRN_SPOKEN_REPORTS[news_idx],
+						"line": FRN_SPOKEN_REPORTS[news_idx] if news_idx < FRN_SPOKEN_REPORTS.size() else str(headline_pair[0]),
 					},
 					{
 						"kind": "diorama_3d",
-						"diorama": DIORAMA_KEYS[feed_idx],
+						"diorama": DIORAMA_KEYS[clampi(feed_idx, 0, DIORAMA_KEYS.size() - 1)],
 						"duration": 5.6,
 						"voice_cue": "frn_drone_%s" % feed_code,
 						"telemetry": "RECON DRONE FEED  //  %s" % str(HubData.mission_meta(feed_idx).sector).to_upper(),
@@ -394,7 +474,7 @@ static func hub_cutscene(id: String, ctx: Dictionary = {}) -> Dictionary:
 					},
 					{
 						"kind": "diorama_3d",
-						"diorama": DIORAMA_KEYS[next_idx],
+						"diorama": DIORAMA_KEYS[clampi(next_idx, 0, DIORAMA_KEYS.size() - 1)],
 						"duration": 5.2,
 						"voice_cue": "rook_sector_%s" % next_code,
 						"telemetry": "TACTICAL PROJECTION  //  %s" % str(meta.sector).to_upper(),
@@ -405,7 +485,7 @@ static func hub_cutscene(id: String, ctx: Dictionary = {}) -> Dictionary:
 				],
 			}
 		"bridge_vale":
-			var vale_cue: String = str(OPENING_CUES[next_idx])
+			var vale_cue: String = str(OPENING_CUES[next_idx]) if next_idx < OPENING_CUES.size() else str(meta.voice_cue)
 			var vale_line: String = str(Campaign.CUES.get(vale_cue, ["Captain Vale", Campaign.MISSIONS[next_idx].brief])[1])
 			if VALE_BRIDGE_OVERRIDES.has(next_idx):
 				vale_cue = str(VALE_BRIDGE_OVERRIDES[next_idx][0])
@@ -723,6 +803,7 @@ static func pending_milestone_cutscene() -> String:
 static func archive_entries() -> Array[Dictionary]:
 	var completed := Campaign.completed_missions()
 	var items: Array[Dictionary] = [
+		{"id": "intro_cinematic", "title": "Intro Cinematic: Suiting Up", "category": "Opening 3D Movie", "unlocked": true},
 		{"id": "hub_prologue", "title": "Prologue: The Ashfall Signal", "category": "Story Cutscene", "unlocked": true},
 		{"id": "bridge_vale", "title": "Command Bridge: Strategic Briefing", "category": "Bridge Cutscene", "unlocked": true},
 		{"id": "armory_intro", "title": "Bay 07: Quartermaster Vane", "category": "Armory Cutscene", "unlocked": true},
@@ -739,7 +820,7 @@ static func archive_entries() -> Array[Dictionary]:
 		items.append({
 			"id": "mission_intro_%d" % idx,
 			"mission_index": idx,
-			"title": "Mission %02d Movie: %s" % [idx + 1, Campaign.MISSIONS[idx].title],
+			"title": "Mission Movie: %s" % Campaign.MISSIONS[idx].title,
 			"category": "Pre-Mission Movie",
 			"unlocked": avail,
 		})

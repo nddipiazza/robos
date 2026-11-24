@@ -125,8 +125,8 @@ func _populate_bridge(room: Control) -> void:
 		Vector2(0, -172), Vector2(0, -24), func(): open_console("mission_select")
 	)
 	_add_hotspot(
-		room, Rect2(415, 405, 145, 350), "Prologue", "Ashfall Signal Movie",
-		Vector2(-75, -135), Vector2(10, -45), func(): trigger_cutscene("hub_prologue")
+		room, Rect2(415, 405, 145, 350), "Intro Cinematic", "Suiting Up 3D Movie",
+		Vector2(-75, -135), Vector2(10, -45), func(): trigger_cutscene("intro_cinematic")
 	)
 	_add_hotspot(
 		room, Rect2(845, 385, 165, 290), "Captain Vale", "Strategic Cutscene",
