@@ -36,6 +36,7 @@ var units_root: Node3D
 var fx_root: Node3D
 
 var unit_nodes: Dictionary = {}     # tag -> Node3D
+var _howitzer_transforms: Dictionary = {} # tag -> Dictionary
 var resource_nodes: Dictionary = {} # tag -> Node3D
 var _campaign_pickups: Dictionary = {}
 var build_blueprints: Dictionary = {} # position -> Node3D
@@ -441,6 +442,7 @@ func _rebuild_static_3d_map() -> void:
 	_clear_children(units_root)
 	_clear_children(fx_root)
 	unit_nodes.clear()
+	_howitzer_transforms.clear()
 	_unit_batches.clear()
 	resource_nodes.clear()
 	_campaign_pickups.clear()
@@ -1296,8 +1298,9 @@ func sync_3d_entities(selected_tags: Array[int], delta: float, local_player: int
 				var rig: Dictionary = u_node.get_meta("siege_gun")
 				gun.transform = rig.rest * attack_pose
 				attack_pose = Transform3D.IDENTITY
+		var transforming_howitzer := _sync_howitzer_transform(u_node, u, u_tag, model_owner)
 		var key: String = u_node.get_meta("mesh_batch", "")
-		if not key.is_empty():
+		if not key.is_empty() and not transforming_howitzer:
 			if not human_transforms.has(key):
 				human_transforms[key] = [[], [], []]
 			var poses: Array = human_transforms[key]
@@ -1310,6 +1313,7 @@ func sync_3d_entities(selected_tags: Array[int], delta: float, local_player: int
 		if not SimEngine.units.has(u_tag):
 			unit_nodes[u_tag].queue_free()
 			unit_nodes.erase(u_tag)
+			_howitzer_transforms.erase(u_tag)
 			_last_pos.erase(u_tag)
 	for point in build_blueprints.keys():
 		if not planned_sites.has(point):
@@ -1665,6 +1669,176 @@ func _cache_unit_mesh_parts(model: Node3D, parts: Array, group: int, animated_bo
 			parts.append({"mesh": child.mesh, "material": child.material_override, "shadow": child.cast_shadow, "group": group})
 	if combined and combined.get_surface_count() > 0:
 		parts.append({"mesh": combined, "material": null, "shadow": GeometryInstance3D.SHADOW_CASTING_SETTING_ON, "group": group})
+
+func _sync_howitzer_transform(u_node: Node3D, u: Dictionary, u_tag: int, model_owner: int) -> bool:
+	if not _howitzer_transforms.has(u_tag):
+		var stale := u_node.get_node_or_null("HowitzerTransformRig") as Node3D
+		if stale:
+			stale.queue_free()
+			var sg_restore := u_node.get_node_or_null("SiegeGun") as Node3D
+			if sg_restore:
+				sg_restore.visible = true
+		return false
+
+	var state: Dictionary = _howitzer_transforms[u_tag]
+	var progress := (anim_time - float(state.start)) / maxf(0.01, float(state.duration))
+	if progress >= 1.0 or str(u.get("unit_type", "")) not in ["howitzer", "howitzer_emplaced"]:
+		var done_rig := u_node.get_node_or_null("HowitzerTransformRig") as Node3D
+		if done_rig:
+			done_rig.queue_free()
+		var sg_done := u_node.get_node_or_null("SiegeGun") as Node3D
+		if sg_done:
+			sg_done.visible = true
+		_howitzer_transforms.erase(u_tag)
+		return false
+
+	var sg := u_node.get_node_or_null("SiegeGun") as Node3D
+	if sg:
+		sg.visible = false
+
+	var rig := u_node.get_node_or_null("HowitzerTransformRig") as Node3D
+	if rig == null:
+		rig = Models.build_howitzer_transform_rig(model_owner)
+		u_node.add_child(rig)
+
+	var emplacing := bool(state.emplacing)
+	var deploy_u := smoothstep(0.12, 0.76, progress) if emplacing else (1.0 - smoothstep(0.14, 0.76, progress))
+
+	# 1. Hydraulic chassis lift & heavy suspension slam/drop bounce
+	var lift_y := 0.0
+	var hull_pitch := 0.0
+	if emplacing:
+		if progress < 0.63:
+			lift_y = 0.36 * smoothstep(0.0, 0.26, progress)
+			hull_pitch = 0.045 * smoothstep(0.05, 0.35, progress)
+		else:
+			var st := (progress - 0.63) / 0.37
+			lift_y = 0.36 * (1.0 - smoothstep(0.0, 0.16, st)) - 0.065 * sin(st * PI * 3.2) * exp(-st * 4.5)
+			hull_pitch = -0.055 * sin(st * PI * 2.4) * exp(-st * 4.2)
+	else:
+		if progress < 0.70:
+			lift_y = 0.26 * sin(clampf(progress / 0.70, 0.0, 1.0) * PI)
+			hull_pitch = -0.035 * sin(clampf(progress / 0.70, 0.0, 1.0) * PI)
+		else:
+			var dt := (progress - 0.70) / 0.30
+			lift_y = -0.055 * sin(dt * PI * 2.6) * exp(-dt * 4.2)
+			hull_pitch = 0.045 * sin(dt * PI * 2.2) * exp(-dt * 4.0)
+
+	var jack := rig.get_node_or_null("LiftJack") as Node3D
+	if jack:
+		jack.visible = lift_y > 0.03
+		jack.scale.y = clampf((lift_y + 0.16) / 0.52, 0.25, 1.15)
+
+	var hull_pivot := rig.get_node_or_null("HullPivot") as Node3D
+	if hull_pivot:
+		hull_pivot.position = Vector3(0.0, maxf(-0.06, lift_y), 0.0)
+		hull_pivot.rotation = Vector3(0.0, 0.0, hull_pitch)
+		var mob_hull := hull_pivot.get_node_or_null("MobileHull") as Node3D
+		var emp_hull := hull_pivot.get_node_or_null("EmplacedHull") as Node3D
+		var show_emp_hull := deploy_u >= 0.58
+		if mob_hull:
+			mob_hull.visible = not show_emp_hull
+			mob_hull.scale = Vector3(1.0, 1.0, 1.0 + 0.09 * deploy_u)
+		if emp_hull:
+			emp_hull.visible = show_emp_hull
+			emp_hull.scale = Vector3(1.0, 1.0, 0.94 + 0.06 * deploy_u)
+
+		# 2. Four articulated hydraulic outrigger stabilizer arms + spade claws
+		var swing_u := smoothstep(0.06, 0.46, progress) if emplacing else (1.0 - smoothstep(0.24, 0.68, progress))
+		var plant_u := smoothstep(0.48, 0.64, progress) if emplacing else (1.0 - smoothstep(0.02, 0.24, progress))
+		var corners := [Vector2(1.0, 1.0), Vector2(1.0, -1.0), Vector2(-1.0, 1.0), Vector2(-1.0, -1.0)]
+		for i in corners.size():
+			var arm := hull_pivot.get_node_or_null("Outrigger_%d" % i) as Node3D
+			if arm == null:
+				continue
+			var c: Vector2 = corners[i]
+			var tucked_yaw := 0.0 if c.x > 0.0 else PI
+			var deploy_yaw := atan2(-c.y * 0.95, c.x * 0.90)
+			arm.rotation.y = lerp_angle(tucked_yaw, deploy_yaw, swing_u)
+			arm.rotation.z = lerpf(1.02, -0.40, plant_u)
+			arm.scale = Vector3(lerpf(0.52, 1.06, swing_u), 1.0, 1.0)
+			var spade := arm.get_node_or_null("Spade") as Node3D
+			if spade:
+				spade.rotation.z = lerpf(-0.65, 0.38, plant_u)
+
+	# 3. Mechanical gear-driven turret slew & gullwing blast shields
+	var turret_pivot := rig.get_node_or_null("TurretPivot") as Node3D
+	if turret_pivot:
+		turret_pivot.position = Vector3(-0.12, 1.24, 0.0).lerp(Vector3(-0.18, 1.08, 0.0), deploy_u) + Vector3(0.0, maxf(-0.05, lift_y), 0.0)
+		var slew_wave := 0.0
+		if emplacing:
+			if progress < 0.34:
+				slew_wave = -0.48 * smoothstep(0.04, 0.34, progress)
+			elif progress < 0.72:
+				slew_wave = lerpf(-0.48, 0.16, smoothstep(0.34, 0.72, progress))
+			else:
+				slew_wave = lerpf(0.16, 0.0, smoothstep(0.72, 0.92, progress))
+		else:
+			slew_wave = 0.36 * sin(smoothstep(0.06, 0.76, progress) * PI)
+		turret_pivot.rotation = Vector3(0.0, slew_wave, hull_pitch * 0.65)
+
+		var mob_tur := turret_pivot.get_node_or_null("MobileTurret") as Node3D
+		var emp_tur := turret_pivot.get_node_or_null("EmplacedTurret") as Node3D
+		if mob_tur:
+			mob_tur.visible = deploy_u < 0.52
+		if emp_tur:
+			emp_tur.visible = deploy_u >= 0.52
+
+		for s_i in 2:
+			var sh_node := turret_pivot.get_node_or_null("BlastShield_%d" % s_i) as Node3D
+			if sh_node:
+				var side := -1.0 if s_i == 0 else 1.0
+				sh_node.visible = deploy_u > 0.08
+				sh_node.rotation.x = side * deg_to_rad(lerpf(0.0, 38.0, deploy_u))
+				sh_node.scale = Vector3.ONE * lerpf(0.45, 1.0, deploy_u)
+
+		# 4. Telescoping & elevating 180mm Siege Cannon + breech lock recoil
+		var gun_pivot := turret_pivot.get_node_or_null("GunPivot") as Node3D
+		if gun_pivot:
+			var elev_u := smoothstep(0.20, 0.78, progress) if emplacing else (1.0 - smoothstep(0.12, 0.68, progress))
+			var lock_kick := 0.0
+			if emplacing and progress >= 0.78:
+				var kt := (progress - 0.78) / 0.22
+				lock_kick = 0.18 * sin(kt * PI)
+			gun_pivot.position = Vector3(0.66, 0.28, 0.0).lerp(Vector3(0.14, 0.36, 0.0), elev_u) - Vector3(lock_kick, 0.0, 0.0)
+			var overshoot := 0.075 * sin(elev_u * PI) if emplacing else 0.0
+			gun_pivot.rotation = Vector3(0.0, 0.0, lerpf(0.0698, 0.4712, elev_u) + overshoot)
+
+			var mob_gun := gun_pivot.get_node_or_null("MobileGun") as Node3D
+			var emp_gun := gun_pivot.get_node_or_null("EmplacedGun") as Node3D
+			if mob_gun:
+				mob_gun.visible = elev_u < 0.78
+				mob_gun.scale = Vector3(lerpf(1.0, 0.65, elev_u), 1.0, 1.0)
+			if emp_gun:
+				emp_gun.visible = elev_u > 0.14
+				var tele := smoothstep(0.14, 0.82, elev_u)
+				emp_gun.position = Vector3(lerpf(-1.15, 0.0, tele), 0.0, 0.0)
+				emp_gun.scale = Vector3(lerpf(0.48, 1.0, tele), lerpf(0.82, 1.0, tele), lerpf(0.82, 1.0, tele))
+
+	# 5. Synchronized hydraulic steam vents & ground anchor slam shockwave FX
+	if not _skip_transient_fx() and _effect_near_view(u.pos) and SimEngine.can_see_unit(_viewing_player, u):
+		var base := u_node.position
+		var heading := Basis(Vector3.UP, u_node.rotation.y)
+		if not bool(state.steam_done) and progress >= 0.06:
+			state.steam_done = true
+			for side_z in [-1.0, 1.0]:
+				var vent_pos := base + heading * Vector3(-0.2, 0.65, side_z * 1.15)
+				_spawn_burst(vent_pos, Color(0.84, 0.90, 0.96, 0.52), 0.34, 0.38, 2.6, heading * Vector3(-0.4, 0.5, side_z * 2.2))
+		var slam_trigger := 0.63 if emplacing else 0.70
+		if not bool(state.slam_done) and progress >= slam_trigger:
+			state.slam_done = true
+			if emplacing:
+				for cx in [-1.0, 1.0]:
+					for cz in [-1.0, 1.0]:
+						var foot := base + heading * Vector3(cx * 1.68, 0.10, cz * 1.62)
+						_spawn_burst(foot, Color(0.68, 0.60, 0.48, 0.68), 0.42, 0.42, 2.8, heading * Vector3(cx * 1.6, 0.65, cz * 1.6))
+				_spawn_burst(base + Vector3(0.0, 0.12, 0.0), Color(1.0, 0.76, 0.28, 0.55), 1.35, 0.24, 2.6, Vector3.UP, true)
+			else:
+				for side_z in [-1.0, 1.0]:
+					var tread := base + heading * Vector3(0.0, 0.10, side_z * 1.05)
+					_spawn_burst(tread, Color(0.64, 0.58, 0.48, 0.58), 0.38, 0.34, 2.4, heading * Vector3(0.0, 0.45, side_z * 1.4))
+
+	return true
 
 func _cache_pick_bounds(unit_type: String, model: Node3D, include_hidden: bool = false) -> void:
 	if _unit_pick_bounds.has(unit_type):
@@ -2320,6 +2494,16 @@ func _render_meridian_capital_ability(unit: Dictionary, ability: String, point: 
 			_spawn_burst(to, Color("#ffbc59"), 1.8, 0.48, 2.6, Vector3.UP, true)
 
 func _on_visual_ability(unit: Dictionary, ability: String, p: Vector2) -> void:
+	if ability in ["emplace", "mobilize", "mobile_mode"]:
+		var emplacing := ability == "emplace"
+		_howitzer_transforms[int(unit.tag)] = {
+			"emplacing": emplacing,
+			"start": anim_time,
+			"duration": 1.32 if emplacing else 1.12,
+			"steam_done": false,
+			"slam_done": false,
+		}
+		return
 	if ability == "vault_drill_beam":
 		if not _skip_transient_fx() and _effect_near_view(p) and SimEngine.can_see_position(_viewing_player, p):
 			var origin := Vector3(unit.pos.x, SimEngine.get_elevation_at(unit.pos) + 2.7, unit.pos.y)

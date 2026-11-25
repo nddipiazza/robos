@@ -120,6 +120,7 @@ const SOUND_FILES: Dictionary = {
 	"power_field_anchor": "res://assets/audio/sfx/power_field_anchor.wav",
 	"power_field_fold": "res://assets/audio/sfx/power_field_fold.wav",
 	"siege_transform": "res://assets/audio/sfx/siege_transform.wav",
+	"siege_mobilize": "res://assets/audio/sfx/siege_mobilize.wav",
 	"silo_gate": "res://assets/audio/sfx/silo_gate.wav",
 	"vital_restore": "res://assets/audio/sfx/vital_restore.wav",
 	"aegis_restore": "res://assets/audio/sfx/aegis_restore.wav",
@@ -284,7 +285,8 @@ const SOUND_VOLUME_OFFSET_DB: Dictionary = {
 	"lattice_burst": -0.5,
 	"power_field_anchor": -1.5,
 	"power_field_fold": -2.0,
-	"siege_transform": -0.5,
+	"siege_transform": 1.0,
+	"siege_mobilize": 1.0,
 	"silo_gate": -1.5,
 	"unit_death_human": -1.0,
 	"unit_death_monster": -1.0,
@@ -1034,6 +1036,8 @@ func _on_ability_triggered(unit: Dictionary, ability_id: String, pos: Vector2) -
 		return
 	var ab_def: Dictionary = RTSData.get_ability_def(ab_id)
 	var sfx_key: String = str(ab_def.get("sfx", ""))
+	if ab_id in ["mobilize", "mobile_mode"]:
+		sfx_key = "siege_mobilize"
 	if sfx_key == "":
 		match ab_id:
 			"agent_snipe_hit":
@@ -1062,8 +1066,10 @@ func _on_ability_triggered(unit: Dictionary, ability_id: String, pos: Vector2) -
 				sfx_key = "acid_splash"
 			"rupture_ready", "ambusher_ready", "seer_ready", "hauler_ready", "siege_flyer_ready":
 				sfx_key = "brood_egg_hatch"
-			"emplace", "mobilize", "mobile_mode":
+			"emplace":
 				sfx_key = "siege_transform"
+			"mobilize", "mobile_mode":
+				sfx_key = "siege_mobilize"
 			"retract_silo", "extend_silo":
 				sfx_key = "silo_gate"
 			"brood_larva_ready", "brood_egg_morph", "brood_egg_hatch", "transit_start", "transit_ready", "transit_mode_ready":

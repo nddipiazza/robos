@@ -1652,3 +1652,132 @@ static func build_resource(res_type: String, seed_val: int, rich: bool = false) 
 
 static func footprint_half(unit_type: String) -> float:
 	return float(RTSData.get_unit_def(unit_type).get("radius", 1.0))
+
+static func _unset_subtree_owner(n: Node) -> void:
+	if n == null:
+		return
+	n.owner = null
+	for c in n.get_children():
+		_unset_subtree_owner(c)
+
+static func build_howitzer_transform_rig(owner_id: int) -> Node3D:
+	var rig := Node3D.new()
+	rig.name = "HowitzerTransformRig"
+
+	var mob := build("howitzer", owner_id)
+	var emp := build("howitzer_emplaced", owner_id)
+	if mob == null or emp == null:
+		return rig
+
+	var mob_turret := mob.get_node_or_null("Turret") as Node3D
+	var mob_gun: Node3D = null
+	if mob_turret:
+		mob_gun = mob_turret.get_node_or_null("Gun") as Node3D
+		if mob_gun:
+			mob_turret.remove_child(mob_gun)
+			_unset_subtree_owner(mob_gun)
+		mob.remove_child(mob_turret)
+		_unset_subtree_owner(mob_turret)
+
+	var emp_turret := emp.get_node_or_null("Turret") as Node3D
+	var emp_gun: Node3D = null
+	if emp_turret:
+		emp_gun = emp_turret.get_node_or_null("Gun") as Node3D
+		if emp_gun:
+			emp_turret.remove_child(emp_gun)
+			_unset_subtree_owner(emp_gun)
+		emp.remove_child(emp_turret)
+		_unset_subtree_owner(emp_turret)
+
+	var dark_steel := mat("hw_xf_dark", STEEL_DARK, Color.BLACK, 1.0, 0.55, 0.45)
+	var chrome := mat("hw_xf_chrome", Color("#dce6f2"), Color.BLACK, 1.0, 0.88, 0.18)
+	var hazard := mat("hw_xf_hazard", Color("#f59e0b"), Color("#d97706"), 0.85, 0.2, 0.4)
+	var team := team_mat(owner_id)
+
+	# Central hydraulic lift jacks beneath the chassis
+	var jack := Node3D.new()
+	jack.name = "LiftJack"
+	rig.add_child(jack)
+	for sz in [-0.46, 0.46]:
+		cyl(jack, 0.11, 0.13, 0.52, chrome, Vector3(-0.08, 0.26, sz), Vector3.ZERO, 10)
+		cyl(jack, 0.16, 0.18, 0.18, dark_steel, Vector3(-0.08, 0.09, sz), Vector3.ZERO, 10)
+
+	# Hull pivot + 4 articulated hydraulic outrigger stabilizer arms
+	var hull_pivot := Node3D.new()
+	hull_pivot.name = "HullPivot"
+	rig.add_child(hull_pivot)
+
+	mob.name = "MobileHull"
+	mob.position = Vector3.ZERO
+	mob.rotation = Vector3.ZERO
+	hull_pivot.add_child(mob)
+
+	emp.name = "EmplacedHull"
+	emp.position = Vector3.ZERO
+	emp.rotation = Vector3.ZERO
+	hull_pivot.add_child(emp)
+
+	var corners := [Vector2(1.0, 1.0), Vector2(1.0, -1.0), Vector2(-1.0, 1.0), Vector2(-1.0, -1.0)]
+	for i in corners.size():
+		var c: Vector2 = corners[i]
+		var arm := Node3D.new()
+		arm.name = "Outrigger_%d" % i
+		arm.position = Vector3(c.x * 0.94, 0.54, c.y * 0.84)
+		hull_pivot.add_child(arm)
+
+		box(arm, Vector3(0.84, 0.22, 0.30), dark_steel, Vector3(0.42, 0.04, 0.0))
+		box(arm, Vector3(0.48, 0.09, 0.32), team, Vector3(0.30, 0.16, 0.0))
+		cyl(arm, 0.058, 0.058, 0.88, chrome, Vector3(0.56, -0.07, 0.0), Vector3(0.0, 0.0, 90.0), 10)
+		box(arm, Vector3(0.22, 0.23, 0.31), hazard, Vector3(0.72, 0.04, 0.0))
+
+		var spade := Node3D.new()
+		spade.name = "Spade"
+		spade.position = Vector3(1.12, -0.08, 0.0)
+		arm.add_child(spade)
+		box(spade, Vector3(0.46, 0.13, 0.44), dark_steel, Vector3(0.06, -0.06, 0.0))
+		box(spade, Vector3(0.18, 0.22, 0.36), chrome, Vector3(0.22, -0.14, 0.0), Vector3(0.0, 0.0, -28.0))
+		sph(spade, 0.075, hazard, Vector3(0.0, 0.06, 0.0))
+
+	# Turret pivot + Gullwing Breech Blast Shields + Telescoping/Elevating Gun
+	var turret_pivot := Node3D.new()
+	turret_pivot.name = "TurretPivot"
+	turret_pivot.position = Vector3(-0.12, 1.24, 0.0)
+	rig.add_child(turret_pivot)
+
+	if mob_turret:
+		mob_turret.name = "MobileTurret"
+		mob_turret.position = Vector3.ZERO
+		mob_turret.rotation = Vector3.ZERO
+		turret_pivot.add_child(mob_turret)
+	if emp_turret:
+		emp_turret.name = "EmplacedTurret"
+		emp_turret.position = Vector3.ZERO
+		emp_turret.rotation = Vector3.ZERO
+		turret_pivot.add_child(emp_turret)
+
+	for s_i in 2:
+		var side := -1.0 if s_i == 0 else 1.0
+		var shield := Node3D.new()
+		shield.name = "BlastShield_%d" % s_i
+		shield.position = Vector3(-0.16, 0.28, side * 0.68)
+		turret_pivot.add_child(shield)
+		box(shield, Vector3(0.92, 0.44, 0.10), team, Vector3(0.0, 0.14, side * 0.08))
+		box(shield, Vector3(0.96, 0.12, 0.12), hazard, Vector3(0.0, 0.36, side * 0.08))
+
+	var gun_pivot := Node3D.new()
+	gun_pivot.name = "GunPivot"
+	gun_pivot.position = Vector3(0.66, 0.28, 0.0)
+	turret_pivot.add_child(gun_pivot)
+
+	if mob_gun:
+		mob_gun.name = "MobileGun"
+		mob_gun.position = Vector3.ZERO
+		mob_gun.rotation = Vector3.ZERO
+		gun_pivot.add_child(mob_gun)
+	if emp_gun:
+		emp_gun.name = "EmplacedGun"
+		emp_gun.position = Vector3.ZERO
+		emp_gun.rotation = Vector3.ZERO
+		gun_pivot.add_child(emp_gun)
+
+	return rig
