@@ -19,6 +19,20 @@ contextBridge.exposeInMainWorld('robos', {
     ipcRenderer.on('vpn-failover', listener);
     return () => ipcRenderer.removeListener('vpn-failover', listener);
   },
+  getGuardState: () => ipcRenderer.invoke('get-guard-state'),
+  addGuardedApp: input => ipcRenderer.invoke('add-guarded-app', input),
+  removeGuardedApp: idOrExecutable => ipcRenderer.invoke('remove-guarded-app', idOrExecutable),
+  setGuardedAppEnabled: (idOrExecutable, enabled) =>
+    ipcRenderer.invoke('set-guarded-app-enabled', idOrExecutable, enabled),
+  setAppVpnOnly: payload => ipcRenderer.invoke('set-app-vpn-only', payload),
+  enforceGuardNow: () => ipcRenderer.invoke('enforce-guard-now'),
+  clearGuardEvents: () => ipcRenderer.invoke('clear-guard-events'),
+  proveVpnOnlyGuard: () => ipcRenderer.invoke('prove-vpn-only-guard'),
+  onGuardEvent: callback => {
+    const listener = (_, event) => callback(event);
+    ipcRenderer.on('vpn-guard-event', listener);
+    return () => ipcRenderer.removeListener('vpn-guard-event', listener);
+  },
   listSessions: () => ipcRenderer.invoke('list-sessions'),
   stopSession: sessionId => ipcRenderer.invoke('stop-session', sessionId),
   deleteSession: sessionId => ipcRenderer.invoke('delete-session', sessionId),

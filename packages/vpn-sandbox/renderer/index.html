@@ -11,7 +11,7 @@
     <header class="header">
       <div>
         <h1 class="title">VPN App Launcher</h1>
-        <p class="subtitle">Launch any app so its internet traffic only goes through your VPN.</p>
+        <p class="subtitle">Launch apps exclusively through your VPN — and lock sensitive apps so they can never run outside the sandbox.</p>
       </div>
       <div class="header-right">
         <div class="ip-box" style="display:flex;align-items:center;gap:8px;">
@@ -44,9 +44,10 @@
           <select id="select-server" class="select"></select>
           <div id="next-server-hint" class="next-server-hint"></div>
         </div>
-        <div class="field-action" style="display:flex;gap:8px;">
+        <div class="field-action" style="display:flex;gap:8px;flex-wrap:wrap;">
           <button type="button" class="btn" id="btn-check-vpn">Test VPN Connection</button>
           <button type="button" class="btn" id="btn-prove-killswitch" title="Launch isolated namespace, verify VPN IP, force-kill OpenVPN mid-flight, and prove 0 packets leak to your normal IP">Prove Kill-Switch</button>
+          <button type="button" class="btn" id="btn-prove-guard" title="Prove that a VPN-Only app cannot launch from its base state AND any outside-sandbox instance is immediately killed (SIGKILL) while sandboxed instances stay running">Prove VPN-Only Guard</button>
         </div>
       </section>
 
@@ -71,7 +72,7 @@
           <div class="field">
             <label for="input-executable">Or Enter Executable Command</label>
             <div class="input-row">
-              <input type="text" id="input-executable" class="input" placeholder="e.g. transmission-gtk, firefox" />
+              <input type="text" id="input-executable" class="input" placeholder="e.g. qbittorrent, transmission-gtk, firefox" />
               <button type="button" class="btn" id="btn-browse">Browse…</button>
             </div>
           </div>
@@ -83,8 +84,15 @@
             </div>
             <div class="field">
               <label for="input-profile-name">Save Name (optional)</label>
-              <input type="text" id="input-profile-name" class="input" placeholder="e.g. Transmission" />
+              <input type="text" id="input-profile-name" class="input" placeholder="e.g. qBittorrent" />
             </div>
+          </div>
+
+          <div class="field" style="margin-bottom:8px;">
+            <label class="inline-check" title="Prevent this app from launching outside the VPN Sandbox and immediately kill any instance found running on your normal host network">
+              <input type="checkbox" id="input-vpn-only" />
+              <span>Lock as VPN-Only (block base launch &amp; kill if started outside VPN)</span>
+            </label>
           </div>
 
           <div class="actions-row">
@@ -93,17 +101,54 @@
           </div>
         </section>
 
-        <!-- Right Column: Running Apps & VPN Traffic Status -->
-        <section class="card">
-          <div class="card-header">
-            <h2 class="card-title">Running VPN Apps</h2>
-            <div style="display:flex;gap:8px;align-items:center;">
-              <span class="count-pill" id="running-count">0 running</span>
-              <button type="button" class="btn hidden" id="btn-clear-stopped">Clear Stopped</button>
+        <!-- Right Column: Running Apps + VPN-Only App Guard -->
+        <div class="right-stack">
+          <section class="card">
+            <div class="card-header">
+              <h2 class="card-title">Running VPN Apps</h2>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <span class="count-pill" id="running-count">0 running</span>
+                <button type="button" class="btn hidden" id="btn-clear-stopped">Clear Stopped</button>
+              </div>
             </div>
-          </div>
-          <div id="sessions-list" class="list"></div>
-        </section>
+            <div id="sessions-list" class="list"></div>
+          </section>
+
+          <section class="card guard-card" id="vpn-only-guard-section">
+            <div class="card-header">
+              <div>
+                <h2 class="card-title" style="margin-bottom:2px;">VPN-Only App Guard (Kill Outside Sandbox)</h2>
+                <p class="guard-desc">Make apps like <code>qbittorrent</code> unlaunchable from their base state and immediately kill (<code>SIGKILL</code>) any instance found running outside a <code>robos_vpn_*</code> namespace.</p>
+              </div>
+              <div style="display:flex;gap:8px;align-items:center;flex-shrink:0;">
+                <span class="count-pill" id="guard-status-pill">0 locked</span>
+                <button type="button" class="btn btn-sm" id="btn-scan-guard-now" title="Immediately scan /proc and terminate any guarded app running outside the VPN sandbox">Scan &amp; Kill Now</button>
+              </div>
+            </div>
+
+            <div class="guard-add-bar">
+              <input type="text" id="input-guard-exec" class="input" placeholder="Executable to lock (e.g. qbittorrent, transmission-gtk, deluge)" />
+              <label class="inline-check guard-base-check" title="Also replace the base binary/launcher with a kernel-netns gate so the app refuses to start outside the VPN sandbox before a single packet can be sent">
+                <input type="checkbox" id="input-guard-block-base" checked />
+                <span>Block Base Launch</span>
+              </label>
+              <button type="button" class="btn btn-primary" id="btn-add-guarded-app">Lock VPN-Only</button>
+            </div>
+
+            <div id="guard-quick-suggestions" class="guard-suggestions hidden"></div>
+
+            <div id="guarded-apps-list" class="list" style="margin-top:10px;"></div>
+
+            <div id="guard-events-wrap" class="guard-events-wrap hidden">
+              <div class="divider"></div>
+              <div class="card-header" style="margin-bottom:8px;">
+                <div class="sub-label" style="margin-bottom:0;">Blocked &amp; Killed Outside-Sandbox Log</div>
+                <button type="button" class="btn btn-sm" id="btn-clear-guard-events">Clear Log</button>
+              </div>
+              <div id="guard-events-list" class="guard-events-list"></div>
+            </div>
+          </section>
+        </div>
       </div>
     </main>
   </div>

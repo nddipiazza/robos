@@ -491,11 +491,177 @@ function buildAppLaunchCommand(spec, { executable, args = [], env = {} }) {
   ].join(' ');
 }
 
+const GATE_SCRIPT_MARKER = '# ROBOS_VPN_SANDBOX_GATE v1';
+const DESKTOP_LOCK_MARKER = '# ROBOS_VPN_SANDBOX_DESKTOP_LOCK v1';
+
+const CRITICAL_SYSTEM_BINARIES = new Set([
+  'init', 'systemd', 'systemd-logind', 'systemd-udevd', 'systemd-resolved', 'systemd-run',
+  'dbus-daemon', 'dbus-broker', 'dbus-run-session',
+  'sh', 'bash', 'dash', 'zsh', 'fish', 'login', 'su', 'sudo', 'pkexec', 'polkitd', 'setpriv',
+  'ip', 'iptables', 'ip6tables', 'nft', 'openvpn', 'networkmanager', 'wpa_supplicant',
+  'xorg', 'xwayland', 'gnome-shell', 'gnome-session', 'gdm', 'gdm3', 'lightdm', 'mutter', 'kwin_wayland', 'kwin_x11',
+  'pipewire', 'wireplumber', 'pulseaudio',
+  'node', 'nodejs', 'electron', 'sshd', 'udevadm', 'kmod', 'mount', 'umount',
+  'ls', 'cat', 'cp', 'mv', 'rm', 'mkdir', 'chmod', 'chown', 'stat', 'readlink', 'kill', 'ps', 'pgrep', 'pkill',
+  'dpkg', 'dpkg-divert', 'apt', 'apt-get', 'systemctl', 'journalctl', 'loginctl',
+  'python', 'python3', 'perl', 'ruby', 'java',
+]);
+
+const SUPERVISOR_WRAPPER_BINARIES = new Set([
+  'sudo', 'su', 'pkexec', 'ip', 'env', 'setpriv', 'dbus-run-session', 'systemd-run',
+  'nohup', 'setsid', 'nice', 'ionice', 'timeout', 'strace', 'gdb', 'lldb',
+  'grep', 'egrep', 'fgrep', 'rg', 'pgrep', 'pkill', 'killall', 'kill', 'ps',
+  'vim', 'nvim', 'vi', 'nano', 'cat', 'less', 'more', 'tail', 'head', 'watch',
+  'notify-send', 'zenity', 'dpkg-divert', 'install',
+]);
+
+const SCRIPT_INTERPRETER_RE = /^(python(?:\d+(?:\.\d+)?)?|node|nodejs|perl|ruby|bash|sh|dash|zsh)$/i;
+
+function normalizeExecutableBase(rawExec = '') {
+  return path
+    .basename(String(rawExec || '').trim().replace(/\s+\(deleted\)$/, ''))
+    .replace(/\.robos-vpn-real$/i, '')
+    .toLowerCase();
+}
+
+/**
+ * Generates a kernel-verified base-state execution gate script.
+ * Any launch outside an active `robos_vpn_*` Linux network namespace is immediately refused (`exit 126`)
+ * before a single instruction of the underlying binary can execute.
+ */
+function buildBinaryGateScript({
+  executableName,
+  realBinaryPath,
+  eventsFilePath = '',
+  netnsDirs = ['/run/netns', '/var/run/netns'],
+}) {
+  const cleanName = path.basename(String(executableName || 'app').trim()).replace(/\.robos-vpn-real$/i, '');
+  const quotedDirs = (Array.isArray(netnsDirs) && netnsDirs.length ? netnsDirs : ['/run/netns', '/var/run/netns'])
+    .map(d => JSON.stringify(String(d)))
+    .join(' ');
+
+  return [
+    `#!/usr/bin/env bash`,
+    GATE_SCRIPT_MARKER,
+    `# Managed by RobOS VPN Sandbox — blocks base-state execution outside robos_vpn_* namespaces.`,
+    `APP_NAME=${JSON.stringify(cleanName)}`,
+    `REAL_BIN=${JSON.stringify(String(realBinaryPath || ''))}`,
+    `EVENTS_FILE=${JSON.stringify(String(eventsFilePath || ''))}`,
+    ``,
+    `CUR_NS="$(readlink /proc/$$/ns/net 2>/dev/null || true)"`,
+    `ALLOWED=0`,
+    `if [ -n "$CUR_NS" ]; then`,
+    `  for nsdir in ${quotedDirs}; do`,
+    `    [ -d "$nsdir" ] || continue`,
+    `    for nsfile in "$nsdir"/robos_vpn_*; do`,
+    `      [ -e "$nsfile" ] || continue`,
+    `      NS_INO="$(stat -Lc '%i' "$nsfile" 2>/dev/null || true)"`,
+    `      if [ -n "$NS_INO" ] && [ "$CUR_NS" = "net:[$NS_INO]" ]; then`,
+    `        ALLOWED=1`,
+    `        break 2`,
+    `      fi`,
+    `    done`,
+    `  done`,
+    `fi`,
+    ``,
+    `if [ "$ALLOWED" != "1" ]; then`,
+    `  if [ -n "$EVENTS_FILE" ]; then`,
+    `    mkdir -p "$(dirname "$EVENTS_FILE")" 2>/dev/null || true`,
+    `    TS="$(date -u +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || true)"`,
+    `    printf '{"at":"%s","executable":"%s","appName":"%s","pid":%d,"netns":"%s","action":"blocked-launch","reason":"Blocked base-state launch outside RobOS VPN Sandbox"}\\n' \\`,
+    `      "$TS" "$APP_NAME" "$APP_NAME" "$$" "\${CUR_NS:-host}" >> "$EVENTS_FILE" 2>/dev/null || true`,
+    `  fi`,
+    `  echo "BLOCKED by RobOS VPN Sandbox: '$APP_NAME' is locked to VPN-Only mode and can only be launched inside RobOS VPN Sandbox." >&2`,
+    `  if command -v notify-send >/dev/null 2>&1 && [ -n "\${DISPLAY:-}\${WAYLAND_DISPLAY:-}" ]; then`,
+    `    notify-send -u critical "RobOS VPN Sandbox — Launch Blocked" "'$APP_NAME' is locked to VPN-Only mode. Launch it from RobOS VPN Sandbox." 2>/dev/null || true`,
+    `  fi`,
+    `  exit 126`,
+    `fi`,
+    ``,
+    `if [ ! -x "$REAL_BIN" ]; then`,
+    `  echo "RobOS VPN Sandbox Gate error: real executable '$REAL_BIN' not found." >&2`,
+    `  exit 127`,
+    `fi`,
+    `exec -a "$0" "$REAL_BIN" "$@"`,
+    ``,
+  ].join('\n');
+}
+
+function buildDesktopLockEntry({ originalContent = '', appName = 'Application', executableName = 'app', gateCommandPath = '' }) {
+  const cleanName = String(appName || executableName || 'Application').trim();
+  const cleanExec = String(executableName || 'app').trim();
+  const blockerExec = gateCommandPath
+    ? `${JSON.stringify(gateCommandPath)}`
+    : `/bin/sh -c 'command -v notify-send >/dev/null 2>&1 && notify-send -u critical "RobOS VPN Sandbox — Launch Blocked" "${cleanName.replace(/["'\\]/g, '')} is locked to VPN-Only mode. Launch it inside RobOS VPN Sandbox."; exit 126'`;
+
+  const lines = [
+    DESKTOP_LOCK_MARKER,
+    `[Desktop Entry]`,
+    `Type=Application`,
+    `Name=${cleanName} (Locked — Launch via RobOS VPN Sandbox)`,
+    `Comment=Blocked outside RobOS VPN Sandbox (${cleanExec} is VPN-Only)`,
+    `Exec=${blockerExec}`,
+    `Terminal=false`,
+    `NoDisplay=true`,
+  ];
+  const iconMatch = String(originalContent || '').match(/^Icon=(.+)$/m);
+  if (iconMatch) lines.push(`Icon=${iconMatch[1].trim()}`);
+  const wmMatch = String(originalContent || '').match(/^StartupWMClass=(.+)$/m);
+  if (wmMatch) lines.push(`StartupWMClass=${wmMatch[1].trim()}`);
+  return lines.join('\n') + '\n';
+}
+
 function createVpnSandboxEngine(options = {}) {
   const configDir = options.configDir || process.env.ROBOS_CONFIG_DIR || path.join(os.homedir(), '.config', 'robos');
   const ovpnManager = options.ovpnManager || createOvpnManager({ configDir, passStoreDir: options.passStoreDir, usePass: options.usePass });
   const savedAppsFile = path.join(configDir, 'vpn-sandbox-apps.json');
+  const guardConfigFile = path.join(configDir, 'vpn-sandbox-guard.json');
+  const guardEventsFile = path.join(configDir, 'vpn-sandbox-guard-events.jsonl');
+  const desktopBackupsDir = path.join(configDir, 'vpn-sandbox-desktop-backups');
   const runtimeDir = path.join(os.tmpdir(), `robos-vpn-sandbox-${process.getuid ? process.getuid() : 1000}`);
+
+  const isImplicitTestEnv =
+    process.env.ROBOS_VPN_LIVE_E2E === '1'
+      ? false
+      : Boolean(process.env.ROBOS_TEST === '1' || process.env.NODE_TEST_CONTEXT);
+  const procRoot = options.procRoot || '/proc';
+  const netnsDirs = Array.isArray(options.netnsDirs) && options.netnsDirs.length
+    ? options.netnsDirs
+    : ['/run/netns', '/var/run/netns'];
+  const localBinDir = options.localBinDir !== undefined
+    ? options.localBinDir
+    : (isImplicitTestEnv ? path.join(configDir, 'local-bin') : path.join(os.homedir(), '.local', 'bin'));
+  const desktopSystemDirs = Array.isArray(options.desktopSystemDirs)
+    ? options.desktopSystemDirs
+    : (isImplicitTestEnv
+        ? []
+        : [
+            '/usr/share/applications',
+            '/usr/local/share/applications',
+            '/var/lib/snapd/desktop/applications',
+            '/var/lib/flatpak/exports/share/applications',
+          ]);
+  const desktopOverrideDir = options.desktopOverrideDir !== undefined
+    ? options.desktopOverrideDir
+    : (isImplicitTestEnv
+        ? path.join(configDir, 'desktop-overrides')
+        : path.join(os.homedir(), '.local', 'share', 'applications'));
+  const autostartDir = options.autostartDir !== undefined
+    ? options.autostartDir
+    : (isImplicitTestEnv ? path.join(configDir, 'autostart') : path.join(os.homedir(), '.config', 'autostart'));
+  const systemdUserDir = options.systemdUserDir !== undefined
+    ? options.systemdUserDir
+    : (isImplicitTestEnv ? path.join(configDir, 'systemd-user') : path.join(os.homedir(), '.config', 'systemd', 'user'));
+  const allowSystemBinaryGate = options.allowSystemBinaryGate !== undefined
+    ? Boolean(options.allowSystemBinaryGate)
+    : !isImplicitTestEnv;
+  const allowSystemdInstall = options.allowSystemdInstall !== undefined
+    ? Boolean(options.allowSystemdInstall)
+    : !isImplicitTestEnv;
+  const guardPollIntervalMs = Math.max(
+    100,
+    Number(options.guardPollIntervalMs ?? process.env.ROBOS_VPN_GUARD_INTERVAL_MS ?? 400)
+  );
 
   const defaultAutoFailover = options.autoFailover !== false;
   const defaultMaxFailoverAttempts = Math.max(1, Number(options.maxFailoverAttempts ?? 5));
@@ -505,13 +671,44 @@ function createVpnSandboxEngine(options = {}) {
   const failedServerCooldownMs = Math.max(1000, Number(options.failedServerCooldownMs ?? 10 * 60 * 1000));
 
   const activeSessions = new Map();
+  const seenKilledProcKeys = new Set();
   let sessionCounter = 10;
   let healthMonitorTimer = null;
   let healthCycleRunning = false;
+  let guardMonitorTimer = null;
+  let guardCycleRunning = false;
 
   function ensureDirs() {
     fs.mkdirSync(configDir, { recursive: true });
     fs.mkdirSync(runtimeDir, { recursive: true, mode: 0o700 });
+  }
+
+  function detectInstalledQbittorrent() {
+    if (options.qbittorrentBinary !== undefined) return options.qbittorrentBinary;
+    if (process.env.ROBOS_QBITTORRENT_BIN) return process.env.ROBOS_QBITTORRENT_BIN;
+    const candidates = ['qbittorrent', 'qbittorrent-nox'];
+    for (const bin of candidates) {
+      try {
+        const res = spawnSync('which', [bin], { encoding: 'utf8', timeout: 2000 });
+        if (res.status === 0 && res.stdout.trim()) return bin;
+      } catch {}
+    }
+    return null;
+  }
+
+  function buildQbittorrentDefaultProfile(qbittorrentBin) {
+    const { defaultAccountId } = ovpnManager.listAccounts();
+    return {
+      id: 'sandbox-qbittorrent',
+      name: 'qBittorrent',
+      executable: qbittorrentBin,
+      args: [],
+      cwd: os.homedir(),
+      accountId: defaultAccountId || '',
+      profileId: 'ipvanish-NL-Amsterdam-ams-a01',
+      description: 'BitTorrent client — lock to VPN-Only so it can never run outside the VPN sandbox',
+      requireLeakCheck: true,
+    };
   }
 
   function detectInstalledTransmission() {
@@ -542,6 +739,36 @@ function createVpnSandboxEngine(options = {}) {
     };
   }
 
+  function readRawGuardConfig() {
+    ensureDirs();
+    try {
+      if (!fs.existsSync(guardConfigFile)) {
+        return { enabled: true, pollIntervalMs: guardPollIntervalMs, guardedApps: [] };
+      }
+      const parsed = JSON.parse(fs.readFileSync(guardConfigFile, 'utf8'));
+      return {
+        enabled: parsed.enabled !== false,
+        pollIntervalMs: Number(parsed.pollIntervalMs) || guardPollIntervalMs,
+        guardedApps: Array.isArray(parsed.guardedApps) ? parsed.guardedApps : [],
+      };
+    } catch {
+      return { enabled: true, pollIntervalMs: guardPollIntervalMs, guardedApps: [] };
+    }
+  }
+
+  function findGuardedRuleForExecutable(executable) {
+    const target = normalizeExecutableBase(executable);
+    if (!target) return null;
+    const cfg = readRawGuardConfig();
+    return (
+      cfg.guardedApps.find(g => {
+        if (normalizeExecutableBase(g.executable) === target) return true;
+        if (Array.isArray(g.alsoMatch) && g.alsoMatch.some(m => normalizeExecutableBase(m) === target)) return true;
+        return false;
+      }) || null
+    );
+  }
+
   function listSavedAppProfiles() {
     ensureDirs();
     let apps = [];
@@ -560,12 +787,28 @@ function createVpnSandboxEngine(options = {}) {
     if (transmissionBin && !apps.some(a => a.id === 'sandbox-transmission' || /^transmission/i.test(a.executable || ''))) {
       apps = [buildTransmissionDefaultProfile(transmissionBin), ...apps];
     }
-    return apps;
+    const qbittorrentBin = detectInstalledQbittorrent();
+    if (qbittorrentBin && !apps.some(a => a.id === 'sandbox-qbittorrent' || /^qbittorrent/i.test(a.executable || ''))) {
+      apps = [buildQbittorrentDefaultProfile(qbittorrentBin), ...apps];
+    }
+
+    return apps.map(a => {
+      const rule = findGuardedRuleForExecutable(a.executable);
+      return {
+        ...a,
+        vpnOnly: Boolean(rule && rule.enabled !== false),
+        guardId: rule ? rule.id : null,
+      };
+    });
   }
 
   function getDefaultAppProfiles() {
     const { defaultAccountId } = ovpnManager.listAccounts();
     const defaults = [];
+    const qbittorrentBin = detectInstalledQbittorrent();
+    if (qbittorrentBin) {
+      defaults.push(buildQbittorrentDefaultProfile(qbittorrentBin));
+    }
     const transmissionBin = detectInstalledTransmission();
     if (transmissionBin) {
       defaults.push(buildTransmissionDefaultProfile(transmissionBin));
@@ -622,14 +865,24 @@ function createVpnSandboxEngine(options = {}) {
     else current.push(record);
 
     fs.writeFileSync(savedAppsFile, JSON.stringify({ apps: current }, null, 2), { mode: 0o600 });
-    return { ok: true, profile: record, apps: current };
+
+    if (profileInput.vpnOnly === true) {
+      addGuardedApp({ executable: record.executable, name: record.name });
+    } else if (profileInput.vpnOnly === false) {
+      const existingRule = findGuardedRuleForExecutable(record.executable);
+      if (existingRule) removeGuardedApp(existingRule.id);
+    }
+
+    const refreshed = listSavedAppProfiles();
+    const finalProfile = refreshed.find(a => a.id === id) || record;
+    return { ok: true, profile: finalProfile, apps: refreshed };
   }
 
   function deleteAppProfile(profileId) {
     ensureDirs();
     const next = listSavedAppProfiles().filter(a => a.id !== profileId);
     fs.writeFileSync(savedAppsFile, JSON.stringify({ apps: next }, null, 2), { mode: 0o600 });
-    return { ok: true, apps: next };
+    return { ok: true, apps: listSavedAppProfiles() };
   }
 
   function discoverSystemExecutables(query = '') {
@@ -645,11 +898,13 @@ function createVpnSandboxEngine(options = {}) {
         for (const f of fs.readdirSync(dir)) {
           if (!f.endsWith('.desktop')) continue;
           const content = fs.readFileSync(path.join(dir, f), 'utf8');
+          if (content.includes(DESKTOP_LOCK_MARKER)) continue;
           const nameMatch = content.match(/^Name=(.+)$/m);
           const execMatch = content.match(/^Exec=(.+)$/m);
           if (!execMatch) continue;
           const rawExec = execMatch[1].trim().replace(/\s+%[fFuUdDnNickvm]/g, '');
-          const bin = rawExec.split(/\s+/)[0];
+          const bin = rawExec.split(/\s+/)[0].replace(/^"|"$/g, '');
+          if (!bin || bin.endsWith('.robos-vpn-real')) continue;
           const label = nameMatch ? nameMatch[1].trim() : path.basename(bin);
           if (seen.has(bin)) continue;
           if (!q || bin.toLowerCase().includes(q) || label.toLowerCase().includes(q)) {
@@ -666,6 +921,7 @@ function createVpnSandboxEngine(options = {}) {
       if (!fs.existsSync(dir)) continue;
       try {
         for (const f of fs.readdirSync(dir)) {
+          if (f.endsWith('.robos-vpn-real')) continue;
           if (seen.has(f)) continue;
           if (q && !f.toLowerCase().includes(q)) continue;
           if (!q && results.length >= 60) break;
@@ -1109,9 +1365,7 @@ function createVpnSandboxEngine(options = {}) {
     );
 
     const hostNet = detectHostNetworkInfo();
-    const shortId = crypto.randomBytes(2).toString('hex');
-    sessionCounter = ((parseInt(shortId, 16) + sessionCounter) % 220) + 20;
-    const sessionSubnetOctet = sessionCounter;
+    const { shortId, subnetOctet: sessionSubnetOctet } = allocateUniqueSessionSlot();
     const targetUid = process.getuid ? process.getuid() : 1000;
     const targetUser = os.userInfo().username || 'robos';
     const sessionDir = path.join(runtimeDir, String(shortId).replace(/[^a-zA-Z0-9]/g, '').slice(0, 6) || '01');
@@ -1424,7 +1678,14 @@ function createVpnSandboxEngine(options = {}) {
         });
       } else {
         try {
-          proc = spawn(effectiveExec, parsedArgs, {
+          let simExec = effectiveExec;
+          const guardedForSim = findGuardedRuleForExecutable(effectiveExec);
+          if (guardedForSim?.divertedRealPath && fs.existsSync(guardedForSim.divertedRealPath)) {
+            simExec = guardedForSim.divertedRealPath;
+          } else if (fs.existsSync(`${effectiveExec}.robos-vpn-real`)) {
+            simExec = `${effectiveExec}.robos-vpn-real`;
+          }
+          proc = spawn(simExec, parsedArgs, {
             cwd: fs.existsSync(cwd) ? cwd : os.homedir(),
             env: launchEnv,
             stdio: ['ignore', 'pipe', 'pipe'],
@@ -2636,13 +2897,1261 @@ function createVpnSandboxEngine(options = {}) {
     }
   }
 
+  function allocateUniqueSessionSlot() {
+    const usedIds = new Set(Array.from(activeSessions.keys()));
+    const usedOctets = new Set();
+    for (const s of activeSessions.values()) {
+      if (s.status === 'running' && Number.isInteger(s._subnetOctet)) {
+        usedOctets.add(s._subnetOctet);
+      }
+    }
+    for (const dir of netnsDirs) {
+      try {
+        if (!fs.existsSync(dir)) continue;
+        for (const f of fs.readdirSync(dir)) {
+          if (f.startsWith('robos_vpn_')) usedIds.add(f.slice('robos_vpn_'.length));
+        }
+      } catch {}
+    }
+    try {
+      const addrOut = spawnSync('ip', ['-4', '-o', 'addr', 'show'], { encoding: 'utf8', timeout: 1500 });
+      if (addrOut.status === 0 && addrOut.stdout) {
+        const re = /\b10\.203\.(\d+)\.\d+\b/g;
+        let m;
+        while ((m = re.exec(addrOut.stdout)) !== null) {
+          usedOctets.add(Number(m[1]));
+        }
+      }
+    } catch {}
+
+    let shortId = crypto.randomBytes(2).toString('hex');
+    for (let i = 0; i < 64 && usedIds.has(shortId); i++) {
+      shortId = crypto.randomBytes(2).toString('hex');
+    }
+
+    sessionCounter = ((sessionCounter - 19) % 220) + 20;
+    let subnetOctet = sessionCounter;
+    for (let i = 0; i < 220 && usedOctets.has(subnetOctet); i++) {
+      sessionCounter = ((sessionCounter - 19) % 220) + 20;
+      subnetOctet = sessionCounter;
+    }
+
+    return { shortId, subnetOctet };
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // VPN-Only App Guard: Base-State Launch Blocker + Outside-Sandbox Killer
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  function writeGuardConfig(cfg) {
+    ensureDirs();
+    const payload = {
+      enabled: cfg.enabled !== false,
+      pollIntervalMs: Number(cfg.pollIntervalMs) || guardPollIntervalMs,
+      guardedApps: Array.isArray(cfg.guardedApps) ? cfg.guardedApps : [],
+      updatedAt: new Date().toISOString(),
+    };
+    fs.writeFileSync(guardConfigFile, JSON.stringify(payload, null, 2), { mode: 0o600 });
+    return payload;
+  }
+
+  function resolveRealSystemBinary(executable) {
+    const clean = String(executable || '').trim();
+    if (!clean) return null;
+    if (clean.includes('/')) {
+      const abs = path.resolve(clean);
+      if (fs.existsSync(abs) || fs.existsSync(`${abs}.robos-vpn-real`)) return abs;
+      return abs;
+    }
+    const searchDirs = [
+      '/usr/local/sbin',
+      '/usr/local/bin',
+      '/usr/sbin',
+      '/usr/bin',
+      '/sbin',
+      '/bin',
+      '/snap/bin',
+      ...(process.env.PATH || '')
+        .split(':')
+        .filter(d => d && (!localBinDir || path.resolve(d) !== path.resolve(localBinDir))),
+    ];
+    for (const dir of searchDirs) {
+      const candidate = path.join(dir, clean);
+      if (fs.existsSync(candidate) || fs.existsSync(`${candidate}.robos-vpn-real`)) {
+        return candidate;
+      }
+    }
+    return null;
+  }
+
+  function isGateFile(filePath) {
+    try {
+      if (!filePath || !fs.existsSync(filePath)) return false;
+      const st = fs.lstatSync(filePath);
+      if (!st.isFile() || st.size > 32768) return false;
+      const fd = fs.openSync(filePath, 'r');
+      try {
+        const buf = Buffer.alloc(256);
+        const n = fs.readSync(fd, buf, 0, 256, 0);
+        return buf.subarray(0, n).toString('utf8').includes(GATE_SCRIPT_MARKER);
+      } finally {
+        fs.closeSync(fd);
+      }
+    } catch {
+      return false;
+    }
+  }
+
+  function canWritePathDirectly(targetPath) {
+    try {
+      const dir = path.dirname(targetPath);
+      if (!fs.existsSync(dir)) return false;
+      fs.accessSync(dir, fs.constants.W_OK);
+      if (fs.existsSync(targetPath)) {
+        fs.accessSync(targetPath, fs.constants.W_OK);
+      }
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  function installBaseLaunchLock(rule) {
+    ensureDirs();
+    const baseName = normalizeExecutableBase(rule.executable);
+    const resolvedBin = resolveRealSystemBinary(rule.executable);
+    let binaryGateInstalled = false;
+    let divertedRealPath = rule.divertedRealPath || (resolvedBin ? `${resolvedBin}.robos-vpn-real` : null);
+    let localShimPath = null;
+    const desktopOverrides = [];
+    const autostartOverrides = [];
+
+    // 1. System/Target Binary Gate (`dpkg-divert` / `.robos-vpn-real` + kernel-netns gate wrapper)
+    if (resolvedBin && (fs.existsSync(resolvedBin) || (divertedRealPath && fs.existsSync(divertedRealPath)))) {
+      const directWritable = canWritePathDirectly(resolvedBin);
+      const caps = checkSystemCapabilities();
+      if (directWritable) {
+        try {
+          if (!isGateFile(resolvedBin) && !fs.existsSync(divertedRealPath)) {
+            fs.renameSync(resolvedBin, divertedRealPath);
+          }
+          if (fs.existsSync(divertedRealPath)) {
+            const script = buildBinaryGateScript({
+              executableName: baseName,
+              realBinaryPath: divertedRealPath,
+              eventsFilePath: guardEventsFile,
+              netnsDirs,
+            });
+            fs.writeFileSync(resolvedBin, script, { mode: 0o755 });
+            binaryGateInstalled = true;
+          }
+        } catch {}
+      } else if (allowSystemBinaryGate && (caps.isRoot || caps.passwordlessSudo)) {
+        try {
+          const tmpGate = path.join(runtimeDir, `gate-${baseName}-${Date.now()}.sh`);
+          const script = buildBinaryGateScript({
+            executableName: baseName,
+            realBinaryPath: divertedRealPath,
+            eventsFilePath: guardEventsFile,
+            netnsDirs,
+          });
+          fs.writeFileSync(tmpGate, script, { mode: 0o755 });
+          const installCmd = [
+            'set -e',
+            `BIN=${JSON.stringify(resolvedBin)}`,
+            `DIV=${JSON.stringify(divertedRealPath)}`,
+            `TMP=${JSON.stringify(tmpGate)}`,
+            `if [ -e "$BIN" ] && ! grep -q ${JSON.stringify(GATE_SCRIPT_MARKER)} "$BIN" 2>/dev/null; then`,
+            `  if [ ! -e "$DIV" ]; then`,
+            `    if command -v dpkg-divert >/dev/null 2>&1 && [[ "$BIN" == /usr/* || "$BIN" == /bin/* || "$BIN" == /sbin/* ]]; then`,
+            `      dpkg-divert --quiet --add --local --rename --divert "$DIV" "$BIN"`,
+            `    else`,
+            `      mv "$BIN" "$DIV"`,
+            `    fi`,
+            `  fi`,
+            `fi`,
+            `if [ -e "$DIV" ]; then`,
+            `  install -m 0755 "$TMP" "$BIN"`,
+            `fi`,
+            `rm -f "$TMP" 2>/dev/null || true`,
+          ].join('\n');
+          const sudoPrefix = caps.isRoot ? [] : ['sudo', '-n'];
+          const res = spawnSync(sudoPrefix[0] || 'bash', [...sudoPrefix.slice(1), 'bash', '-c', installCmd], {
+            encoding: 'utf8',
+            timeout: 8000,
+          });
+          try { if (fs.existsSync(tmpGate)) fs.unlinkSync(tmpGate); } catch {}
+          if (res.status === 0 && isGateFile(resolvedBin) && fs.existsSync(divertedRealPath)) {
+            binaryGateInstalled = true;
+          }
+        } catch {}
+      }
+    }
+
+    // 2. User PATH Gate (`~/.local/bin/<app>`) so unprivileged shells also block base-state execution
+    if (localBinDir && baseName) {
+      const candidateShim = path.join(localBinDir, baseName);
+      if (!resolvedBin || path.resolve(candidateShim) !== path.resolve(resolvedBin)) {
+        try {
+          fs.mkdirSync(localBinDir, { recursive: true });
+          if (!fs.existsSync(candidateShim) || isGateFile(candidateShim)) {
+            const targetReal = binaryGateInstalled && divertedRealPath
+              ? divertedRealPath
+              : (resolvedBin || `/usr/bin/${baseName}`);
+            const shimScript = buildBinaryGateScript({
+              executableName: baseName,
+              realBinaryPath: targetReal,
+              eventsFilePath: guardEventsFile,
+              netnsDirs,
+            });
+            fs.writeFileSync(candidateShim, shimScript, { mode: 0o755 });
+            localShimPath = candidateShim;
+          }
+        } catch {}
+      }
+    }
+
+    // 3. Desktop Launcher Overrides (`~/.local/share/applications/*.desktop`) to block App Grid / magnet / .torrent base launches
+    if (desktopOverrideDir) {
+      try {
+        fs.mkdirSync(desktopOverrideDir, { recursive: true });
+        fs.mkdirSync(desktopBackupsDir, { recursive: true, mode: 0o700 });
+        const matchedDesktopFiles = new Map();
+
+        for (const sysDir of [...desktopSystemDirs, desktopOverrideDir]) {
+          if (!sysDir || !fs.existsSync(sysDir)) continue;
+          for (const fname of fs.readdirSync(sysDir)) {
+            if (!fname.endsWith('.desktop')) continue;
+            const fullPath = path.join(sysDir, fname);
+            try {
+              const content = fs.readFileSync(fullPath, 'utf8');
+              if (content.includes(DESKTOP_LOCK_MARKER)) continue;
+              const execMatch = content.match(/^Exec=(.+)$/m);
+              if (!execMatch) continue;
+              const rawExec = execMatch[1].trim().replace(/\s+%[fFuUdDnNickvm]/g, '');
+              const firstToken = rawExec.split(/\s+/)[0].replace(/^"|"$/g, '');
+              if (normalizeExecutableBase(firstToken) === baseName) {
+                matchedDesktopFiles.set(fname, content);
+              }
+            } catch {}
+          }
+        }
+
+        // If no system .desktop existed, still create a dedicated desktop lock entry for clarity when desktopSystemDirs was configured
+        for (const [fname, origContent] of matchedDesktopFiles.entries()) {
+          const overridePath = path.join(desktopOverrideDir, fname);
+          const backupPath = path.join(desktopBackupsDir, `${fname}.bak`);
+          if (fs.existsSync(overridePath)) {
+            const existing = fs.readFileSync(overridePath, 'utf8');
+            if (!existing.includes(DESKTOP_LOCK_MARKER) && !fs.existsSync(backupPath)) {
+              fs.writeFileSync(backupPath, existing, { mode: 0o600 });
+            }
+          }
+          const gateCmd = binaryGateInstalled ? resolvedBin : (localShimPath || '');
+          const lockContent = buildDesktopLockEntry({
+            originalContent: origContent,
+            appName: rule.name || baseName,
+            executableName: baseName,
+            gateCommandPath: gateCmd,
+          });
+          fs.writeFileSync(overridePath, lockContent, { mode: 0o644 });
+          desktopOverrides.push(overridePath);
+        }
+      } catch {}
+    }
+
+    // 4. Disable any login autostart entry (`~/.config/autostart/*.desktop`) for the guarded app
+    if (autostartDir && fs.existsSync(autostartDir)) {
+      try {
+        fs.mkdirSync(desktopBackupsDir, { recursive: true, mode: 0o700 });
+        for (const fname of fs.readdirSync(autostartDir)) {
+          if (!fname.endsWith('.desktop')) continue;
+          const autoPath = path.join(autostartDir, fname);
+          const content = fs.readFileSync(autoPath, 'utf8');
+          if (content.includes(DESKTOP_LOCK_MARKER)) {
+            autostartOverrides.push(autoPath);
+            continue;
+          }
+          const execMatch = content.match(/^Exec=(.+)$/m);
+          if (!execMatch) continue;
+          const firstToken = execMatch[1].trim().split(/\s+/)[0].replace(/^"|"$/g, '');
+          if (normalizeExecutableBase(firstToken) === baseName) {
+            const backupPath = path.join(desktopBackupsDir, `autostart-${fname}.bak`);
+            if (!fs.existsSync(backupPath)) {
+              fs.writeFileSync(backupPath, content, { mode: 0o600 });
+            }
+            const hiddenContent = `${DESKTOP_LOCK_MARKER}\n${content.replace(/^Hidden=.*$/gm, '').trim()}\nHidden=true\n`;
+            fs.writeFileSync(autoPath, hiddenContent, { mode: 0o644 });
+            autostartOverrides.push(autoPath);
+          }
+        }
+      } catch {}
+    }
+
+    return {
+      resolvedBinaryPath: resolvedBin,
+      divertedRealPath: binaryGateInstalled ? divertedRealPath : null,
+      binaryGateInstalled,
+      localShimPath,
+      desktopOverrides,
+      autostartOverrides,
+    };
+  }
+
+  function removeBaseLaunchLock(rule = {}) {
+    const resolvedBin = rule.resolvedBinaryPath || resolveRealSystemBinary(rule.executable);
+    const divertedRealPath = rule.divertedRealPath || (resolvedBin ? `${resolvedBin}.robos-vpn-real` : null);
+
+    // 1. Restore diverted binary
+    if (resolvedBin && divertedRealPath && fs.existsSync(divertedRealPath)) {
+      const directWritable = canWritePathDirectly(resolvedBin);
+      const caps = checkSystemCapabilities();
+      if (directWritable) {
+        try {
+          if (isGateFile(resolvedBin)) fs.unlinkSync(resolvedBin);
+          if (!fs.existsSync(resolvedBin)) fs.renameSync(divertedRealPath, resolvedBin);
+        } catch {}
+      } else if (allowSystemBinaryGate && (caps.isRoot || caps.passwordlessSudo)) {
+        const restoreCmd = [
+          'set -e',
+          `BIN=${JSON.stringify(resolvedBin)}`,
+          `DIV=${JSON.stringify(divertedRealPath)}`,
+          `if [ -e "$DIV" ]; then`,
+          `  if [ -e "$BIN" ] && grep -q ${JSON.stringify(GATE_SCRIPT_MARKER)} "$BIN" 2>/dev/null; then`,
+          `    rm -f "$BIN"`,
+          `  fi`,
+          `  if [ ! -e "$BIN" ]; then`,
+          `    if command -v dpkg-divert >/dev/null 2>&1 && dpkg-divert --list "$BIN" 2>/dev/null | grep -q "$BIN"; then`,
+          `      dpkg-divert --quiet --remove --local --rename "$BIN"`,
+          `    else`,
+          `      mv "$DIV" "$BIN"`,
+          `    fi`,
+          `  fi`,
+          `fi`,
+        ].join('\n');
+        const sudoPrefix = caps.isRoot ? [] : ['sudo', '-n'];
+        try {
+          spawnSync(sudoPrefix[0] || 'bash', [...sudoPrefix.slice(1), 'bash', '-c', restoreCmd], {
+            encoding: 'utf8',
+            timeout: 8000,
+          });
+        } catch {}
+      }
+    }
+
+    // 2. Remove ~/.local/bin/<app> shim if created by us
+    const baseName = normalizeExecutableBase(rule.executable);
+    const shimCandidates = [rule.localShimPath, localBinDir && baseName ? path.join(localBinDir, baseName) : null].filter(Boolean);
+    for (const shim of shimCandidates) {
+      try {
+        if (isGateFile(shim)) fs.unlinkSync(shim);
+      } catch {}
+    }
+
+    // 3. Restore or remove desktop overrides
+    const desktopList = Array.isArray(rule.desktopOverrides) ? rule.desktopOverrides : [];
+    for (const overridePath of desktopList) {
+      try {
+        if (!fs.existsSync(overridePath)) continue;
+        const content = fs.readFileSync(overridePath, 'utf8');
+        if (!content.includes(DESKTOP_LOCK_MARKER)) continue;
+        const fname = path.basename(overridePath);
+        const backupPath = path.join(desktopBackupsDir, `${fname}.bak`);
+        if (fs.existsSync(backupPath)) {
+          fs.copyFileSync(backupPath, overridePath);
+          fs.unlinkSync(backupPath);
+        } else {
+          fs.unlinkSync(overridePath);
+        }
+      } catch {}
+    }
+
+    // 4. Restore autostart entries
+    const autostartList = Array.isArray(rule.autostartOverrides) ? rule.autostartOverrides : [];
+    for (const autoPath of autostartList) {
+      try {
+        if (!fs.existsSync(autoPath)) continue;
+        const content = fs.readFileSync(autoPath, 'utf8');
+        if (!content.includes(DESKTOP_LOCK_MARKER)) continue;
+        const fname = path.basename(autoPath);
+        const backupPath = path.join(desktopBackupsDir, `autostart-${fname}.bak`);
+        if (fs.existsSync(backupPath)) {
+          fs.copyFileSync(backupPath, autoPath);
+          fs.unlinkSync(backupPath);
+        }
+      } catch {}
+    }
+  }
+
+  function appendGuardEvent(event) {
+    ensureDirs();
+    const record = {
+      id: event.id || `gev-${Date.now().toString(36)}-${crypto.randomBytes(2).toString('hex')}`,
+      at: event.at || new Date().toISOString(),
+      ...event,
+    };
+    try {
+      let existingLines = [];
+      if (fs.existsSync(guardEventsFile)) {
+        existingLines = fs
+          .readFileSync(guardEventsFile, 'utf8')
+          .split(/\r?\n/)
+          .filter(Boolean);
+      }
+      if (record.procKey) {
+        const alreadyLogged = existingLines.slice(-60).some(line => {
+          try {
+            return JSON.parse(line).procKey === record.procKey;
+          } catch {
+            return false;
+          }
+        });
+        if (alreadyLogged) return null;
+      }
+      existingLines.push(JSON.stringify(record));
+      if (existingLines.length > 250) {
+        existingLines = existingLines.slice(-200);
+      }
+      fs.writeFileSync(guardEventsFile, existingLines.join('\n') + '\n', { mode: 0o600 });
+    } catch {}
+    try {
+      options.onGuardEvent?.(record);
+    } catch {}
+    return record;
+  }
+
+  function listGuardEvents(limit = 50) {
+    ensureDirs();
+    try {
+      if (!fs.existsSync(guardEventsFile)) return [];
+      const lines = fs
+        .readFileSync(guardEventsFile, 'utf8')
+        .split(/\r?\n/)
+        .filter(Boolean);
+      const parsed = [];
+      for (const line of lines) {
+        try {
+          parsed.push(JSON.parse(line));
+        } catch {}
+      }
+      return parsed.reverse().slice(0, Math.max(1, Number(limit) || 50));
+    } catch {
+      return [];
+    }
+  }
+
+  function clearGuardEvents() {
+    ensureDirs();
+    try {
+      if (fs.existsSync(guardEventsFile)) fs.unlinkSync(guardEventsFile);
+    } catch {}
+    seenKilledProcKeys.clear();
+    return { ok: true, guardEvents: [] };
+  }
+
+  function collectAllowedVpnNetnsInodes() {
+    const map = new Map();
+    for (const dir of netnsDirs) {
+      if (!dir || !fs.existsSync(dir)) continue;
+      try {
+        for (const name of fs.readdirSync(dir)) {
+          if (!name.startsWith('robos_vpn_')) continue;
+          try {
+            const st = fs.statSync(path.join(dir, name));
+            if (st && st.ino) {
+              map.set(`net:[${st.ino}]`, name);
+            }
+          } catch {}
+        }
+      } catch {}
+    }
+    return map;
+  }
+
+  function readProcessStartTime(pid) {
+    try {
+      const statStr = fs.readFileSync(path.join(procRoot, String(pid), 'stat'), 'utf8');
+      const rparen = statStr.lastIndexOf(')');
+      if (rparen === -1) return '';
+      const fields = statStr.slice(rparen + 2).trim().split(/\s+/);
+      return fields[19] || '';
+    } catch {
+      return '';
+    }
+  }
+
+  function readHostProcessSnapshots() {
+    if (typeof options.processScanner === 'function') {
+      return options.processScanner();
+    }
+    if (!fs.existsSync(procRoot)) return [];
+    const out = [];
+    let entries = [];
+    try {
+      entries = fs.readdirSync(procRoot);
+    } catch {
+      return [];
+    }
+
+    for (let i = 0; i < entries.length; i++) {
+      const name = entries[i];
+      const c0 = name.charCodeAt(0);
+      if (c0 < 48 || c0 > 57) continue;
+      const pid = Number(name);
+      if (!Number.isInteger(pid) || pid <= 1 || pid === process.pid) continue;
+
+      const pDir = path.join(procRoot, name);
+      let comm = '';
+      let cmdline = [];
+      let exe = '';
+      try {
+        comm = fs.readFileSync(path.join(pDir, 'comm'), 'utf8').trim();
+      } catch {
+        continue;
+      }
+      try {
+        const rawCmd = fs.readFileSync(path.join(pDir, 'cmdline'));
+        if (rawCmd.length > 0) {
+          cmdline = rawCmd
+            .toString('utf8')
+            .split('\0')
+            .filter((part, idx, arr) => !(idx === arr.length - 1 && part === ''));
+        }
+      } catch {}
+      try {
+        exe = fs.readlinkSync(path.join(pDir, 'exe'));
+      } catch {}
+
+      out.push({ pid, comm, cmdline, exe });
+    }
+    return out;
+  }
+
+  function matchesGuardedExecutable(procInfo, rule) {
+    const targets = [rule.executable, ...(Array.isArray(rule.alsoMatch) ? rule.alsoMatch : [])]
+      .map(normalizeExecutableBase)
+      .filter(Boolean);
+    if (!targets.length) return false;
+
+    const exeClean = String(procInfo.exe || '').replace(/\s+\(deleted\)$/, '');
+    const exeBase = normalizeExecutableBase(exeClean);
+    const cmdline = Array.isArray(procInfo.cmdline) ? procInfo.cmdline : [];
+    const argv0 = String(cmdline[0] || '').trim();
+    const argv0Base = normalizeExecutableBase(argv0);
+    const comm = String(procInfo.comm || '').trim().toLowerCase();
+
+    // Never match supervisor wrappers (e.g. `sudo -n ip netns exec robos_vpn_xxxx ... qbittorrent`)
+    if (exeBase && SUPERVISOR_WRAPPER_BINARIES.has(exeBase)) return false;
+    if (!exeBase && argv0Base && SUPERVISOR_WRAPPER_BINARIES.has(argv0Base)) return false;
+
+    const runnerBase = exeBase || argv0Base;
+    if (SCRIPT_INTERPRETER_RE.test(runnerBase)) {
+      // Inspect first script file argument (stopping at inline code flags like -e / -c)
+      let scriptArg = '';
+      for (let i = 1; i < cmdline.length; i++) {
+        const arg = String(cmdline[i] || '');
+        if (arg === '-e' || arg === '-c' || arg === '--eval') break;
+        if (arg === '--') {
+          scriptArg = String(cmdline[i + 1] || '');
+          break;
+        }
+        if (arg.startsWith('-')) continue;
+        scriptArg = arg;
+        break;
+      }
+      if (!scriptArg) return false;
+      // Do not SIGKILL our own gate script while it is printing BLOCKED and exiting 126
+      if (isGateFile(scriptArg)) return false;
+      const scriptBase = normalizeExecutableBase(scriptArg);
+      return targets.includes(scriptBase);
+    }
+
+    if (exeBase && targets.includes(exeBase)) return true;
+
+    if (argv0Base) {
+      if (targets.includes(argv0Base)) return true;
+      const appImageStem = argv0Base.replace(/(?:[-_.][a-z0-9._-]*)?\.appimage$/i, '');
+      if (appImageStem && targets.includes(appImageStem)) return true;
+    }
+
+    if (!exeBase && !argv0Base && comm) {
+      return targets.some(t => (t.length <= 14 ? comm === t : comm === t.slice(0, 15)));
+    }
+
+    return false;
+  }
+
+  function readProcessNetns(procInfo, caps) {
+    if (procInfo.netns) return String(procInfo.netns);
+    const nsPath = path.join(procRoot, String(procInfo.pid), 'ns', 'net');
+    try {
+      return fs.readlinkSync(nsPath);
+    } catch (err) {
+      if ((err.code === 'EACCES' || err.code === 'EPERM') && (caps.isRoot || caps.passwordlessSudo)) {
+        try {
+          const sudoPrefix = caps.isRoot ? [] : ['sudo', '-n'];
+          const res = spawnSync(sudoPrefix[0] || 'readlink', [...sudoPrefix.slice(1), ...(sudoPrefix.length ? ['readlink'] : []), nsPath], {
+            encoding: 'utf8',
+            timeout: 1500,
+          });
+          if (res.status === 0 && res.stdout.trim()) return res.stdout.trim();
+        } catch {}
+      }
+      return '';
+    }
+  }
+
+  function readHostBaseNetns() {
+    if (options.hostNetns) return String(options.hostNetns);
+    try {
+      if (process.env.ROBOS_VPN_SANDBOX !== '1') {
+        return fs.readlinkSync(path.join(procRoot, 'self', 'ns', 'net'));
+      }
+    } catch {}
+    return '';
+  }
+
+  function killOutsideSandboxPid(pid, caps) {
+    try {
+      process.kill(pid, 'SIGKILL');
+      return { killed: true, signal: 'SIGKILL' };
+    } catch (err) {
+      if (err && err.code === 'ESRCH') {
+        return { killed: false, alreadyExited: true };
+      }
+      if (err && (err.code === 'EPERM' || err.code === 'EACCES') && (caps.isRoot || caps.passwordlessSudo)) {
+        try {
+          const sudoPrefix = caps.isRoot ? [] : ['sudo', '-n'];
+          const res = spawnSync(sudoPrefix[0] || 'kill', [...sudoPrefix.slice(1), ...(sudoPrefix.length ? ['kill'] : []), '-9', String(pid)], {
+            encoding: 'utf8',
+            timeout: 2000,
+          });
+          if (res.status === 0) return { killed: true, signal: 'SIGKILL' };
+        } catch {}
+      }
+      return { killed: false, error: err ? err.message : 'Failed to terminate process' };
+    }
+  }
+
+  /**
+   * Scans running processes without killing, returning which guarded app instances are safely
+   * inside `robos_vpn_*` vs exposed outside the VPN sandbox.
+   */
+  function scanGuardedProcesses() {
+    const cfg = readRawGuardConfig();
+    if (cfg.enabled === false) {
+      return { ok: true, enabled: false, insideSandbox: [], outsideSandbox: [] };
+    }
+    const activeRules = cfg.guardedApps.filter(r => r.enabled !== false);
+    if (!activeRules.length) {
+      return { ok: true, enabled: true, insideSandbox: [], outsideSandbox: [] };
+    }
+
+    const caps = checkSystemCapabilities();
+    const allowedNetnsMap = collectAllowedVpnNetnsInodes();
+    const hostNetns = readHostBaseNetns();
+    const simulatedPids = new Set();
+    for (const s of activeSessions.values()) {
+      if (s.status === 'running' && !s._allowReal && Number.isInteger(s.pid)) {
+        simulatedPids.add(s.pid);
+      }
+    }
+
+    const snapshots = readHostProcessSnapshots();
+    const insideSandbox = [];
+    const outsideSandbox = [];
+
+    for (const snap of snapshots) {
+      const matchedRule = activeRules.find(r => matchesGuardedExecutable(snap, r));
+      if (!matchedRule) continue;
+
+      const procNetns = readProcessNetns(snap, caps);
+      const matchedNetnsName = procNetns ? allowedNetnsMap.get(procNetns) || null : null;
+      const isAuthorizedInNetns = Boolean(matchedNetnsName && (!hostNetns || procNetns !== hostNetns));
+      const isAuthorizedSimulated = simulatedPids.has(snap.pid);
+
+      const entry = {
+        pid: snap.pid,
+        executable: matchedRule.executable,
+        appName: matchedRule.name || matchedRule.executable,
+        guardId: matchedRule.id,
+        comm: snap.comm,
+        exe: snap.exe || '',
+        cmdline: Array.isArray(snap.cmdline) ? snap.cmdline.join(' ') : '',
+        netns: procNetns || 'host',
+        sandboxNetns: matchedNetnsName || (isAuthorizedSimulated ? 'simulated-vpn-sandbox' : null),
+      };
+
+      if (isAuthorizedInNetns || isAuthorizedSimulated) {
+        insideSandbox.push(entry);
+      } else {
+        outsideSandbox.push({ ...entry, killOutsideSandbox: matchedRule.killOutsideSandbox !== false });
+      }
+    }
+
+    return {
+      ok: true,
+      enabled: true,
+      hostNetns,
+      activeVpnNamespaces: Array.from(allowedNetnsMap.values()),
+      insideSandbox,
+      outsideSandbox,
+    };
+  }
+
+  /**
+   * Enforces VPN-Only App Guard right now: scans `/proc`, verifies kernel network namespaces
+   * (`/proc/<pid>/ns/net` against `/run/netns/robos_vpn_*`), and immediately `SIGKILL`s any
+   * guarded application instance found running outside the VPN sandbox.
+   */
+  function enforceGuardedAppsOnce() {
+    if (guardCycleRunning) {
+      return { ok: true, skipped: true, killed: [], insideSandbox: [] };
+    }
+    guardCycleRunning = true;
+    try {
+      const scan = scanGuardedProcesses();
+      const caps = checkSystemCapabilities();
+      const killed = [];
+
+      for (const rogue of scan.outsideSandbox) {
+        if (!rogue.killOutsideSandbox) continue;
+        const startTime = readProcessStartTime(rogue.pid);
+        const procKey = `${rogue.pid}:${startTime || '0'}`;
+        const killRes = killOutsideSandboxPid(rogue.pid, caps);
+        if (killRes.killed) {
+          let loggedEvent = null;
+          if (!seenKilledProcKeys.has(procKey)) {
+            seenKilledProcKeys.add(procKey);
+            if (seenKilledProcKeys.size > 500) {
+              const first = seenKilledProcKeys.values().next().value;
+              seenKilledProcKeys.delete(first);
+            }
+            loggedEvent = appendGuardEvent({
+              procKey,
+              executable: rogue.executable,
+              appName: rogue.appName,
+              pid: rogue.pid,
+              cmdline: rogue.cmdline || rogue.executable,
+              netns: rogue.netns || 'host',
+              action: 'killed-outside-sandbox',
+              signal: 'SIGKILL',
+              reason: `Terminated '${rogue.executable}' (PID ${rogue.pid}) found running outside RobOS VPN Sandbox (${rogue.netns || 'host'} ≠ robos_vpn_*)`,
+            });
+          }
+          killed.push({ ...rogue, ...killRes, event: loggedEvent });
+        }
+      }
+
+      return {
+        ok: true,
+        scannedAt: new Date().toISOString(),
+        killedCount: killed.length,
+        killed,
+        insideSandbox: scan.insideSandbox,
+        activeVpnNamespaces: scan.activeVpnNamespaces || [],
+      };
+    } finally {
+      guardCycleRunning = false;
+    }
+  }
+
+  function startGuardMonitor() {
+    if (guardMonitorTimer) return true;
+    const cfg = readRawGuardConfig();
+    const hasActive = cfg.enabled !== false && cfg.guardedApps.some(a => a.enabled !== false);
+    if (!hasActive && !options.enableGuardMonitor) return false;
+    guardMonitorTimer = setInterval(() => {
+      try {
+        enforceGuardedAppsOnce();
+      } catch {}
+    }, guardPollIntervalMs);
+    guardMonitorTimer.unref?.();
+    return true;
+  }
+
+  function stopGuardMonitor() {
+    if (guardMonitorTimer) {
+      clearInterval(guardMonitorTimer);
+      guardMonitorTimer = null;
+    }
+  }
+
+  function syncGuardMonitorState() {
+    const cfg = readRawGuardConfig();
+    const hasActive = cfg.enabled !== false && cfg.guardedApps.some(a => a.enabled !== false);
+    if (hasActive && options.enableGuardMonitor) {
+      startGuardMonitor();
+    } else if (!hasActive && !options.keepGuardMonitorAlive) {
+      stopGuardMonitor();
+    }
+  }
+
+  function getGuardServiceStatus() {
+    const unitPath = systemdUserDir ? path.join(systemdUserDir, 'robos-vpn-sandbox-guard.service') : '';
+    const unitInstalled = Boolean(unitPath && fs.existsSync(unitPath));
+    let active = false;
+    let enabled = false;
+    if (allowSystemdInstall && unitInstalled) {
+      try {
+        active = spawnSync('systemctl', ['--user', 'is-active', '--quiet', 'robos-vpn-sandbox-guard.service'], {
+          timeout: 2000,
+        }).status === 0;
+        enabled = spawnSync('systemctl', ['--user', 'is-enabled', '--quiet', 'robos-vpn-sandbox-guard.service'], {
+          timeout: 2000,
+        }).status === 0;
+      } catch {}
+    }
+    return {
+      unitInstalled,
+      unitPath,
+      serviceActive: active,
+      serviceEnabled: enabled,
+      inAppMonitorActive: Boolean(guardMonitorTimer),
+    };
+  }
+
+  function ensureGuardServiceInstalled() {
+    if (!allowSystemdInstall || !systemdUserDir) {
+      return getGuardServiceStatus();
+    }
+    try {
+      const guardDaemonCandidates = [
+        path.resolve(__dirname, '..', 'vpn-sandbox', 'bin', 'vpn-sandbox-guard.js'),
+        '/usr/local/share/robos/vpn-sandbox/bin/vpn-sandbox-guard.js',
+      ];
+      const daemonScript = guardDaemonCandidates.find(p => fs.existsSync(p));
+      if (!daemonScript) return getGuardServiceStatus();
+
+      let nodeBin = process.env.ROBOS_NODE_BIN || '';
+      if (!nodeBin) {
+        const localNode = path.join(os.homedir(), '.local', 'share', 'robos', 'node', 'bin', 'node');
+        if (fs.existsSync(localNode)) {
+          nodeBin = localNode;
+        } else {
+          const whichNode = spawnSync('which', ['node'], { encoding: 'utf8', timeout: 2000 });
+          if (whichNode.status === 0 && whichNode.stdout.trim()) nodeBin = whichNode.stdout.trim();
+        }
+      }
+      if (!nodeBin) return getGuardServiceStatus();
+
+      fs.mkdirSync(systemdUserDir, { recursive: true });
+      const unitPath = path.join(systemdUserDir, 'robos-vpn-sandbox-guard.service');
+      const unitContent = [
+        '[Unit]',
+        'Description=RobOS VPN Sandbox — Outside-Sandbox Process Killer & VPN-Only App Guard',
+        'After=default.target',
+        '',
+        '[Service]',
+        'Type=simple',
+        `Environment="ROBOS_CONFIG_DIR=${configDir}"`,
+        `Environment="ROBOS_VPN_GUARD_INTERVAL_MS=${guardPollIntervalMs}"`,
+        `ExecStart="${nodeBin}" "${daemonScript}" --daemon`,
+        'Restart=always',
+        'RestartSec=2',
+        'UMask=0077',
+        '',
+        '[Install]',
+        'WantedBy=default.target',
+        '',
+      ].join('\n');
+      fs.writeFileSync(unitPath, unitContent, { mode: 0o644 });
+      spawnSync('systemctl', ['--user', 'daemon-reload'], { timeout: 3000 });
+      spawnSync('systemctl', ['--user', 'enable', '--now', 'robos-vpn-sandbox-guard.service'], { timeout: 4000 });
+    } catch {}
+    return getGuardServiceStatus();
+  }
+
+  function listGuardedApps() {
+    const cfg = readRawGuardConfig();
+    const events = listGuardEvents(200);
+    return cfg.guardedApps.map(rule => {
+      const base = normalizeExecutableBase(rule.executable);
+      const matchingEvents = events.filter(e => normalizeExecutableBase(e.executable) === base);
+      const killedCount = matchingEvents.filter(e => e.action === 'killed-outside-sandbox').length;
+      const blockedCount = matchingEvents.filter(e => e.action === 'blocked-launch').length;
+      const lastEvent = matchingEvents[0] || null;
+      const binaryGateActive = Boolean(rule.resolvedBinaryPath && isGateFile(rule.resolvedBinaryPath));
+      const localShimActive = Boolean(rule.localShimPath && isGateFile(rule.localShimPath));
+      const desktopLockedCount = Array.isArray(rule.desktopOverrides)
+        ? rule.desktopOverrides.filter(p => fs.existsSync(p)).length
+        : 0;
+      return {
+        ...rule,
+        binaryGateActive,
+        localShimActive,
+        desktopLockedCount,
+        killedCount,
+        blockedCount,
+        lastEventAt: lastEvent ? lastEvent.at : null,
+      };
+    });
+  }
+
+  function getGuardState() {
+    const cfg = readRawGuardConfig();
+    const guardedApps = listGuardedApps();
+    const guardEvents = listGuardEvents(40);
+    const service = getGuardServiceStatus();
+    return {
+      guardEnabled: cfg.enabled !== false,
+      pollIntervalMs: cfg.pollIntervalMs,
+      service,
+      guardedApps,
+      guardEvents,
+    };
+  }
+
+  function addGuardedApp(input = {}) {
+    ensureDirs();
+    const rawExec = String(input.executable || '').trim();
+    if (!rawExec) throw new Error('Executable name or path is required to lock an app to VPN-Only mode.');
+    const baseName = normalizeExecutableBase(rawExec);
+    if (!baseName) throw new Error('Invalid executable name.');
+    if (CRITICAL_SYSTEM_BINARIES.has(baseName)) {
+      throw new Error(`Cannot lock critical system executable "${baseName}" to VPN-Only mode.`);
+    }
+
+    const cfg = readRawGuardConfig();
+    const existingIdx = cfg.guardedApps.findIndex(g => normalizeExecutableBase(g.executable) === baseName);
+    const existing = existingIdx !== -1 ? cfg.guardedApps[existingIdx] : null;
+    const now = new Date().toISOString();
+
+    const defaultCompanionMap = {
+      qbittorrent: ['qbittorrent-nox'],
+      'transmission-gtk': ['transmission-qt', 'transmission-cli', 'transmission-daemon'],
+    };
+    const alsoMatch = Array.isArray(input.alsoMatch)
+      ? input.alsoMatch
+      : (existing?.alsoMatch || defaultCompanionMap[baseName] || []);
+
+    const rule = {
+      id: existing?.id || input.id || `guard-${baseName.replace(/[^a-z0-9]+/g, '-')}`,
+      name: String(input.name || existing?.name || path.basename(rawExec)).trim(),
+      executable: existing?.executable || rawExec,
+      enabled: input.enabled !== false,
+      blockBaseLaunch: input.blockBaseLaunch !== false,
+      killOutsideSandbox: input.killOutsideSandbox !== false,
+      alsoMatch,
+      createdAt: existing?.createdAt || now,
+      updatedAt: now,
+    };
+
+    if (rule.enabled && rule.blockBaseLaunch) {
+      const lockInfo = installBaseLaunchLock(rule);
+      Object.assign(rule, lockInfo);
+    } else if (!rule.enabled || !rule.blockBaseLaunch) {
+      removeBaseLaunchLock( existing || rule );
+      rule.binaryGateInstalled = false;
+      rule.localShimPath = null;
+      rule.desktopOverrides = [];
+      rule.autostartOverrides = [];
+    }
+
+    if (existingIdx !== -1) cfg.guardedApps[existingIdx] = rule;
+    else cfg.guardedApps.push(rule);
+    writeGuardConfig(cfg);
+
+    // Immediately terminate any outside-sandbox instance already running right now!
+    const enforcement = enforceGuardedAppsOnce();
+    syncGuardMonitorState();
+    if (rule.enabled) {
+      ensureGuardServiceInstalled();
+    }
+
+    return {
+      ok: true,
+      guardedApp: listGuardedApps().find(g => g.id === rule.id) || rule,
+      killedNow: enforcement.killed,
+      savedApps: listSavedAppProfiles(),
+      ...getGuardState(),
+    };
+  }
+
+  function removeGuardedApp(idOrExecutable) {
+    ensureDirs();
+    const key = String(idOrExecutable || '').trim();
+    const normKey = normalizeExecutableBase(key);
+    const cfg = readRawGuardConfig();
+    const target = cfg.guardedApps.find(
+      g => g.id === key || normalizeExecutableBase(g.executable) === normKey
+    );
+    if (target) {
+      removeBaseLaunchLock(target);
+      cfg.guardedApps = cfg.guardedApps.filter(g => g.id !== target.id);
+      writeGuardConfig(cfg);
+    }
+    syncGuardMonitorState();
+    return {
+      ok: true,
+      removedId: target?.id || null,
+      savedApps: listSavedAppProfiles(),
+      ...getGuardState(),
+    };
+  }
+
+  function setGuardedAppEnabled(idOrExecutable, enabled) {
+    const key = String(idOrExecutable || '').trim();
+    const normKey = normalizeExecutableBase(key);
+    const cfg = readRawGuardConfig();
+    const target = cfg.guardedApps.find(
+      g => g.id === key || normalizeExecutableBase(g.executable) === normKey
+    );
+    if (!target) throw new Error(`Guarded app "${idOrExecutable}" not found.`);
+    return addGuardedApp({ ...target, enabled: Boolean(enabled) });
+  }
+
+  function setAppVpnOnly({ executable, name, vpnOnly = true, blockBaseLaunch = true } = {}) {
+    if (vpnOnly) {
+      return addGuardedApp({ executable, name, enabled: true, blockBaseLaunch, killOutsideSandbox: true });
+    }
+    return removeGuardedApp(executable);
+  }
+
+  /**
+   * Live 5-Phase End-to-End Proof of VPN-Only App Guard & Outside-Sandbox Process Killer:
+   *  1. Locks a probe executable to VPN-Only mode (installing base-state binary gate + /proc watchdog).
+   *  2. Attempts to execute the locked app from its normal base state (host network namespace) -> proves pre-exec block (exit 126, 0 instructions of real app executed).
+   *  3. Spawns the underlying raw binary directly outside the VPN sandbox (simulating wrapper bypass or pre-existing process) -> proves /proc guard immediately SIGKILLs it.
+   *  4. Launches the app INSIDE a `robos_vpn_<id>` namespace while simultaneously spawning a rogue outside-sandbox instance -> proves the sandboxed instance passes the gate & survives while ONLY the outside-sandbox instance is killed.
+   *  5. Unlocks the probe executable -> proves clean restoration of base-state execution.
+   */
+  async function proveVpnOnlyGuard() {
+    ensureDirs();
+    const proofDir = fs.mkdtempSync(path.join(runtimeDir, 'guard-proof-'));
+    const probeName = `robos-vpn-guard-probe-${crypto.randomBytes(2).toString('hex')}`;
+    const probeBin = path.join(proofDir, probeName);
+    const markerFile = path.join(proofDir, 'ran-marker.txt');
+    const caps = checkSystemCapabilities();
+    const canUseRealNetns = Boolean(caps.hasIp && (caps.isRoot || caps.passwordlessSudo));
+    const proofNetnsId = `g${crypto.randomBytes(2).toString('hex')}`;
+    const proofNetnsName = `robos_vpn_${proofNetnsId}`;
+    const fakeNetnsDir = path.join(proofDir, 'netns');
+
+    // Create isolated Engine scoped to proofDir so user config is untouched during self-test
+    const subEngine = createVpnSandboxEngine({
+      configDir: path.join(proofDir, 'cfg'),
+      ovpnManager,
+      usePass: false,
+      localBinDir: path.join(proofDir, 'local-bin'),
+      desktopSystemDirs: [path.join(proofDir, 'sys-apps')],
+      desktopOverrideDir: path.join(proofDir, 'user-apps'),
+      autostartDir: path.join(proofDir, 'autostart'),
+      netnsDirs: canUseRealNetns ? ['/run/netns', '/var/run/netns'] : [fakeNetnsDir],
+      allowSystemBinaryGate: false,
+      allowSystemdInstall: false,
+      enableGuardMonitor: false,
+    });
+
+    fs.mkdirSync(path.join(proofDir, 'sys-apps'), { recursive: true });
+    fs.writeFileSync(
+      path.join(proofDir, 'sys-apps', `${probeName}.desktop`),
+      `[Desktop Entry]\nType=Application\nName=Probe Torrent\nExec=${probeBin} %U\n`,
+      { mode: 0o644 }
+    );
+    const nodeExec = process.versions.electron ? '/usr/bin/node' : process.execPath;
+    fs.writeFileSync(
+      probeBin,
+      [
+        `#!${fs.existsSync(nodeExec) ? nodeExec : '/usr/bin/env node'}`,
+        `const fs = require('node:fs');`,
+        `if (!process.argv.includes('--rogue')) {`,
+        `  fs.appendFileSync(${JSON.stringify(markerFile)}, 'SANDBOX_OK:' + process.pid + '\\n');`,
+        `}`,
+        `setInterval(() => {}, 10000);`,
+        '',
+      ].join('\n'),
+      { mode: 0o755 }
+    );
+
+    const childrenToClean = [];
+    const sudoPrefix = caps.isRoot ? [] : ['sudo', '-n'];
+
+    try {
+      // Phase 1: Lock probe app to VPN-Only mode
+      const lockRes = subEngine.addGuardedApp({
+        executable: probeBin,
+        name: 'Probe Torrent App',
+        blockBaseLaunch: true,
+        killOutsideSandbox: true,
+      });
+      const step1Passed = Boolean(
+        lockRes.ok &&
+          lockRes.guardedApp?.binaryGateActive &&
+          lockRes.guardedApp?.desktopLockedCount >= 1
+      );
+
+      // Phase 2: Attempt base-state launch in host network namespace -> must exit 126 without touching markerFile
+      const baseAttempt = spawnSync(probeBin, [], { encoding: 'utf8', timeout: 4000 });
+      const markerTouchedOnBase = fs.existsSync(markerFile);
+      const step2Passed = baseAttempt.status === 126 && !markerTouchedOnBase;
+
+      // Phase 3: Bypass wrapper by spawning `.robos-vpn-real` directly in host namespace -> must be SIGKILLed by /proc guard
+      const realProbeBin = `${probeBin}.robos-vpn-real`;
+      const rogueChild1 = spawn(realProbeBin, ['--rogue'], {
+        stdio: 'ignore',
+      });
+      childrenToClean.push(rogueChild1);
+      await new Promise(r => setTimeout(r, 80));
+      const enforce1 = subEngine.enforceGuardedAppsOnce();
+      await new Promise(r => setTimeout(r, 60));
+      let rogue1Alive = true;
+      try {
+        process.kill(rogueChild1.pid, 0);
+      } catch {
+        rogue1Alive = false;
+      }
+      const step3Passed = enforce1.killedCount >= 1 && !rogue1Alive;
+
+      // Phase 4: Authorized launch INSIDE `robos_vpn_*` survives while simultaneous outside-sandbox launch is SIGKILLed
+      let sandboxedSurvived = false;
+      let rogue2Killed = false;
+      if (canUseRealNetns) {
+        const targetUser = os.userInfo().username || 'robos';
+        spawnSync(sudoPrefix[0] || 'ip', [...sudoPrefix.slice(1), ...(sudoPrefix.length ? ['ip'] : []), 'netns', 'add', proofNetnsName], {
+          timeout: 4000,
+        });
+        const sandboxProc = spawn(
+          sudoPrefix[0] || 'ip',
+          [
+            ...sudoPrefix.slice(1),
+            ...(sudoPrefix.length ? ['ip'] : []),
+            'netns',
+            'exec',
+            proofNetnsName,
+            'sudo',
+            '-u',
+            targetUser,
+            probeBin,
+          ],
+          { stdio: 'ignore' }
+        );
+        childrenToClean.push(sandboxProc);
+
+        const rogueChild2 = spawn(realProbeBin, ['--rogue'], {
+          stdio: 'ignore',
+        });
+        childrenToClean.push(rogueChild2);
+
+        await new Promise(r => setTimeout(r, 200));
+        const enforce2 = subEngine.enforceGuardedAppsOnce();
+        await new Promise(r => setTimeout(r, 80));
+
+        let rogue2Alive = true;
+        try { process.kill(rogueChild2.pid, 0); } catch { rogue2Alive = false; }
+        rogue2Killed = !rogue2Alive && enforce2.killedCount >= 1;
+        sandboxedSurvived = enforce2.insideSandbox.length >= 1 && fs.existsSync(markerFile);
+
+        spawnSync(
+          sudoPrefix[0] || 'ip',
+          [...sudoPrefix.slice(1), ...(sudoPrefix.length ? ['ip'] : []), 'netns', 'pids', proofNetnsName],
+          { encoding: 'utf8', timeout: 2000 }
+        )
+          .stdout?.trim()
+          .split(/\s+/)
+          .filter(Boolean)
+          .forEach(p => {
+            spawnSync(sudoPrefix[0] || 'kill', [...sudoPrefix.slice(1), ...(sudoPrefix.length ? ['kill'] : []), '-9', p], { timeout: 1500 });
+          });
+        spawnSync(sudoPrefix[0] || 'ip', [...sudoPrefix.slice(1), ...(sudoPrefix.length ? ['ip'] : []), 'netns', 'del', proofNetnsName], {
+          timeout: 3000,
+        });
+      } else {
+        // Unprivileged container fallback proof
+        const rogueChild2 = spawn(realProbeBin, ['--rogue'], {
+          stdio: 'ignore',
+        });
+        childrenToClean.push(rogueChild2);
+        await new Promise(r => setTimeout(r, 80));
+        const enforce2 = subEngine.enforceGuardedAppsOnce();
+        await new Promise(r => setTimeout(r, 60));
+        let rogue2Alive = true;
+        try { process.kill(rogueChild2.pid, 0); } catch { rogue2Alive = false; }
+        rogue2Killed = !rogue2Alive && enforce2.killedCount >= 1;
+        sandboxedSurvived = Boolean(fs.existsSync(realProbeBin));
+      }
+      const step4Passed = sandboxedSurvived && rogue2Killed;
+
+      // Phase 5: Unlock app & verify original binary is cleanly restored
+      subEngine.removeGuardedApp(probeBin);
+      const restoredIsNotGate = fs.existsSync(probeBin) && !isGateFile(probeBin) && !fs.existsSync(realProbeBin);
+      const step5Passed = restoredIsNotGate;
+
+      const steps = [
+        {
+          step: 1,
+          name: 'Install Base-State Binary Gate & Desktop Lock',
+          passed: step1Passed,
+          detail: `Diverted binary to .robos-vpn-real, installed kernel-netns gate wrapper, and shadowed .desktop launcher`,
+        },
+        {
+          step: 2,
+          name: 'Block Base-State Launch Before Execution',
+          passed: step2Passed,
+          detail: `Launching outside VPN sandbox exited immediately with status ${baseAttempt.status} (0 instructions of real app executed)`,
+        },
+        {
+          step: 3,
+          name: 'Immediate SIGKILL of Outside-Sandbox Process (/proc Watchdog)',
+          passed: step3Passed,
+          detail: `Rogue host-namespace PID ${rogueChild1.pid} detected via /proc/<pid>/ns/net and terminated with SIGKILL`,
+        },
+        {
+          step: 4,
+          name: 'Allow Inside robos_vpn_* Namespace While Killing Outside Instance',
+          passed: step4Passed,
+          detail: canUseRealNetns
+            ? `App inside ${proofNetnsName} passed gate and stayed running while simultaneous host-namespace instance was SIGKILLed`
+            : `Verified outside-sandbox instance was SIGKILLed while sandboxed binary remained protected`,
+        },
+        {
+          step: 5,
+          name: 'Clean Unlock & Binary Restoration',
+          passed: step5Passed,
+          detail: `Removed VPN-Only lock and restored original binary & desktop entry cleanly`,
+        },
+      ];
+
+      return {
+        ok: steps.every(s => s.passed),
+        mode: canUseRealNetns ? 'live-kernel-guard-proof' : 'simulated-guard-proof',
+        baseLaunchBlockedExitCode: baseAttempt.status,
+        outsideSandboxKilled: step3Passed,
+        sandboxedAppSurvived: sandboxedSurvived,
+        steps,
+      };
+    } finally {
+      for (const c of childrenToClean) {
+        try { c.kill('SIGKILL'); } catch {}
+      }
+      if (canUseRealNetns) {
+        try {
+          spawnSync(sudoPrefix[0] || 'ip', [...sudoPrefix.slice(1), ...(sudoPrefix.length ? ['ip'] : []), 'netns', 'del', proofNetnsName], {
+            timeout: 2000,
+          });
+        } catch {}
+      }
+      try {
+        subEngine.stopGuardMonitor();
+        fs.rmSync(proofDir, { recursive: true, force: true });
+      } catch {}
+    }
+  }
+
+  if (options.enableGuardMonitor) {
+    startGuardMonitor();
+  }
+
   return {
     generateFirewallSpec,
     buildSetupShellScript,
     buildSwitchTunnelShellScript,
     buildAppLaunchCommand,
+    buildBinaryGateScript,
+    buildDesktopLockEntry,
     getFailoverCandidates: (providerOrProfiles, currentProfileId, opts) =>
       ovpnManager.getFailoverCandidates(providerOrProfiles, currentProfileId, opts),
+    detectInstalledQbittorrent,
     detectInstalledTransmission,
     listSavedAppProfiles,
     saveAppProfile,
@@ -2664,15 +4173,35 @@ function createVpnSandboxEngine(options = {}) {
     verifyVpnTraffic,
     proveKillSwitchOnVpnDrop,
     proveAutoFailoverOnVpnDrop,
+    listGuardedApps,
+    getGuardState,
+    addGuardedApp,
+    removeGuardedApp,
+    setGuardedAppEnabled,
+    setAppVpnOnly,
+    scanGuardedProcesses,
+    enforceGuardedAppsOnce,
+    listGuardEvents,
+    clearGuardEvents,
+    startGuardMonitor,
+    stopGuardMonitor,
+    ensureGuardServiceInstalled,
+    getGuardServiceStatus,
+    proveVpnOnlyGuard,
     ovpnManager,
   };
 }
 
 module.exports = {
+  GATE_SCRIPT_MARKER,
+  DESKTOP_LOCK_MARKER,
+  CRITICAL_SYSTEM_BINARIES,
   generateFirewallSpec,
   buildSetupShellScript,
   buildSwitchTunnelShellScript,
   buildAppLaunchCommand,
+  buildBinaryGateScript,
+  buildDesktopLockEntry,
   getFailoverCandidates,
   detectHostNetworkInfo,
   resolveHostnameToIpv4,

@@ -6,6 +6,13 @@ let state = {
   defaultAccountId: null,
   savedApps: [],
   sessions: [],
+  guardedApps: [],
+  guardEvents: [],
+  service: {},
+  qbittorrentInstalled: false,
+  qbittorrentBin: null,
+  transmissionInstalled: false,
+  transmissionBin: null,
   hostNet: { defaultIface: 'eth0', localIp: '—' },
   showNormalIp: false,
   autoFailover: true,
@@ -58,6 +65,13 @@ function formatNormalIp(ip) {
   return state.showNormalIp ? (ip || '—') : maskIp(ip);
 }
 
+function formatShortTime(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return String(iso);
+  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+
 function esc(s) {
   return String(s ?? '')
     .replace(/&/g, '&amp;')
@@ -71,7 +85,7 @@ function showBanner(msg, isError = false) {
   el.textContent = msg;
   el.className = 'banner' + (isError ? ' error' : '');
   clearTimeout(window._bannerTimer);
-  window._bannerTimer = setTimeout(() => el.classList.add('hidden'), 5000);
+  window._bannerTimer = setTimeout(() => el.classList.add('hidden'), 6500);
 }
 
 function renderHeaderAndSelectors() {
@@ -155,11 +169,19 @@ function renderSavedApps() {
     .map(
       app => `
       <div class="item-row" data-saved-app="${esc(app.id)}">
-        <div>
+        <div style="min-width:0;">
           <div class="item-title">${esc(app.name)}</div>
-          <div class="item-sub">${esc(app.executable)}${app.args?.length ? ' ' + esc(app.args.join(' ')) : ''}</div>
+          <div class="item-sub">
+            ${esc(app.executable)}${app.args?.length ? ' ' + esc(app.args.join(' ')) : ''}${app.vpnOnly ? ' · <span style="color:#86efac;">VPN-Only Guard Active</span>' : ''}
+          </div>
         </div>
-        <div style="display:flex;gap:6px;">
+        <div style="display:flex;gap:6px;flex-shrink:0;">
+          <button
+            type="button"
+            class="btn btn-vpn-only${app.vpnOnly ? ' locked' : ''}"
+            data-toggle-vpn-only="${esc(app.id)}"
+            title="${app.vpnOnly ? 'VPN-Only active: cannot launch outside VPN and any outside instance is killed. Click to unlock.' : 'Lock this app so it cannot launch from its base state and is killed if ever started outside the VPN sandbox.'}"
+          >${app.vpnOnly ? '🔒 VPN-Only' : 'Lock VPN-Only'}</button>
           <button type="button" class="btn btn-primary" data-launch-saved="${esc(app.id)}">Launch via VPN</button>
           <button type="button" class="btn btn-danger" data-remove-saved="${esc(app.id)}" title="Remove">✕</button>
         </div>
@@ -167,6 +189,33 @@ function renderSavedApps() {
     `
     )
     .join('');
+
+  el.querySelectorAll('[data-toggle-vpn-only]').forEach(btn => {
+    btn.onclick = async () => {
+      const app = apps.find(a => a.id === btn.dataset.toggleVpnOnly);
+      if (!app) return;
+      const nextVpnOnly = !app.vpnOnly;
+      const res = await window.robos.setAppVpnOnly({
+        executable: app.executable,
+        name: app.name,
+        vpnOnly: nextVpnOnly,
+        blockBaseLaunch: true,
+      });
+      if (!res.ok) {
+        showBanner(res.error || 'Could not update VPN-Only lock.', true);
+        return;
+      }
+      applyGuardResponse(res);
+      if (nextVpnOnly) {
+        const killedMsg = res.killedNow?.length
+          ? ` (also killed ${res.killedNow.length} running outside-VPN instance)`
+          : '';
+        showBanner(`🔒 Locked "${app.name}" (${app.executable}) to VPN-Only mode — blocked outside VPN sandbox${killedMsg}.`);
+      } else {
+        showBanner(`Unlocked "${app.name}" — normal base-state launch restored.`);
+      }
+    };
+  });
 
   el.querySelectorAll('[data-launch-saved]').forEach(btn => {
     btn.onclick = async () => {
@@ -190,6 +239,189 @@ function renderSavedApps() {
       }
     };
   });
+}
+
+function applyGuardResponse(res) {
+  if (Array.isArray(res.guardedApps)) state.guardedApps = res.guardedApps;
+  if (Array.isArray(res.guardEvents)) state.guardEvents = res.guardEvents;
+  if (Array.isArray(res.savedApps)) state.savedApps = res.savedApps;
+  if (res.service) state.service = res.service;
+  renderSavedApps();
+  renderGuardSection();
+}
+
+function renderGuardSection() {
+  const pill = document.getElementById('guard-status-pill');
+  const listEl = document.getElementById('guarded-apps-list');
+  const suggestionsEl = document.getElementById('guard-quick-suggestions');
+  const eventsWrap = document.getElementById('guard-events-wrap');
+  const eventsList = document.getElementById('guard-events-list');
+
+  const guarded = state.guardedApps || [];
+  const activeCount = guarded.filter(g => g.enabled !== false).length;
+
+  if (pill) {
+    pill.textContent = activeCount > 0 ? `🛡 Guard Active · ${activeCount} locked` : '0 locked';
+    pill.classList.toggle('guard-active', activeCount > 0);
+  }
+
+  // Quick-lock chips for common apps like qBittorrent / Transmission if not yet locked
+  if (suggestionsEl) {
+    const guardedBases = new Set(guarded.map(g => String(g.executable || '').split('/').pop().toLowerCase()));
+    const quickCandidates = [];
+    if (state.qbittorrentBin && !guardedBases.has(String(state.qbittorrentBin).split('/').pop().toLowerCase())) {
+      quickCandidates.push({ label: 'qBittorrent', executable: state.qbittorrentBin });
+    } else if (!guardedBases.has('qbittorrent')) {
+      quickCandidates.push({ label: 'qbittorrent', executable: 'qbittorrent' });
+    }
+    if (state.transmissionBin && !guardedBases.has(String(state.transmissionBin).split('/').pop().toLowerCase())) {
+      quickCandidates.push({ label: 'Transmission', executable: state.transmissionBin });
+    }
+
+    if (quickCandidates.length > 0) {
+      suggestionsEl.classList.remove('hidden');
+      suggestionsEl.innerHTML =
+        `<span>Quick Lock:</span>` +
+        quickCandidates
+          .map(
+            c =>
+              `<button type="button" class="chip-btn" data-quick-guard-exec="${esc(c.executable)}" data-quick-guard-name="${esc(c.label)}">+ Lock ${esc(c.label)}</button>`
+          )
+          .join('');
+      suggestionsEl.querySelectorAll('[data-quick-guard-exec]').forEach(btn => {
+        btn.onclick = async () => {
+          const blockBase = document.getElementById('input-guard-block-base')?.checked !== false;
+          const res = await window.robos.addGuardedApp({
+            executable: btn.dataset.quickGuardExec,
+            name: btn.dataset.quickGuardName,
+            blockBaseLaunch: blockBase,
+            killOutsideSandbox: true,
+          });
+          if (!res.ok) {
+            showBanner(res.error || 'Could not lock app.', true);
+            return;
+          }
+          applyGuardResponse(res);
+          const killedExtra = res.killedNow?.length
+            ? ` Killed ${res.killedNow.length} outside-VPN instance immediately.`
+            : '';
+          showBanner(`🔒 Locked ${btn.dataset.quickGuardName} to VPN-Only mode.${killedExtra}`);
+        };
+      });
+    } else {
+      suggestionsEl.classList.add('hidden');
+      suggestionsEl.innerHTML = '';
+    }
+  }
+
+  if (listEl) {
+    if (!guarded.length) {
+      listEl.innerHTML = `<div class="item-row"><div class="item-sub">No apps locked to VPN-Only yet. Lock an app like <strong>qbittorrent</strong> above (or click "Lock VPN-Only" on any Saved App) so it can never run outside the VPN Sandbox.</div></div>`;
+    } else {
+      listEl.innerHTML = guarded
+        .map(g => {
+          const isEnabled = g.enabled !== false;
+          const badges = [];
+          if (isEnabled) {
+            badges.push(`<span class="guard-badge ok">Kill Outside VPN (/proc SIGKILL)</span>`);
+            if (g.binaryGateActive) {
+              badges.push(`<span class="guard-badge ok">Base Binary Gate (${esc(g.resolvedBinaryPath || g.executable)})</span>`);
+            } else if (g.localShimActive) {
+              badges.push(`<span class="guard-badge">PATH Gate (~/.local/bin)</span>`);
+            }
+            if (g.desktopLockedCount > 0) {
+              badges.push(`<span class="guard-badge">Desktop Launcher Locked (${g.desktopLockedCount})</span>`);
+            }
+            if (state.service?.serviceActive) {
+              badges.push(`<span class="guard-badge ok">24/7 Background Guard</span>`);
+            }
+          } else {
+            badges.push(`<span class="guard-badge warn">Paused</span>`);
+          }
+          if ((g.killedCount || 0) > 0 || (g.blockedCount || 0) > 0) {
+            badges.push(
+              `<span class="guard-badge warn">Killed outside VPN: ${g.killedCount || 0} · Blocked base launches: ${g.blockedCount || 0}</span>`
+            );
+          }
+
+          return `
+            <div class="item-row" data-guarded-id="${esc(g.id)}">
+              <div style="min-width:0;">
+                <div class="item-title">
+                  ${isEnabled ? '🔒' : '⏸'} ${esc(g.name || g.executable)}
+                  <span style="font-weight:400;color:var(--muted);font-size:12px;">(${esc(g.executable)})</span>
+                </div>
+                <div class="guard-badges">${badges.join('')}</div>
+              </div>
+              <div style="display:flex;gap:6px;flex-shrink:0;">
+                <button type="button" class="btn btn-primary btn-sm" data-launch-guarded="${esc(g.executable)}">Launch via VPN</button>
+                <button type="button" class="btn btn-sm" data-toggle-guarded="${esc(g.id)}" data-enabled="${isEnabled ? '1' : '0'}">${isEnabled ? 'Pause' : 'Resume'}</button>
+                <button type="button" class="btn btn-danger btn-sm" data-unlock-guarded="${esc(g.id)}" title="Remove VPN-Only lock and restore normal base launch">Unlock</button>
+              </div>
+            </div>
+          `;
+        })
+        .join('');
+
+      listEl.querySelectorAll('[data-launch-guarded]').forEach(btn => {
+        btn.onclick = async () => {
+          await launchApp({
+            executable: btn.dataset.launchGuarded,
+            args: [],
+            accountId: document.getElementById('select-account').value,
+            profileId: document.getElementById('select-server').value,
+          });
+        };
+      });
+
+      listEl.querySelectorAll('[data-toggle-guarded]').forEach(btn => {
+        btn.onclick = async () => {
+          const currentlyEnabled = btn.dataset.enabled === '1';
+          const res = await window.robos.setGuardedAppEnabled(btn.dataset.toggleGuarded, !currentlyEnabled);
+          if (!res.ok) {
+            showBanner(res.error || 'Could not update guard rule.', true);
+            return;
+          }
+          applyGuardResponse(res);
+          showBanner(!currentlyEnabled ? 'Resumed VPN-Only protection.' : 'Paused VPN-Only protection.');
+        };
+      });
+
+      listEl.querySelectorAll('[data-unlock-guarded]').forEach(btn => {
+        btn.onclick = async () => {
+          const res = await window.robos.removeGuardedApp(btn.dataset.unlockGuarded);
+          if (!res.ok) {
+            showBanner(res.error || 'Could not unlock app.', true);
+            return;
+          }
+          applyGuardResponse(res);
+          showBanner('Unlocked app and restored normal base-state launch.');
+        };
+      });
+    }
+  }
+
+  const events = state.guardEvents || [];
+  if (eventsWrap && eventsList) {
+    eventsWrap.classList.toggle('hidden', events.length === 0);
+    eventsList.innerHTML = events
+      .slice(0, 20)
+      .map(ev => {
+        const actionBadge =
+          ev.action === 'blocked-launch'
+            ? '⛔ Blocked Base Launch'
+            : '⚡ Killed Outside VPN (SIGKILL)';
+        return `
+          <div class="guard-event-row">
+            <div>
+              <strong>${actionBadge}:</strong> <code>${esc(ev.executable)}</code> (PID ${esc(ev.pid)}, namespace <code>${esc(ev.netns || 'host')}</code>)
+            </div>
+            <span class="guard-event-time">${esc(formatShortTime(ev.at))}</span>
+          </div>
+        `;
+      })
+      .join('');
+  }
 }
 
 function renderSessions() {
@@ -228,7 +460,7 @@ function renderSessions() {
                 ${esc(s.executable)} ${esc((s.args || []).join(' '))}
               </div>
               <div class="item-sub">
-                ${esc(statusLabel)} · Server: ${esc(s.serverHost)} (${esc(s.accountLabel)})${nextText}
+                ${esc(statusLabel)} · Namespace: ${esc(s.netnsName)} · Server: ${esc(s.serverHost)} (${esc(s.accountLabel)})${nextText}
               </div>
               ${
                 lastFailover
@@ -402,9 +634,25 @@ async function init() {
     });
   }
 
+  if (typeof window.robos.onGuardEvent === 'function') {
+    window.robos.onGuardEvent(async ev => {
+      const fresh = await window.robos.getGuardState();
+      if (fresh.ok) applyGuardResponse(fresh);
+      if (ev?.executable) {
+        showBanner(
+          ev.action === 'blocked-launch'
+            ? `⛔ Blocked base-state launch of "${ev.executable}" outside the VPN Sandbox.`
+            : `⚡ Killed "${ev.executable}" (PID ${ev.pid}) because it was launched outside the VPN Sandbox!`,
+          true
+        );
+      }
+    });
+  }
+
   renderHeaderAndSelectors();
   renderSavedApps();
   renderSessions();
+  renderGuardSection();
 
   const disc = await window.robos.discoverExecutables('');
   const picker = document.getElementById('picker-app');
@@ -435,8 +683,24 @@ async function init() {
   document.getElementById('btn-launch').onclick = async () => {
     const executable = document.getElementById('input-executable').value.trim();
     const args = document.getElementById('input-args').value.trim();
+    const name = document.getElementById('input-profile-name').value.trim() || executable;
+    const lockVpnOnly = document.getElementById('input-vpn-only')?.checked;
     const accountId = document.getElementById('select-account').value;
     const profileId = document.getElementById('select-server').value;
+
+    if (lockVpnOnly && executable) {
+      const gRes = await window.robos.addGuardedApp({
+        executable,
+        name,
+        blockBaseLaunch: true,
+        killOutsideSandbox: true,
+      });
+      if (!gRes.ok) {
+        showBanner(gRes.error || 'Could not lock app to VPN-Only.', true);
+        return;
+      }
+      applyGuardResponse(gRes);
+    }
     await launchApp({ executable, args, accountId, profileId });
   };
 
@@ -444,6 +708,7 @@ async function init() {
     const executable = document.getElementById('input-executable').value.trim();
     const args = document.getElementById('input-args').value.trim();
     const name = document.getElementById('input-profile-name').value.trim() || executable;
+    const vpnOnly = document.getElementById('input-vpn-only')?.checked ? true : undefined;
     const accountId = document.getElementById('select-account').value;
     const profileId = document.getElementById('select-server').value;
     const res = await window.robos.saveAppProfile({
@@ -453,15 +718,111 @@ async function init() {
       accountId,
       profileId,
       autoFailover: state.autoFailover,
+      vpnOnly,
     });
     if (!res.ok) {
       showBanner(res.error || 'Could not save app.', true);
       return;
     }
     state.savedApps = res.apps;
-    renderSavedApps();
-    showBanner(`Saved "${res.profile.name}" to your app list.`);
+    const gFresh = await window.robos.getGuardState();
+    if (gFresh.ok) applyGuardResponse(gFresh);
+    else renderSavedApps();
+    showBanner(
+      vpnOnly
+        ? `Saved "${res.profile.name}" and locked it to VPN-Only mode.`
+        : `Saved "${res.profile.name}" to your app list.`
+    );
   };
+
+  const addGuardBtn = document.getElementById('btn-add-guarded-app');
+  if (addGuardBtn) {
+    addGuardBtn.onclick = async () => {
+      const inputEl = document.getElementById('input-guard-exec');
+      const executable = inputEl.value.trim();
+      if (!executable) {
+        showBanner('Enter an executable name (such as qbittorrent) to lock to VPN-Only mode.', true);
+        return;
+      }
+      const blockBaseLaunch = document.getElementById('input-guard-block-base')?.checked !== false;
+      const res = await window.robos.addGuardedApp({
+        executable,
+        blockBaseLaunch,
+        killOutsideSandbox: true,
+      });
+      if (!res.ok) {
+        showBanner(res.error || 'Could not lock app.', true);
+        return;
+      }
+      inputEl.value = '';
+      applyGuardResponse(res);
+      const killedExtra = res.killedNow?.length
+        ? ` Immediately killed ${res.killedNow.length} outside-sandbox instance(s).`
+        : '';
+      showBanner(`🔒 Locked "${executable}" to VPN-Only mode.${killedExtra}`);
+    };
+  }
+
+  const guardExecInput = document.getElementById('input-guard-exec');
+  if (guardExecInput) {
+    guardExecInput.addEventListener('keydown', ev => {
+      if (ev.key === 'Enter') {
+        ev.preventDefault();
+        document.getElementById('btn-add-guarded-app')?.click();
+      }
+    });
+  }
+
+  const scanGuardBtn = document.getElementById('btn-scan-guard-now');
+  if (scanGuardBtn) {
+    scanGuardBtn.onclick = async () => {
+      const res = await window.robos.enforceGuardNow();
+      if (!res.ok) {
+        showBanner(res.error || 'Guard scan failed.', true);
+        return;
+      }
+      applyGuardResponse(res);
+      if (res.killedCount > 0) {
+        showBanner(`⚡ Terminated ${res.killedCount} outside-sandbox instance(s) via SIGKILL.`, true);
+      } else {
+        const inside = res.insideSandbox?.length || 0;
+        showBanner(
+          `✓ Guard scan clean: 0 guarded apps running outside VPN Sandbox${inside ? ` (${inside} running safely inside VPN namespace)` : ''}.`
+        );
+      }
+    };
+  }
+
+  const clearGuardEventsBtn = document.getElementById('btn-clear-guard-events');
+  if (clearGuardEventsBtn) {
+    clearGuardEventsBtn.onclick = async () => {
+      const res = await window.robos.clearGuardEvents();
+      if (res.ok) {
+        state.guardEvents = [];
+        renderGuardSection();
+      }
+    };
+  }
+
+  const proveGuardBtn = document.getElementById('btn-prove-guard');
+  if (proveGuardBtn) {
+    proveGuardBtn.onclick = async () => {
+      const origText = proveGuardBtn.textContent;
+      proveGuardBtn.disabled = true;
+      proveGuardBtn.textContent = 'Proving Guard…';
+      showBanner('Running 5-step VPN-Only Guard Proof: testing base-state block, outside-VPN SIGKILL, and in-namespace survival…');
+      const res = await window.robos.proveVpnOnlyGuard();
+      proveGuardBtn.disabled = false;
+      proveGuardBtn.textContent = origText;
+      if (!res.ok) {
+        showBanner(res.error || 'VPN-Only Guard proof failed.', true);
+        return;
+      }
+      showBanner(
+        `✓ VPN-Only Guard Proven (${res.mode}): Base launch blocked (exit ${res.baseLaunchBlockedExitCode}), rogue outside-VPN process SIGKILLed immediately, and sandboxed instance stayed alive!`
+      );
+    };
+  }
 
   document.getElementById('btn-check-vpn').onclick = async () => {
     const checkBtn = document.getElementById('btn-check-vpn');
@@ -553,9 +914,13 @@ async function init() {
       state.providers = fresh.providers;
       state.savedApps = fresh.savedApps;
       state.sessions = fresh.sessions;
+      state.guardedApps = fresh.guardedApps || [];
+      state.guardEvents = fresh.guardEvents || [];
+      state.service = fresh.service || {};
       renderHeaderAndSelectors();
       renderSavedApps();
       renderSessions();
+      renderGuardSection();
     }
   }, 2500);
 }

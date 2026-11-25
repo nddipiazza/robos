@@ -163,9 +163,16 @@ h1, h2, h3, p { margin: 0; }
 
 .columns {
   display: grid;
-  grid-template-columns: 420px 1fr;
+  grid-template-columns: 460px 1fr;
   gap: 16px;
   align-items: start;
+}
+
+.right-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
 }
 
 .card {
@@ -311,6 +318,7 @@ h1, h2, h3, p { margin: 0; }
   font-size: 12px;
   color: var(--muted);
   margin-top: 2px;
+  overflow-wrap: anywhere;
 }
 
 .session-card {
@@ -366,7 +374,141 @@ h1, h2, h3, p { margin: 0; }
   margin-right: 6px;
 }
 
+.btn-sm {
+  padding: 5px 10px;
+  font-size: 12px;
+}
+
+.btn-vpn-only {
+  padding: 6px 10px;
+  font-size: 12px;
+  background: #17202b;
+  border-color: #384657;
+  color: #cbd5e1;
+}
+
+.btn-vpn-only.locked {
+  background: rgba(34, 197, 94, 0.14);
+  border-color: rgba(34, 197, 94, 0.55);
+  color: #86efac;
+}
+
+.count-pill.guard-active {
+  background: rgba(34, 197, 94, 0.14);
+  border-color: rgba(34, 197, 94, 0.5);
+  color: #86efac;
+}
+
+.guard-desc {
+  font-size: 12px;
+  color: var(--muted);
+  max-width: 680px;
+}
+
+.guard-desc code {
+  color: #a5f3fc;
+  background: rgba(0, 188, 212, 0.1);
+  padding: 1px 4px;
+  border-radius: 4px;
+  font-size: 11.5px;
+}
+
+.guard-add-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.guard-base-check {
+  white-space: nowrap;
+  padding: 0 4px;
+}
+
+.guard-suggestions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.chip-btn {
+  padding: 3px 9px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 188, 212, 0.45);
+  background: rgba(0, 188, 212, 0.1);
+  color: #a5f3fc;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.chip-btn:hover {
+  background: rgba(0, 188, 212, 0.22);
+}
+
+.guard-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 5px;
+}
+
+.guard-badge {
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  background: #12212b;
+  border: 1px solid rgba(0, 188, 212, 0.35);
+  color: #a5f3fc;
+}
+
+.guard-badge.ok {
+  background: #0e211a;
+  border-color: rgba(34, 197, 94, 0.45);
+  color: #86efac;
+}
+
+.guard-badge.warn {
+  background: #2b1d12;
+  border-color: rgba(245, 158, 11, 0.45);
+  color: #fcd34d;
+}
+
+.guard-events-list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  max-height: 170px;
+  overflow-y: auto;
+}
+
+.guard-event-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 6px 10px;
+  border-radius: 5px;
+  background: #1a1114;
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  font-size: 12px;
+  color: #fecaca;
+}
+
+.guard-event-time {
+  color: var(--muted);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
 @media (max-width: 860px) {
   .columns { grid-template-columns: 1fr; }
   .vpn-selector-bar { flex-direction: column; align-items: stretch; }
+  .guard-add-bar { flex-direction: column; align-items: stretch; }
 }

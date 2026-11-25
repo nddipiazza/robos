@@ -60,10 +60,18 @@ const ovpnManager = ovpnModule.createOvpnManager({ configDir: CONFIG_DIR });
 const sandboxEngine = sandboxModule.createVpnSandboxEngine({
   configDir: CONFIG_DIR,
   ovpnManager,
+  enableGuardMonitor: process.env.ROBOS_TEST !== '1',
   onFailover: event => {
     try {
       if (mainWindow && !mainWindow.isDestroyed?.()) {
         mainWindow.webContents?.send?.('vpn-failover', event);
+      }
+    } catch {}
+  },
+  onGuardEvent: event => {
+    try {
+      if (mainWindow && !mainWindow.isDestroyed?.()) {
+        mainWindow.webContents?.send?.('vpn-guard-event', event);
       }
     } catch {}
   },
@@ -122,7 +130,10 @@ app.whenReady?.().then(() => {
   }
 });
 
-app.on?.('window-all-closed', () => app.quit());
+app.on?.('window-all-closed', () => {
+  sandboxEngine.stopGuardMonitor?.();
+  app.quit();
+});
 app.on?.('second-instance', () => {
   if (mainWindow && !mainWindow.isDestroyed?.()) {
     if (mainWindow.isMinimized?.()) mainWindow.restore();
@@ -136,15 +147,21 @@ ipcMain.handle('get-initial-state', async () => {
     const accountsState = ovpnManager.listAccounts();
     const savedApps = sandboxEngine.listSavedAppProfiles();
     const sessions = sandboxEngine.listSessions();
+    const guardState = sandboxEngine.getGuardState();
     const hostNet = sandboxModule.detectHostNetworkInfo();
-    const transmissionInstalled = Boolean(sandboxEngine.detectInstalledTransmission());
+    const qbittorrentBin = sandboxEngine.detectInstalledQbittorrent();
+    const transmissionBin = sandboxEngine.detectInstalledTransmission();
     return {
       ok: true,
       ...accountsState,
       savedApps,
       sessions,
+      ...guardState,
       hostNet,
-      transmissionInstalled,
+      qbittorrentInstalled: Boolean(qbittorrentBin),
+      qbittorrentBin,
+      transmissionInstalled: Boolean(transmissionBin),
+      transmissionBin,
     };
   } catch (err) {
     return { ok: false, error: err.message };
@@ -297,6 +314,72 @@ ipcMain.handle('clear-stopped-sessions', async () => {
 ipcMain.handle('emergency-kill-all', async () => {
   try {
     return sandboxEngine.emergencyKillAll();
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('get-guard-state', async () => {
+  try {
+    return { ok: true, ...sandboxEngine.getGuardState(), savedApps: sandboxEngine.listSavedAppProfiles() };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('add-guarded-app', async (_, input) => {
+  try {
+    return sandboxEngine.addGuardedApp(input || {});
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('remove-guarded-app', async (_, idOrExecutable) => {
+  try {
+    return sandboxEngine.removeGuardedApp(idOrExecutable);
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('set-guarded-app-enabled', async (_, idOrExecutable, enabled) => {
+  try {
+    return sandboxEngine.setGuardedAppEnabled(idOrExecutable, enabled);
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('set-app-vpn-only', async (_, payload) => {
+  try {
+    return sandboxEngine.setAppVpnOnly(payload || {});
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('enforce-guard-now', async () => {
+  try {
+    const res = sandboxEngine.enforceGuardedAppsOnce();
+    return { ...res, ...sandboxEngine.getGuardState() };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('clear-guard-events', async () => {
+  try {
+    return sandboxEngine.clearGuardEvents();
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('prove-vpn-only-guard', async () => {
+  try {
+    const proof = await sandboxEngine.proveVpnOnlyGuard();
+    return { ...proof, ...sandboxEngine.getGuardState() };
   } catch (err) {
     return { ok: false, error: err.message };
   }

@@ -82,3 +82,20 @@ test('E2E Auto-Failover Proof: killing OpenVPN on Chicago 2 detects down tunnel 
     assert.equal(s.passed, true, `Step ${s.step} (${s.name}) failed: ${s.detail}`);
   }
 });
+
+test('E2E VPN-Only App Guard Proof: locked app is unlaunchable in base state, SIGKILLed outside VPN, and allowed inside robos_vpn_*', async () => {
+  const engine = createVpnSandboxEngine();
+  const proof = await engine.proveVpnOnlyGuard();
+
+  console.log('\n=== E2E VPN-ONLY APP GUARD PROOF REPORT ===');
+  console.log(JSON.stringify(proof, null, 2));
+  console.log('===========================================\n');
+
+  assert.equal(proof.ok, true, 'All 5 VPN-Only Guard proof phases must pass');
+  assert.equal(proof.baseLaunchBlockedExitCode, 126, 'Base-state launch outside VPN must exit 126');
+  assert.equal(proof.outsideSandboxKilled, true, 'Rogue outside-sandbox process must be SIGKILLed');
+  assert.equal(proof.sandboxedAppSurvived, true, 'Authorized in-namespace process must stay running');
+  for (const s of proof.steps) {
+    assert.equal(s.passed, true, `Step ${s.step} (${s.name}) failed: ${s.detail}`);
+  }
+});

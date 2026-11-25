@@ -405,3 +405,288 @@ test('VPN Sandbox detects down VPN at launch AND mid-session and automatically f
     fs.rmSync(tmpDir, { recursive: true, force: true });
   }
 });
+
+test('qBittorrent default profile is automatically seeded when qbittorrent is installed and critical system binaries cannot be locked', () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'robos-vpn-qbit-default-'));
+  try {
+    const ovpnManager = createOvpnManager({ configDir: tmpDir, usePass: false });
+    const engineWithQbit = createVpnSandboxEngine({
+      configDir: tmpDir,
+      ovpnManager,
+      usePass: false,
+      qbittorrentBinary: 'qbittorrent',
+      transmissionBinary: null,
+    });
+    const profiles = engineWithQbit.listSavedAppProfiles();
+    const qb = profiles.find(p => p.id === 'sandbox-qbittorrent');
+    assert.ok(qb, 'qBittorrent profile must be seeded when qbittorrent is installed');
+    assert.equal(qb.name, 'qBittorrent');
+    assert.equal(qb.executable, 'qbittorrent');
+    assert.equal(qb.vpnOnly, false);
+
+    // Critical OS binaries must never be allowed to be locked/killed
+    for (const critical of ['bash', 'sudo', 'openvpn', 'ip', 'node', 'electron']) {
+      assert.throws(
+        () => engineWithQbit.addGuardedApp({ executable: critical }),
+        /Cannot lock critical system executable/
+      );
+    }
+  } finally {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
+});
+
+test('VPN-Only App Guard makes an app (e.g. qbittorrent) unlaunchable from its base state, shadows desktop/autostart launchers, and cleanly restores on unlock', async () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'robos-vpn-guard-base-test-'));
+  try {
+    const { spawnSync } = require('node:child_process');
+    const binDir = path.join(tmpDir, 'bin');
+    const localBinDir = path.join(tmpDir, 'local-bin');
+    const sysDesktopDir = path.join(tmpDir, 'sys-desktop');
+    const userDesktopDir = path.join(tmpDir, 'user-desktop');
+    const autostartDir = path.join(tmpDir, 'autostart');
+    const fakeNetnsDir = path.join(tmpDir, 'netns');
+    fs.mkdirSync(binDir, { recursive: true });
+    fs.mkdirSync(sysDesktopDir, { recursive: true });
+    fs.mkdirSync(userDesktopDir, { recursive: true });
+    fs.mkdirSync(autostartDir, { recursive: true });
+    fs.mkdirSync(fakeNetnsDir, { recursive: true });
+
+    const qbitBin = path.join(binDir, 'qbittorrent');
+    const ranFlag = path.join(tmpDir, 'qbit-executed.txt');
+    fs.writeFileSync(
+      qbitBin,
+      `#!/usr/bin/env bash\necho "EXECUTED:$$" >> "${ranFlag}"\nexit 0\n`,
+      { mode: 0o755 }
+    );
+    fs.writeFileSync(
+      path.join(sysDesktopDir, 'org.qbittorrent.qBittorrent.desktop'),
+      `[Desktop Entry]\nType=Application\nName=qBittorrent\nExec=${qbitBin} %U\nIcon=qbittorrent\n`,
+      { mode: 0o644 }
+    );
+    fs.writeFileSync(
+      path.join(autostartDir, 'qbittorrent.desktop'),
+      `[Desktop Entry]\nType=Application\nName=qBittorrent\nExec=${qbitBin}\n`,
+      { mode: 0o644 }
+    );
+
+    const ovpnManager = createOvpnManager({ configDir: tmpDir, usePass: false });
+    ovpnManager.saveAccount({
+      providerId: 'ipvanish',
+      label: 'IPVanish Guard Test',
+      username: 'u',
+      password: 'p',
+      defaultProfile: 'ipvanish-US-New-York-nyc-a01',
+      setDefault: true,
+    });
+
+    const engine = createVpnSandboxEngine({
+      configDir: tmpDir,
+      ovpnManager,
+      usePass: false,
+      localBinDir,
+      desktopSystemDirs: [sysDesktopDir],
+      desktopOverrideDir: userDesktopDir,
+      autostartDir,
+      netnsDirs: [fakeNetnsDir],
+      allowSystemBinaryGate: false,
+      allowSystemdInstall: false,
+      qbittorrentBinary: qbitBin,
+    });
+
+    // Lock qbittorrent to VPN-Only mode
+    const locked = engine.setAppVpnOnly({ executable: qbitBin, name: 'qBittorrent', vpnOnly: true });
+    assert.equal(locked.ok, true);
+    assert.equal(locked.guardedApp.binaryGateActive, true, 'Binary gate must be installed at executable path');
+    assert.ok(fs.existsSync(`${qbitBin}.robos-vpn-real`), 'Real binary must be safely diverted to .robos-vpn-real');
+    assert.equal(locked.guardedApp.desktopLockedCount, 1, 'System .desktop entry must be shadowed in user applications');
+
+    const desktopShadow = fs.readFileSync(path.join(userDesktopDir, 'org.qbittorrent.qBittorrent.desktop'), 'utf8');
+    assert.ok(desktopShadow.includes('NoDisplay=true'));
+    const autostartLocked = fs.readFileSync(path.join(autostartDir, 'qbittorrent.desktop'), 'utf8');
+    assert.ok(autostartLocked.includes('Hidden=true'));
+
+    // Saved apps must reflect vpnOnly: true
+    assert.equal(locked.savedApps.find(a => a.id === 'sandbox-qbittorrent')?.vpnOnly, true);
+
+    // Base-state execution outside VPN sandbox must be refused immediately (exit 126) without executing real binary
+    const blockedRun = spawnSync(qbitBin, ['magnet:?xt=urn:btih:123'], { encoding: 'utf8', timeout: 4000 });
+    assert.equal(blockedRun.status, 126, 'Base-state launch must fail with exit code 126');
+    assert.ok(blockedRun.stderr.includes('BLOCKED by RobOS VPN Sandbox'));
+    assert.equal(fs.existsSync(ranFlag), false, 'Real binary must NEVER execute in base state');
+
+    // Event log must record the blocked base-state launch
+    const events = engine.listGuardEvents();
+    assert.ok(events.some(e => e.action === 'blocked-launch' && e.executable === 'qbittorrent'));
+
+    // Launching via VPN Sandbox engine in simulated harness mode must still work!
+    const session = await engine.launchSandboxedExecutable({ executable: qbitBin, args: [] });
+    await new Promise(r => setTimeout(r, 120));
+    assert.equal(fs.existsSync(ranFlag), true, 'Launching inside VPN Sandbox must execute real binary');
+    engine.stopSession(session.id);
+
+    // Unlocking must cleanly restore original binary, remove desktop shadow, and restore autostart
+    fs.unlinkSync(ranFlag);
+    const unlocked = engine.setAppVpnOnly({ executable: qbitBin, vpnOnly: false });
+    assert.equal(unlocked.ok, true);
+    assert.equal(unlocked.guardedApps.length, 0);
+    assert.equal(fs.existsSync(`${qbitBin}.robos-vpn-real`), false, 'Diverted binary must be restored');
+    assert.equal(fs.existsSync(path.join(userDesktopDir, 'org.qbittorrent.qBittorrent.desktop')), false);
+    const restoredRun = spawnSync(qbitBin, [], { encoding: 'utf8', timeout: 4000 });
+    assert.equal(restoredRun.status, 0);
+    assert.equal(fs.existsSync(ranFlag), true);
+  } finally {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
+});
+
+test('Outside-Sandbox Process Killer SIGKILLs any guarded app (qbittorrent / companion / AppImage) outside robos_vpn_* while preserving sandboxed instances and supervisors', async () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'robos-vpn-guard-kill-test-'));
+  const { spawn } = require('node:child_process');
+  const spawnedChildren = [];
+  try {
+    const ovpnManager = createOvpnManager({ configDir: tmpDir, usePass: false });
+    ovpnManager.saveAccount({
+      providerId: 'ipvanish',
+      label: 'IPVanish Kill Test',
+      username: 'u',
+      password: 'p',
+      defaultProfile: 'ipvanish-US-New-York-nyc-a01',
+      setDefault: true,
+    });
+
+    // 1. Test real /proc SIGKILL on an actual live child process running outside VPN sandbox
+    const fakeQbitScript = path.join(tmpDir, 'qbittorrent');
+    fs.writeFileSync(fakeQbitScript, '#!/usr/bin/env node\nsetInterval(() => {}, 10000);\n', { mode: 0o755 });
+
+    const preExistingRogue = spawn(process.execPath, [fakeQbitScript], { stdio: 'ignore' });
+    spawnedChildren.push(preExistingRogue);
+    await new Promise(r => setTimeout(r, 80));
+
+    const realProcEngine = createVpnSandboxEngine({
+      configDir: tmpDir,
+      ovpnManager,
+      usePass: false,
+      allowSystemBinaryGate: false,
+      allowSystemdInstall: false,
+    });
+
+    // Adding qbittorrent to Guard must IMMEDIATELY kill the already-running outside-sandbox instance!
+    const addRes = realProcEngine.addGuardedApp({
+      executable: 'qbittorrent',
+      name: 'qBittorrent',
+      blockBaseLaunch: false,
+      killOutsideSandbox: true,
+    });
+    await new Promise(r => setTimeout(r, 60));
+
+    let rogueStillAlive = true;
+    try {
+      process.kill(preExistingRogue.pid, 0);
+    } catch {
+      rogueStillAlive = false;
+    }
+    assert.equal(rogueStillAlive, false, 'Pre-existing outside-sandbox qbittorrent process must be SIGKILLed immediately on lock');
+    assert.ok(addRes.killedNow.some(k => k.pid === preExistingRogue.pid), 'killedNow must report the terminated rogue PID');
+
+    // 2. Verify namespace discrimination: processes in robos_vpn_* and sudo supervisors survive; host/other-ns processes are killed
+    const fakeNetnsDir = path.join(tmpDir, 'fake-netns');
+    fs.mkdirSync(fakeNetnsDir, { recursive: true });
+    const fakeNsFile = path.join(fakeNetnsDir, 'robos_vpn_abcd');
+    fs.writeFileSync(fakeNsFile, 'ns');
+    const vpnInode = `net:[${fs.statSync(fakeNsFile).ino}]`;
+    const hostInode = 'net:[4026531833]';
+
+    // Spawn two real sacrificial processes to represent outside-VPN qbittorrent & qbittorrent-nox
+    const rogueHostProc = spawn(process.execPath, ['-e', 'setInterval(()=>{},10000)'], { stdio: 'ignore' });
+    const rogueAppImageProc = spawn(process.execPath, ['-e', 'setInterval(()=>{},10000)'], { stdio: 'ignore' });
+    const safeSandboxedProc = spawn(process.execPath, ['-e', 'setInterval(()=>{},10000)'], { stdio: 'ignore' });
+    const safeSupervisorProc = spawn(process.execPath, ['-e', 'setInterval(()=>{},10000)'], { stdio: 'ignore' });
+    const safeUnrelatedProc = spawn(process.execPath, ['-e', 'setInterval(()=>{},10000)'], { stdio: 'ignore' });
+    spawnedChildren.push(rogueHostProc, rogueAppImageProc, safeSandboxedProc, safeSupervisorProc, safeUnrelatedProc);
+    await new Promise(r => setTimeout(r, 60));
+
+    const discriminationEngine = createVpnSandboxEngine({
+      configDir: tmpDir,
+      ovpnManager,
+      usePass: false,
+      netnsDirs: [fakeNetnsDir],
+      hostNetns: hostInode,
+      allowSystemBinaryGate: false,
+      allowSystemdInstall: false,
+      processScanner: () => [
+        {
+          pid: rogueHostProc.pid,
+          comm: 'qbittorrent',
+          exe: '/usr/bin/qbittorrent.robos-vpn-real',
+          cmdline: ['/usr/bin/qbittorrent'],
+          netns: hostInode,
+        },
+        {
+          pid: rogueAppImageProc.pid,
+          comm: 'qbittorrent-nox',
+          exe: '/usr/bin/qbittorrent-nox',
+          cmdline: ['./qBittorrent-5.0-x86_64.AppImage'],
+          netns: 'net:[4026539999]', // arbitrary non-RobOS namespace (e.g. Docker) must ALSO be killed!
+        },
+        {
+          pid: safeSandboxedProc.pid,
+          comm: 'qbittorrent',
+          exe: '/usr/bin/qbittorrent.robos-vpn-real',
+          cmdline: ['/usr/bin/qbittorrent'],
+          netns: vpnInode, // inside active robos_vpn_abcd -> MUST SURVIVE!
+        },
+        {
+          pid: safeSupervisorProc.pid,
+          comm: 'sudo',
+          exe: '/usr/bin/sudo',
+          cmdline: ['sudo', '-n', 'ip', 'netns', 'exec', 'robos_vpn_abcd', 'sudo', '-u', 'robos', 'qbittorrent'],
+          netns: hostInode, // host-side sudo supervisor -> MUST SURVIVE!
+        },
+        {
+          pid: safeUnrelatedProc.pid,
+          comm: 'vim',
+          exe: '/usr/bin/vim',
+          cmdline: ['vim', 'qbittorrent.conf'],
+          netns: hostInode, // editing a file named qbittorrent.conf -> MUST SURVIVE!
+        },
+      ],
+    });
+
+    const enforceRes = discriminationEngine.enforceGuardedAppsOnce();
+    await new Promise(r => setTimeout(r, 60));
+
+    const isAlive = pid => {
+      try {
+        process.kill(pid, 0);
+        return true;
+      } catch {
+        return false;
+      }
+    };
+
+    assert.equal(enforceRes.killedCount, 2, 'Exactly the 2 outside-VPN instances must be killed');
+    assert.equal(isAlive(rogueHostProc.pid), false, 'Host-namespace qbittorrent must be dead');
+    assert.equal(isAlive(rogueAppImageProc.pid), false, 'Non-VPN-namespace qbittorrent-nox/AppImage must be dead');
+    assert.equal(isAlive(safeSandboxedProc.pid), true, 'Sandboxed qbittorrent inside robos_vpn_abcd must stay alive');
+    assert.equal(isAlive(safeSupervisorProc.pid), true, 'Host sudo ip netns exec supervisor must stay alive');
+    assert.equal(isAlive(safeUnrelatedProc.pid), true, 'Unrelated vim qbittorrent.conf process must stay alive');
+
+    // 3. Multi-app concurrent sandbox sessions must get distinct session IDs and distinct 10.203.X.0/30 subnets
+    const s1 = await realProcEngine.launchSandboxedExecutable({ executable: 'curl', args: ['https://api.ipify.org'] });
+    const s2 = await realProcEngine.launchSandboxedExecutable({ executable: 'curl', args: ['https://api.ipify.org'] });
+    assert.notEqual(s1.id, s2.id, 'Concurrent sandboxed apps must have unique session IDs');
+    assert.notEqual(
+      s1.firewallSpec.subnetCidr,
+      s2.firewallSpec.subnetCidr,
+      'Concurrent sandboxed apps must have non-overlapping 10.203.X.0/30 veth subnets'
+    );
+    realProcEngine.stopSession(s1.id);
+    realProcEngine.stopSession(s2.id);
+  } finally {
+    for (const c of spawnedChildren) {
+      try { c.kill('SIGKILL'); } catch {}
+    }
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
+});
