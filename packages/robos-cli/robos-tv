@@ -127,9 +127,12 @@ async function main() {
     const serverArg = srvIdx >= 0 && args[srvIdx + 1] ? args[srvIdx + 1] : '';
     const passIdx = args.indexOf('--pass');
     const passArg = passIdx >= 0 && args[passIdx + 1] ? args[passIdx + 1] : '';
+    const nameIdx = args.indexOf('--name');
+    const nameArg = nameIdx >= 0 && args[nameIdx + 1] ? args[nameIdx + 1] : '';
     const res = await engine.installRokuMoviePlayer({
       tvIp: ipArg || defaultRokuIp,
       mediaServerUrl: serverArg,
+      appName: nameArg || undefined,
       rokuDevPassword: passArg || process.env.ROKU_DEV_PASS || 'robos',
     });
     console.log(JSON.stringify(res, null, 2));

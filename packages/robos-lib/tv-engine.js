@@ -68,58 +68,77 @@ function buildCinemaPosterPng(width, height) {
     return out;
   };
 
-  const stride = 1 + width * 4;
-  const raw = Buffer.alloc(stride * height);
+  // Pure 24-bit opaque RGB (no alpha channel) white background + navy/blue RobOS [ robot ] emblem
+  const stride = 1 + width * 3;
+  const raw = Buffer.alloc(stride * height, 255);
   const cx = width / 2;
-  const cy = height / 2;
-  const radius = Math.min(width, height) * 0.28;
-  const border = Math.max(3, Math.round(Math.min(width, height) * 0.028));
-  const sprocketW = Math.max(8, Math.round(width * 0.055));
+  const cy = height * 0.44;
+  const unit = Math.min(width, height);
+  const stroke = Math.max(4, Math.round(unit * 0.045));
+  const headW = Math.round(unit * 0.28);
+  const headH = Math.round(unit * 0.19);
+  const headX0 = Math.round(cx - headW / 2);
+  const headY0 = Math.round(cy - unit * 0.19);
+  const bodyW = Math.round(unit * 0.24);
+  const bodyH = Math.round(unit * 0.22);
+  const bodyX0 = Math.round(cx - bodyW / 2);
+  const bodyY0 = headY0 + headH + Math.max(3, Math.round(unit * 0.025));
+  const eyeR = Math.max(3, Math.round(unit * 0.03));
+  const eyeY = Math.round(headY0 + headH * 0.52);
+  const eyeL = Math.round(cx - headW * 0.23);
+  const eyeRgt = Math.round(cx + headW * 0.23);
+  const brkHalfW = Math.round(unit * 0.31);
+  const brkTop = Math.round(cy - unit * 0.26);
+  const brkBot = Math.round(cy + unit * 0.26);
+  const brkKnee = Math.round(unit * 0.09);
 
   for (let y = 0; y < height; y++) {
     const rowOff = y * stride;
     raw[rowOff] = 0;
     for (let x = 0; x < width; x++) {
-      let r = 17, g = 14, b = 11; // Warm obsidian #110E0B
-      // Subtle radial theater glow
-      const dx = x - cx;
-      const dy = y - cy;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      if (dist < radius * 1.65) {
-        const glow = Math.max(0, 1 - dist / (radius * 1.65));
-        r = Math.min(255, Math.round(r + 38 * glow));
-        g = Math.min(255, Math.round(g + 24 * glow));
-        b = Math.min(255, Math.round(b + 10 * glow));
-      }
-      // Outer gold frame (#E8A33D) & top cyan stripe (#00BCD4)
-      if (y < border * 2 && y >= border) {
-        r = 0; g = 188; b = 212;
-      } else if (x < border || x >= width - border || y < border || y >= height - border) {
-        r = 232; g = 163; b = 61;
-      } else if (x < border + sprocketW || x >= width - border - sprocketW) {
-        // Filmstrip side rails & sprocket holes
-        const period = Math.max(18, Math.round(height / 8));
-        const inHole = (y % period) >= Math.round(period * 0.28) && (y % period) <= Math.round(period * 0.72)
-          && x >= border + Math.round(sprocketW * 0.22) && x <= width - border - Math.round(sprocketW * 0.22);
-        if (inHole) { r = 42; g = 33; b = 22; }
-        else { r = 26; g = 20; b = 14; }
-      }
-      // Center gold ring + cinema Play triangle
-      if (Math.abs(dist - radius) <= Math.max(2, border * 0.75)) {
-        r = 232; g = 163; b = 61;
-      } else if (dist < radius) {
-        r = 28; g = 22; b = 16;
-        const tx = (x - (cx - radius * 0.26)) / (radius * 0.68);
-        const ty = Math.abs(y - cy) / (radius * 0.42);
-        if (tx >= 0 && tx <= 1 && ty <= (1 - tx)) {
-          r = 252; g = 211; b = 77; // Bright cinema gold #FCD34D
+      let r = 255, g = 255, b = 255;
+
+      // Left & right angled code brackets < robot >
+      const dxAbs = Math.abs(x - cx);
+      if (y >= brkTop && y <= brkBot) {
+        let targetX = brkHalfW;
+        if (y < brkTop + brkKnee) {
+          targetX = brkHalfW - (brkTop + brkKnee - y);
+        } else if (y > brkBot - brkKnee) {
+          targetX = brkHalfW - (y - (brkBot - brkKnee));
+        }
+        if (Math.abs(dxAbs - targetX) <= stroke * 0.55) {
+          r = 0; g = 18; b = 83;
         }
       }
-      const p = rowOff + 1 + x * 4;
+
+      // Antenna stem + bulb
+      const antTop = headY0 - Math.round(unit * 0.075);
+      const antDist = Math.hypot(x - cx, y - antTop);
+      if (antDist <= Math.max(3, Math.round(unit * 0.025)) || (Math.abs(x - cx) <= Math.max(2, Math.round(stroke * 0.3)) && y >= antTop && y <= headY0)) {
+        r = 0; g = 18; b = 83;
+      }
+
+      // Robot head + white eyes
+      if (x >= headX0 && x <= headX0 + headW && y >= headY0 && y <= headY0 + headH) {
+        r = 0; g = 18; b = 83;
+        if (Math.hypot(x - eyeL, y - eyeY) <= eyeR || Math.hypot(x - eyeRgt, y - eyeY) <= eyeR) {
+          r = 255; g = 255; b = 255;
+        }
+      }
+
+      // Robot torso with vertical navy -> light-blue fade
+      if (x >= bodyX0 && x <= bodyX0 + bodyW && y >= bodyY0 && y <= bodyY0 + bodyH) {
+        const t = (y - bodyY0) / Math.max(1, bodyH);
+        r = Math.round(0 + 185 * t);
+        g = Math.round(22 + 182 * t);
+        b = Math.round(92 + 140 * t);
+      }
+
+      const p = rowOff + 1 + x * 3;
       raw[p] = r;
       raw[p + 1] = g;
       raw[p + 2] = b;
-      raw[p + 3] = 255;
     }
   }
 
@@ -127,7 +146,7 @@ function buildCinemaPosterPng(width, height) {
   ihdr.writeUInt32BE(width, 0);
   ihdr.writeUInt32BE(height, 4);
   ihdr[8] = 8;
-  ihdr[9] = 6; // RGBA
+  ihdr[9] = 2; // 24-bit opaque RGB (no alpha channel)
   ihdr[10] = 0;
   ihdr[11] = 0;
   ihdr[12] = 0;
@@ -138,6 +157,62 @@ function buildCinemaPosterPng(width, height) {
     chunk('IDAT', zlib.deflateSync(raw, { level: 6 })),
     chunk('IEND', Buffer.alloc(0)),
   ]);
+}
+
+function renderRobosWhiteBluePng({ width, height, isSplash = false, destPath }) {
+  const transparentLogoPath = path.resolve(__dirname, '..', '..', 'robos-transparent-background.png');
+  const sidebarLogoPath = path.resolve(__dirname, '..', '..', 'site', 'assets', 'images', 'logo-sidebar.png');
+  const maxW = Math.round(width * (isSplash ? 0.46 : 0.84));
+  const maxH = Math.round(height * (isSplash ? 0.58 : 0.84));
+
+  if (fs.existsSync(transparentLogoPath)) {
+    try {
+      // Crop transparent margins tightly to the blue [ robot ] RobOS mark (1038x827 at 507,354 on 2048x1536),
+      // Lanczos-scale, composite onto a pure #FFFFFF white canvas, and encode as 24-bit opaque RGB (no alpha).
+      const fc = `[1:v]crop=1038:827:507:354,scale=${maxW}:${maxH}:force_original_aspect_ratio=decrease:flags=lanczos[fg];[0:v][fg]overlay=(W-w)/2:(H-h)/2,format=rgb24[out]`;
+      const r = spawnSync(
+        'ffmpeg',
+        [
+          '-y',
+          '-f', 'lavfi', '-i', `color=c=white:s=${width}x${height}:d=1`,
+          '-i', transparentLogoPath,
+          '-filter_complex', fc,
+          '-map', '[out]',
+          '-frames:v', '1',
+          destPath,
+        ],
+        { timeout: 6000 }
+      );
+      if (r.status === 0 && fs.existsSync(destPath) && fs.statSync(destPath).size > 500) {
+        return true;
+      }
+    } catch {}
+  }
+
+  if (fs.existsSync(sidebarLogoPath)) {
+    try {
+      const fc = `[1:v]scale=${maxW}:${maxH}:force_original_aspect_ratio=decrease:flags=lanczos[fg];[0:v][fg]overlay=(W-w)/2:(H-h)/2,format=rgb24[out]`;
+      const r = spawnSync(
+        'ffmpeg',
+        [
+          '-y',
+          '-f', 'lavfi', '-i', `color=c=white:s=${width}x${height}:d=1`,
+          '-i', sidebarLogoPath,
+          '-filter_complex', fc,
+          '-map', '[out]',
+          '-frames:v', '1',
+          destPath,
+        ],
+        { timeout: 6000 }
+      );
+      if (r.status === 0 && fs.existsSync(destPath) && fs.statSync(destPath).size > 500) {
+        return true;
+      }
+    } catch {}
+  }
+
+  fs.writeFileSync(destPath, buildCinemaPosterPng(width, height));
+  return false;
 }
 
 const DEFAULT_PORTAL_PORT = 19210;
@@ -1799,21 +1874,6 @@ ${tailLabels}`;
       : 'RobOS 10-Foot Smart TV & Live Dashboards Suite';
     const progressBaseUrl = effectiveMediaServerUrl || portalUrl;
 
-    const manifest = [
-      `title=${effectiveChannelTitle}`,
-      `subtitle=${effectiveSubtitle}`,
-      `major_version=${isMoviePlayerChannel ? 2 : 1}`,
-      `minor_version=${isMoviePlayerChannel ? 1 : 3}`,
-      `build_version=2`,
-      `ui_resolutions=fhd`,
-      `mm_icon_focus_fhd=pkg:/images/channel-poster_fhd.png`,
-      `mm_icon_focus_hd=pkg:/images/channel-poster_hd.png`,
-      `mm_icon_side_hd=pkg:/images/channel-poster_sd.png`,
-      `splash_screen_fhd=pkg:/images/splash_fhd.png`,
-      `splash_color=#0B1120`,
-      `splash_min_time=350`,
-      '',
-    ].join('\n');
     const mainBrs = `sub Main()
     screen = CreateObject("roSGScreen")
     m.port = CreateObject("roMessagePort")
@@ -5551,35 +5611,43 @@ end function
 
     const imagesDir = path.join(targetDir, 'images');
     fs.mkdirSync(imagesDir, { recursive: true });
-    const repoLogoPath = path.resolve(__dirname, '..', '..', 'robos-transparent-background.png');
     try {
-      for (const [imgName, w, h] of [
-        ['channel-poster_fhd.png', 540, 405],
-        ['channel-poster_hd.png', 290, 218],
-        ['channel-poster_sd.png', 214, 144],
-        ['splash_fhd.png', 1920, 1080],
+      for (const existing of fs.readdirSync(imagesDir)) {
+        if (/^robos-(poster|splash)-[0-9a-f]+_(fhd|hd|sd)\.png$/i.test(existing)) {
+          try { fs.unlinkSync(path.join(imagesDir, existing)); } catch {}
+        }
+      }
+    } catch {}
+    try {
+      for (const [imgName, w, h, isSplash] of [
+        ['channel-poster_fhd.png', 540, 405, false],
+        ['channel-poster_hd.png', 290, 218, false],
+        ['channel-poster_sd.png', 214, 144, false],
+        ['splash_fhd.png', 1920, 1080, true],
+        ['splash_hd.png', 1280, 720, true],
       ]) {
         const imgFull = path.join(imagesDir, imgName);
-        let renderedLogo = false;
-        if (fs.existsSync(repoLogoPath)) {
-          try {
-            const barH = Math.max(4, Math.round(h * 0.022));
-            const vf = [
-              `scale=${Math.round(w * 0.92)}:${Math.round(h * 0.88)}:force_original_aspect_ratio=decrease`,
-              `pad=${w}:${h}:(ow-iw)/2:(oh-ih)/2:color=white`,
-              `drawbox=x=0:y=0:w=${w}:h=${barH}:color=0x00BCD4:t=fill`,
-              `drawbox=x=0:y=${h - barH}:w=${w}:h=${barH}:color=0x0F172A:t=fill`,
-            ].join(',');
-            const r = spawnSync('ffmpeg', ['-y', '-i', repoLogoPath, '-vf', vf, '-frames:v', '1', imgFull], { timeout: 6000 });
-            if (r.status === 0 && fs.existsSync(imgFull) && fs.statSync(imgFull).size > 500) {
-              renderedLogo = true;
-            }
-          } catch {}
-        }
-        if (!renderedLogo) {
-          fs.writeFileSync(imgFull, buildCinemaPosterPng(w, h));
-        }
+        renderRobosWhiteBluePng({ width: w, height: h, isSplash, destPath: imgFull });
         filesCreated.push(imgFull);
+      }
+    } catch {}
+    let iconHash = 'v3';
+    try {
+      const fhdBuf = fs.readFileSync(path.join(imagesDir, 'channel-poster_fhd.png'));
+      iconHash = crypto.createHash('sha256').update(fhdBuf).digest('hex').slice(0, 8);
+      for (const [srcName, hashedName] of [
+        ['channel-poster_fhd.png', `robos-poster-${iconHash}_fhd.png`],
+        ['channel-poster_hd.png', `robos-poster-${iconHash}_hd.png`],
+        ['channel-poster_sd.png', `robos-poster-${iconHash}_sd.png`],
+        ['splash_fhd.png', `robos-splash-${iconHash}_fhd.png`],
+        ['splash_hd.png', `robos-splash-${iconHash}_hd.png`],
+      ]) {
+        const srcFull = path.join(imagesDir, srcName);
+        const dstFull = path.join(imagesDir, hashedName);
+        if (fs.existsSync(srcFull)) {
+          fs.copyFileSync(srcFull, dstFull);
+          filesCreated.push(dstFull);
+        }
       }
     } catch {}
     const bundledPkgImageUris = new Set();
@@ -5602,6 +5670,24 @@ end function
       if (it.pkgThumbUri && !bundledPkgImageUris.has(it.pkgThumbUri)) delete it.pkgThumbUri;
       if (it.pkgCoverUri && !bundledPkgImageUris.has(it.pkgCoverUri)) delete it.pkgCoverUri;
     }
+
+    const manifest = [
+      `title=${effectiveChannelTitle}`,
+      `subtitle=${effectiveSubtitle}`,
+      `major_version=${isMoviePlayerChannel ? 2 : 1}`,
+      `minor_version=${isMoviePlayerChannel ? 2 : 4}`,
+      `build_version=3`,
+      `ui_resolutions=fhd`,
+      `mm_icon_focus_fhd=pkg:/images/robos-poster-${iconHash}_fhd.png`,
+      `mm_icon_focus_hd=pkg:/images/robos-poster-${iconHash}_hd.png`,
+      `mm_icon_focus_sd=pkg:/images/robos-poster-${iconHash}_sd.png`,
+      `mm_icon_side_hd=pkg:/images/robos-poster-${iconHash}_sd.png`,
+      `splash_screen_fhd=pkg:/images/robos-splash-${iconHash}_fhd.png`,
+      `splash_screen_hd=pkg:/images/robos-splash-${iconHash}_hd.png`,
+      `splash_color=#FFFFFF`,
+      `splash_min_time=350`,
+      '',
+    ].join('\n');
 
     write('manifest', manifest);
     write('source/Main.brs', mainBrs);
@@ -5629,6 +5715,11 @@ ROKU_PASS="\${ROKU_DEV_PASS:-${defaultPass}}"
 
 rm -f robos-tv-roku.zip
 zip -r -q robos-tv-roku.zip manifest source components images
+echo "[RobOS TV] Clearing previous dev channel icon cache on Roku ($TV_IP)..."
+curl --user "$ROKU_USER:$ROKU_PASS" --digest -s -S \\
+  -F "mysubmit=Delete" \\
+  -F "archive=" \\
+  "http://$TV_IP/plugin_install" >/dev/null 2>&1 || true
 echo "[RobOS TV] Uploading robos-tv-roku.zip to Roku ($TV_IP) as $ROKU_USER..."
 curl --user "$ROKU_USER:$ROKU_PASS" --digest -s -S \\
   -F "mysubmit=Install" \\

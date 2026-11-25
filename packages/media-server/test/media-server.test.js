@@ -395,6 +395,10 @@ test('RobOS Media Server indexes movies, shows, music, books & courses, serves H
   assert.equal(rokuBuild.ok, true);
   const manifestTxt = fs.readFileSync(path.join(rokuBuild.targetDir, 'manifest'), 'utf8');
   assert.match(manifestTxt, /title=RobOS Movie Player/);
+  assert.match(manifestTxt, /mm_icon_focus_fhd=pkg:\/images\/robos-poster-[0-9a-f]+_fhd\.png/);
+  assert.match(manifestTxt, /splash_color=#FFFFFF/);
+  const fhdPosterBuf = fs.readFileSync(path.join(rokuBuild.targetDir, 'images', 'channel-poster_fhd.png'));
+  assert.equal(fhdPosterBuf[25], 2, 'Roku channel poster must be 24-bit opaque RGB (colorType=2) with no alpha channel');
   const embeddedLib = JSON.parse(fs.readFileSync(path.join(rokuBuild.targetDir, 'source', 'cinema-library.json'), 'utf8'));
   assert.equal(embeddedLib.active, true);
   assert.equal(embeddedLib.items.length, 3); // 2 movies + 1 grouped TV series
