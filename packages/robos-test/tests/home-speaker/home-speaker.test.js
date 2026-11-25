@@ -562,6 +562,59 @@ describe('RobOS Home Speaker Tests', () => {
         fs.rmSync(tmpCfg, { recursive: true, force: true });
       }
     });
+
+    it('stops music playback via "stop playing music on {device}" across speakers, rooms, all speakers, and local', async () => {
+      const os = require('os');
+      const router = require(path.join(APP_DIR, 'lib', 'nabu-command-router'));
+      const { SkillsExecutor } = require(path.resolve(__dirname, '../../../voice-prompt/lib/skills-executor'));
+      const tmpCfg = fs.mkdtempSync(path.join(os.tmpdir(), 'robos-stop-music-'));
+      try {
+        fs.writeFileSync(path.join(tmpCfg, 'home-speakers.json'), JSON.stringify({
+          speakers: [
+            { ip: '192.168.1.10', name: 'Kitchen speaker', model: 'Google Cast Speaker', protocol: 'google-cast', online: true },
+            { ip: '192.168.1.6', name: "Leo's Rooom speaker", model: 'Google Cast Speaker', protocol: 'google-cast', online: true },
+            { ip: '192.168.1.2', name: 'Master Bedroom clock', model: 'Google Cast Speaker', protocol: 'google-cast', online: true },
+          ],
+        }));
+
+        // 1. Exact requested command: "Commander, stop playing music on Kitchen speaker"
+        await router.executeNabuCommand('set current listening device to Kitchen speaker', { configDir: tmpCfg, autoLaunchPlayers: false });
+        const stopKitchen = await router.executeNabuCommand('Commander, stop playing music on Kitchen speaker', { configDir: tmpCfg, autoLaunchPlayers: false });
+        assert.strictEqual(stopKitchen.ok, true);
+        assert.strictEqual(stopKitchen.skill, 'audio-stop');
+        assert.strictEqual(stopKitchen.targetIp, '192.168.1.10');
+        assert.strictEqual(stopKitchen.response, 'Stopped playing music on Kitchen speaker.');
+        assert.strictEqual(router.getCurrentListeningDevice(tmpCfg), null);
+
+        // 2. Room phrasing & typo cleanup: "stop playing music in Leo's room"
+        const stopLeo = await router.executeNabuCommand("stop playing music in Leo's room", { configDir: tmpCfg, autoLaunchPlayers: false });
+        assert.strictEqual(stopLeo.ok, true);
+        assert.strictEqual(stopLeo.skill, 'audio-stop');
+        assert.strictEqual(stopLeo.targetIp, '192.168.1.6');
+        assert.strictEqual(stopLeo.response, "Stopped playing music on Leo's Room speaker.");
+
+        // 3. "stop playing music on Master Bedroom clock" via SkillsExecutor (Voice Server path)
+        const exec = new SkillsExecutor();
+        exec.configDir = tmpCfg;
+        const stopClock = await exec.executeCommand('stop playing music on Master Bedroom clock', {});
+        assert.strictEqual(stopClock.ok, true);
+        assert.strictEqual(stopClock.skill, 'audio-stop');
+        assert.strictEqual(stopClock.response, 'Stopped playing music on Master Bedroom clock.');
+
+        // 4. "stop playing music on all speakers" & "stop playing music everywhere"
+        const stopAll = await router.executeNabuCommand('stop playing music on all speakers', { configDir: tmpCfg, autoLaunchPlayers: false });
+        assert.strictEqual(stopAll.ok, true);
+        assert.strictEqual(stopAll.targetIp, 'all');
+        assert.strictEqual(stopAll.response, 'Stopped playing music on all speakers.');
+
+        // 5. Unknown device lists available devices clearly
+        const stopBad = await router.executeNabuCommand('stop playing music on Mars toaster', { configDir: tmpCfg, autoLaunchPlayers: false });
+        assert.strictEqual(stopBad.ok, false);
+        assert.match(stopBad.response, /Available devices:.*Kitchen speaker/i);
+      } finally {
+        fs.rmSync(tmpCfg, { recursive: true, force: true });
+      }
+    });
   });
 
 });

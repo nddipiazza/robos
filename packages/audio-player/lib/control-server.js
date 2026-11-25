@@ -137,6 +137,9 @@ function createControlServer({ handlers, configDir = defaultConfigDir(), port = 
     }
     if (url.pathname === '/api/pause') return [200, await handlers.pause(body || {})];
     if (url.pathname === '/api/resume') return [200, await handlers.resume(body || {})];
+    if (url.pathname === '/api/stop' && typeof handlers.stop === 'function') {
+      return [200, await handlers.stop(body || {})];
+    }
     if (url.pathname === '/api/set-output' && typeof handlers.setOutput === 'function') {
       return [200, await handlers.setOutput(body || {})];
     }
@@ -251,6 +254,7 @@ function createAudioPlayerClient({ configDir = defaultConfigDir(), timeoutMs = 8
     previous: (opts = {}) => call('POST', '/api/previous', opts),
     pause: (opts = {}) => call('POST', '/api/pause', opts),
     resume: (opts = {}) => call('POST', '/api/resume', opts),
+    stop: (opts = {}) => call('POST', '/api/stop', opts),
     setOutput: (opts = {}) => call('POST', '/api/set-output', opts),
     setVolume: (opts = {}) => call('POST', '/api/volume', opts),
     // Movie Player watch status (null when the app is not running).

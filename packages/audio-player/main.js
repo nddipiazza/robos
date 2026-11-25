@@ -324,6 +324,30 @@ const controlHandlers = {
     previous: (body = {}) => askRenderer('previous', { robosUser: body.robosUser || null }),
     pause: (body = {}) => askRenderer('pause', { robosUser: body.robosUser || null }),
     resume: (body = {}) => askRenderer('resume', { robosUser: body.robosUser || null }),
+    stop: async (body = {}) => {
+      const targetIp = typeof body.targetIp === 'string' && body.targetIp.trim() ? body.targetIp.trim() : null;
+      if (targetIp === 'all') {
+        const stopped = await castService.stopAllPlayback();
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.send('audio:speaker-playback-stopped', { all: true });
+        }
+        await askRenderer('set-output', { clear: true, robosUser: body.robosUser || null }).catch(() => {});
+        return { ok: true, stoppedAll: true, stopped };
+      }
+      if (targetIp && targetIp !== 'local') {
+        const res = await castService.stopPlayback(targetIp);
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.send('audio:speaker-playback-stopped', { ip: targetIp });
+        }
+        const st = await askRenderer('status', {}).catch(() => null);
+        if (st && Array.isArray(st.speakerIps) && st.speakerIps.includes(targetIp)) {
+          await askRenderer('set-output', { clear: true, robosUser: body.robosUser || null }).catch(() => {});
+        }
+        return { ok: true, targetIp, ...res };
+      }
+      await askRenderer('set-output', { clear: true, robosUser: body.robosUser || null }).catch(() => {});
+      return askRenderer('pause', { robosUser: body.robosUser || null });
+    },
     setOutput: (body = {}) => askRenderer('set-output', {
       targetIp: body.targetIp || null,
       deviceName: body.deviceName || null,

@@ -1063,6 +1063,209 @@ async function executeVolumeCommand(intent, {
 }
 
 /**
+ * Parse natural-language commands to stop music playback on a named speaker, Smart TV, all speakers, or local computer:
+ *   - "stop playing music on Kitchen speaker" / "stop playing music in the kitchen" / "stop playing music in Leo's room"
+ *   - "stop playing music on Master Bedroom clock" / "stop playing music on all speakers" / "stop playing music everywhere"
+ *   - "stop music on Kitchen speaker" / "stop the music on Kitchen speaker" / "turn off the music on Kitchen speaker"
+ *   - "stop playing music" / "stop the music" / "turn off the music"
+ */
+function parseStopMusicCommand(cleanedText) {
+  const qFull = foldText(cleanedText)
+    .replace(/\s+(?:please|right\s+now|now|for\s+me|for\s+us)$/, '')
+    .trim();
+  if (!qFull) return null;
+
+  // Never intercept TTS speech silencer ("stop speaking", "stop talking") or TV-specific "stop casting"
+  if (/^stop\s+(?:speaking|talking|casting)\b/.test(qFull)) return null;
+
+  const MUSIC_NOUN = String.raw`(?:(?:the|my|our|this|some|all)\s+)?(?:music|songs?|audio|tracks?|playlist|tunes)`;
+
+  const devPatterns = [
+    new RegExp(`^(?:stop|stopped|quit|end|kill|halt)\\s+(?:playing\\s+)?${MUSIC_NOUN}\\s+(?:on|in|at|from|to)\\s+(.+)$`),
+    new RegExp(`^(?:turn|shut)\\s+off\\s+(?:playing\\s+)?${MUSIC_NOUN}\\s+(?:on|in|at|from|to)\\s+(.+)$`),
+    new RegExp(`^(?:stop|stopped|turn\\s+off|shut\\s+off|kill)\\s+(?:playing\\s+)?${MUSIC_NOUN}\\s+(everywhere|all\\s+speakers|every\\s+speaker)$`),
+    /^(?:stop|stopped)\s+playing\s+(?:on|in|at|from)\s+(.+)$/,
+  ];
+  for (const re of devPatterns) {
+    const m = qFull.match(re);
+    if (m && m[1] && m[1].trim()) {
+      const targetQuery = m[1].replace(/^(?:the|my|our)\s+/, '').trim();
+      return { type: 'stop-music', targetQuery };
+    }
+  }
+
+  if (
+    new RegExp(`^(?:stop|stopped|quit|end|kill|halt)\\s+playing(?:\\s+${MUSIC_NOUN})$`).test(qFull) ||
+    new RegExp(`^(?:stop|stopped|turn\\s+off|shut\\s+off|kill)\\s+${MUSIC_NOUN}$`).test(qFull)
+  ) {
+    return { type: 'stop-music', targetQuery: null };
+  }
+
+  return null;
+}
+
+/**
+ * Execute a parsed `stop-music` command against a Google Cast speaker, Smart TV, all speakers, or local Audio Player.
+ */
+async function executeStopMusicCommand(intent, {
+  configDir = path.join(os.homedir(), '.config', 'robos'),
+  devices = null,
+  autoLaunchPlayers = process.env.ROBOS_TEST !== '1',
+  robosUser = null,
+} = {}) {
+  const headlessTvCast = require('../../robos-lib/headless-tv-cast');
+  const { createAudioPlayerClient } = require('../../audio-player/lib/control-server');
+  const isOfflineTest = !autoLaunchPlayers || process.env.ROBOS_TEST === '1' || Boolean(process.env.NODE_TEST_CONTEXT);
+
+  let allDevices = Array.isArray(devices) ? devices : loadCastDevices(configDir);
+  if (!filterRealListeningDevices(allDevices).length && !isOfflineTest) {
+    allDevices = await discoverAndCacheCastSpeakers(configDir);
+  }
+
+  let targetDevice = intent.targetDevice || null;
+  const rawTarget = String(intent.targetQuery || '').trim();
+
+  if (!targetDevice && rawTarget) {
+    const tNorm = foldText(rawTarget).replace(/^(?:the|my|our|current)\s+/, '').trim();
+    if (/^(?:all\s+speakers|every\s+speaker|everywhere|all)$/.test(tNorm)) {
+      targetDevice = { ip: 'all', id: 'all', name: 'all speakers', deviceType: 'speaker', protocol: 'cast' };
+    } else if (/^(?:local|this\s+computer|my\s+computer|computer|desktop|laptop|here)$/.test(tNorm)) {
+      targetDevice = { ip: 'local', id: 'local', name: 'this computer', deviceType: 'local', protocol: 'local' };
+    } else if (/^(?:speaker|current\s+speaker|listening\s+device|output\s+device)$/.test(tNorm)) {
+      targetDevice = getCurrentListeningDevice(configDir, allDevices);
+      if (!targetDevice) {
+        const msg = 'No current listening device is active for this session. Specify a speaker, such as "stop playing music on Kitchen speaker".';
+        return { ok: false, error: msg, response: msg };
+      }
+    } else {
+      const resolved = resolveTargetDevice(rawTarget, { configDir, devices: allDevices });
+      if (resolved) {
+        targetDevice = allDevices.find(d => d.ip === resolved.ip) || resolved;
+      } else {
+        const avail = filterRealListeningDevices(allDevices);
+        targetDevice = avail.find(d => foldText(d.name || '').includes(tNorm) || cleanSpeakerNameForSpeech(d.name).toLowerCase().includes(tNorm)) || null;
+      }
+      if (!targetDevice) {
+        const names = [...filterRealListeningDevices(allDevices), ...allDevices.filter(d => d.deviceType === 'tv' && d.isRealLanDevice)].map(d => cleanSpeakerNameForSpeech(d.name));
+        const msg = names.length
+          ? `Could not match "${rawTarget}" to a speaker or device. Available devices: ${[...new Set(names)].join(', ')}.`
+          : `Could not match "${rawTarget}" to a speaker or device.`;
+        return { ok: false, error: msg, response: msg };
+      }
+    }
+  }
+
+  const audioClient = createAudioPlayerClient({ configDir });
+  if (!targetDevice) {
+    const sessionSpk = getCurrentListeningDevice(configDir, allDevices);
+    if (sessionSpk) {
+      targetDevice = sessionSpk;
+    } else if (!isOfflineTest && audioClient.running()) {
+      const st = await audioClient.status().catch(() => null);
+      if (st && Array.isArray(st.speakerIps) && st.speakerIps.length > 0) {
+        if (st.speakerIps.length > 1) {
+          targetDevice = { ip: 'all', id: 'all', name: 'all speakers', deviceType: 'speaker', protocol: 'cast' };
+        } else {
+          const ip = st.speakerIps[0];
+          targetDevice = allDevices.find(d => d.ip === ip) || { ip, id: `spk-${ip}`, name: `Speaker (${ip})`, deviceType: 'speaker', protocol: 'cast' };
+        }
+      }
+    }
+    if (!targetDevice) {
+      targetDevice = { ip: 'all', id: 'all', name: 'all speakers', deviceType: 'speaker', protocol: 'cast' };
+    }
+  }
+
+  const devName = targetDevice.ip === 'all'
+    ? 'all speakers'
+    : (targetDevice.ip === 'local' ? 'this computer' : cleanSpeakerNameForSpeech(targetDevice.name || targetDevice.ip));
+  const isRokuTv = targetDevice.protocol === 'roku-ecp' || targetDevice.platformId === 'roku-os';
+
+  // 1. Local computer stop
+  if (targetDevice.ip === 'local') {
+    if (!isOfflineTest && audioClient.running()) {
+      const stopRes = typeof audioClient.stop === 'function' ? await audioClient.stop({ targetIp: 'local', robosUser }) : null;
+      if (!stopRes || stopRes.status === 404) {
+        await audioClient.pause({ robosUser }).catch(() => {});
+      }
+    }
+    if (getCurrentListeningDevice(configDir, allDevices)?.ip === 'local') {
+      clearCurrentListeningDevice(configDir);
+    }
+    return {
+      ok: true,
+      targetDevice,
+      targetIp: 'local',
+      response: 'Stopped playing music on this computer.',
+      data: { stopped: true, targetDevice, targetIp: 'local' },
+    };
+  }
+
+  // 2. Roku OS Smart TV stop
+  if (isRokuTv) {
+    if (!isOfflineTest) {
+      await headlessTvCast.controlHeadlessTv('stop-cast', { targetIp: targetDevice.ip, configDir }).catch(() => {});
+    }
+    return {
+      ok: true,
+      targetDevice,
+      targetIp: targetDevice.ip,
+      response: `Stopped playing music on ${devName}.`,
+      data: { stopped: true, targetDevice, targetIp: targetDevice.ip },
+    };
+  }
+
+  // 3. Google Cast Speaker(s) (single speaker or all speakers)
+  let cs = null;
+  try {
+    if (!isOfflineTest && audioClient.running()) {
+      const st = await audioClient.status().catch(() => null);
+      const stopRes = typeof audioClient.stop === 'function'
+        ? await audioClient.stop({ targetIp: targetDevice.ip, robosUser }).catch(() => null)
+        : null;
+      if (!stopRes || stopRes.status === 404) {
+        const matchesActiveCast = targetDevice.ip === 'all' ||
+          !st ||
+          !Array.isArray(st.speakerIps) ||
+          st.speakerIps.length === 0 ||
+          st.speakerIps.includes(targetDevice.ip);
+        if (matchesActiveCast) {
+          await audioClient.setOutput({ clear: true, robosUser }).catch(() => {});
+          await audioClient.pause({ robosUser }).catch(() => {});
+        }
+      }
+    }
+
+    if (!isOfflineTest) {
+      const { CastService } = require('../../audio-player/lib/cast-service');
+      cs = new CastService();
+      const ipsToStop = targetDevice.ip === 'all'
+        ? filterRealListeningDevices(allDevices).map(d => d.ip).filter(Boolean)
+        : [targetDevice.ip];
+      await Promise.all(ipsToStop.map(ip => cs.stopPlayback(ip).catch(() => null)));
+    }
+  } finally {
+    try { cs?.streamServer?.close?.(); } catch {}
+  }
+
+  const curSession = getCurrentListeningDevice(configDir, allDevices);
+  if (targetDevice.ip === 'all' || (curSession && curSession.ip === targetDevice.ip)) {
+    clearCurrentListeningDevice(configDir);
+  }
+
+  const response = targetDevice.ip === 'all' && !rawTarget
+    ? 'Stopped playing music.'
+    : `Stopped playing music on ${devName}.`;
+  return {
+    ok: true,
+    targetDevice,
+    targetIp: targetDevice.ip,
+    response,
+    data: { stopped: true, targetDevice, targetIp: targetDevice.ip },
+  };
+}
+
+/**
  * Resolve a natural language device phrase (e.g. "the roku", "living room tv",
  * "kitchen speaker", "basement tv", "bedroom clock") to the closest configured
  * Smart TV or Smart Speaker.
@@ -2703,6 +2906,10 @@ function classifyVoiceCommand(cleanedText, { audioTracks = null, movieTracks = n
   const words = q.split(' ').filter(Boolean);
   const firstWord = words[0] || '';
 
+  // 0.9 Stop Music on Speaker / Device ("stop playing music on Kitchen speaker", "stop the music in Leo's room", "stop playing music everywhere")
+  const stopMusicIntent = parseStopMusicCommand(cleanedText);
+  if (stopMusicIntent) return { ...stopMusicIntent, query: cleanedText };
+
   // 1. Transport controls (exact, phonetic, or Smart TV scoped like "pause the roku tv", "pause on the roku tv", "paused the roku tv", "next episode", "start over")
   const directDevMatch = q.match(/^(pause|paused|paws|pos|resume|resumed|unpause|unpaused|continue|play|stop|stopped|next|skip|restart)\s+(?:playback\s+)?(?:on\s+|in\s+)?(?:the\s+|my\s+|our\s+)?(.+)$/);
   if (directDevMatch) {
@@ -2713,6 +2920,9 @@ function classifyVoiceCommand(cleanedText, { audioTracks = null, movieTracks = n
       const directDev = resolveTargetDevice(targetPhrase, { configDir });
       if (directDev && directDev.score >= 115) {
         if (verb === 'stop' || verb === 'stopped') {
+          if (directDev.deviceType === 'speaker' || directDev.ip === 'local') {
+            return { type: 'stop-music', targetQuery: targetPhrase, targetDevice: directDev, query: cleanedText };
+          }
           return { type: 'smart-tv-control', action: 'stop-cast', targetDevice: directDev };
         }
         const actionMap = {
@@ -3205,6 +3415,26 @@ async function executeNabuCommand(rawTranscript, {
       targetIp: volRes.targetIp || null,
       response: volRes.response || volRes.error,
       data: volRes.data || volRes,
+    };
+  }
+
+  // ── 0.695 Stop Playing Music on Speaker / Device ─────────────────────────────
+  if (intent.type === 'stop-music') {
+    const stopRes = await executeStopMusicCommand(intent, {
+      configDir,
+      devices: castDevices,
+      autoLaunchPlayers,
+      robosUser: activeUser,
+    });
+    return {
+      ok: Boolean(stopRes.ok),
+      skill: 'audio-stop',
+      cleanedCommand: cleaned,
+      robosUser: activeUser,
+      targetDevice: stopRes.targetDevice || null,
+      targetIp: stopRes.targetIp || null,
+      response: stopRes.response || stopRes.error,
+      data: stopRes.data || stopRes,
     };
   }
 
@@ -3713,6 +3943,8 @@ module.exports = {
   parseListeningDeviceCommand,
   parseVolumeCommand,
   executeVolumeCommand,
+  parseStopMusicCommand,
+  executeStopMusicCommand,
   resolveTargetDevice,
   extractDeviceFromCommand,
   parseSeasonEpisode,

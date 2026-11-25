@@ -101,8 +101,8 @@ class SkillsExecutor {
         };
       }
       const mediaIntent = classifyVoiceCommand(cleanedMedia, { configDir: this.configDir });
-      // "what season of The Office did we leave off on?", "play a random episode of House on the Roku TV", session listening device, volume controls, and watchlist management too.
-      if (['play-movie', 'play-media', 'transport', 'watch-status', 'play-next-episode', 'movie-watchlist', 'cinema-special', 'smart-tv-control', 'listening-device-control', 'volume-control'].includes(mediaIntent.type)) {
+      // "what season of The Office did we leave off on?", "play a random episode of House on the Roku TV", "stop playing music on Kitchen speaker", session listening device, volume controls, and watchlist management too.
+      if (['play-movie', 'play-media', 'stop-music', 'transport', 'watch-status', 'play-next-episode', 'movie-watchlist', 'cinema-special', 'smart-tv-control', 'listening-device-control', 'volume-control'].includes(mediaIntent.type)) {
         const res = await executeNabuCommand(cleanedMedia, { skillsExecutor: this, configDir: this.configDir });
         return {
           ok: res.ok,
