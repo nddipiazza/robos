@@ -862,6 +862,57 @@ describe('Movie Player watchlist & episode cursor skills (CLI, MCP, and RobOS Vo
       });
       assert.equal(stopped.ok, true);
       assert.equal(activeCast, null);
+
+      // 5. Default Smart TV ("set my default tv to Roku TV" -> commands without "on Roku TV" + STT split words like "put a typical" auto-target Roku TV!)
+      fs.writeFileSync(path.join(configDir, 'movie-library.json'), JSON.stringify({
+        tracks: [
+          ...tracks,
+          {
+            id: 'atypical-102',
+            title: 'Atypical - S01E02 - A Human Female',
+            showName: 'Atypical',
+            seasonNumber: 1,
+            episodeNumber: 2,
+            episodeTitle: 'A Human Female',
+            mediaType: 'tv',
+            mediaService: { endpoint: baseEndpoint, remoteItemId: 'ms-atyp-102', directStreamUrl: `${baseEndpoint}/stream/ms-atyp-102.mp4` },
+          },
+          {
+            id: 'atypical-202',
+            title: 'Atypical - S02E02',
+            showName: 'Atypical',
+            seasonNumber: 2,
+            episodeNumber: 2,
+            episodeTitle: 'Episode 2',
+            mediaType: 'tv',
+            mediaService: { endpoint: baseEndpoint, remoteItemId: 'ms-atyp-202', directStreamUrl: `${baseEndpoint}/stream/ms-atyp-202.mp4` },
+          },
+        ],
+      }));
+
+      const setDef = await nabu.executeNabuCommand('set my default tv to Roku TV', {
+        configDir,
+        autoLaunchPlayers: false,
+      });
+      assert.equal(setDef.ok, true);
+      assert.equal(setDef.targetIp, '192.168.1.15');
+
+      const getDef = await nabu.executeNabuCommand('what is my default tv', {
+        configDir,
+        autoLaunchPlayers: false,
+      });
+      assert.equal(getDef.ok, true);
+      assert.match(getDef.response, /65" TCL Roku TV/);
+
+      // Play WITHOUT naming the TV AND with STT split word "a typical" + "put" verb!
+      const autoDefPlay = await nabu.executeNabuCommand('put a typical season 2 episode 2', {
+        configDir,
+        autoLaunchPlayers: true,
+      });
+      assert.equal(autoDefPlay.ok, true);
+      assert.equal(autoDefPlay.bestTrack.id, 'atypical-202', 'collapses "a typical" -> "Atypical" and picks S02E02 instead of S01E02 ("A Human Female")');
+      assert.equal(autoDefPlay.targetIp, '192.168.1.15', 'automatically casts to Default Smart TV when no TV is named');
+      assert.equal(activeCast.trackId, 'ms-atyp-202');
     } finally {
       if (prevHeadless === undefined) delete process.env.ROBOS_HEADLESS;
       else process.env.ROBOS_HEADLESS = prevHeadless;

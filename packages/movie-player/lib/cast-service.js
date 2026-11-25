@@ -141,13 +141,16 @@ class CastService {
       const cfgPath = path.join(os.homedir(), '.config', 'robos', 'tv-studio.json');
       if (!fs.existsSync(cfgPath)) return;
       const raw = JSON.parse(fs.readFileSync(cfgPath, 'utf8'));
+      const defId = raw?.defaultTvId || null;
+      const defIp = raw?.defaultTvIp || null;
       const tvs = Array.isArray(raw?.tvs) ? raw.tvs : [];
       for (const tv of tvs) {
         if (!tv || !tv.ip) continue;
         const existing = this.speakers.get(tv.ip) || {};
+        const tvId = tv.id || `tv-${tv.ip}`;
         this.speakers.set(tv.ip, {
           ...existing,
-          id: tv.id || `tv-${tv.ip}`,
+          id: tvId,
           ip: tv.ip,
           name: tv.name || `RobOS Smart TV (${tv.ip})`,
           model: tv.model || tv.platformName || 'RobOS Smart TV',
@@ -161,6 +164,7 @@ class CastService {
           online: tv.online !== false,
           lastSeen: Date.now(),
           robosTv: true,
+          isDefault: Boolean((defId && tvId === defId) || (defIp && tv.ip === defIp)),
         });
       }
     } catch (err) {

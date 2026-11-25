@@ -808,6 +808,16 @@ ipcMain.handle('audio:discover-speakers', async (_evt, { scanLan = false } = {})
   }
 });
 
+ipcMain.handle('audio:set-default-tv', async (_evt, target) => {
+  try {
+    const nabu = require(path.resolve(__dirname, '..', 'home-speaker', 'lib', 'nabu-command-router'));
+    const res = nabu.setDefaultSmartTv(target || '', { configDir: CONFIG_DIR });
+    return { ...res, speakers: castService.getPairedSmartTvs() };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
 ipcMain.handle('audio:get-speaker-status', async (_evt, ip) => {
   try {
     return await castService.getSpeakerStatus(ip);

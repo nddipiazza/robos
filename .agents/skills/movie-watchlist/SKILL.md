@@ -103,6 +103,7 @@ Both **RobOS Voice Desktop Assistant** (`packages/voice-prompt`, port `:19188`, 
   - *"Play the latest episode of Ghosts on the Roku TV"* / *"Play the pilot of Firefly on the Roku TV"*
   - *"Move playback to the Roku TV"* / *"Move playback to this computer"* / *"Stop casting"*
   - *"Open the movie library on the Roku TV"* / *"List my Smart TVs"*
+  - *"Set my default TV to Roku TV"* / *"What is my default TV?"* / *"Clear my default TV"* (once set, commands like *"Play Atypical Season 2 Episode 2"* or *"Play a random episode of House"* cast to your Default TV automatically without naming it)
 
 Test via the RobOS Voice CLI:
 

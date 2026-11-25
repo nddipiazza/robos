@@ -4,6 +4,7 @@ const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('robosAudio', {
   discoverSpeakers: (opts) => ipcRenderer.invoke('audio:discover-speakers', opts || {}),
+  setDefaultTv: (target) => ipcRenderer.invoke('audio:set-default-tv', target),
   launchTvLibrary: (ip) => ipcRenderer.invoke('audio:launch-tv-library', ip),
   closeTvLibrary: (ip) => ipcRenderer.invoke('audio:close-tv-library', ip),
   getActiveCast: () => ipcRenderer.invoke('audio:get-active-cast'),

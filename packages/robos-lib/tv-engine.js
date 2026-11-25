@@ -5767,8 +5767,8 @@ function createTvEngine({
         try {
           const onDisk = JSON.parse(fs.readFileSync(stateFile, 'utf8'));
           const preserveKeys = overwriteCinemaState
-            ? ['moviePlayerServer', 'moviePlayerLibrarySnapshot']
-            : ['activeCinemaCast', 'activeCinemaLibrary', 'moviePlayerServer', 'moviePlayerLibrarySnapshot', 'tabloCinemaItemsSnapshot'];
+            ? ['defaultTvId', 'defaultTvIp', 'moviePlayerServer', 'moviePlayerLibrarySnapshot']
+            : ['defaultTvId', 'defaultTvIp', 'activeCinemaCast', 'activeCinemaLibrary', 'moviePlayerServer', 'moviePlayerLibrarySnapshot', 'tabloCinemaItemsSnapshot'];
           for (const k of preserveKeys) {
             if (onDisk[k] !== undefined) {
               state[k] = onDisk[k];

@@ -22640,8 +22640,10 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
         items: [
           { cmd: selectedTvPhrase === "this computer" ? "move playback to this computer" : `move playback to the "${selectedTvPhrase}"`, desc: "Transfers the currently playing movie/episode at its live timestamp" },
           ...selectedTvPhrase !== "this computer" ? [
+            { cmd: `set my default tv to "${selectedTvPhrase}"`, desc: "Makes this TV the automatic target whenever you do not name a TV" },
             { cmd: `open the movie library ${tvSuffix}`, desc: "Launches the 10-foot TV remote browser on that Smart TV" }
           ] : [],
+          { cmd: "what is my default tv", desc: "Speaks your currently configured Default Smart TV" },
           { cmd: `pause ${tvSuffix}`, desc: "Pauses active playback" },
           { cmd: `resume ${tvSuffix}`, desc: "Resumes paused playback" },
           { cmd: `next episode ${tvSuffix}`, desc: "Skips to the next queued episode" },
@@ -23358,7 +23360,12 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
       if (scanLan) showStatus("Scanning local network & RobOS Smart TV Studio for Smart TVs...");
       try {
         const found = await window.robosAudio.discoverSpeakers({ scanLan });
-        setSpeakers(found || []);
+        const list = found || [];
+        setSpeakers(list);
+        const defTv = list.find((s) => s && s.isDefault);
+        if (defTv && !scanLan) {
+          setOutputTarget((prev) => prev === "local" ? defTv.ip : prev);
+        }
         if (scanLan) {
           if (found && found.length > 0) {
             showStatus(`Discovered ${found.length} RobOS Smart TV(s)!`);
@@ -25178,7 +25185,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
           }
         },
         /* @__PURE__ */ import_react27.default.createElement("option", { value: "local" }, "Desktop (Local Cinema)"),
-        speakers.map((s) => /* @__PURE__ */ import_react27.default.createElement("option", { key: s.ip, value: s.ip }, s.name, " (", s.ip, ")")),
+        speakers.map((s) => /* @__PURE__ */ import_react27.default.createElement("option", { key: s.ip, value: s.ip }, s.isDefault ? "\u2605 " : "", s.name, " (", s.ip, ")", s.isDefault ? " [Default]" : "")),
         speakers.length > 0 && /* @__PURE__ */ import_react27.default.createElement("option", { value: "all" }, "Broadcast to All Smart TVs")
       ), /* @__PURE__ */ import_react27.default.createElement(
         "button",
@@ -26057,8 +26064,8 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
             className: "speaker-card",
             style: isSelected ? { borderColor: "#e8a33d", boxShadow: "0 0 0 1px rgba(232,163,61,0.35)" } : void 0
           },
-          /* @__PURE__ */ import_react27.default.createElement("div", { className: "speaker-badge" }, isCastingHere ? "CASTING LIVE" : s.online !== false ? "ONLINE \xB7 READY" : "PAIRED"),
-          /* @__PURE__ */ import_react27.default.createElement("h4", { style: { paddingRight: "108px" } }, s.name),
+          /* @__PURE__ */ import_react27.default.createElement("div", { className: "speaker-badge" }, isCastingHere ? "CASTING LIVE" : s.isDefault ? "\u2605 DEFAULT TV" : s.online !== false ? "ONLINE \xB7 READY" : "PAIRED"),
+          /* @__PURE__ */ import_react27.default.createElement("h4", { style: { paddingRight: "108px" } }, s.isDefault ? "\u2605 " : "", s.name),
           s.platformName && /* @__PURE__ */ import_react27.default.createElement("p", { className: "speaker-model", style: { color: "#e8a33d", fontWeight: 600 } }, "Platform: ", s.platformName),
           /* @__PURE__ */ import_react27.default.createElement("p", { className: "speaker-ip" }, "LAN IP: ", /* @__PURE__ */ import_react27.default.createElement("code", null, s.ip)),
           /* @__PURE__ */ import_react27.default.createElement("p", { className: "speaker-model" }, "Model: ", s.model),
@@ -26104,6 +26111,24 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
               title: "Open the interactive 10-foot Movie Library on this Smart TV to browse and play movies using your physical TV remote"
             },
             "\u{1F3AE} Open TV Library (Remote UI)"
+          ), /* @__PURE__ */ import_react27.default.createElement(
+            "button",
+            {
+              className: "btn-secondary",
+              style: s.isDefault ? { borderColor: "#fbbf24", color: "#fbbf24" } : void 0,
+              onClick: async () => {
+                if (!window.robosAudio?.setDefaultTv) return;
+                const nextTarget = s.isDefault ? "" : s.ip;
+                const res = await window.robosAudio.setDefaultTv(nextTarget);
+                if (res && res.ok) {
+                  if (Array.isArray(res.speakers)) setSpeakers(res.speakers);
+                  if (nextTarget) setOutputTarget(s.ip);
+                  showStatus(res.spoken || (nextTarget ? `Set default TV to ${s.name}` : "Cleared default TV"));
+                }
+              },
+              title: s.isDefault ? "Click to clear Default Smart TV" : "Set as your Default Smart TV for voice and Movie Player playback"
+            },
+            s.isDefault ? "\u2605 Default TV" : "\u2606 Set Default TV"
           ), /* @__PURE__ */ import_react27.default.createElement("button", { className: "btn-chip btn-stop-cast", onClick: async () => {
             if (window.robosAudio?.closeTvLibrary) await window.robosAudio.closeTvLibrary(s.ip).catch(() => {
             });

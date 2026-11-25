@@ -619,6 +619,40 @@ async function importWatchHistory(sourceOrOpts, maybeOpts = {}) {
   return { ...clean, via: 'history-file' };
 }
 
+function requireNabuRouter() {
+  const candidates = [
+    path.resolve(__dirname, '..', 'home-speaker', 'lib', 'nabu-command-router'),
+    '/usr/local/share/robos/home-speaker/lib/nabu-command-router',
+  ];
+  for (const p of candidates) {
+    try { return require(p); } catch (err) { if (err.code !== 'MODULE_NOT_FOUND') throw err; }
+  }
+  return null;
+}
+
+async function defaultTv(opts = {}) {
+  const dir = configDir(opts);
+  const router = requireNabuRouter();
+  if (!router) return { ok: false, error: 'Smart TV router not available.' };
+  const tvs = router.loadCastDevices(dir).filter(d => d.deviceType === 'tv');
+  const def = router.getDefaultSmartTv(dir, tvs);
+  const spoken = def
+    ? `Your default Smart TV is ${def.name} (${def.ip}).`
+    : 'No default Smart TV is set yet.';
+  return { ok: true, defaultTv: def, tvs, spoken };
+}
+
+async function setDefaultTv(queryOrOpts, maybeOpts = {}) {
+  const raw = typeof queryOrOpts === 'string'
+    ? { target: queryOrOpts, ...maybeOpts }
+    : { ...(queryOrOpts || {}), ...maybeOpts };
+  const dir = configDir(raw);
+  const router = requireNabuRouter();
+  if (!router) return { ok: false, error: 'Smart TV router not available.' };
+  const target = raw.clear ? '' : String(raw.target ?? raw.tv ?? raw.query ?? '');
+  return router.setDefaultSmartTv(target, { configDir: dir });
+}
+
 /** Syncs both players' folders, playlists and history with the backup vault now. */
 async function syncNow(opts = {}) {
   let sync;
@@ -638,5 +672,5 @@ async function syncNow(opts = {}) {
 module.exports = {
   watchStatus, movieStatus, continueWatching, watchlist, listShows, history: historyList,
   setWatched, addToWatchlist, removeFromWatchlist, markAllNew, setCurrentEpisode,
-  importWatchHistory, playNextEpisode, syncNow, callPlayer, controlInfo,
+  importWatchHistory, playNextEpisode, defaultTv, setDefaultTv, syncNow, callPlayer, controlInfo,
 };

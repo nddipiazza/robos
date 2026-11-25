@@ -124,9 +124,27 @@ const TOOLS = [
   },
   {
     name: 'robos_media_play_next_episode',
-    description: 'Plays the next episode of a show in RobOS Movie Player (resuming the one in progress). The Movie Player must be open.',
+    description: 'Plays the next episode of a show in RobOS Movie Player (resuming the one in progress). Automatically casts to the user\'s Default Smart TV if set unless targetIp overrides it.',
     inputSchema: { type: 'object', properties: { show: str('Show name'), targetIp: str('Optional TV / Chromecast IP to cast to') }, required: ['show'] },
     call: a => watch.playNextEpisode(a),
+  },
+  {
+    name: 'robos_media_get_default_tv',
+    description: 'Returns the user\'s configured Default Smart TV and all paired RobOS Smart TVs.',
+    inputSchema: { type: 'object', properties: {} },
+    call: () => watch.defaultTv(),
+  },
+  {
+    name: 'robos_media_set_default_tv',
+    description: 'Sets (or clears) the user\'s Default Smart TV by name, ID, or IP (e.g. "Roku TV", "Basement TV", or clear=true). Once set, voice and playback commands cast to this TV automatically when no TV is named.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        target: str('Smart TV name, ID, or IP (e.g. "Roku TV", "Living Room OLED", "192.168.1.15")'),
+        clear: { type: 'boolean', description: 'Set true to clear the Default Smart TV' },
+      },
+    },
+    call: a => watch.setDefaultTv(a),
   },
   {
     name: 'robos_media_sync_now',

@@ -406,7 +406,12 @@ export default function App() {
     if (scanLan) showStatus('Scanning local network & RobOS Smart TV Studio for Smart TVs...');
     try {
       const found = await window.robosAudio.discoverSpeakers({ scanLan });
-      setSpeakers(found || []);
+      const list = found || [];
+      setSpeakers(list);
+      const defTv = list.find(s => s && s.isDefault);
+      if (defTv && !scanLan) {
+        setOutputTarget(prev => (prev === 'local' ? defTv.ip : prev));
+      }
       if (scanLan) {
         if (found && found.length > 0) {
           showStatus(`Discovered ${found.length} RobOS Smart TV(s)!`);
@@ -2364,7 +2369,7 @@ export default function App() {
             >
               <option value="local">Desktop (Local Cinema)</option>
               {speakers.map(s => (
-                <option key={s.ip} value={s.ip}>{s.name} ({s.ip})</option>
+                <option key={s.ip} value={s.ip}>{s.isDefault ? '★ ' : ''}{s.name} ({s.ip}){s.isDefault ? ' [Default]' : ''}</option>
               ))}
               {speakers.length > 0 && (
                 <option value="all">Broadcast to All Smart TVs</option>
@@ -3502,9 +3507,9 @@ export default function App() {
                     style={isSelected ? { borderColor: '#e8a33d', boxShadow: '0 0 0 1px rgba(232,163,61,0.35)' } : undefined}
                   >
                     <div className="speaker-badge">
-                      {isCastingHere ? 'CASTING LIVE' : (s.online !== false ? 'ONLINE · READY' : 'PAIRED')}
+                      {isCastingHere ? 'CASTING LIVE' : (s.isDefault ? '★ DEFAULT TV' : (s.online !== false ? 'ONLINE · READY' : 'PAIRED'))}
                     </div>
-                    <h4 style={{ paddingRight: '108px' }}>{s.name}</h4>
+                    <h4 style={{ paddingRight: '108px' }}>{s.isDefault ? '★ ' : ''}{s.name}</h4>
                     {s.platformName && (
                       <p className="speaker-model" style={{ color: '#e8a33d', fontWeight: 600 }}>
                         Platform: {s.platformName}
@@ -3553,6 +3558,23 @@ export default function App() {
                         title="Open the interactive 10-foot Movie Library on this Smart TV to browse and play movies using your physical TV remote"
                       >
                         🎮 Open TV Library (Remote UI)
+                      </button>
+                      <button
+                        className="btn-secondary"
+                        style={s.isDefault ? { borderColor: '#fbbf24', color: '#fbbf24' } : undefined}
+                        onClick={async () => {
+                          if (!window.robosAudio?.setDefaultTv) return;
+                          const nextTarget = s.isDefault ? '' : s.ip;
+                          const res = await window.robosAudio.setDefaultTv(nextTarget);
+                          if (res && res.ok) {
+                            if (Array.isArray(res.speakers)) setSpeakers(res.speakers);
+                            if (nextTarget) setOutputTarget(s.ip);
+                            showStatus(res.spoken || (nextTarget ? `Set default TV to ${s.name}` : 'Cleared default TV'));
+                          }
+                        }}
+                        title={s.isDefault ? 'Click to clear Default Smart TV' : 'Set as your Default Smart TV for voice and Movie Player playback'}
+                      >
+                        {s.isDefault ? '★ Default TV' : '☆ Set Default TV'}
                       </button>
                       <button className="btn-chip btn-stop-cast" onClick={async () => {
                         if (window.robosAudio?.closeTvLibrary) await window.robosAudio.closeTvLibrary(s.ip).catch(() => {});

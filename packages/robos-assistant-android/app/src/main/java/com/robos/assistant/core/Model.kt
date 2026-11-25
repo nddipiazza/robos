@@ -26,8 +26,8 @@ data class AssistantConfig(
     val port: Int = 8090,
     val sampleRate: Int = 16000,
     val vadSensitivity: Int = 60,
-    val silenceHangMs: Int = 420,
-    val preRollMs: Int = 320,
+    val silenceHangMs: Int = 1050,
+    val preRollMs: Int = 400,
     val maxClipSeconds: Int = 45,
     val recordAllSpeech: Boolean = true,
     val saveNonSpeechNoise: Boolean = false,
@@ -81,9 +81,9 @@ class FileConfigStore(private val file: File) : ConfigStore {
         }
         return try {
             val loaded = json.decodeFromString(AssistantConfig.serializer(), file.readText()).sanitized()
-            // Migrate legacy 1100ms default to ultra-fast 420ms conversational endpointing
-            if (loaded.silenceHangMs == 1100) {
-                save(loaded.copy(silenceHangMs = 420, preRollMs = 320))
+            // Migrate aggressive 420ms cutoff to 1050ms so natural mid-sentence pauses after "Commander," stay in a single utterance
+            if (loaded.silenceHangMs == 420) {
+                save(loaded.copy(silenceHangMs = 1050, preRollMs = 400))
             } else {
                 loaded
             }

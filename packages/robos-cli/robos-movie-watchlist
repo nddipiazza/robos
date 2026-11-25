@@ -12,6 +12,8 @@
  *   robos-movie-watchlist current "<show>" "<ep>" [--json]
  *   robos-movie-watchlist current "<show>" --season <n> --episode <n> [--json]
  *   robos-movie-watchlist import [<file>] [--account <name>] [--no-audio] [--json]
+ *   robos-movie-watchlist default-tv [--json]
+ *   robos-movie-watchlist set-default-tv "<tv name or ip>" [--clear] [--json]
  *   robos-movie-watchlist status "<show>" [--json]
  *   robos-movie-watchlist say "<natural-language command>" [--json]
  *
@@ -48,6 +50,7 @@ function parseArgs(argv) {
     if (a === '--json') out.json = true;
     else if (a === '--no-audio') out.noAudio = true;
     else if (a === '--no-server') out.noServer = true;
+    else if (a === '--clear') out.clear = true;
     else if (a === '-h' || a === '--help') out.help = true;
     else if (a.startsWith('--')) out[a.slice(2)] = argv[++i];
     else out._.push(a);
@@ -126,6 +129,14 @@ async function main() {
     case 'show':
       res = await watch.watchStatus(joined || args.show, opts);
       break;
+    case 'default-tv':
+    case 'get-default-tv':
+    case 'tvs':
+      res = await watch.defaultTv(opts);
+      break;
+    case 'set-default-tv':
+      res = await watch.setDefaultTv({ target: joined || args.tv || args.target || '', clear: Boolean(args.clear), ...opts });
+      break;
     case 'import':
     case 'import-history':
       res = await watch.importWatchHistory({
@@ -145,12 +156,18 @@ async function main() {
         const out = await router.executeWatchlistCommand(wlIntent, opts);
         res = out.data ? { ...out.data, ok: out.ok, spoken: out.response } : { ok: out.ok, spoken: out.response };
       } else {
-        const wsIntent = router.parseWatchStatusQuery(cleaned);
+        const wsIntent = router.parseWatchStatusQuery(cleaned, opts);
         if (wsIntent && wsIntent.type === 'watch-status') {
           const out = await router.answerWatchStatus(wsIntent, opts);
           res = out.data ? { ...out.data, ok: out.ok, spoken: out.response } : { ok: out.ok, spoken: out.response };
         } else {
-          res = { ok: false, error: `Could not parse watchlist command: "${phrase}"` };
+          const tvIntent = router.parseCinemaSpecialCommand(cleaned, opts);
+          if (tvIntent && tvIntent.type === 'smart-tv-control' && ['list-tvs', 'get-default-tv', 'set-default-tv', 'clear-default-tv'].includes(tvIntent.action)) {
+            const out = await router.executeNabuCommand(cleaned, { ...opts, autoLaunchPlayers: false });
+            res = { ...(out.data || {}), ok: out.ok, spoken: out.response };
+          } else {
+            res = { ok: false, error: `Could not parse watchlist command: "${phrase}"` };
+          }
         }
       }
       break;

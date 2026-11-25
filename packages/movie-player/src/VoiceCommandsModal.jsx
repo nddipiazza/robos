@@ -65,8 +65,10 @@ export default function VoiceCommandsModal({ speakers = [], sampleShow = 'House'
       items: [
         { cmd: selectedTvPhrase === 'this computer' ? 'move playback to this computer' : `move playback to the "${selectedTvPhrase}"`, desc: 'Transfers the currently playing movie/episode at its live timestamp' },
         ...(selectedTvPhrase !== 'this computer' ? [
+          { cmd: `set my default tv to "${selectedTvPhrase}"`, desc: 'Makes this TV the automatic target whenever you do not name a TV' },
           { cmd: `open the movie library ${tvSuffix}`, desc: 'Launches the 10-foot TV remote browser on that Smart TV' },
         ] : []),
+        { cmd: 'what is my default tv', desc: 'Speaks your currently configured Default Smart TV' },
         { cmd: `pause ${tvSuffix}`, desc: 'Pauses active playback' },
         { cmd: `resume ${tvSuffix}`, desc: 'Resumes paused playback' },
         { cmd: `next episode ${tvSuffix}`, desc: 'Skips to the next queued episode' },

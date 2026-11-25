@@ -35,6 +35,7 @@ const PLAY_VERB_VARIANTS = new Set([
   'play', 'playing', 'plays', 'played', 'place', 'placed', 'places',
   'plate', 'plates', 'plane', 'plain', 'plague', 'plea', 'pray',
   'player', 'clay', 'lay', 'spin', 'jam', 'queue', 'shuffle', 'shuffling',
+  'put', 'start', 'throw',
 ]);
 
 // Known device cue tokens so we distinguish "on the roku" / "on the kitchen speaker" from song titles like "House on Haunted Hill"
@@ -244,12 +245,15 @@ function loadCastDevices(configDir = path.join(os.homedir(), '.config', 'robos')
   try {
     if (fs.existsSync(tvFile)) {
       const data = JSON.parse(fs.readFileSync(tvFile, 'utf8'));
+      const defId = data.defaultTvId || null;
+      const defIp = data.defaultTvIp || null;
       for (const tv of (data.tvs || [])) {
         if (!tv || !tv.ip) continue;
         const isRealLanDevice = Boolean(tv.lastSeen || tv.ecpDeviceInfo);
+        const id = tv.id || `tv-${tv.ip}`;
         byIp.set(tv.ip, {
           ip: tv.ip,
-          id: tv.id || `tv-${tv.ip}`,
+          id,
           name: tv.name || `Smart TV (${tv.ip})`,
           model: tv.model || tv.platformName || 'Smart TV',
           platformId: tv.platformId || 'smart-tv',
@@ -257,6 +261,7 @@ function loadCastDevices(configDir = path.join(os.homedir(), '.config', 'robos')
           deviceType: 'tv',
           protocol: tv.platformId === 'roku-os' ? 'roku-ecp' : 'cast',
           isRealLanDevice,
+          isDefault: Boolean((defId && id === defId) || (defIp && tv.ip === defIp)),
           ports: tv.ports || {},
         });
       }
@@ -289,6 +294,82 @@ function loadCastDevices(configDir = path.join(os.homedir(), '.config', 'robos')
   } catch {}
 
   return Array.from(byIp.values());
+}
+
+/**
+ * Return the user's configured Default Smart TV (from ~/.config/robos/tv-studio.json), or null if unset.
+ */
+function getDefaultSmartTv(configDir = path.join(os.homedir(), '.config', 'robos'), devices = null) {
+  const list = (Array.isArray(devices) ? devices : loadCastDevices(configDir)).filter(d => d.deviceType === 'tv');
+  if (!list.length) return null;
+  const tvFile = path.join(configDir, 'tv-studio.json');
+  try {
+    if (fs.existsSync(tvFile)) {
+      const data = JSON.parse(fs.readFileSync(tvFile, 'utf8'));
+      if (data.defaultTvId || data.defaultTvIp) {
+        const hit = list.find(t => (data.defaultTvId && t.id === data.defaultTvId) || (data.defaultTvIp && t.ip === data.defaultTvIp));
+        if (hit) return { ...hit, isDefault: true };
+      }
+    }
+  } catch {}
+  return list.find(t => t.isDefault) || null;
+}
+
+/**
+ * Set or clear the Default Smart TV in ~/.config/robos/tv-studio.json by TV name, ID, or IP.
+ */
+function setDefaultSmartTv(queryOrClear, { configDir = path.join(os.homedir(), '.config', 'robos'), devices = null } = {}) {
+  const tvFile = path.join(configDir, 'tv-studio.json');
+  let data = { tvs: [] };
+  try {
+    if (fs.existsSync(tvFile)) data = JSON.parse(fs.readFileSync(tvFile, 'utf8'));
+  } catch {}
+  const tvs = (Array.isArray(devices) ? devices : loadCastDevices(configDir)).filter(d => d.deviceType === 'tv');
+  const rawQ = String(queryOrClear ?? '').trim();
+
+  if (!rawQ || /^(?:none|null|clear|off|unset|local|this\s+computer|my\s+computer|computer|desktop)$/i.test(rawQ)) {
+    delete data.defaultTvId;
+    delete data.defaultTvIp;
+    fs.mkdirSync(configDir, { recursive: true });
+    fs.writeFileSync(tvFile, JSON.stringify(data, null, 2));
+    const refreshed = loadCastDevices(configDir).filter(d => d.deviceType === 'tv');
+    return {
+      ok: true,
+      cleared: true,
+      defaultTv: null,
+      tvs: refreshed,
+      spoken: 'Cleared your default Smart TV. Playback will stay on this computer unless you name a TV.',
+    };
+  }
+
+  if (!tvs.length) {
+    const error = 'No RobOS Smart TVs are paired yet. Open RobOS Smart TV Studio to pair a TV first.';
+    return { ok: false, error, spoken: error, tvs: [] };
+  }
+
+  let chosen = tvs.find(t => t.ip === rawQ || t.id.toLowerCase() === rawQ.toLowerCase() || t.name.toLowerCase() === rawQ.toLowerCase()) || null;
+  if (!chosen) {
+    const resolved = resolveTargetDevice(rawQ, { configDir, devices: tvs });
+    if (resolved && resolved.ip !== 'local') chosen = tvs.find(t => t.ip === resolved.ip) || resolved;
+  }
+  if (!chosen) {
+    const names = tvs.map(t => t.name).join(', ');
+    const error = `Could not match "${rawQ}" to a paired Smart TV. Available TVs: ${names}.`;
+    return { ok: false, error, spoken: error, tvs };
+  }
+
+  data.defaultTvId = chosen.id;
+  data.defaultTvIp = chosen.ip;
+  fs.mkdirSync(configDir, { recursive: true });
+  fs.writeFileSync(tvFile, JSON.stringify(data, null, 2));
+  const refreshed = loadCastDevices(configDir).filter(d => d.deviceType === 'tv');
+  const updatedDefault = refreshed.find(t => t.ip === chosen.ip) || { ...chosen, isDefault: true };
+  return {
+    ok: true,
+    defaultTv: updatedDefault,
+    tvs: refreshed,
+    spoken: `Set your default Smart TV to ${updatedDefault.name} (${updatedDefault.ip}).`,
+  };
 }
 
 /**
@@ -555,8 +636,8 @@ function parseMediaQuery(cleanedCommand, kind = 'audio', { configDir = path.join
   const explicitMovieOrTv = /\b(?:movie|film|video|cinema|show|series|season|episode|s\d+e\d+)\b/i.test(raw);
   const explicitAudio = /\b(?:song|songs|track|tracks|album|artist|band|music)\b/i.test(raw);
 
-  // Strip ONLY leading verb phrases (including Whisper phonetic variants like "place some", "plays", "played", "plate")
-  const verbPattern = /^(?:play|playing|plays|played|place|placed|places|plate|plates|plane|plain|plague|plea|pray|watch|watching|put\s+on|start|queue|listen\s+to|shuffle|shuffling|hear|spin)\s+/i;
+  // Strip ONLY leading verb phrases (including Whisper phonetic variants like "place some", "plays", "played", "plate", "put X on TV")
+  const verbPattern = /^(?:play|playing|plays|played|place|placed|places|plate|plates|plane|plain|plague|plea|pray|watch|watching|put\s+on|throw\s+on|put|start|queue|listen\s+to|shuffle|shuffling|hear|spin)\s+/i;
   let stripped = raw
     .replace(verbPattern, '')
     .replace(/^(?:some\s+(?:music\s+by\s+|songs?\s+by\s+)?|a\s+(?:song|track|movie|film|show|episode)\s+(?:by\s+|called\s+|named\s+)?|the\s+(?:song|track|album|band|artist|movie|film|show|series|episode)\s+(?:by\s+|called\s+|named\s+)?)/i, '')
@@ -638,11 +719,14 @@ function findBestMediaMatches(cleanedCommand, tracks = [], {
   }
 
   const qPhoneticPhrase = qTokens.map(phoneticCode).join(' ');
+  const qCollapsed = qPhrase.replace(/\s+/g, '');
 
   const scored = [];
   for (const t of list) {
     const titleNorm = normalizeNumberTokens(t.title || '');
     const showNameNorm = normalizeNumberTokens(t.showName || '');
+    const showCollapsed = showNameNorm.replace(/\s+/g, '');
+    const titleCollapsed = titleNorm.replace(/\s+/g, '');
     const epTitleNorm = normalizeNumberTokens(t.episodeTitle || '');
     const epCodeNorm = foldText(t.episodeCode || '');
     const artistNorm = normalizeNumberTokens(t.artist || t.albumArtist || '');
@@ -667,14 +751,17 @@ function findBestMediaMatches(cleanedCommand, tracks = [], {
     let score = 0;
     let fieldHit = 'none';
 
-    // 1. Exact full-field or exact phonetic full-field matches
-    if (showNameNorm && (showNameNorm === qPhrase || showTokens.map(phoneticCode).join(' ') === qPhoneticPhrase)) {
+    // 1. Exact full-field, collapsed compound-word ("a typical" -> "atypical"), or exact phonetic full-field matches
+    if (showNameNorm && (showNameNorm === qPhrase || (qCollapsed.length >= 4 && showCollapsed === qCollapsed) || showTokens.map(phoneticCode).join(' ') === qPhoneticPhrase)) {
       score += 158;
+      fieldHit = 'show';
+    } else if (showCollapsed.length >= 5 && qCollapsed.length >= 5 && jaroWinkler(qCollapsed, showCollapsed) >= 0.89) {
+      score += 136;
       fieldHit = 'show';
     } else if (artistNorm && (artistNorm === qPhrase || artistTokens.map(phoneticCode).join(' ') === qPhoneticPhrase)) {
       score += 150;
       fieldHit = 'artist';
-    } else if (titleNorm && (titleNorm === qPhrase || titleTokens.map(phoneticCode).join(' ') === qPhoneticPhrase)) {
+    } else if (titleNorm && (titleNorm === qPhrase || (qCollapsed.length >= 4 && titleCollapsed === qCollapsed) || titleTokens.map(phoneticCode).join(' ') === qPhoneticPhrase)) {
       score += 155;
       fieldHit = 'title';
     } else if (epTitleNorm && (epTitleNorm === qPhrase || epTitleTokens.map(phoneticCode).join(' ') === qPhoneticPhrase)) {
@@ -1545,10 +1632,31 @@ function parseCinemaSpecialCommand(cleanedText, {
   const qFull = foldText(cleanedText).replace(/\s+(?:please|right\s+now|now|for\s+me|for\s+us)$/, '').trim();
   if (!qFull) return null;
 
-  // 1. Smart TV discovery ("list my smart tvs", "what smart tvs are paired")
+  // 1. Smart TV discovery & Default TV ("list my smart tvs", "set my default tv to Roku TV", "what is my default tv", "clear default tv")
   if (/^(?:list|show|what\s+are|read)\s+(?:(?:my|our|the)\s+)?(?:paired\s+|configured\s+|available\s+)?(?:robos\s+)?smart\s+tvs?$/.test(qFull) ||
       /^(?:what|which)\s+(?:robos\s+)?smart\s+tvs?\s+(?:do\s+(?:i|we)\s+have|are\s+(?:paired|available|connected|online))$/.test(qFull)) {
     return { type: 'smart-tv-control', action: 'list-tvs' };
+  }
+
+  if (/^(?:what|which)\s+(?:is\s+)?(?:my|our|the)\s+default\s+(?:smart\s+)?(?:tv|television)$/.test(qFull) ||
+      /^(?:which|what)\s+(?:smart\s+)?(?:tv|television)\s+is\s+(?:my|our|the)\s+default$/.test(qFull)) {
+    return { type: 'smart-tv-control', action: 'get-default-tv' };
+  }
+
+  if (/^(?:clear|unset|remove|reset|disable)\s+(?:my\s+|our\s+|the\s+)?default\s+(?:smart\s+)?(?:tv|television)$/.test(qFull)) {
+    return { type: 'smart-tv-control', action: 'clear-default-tv' };
+  }
+
+  const setDefPatterns = [
+    /^(?:set|change|update|switch)\s+(?:my\s+|our\s+|the\s+)?default\s+(?:smart\s+)?(?:tv|television)\s+(?:to|as)\s+(.+)$/,
+    /^(?:make|use)\s+(.+?)\s+(?:as\s+)?(?:my\s+|our\s+|the\s+)?default\s+(?:smart\s+)?(?:tv|television)$/,
+    /^(?:my\s+|our\s+|the\s+)?default\s+(?:smart\s+)?(?:tv|television)\s+(?:is|should\s+be)\s+(.+)$/,
+  ];
+  for (const re of setDefPatterns) {
+    const m = qFull.match(re);
+    if (m && m[1] && m[1].trim()) {
+      return { type: 'smart-tv-control', action: 'set-default-tv', targetQuery: m[1].trim() };
+    }
   }
 
   // 2. Stop casting / return playback to computer ("stop casting", "disconnect from the roku tv", "move playback to this computer")
@@ -1565,9 +1673,15 @@ function parseCinemaSpecialCommand(cleanedText, {
     return { type: 'smart-tv-control', action: 'transfer-to-local', targetDevice };
   }
 
-  // 3. Open 10-foot Movie Library on Named Smart TV ("open the movie library on the roku tv", "launch robos movie player on basement tv")
+  // 3. Open 10-foot Movie Library on Named or Default Smart TV ("open the movie library on the roku tv", "open the tv library")
+  const effectiveLibTv = (targetDevice && targetDevice.ip !== 'local' && targetDevice.deviceType === 'tv')
+    ? targetDevice
+    : (!targetDevice ? getDefaultSmartTv(configDir, list) : null);
+  if (effectiveLibTv && /^(?:open|launch|show|display|bring\s+up)\s+(?:the\s+)?(?:robos\s+)?(?:movie\s+library|cinema\s+library|tv\s+library|movies\s+browser)$/.test(qMedia)) {
+    return { type: 'smart-tv-control', action: 'open-tv-library', targetDevice: effectiveLibTv };
+  }
   if (targetDevice && targetDevice.ip !== 'local' && targetDevice.deviceType === 'tv') {
-    if (/^(?:open|launch|show|display|bring\s+up)\s+(?:the\s+)?(?:robos\s+)?(?:movie\s+library|cinema\s+library|tv\s+library|movie\s+player|movies\s+browser|library)$/.test(qMedia)) {
+    if (/^(?:open|launch|show|display|bring\s+up)\s+(?:the\s+)?(?:robos\s+)?(?:movie\s+player|library)$/.test(qMedia)) {
       return { type: 'smart-tv-control', action: 'open-tv-library', targetDevice };
     }
     // 4. Transfer live playback to Named Smart TV ("move playback to the roku tv", "cast this to the roku tv", "send this movie to basement tv")
@@ -1578,7 +1692,7 @@ function parseCinemaSpecialCommand(cleanedText, {
   }
 
   // 5. Random Episode of a TV Show ("play a random [unwatched] episode of House [Season 3] [on the Roku TV]")
-  const PLAY_LEAD = String.raw`(?:play|playing|plays|place|watch|put\s+on|start|pick|choose|give\s+(?:me|us)|throw\s+on)`;
+  const PLAY_LEAD = String.raw`(?:play|playing|plays|place|watch|put\s+on|put|start|pick|choose|give\s+(?:me|us)|throw\s+on)`;
   const UNWATCHED_OPT = String.raw`(?:(unwatched|new|unseen)\s+)?`;
 
   const randEpPatterns = [
@@ -2260,11 +2374,13 @@ async function executeNabuCommand(rawTranscript, {
   }
 
   // ── 0.6 Continue watching / play the next episode of a show ───────────────
+  const defaultSmartTv = getDefaultSmartTv(configDir, castDevices);
+
   if (intent.type === 'play-next-episode') {
     const watch = requireMediaWatch();
     if (!watch) return { ok: false, skill: 'media-next-episode', cleanedCommand: cleaned, robosUser: activeUser, response: 'RobOS media history is not installed on this computer.' };
     if (autoLaunchPlayers) await ensureMediaPlayerRunning('movie-player', createMoviePlayerClient, { configDir });
-    const targetDev = intent.targetDevice || extractDeviceFromCommand(cleaned, { configDir, devices: castDevices }).targetDevice;
+    const targetDev = intent.targetDevice || extractDeviceFromCommand(cleaned, { configDir, devices: castDevices }).targetDevice || defaultSmartTv || null;
     const res = await watch.playNextEpisode({ show: intent.title, targetIp: (targetDev && targetDev.ip) || null, configDir });
     const tvNote = targetDev && targetDev.ip !== 'local' && res && res.ok ? ` Casting to ${targetDev.name}.` : '';
     return {
@@ -2276,8 +2392,42 @@ async function executeNabuCommand(rawTranscript, {
     };
   }
 
-  // ── 0.7 Smart TV Session Controls (list TVs, open 10-foot library, transfer playback, stop casting) ──
+  // ── 0.7 Smart TV Session Controls (list TVs, default TV, open 10-foot library, transfer playback, stop casting) ──
   if (intent.type === 'smart-tv-control') {
+    if (intent.action === 'get-default-tv') {
+      const def = getDefaultSmartTv(configDir, castDevices);
+      const response = def
+        ? `Your default Smart TV is ${def.name} (${def.ip}).`
+        : 'No default Smart TV is set yet. Say "set my default TV to Roku TV" to choose one.';
+      return {
+        ok: true,
+        skill: 'smart-tv-control',
+        cleanedCommand: cleaned,
+        robosUser: activeUser,
+        targetDevice: def,
+        targetIp: def ? def.ip : null,
+        response,
+        data: { defaultTv: def },
+      };
+    }
+
+    if (intent.action === 'set-default-tv' || intent.action === 'clear-default-tv') {
+      const res = setDefaultSmartTv(intent.action === 'clear-default-tv' ? '' : intent.targetQuery, {
+        configDir,
+        devices: castDevices,
+      });
+      return {
+        ok: res.ok,
+        skill: 'smart-tv-control',
+        cleanedCommand: cleaned,
+        robosUser: activeUser,
+        targetDevice: res.defaultTv || null,
+        targetIp: res.defaultTv ? res.defaultTv.ip : null,
+        response: res.spoken || res.error,
+        data: res,
+      };
+    }
+
     if (intent.action === 'list-tvs') {
       const tvs = castDevices.filter(d => d.deviceType === 'tv');
       if (!tvs.length) {
@@ -2287,17 +2437,17 @@ async function executeNabuCommand(rawTranscript, {
           cleanedCommand: cleaned,
           robosUser: activeUser,
           response: 'No RobOS Smart TVs are paired yet. Open RobOS Smart TV Studio to pair a TV.',
-          data: { tvs: [] },
+          data: { tvs: [], defaultTv: null },
         };
       }
-      const names = tvs.map(t => `${t.name} (${t.ip})`).join(', ');
+      const names = tvs.map(t => `${t.name} (${t.ip})${t.isDefault ? ' [Default TV]' : ''}`).join(', ');
       return {
         ok: true,
         skill: 'smart-tv-control',
         cleanedCommand: cleaned,
         robosUser: activeUser,
         response: `You have ${tvs.length} paired RobOS Smart TV${tvs.length === 1 ? '' : 's'}: ${names}.`,
-        data: { tvs },
+        data: { tvs, defaultTv: defaultSmartTv },
       };
     }
 
@@ -2398,7 +2548,10 @@ async function executeNabuCommand(rawTranscript, {
 
   // ── 0.8 Specialized Cinema Playback (Random Episode / Unwatched / Random Movie / Latest / From Beginning) ──
   if (intent.type === 'cinema-special') {
-    const match = resolveCinemaSpecialPlayback(intent, movieTracks, { configDir });
+    const effectiveIntent = !intent.targetDevice && defaultSmartTv
+      ? { ...intent, targetDevice: defaultSmartTv }
+      : intent;
+    const match = resolveCinemaSpecialPlayback(effectiveIntent, movieTracks, { configDir });
     if (!match.ok) {
       return {
         ok: false,
@@ -2487,14 +2640,15 @@ async function executeNabuCommand(rawTranscript, {
       targetName = 'Movie Player';
     }
 
-    if (!targetClient || (intent.targetDevice && intent.targetDevice.deviceType === 'tv' && !movieClient.running())) {
-      if (headlessTvCast.hasActiveHeadlessSession(configDir) || (intent.targetDevice && intent.targetDevice.ip && intent.targetDevice.ip !== 'local')) {
+    const effectiveTransportDev = intent.targetDevice || (!targetClient ? defaultSmartTv : null);
+    if (!targetClient || (effectiveTransportDev && effectiveTransportDev.deviceType === 'tv' && !movieClient.running())) {
+      if (headlessTvCast.hasActiveHeadlessSession(configDir) || (effectiveTransportDev && effectiveTransportDev.ip && effectiveTransportDev.ip !== 'local')) {
         const hs = headlessTvCast.readHeadlessSession(configDir);
         const res = await headlessTvCast.controlHeadlessTv(intent.action, {
-          targetIp: intent.targetDevice?.ip || hs?.targetIp || null,
+          targetIp: effectiveTransportDev?.ip || hs?.targetIp || null,
           configDir,
         });
-        const tvDisplay = intent.targetDevice?.name || hs?.targetDevice?.name || 'Smart TV';
+        const tvDisplay = effectiveTransportDev?.name || hs?.targetDevice?.name || 'Smart TV';
         const headlessLabels = {
           pause: `Paused playback on ${tvDisplay}.`,
           resume: `Resumed playback on ${tvDisplay}.`,
@@ -2562,6 +2716,14 @@ async function executeNabuCommand(rawTranscript, {
         robosUser: activeUser,
         response: match.error || `I couldn't find that in your ${chosenKind} library.`,
       };
+    }
+
+    if (chosenKind === 'movie' && !match.targetDevice && defaultSmartTv) {
+      match.targetDevice = defaultSmartTv;
+      match.targetIp = defaultSmartTv.ip;
+      match.onSpeaker = true;
+      match.summaryText = String(match.summaryText || '')
+        .replace(/\s+in RobOS Movie Player$/, ` on ${defaultSmartTv.name}`);
     }
 
     const appId = chosenKind === 'movie' ? 'movie-player' : 'audio-player';
@@ -2657,6 +2819,8 @@ module.exports = {
   jaroWinkler,
   isGenuineTabletopCommand,
   loadCastDevices,
+  getDefaultSmartTv,
+  setDefaultSmartTv,
   resolveTargetDevice,
   extractDeviceFromCommand,
   parseSeasonEpisode,
