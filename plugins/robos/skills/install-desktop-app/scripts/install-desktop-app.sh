@@ -462,7 +462,7 @@ TEMP_DESKTOP_FILE="$(mktemp "/tmp/${APP_ID}-XXXXXX.desktop")"
 
 cat > "${TEMP_DESKTOP_FILE}" << EOF
 [Desktop Entry]
-Version=1.5
+Version=1.0
 Type=Application
 Name=${APP_NAME}
 ${GENERIC_NAME:+GenericName=${GENERIC_NAME}}
