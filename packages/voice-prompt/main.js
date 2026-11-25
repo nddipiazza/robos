@@ -1086,6 +1086,7 @@ function startApiServer(overridePort) {
           } catch {}
         }
 
+        const wasRecognized = turn.skill !== 'unknown-command';
         res.writeHead(200);
         return res.end(JSON.stringify({
           ok: true,
@@ -1094,12 +1095,13 @@ function startApiServer(overridePort) {
           sttSource,
           wakeWordDetected: true,
           greetingOnly: false,
-          actionExecuted: true,
+          actionExecuted: wasRecognized,
           trigger,
           query,
           response: turn.response || '',
           skill: turn.skill || '',
           actionDone: turn.actionDone || '',
+          error: wasRecognized ? '' : (turn.actionDone || `No command ${query}`),
           audioWavBase64,
           audioDurationMs,
           audioEngine,

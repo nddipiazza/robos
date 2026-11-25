@@ -357,6 +357,17 @@ describe('Voice Prompt Unit Tests', () => {
       assert.strictEqual(procCmd.data.wakeWordDetected, true);
       assert.strictEqual(procCmd.data.actionExecuted, true);
       assert.strictEqual(procCmd.data.query, 'what time is it');
+
+      const procUnknown = await httpReq('POST', '/api/assistant/process-audio', {
+        deviceUuid: 'phone-123',
+        mockTranscript: 'Commander, activate hyperdrive warp nine!',
+        returnAudio: false,
+      });
+      assert.strictEqual(procUnknown.status, 200);
+      assert.strictEqual(procUnknown.data.wakeWordDetected, true);
+      assert.strictEqual(procUnknown.data.actionExecuted, false);
+      assert.strictEqual(procUnknown.data.skill, 'unknown-command');
+      assert.strictEqual(procUnknown.data.response, 'No command activate hyperdrive warp nine.');
     });
   });
 

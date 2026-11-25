@@ -123,7 +123,7 @@ class DesktopAssistant extends EventEmitter {
     if (this.lastSpokenText && lower.includes(this.lastSpokenText.toLowerCase().slice(0, 15))) {
       return;
     }
-    if (/^(?:command received|done:|executed:)/i.test(lower)) {
+    if (/^(?:command received|done:|executed:|no command\b)/i.test(lower)) {
       return;
     }
 
@@ -184,7 +184,7 @@ class DesktopAssistant extends EventEmitter {
 
     // Drop acoustic recursion triggers
     const lowerQ = query.toLowerCase();
-    if (/^(?:command received|done:|executed:)/i.test(lowerQ)) {
+    if (/^(?:command received|done:|executed:|no command\b)/i.test(lowerQ)) {
       return { ok: false, error: 'Acoustic echo dropped' };
     }
     if (this.lastSpokenText && lowerQ.includes(this.lastSpokenText.toLowerCase().slice(0, 15))) {

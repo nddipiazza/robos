@@ -984,19 +984,20 @@ class SkillsExecutor {
   }
 
   /**
-   * Fallback to direct command execution
+   * Unrecognized command response ("No command {command}")
    */
   async executeAIAgentFallback(query, context = {}, options = {}) {
-    const cleanQ = query.trim().replace(/[.!]+$/, '');
-    const actionDone = `Executed: "${cleanQ}"`;
-    const response = `Done: ${cleanQ}.`;
+    const cleanQ = query.trim().replace(/[.!?]+$/, '');
+    const actionDone = `No command: "${cleanQ}"`;
+    const response = `No command ${cleanQ}.`;
 
     return {
       ok: true,
-      skill: 'command-receive',
+      recognized: false,
+      skill: 'unknown-command',
       actionDone,
       response,
-      data: { query: cleanQ }
+      data: { query: cleanQ, recognized: false }
     };
   }
 

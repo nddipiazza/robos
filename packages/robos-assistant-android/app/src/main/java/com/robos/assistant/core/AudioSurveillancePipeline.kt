@@ -801,13 +801,13 @@ class SurveillanceCoordinator(
                 }
 
                 val outcome = when {
-                    srvRes.actionExecuted -> ActionOutcomeStatus.ACTION_EXECUTED
+                    srvRes.actionExecuted && srvRes.skill != "unknown-command" -> ActionOutcomeStatus.ACTION_EXECUTED
                     srvRes.wakeWordDetected -> ActionOutcomeStatus.ACTION_FAILED
                     else -> ActionOutcomeStatus.AMBIENT_RECORDED
                 }
                 val summary = when {
-                    srvRes.actionExecuted -> srvRes.actionDone.ifBlank { srvRes.skill.ifBlank { "Executed on RobOS Server" } }
-                    srvRes.wakeWordDetected -> srvRes.error.ifBlank { "Action failed on RobOS Server" }
+                    outcome == ActionOutcomeStatus.ACTION_EXECUTED -> srvRes.actionDone.ifBlank { srvRes.skill.ifBlank { "Executed on RobOS Server" } }
+                    srvRes.wakeWordDetected -> srvRes.actionDone.ifBlank { srvRes.error.ifBlank { "Action failed on RobOS Server" } }
                     else -> ""
                 }
 
@@ -838,12 +838,13 @@ class SurveillanceCoordinator(
                     maxMb = config.retentionMaxMb,
                 )
 
-                if (srvRes.actionExecuted && config.speakServerReplies && srvRes.audioWavBytes != null && srvRes.audioWavBytes.size > 44) {
+                // Speak server reply out loud for both executed skills AND "No command {command}" feedback
+                if ((srvRes.actionExecuted || srvRes.wakeWordDetected) && config.speakServerReplies && srvRes.audioWavBytes != null && srvRes.audioWavBytes.size > 44) {
                     lastSpokenReplyLower = srvRes.response.trim().lowercase()
                     onSpeakWav(srvRes.audioWavBytes, srvRes.response)
                 }
 
-                onEvent(if (srvRes.actionExecuted) "action_executed" else "recorded_ambient", saved)
+                onEvent(if (outcome == ActionOutcomeStatus.ACTION_EXECUTED) "action_executed" else if (srvRes.wakeWordDetected) "action_failed" else "recorded_ambient", saved)
                 return saved
             }
         }
@@ -933,10 +934,11 @@ class SurveillanceCoordinator(
             ServerTurnResponse(ok = false, error = e.message ?: "RobOS server unreachable")
         }
 
+        val recognizedSkill = turnRes.ok && turnRes.skill != "unknown-command"
         entry = if (turnRes.ok) {
             archiveStore.updateRecording(entry.id) {
                 it.copy(
-                    actionStatus = ActionOutcomeStatus.ACTION_EXECUTED,
+                    actionStatus = if (recognizedSkill) ActionOutcomeStatus.ACTION_EXECUTED else ActionOutcomeStatus.ACTION_FAILED,
                     actionSkill = turnRes.skill,
                     actionSummary = turnRes.actionDone.ifBlank { turnRes.skill.ifBlank { "Executed on RobOS Server" } },
                     assistantReply = turnRes.response,
@@ -956,7 +958,7 @@ class SurveillanceCoordinator(
             onSpeakWav(turnRes.audioWavBytes, turnRes.response)
         }
 
-        onEvent(if (turnRes.ok) "action_executed" else "action_failed", entry)
+        onEvent(if (recognizedSkill) "action_executed" else "action_failed", entry)
         return entry
     }
 

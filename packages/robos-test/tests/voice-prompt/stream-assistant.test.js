@@ -260,9 +260,10 @@ describe('RobOS Voice Background Stream, Wake-Word & Desktop Assistant Tests', (
       assert.ok(actionDone && actionDone.includes('Task Explorer'));
       assert.ok(spokenText && spokenText.includes('Task Explorer'));
 
-      // Direct general command fallback returns concise confirmation
+      // Unrecognized command returns "No command {command}." instead of pretending it ran
       const res = await assistant.processQuery('run verification audit');
-      assert.strictEqual(res.turn.response, 'Done: run verification audit.');
+      assert.strictEqual(res.turn.response, 'No command run verification audit.');
+      assert.strictEqual(res.turn.skill, 'unknown-command');
     });
 
     it('continuously analyzes speech stream and autonomously executes matched action', async () => {
