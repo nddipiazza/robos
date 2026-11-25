@@ -153,6 +153,7 @@ enum class ActionOutcomeStatus(val label: String) {
 @Serializable
 enum class RecordingFilter(val label: String) {
     ALL("All"),
+    IDENTIFIED_SPEAKERS("Identified Voices"),
     WAKE_COMMANDS("Wake Word"),
     ACTIONS_EXECUTED("Actions Run"),
     OFFLINE_ONLY("Offline Recorded"),
@@ -179,6 +180,9 @@ data class AudioRecordingEntry(
     val actionSkill: String = "",
     val actionSummary: String = "",
     val assistantReply: String = "",
+    val speakerId: String = "",
+    val speakerName: String = "",
+    val speakerConfidencePct: Int = 0,
 )
 
 data class AssistantRuntimeStatus(
@@ -215,6 +219,8 @@ data class AssistantRuntimeStatus(
     val temperatureC: Float = 0f,
     val batteryUnrestricted: Boolean = false,
     val activePlaybackId: String = "",
+    val enrolledSpeakers: List<String> = emptyList(),
+    val robosPeople: List<String> = emptyList(),
 ) {
     val actionsArmed: Boolean
         get() = serverState == ServerConnectionState.CONNECTED

@@ -9,8 +9,10 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import kotlinx.serialization.json.putJsonArray
 import java.io.BufferedInputStream
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
@@ -35,7 +37,15 @@ interface AssistantNodeController {
     suspend fun askWhenConnected(query: String): Result<AudioRecordingEntry>
     suspend fun simulateUtterance(text: String, pcm16le: ByteArray, sampleRate: Int = 16000): AudioRecordingEntry?
     suspend fun playRemoteSpeechWav(wavBytes: ByteArray, caption: String = "")
+    suspend fun enrollRecordingSpeaker(recordingId: String, speakerName: String): Result<AudioRecordingEntry> =
+        Result.failure(UnsupportedOperationException("Speaker enrollment requires an active RobOS Server"))
 }
+
+@Serializable
+private data class EnrollClipReqDto(
+    val name: String = "",
+    val speakerName: String = "",
+)
 
 @Serializable
 private data class ConnectReqDto(
@@ -192,6 +202,8 @@ class HttpAssistantServer(
                         put("charging", st.charging)
                         put("temperatureC", st.temperatureC)
                         put("uptimeSeconds", st.uptimeSeconds)
+                        putJsonArray("enrolledSpeakers") { st.enrolledSpeakers.forEach { add(JsonPrimitive(it)) } }
+                        putJsonArray("robosPeople") { st.robosPeople.forEach { add(JsonPrimitive(it)) } }
                     }.toString()
                     writeJson(output, "200 OK", body)
                 }
@@ -213,6 +225,31 @@ class HttpAssistantServer(
                 req.path == "/api/recordings" && req.method == "DELETE" -> {
                     archiveStore.clearAll()
                     writeJson(output, "200 OK", """{"ok":true,"cleared":true}""")
+                }
+
+                req.path.startsWith("/api/recordings/") && req.path.endsWith("/enroll-speaker") && req.method == "POST" -> {
+                    val id = req.path.removePrefix("/api/recordings/").removeSuffix("/enroll-speaker").trim()
+                    val dto = try {
+                        json.decodeFromString(EnrollClipReqDto.serializer(), req.bodyUtf8())
+                    } catch (_: Exception) {
+                        EnrollClipReqDto()
+                    }
+                    val chosen = dto.name.ifBlank { dto.speakerName }.trim()
+                    if (id.isEmpty() || chosen.isEmpty()) {
+                        writeJson(output, "400 Bad Request", """{"ok":false,"error":"recording id and speaker name are required"}""")
+                        return
+                    }
+                    val res = runBlocking { controller.enrollRecordingSpeaker(id, chosen) }
+                    res.fold(
+                        onSuccess = { entry ->
+                            val entryJson = json.encodeToString(AudioRecordingEntry.serializer(), entry)
+                            writeJson(output, "200 OK", """{"ok":true,"recording":$entryJson}""")
+                        },
+                        onFailure = { err ->
+                            val safe = jsonEscape(err.message ?: "Speaker enrollment failed")
+                            writeJson(output, "409 Conflict", """{"ok":false,"error":"$safe"}""")
+                        },
+                    )
                 }
 
                 req.path.startsWith("/api/recordings/") && req.method == "DELETE" -> {
@@ -672,20 +709,30 @@ class HttpAssistantServer(
   <div class="card">
     <div class="row" style="margin-bottom:8px">
       <strong>Recorded Audio &amp; Text Archive</strong>
-      <button id="refresh-btn">Refresh</button>
+      <div class="row" style="gap:8px">
+        <span class="muted" id="speakers-summary"></span>
+        <button id="refresh-btn">Refresh</button>
+      </div>
     </div>
     <div id="rec-list" class="muted">Loading recordings…</div>
   </div>
 </div>
 <script>
+let knownPeople = [];
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
 async function refresh() {
   const st = await (await fetch('/api/status')).json();
+  knownPeople = Array.isArray(st.robosPeople) ? st.robosPeople : [];
+  const enrolled = Array.isArray(st.enrolledSpeakers) ? st.enrolledSpeakers : [];
   const pill = document.getElementById('srv-pill');
   pill.textContent = st.serverLabel;
   pill.className = 'pill ' + (st.actionsArmed ? 'ok' : 'warn');
   document.getElementById('ask-input').disabled = !st.actionsArmed;
   document.getElementById('ask-btn').disabled = !st.actionsArmed;
   document.getElementById('live-partial').textContent = st.livePartialTranscript ? ('Live: "' + st.livePartialTranscript + '"') : (st.listeningLabel + ' (' + Math.round(st.rmsDbFs) + ' dBFS)');
+  document.getElementById('speakers-summary').textContent = enrolled.length ? ('Enrolled voices: ' + enrolled.join(', ')) : 'Say "Commander, remember my voice as <Name>" or click Enroll Voice below';
 
   const rec = await (await fetch('/api/recordings?limit=50')).json();
   const list = document.getElementById('rec-list');
@@ -693,18 +740,49 @@ async function refresh() {
     list.innerHTML = '<div class="muted">No speech clips recorded yet.</div>';
     return;
   }
+  const peopleOpts = knownPeople.map(p => `<option value="${'$'}{esc(p)}">${'$'}{esc(p)}</option>`).join('');
   list.innerHTML = rec.recordings.map(r => `
     <div class="rec">
       <div class="row">
-        <strong>${'$'}{r.transcript}</strong>
-        <span class="pill ${'$'}{r.actionStatus === 'ACTION_EXECUTED' ? 'ok' : 'warn'}">${'$'}{r.actionStatus}</span>
+        <strong>${'$'}{esc(r.transcript)}</strong>
+        <div class="row" style="gap:6px">
+          ${'$'}{r.speakerName ? '<span class="pill ok">🗣️ ' + esc(r.speakerName) + (r.speakerConfidencePct ? ' · ' + r.speakerConfidencePct + '%' : '') + '</span>' : ''}
+          <span class="pill ${'$'}{r.actionStatus === 'ACTION_EXECUTED' ? 'ok' : 'warn'}">${'$'}{esc(r.actionStatus)}</span>
+        </div>
       </div>
-      ${'$'}{r.assistantReply ? '<div style="color:#00bcd4">Reply: ' + r.assistantReply + '</div>' : ''}
-      ${'$'}{r.actionSummary ? '<div class="muted">' + r.actionSummary + '</div>' : ''}
-      <div class="muted">${'$'}{r.createdAtIso} · ${'$'}{(r.durationMs/1000).toFixed(1)}s · ${'$'}{Math.round(r.peakDbFs)} dBFS</div>
+      ${'$'}{r.assistantReply ? '<div style="color:#00bcd4">Reply: ' + esc(r.assistantReply) + '</div>' : ''}
+      ${'$'}{r.actionSummary ? '<div class="muted">' + esc(r.actionSummary) + '</div>' : ''}
+      <div class="row">
+        <div class="muted">${'$'}{esc(r.createdAtIso)} · ${'$'}{(r.durationMs/1000).toFixed(1)}s · ${'$'}{Math.round(r.peakDbFs)} dBFS</div>
+        ${'$'}{st.actionsArmed ? `
+          <div class="row" style="gap:4px">
+            ${'$'}{peopleOpts ? `<select id="spk-${'$'}{esc(r.id)}" style="background:#0d1117;color:var(--fg);border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:12px"><option value="">Enroll voice as…</option>${'$'}{peopleOpts}<option value="__custom__">+ Custom name…</option></select><button type="button" style="padding:4px 8px;font-size:12px;cursor:pointer" onclick="enrollFromSelect('${'$'}{esc(r.id)}')">Enroll Voice</button>` : `<button type="button" style="padding:4px 8px;font-size:12px;cursor:pointer" onclick="enrollCustom('${'$'}{esc(r.id)}')">Enroll Voice</button>`}
+          </div>` : ''}
+      </div>
       <audio controls preload="none" src="/recordings/${'$'}{r.id}.wav"></audio>
     </div>
   `).join('');
+}
+async function enrollClip(id, name) {
+  if (!name || !name.trim()) return;
+  const res = await fetch('/api/recordings/' + encodeURIComponent(id) + '/enroll-speaker', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name: name.trim() }),
+  });
+  const data = await res.json();
+  if (!data.ok) alert(data.error || 'Failed to enroll voiceprint');
+  refresh();
+}
+function enrollFromSelect(id) {
+  const sel = document.getElementById('spk-' + id);
+  if (!sel || !sel.value) return;
+  if (sel.value === '__custom__') return enrollCustom(id);
+  enrollClip(id, sel.value);
+}
+function enrollCustom(id) {
+  const name = prompt('Enter speaker name (e.g. Nick, Diana, Leo):');
+  if (name && name.trim()) enrollClip(id, name.trim());
 }
 async function runQuick(q) {
   await fetch('/api/ask', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({query:q}) });

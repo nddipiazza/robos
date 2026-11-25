@@ -221,6 +221,7 @@ private fun RobosAssistantRoot(
                     onOpenRecordingsTab = { tab = AssistantTab.Recordings },
                     onSendCommand = vm::sendManualAssistantCommand,
                     onPlayClip = vm::playOrStopClip,
+                    onEnrollSpeaker = vm::enrollClipSpeaker,
                     onDownloadModel = vm::downloadOfflineSttModel,
                     onCopyUrl = vm::copyToClipboard,
                     onRequestUnrestrictedBattery = {
@@ -240,6 +241,7 @@ private fun RobosAssistantRoot(
                     onSearchChange = vm::setSearchQuery,
                     onFilterChange = vm::setFilter,
                     onPlayClip = vm::playOrStopClip,
+                    onEnrollSpeaker = vm::enrollClipSpeaker,
                     onCopyText = { txt -> vm.copyToClipboard("transcript", txt) },
                     onDeleteClip = vm::deleteClip,
                     onClearAll = vm::clearAllRecordings,

@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const { spawn, exec } = require('child_process');
+const { SpeakerIdentifier } = require('./speaker-id');
 
 class SkillsExecutor {
   constructor(options = {}) {
@@ -11,6 +12,20 @@ class SkillsExecutor {
     this.configDir = path.join(this.homeDir, '.config', 'robos');
     this.projectsDir = path.join(this.configDir, 'task-planner', 'projects');
     this.rootRepoDir = path.resolve(__dirname, '..', '..', '..');
+    this._speakerIdentifier = options.speakerIdentifier || null;
+  }
+
+  _getSpeakerIdentifier() {
+    if (
+      !this._speakerIdentifier ||
+      this._speakerIdentifier.configDir !== this.configDir
+    ) {
+      this._speakerIdentifier = new SpeakerIdentifier({
+        homeDir: this.homeDir,
+        configDir: this.configDir,
+      });
+    }
+    return this._speakerIdentifier;
   }
 
   /**
@@ -39,6 +54,7 @@ class SkillsExecutor {
       { id: 'media-next-episode', label: 'Continue Watching a Show', intent: 'Play the next episode of a show in RobOS Movie Player, resuming the one in progress', patterns: ['continue watching [show]', 'play the next episode of [show]'] },
       { id: 'shopping-lists', label: 'Manage Household Shopping Lists (Grocery, Target, Costco)', intent: 'Add, check off, remove, adjust quantity, sync with Google Docs/Drive, or read items on Grocery, Target, and Costco shopping lists', patterns: ['add [items] to grocery/target/costco list', 'check off [item] on shopping list', 'remove [item] from target list', 'what is on my costco list', 'clear checked on grocery list'] },
       { id: 'google-calendar', label: 'Manage Google Calendar, Named Family Calendars & Access Google Doc', intent: 'Create/list Google Calendar events on Named Calendars (Family, Primary), list named calendars, or sync the 1-button Calendar Request Google Doc', patterns: ['add [event] to family calendar', 'schedule [event] on [date] at [time]', 'what google calendars do I have', 'sync calendar google doc'] },
+      { id: 'speaker-id', label: 'Speaker Identification & Voiceprints', intent: 'Identify who is talking by neural voiceprint, enroll voices linked to RobOS Users, list enrolled voices, or forget a voiceprint', patterns: ['who is talking', 'who am I', 'remember my voice as [name]', 'enroll my voice as [name]', 'whose voices do you know', "forget [name]'s voice"] },
       { id: 'robos-users', label: 'Manage RobOS Users & Send Email', intent: 'List RobOS users, check/switch active user, ask about user emails/birthdays/roles/hobbies/music/BG3 characters, send or draft emails to RobOS users via Thunderbird Bridge, add/update/remove users, and sync to RobOS Services', patterns: ['who are the robos users', 'who am I', 'switch robos user to [name]', 'tell me about [user]', 'send an email to [user] saying [message]', 'email [user] with subject [subject] and body [message]', 'confirm email', 'cancel email', 'sync robos users and groups to [host]'] },
       { id: 'robos-groups', label: 'Manage RobOS Groups & Group Email', intent: 'List RobOS groups, inspect group members and emails, email an entire RobOS group via Thunderbird Bridge, check what groups a user is in, create/delete groups, and add/remove group members', patterns: ['what robos groups do we have', 'who is in the [group] group', 'what are the emails for [group]', 'email the [group] group saying [message]', 'add [user] to the [group] group', 'remove [user] from [group]', 'create a robos group called [name]'] },
       { id: 'greeting', label: 'Casual Greeting', intent: 'Respond with a friendly greeting', patterns: ['commander', 'hi', 'hey'] },
@@ -280,6 +296,20 @@ class SkillsExecutor {
           data: { error: errMsg },
         };
       }
+    }
+
+    // 1.62 Speaker Identification & Voiceprint Enrollment ("Commander, who is talking?", "Commander, remember my voice as Nick")
+    try {
+      const spkEngine = this._getSpeakerIdentifier();
+      if (spkEngine.parseVoiceCommand(query)) {
+        const spkRes = spkEngine.executeVoiceCommand(query, {
+          utteranceWavBuffer: options.utteranceWavBuffer || null,
+          preIdentified: options.preIdentified || null,
+        });
+        if (spkRes) return spkRes;
+      }
+    } catch (err) {
+      console.warn('[skills-executor] Speaker ID skill error:', err.message);
     }
 
     // 1.65 RobOS Users & RobOS Groups Skills

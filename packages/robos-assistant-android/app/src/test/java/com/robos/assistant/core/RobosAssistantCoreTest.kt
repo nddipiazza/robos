@@ -395,6 +395,138 @@ class RobosAssistantCoreTest {
         }
     }
 
+    @Test
+    fun speakerIdentificationTagsRecordingsFiltersBySpeakerAndEnrollsClips() = runTest {
+        val dir = Files.createTempDirectory("robos-assistant-speaker-test").toFile()
+        val mockVoiceServer = ServerSocket(0, 16, InetSocketAddress("127.0.0.1", 0).address)
+        val mockPort = mockVoiceServer.localPort
+        val serverRunning = AtomicBoolean(true)
+
+        val serverThread = Thread {
+            while (serverRunning.get()) {
+                val client = try {
+                    mockVoiceServer.accept()
+                } catch (_: Exception) {
+                    break
+                }
+                client.use { sock ->
+                    val raw = ByteArray(16384)
+                    val n = sock.getInputStream().read(raw)
+                    val reqStr = if (n > 0) String(raw, 0, n, StandardCharsets.UTF_8) else ""
+                    val bodyJson = when {
+                        reqStr.startsWith("GET /api/speakers") ->
+                            """{"ok":true,"engine":"wespeaker-cam++","speakers":[{"speakerId":"nicholas-dipiazza","name":"Nicholas \"Nick\" DiPiazza","shortName":"Nick","sampleCount":2}],"robosPeople":[{"uid":"nicholas-dipiazza","name":"Nicholas \"Nick\" DiPiazza","shortName":"Nick"},{"uid":"diana-arrington","name":"Diana Arrington","shortName":"Diana"}]}"""
+                        reqStr.startsWith("POST /api/speakers/enroll") ->
+                            """{"ok":true,"speakerId":"diana-arrington","speakerName":"Diana","fullName":"Diana Arrington","sampleCount":1}"""
+                        reqStr.startsWith("POST /api/assistant/process-audio") ->
+                            """{"ok":true,"isSpeech":true,"transcript":"Hey everyone dinner is ready","sttSource":"robos-server-moonshine","wakeWordDetected":false,"greetingOnly":false,"actionExecuted":false,"speakerId":"nicholas-dipiazza","speakerName":"Nick","speakerFullName":"Nicholas \"Nick\" DiPiazza","speakerConfidencePct":91}"""
+                        else ->
+                            """{"ok":true}"""
+                    }
+                    val bytes = bodyJson.toByteArray(StandardCharsets.UTF_8)
+                    val resp = "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: ${bytes.size}\r\nConnection: close\r\n\r\n"
+                    sock.getOutputStream().write(resp.toByteArray(StandardCharsets.US_ASCII))
+                    sock.getOutputStream().write(bytes)
+                    sock.getOutputStream().flush()
+                }
+            }
+        }.apply { isDaemon = true; start() }
+
+        var httpSrv: HttpAssistantServer? = null
+        try {
+            val client = RobosVoiceServerClient()
+            val spkInfo = client.fetchSpeakersInfo("127.0.0.1", mockPort)
+            assertTrue(spkInfo.ok)
+            assertEquals(listOf("Nick"), spkInfo.enrolledNames)
+            assertEquals(listOf("Nick", "Diana"), spkInfo.robosPeopleNames)
+
+            val store = RecordingArchiveStore(dir)
+            val coordinator = SurveillanceCoordinator(
+                archiveStore = store,
+                serverGateway = { cfg, trig, q, full -> client.executePhoneTurn("127.0.0.1", mockPort, cfg, trig, q, full) },
+                isServerConnected = { true },
+                serverAudioProcessor = { cfg, wavBytes, fb, armed, trig ->
+                    client.processUtteranceAudio("127.0.0.1", mockPort, cfg, wavBytes, fb, armed, trig)
+                },
+            )
+            val cfg = AssistantConfig(room = "Kitchen", robosServerEnabled = true, robosServerHost = "127.0.0.1", robosServerPort = mockPort)
+            val pcm = HttpAssistantServer.synthesizeSpeechLikeTonePcm(durationMs = 700L)
+
+            // 1. Captured ambient clip is automatically tagged with Nick's voiceprint!
+            val nickClip = coordinator.handleCapturedUtterance(
+                config = cfg,
+                utterance = CapturedUtterance(pcm, 16000, 700L, -14f, 1000L, 1700L),
+                rawTranscript = "",
+                sttSource = "robos-server-moonshine",
+            )
+            assertNotNull(nickClip)
+            assertEquals("nicholas-dipiazza", nickClip!!.speakerId)
+            assertEquals("Nick", nickClip.speakerName)
+            assertEquals(91, nickClip.speakerConfidencePct)
+
+            // 2. Unidentified offline clip for filter testing
+            val untaggedClip = coordinator.handleCapturedUtterance(
+                config = cfg.copy(robosServerEnabled = false),
+                utterance = CapturedUtterance(pcm, 16000, 700L, -14f, 2000L, 2700L),
+                rawTranscript = "Testing untagged clip",
+            )
+            assertNotNull(untaggedClip)
+            assertEquals("", untaggedClip!!.speakerName)
+
+            assertEquals(1, store.list(filter = RecordingFilter.IDENTIFIED_SPEAKERS).size)
+            assertEquals(1, store.list(query = "nick").size)
+
+            // 3. Enroll untagged clip via POST /api/recordings/<id>/enroll-speaker on HttpAssistantServer
+            var status = AssistantRuntimeStatus(
+                running = true,
+                serverState = ServerConnectionState.CONNECTED,
+                serverHost = "127.0.0.1",
+                serverPort = mockPort,
+                enrolledSpeakers = spkInfo.enrolledNames,
+                robosPeople = spkInfo.robosPeopleNames,
+            )
+            val controller = object : AssistantNodeController {
+                override fun currentConfig(): AssistantConfig = cfg
+                override fun currentStatus(): AssistantRuntimeStatus = status
+                override fun connectServer(host: String, port: Int): AssistantRuntimeStatus = status
+                override fun disconnectServer(): AssistantRuntimeStatus = status
+                override suspend fun askWhenConnected(query: String): Result<AudioRecordingEntry> = Result.failure(IllegalStateException())
+                override suspend fun simulateUtterance(text: String, pcm16le: ByteArray, sampleRate: Int): AudioRecordingEntry? = null
+                override suspend fun playRemoteSpeechWav(wavBytes: ByteArray, caption: String) {}
+                override suspend fun enrollRecordingSpeaker(recordingId: String, speakerName: String): Result<AudioRecordingEntry> {
+                    val wav = store.getWavFile(recordingId)!!.readBytes()
+                    val res = client.enrollSpeakerWav("127.0.0.1", mockPort, speakerName, wav)
+                    val updated = store.updateRecording(recordingId) {
+                        it.copy(speakerId = res.speakerId, speakerName = res.speakerName, speakerConfidencePct = 99)
+                    }!!
+                    status = status.copy(enrolledSpeakers = (status.enrolledSpeakers + res.speakerName).distinct())
+                    return Result.success(updated)
+                }
+            }
+            httpSrv = HttpAssistantServer(0, store, LiveAudioHub(), MemoryAuthVault(""), controller).also { it.start() }
+
+            val (enrollCode, enrollBody) = simpleHttp(
+                httpSrv.boundPort,
+                "POST",
+                "/api/recordings/${untaggedClip.id}/enroll-speaker",
+                """{"name":"Diana"}""",
+            )
+            assertEquals(200, enrollCode)
+            assertTrue(enrollBody.contains(""""speakerName":"Diana""""))
+            assertEquals(2, store.list(filter = RecordingFilter.IDENTIFIED_SPEAKERS).size)
+
+            val (stCode, stBody) = simpleHttp(httpSrv.boundPort, "GET", "/api/status")
+            assertEquals(200, stCode)
+            assertTrue(stBody.contains(""""enrolledSpeakers":["Nick","Diana"]"""))
+        } finally {
+            httpSrv?.stop()
+            serverRunning.set(false)
+            mockVoiceServer.close()
+            serverThread.join(500)
+            dir.deleteRecursively()
+        }
+    }
+
     private fun simpleHttp(port: Int, method: String, path: String, jsonBody: String? = null): Pair<Int, String> {
         val (code, bytes) = simpleHttpBytes(port, method, path, jsonBody)
         return code to String(bytes, StandardCharsets.UTF_8)

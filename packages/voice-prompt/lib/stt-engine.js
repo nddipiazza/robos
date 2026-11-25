@@ -833,5 +833,6 @@ module.exports = {
   AdaptiveEnergyVad,
   readWavToFloat32,
   decodeWavBufferToFloat32,
+  trimSilenceFloat32,
   cleanTranscript,
 };

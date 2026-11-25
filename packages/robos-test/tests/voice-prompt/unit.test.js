@@ -369,6 +369,158 @@ describe('Voice Prompt Unit Tests', () => {
       assert.strictEqual(procUnknown.data.skill, 'unknown-command');
       assert.strictEqual(procUnknown.data.response, 'No command activate hyperdrive warp nine.');
     });
+
+    it('Speaker Identification enrolls voices, links RobOS Users, tags every utterance, and answers "who is talking"', async () => {
+      const spkDir = path.join(tmpDir, 'speaker-http-test');
+      const peopleDir = path.join(spkDir, 'people');
+      fs.mkdirSync(peopleDir, { recursive: true });
+      fs.writeFileSync(path.join(peopleDir, 'nicholas-dipiazza.json'), JSON.stringify({
+        uid: 'nicholas-dipiazza',
+        name: 'Nicholas "Nick" DiPiazza',
+      }));
+      fs.writeFileSync(path.join(peopleDir, 'diana-arrington.json'), JSON.stringify({
+        uid: 'diana-arrington',
+        name: 'Diana Arrington',
+      }));
+
+      const prevSpkFile = process.env.ROBOS_SPEAKERS_FILE;
+      const prevPeopleDir = process.env.ROBOS_PEOPLE_DIR;
+      process.env.ROBOS_SPEAKERS_FILE = path.join(spkDir, 'voice-speakers.json');
+      process.env.ROBOS_PEOPLE_DIR = peopleDir;
+
+      function makeSyntheticVoiceWavBase64({ f0Hz, formantHz, amp = 0.35, durationMs = 900, sampleRate = 16000 }) {
+        const numSamples = Math.floor((sampleRate * durationMs) / 1000);
+        const buf = Buffer.alloc(44 + numSamples * 2);
+        buf.write('RIFF', 0);
+        buf.writeUInt32LE(36 + numSamples * 2, 4);
+        buf.write('WAVE', 8);
+        buf.write('fmt ', 12);
+        buf.writeUInt32LE(16, 16);
+        buf.writeUInt16LE(1, 20);
+        buf.writeUInt16LE(1, 22);
+        buf.writeUInt32LE(sampleRate, 24);
+        buf.writeUInt32LE(sampleRate * 2, 28);
+        buf.writeUInt16LE(2, 32);
+        buf.writeUInt16LE(16, 34);
+        buf.write('data', 36);
+        buf.writeUInt32LE(numSamples * 2, 40);
+        for (let i = 0; i < numSamples; i++) {
+          const t = i / sampleRate;
+          const v = amp * (
+            0.60 * Math.sin(2 * Math.PI * f0Hz * t) +
+            0.25 * Math.sin(2 * Math.PI * (f0Hz * 2) * t) +
+            0.15 * Math.sin(2 * Math.PI * formantHz * t)
+          );
+          const s = Math.max(-32767, Math.min(32767, Math.round(v * 32767)));
+          buf.writeInt16LE(s, 44 + i * 2);
+        }
+        return buf.toString('base64');
+      }
+
+      try {
+        const nickWav1 = makeSyntheticVoiceWavBase64({ f0Hz: 112, formantHz: 420 });
+        const nickWav2 = makeSyntheticVoiceWavBase64({ f0Hz: 115, formantHz: 420, amp: 0.32 });
+        const dianaWav1 = makeSyntheticVoiceWavBase64({ f0Hz: 235, formantHz: 2000 });
+        const dianaWav2 = makeSyntheticVoiceWavBase64({ f0Hz: 232, formantHz: 2000, amp: 0.30 });
+        const unseenGuestWav = makeSyntheticVoiceWavBase64({ f0Hz: 375, formantHz: 4100 });
+
+        // 1. Live voice enrollment via "Commander, remember my voice as Nick"
+        const enrollNick = await httpReq('POST', '/api/assistant/process-audio', {
+          deviceUuid: 'phone-123',
+          audioWavBase64: nickWav1,
+          mockTranscript: 'Commander, remember my voice as Nick',
+          returnAudio: false,
+        });
+        assert.strictEqual(enrollNick.status, 200);
+        assert.strictEqual(enrollNick.data.actionExecuted, true);
+        assert.strictEqual(enrollNick.data.skill, 'speaker-id:enroll');
+        assert.strictEqual(enrollNick.data.speakerId, 'nicholas-dipiazza');
+        assert.strictEqual(enrollNick.data.speakerName, 'Nick');
+        assert.ok(enrollNick.data.response.includes('Nick'));
+
+        // 2. Direct clip enrollment via POST /api/speakers/enroll for Diana
+        const enrollDiana = await httpReq('POST', '/api/speakers/enroll', {
+          name: 'Diana',
+          audioWavBase64: dianaWav1,
+        });
+        assert.strictEqual(enrollDiana.status, 200);
+        assert.strictEqual(enrollDiana.data.ok, true);
+        assert.strictEqual(enrollDiana.data.speakerId, 'diana-arrington');
+        assert.strictEqual(enrollDiana.data.speakerName, 'Diana');
+
+        // 3. GET /api/speakers lists enrolled voices & RobOS Users
+        const listSpk = await httpReq('GET', '/api/speakers');
+        assert.strictEqual(listSpk.status, 200);
+        assert.strictEqual(listSpk.data.speakers.length, 2);
+        assert.strictEqual(listSpk.data.robosPeople.length, 2);
+
+        // 4. Ambient utterance by Nick is automatically tagged with speakerName = "Nick"
+        const nickAmbient = await httpReq('POST', '/api/assistant/process-audio', {
+          deviceUuid: 'phone-123',
+          audioWavBase64: nickWav2,
+          mockTranscript: 'I am making espresso in the kitchen',
+          returnAudio: false,
+        });
+        assert.strictEqual(nickAmbient.status, 200);
+        assert.strictEqual(nickAmbient.data.wakeWordDetected, false);
+        assert.strictEqual(nickAmbient.data.speakerId, 'nicholas-dipiazza');
+        assert.strictEqual(nickAmbient.data.speakerName, 'Nick');
+        assert.ok(nickAmbient.data.speakerConfidencePct >= 85);
+
+        // 5. Diana asks "Commander, who is talking?" -> identified accurately as Diana!
+        const whoDiana = await httpReq('POST', '/api/assistant/process-audio', {
+          deviceUuid: 'phone-123',
+          audioWavBase64: dianaWav2,
+          mockTranscript: 'Commander, who is talking?',
+          returnAudio: false,
+        });
+        assert.strictEqual(whoDiana.status, 200);
+        assert.strictEqual(whoDiana.data.actionExecuted, true);
+        assert.strictEqual(whoDiana.data.skill, 'speaker-id:identify');
+        assert.strictEqual(whoDiana.data.speakerName, 'Diana');
+        assert.ok(whoDiana.data.response.includes('You are Diana'), `Unexpected response: ${whoDiana.data.response}`);
+
+        // 6. Ask "Commander, whose voices do you know?"
+        const listVoicesCmd = await httpReq('POST', '/api/assistant/process-audio', {
+          deviceUuid: 'phone-123',
+          audioWavBase64: nickWav2,
+          mockTranscript: 'Commander, whose voices do you know?',
+          returnAudio: false,
+        });
+        assert.strictEqual(listVoicesCmd.status, 200);
+        assert.strictEqual(listVoicesCmd.data.skill, 'speaker-id:list');
+        assert.ok(listVoicesCmd.data.response.includes('Nick') && listVoicesCmd.data.response.includes('Diana'));
+
+        // 7. Unseen guest voice is NOT falsely matched to Nick or Diana
+        const unseenRes = await httpReq('POST', '/api/assistant/process-audio', {
+          deviceUuid: 'phone-123',
+          audioWavBase64: unseenGuestWav,
+          mockTranscript: 'Commander, who is talking?',
+          returnAudio: false,
+        });
+        assert.strictEqual(unseenRes.status, 200);
+        assert.strictEqual(unseenRes.data.speakerName, '');
+        assert.ok(unseenRes.data.response.includes("don't recognize this voice yet"));
+
+        // 8. Forget voiceprint via voice command
+        const forgetCmd = await httpReq('POST', '/api/assistant/process-audio', {
+          deviceUuid: 'phone-123',
+          audioWavBase64: dianaWav2,
+          mockTranscript: "Commander, forget Nick's voice",
+          returnAudio: false,
+        });
+        assert.strictEqual(forgetCmd.status, 200);
+        assert.strictEqual(forgetCmd.data.skill, 'speaker-id:forget');
+        const afterForget = await httpReq('GET', '/api/speakers');
+        assert.strictEqual(afterForget.data.speakers.length, 1);
+        assert.strictEqual(afterForget.data.speakers[0].shortName, 'Diana');
+      } finally {
+        if (prevSpkFile === undefined) delete process.env.ROBOS_SPEAKERS_FILE;
+        else process.env.ROBOS_SPEAKERS_FILE = prevSpkFile;
+        if (prevPeopleDir === undefined) delete process.env.ROBOS_PEOPLE_DIR;
+        else process.env.ROBOS_PEOPLE_DIR = prevPeopleDir;
+      }
+    });
   });
 
   describe('Speech Stream Overlap & Recall Prevention', () => {

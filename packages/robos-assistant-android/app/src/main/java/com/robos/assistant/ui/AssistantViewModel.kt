@@ -49,12 +49,14 @@ class AssistantViewModel(application: Application) : AndroidViewModel(applicatio
         all.filter { item ->
             val matchFilter = when (flt) {
                 RecordingFilter.ALL -> true
+                RecordingFilter.IDENTIFIED_SPEAKERS -> item.speakerName.isNotBlank()
                 RecordingFilter.WAKE_COMMANDS -> item.wakeWordDetected
                 RecordingFilter.ACTIONS_EXECUTED -> item.actionStatus == ActionOutcomeStatus.ACTION_EXECUTED
                 RecordingFilter.OFFLINE_ONLY -> item.actionStatus == ActionOutcomeStatus.SERVER_OFFLINE_RECORDED_ONLY
             }
             val matchQuery = query.isEmpty() ||
                 item.transcript.lowercase().contains(query) ||
+                item.speakerName.lowercase().contains(query) ||
                 item.assistantReply.lowercase().contains(query) ||
                 item.actionSummary.lowercase().contains(query) ||
                 item.room.lowercase().contains(query)
@@ -128,6 +130,22 @@ class AssistantViewModel(application: Application) : AndroidViewModel(applicatio
         app.archiveStore.clearAll()
         app.refreshArchiveSnapshot()
         _messages.tryEmit("Cleared all recorded audio clips and transcripts.")
+    }
+
+    fun enrollClipSpeaker(recordingId: String, speakerName: String) {
+        val clean = speakerName.trim()
+        if (clean.isEmpty()) return
+        viewModelScope.launch {
+            val res = app.enrollClipAsSpeaker(recordingId, clean)
+            res.fold(
+                onSuccess = { entry ->
+                    _messages.tryEmit("Enrolled voiceprint for ${entry.speakerName}!")
+                },
+                onFailure = { err ->
+                    _messages.tryEmit(err.message ?: "Voiceprint enrollment failed.")
+                },
+            )
+        }
     }
 
     fun discoverRobosServer() {

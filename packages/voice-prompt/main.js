@@ -29,6 +29,7 @@ const { STTEngine } = require('./lib/stt-engine');
 const { TTSEngine } = require('./lib/tts-engine');
 const { WakeWordDetector } = require('./lib/wake-word');
 const { DesktopAssistant } = require('./lib/desktop-assistant');
+const { SpeakerIdentifier } = require('./lib/speaker-id');
 const { defaultRegistry: voiceCommandsRegistry } = require('./lib/voice-commands-registry');
 const { defaultIntentResolver } = require('./lib/skill-intent-resolver');
 
@@ -114,7 +115,8 @@ if (/^\d+$/.test(String(voicePrefs.configuredDevice))) {
 const sttEngine = new STTEngine(voicePrefs);
 const ttsEngine = new TTSEngine((promptStore.loadPrefs() && promptStore.loadPrefs().tts) || {});
 const wakeDetector = new WakeWordDetector({ enabled: true, cooldownMs: 4000 });
-const desktopAssistant = new DesktopAssistant({ ttsEngine, wakeDetector, promptStore });
+const speakerIdentifier = new SpeakerIdentifier();
+const desktopAssistant = new DesktopAssistant({ ttsEngine, wakeDetector, promptStore, speakerIdentifier });
 
 // Acoustic echo suppression gate
 let echoCooldownUntil = 0;
@@ -863,6 +865,59 @@ function startApiServer(overridePort) {
         return res.end(JSON.stringify({ ok: true, open: isOpen }));
       }
 
+      // 10.115 Speaker Identification & Voiceprint Management (/api/speakers/*)
+      if (pathname === '/api/speakers' && method === 'GET') {
+        res.writeHead(200);
+        return res.end(JSON.stringify({
+          ok: true,
+          engine: speakerIdentifier.getEngineName(),
+          speakers: speakerIdentifier.listSpeakers(),
+          robosPeople: speakerIdentifier.listRobosPeople(),
+        }));
+      }
+
+      if (pathname === '/api/speakers/enroll' && method === 'POST') {
+        const body = await parseBody(req);
+        const name = typeof body === 'object' ? String(body.name || body.speakerName || '').trim() : '';
+        const wavB64 = typeof body === 'object' ? String(body.audioWavBase64 || '').trim() : '';
+        if (!name || !wavB64) {
+          res.writeHead(400);
+          return res.end(JSON.stringify({ ok: false, error: 'name and audioWavBase64 are required' }));
+        }
+        const enrolled = speakerIdentifier.enrollWav(Buffer.from(wavB64, 'base64'), name);
+        res.writeHead(enrolled.ok ? 200 : 400);
+        return res.end(JSON.stringify(enrolled));
+      }
+
+      if (pathname === '/api/speakers/identify' && method === 'POST') {
+        const body = await parseBody(req);
+        const wavB64 = typeof body === 'object' ? String(body.audioWavBase64 || '').trim() : '';
+        if (!wavB64) {
+          res.writeHead(400);
+          return res.end(JSON.stringify({ ok: false, error: 'audioWavBase64 is required' }));
+        }
+        const idRes = speakerIdentifier.identifyWav(Buffer.from(wavB64, 'base64'), {
+          threshold: body && body.threshold !== undefined ? Number(body.threshold) : undefined,
+        });
+        res.writeHead(200);
+        return res.end(JSON.stringify(idRes));
+      }
+
+      if (pathname === '/api/speakers/remove' && method === 'POST') {
+        const body = await parseBody(req);
+        const name = typeof body === 'string' ? body : String((body && (body.name || body.speakerId)) || '');
+        const rem = speakerIdentifier.removeSpeaker(name);
+        res.writeHead(rem.ok ? 200 : 404);
+        return res.end(JSON.stringify(rem));
+      }
+
+      const spkDelMatch = pathname.match(/^\/api\/speakers\/([^/]+)$/);
+      if (spkDelMatch && method === 'DELETE') {
+        const rem = speakerIdentifier.removeSpeaker(decodeURIComponent(spkDelMatch[1]));
+        res.writeHead(rem.ok ? 200 : 404);
+        return res.end(JSON.stringify(rem));
+      }
+
       // 10.12 RobOS Assistant Phone Hub & Turn Bridge (packages/robos-assistant-android)
       if (pathname === '/api/robos-assistant-hub' && method === 'GET') {
         const deviceUuid = urlObj.searchParams.get('deviceUuid') || '';
@@ -995,13 +1050,13 @@ function startApiServer(overridePort) {
           return res.end(JSON.stringify({ ok: false, error: 'audioWavBase64 is required' }));
         }
 
+        const rawWavBuffer = wavB64 ? Buffer.from(wavB64, 'base64') : null;
         let transcript = '';
         let sttSource = 'robos-server-asr';
         if (body && typeof body.mockTranscript === 'string') {
           transcript = body.mockTranscript.trim();
-        } else {
-          const wavBuffer = Buffer.from(wavB64, 'base64');
-          const sttRes = await sttEngine.transcribeWavBuffer(wavBuffer);
+        } else if (rawWavBuffer) {
+          const sttRes = await sttEngine.transcribeWavBuffer(rawWavBuffer);
           transcript = (sttRes && sttRes.text ? sttRes.text : '').trim();
           if (sttRes && sttRes.modelId) sttSource = sttRes.modelId;
           if (!transcript && body && typeof body.fallbackTranscript === 'string') {
@@ -1019,6 +1074,11 @@ function startApiServer(overridePort) {
             sttSource,
           }));
         }
+
+        // Identify who is speaking via 512-dim CAM++ neural voiceprint (~44ms on CPU)
+        let speakerMatch = (rawWavBuffer && rawWavBuffer.length > 44)
+          ? speakerIdentifier.identifyWav(rawWavBuffer)
+          : { identified: false, speakerId: '', speakerName: '', fullName: '', robosUserUid: '', confidencePct: 0 };
 
         const wakeEnabled = !body || body.wakeWordEnabled !== false;
         const returnAudio = !body || body.returnAudio !== false;
@@ -1046,12 +1106,18 @@ function startApiServer(overridePort) {
             wakeWordDetected: false,
             greetingOnly: Boolean(localWake.matched && isGreetingOnly),
             actionExecuted: false,
+            speakerId: speakerMatch.identified ? speakerMatch.speakerId : '',
+            speakerName: speakerMatch.identified ? speakerMatch.speakerName : '',
+            speakerFullName: speakerMatch.identified ? speakerMatch.fullName : '',
+            speakerConfidencePct: speakerMatch.identified ? speakerMatch.confidencePct : 0,
           }));
         }
 
         const result = await desktopAssistant.processQuery(query, {
           ...(typeof body === 'object' ? body : {}),
           silent: !speakOnServer,
+          utteranceWavBuffer: rawWavBuffer,
+          preIdentified: speakerMatch,
         });
         if (!result.ok) {
           res.writeHead(200);
@@ -1066,10 +1132,26 @@ function startApiServer(overridePort) {
             trigger,
             query,
             error: result.error || 'Action failed',
+            speakerId: speakerMatch.identified ? speakerMatch.speakerId : '',
+            speakerName: speakerMatch.identified ? speakerMatch.speakerName : '',
+            speakerFullName: speakerMatch.identified ? speakerMatch.fullName : '',
+            speakerConfidencePct: speakerMatch.identified ? speakerMatch.confidencePct : 0,
           }));
         }
 
         const turn = result.turn || {};
+        // If this turn enrolled the speaker's voice, immediately reflect their identity on this clip!
+        if (turn.skill === 'speaker-id:enroll' && turn.data && turn.data.speakerName) {
+          speakerMatch = {
+            identified: true,
+            speakerId: turn.data.speakerId || '',
+            speakerName: turn.data.speakerName || '',
+            fullName: turn.data.fullName || turn.data.speakerName || '',
+            robosUserUid: turn.data.robosUserUid || '',
+            confidencePct: 99,
+          };
+        }
+
         let audioWavBase64 = '';
         let audioDurationMs = 0;
         let audioEngine = '';
@@ -1102,6 +1184,10 @@ function startApiServer(overridePort) {
           skill: turn.skill || '',
           actionDone: turn.actionDone || '',
           error: wasRecognized ? '' : (turn.actionDone || `No command ${query}`),
+          speakerId: speakerMatch.identified ? speakerMatch.speakerId : '',
+          speakerName: speakerMatch.identified ? speakerMatch.speakerName : '',
+          speakerFullName: speakerMatch.identified ? speakerMatch.fullName : '',
+          speakerConfidencePct: speakerMatch.identified ? speakerMatch.confidencePct : 0,
           audioWavBase64,
           audioDurationMs,
           audioEngine,
@@ -1743,6 +1829,7 @@ module.exports = {
   sttEngine,
   ttsEngine,
   wakeDetector,
+  speakerIdentifier,
   desktopAssistant,
   promptStore,
   contextProvider,

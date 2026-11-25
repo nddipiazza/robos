@@ -516,6 +516,7 @@ class RecordingArchiveStore(private val rootDir: File) {
             .filter { item ->
                 when (filter) {
                     RecordingFilter.ALL -> true
+                    RecordingFilter.IDENTIFIED_SPEAKERS -> item.speakerName.isNotBlank()
                     RecordingFilter.WAKE_COMMANDS -> item.wakeWordDetected
                     RecordingFilter.ACTIONS_EXECUTED -> item.actionStatus == ActionOutcomeStatus.ACTION_EXECUTED
                     RecordingFilter.OFFLINE_ONLY -> item.actionStatus == ActionOutcomeStatus.SERVER_OFFLINE_RECORDED_ONLY
@@ -526,6 +527,7 @@ class RecordingArchiveStore(private val rootDir: File) {
                     true
                 } else {
                     item.transcript.lowercase().contains(q) ||
+                        item.speakerName.lowercase().contains(q) ||
                         item.assistantReply.lowercase().contains(q) ||
                         item.actionSummary.lowercase().contains(q) ||
                         item.room.lowercase().contains(q)
@@ -792,6 +794,9 @@ class SurveillanceCoordinator(
                             actionStatus = ActionOutcomeStatus.AMBIENT_RECORDED,
                             actionSummary = "",
                             assistantReply = "",
+                            speakerId = srvRes.speakerId,
+                            speakerName = srvRes.speakerName,
+                            speakerConfidencePct = srvRes.speakerConfidencePct,
                         ),
                         maxClips = config.retentionMaxClips,
                         maxMb = config.retentionMaxMb,
@@ -833,6 +838,9 @@ class SurveillanceCoordinator(
                         actionSkill = srvRes.skill,
                         actionSummary = summary,
                         assistantReply = srvRes.response,
+                        speakerId = srvRes.speakerId,
+                        speakerName = srvRes.speakerName,
+                        speakerConfidencePct = srvRes.speakerConfidencePct,
                     ),
                     maxClips = config.retentionMaxClips,
                     maxMb = config.retentionMaxMb,

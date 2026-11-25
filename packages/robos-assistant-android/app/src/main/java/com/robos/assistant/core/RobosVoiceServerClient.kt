@@ -63,8 +63,61 @@ data class ProcessAudioDto(
     val response: String = "",
     val skill: String = "",
     val actionDone: String = "",
+    val speakerId: String = "",
+    val speakerName: String = "",
+    val speakerFullName: String = "",
+    val speakerConfidencePct: Int = 0,
     val audioWavBase64: String = "",
     val audioDurationMs: Long = 0L,
+)
+
+@Serializable
+data class EnrolledSpeakerDto(
+    val speakerId: String = "",
+    val name: String = "",
+    val shortName: String = "",
+    val sampleCount: Int = 0,
+)
+
+@Serializable
+data class RobosPersonDto(
+    val uid: String = "",
+    val name: String = "",
+    val shortName: String = "",
+)
+
+@Serializable
+data class SpeakersInfoDto(
+    val ok: Boolean = false,
+    val engine: String = "",
+    val speakers: List<EnrolledSpeakerDto> = emptyList(),
+    val robosPeople: List<RobosPersonDto> = emptyList(),
+)
+
+@Serializable
+data class EnrollSpeakerDto(
+    val ok: Boolean = false,
+    val error: String = "",
+    val speakerId: String = "",
+    val speakerName: String = "",
+    val fullName: String = "",
+    val sampleCount: Int = 0,
+)
+
+data class ServerSpeakersInfo(
+    val ok: Boolean,
+    val engine: String = "",
+    val enrolledNames: List<String> = emptyList(),
+    val robosPeopleNames: List<String> = emptyList(),
+)
+
+data class ServerSpeakerEnrollResult(
+    val ok: Boolean,
+    val speakerId: String = "",
+    val speakerName: String = "",
+    val fullName: String = "",
+    val sampleCount: Int = 0,
+    val error: String = "",
 )
 
 data class ServerAudioProcessResult(
@@ -80,6 +133,10 @@ data class ServerAudioProcessResult(
     val response: String = "",
     val skill: String = "",
     val actionDone: String = "",
+    val speakerId: String = "",
+    val speakerName: String = "",
+    val speakerFullName: String = "",
+    val speakerConfidencePct: Int = 0,
     val audioWavBytes: ByteArray? = null,
     val error: String = "",
 )
@@ -309,9 +366,89 @@ class RobosVoiceServerClient {
             response = dto.response,
             skill = dto.skill,
             actionDone = dto.actionDone,
+            speakerId = dto.speakerId,
+            speakerName = dto.speakerName,
+            speakerFullName = dto.speakerFullName,
+            speakerConfidencePct = dto.speakerConfidencePct,
             audioWavBytes = replyWav,
             error = dto.error,
         )
+    }
+
+    suspend fun fetchSpeakersInfo(
+        hostIp: String,
+        port: Int = DEFAULT_SERVER_PORT,
+    ): ServerSpeakersInfo = withContext(Dispatchers.IO) {
+        val cleanHost = hostIp.trim()
+        if (cleanHost.isEmpty()) return@withContext ServerSpeakersInfo(ok = false)
+        try {
+            val (code, body) = rawHttp(
+                hostIp = cleanHost,
+                port = port,
+                method = "GET",
+                path = "/api/speakers",
+                connectTimeoutMs = 1_500,
+                readTimeoutMs = 3_000,
+            )
+            if (code !in 200..299) return@withContext ServerSpeakersInfo(ok = false)
+            val dto = json.decodeFromString(SpeakersInfoDto.serializer(), body)
+            if (!dto.ok) return@withContext ServerSpeakersInfo(ok = false)
+            ServerSpeakersInfo(
+                ok = true,
+                engine = dto.engine,
+                enrolledNames = dto.speakers.map { it.shortName.ifBlank { it.name } }.filter { it.isNotBlank() },
+                robosPeopleNames = dto.robosPeople.map { it.shortName.ifBlank { it.name } }.filter { it.isNotBlank() },
+            )
+        } catch (_: Exception) {
+            ServerSpeakersInfo(ok = false)
+        }
+    }
+
+    suspend fun enrollSpeakerWav(
+        hostIp: String,
+        port: Int = DEFAULT_SERVER_PORT,
+        speakerName: String,
+        wavBytes: ByteArray,
+    ): ServerSpeakerEnrollResult = withContext(Dispatchers.IO) {
+        val cleanHost = hostIp.trim()
+        val cleanName = speakerName.trim()
+        if (cleanHost.isEmpty()) return@withContext ServerSpeakerEnrollResult(ok = false, error = "No RobOS Server host configured")
+        if (cleanName.isEmpty()) return@withContext ServerSpeakerEnrollResult(ok = false, error = "Speaker name is required")
+        try {
+            val payload = buildJsonObject {
+                put("name", cleanName)
+                put("audioWavBase64", Base64.getEncoder().encodeToString(wavBytes))
+            }.toString()
+            val (code, body) = rawHttp(
+                hostIp = cleanHost,
+                port = port,
+                method = "POST",
+                path = "/api/speakers/enroll",
+                bodyJson = payload,
+                connectTimeoutMs = 2_500,
+                readTimeoutMs = 15_000,
+            )
+            val dto = try {
+                json.decodeFromString(EnrollSpeakerDto.serializer(), body)
+            } catch (_: Exception) {
+                return@withContext ServerSpeakerEnrollResult(ok = false, error = "Invalid response from RobOS Server (HTTP $code)")
+            }
+            if (code !in 200..299 || !dto.ok) {
+                return@withContext ServerSpeakerEnrollResult(
+                    ok = false,
+                    error = dto.error.ifBlank { "Speaker enrollment failed (HTTP $code)" },
+                )
+            }
+            ServerSpeakerEnrollResult(
+                ok = true,
+                speakerId = dto.speakerId,
+                speakerName = dto.speakerName.ifBlank { cleanName },
+                fullName = dto.fullName.ifBlank { dto.speakerName.ifBlank { cleanName } },
+                sampleCount = dto.sampleCount,
+            )
+        } catch (e: Exception) {
+            ServerSpeakerEnrollResult(ok = false, error = e.message ?: "Speaker enrollment failed")
+        }
     }
 
     suspend fun executePhoneTurn(

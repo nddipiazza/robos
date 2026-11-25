@@ -11,7 +11,9 @@ class DesktopAssistant extends EventEmitter {
     super();
     this.ttsEngine = options.ttsEngine;
     this.wakeDetector = options.wakeDetector;
-    this.skillsExecutor = options.skillsExecutor || new SkillsExecutor();
+    this.skillsExecutor = options.skillsExecutor || new SkillsExecutor({
+      speakerIdentifier: options.speakerIdentifier || null,
+    });
     this.promptStore = options.promptStore || require('./prompt-store');
     this.state = 'IDLE'; // 'IDLE' | 'WAKE_DETECTED' | 'LISTENING' | 'PROCESSING' | 'SPEAKING'
     this.history = [];

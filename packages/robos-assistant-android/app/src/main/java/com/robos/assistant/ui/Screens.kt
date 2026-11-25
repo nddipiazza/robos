@@ -19,6 +19,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilterChip
@@ -86,6 +87,7 @@ fun ListenTabScreen(
     onOpenRecordingsTab: () -> Unit,
     onSendCommand: (String) -> Unit,
     onPlayClip: (String) -> Unit,
+    onEnrollSpeaker: (String, String) -> Unit = { _, _ -> },
     onDownloadModel: () -> Unit,
     onCopyUrl: (String, String) -> Unit,
     onRequestUnrestrictedBattery: () -> Unit,
@@ -330,7 +332,10 @@ fun ListenTabScreen(
                 RecordingItemContent(
                     item = latestRecording,
                     isPlaying = status.activePlaybackId == latestRecording.id,
+                    serverConnected = serverConnected,
+                    robosPeople = status.robosPeople,
                     onPlay = { onPlayClip(latestRecording.id) },
+                    onEnrollSpeaker = { name -> onEnrollSpeaker(latestRecording.id, name) },
                     onCopy = null,
                     onDelete = null,
                 )
@@ -398,6 +403,7 @@ fun RecordingsTabScreen(
     onSearchChange: (String) -> Unit,
     onFilterChange: (RecordingFilter) -> Unit,
     onPlayClip: (String) -> Unit,
+    onEnrollSpeaker: (String, String) -> Unit = { _, _ -> },
     onCopyText: (String) -> Unit,
     onDeleteClip: (String) -> Unit,
     onClearAll: () -> Unit,
@@ -424,7 +430,7 @@ fun RecordingsTabScreen(
         OutlinedTextField(
             value = searchQuery,
             onValueChange = onSearchChange,
-            placeholder = { Text("Search transcripts, replies, or room…") },
+            placeholder = { Text("Search speaker name, transcripts, replies, or room…") },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
         )
@@ -458,7 +464,10 @@ fun RecordingsTabScreen(
                         RecordingItemContent(
                             item = item,
                             isPlaying = status.activePlaybackId == item.id,
+                            serverConnected = status.actionsArmed,
+                            robosPeople = status.robosPeople,
                             onPlay = { onPlayClip(item.id) },
+                            onEnrollSpeaker = { name -> onEnrollSpeaker(item.id, name) },
                             onCopy = { onCopyText(item.transcript) },
                             onDelete = { onDeleteClip(item.id) },
                         )
@@ -473,10 +482,16 @@ fun RecordingsTabScreen(
 private fun RecordingItemContent(
     item: AudioRecordingEntry,
     isPlaying: Boolean,
+    serverConnected: Boolean = false,
+    robosPeople: List<String> = emptyList(),
     onPlay: () -> Unit,
+    onEnrollSpeaker: ((String) -> Unit)? = null,
     onCopy: (() -> Unit)?,
     onDelete: (() -> Unit)?,
 ) {
+    var showEnrollDialog by remember { mutableStateOf(false) }
+    var customSpeakerName by remember(item.speakerName) { mutableStateOf(item.speakerName) }
+
     val badgeColor = when (item.actionStatus) {
         ActionOutcomeStatus.ACTION_EXECUTED -> Success
         ActionOutcomeStatus.SERVER_OFFLINE_RECORDED_ONLY -> Warning
@@ -489,7 +504,18 @@ private fun RecordingItemContent(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        StatusPill(text = item.actionStatus.label, color = badgeColor)
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.weight(1f),
+        ) {
+            StatusPill(text = item.actionStatus.label, color = badgeColor)
+            if (item.speakerName.isNotBlank()) {
+                val confSuffix = if (item.speakerConfidencePct > 0) " · ${item.speakerConfidencePct}%" else ""
+                StatusPill(text = "🗣️ ${item.speakerName}$confSuffix", color = Success)
+            }
+        }
+        Spacer(Modifier.width(6.dp))
         MutedText("${"%.1f".format(item.durationMs / 1000f)}s · ${item.peakDbFs.toInt()} dB")
     }
 
@@ -519,7 +545,13 @@ private fun RecordingItemContent(
 
     MutedText("${formatTimestamp(item.createdAtIso)} · ${item.room} · ${formatBytes(item.sizeBytes)}")
 
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
         Button(
             onClick = onPlay,
             colors = ButtonDefaults.buttonColors(
@@ -528,6 +560,11 @@ private fun RecordingItemContent(
             ),
         ) {
             Text(if (isPlaying) "⏹ Stop Audio" else "▶ Play WAV")
+        }
+        if (serverConnected && onEnrollSpeaker != null) {
+            OutlinedButton(onClick = { showEnrollDialog = true }) {
+                Text(if (item.speakerName.isNotBlank()) "🗣️ ${item.speakerName}" else "Enroll Voice")
+            }
         }
         if (onCopy != null) {
             OutlinedButton(onClick = onCopy) {
@@ -539,6 +576,66 @@ private fun RecordingItemContent(
                 Text("Delete", color = Danger)
             }
         }
+    }
+
+    if (showEnrollDialog && onEnrollSpeaker != null) {
+        AlertDialog(
+            onDismissRequest = { showEnrollDialog = false },
+            title = { Text("Enroll Voiceprint") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    MutedText("Train neural speaker identification from this clip so RobOS recognizes who is talking.")
+                    if (robosPeople.isNotEmpty()) {
+                        Text("RobOS Users:", style = MaterialTheme.typography.labelMedium)
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .horizontalScroll(rememberScrollState()),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        ) {
+                            robosPeople.forEach { person ->
+                                FilterChip(
+                                    selected = customSpeakerName.equals(person, ignoreCase = true),
+                                    onClick = {
+                                        onEnrollSpeaker(person)
+                                        showEnrollDialog = false
+                                    },
+                                    label = { Text(person) },
+                                )
+                            }
+                        }
+                    }
+                    OutlinedTextField(
+                        value = customSpeakerName,
+                        onValueChange = { customSpeakerName = it },
+                        label = { Text("Speaker Name") },
+                        placeholder = { Text("e.g. Nick, Diana, Leo") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val trimmed = customSpeakerName.trim()
+                        if (trimmed.isNotEmpty()) {
+                            onEnrollSpeaker(trimmed)
+                            showEnrollDialog = false
+                        }
+                    },
+                    enabled = customSpeakerName.isNotBlank(),
+                    colors = ButtonDefaults.buttonColors(containerColor = Accent, contentColor = Color(0xFF04222A)),
+                ) {
+                    Text("Enroll Voice")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showEnrollDialog = false }) {
+                    Text("Cancel")
+                }
+            },
+        )
     }
 }
 
@@ -609,6 +706,21 @@ fun AssistantTabScreen(
                     onCheckedChange = { v -> onUpdateConfig { it.copy(speakServerReplies = v) } },
                 )
             }
+        }
+
+        SectionCard {
+            Text("Voiceprint Speaker Identification", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+            val enrolledCount = status.enrolledSpeakers.size
+            StatusPill(
+                text = if (enrolledCount > 0) "🗣️ $enrolledCount Voice${if (enrolledCount == 1) "" else "s"} Enrolled" else "No Voices Enrolled Yet",
+                color = if (enrolledCount > 0) Success else Accent,
+            )
+            if (enrolledCount > 0) {
+                Text("Known voices: ${status.enrolledSpeakers.joinToString(", ")}")
+            }
+            MutedText(
+                "Uses 512-dim WeSpeaker CAM++ neural voiceprints on your RobOS Server to tag who is speaking on every clip and link to RobOS Users. Say \"Commander, remember my voice as Nick\", \"Commander, who is talking?\", or tap \"Enroll Voice\" on any recording.",
+            )
         }
 
         SectionCard {

@@ -157,12 +157,21 @@ class AssistantApp : Application() {
                     }
                 }
                 if (entry != null) {
+                    if (entry.actionSkill.startsWith("speaker-id:")) {
+                        val cfgNow = _config.value
+                        val hostNow = _status.value.serverHost.ifBlank { cfgNow.robosServerHost }
+                        if (hostNow.isNotBlank()) {
+                            scope.launch { refreshServerSpeakers(hostNow, cfgNow.robosServerPort) }
+                        }
+                    }
                     val payload = buildJsonObject {
                         put("type", eventType)
                         put("id", entry.id)
                         put("transcript", entry.transcript)
                         put("actionStatus", entry.actionStatus.name)
                         put("assistantReply", entry.assistantReply)
+                        put("speakerName", entry.speakerName)
+                        put("speakerConfidencePct", entry.speakerConfidencePct)
                         put("createdAtIso", entry.createdAtIso)
                     }.toString()
                     liveHub.publishSseJson(payload)
@@ -455,6 +464,7 @@ class AssistantApp : Application() {
                         lastServerCheckIso = Instant.now().toString(),
                     )
                 }
+                refreshServerSpeakers(probe.hostIp, probe.port)
                 return _status.value
             }
         }
@@ -493,6 +503,7 @@ class AssistantApp : Application() {
                         lastServerCheckIso = Instant.now().toString(),
                     )
                 }
+                refreshServerSpeakers(found.hostIp, found.port)
                 return _status.value
             }
         }
@@ -506,6 +517,50 @@ class AssistantApp : Application() {
             )
         }
         return _status.value
+    }
+
+    suspend fun refreshServerSpeakers(hostIp: String, port: Int) {
+        val info = serverClient.fetchSpeakersInfo(hostIp = hostIp, port = port)
+        if (info.ok) {
+            updateStatus {
+                it.copy(
+                    enrolledSpeakers = info.enrolledNames,
+                    robosPeople = info.robosPeopleNames,
+                )
+            }
+        }
+    }
+
+    suspend fun enrollClipAsSpeaker(recordingId: String, speakerName: String): Result<AudioRecordingEntry> {
+        val cleanName = speakerName.trim()
+        if (cleanName.isEmpty()) {
+            return Result.failure(IllegalArgumentException("Speaker name is required"))
+        }
+        val st = checkOrDiscoverServer(forceSubnetScan = false)
+        if (!st.actionsArmed || st.serverHost.isBlank()) {
+            return Result.failure(IllegalStateException("Connect a RobOS Server (:19188) to enroll voiceprints"))
+        }
+        val wavFile = archiveStore.getWavFile(recordingId)
+            ?: return Result.failure(IllegalArgumentException("Audio clip not found"))
+        val enrolled = serverClient.enrollSpeakerWav(
+            hostIp = st.serverHost,
+            port = st.serverPort,
+            speakerName = cleanName,
+            wavBytes = wavFile.readBytes(),
+        )
+        if (!enrolled.ok) {
+            return Result.failure(IllegalStateException(enrolled.error.ifBlank { "Speaker enrollment failed" }))
+        }
+        val updated = archiveStore.updateRecording(recordingId) { cur ->
+            cur.copy(
+                speakerId = enrolled.speakerId,
+                speakerName = enrolled.speakerName,
+                speakerConfidencePct = 99,
+            )
+        } ?: return Result.failure(IllegalStateException("Recording entry not found"))
+        refreshArchiveSnapshot()
+        refreshServerSpeakers(st.serverHost, st.serverPort)
+        return Result.success(updated)
     }
 }
 
@@ -885,6 +940,9 @@ class AssistantServerService : Service(), AssistantNodeController {
     override suspend fun playRemoteSpeechWav(wavBytes: ByteArray, caption: String) {
         app.speakReplyWavWithEchoGate(wavBytes)
     }
+
+    override suspend fun enrollRecordingSpeaker(recordingId: String, speakerName: String): Result<AudioRecordingEntry> =
+        app.enrollClipAsSpeaker(recordingId, speakerName)
 
     private fun acquireLocks() {
         val pm = getSystemService(PowerManager::class.java)
