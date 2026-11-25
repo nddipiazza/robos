@@ -92,7 +92,7 @@ This node comes from `.robos/kgraphs/applications/package.jsonld` in the RobOS r
   "robos:ownerTeam": "urn:robos:team:core-platform",
   "robos:hasProject": "urn:robos:project:enterprise-core",
   "robos:inOrganization": "urn:robos:git-org:acme",
-  "robos:localPath": "/home/ndipiazza/source/robos/packages/rest-client",
+  "robos:localPath": "~/source/robos/packages/rest-client",
   "robos:package": "applications",
   "robos:namespace": "robos.applications",
   "robos:schemaOrgType": "https://schema.org/SoftwareApplication",

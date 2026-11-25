@@ -137,7 +137,7 @@ flowchart LR
 
 ![Autonomous Quest Testing Pipeline]({{ '/assets/images/tabletop-rpg/tabletop_viability_pipeline.jpg' | relative_url }})
 
-The end-to-end autonomous proof is implemented in [`games/tabletop-rpg/tests/test_demo_custom_quest_e2e.py`](file:///home/ndipiazza/source/robos/games/tabletop-rpg/tests/test_demo_custom_quest_e2e.py). It runs the four heroes autonomously on `custom-quest.cartridge.json`, verifying:
+The end-to-end autonomous proof is implemented in [`games/tabletop-rpg/tests/test_demo_custom_quest_e2e.py`](https://github.com/nddipiazza/robos/blob/main/games/tabletop-rpg/tests/test_demo_custom_quest_e2e.py). It runs the four heroes autonomously on `custom-quest.cartridge.json`, verifying:
 
 1. **Starting Healing Potions & Emergency Consumption**: All 4 heroes are provisioned with 2 healing potions each; Mentor AI monitors health and drinks a potion whenever `cur_bp <= 4` (+4 BP, `USE_ITEM` transaction).
 2. **Dynamic Room & Corridor Secret Passageway Sweeping**: The engine tracks `searched_secret_rooms` and `searched_secret_corridor_tiles`. Heroes uncover hidden `door-6` in Room SE-21 (TX #121) and hidden `door-9` in Room NW-4 (TX #307).
@@ -146,7 +146,7 @@ The end-to-end autonomous proof is implemented in [`games/tabletop-rpg/tests/tes
 
 The test produces an immutable 315-transaction audit ledger, 0 hero casualties (100% survival rate), and turn-by-turn visual evidence.
 
-For **Election 2026: Battle for the Hill** (`election-2026-quest-1.cartridge.json`), the end-to-end autonomous proof in [`games/tabletop-rpg/tests/test_demo_election_2026_quest_e2e.py`](file:///home/ndipiazza/source/robos/games/tabletop-rpg/tests/test_demo_election_2026_quest_e2e.py) drives the bipartisan party (Barack Obama, Donald Trump, Hillary Clinton, Bernie Sanders) across 266 autonomous steps, 15 combat rounds, and 283 transactions to slay all three 2-square Capitol Hydras (`Talarixon` in TX #167, `Brownsted` in TX #211, and `El-Rogers` in TX #282–283) with 100% hero survival (4/4 alive).
+For **Election 2026: Battle for the Hill** (`election-2026-quest-1.cartridge.json`), the end-to-end autonomous proof in [`games/tabletop-rpg/tests/test_demo_election_2026_quest_e2e.py`](https://github.com/nddipiazza/robos/blob/main/games/tabletop-rpg/tests/test_demo_election_2026_quest_e2e.py) drives the bipartisan party (Barack Obama, Donald Trump, Hillary Clinton, Bernie Sanders) across 266 autonomous steps, 15 combat rounds, and 283 transactions to slay all three 2-square Capitol Hydras (`Talarixon` in TX #167, `Brownsted` in TX #211, and `El-Rogers` in TX #282–283) with 100% hero survival (4/4 alive).
 
 <div style="aspect-ratio:16/9;margin:24px 0"><iframe src="https://www.youtube-nocookie.com/embed/7HkZARyvqmM" title="RobOS Tabletop RPG — Election 2026: Full 266-Turn Autonomous AI Playthrough" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen style="width:100%;height:100%;border:0"></iframe></div>
 

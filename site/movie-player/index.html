@@ -85,7 +85,7 @@ keywords: "RobOS Movie Player, RobOS Video Player, Tablo 4th Gen OTA DVR, Roku T
 
 <div class="cr-pair">
 <figure class="guide-shot"><a href="{{ mp }}roku-cinema-seasons.jpg"><img src="{{ mp }}roku-cinema-seasons.jpg" alt="Live hardware screenshot from a 65-inch TCL Roku TV showing Archer Season cards in Row 2 and Episode cards in Row 3" loading="lazy" width="1920" height="1080"></a><figcaption><strong>Live Roku TV Capture — Series Season &amp; Episode Drill-Down</strong>: pressing <strong>OK</strong> on any TV series turns Row 2 into visual <strong>Season Image Cards</strong> (<code>All All Episodes</code>, <code>S01 Season 1</code>, <code>S02 Season 2</code>…) and Row 3 into <strong>Episode Cards</strong> (<code>S01E01 Mole Hunt</code>, <code>S01E02 Training Day</code>…).</figcaption></figure>
-<figure class="guide-shot"><a href="{{ mp }}roku-cinema-tablo-dvr.png"><img src="{{ mp }}roku-cinema-tablo-dvr.png" alt="10-foot Smart TV Cinema & Tablo DVR browser on the TABLO DVR (8) tab showing live 2026 World Series recording, NFL/MLB/Series/Channel category cards, and broadcast recording thumbnails" loading="lazy" width="1920" height="1080"></a><figcaption><strong>10-Foot Cinema+ — TABLO DVR (8) Tab</strong>: select the third top tab to browse live and recorded OTA broadcasts from your Tablo DVR (<code>192.168.1.55</code>) with acquired broadcast recording thumbnails and 1-click direct playback.</figcaption></figure>
+<figure class="guide-shot"><a href="{{ mp }}roku-cinema-tablo-dvr.png"><img src="{{ mp }}roku-cinema-tablo-dvr.png" alt="10-foot Smart TV Cinema & Tablo DVR browser on the TABLO DVR (8) tab showing live 2026 World Series recording, NFL/MLB/Series/Channel category cards, and broadcast recording thumbnails" loading="lazy" width="1920" height="1080"></a><figcaption><strong>10-Foot Cinema+ — TABLO DVR (8) Tab</strong>: select the third top tab to browse live and recorded OTA broadcasts from your Tablo DVR (<code>192.0.2.55</code>) with acquired broadcast recording thumbnails and 1-click direct playback.</figcaption></figure>
 </div>
 
 <h3>Thoughtful 2D Remote D-Pad Navigation</h3>
@@ -109,7 +109,7 @@ keywords: "RobOS Movie Player, RobOS Video Player, Tablo 4th Gen OTA DVR, Roku T
 
 <pre class="mermaid">
 flowchart LR
-  subgraph Tablo["1. Tablo 4th Gen OTA DVR (192.168.1.55:8887)"]
+  subgraph Tablo["1. Tablo 4th Gen OTA DVR (192.0.2.55:8887)"]
     REST["HMAC-MD5 Signed REST API<br/>/server/info, /recordings/airings, /guide/channels"]
     IMG["Broadcast Image Server (/images/:id)<br/>16:9 Recording Snapshots &amp; Series Cover Art"]
     HLS["OTA Tuner HLS Server (:80/stream/pl.m3u8)<br/>MPEG-2 Video + Dolby AC-3 Audio"]
@@ -126,7 +126,7 @@ flowchart LR
     MPV["External MPV / VLC<br/>Direct Zero-Transcode HLS"]
   end
 
-  subgraph LivingRoom["4. 65-Inch TCL Roku TV (192.168.1.15:8060)"]
+  subgraph LivingRoom["4. 65-Inch TCL Roku TV (192.0.2.15:8060)"]
     ROKUTAB["Row 1 Top Image Tab: TABLO DVR (8)<br/>+ 16:9 Broadcast Thumbnail Hero Frame"]
     ROKUVID["Native Roku SceneGraph Video Node<br/>Direct 60fps MPEG-2 / AC-3 HLS Playback"]
   end

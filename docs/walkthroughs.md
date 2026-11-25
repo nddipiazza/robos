@@ -79,7 +79,7 @@ xvfb-run -a -s "-screen 0 1920x1080x24" node packages/robos-test/demos/new-app-w
 
 - The scenarios and stub binaries fake accounts, keys and the forge. Steps 9 and 10 below are the exception: they use a real local Kind cluster (set up with `scripts/setup-local-kube.sh`).
 - Many scripts contain checks that throw `E2E Assertion Failed` inside the page. The recorder ignores errors thrown there, so a failed check does not fail the run. Only Steps 9 and 10 check results from Node (`kubectl get pods`) and exit with an error.
-- 41 of the 128 scripts contain hard-coded paths under `/home/ndipiazza/`. Many of those write frames or videos to such a directory, so edit constants like `BRAIN_DIR` before running them elsewhere.
+- 41 of the 128 scripts contain hard-coded paths under `/home/<user>/`. Many of those write frames or videos to such a directory, so edit constants like `BRAIN_DIR` before running them elsewhere.
 - Few finished recordings are committed. Generate your own with the commands above.
 - `acme-petshop-step6-pr-ci-demo.js` and `agent-code-review-ide-demo.js` click through a pull request list (`.pr-card`) that the review app no longer shows at startup, so they are not listed below.
 - The five entry points in `demos/RETIRED.md` exit with status 1 on purpose. Do not run them.

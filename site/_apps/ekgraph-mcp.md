@@ -14,7 +14,7 @@ This package is an MCP server with a console window. Which tools do real work de
 
 ## Default mode: node store
 
-With no `ROBOS_GRAPH_ROOT`, the server uses a flat store at `~/.config/robos/ekgraph/nodes.json`. First run seeds five sample nodes (`repos/robos-core`, `services/auth-service`, `services/gateway`, `environments/prod`, `people/ndipiazza`). A node has a `path`, `title`, `type`, `content`, `tags` and `links` to other node paths.
+With no `ROBOS_GRAPH_ROOT`, the server uses a flat store at `~/.config/robos/ekgraph/nodes.json`. First run seeds five sample nodes (`repos/robos-core`, `services/auth-service`, `services/gateway`, `environments/prod`, `people/<name>`). A node has a `path`, `title`, `type`, `content`, `tags` and `links` to other node paths.
 
 | Tool | What it does |
 |---|---|

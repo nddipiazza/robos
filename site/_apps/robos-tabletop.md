@@ -45,4 +45,4 @@ When the Godot window closes, the app reads the cartridge's quest status and, if
 Launch from the app launcher, or run `npm start` in `packages/robos-tabletop`. `npm test` runs the tests in `tests/`.
 
 {: .note }
-The installed `.desktop` file in the repository points at a developer's home folder (`/home/ndipiazza/.local/bin/robos-tabletop`), so start it with `npm start` unless you have your own launcher.
+The installed `.desktop` file in the repository points at a developer's home folder (`~/.local/bin/robos-tabletop`), so start it with `npm start` unless you have your own launcher.

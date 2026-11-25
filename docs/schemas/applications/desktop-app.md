@@ -56,7 +56,7 @@ This node comes from `.robos/kgraphs/applications/package.jsonld` in the RobOS r
   "robos:repository": "github.com/nddipiazza/robos",
   "robos:technology": "Electron / Vanilla JS / Whisper ONNX",
   "robos:desktopFramework": "Electron",
-  "robos:localPath": "/home/ndipiazza/source/robos/packages/voice-prompt",
+  "robos:localPath": "~/source/robos/packages/voice-prompt",
   "robos:apiPort": 19188,
   "robos:globalHotkey": "Super+V",
   "robos:ownerTeam": "urn:robos:team:core-platform",
