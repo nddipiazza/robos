@@ -816,6 +816,7 @@ func _send_wave(engine, target: Vector2) -> void:
 		_speak(engine, "last_wave")
 
 func _finish(engine, won: bool, message: String, final_cue: String = "") -> void:
+	var was_playing := status == "playing"
 	status = "victory" if won else "defeat"
 	reason = message
 	engine.paused = true
@@ -823,6 +824,8 @@ func _finish(engine, won: bool, message: String, final_cue: String = "") -> void
 		cue.clear()
 	else:
 		_speak(engine, final_cue)
+	if was_playing and engine != null and engine.has_signal("mission_ended") and engine.campaign == self:
+		engine.emit_signal("mission_ended", won)
 
 func _marker(point: Vector2, label: String, bonus: bool = false, kind: String = "") -> Dictionary:
 	return {"point": [point.x, point.y], "label": label, "bonus": bonus, "kind": kind}

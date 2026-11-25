@@ -1528,6 +1528,208 @@ def gen_match_defeat() -> list[float]:
     return [_soft_clip(x, 1.2) for x in out]
 
 
+def _add_snare_stroke(
+    buf: list[float],
+    t_onset: float,
+    vel: float,
+    pitch_scale: float,
+    seed: int,
+    kind: str = "primary",
+) -> None:
+    """Synthesize an acoustic snare drum stroke (primary stick, buzz rebound, or rimshot accent)."""
+    n = len(buf)
+    is_accent = kind == "accent"
+    is_buzz = kind == "buzz"
+    dur = 0.22 if is_accent else (0.068 if is_buzz else 0.105)
+    i0 = max(0, int(t_onset * SAMPLE_RATE))
+    i1 = min(n, int((t_onset + dur) * SAMPLE_RATE))
+    m = i1 - i0
+    if m <= 8:
+        return
+
+    rng = random.Random(seed)
+    white = [rng.uniform(-1.0, 1.0) for _ in range(m)]
+    snaps = _sticky_impulses(m, seed + 17, 0.40, 1.85, 0.65)
+    wire_src = [white[k] * 0.65 + snaps[k] * 0.55 for k in range(m)]
+
+    # Crisp snare-bed crack (1.4-2.9 kHz) + bright steel snare-wire sizzle (3.5-8.8 kHz)
+    snare_crack = _svf_process(wire_src, 2050.0 * pitch_scale, 1.35, "bp")
+    snare_sizzle = _one_pole_hp(_one_pole_lp(wire_src, 9100.0), 3500.0)
+    stick_snap = _svf_process(white, 3350.0 * pitch_scale, 2.1, "bp")
+    shell_wood = _svf_process(white, 540.0 * pitch_scale, 3.0, "bp")
+
+    f0_base = (186.0 if is_accent else 198.0) * pitch_scale
+    ph1 = rng.uniform(0.0, 0.25)
+    ph2 = rng.uniform(0.0, 0.40)
+    wire_decay = 0.145 if is_accent else (0.048 if is_buzz else 0.072)
+    body_gain = (0.56 if is_accent else (0.09 if is_buzz else 0.25)) * vel
+
+    for k in range(m):
+        t = k / SAMPLE_RATE
+        f0 = f0_base + (78.0 if is_accent else 44.0) * math.exp(-t * 115.0)
+        ph1 += math.tau * f0 / SAMPLE_RATE
+        ph2 += math.tau * (f0 * 1.593) / SAMPLE_RATE
+
+        head_f1 = math.sin(ph1) * math.exp(-t * (28.0 if is_accent else 54.0))
+        head_f2 = 0.48 * math.sin(ph2) * math.exp(-t * 68.0)
+        wood = shell_wood[k] * _env_ad(t, 0.0005, 0.028 if is_accent else 0.016, 2.2) * (0.42 if is_accent else 0.20) * vel
+        head = (head_f1 + head_f2) * body_gain + wood
+
+        rim = 0.0
+        if is_accent:
+            rim = (
+                math.sin(math.tau * 1240.0 * pitch_scale * t) * 0.26
+                + math.sin(math.tau * 2420.0 * pitch_scale * t) * 0.16
+            ) * math.exp(-t * 120.0) * vel
+
+        stick_env = _env_ad(t, 0.00025, 0.0075 if is_accent else 0.0045, 2.5)
+        stick = stick_snap[k] * stick_env * (1.25 if is_accent else (0.55 if is_buzz else 0.92)) * vel
+
+        wire_env = _env_ad(t - 0.0006, 0.0018, wire_decay, 1.75)
+        rattle_mod = 1.0 + 0.22 * head_f1
+        wires = (snare_crack[k] * 0.95 + snare_sizzle[k] * 1.38) * wire_env * rattle_mod * vel
+
+        buf[i0 + k] += _soft_clip(head + rim + stick + wires, 1.25) * 0.82
+
+
+def _synth_splash_cymbal(n: int, t_hit: float, seed: int) -> list[float]:
+    """Synthesize a bright, fast-blooming 9-inch B20 bronze splash cymbal at t_hit."""
+    rng = random.Random(seed)
+    out = [0.0] * n
+    i0 = max(0, int(t_hit * SAMPLE_RATE))
+    m = n - i0
+    if m <= 16:
+        return out
+
+    base_plate_hz = 690.0
+    mode_ratios = (
+        1.58, 1.97, 2.41, 2.89, 3.38, 3.92, 4.49, 5.08,
+        5.71, 6.37, 7.06, 7.79, 8.55, 9.34, 10.17, 11.03,
+        11.91, 12.78, 13.52,
+    )
+    modes = []
+    for r in mode_ratios:
+        freq = base_plate_hz * r * rng.uniform(0.989, 1.011)
+        if freq > SAMPLE_RATE * 0.435:
+            continue
+        hi_frac = max(0.0, (freq - 1050.0) / 8400.0)
+        decay_rate = 2.95 + 2.35 * (hi_frac ** 1.15) + rng.uniform(-0.15, 0.15)
+        amp = (0.65 + 0.55 * math.sin(math.pi * min(1.0, hi_frac * 1.15))) * rng.uniform(0.82, 1.16)
+        ph0 = rng.uniform(0.0, math.tau)
+        mod_ratio = rng.choice((1.4142, 1.7321, 2.2361, 2.6180))
+        modes.append((freq, decay_rate, amp, ph0, mod_ratio))
+
+    modal_sum = [0.0] * m
+    phases = [mi[3] for mi in modes]
+    mod_phases = [rng.uniform(0.0, math.tau) for _ in modes]
+
+    for k in range(m):
+        t = k / SAMPLE_RATE
+        chirp = 1.0 + 0.018 * math.exp(-t * 42.0)
+        fm_depth = 1.65 * math.exp(-t * 28.0) + 0.24 * math.exp(-t * 4.5)
+        bloom = 1.0 - math.exp(-t / 0.0022)
+        s = 0.0
+        for idx, (freq, decay_rate, amp, _, mod_ratio) in enumerate(modes):
+            f_inst = freq * chirp
+            mod_phases[idx] += math.tau * min(SAMPLE_RATE * 0.44, f_inst * mod_ratio * 0.33) / SAMPLE_RATE
+            fm = fm_depth * math.sin(mod_phases[idx])
+            phases[idx] += math.tau * f_inst / SAMPLE_RATE
+            s += math.sin(phases[idx] + fm) * amp * math.exp(-t * decay_rate)
+        modal_sum[k] = s * bloom * 0.068
+
+    white_a = [rng.uniform(-1.0, 1.0) for _ in range(m)]
+    white_b = [rng.uniform(-1.0, 1.0) for _ in range(m)]
+    lattice_freqs = (811.0, 1237.0, 1789.0, 2543.0, 3467.0, 4639.0)
+    lat_ph = [rng.uniform(0.0, math.tau) for _ in lattice_freqs]
+    bronze_wash = [0.0] * m
+    for k in range(m):
+        for j, lf in enumerate(lattice_freqs):
+            lat_ph[j] += math.tau * lf / SAMPLE_RATE
+        r1 = math.tanh(2.4 * math.sin(lat_ph[0])) * math.tanh(2.4 * math.sin(lat_ph[3]))
+        r2 = math.tanh(2.4 * math.sin(lat_ph[1])) * math.tanh(2.4 * math.sin(lat_ph[4]))
+        r3 = math.tanh(2.4 * math.sin(lat_ph[2])) * math.tanh(2.4 * math.sin(lat_ph[5]))
+        ring = (r1 + r2 + r3) * 0.34
+        bronze_wash[k] = white_a[k] * (0.58 + 0.42 * ring) + ring * white_b[k] * 0.55
+
+    splash_mid = _svf_process(bronze_wash, 3450.0, 1.35, "bp")
+    splash_brilliance = _svf_process(bronze_wash, 6100.0, 1.25, "bp")
+    splash_air = _one_pole_hp(_one_pole_lp(white_b, 9800.0), 5800.0)
+    edge_chick = _svf_bp4(white_a, 4300.0, 3.6)
+
+    raw_cymbal = [0.0] * m
+    for k in range(m):
+        t = k / SAMPLE_RATE
+        bloom = (1.0 - math.exp(-t / 0.0020)) * (0.68 + 0.52 * math.exp(-t * 24.0))
+        env_mid = bloom * math.exp(-t * 3.10)
+        env_bril = bloom * math.exp(-t * 3.35)
+        env_air = bloom * math.exp(-t * 3.80)
+        sway = 1.0 + 0.08 * math.sin(math.tau * 7.2 * t) * (1.0 - math.exp(-t * 6.0))
+        shoulder = edge_chick[k] * _env_ad(t, 0.0004, 0.022, 2.1) * 0.85
+
+        shimmer = (
+            splash_mid[k] * env_mid * 0.42
+            + splash_brilliance[k] * env_bril * 0.72
+            + splash_air[k] * env_air * 0.68
+        )
+        raw_cymbal[k] = (modal_sum[k] + shimmer + shoulder) * sway
+
+    clean_cymbal = _svf_process(raw_cymbal, 920.0, 0.80, "hp")
+    for k in range(m):
+        out[i0 + k] = clean_cymbal[k]
+    return out
+
+
+def gen_mission_end() -> list[float]:
+    """Mission end percussion sting: crescendoing military snare drum roll into a bright bronze splash cymbal crash."""
+    dur = 2.05
+    n = int(dur * SAMPLE_RATE)
+    snare = [0.0] * n
+    rng = random.Random(7411)
+
+    t_cur = 0.010
+    t_roll_end = 0.735
+    stroke_idx = 0
+    while t_cur < t_roll_end:
+        prog = (t_cur - 0.010) / (t_roll_end - 0.010)
+        vel = 0.30 + 0.54 * (prog ** 1.40)
+        is_left = (stroke_idx % 2 == 0)
+        hand_pitch = (0.988 if is_left else 1.012) + rng.uniform(-0.006, 0.006)
+        t_hit = max(0.0, t_cur + rng.uniform(-0.0012, 0.0012))
+
+        dt_hand = 0.056 - 0.010 * prog
+        _add_snare_stroke(snare, t_hit, vel, hand_pitch, 8100 + stroke_idx * 31, kind="primary")
+        _add_snare_stroke(snare, t_hit + dt_hand * 0.34, vel * 0.58, hand_pitch * 1.016, 8109 + stroke_idx * 31, kind="buzz")
+        _add_snare_stroke(snare, t_hit + dt_hand * 0.66, vel * 0.34, hand_pitch * 1.028, 8117 + stroke_idx * 31, kind="buzz")
+
+        t_cur += dt_hand
+        stroke_idx += 1
+
+    # Crisp flam pickup -> decisive accented snare hit + bright splash cymbal crash
+    t_climax = 0.786
+    _add_snare_stroke(snare, t_climax - 0.024, 0.56, 0.986, 9501, kind="primary")
+    _add_snare_stroke(snare, t_climax, 0.98, 1.00, 9523, kind="accent")
+
+    splash = _synth_splash_cymbal(n, t_climax + 0.005, 9613)
+
+    dry = [snare[i] * 0.80 + splash[i] * 1.12 for i in range(n)]
+
+    room_lp = _one_pole_lp(dry, 6400.0)
+    taps = ((int(0.0115 * SAMPLE_RATE), 0.10), (int(0.0193 * SAMPLE_RATE), 0.068), (int(0.0317 * SAMPLE_RATE), 0.042))
+    mixed = [0.0] * n
+    for i in range(n):
+        refl = 0.0
+        for delay_s, tap_gain in taps:
+            if i >= delay_s:
+                refl += room_lp[i - delay_s] * tap_gain
+        tail_fade = 1.0
+        t = i / SAMPLE_RATE
+        if t > dur - 0.18:
+            tail_fade = max(0.0, (dur - t) / 0.18) ** 1.35
+        mixed[i] = _soft_clip((dry[i] + refl) * tail_fade, 1.08)
+
+    return _one_pole_hp(mixed, 32.0)
+
+
 def gen_support_pulse(frequency: float, duration: float) -> list[float]:
     samples = []
     for index in range(int(SAMPLE_RATE * duration)):
@@ -2182,6 +2384,7 @@ GENERATORS = {
     "alert_under_attack": (gen_alert_under_attack, 0.88),
     "match_victory": (gen_match_victory, 0.88),
     "match_defeat": (gen_match_defeat, 0.85),
+    "mission_end": (gen_mission_end, 0.88),
 }
 
 

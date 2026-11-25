@@ -34,6 +34,7 @@ signal resource_depleted(owner_id: int, resource_type: String)
 signal unit_production_finished(unit: Dictionary, structure: Dictionary)
 signal structure_construction_finished(structure: Dictionary)
 signal match_finished
+signal mission_ended(won: bool)
 
 const TICK_RATE: int = 64
 const BUILD_CLEAR_TIMEOUT_TICKS := 4 * TICK_RATE

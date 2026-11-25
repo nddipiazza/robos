@@ -31,6 +31,7 @@ func _run() -> void:
 	_test_brood_support_cues()
 	_test_campaign_voices()
 	_test_captain_vale_voice()
+	_test_mission_end_sfx()
 	await _test_combat_sound_burst()
 	print("PASS test_audio_sfx (%d SFX and %d voice streams verified)" % [audio.SOUND_FILES.size(), audio.voice_streams.size()])
 	quit(0)
@@ -273,7 +274,7 @@ func _test_abilities_and_deaths_sfx() -> void:
 func _test_economy_and_ui_sfx() -> void:
 	audio.reset_stats()
 	audio.local_player_id = 1
-	for ui_key in ["ui_select", "ui_command_move", "ui_command_attack", "ui_build_place", "ui_error", "alert_under_attack", "match_victory", "match_defeat"]:
+	for ui_key in ["ui_select", "ui_command_move", "ui_command_attack", "ui_build_place", "ui_error", "alert_under_attack", "match_victory", "match_defeat", "mission_end"]:
 		assert(audio.play_ui(ui_key), "Expected play_ui('%s') to succeed" % ui_key)
 		assert(int(audio.sfx_counts.get(ui_key, 0)) == 1, "Expected count 1 for %s" % ui_key)
 
@@ -486,3 +487,44 @@ func _test_captain_vale_voice() -> void:
 		assert(str(audio.play_character_dialogue(vale, category, true).get("id", "")).begins_with("captain_vale_" + category))
 		assert(str(audio.play_character_dialogue(rifleman, category, true).get("id", "")).begins_with("rifleman_" + category))
 	assert(data.named_voice_profiles["captain_vale"].unit_name == "Captain Vale")
+
+func _test_mission_end_sfx() -> void:
+	var stream: AudioStreamWAV = audio.get_stream("mission_end")
+	assert(stream != null and stream.get_length() >= 1.5, "Expected snare drum roll + splash cymbal mission_end stream")
+
+	var old_progress := OS.get_environment("RTS_CAMPAIGN_PROGRESS_PATH")
+	var tmp_progress := "user://test-mission-end-%d.cfg" % OS.get_process_id()
+	OS.set_environment("RTS_CAMPAIGN_PROGRESS_PATH", tmp_progress)
+
+	# Campaign mission victory plays mission_end once (and deduplicates HUD follow-up)
+	var campaign = preload("res://scripts/engine/RTSCampaign.gd")
+	assert(sim.start_campaign(campaign.ASSAULT, "normal").ok)
+	audio.reset_stats()
+	sim.campaign._finish(sim, true, "Test mission victory.")
+	assert(int(audio.sfx_counts.get("mission_end", 0)) == 1, "Expected mission_end SFX on mission victory")
+	assert(int(audio.sfx_counts.get("match_victory", 0)) == 0, "Expected mission_end instead of match_victory")
+
+	var hud: CanvasLayer = load("res://scripts/RTSCampaignHud.gd").new()
+	root.add_child(hud)
+	hud.set_process(false)
+	hud.state = sim.campaign.snapshot(sim)
+	hud._show_result()
+	assert(hud._result.visible, "Expected mission result panel to be shown")
+	assert(int(audio.sfx_counts.get("mission_end", 0)) == 1, "Expected HUD _show_result() not to double-play mission_end")
+
+	# Direct HUD _show_result() after stats reset also triggers mission_end cleanly
+	audio.reset_stats()
+	hud._reported_result = false
+	hud._show_result()
+	assert(int(audio.sfx_counts.get("mission_end", 0)) == 1, "Expected HUD _show_result() to play mission_end")
+	hud.free()
+
+	# Starting a new campaign attempt resets deduplication and plays mission_end on defeat as well
+	assert(sim.start_campaign(campaign.DEFENSE, "normal").ok)
+	audio.reset_stats()
+	sim.campaign._finish(sim, false, "Test mission defeat.")
+	assert(int(audio.sfx_counts.get("mission_end", 0)) == 1, "Expected mission_end SFX on mission defeat")
+	assert(int(audio.sfx_counts.get("match_defeat", 0)) == 0, "Expected mission_end instead of match_defeat")
+
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(tmp_progress))
+	OS.set_environment("RTS_CAMPAIGN_PROGRESS_PATH", old_progress)

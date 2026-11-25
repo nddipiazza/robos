@@ -147,7 +147,8 @@ const SOUND_FILES: Dictionary = {
 	"alert_under_attack": "res://assets/audio/sfx/alert_under_attack.wav",
 	"alert_supply_required": "res://assets/audio/sfx/alert_supply_required.wav",
 	"match_victory": "res://assets/audio/sfx/match_victory.wav",
-	"match_defeat": "res://assets/audio/sfx/match_defeat.wav"
+	"match_defeat": "res://assets/audio/sfx/match_defeat.wav",
+	"mission_end": "res://assets/audio/sfx/mission_end.wav"
 }
 
 const SOUND_ALIASES: Dictionary = {
@@ -300,7 +301,8 @@ const SOUND_VOLUME_OFFSET_DB: Dictionary = {
 	"alert_under_attack": 0.5,
 	"alert_supply_required": 1.0,
 	"match_victory": 1.0,
-	"match_defeat": 0.5
+	"match_defeat": 0.5,
+	"mission_end": 1.0
 }
 
 const SOUND_MIN_INTERVAL_SEC: Dictionary = {
@@ -378,6 +380,7 @@ var _pitch_rng: RandomNumberGenerator = RandomNumberGenerator.new()
 var _last_weapon_attack_tick: int = -1
 var _last_weapon_attack_pos: Vector2 = Vector2.INF
 var _last_match_outcome_tick: int = -1
+var _played_mission_end_campaign: Variant = null
 
 var sfx_counts: Dictionary = {}
 var last_played_sfx: String = ""
@@ -501,6 +504,8 @@ func _connect_sim_signals() -> void:
 		SimEngine.notice.connect(_on_sim_notice)
 	if not SimEngine.scenario_loaded.is_connected(_on_scenario_loaded):
 		SimEngine.scenario_loaded.connect(_on_scenario_loaded)
+	if not SimEngine.mission_ended.is_connected(_on_mission_ended):
+		SimEngine.mission_ended.connect(_on_mission_ended)
 
 func can_play_campaign_voice() -> bool:
 	return _should_output_audio()
@@ -679,6 +684,7 @@ func reset_stats() -> void:
 	_last_auto_attack_voice_sec = -999.0
 	_last_weapon_attack_tick = -1
 	_last_weapon_attack_pos = Vector2.INF
+	_played_mission_end_campaign = null
 
 func play_character_dialogue(unit: Dictionary, category: String, force: bool = false) -> Dictionary:
 	return play_unit_dialogue(_voice_profile_for(unit), category, force)
@@ -765,6 +771,13 @@ func play_ui(sfx_key: String, volume_offset_db: float = 0.0, pitch_scale: float 
 	player.pitch_scale = clampf(pitch_scale, 0.5, 2.0)
 	player.play()
 	return true
+
+func play_mission_end() -> bool:
+	var active_campaign: Variant = SimEngine.campaign if SimEngine != null else null
+	if active_campaign != null and _played_mission_end_campaign == active_campaign:
+		return false
+	_played_mission_end_campaign = active_campaign
+	return play_ui("mission_end")
 
 func _pick_world_stream(resolved_key: String) -> AudioStreamWAV:
 	if sound_variant_streams.has(resolved_key):
@@ -1138,4 +1151,8 @@ func _on_scenario_loaded(_scenario_name: String) -> void:
 	_world_sounds_in_window = 0
 	_last_weapon_attack_tick = -1
 	_last_weapon_attack_pos = Vector2.INF
+	_played_mission_end_campaign = null
 	_last_match_outcome_tick = -1
+
+func _on_mission_ended(_won: bool) -> void:
+	play_mission_end()

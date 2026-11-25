@@ -297,7 +297,8 @@ func _set_cinematic(active: bool, restore: bool = true) -> void:
 	_cinematic = active
 	_top_bar.visible = active
 	_bottom_bar.visible = active
-	battle.hud.visible = not active
+	if battle and battle.hud:
+		battle.hud.visible = not active
 
 func blocks_battle_input() -> bool:
 	return _cinematic or _result.visible or restart_picker_visible()
@@ -362,7 +363,7 @@ func _show_result() -> void:
 	_retry.text = "Replay mission" if won else "Retry mission"
 	if won and Campaign.save_completion(state.mission - 1, state.get("brood_research", 0), state.get("concord_research", 0)) != OK:
 		_result_reason.text += "\nCampaign progress could not be saved."
-	RTSAudio.play_ui("match_victory" if won else "match_defeat")
+	RTSAudio.play_mission_end()
 	_result.show()
 	(_next if _next.visible else _retry).grab_focus()
 
