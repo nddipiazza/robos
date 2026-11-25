@@ -421,14 +421,17 @@ test('RobOS Media Server indexes movies, shows, music, books & courses, serves H
   const sceneXml = fs.readFileSync(path.join(rokuBuild.targetDir, 'components', 'MainScene.xml'), 'utf8');
   assert.match(sceneXml, /id="playerOsdGroup"/);
   assert.match(sceneXml, /id="subtitleOverlayGroup"/);
-  assert.match(sceneXml, /2\. CC CAPTIONS/);
-  assert.match(sceneXml, /3\. SEE SEASON/);
-  assert.match(sceneXml, /4\. SEE SHOW/);
-  assert.match(sceneXml, /5\. EP DETAILS/);
-  assert.match(sceneXml, /7\. METADATA/);
+  assert.match(sceneXml, /text="Subtitles"/);
+  assert.match(sceneXml, /text="Season"/);
+  assert.match(sceneXml, /text="Show"/);
+  assert.match(sceneXml, /text="Details"/);
+  assert.match(sceneXml, /text="Metadata"/);
+  assert.doesNotMatch(sceneXml, /E8A33D|FCD34D/i);
   const sceneBrs = fs.readFileSync(path.join(rokuBuild.targetDir, 'components', 'MainScene.brs'), 'utf8');
   assert.match(sceneBrs, /function handleCinemaVideoKeyEvent/);
   assert.match(sceneBrs, /sub jumpToNeighborCaption/);
+  assert.match(sceneBrs, /winStart = Int\(focusedIdx \/ 6\) \* 6/);
+  assert.doesNotMatch(sceneBrs, /E8A33D|FCD34D/i);
   const embeddedLib = JSON.parse(fs.readFileSync(path.join(rokuBuild.targetDir, 'source', 'cinema-library.json'), 'utf8'));
   assert.equal(embeddedLib.active, true);
   assert.equal(embeddedLib.items.length, 3); // 2 movies + 1 grouped TV series

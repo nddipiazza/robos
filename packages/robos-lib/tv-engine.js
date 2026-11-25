@@ -1593,7 +1593,7 @@ tizen run -p robostv001.RobOSTV
     const nmBarW = Math.max(24, Math.min(528, Math.round(((Number(meetingData.urgencyPct) || 0) / 100) * 528)));
 
     const relRunning = Boolean(ghRel.isRunningNow);
-    const relStripeColor = relRunning ? '0xF59E0BFF' : '0x10B981FF';
+    const relStripeColor = relRunning ? '0x38BDF8FF' : '0x10B981FF';
     const relLine1 = `RELEASE: ${ghRel.name || ghRel.tag || 'v0.0.8'} (Run #${ghRel.releaseRunNumber || 11}) [${relRunning ? 'RUNNING NOW' : 'IDLE - NOT RUNNING'}]`;
     const relLine2 = `Last Release #${ghRel.releaseRunNumber || 11}: ${String(ghRel.releaseConclusion || 'SUCCESS').toUpperCase()} | Win EXE Release #${ghRel.windowsReleaseRunNumber || 5}: ${String(ghRel.windowsReleaseConclusion || 'SUCCESS').toUpperCase()}`;
 
@@ -1639,7 +1639,7 @@ tizen run -p robostv001.RobOSTV
       const by = 356 - bh;
       const isToday = i === 29;
       const barColor = isToday
-        ? '0xF59E0BFF'
+        ? '0x38BDF8FF'
         : cnt >= 35
         ? '0x10B981FF'
         : cnt >= 15
@@ -1650,7 +1650,7 @@ tizen run -p robostv001.RobOSTV
       const maH = Math.max(4, Math.min(68, Math.round((ma / maxDayCommits) * 68)));
       const maY = 356 - maH;
       return `    <Rectangle id="commitBar${i}" translation="[${bx}, ${by}]" width="12" height="${bh}" color="${barColor}" />
-    <Rectangle id="maDot${i}" translation="[${bx + 2}, ${maY}]" width="8" height="3" color="0xFCD34DFF" />`;
+    <Rectangle id="maDot${i}" translation="[${bx + 2}, ${maY}]" width="8" height="3" color="0x7DD3FCFF" />`;
     }).join('\n');
 
     const commitRowsXml = Array.from({ length: 7 }, (_, i) => {
@@ -1707,16 +1707,16 @@ tizen run -p robostv001.RobOSTV
       const uy = 354 - uh;
       const bColor = cnt >= 250 ? '0x10B981FF' : cnt >= 150 ? '0x00BCD4FF' : '0xA855F7FF';
       return `      <Rectangle id="cloneBar${i}" translation="[${bx}, ${by}]" width="24" height="${bh}" color="${bColor}" />
-      <Rectangle id="cloneUniqBar${i}" translation="[${bx + 5}, ${uy}]" width="14" height="${uh}" color="0xFCD34DFF" />`;
+      <Rectangle id="cloneUniqBar${i}" translation="[${bx + 5}, ${uy}]" width="14" height="${uh}" color="0x7DD3FCFF" />`;
     }).join('\n');
 
     const stargazerRowsXml = Array.from({ length: 7 }, (_, i) => {
       const sg = popStargazers[i] || { login: 'github-user', starredAt: '2026' };
       const y = 456 + i * 56;
       return `      <Rectangle translation="[694, ${y}]" width="508" height="46" color="0x090D16FF" />
-      <Rectangle translation="[694, ${y}]" width="4" height="46" color="0xF59E0BFF" />
+      <Rectangle translation="[694, ${y}]" width="3" height="46" color="0x38BDF8FF" />
       <Label id="s1StarUser${i}" translation="[712, ${y + 10}]" scale="[0.62, 0.62]" width="520" height="30" numLines="1" color="0xF8FAFCFF" text="${safeXml(`${i + 1}. @${sg.login}`)}" />
-      <Label id="s1StarDate${i}" translation="[1010, ${y + 11}]" scale="[0.55, 0.55]" width="320" height="28" numLines="1" color="0xFCD34DFF" text="${safeXml(`* Starred ${sg.starredAt}`)}" />`;
+      <Label id="s1StarDate${i}" translation="[1010, ${y + 11}]" scale="[0.55, 0.55]" width="320" height="28" numLines="1" color="0x7DD3FCFF" text="${safeXml(`* Starred ${sg.starredAt}`)}" />`;
     }).join('\n');
 
     const wfCardsSlide1Xml = Array.from({ length: 4 }, (_, i) => {
@@ -1731,8 +1731,8 @@ tizen run -p robostv001.RobOSTV
       const y = 278 + i * 108;
       const isRun = wf.status === 'in_progress' || wf.status === 'queued';
       const isOk = wf.conclusion === 'success';
-      const stripeCol = isRun ? '0xF59E0BFF' : isOk ? '0x10B981FF' : '0xEF4444FF';
-      const statusCol = isRun ? '0xFCD34DFF' : isOk ? '0x6EE7B7FF' : '0xFCA5A5FF';
+      const stripeCol = isRun ? '0x38BDF8FF' : isOk ? '0x10B981FF' : '0xEF4444FF';
+      const statusCol = isRun ? '0x7DD3FCFF' : isOk ? '0x6EE7B7FF' : '0xFCA5A5FF';
       const badgeTxt = isRun ? 'RUNNING NOW' : isOk ? 'PASS - SUCCESS' : 'FAIL - ATTENTION';
       return `      <Rectangle id="s1WfBg${i}" translation="[68, ${y}]" width="544" height="96" color="0x161F30FF" />
       <Rectangle id="s1WfStripe${i}" translation="[68, ${y}]" width="6" height="96" color="${stripeCol}" />
@@ -2105,15 +2105,15 @@ end sub
   <children>
     <!-- Silent 160x90 looping H.264+AAC video node placed behind opaque bg Rectangle so Roku hardware media player stays in state=play (suppresses screensaver & auto-standby with zero keypress audio) -->
     <Video id="keepAliveVideo" translation="[0, 0]" width="160" height="90" mute="true" loop="true" enableUI="false" />
-    <Rectangle id="bg" width="1920" height="1080" color="0x070B12FF" />
-    <Rectangle id="headerBar" width="1920" height="84" color="0x0F172AFF" />
-    <Rectangle id="headerAccent" translation="[0, 84]" width="1920" height="2" color="0x00BCD4FF" />
-    <Rectangle id="slideProgressFill" translation="[0, 82]" width="${ssEnabled ? Math.max(40, Math.round(((ssInterval - ssRem) / ssInterval) * 1920)) : 0}" height="4" color="0xF59E0BFF" />
+    <Rectangle id="bg" width="1920" height="1080" color="0x070B14FF" />
+    <Rectangle id="headerBar" width="1920" height="84" color="0x090E1AFF" />
+    <Rectangle id="headerAccent" translation="[0, 84]" width="1920" height="1" color="0x1E293BFF" />
+    <Rectangle id="slideProgressFill" translation="[0, 82]" width="${ssEnabled ? Math.max(40, Math.round(((ssInterval - ssRem) / ssInterval) * 1920)) : 0}" height="3" color="0x38BDF8FF" />
     <Label id="brandLabel" scale="[0.76, 0.76]" text="RobOS Dashboards - Daily Engineering &amp; Agent Ops" translation="[48, 25]" width="980" height="40" numLines="1" color="0xF8FAFCFF" />
     <Label id="headerCountdownLabel" scale="[0.60, 0.60]" text="NEXT MEETING: ${safeXml(nm.time || '16:30')} (${safeXml(meetingData.countdownLabel || 'T - 00:28:00')})" translation="[780, 29]" width="560" height="34" numLines="1" color="0x6EE7B7FF" />
-    <Rectangle id="slideshowBadgeBg" translation="[1130, 20]" width="390" height="42" color="0x1E1B4BFF" />
-    <Rectangle id="slideshowBadgeBorder" translation="[1130, 20]" width="4" height="42" color="0xF59E0BFF" />
-    <Label id="slideshowBadgeLabel" scale="[0.54, 0.54]" text="${safeXml(ssBadgeText)}" translation="[1144, 29]" width="680" height="32" numLines="1" color="0xFCD34DFF" />
+    <Rectangle id="slideshowBadgeBg" translation="[1130, 20]" width="390" height="42" color="0x0F172AFF" />
+    <Rectangle id="slideshowBadgeBorder" translation="[1130, 20]" width="3" height="42" color="0x38BDF8FF" />
+    <Label id="slideshowBadgeLabel" scale="[0.54, 0.54]" text="${safeXml(ssBadgeText)}" translation="[1144, 29]" width="680" height="32" numLines="1" color="0xBAE6FDFF" />
     <Label id="hostLabel" scale="[0.54, 0.54]" text="LIVE CAST | ${portalUrl}/dashboard" translation="[1460, 30]" width="760" height="34" numLines="1" horizAlign="right" color="0x67E8F9FF" />
 
     <!-- SLIDE 0: Daily Engineering & Calendar Ops (daily-engineering-ops) — CI Status removed from Slide 1 -->
@@ -2168,8 +2168,8 @@ ${calendarRowsXml}
 
     <!-- Column 3: Countdown Until Next Meeting + Running RobOS Agent Sessions (Status Tailed Live) -->
     <Rectangle id="colAgentsCard" translation="[1264, 102]" width="608" height="784" color="0x111827FF" />
-    <Rectangle translation="[1264, 102]" width="608" height="4" color="0xF59E0BFF" />
-    <Label id="colAgentsHeader" scale="[0.65, 0.65]" text="3. NEXT MEETING COUNTDOWN &amp; RUNNING AGENTS" translation="[1284, 118]" width="820" height="36" numLines="1" color="0xFCD34DFF" />
+    <Rectangle translation="[1264, 102]" width="608" height="3" color="0x38BDF8FF" />
+    <Label id="colAgentsHeader" scale="[0.65, 0.65]" text="3. NEXT MEETING COUNTDOWN &amp; RUNNING AGENTS" translation="[1284, 118]" width="820" height="36" numLines="1" color="0x7DD3FCFF" />
     <Rectangle translation="[1284, 152]" width="568" height="2" color="0x1E293BFF" />
 
     <!-- Countdown Until Next Meeting Widget Box -->
@@ -2204,45 +2204,45 @@ ${wfCardsSlide1Xml}
 
       <Rectangle translation="[68, 718]" width="544" height="150" color="0x090D16FF" />
       <Rectangle id="s1RelStripe" translation="[68, 718]" width="6" height="150" color="${relStripeColor}" />
-      <Label translation="[86, 730]" scale="[0.58, 0.58]" width="880" height="30" numLines="1" color="0xFCD34DFF" text="LATEST RELEASE PIPELINE STATUS:" />
+      <Label translation="[86, 730]" scale="[0.58, 0.58]" width="880" height="30" numLines="1" color="0x7DD3FCFF" text="LATEST RELEASE PIPELINE STATUS:" />
       <Label id="s1RelLine1" translation="[86, 762]" scale="[0.58, 0.58]" width="880" height="30" numLines="1" color="0x6EE7B7FF" text="${safeXml(relLine1)}" />
       <Label id="s1RelLine2" translation="[86, 794]" scale="[0.54, 0.54]" width="920" height="28" numLines="1" color="0xF8FAFCFF" text="${safeXml(relLine2)}" />
       <Label translation="[86, 826]" scale="[0.52, 0.52]" width="920" height="28" numLines="1" color="0x94A3B8FF" text="Tag: ${safeXml(ghRel.tag || 'v0.0.8')} | Published: Oct 22, 2026 | Assets: Win EXE, macOS DMG, Linux" />
 
       <!-- Column 2: GitHub Stars, Forks, Watchers & Stargazers -->
       <Rectangle translation="[656, 102]" width="584" height="784" color="0x111827FF" />
-      <Rectangle translation="[656, 102]" width="584" height="4" color="0xF59E0BFF" />
-      <Label scale="[0.65, 0.65]" text="2. GITHUB STARS, FORKS &amp; COMMUNITY PULSE" translation="[676, 118]" width="820" height="36" numLines="1" color="0xFCD34DFF" />
+      <Rectangle translation="[656, 102]" width="584" height="3" color="0x38BDF8FF" />
+      <Label scale="[0.65, 0.65]" text="2. GITHUB STARS, FORKS &amp; COMMUNITY PULSE" translation="[676, 118]" width="820" height="36" numLines="1" color="0x7DD3FCFF" />
       <Rectangle translation="[676, 152]" width="544" height="2" color="0x1E293BFF" />
 
       <!-- 2x2 Big Hero Metric Boxes -->
       <Rectangle translation="[676, 166]" width="264" height="114" color="0x161F30FF" />
-      <Rectangle translation="[676, 166]" width="264" height="4" color="0xF59E0BFF" />
-      <Label id="s1StarsVal" translation="[694, 180]" scale="[1.02, 1.02]" width="230" height="44" numLines="1" color="0xFCD34DFF" text="${safeXml(`* ${popStars} STARS`)}" />
+      <Rectangle translation="[676, 166]" width="264" height="3" color="0x38BDF8FF" />
+      <Label id="s1StarsVal" translation="[694, 180]" scale="[1.02, 1.02]" width="230" height="44" numLines="1" color="0xBAE6FDFF" text="${safeXml(`* ${popStars} STARS`)}" />
       <Label translation="[694, 224]" scale="[0.54, 0.54]" width="420" height="28" numLines="1" color="0xF8FAFCFF" text="GitHub Stargazers" />
       <Label translation="[694, 248]" scale="[0.48, 0.48]" width="460" height="24" numLines="1" color="0x94A3B8FF" text="nddipiazza/robos (+2 this month)" />
 
       <Rectangle translation="[956, 166]" width="264" height="114" color="0x161F30FF" />
-      <Rectangle translation="[956, 166]" width="264" height="4" color="0x00BCD4FF" />
+      <Rectangle translation="[956, 166]" width="264" height="3" color="0x00BCD4FF" />
       <Label id="s1ForksVal" translation="[974, 180]" scale="[1.02, 1.02]" width="230" height="44" numLines="1" color="0x67E8F9FF" text="${safeXml(`${popForks} FORK`)}" />
       <Label translation="[974, 224]" scale="[0.54, 0.54]" width="420" height="28" numLines="1" color="0xF8FAFCFF" text="Repository Forks" />
       <Label translation="[974, 248]" scale="[0.48, 0.48]" width="460" height="24" numLines="1" color="0x94A3B8FF" text="Active Community Network" />
 
       <Rectangle translation="[676, 292]" width="264" height="106" color="0x161F30FF" />
-      <Rectangle translation="[676, 292]" width="264" height="4" color="0x10B981FF" />
+      <Rectangle translation="[676, 292]" width="264" height="3" color="0x10B981FF" />
       <Label id="s1WatchersVal" translation="[694, 304]" scale="[0.90, 0.90]" width="260" height="40" numLines="1" color="0x6EE7B7FF" text="${safeXml(`${popWatchers} WATCHERS`)}" />
       <Label translation="[694, 344]" scale="[0.52, 0.52]" width="440" height="28" numLines="1" color="0xF8FAFCFF" text="Subscribed Repo Watchers" />
       <Label translation="[694, 368]" scale="[0.48, 0.48]" width="460" height="24" numLines="1" color="0x94A3B8FF" text="Following all RobOS releases" />
 
       <Rectangle translation="[956, 292]" width="264" height="106" color="0x161F30FF" />
-      <Rectangle translation="[956, 292]" width="264" height="4" color="0xA855F7FF" />
+      <Rectangle translation="[956, 292]" width="264" height="3" color="0xA855F7FF" />
       <Label id="s1DlHeroVal" translation="[974, 304]" scale="[0.86, 0.86]" width="270" height="40" numLines="1" color="0xD8B4FEFF" text="${safeXml(`${popDlTotal} INSTALLS`)}" />
       <Label translation="[974, 344]" scale="[0.52, 0.52]" width="440" height="28" numLines="1" color="0xF8FAFCFF" text="Release Asset Downloads" />
       <Label translation="[974, 368]" scale="[0.48, 0.48]" width="460" height="24" numLines="1" color="0x94A3B8FF" text="Win EXE + macOS DMG + Linux" />
 
       <Rectangle translation="[676, 412]" width="544" height="456" color="0x161F30FF" />
-      <Rectangle translation="[676, 412]" width="6" height="456" color="0xF59E0BFF" />
-      <Label translation="[694, 422]" scale="[0.58, 0.58]" width="880" height="30" numLines="1" color="0xFCD34DFF" text="RECENT GITHUB STARGAZERS (WHO STARRED ROBOS):" />
+      <Rectangle translation="[676, 412]" width="4" height="456" color="0x38BDF8FF" />
+      <Label translation="[694, 422]" scale="[0.58, 0.58]" width="880" height="30" numLines="1" color="0x7DD3FCFF" text="RECENT GITHUB STARGAZERS (WHO STARRED ROBOS):" />
 ${stargazerRowsXml}
 
       <!-- Column 3: App Popularity: 14-Day Clones, Traffic Referrers & Release Downloads -->
@@ -2281,8 +2281,8 @@ ${cloneBarsXml}
 
       <!-- Top Traffic Referrers & Popular Pages Box -->
       <Rectangle translation="[1284, 710]" width="568" height="158" color="0x090D16FF" />
-      <Rectangle translation="[1284, 710]" width="568" height="3" color="0xF59E0BFF" />
-      <Label translation="[1304, 722]" scale="[0.58, 0.58]" width="880" height="30" numLines="1" color="0xFCD34DFF" text="TOP DISCOVERY REFERRERS &amp; POPULAR CONTENT PATHS:" />
+      <Rectangle translation="[1284, 710]" width="568" height="2" color="0x38BDF8FF" />
+      <Label translation="[1304, 722]" scale="[0.58, 0.58]" width="880" height="30" numLines="1" color="0x7DD3FCFF" text="TOP DISCOVERY REFERRERS &amp; POPULAR CONTENT PATHS:" />
       <Label translation="[1304, 754]" scale="[0.54, 0.54]" width="940" height="28" numLines="1" color="0x6EE7B7FF" text="* #1 Referrer: rowbose.com (5 views / 4 unique visitors)" />
       <Label translation="[1304, 784]" scale="[0.54, 0.54]" width="940" height="28" numLines="1" color="0x67E8F9FF" text="* #2 Referrer: github.com (1u)  |  #3 Referrer: l.facebook.com (1u)" />
       <Label translation="[1304, 814]" scale="[0.52, 0.52]" width="960" height="28" numLines="1" color="0xCBD5E1FF" text="Top Paths: /nddipiazza/robos | /releases/tag/v0.0.8 | /packages/getemgigs" />
@@ -2304,631 +2304,474 @@ ${voiceSlide2RowsXml}
     </Group>
 
     <!-- Bottom Status & Visual Image-Card Launcher Bar (Zero LabelList / Zero Text-Only Menus) -->
-    <Rectangle id="heroCard" translation="[48, 898]" width="1824" height="142" color="0x111827FF" />
-    <Rectangle translation="[48, 898]" width="1824" height="3" color="0x00BCD4FF" />
-    <Label id="heroTitle" scale="[0.66, 0.66]" text="RobOS Live TV Wallboard  |  D-Pad Left/Right &amp; OK Launches Experience" translation="[68, 910]" width="1160" height="32" numLines="1" color="0xF8FAFCFF" />
-    <Label id="heroDesc" scale="[0.52, 0.52]" text="Select a visual card on the right: Movies, TV Shows, Tablo DVR, Engineering Ops, CI &amp; Popularity, or Voice Chats" translation="[68, 938]" width="1460" height="28" numLines="1" color="0x94A3B8FF" />
-    <Label id="statusFooter" scale="[0.52, 0.52]" text="Connected to ${portalUrl}/dashboard | 100% Image-Card Navigation" translation="[68, 964]" width="1460" height="28" numLines="1" color="0x67E8F9FF" />
+    <Rectangle id="heroCard" translation="[48, 898]" width="1824" height="142" color="0x0B1220FF" />
+    <Rectangle translation="[48, 898]" width="1824" height="1" color="0x1E293BFF" />
+    <Label id="heroTitle" scale="[0.64, 0.64]" text="RobOS TV  |  Movies, TV Shows &amp; Dashboards" translation="[68, 912]" width="1160" height="32" numLines="1" color="0xF8FAFCFF" />
+    <Label id="heroDesc" scale="[0.50, 0.50]" text="Choose Movies, TV Shows, DVR, or a live dashboard card on the right" translation="[68, 942]" width="1460" height="28" numLines="1" color="0x94A3B8FF" />
+    <Label id="statusFooter" scale="[0.48, 0.48]" text="Connected to ${portalUrl}/dashboard" translation="[68, 970]" width="1460" height="26" numLines="1" color="0x64748BFF" />
     <!-- 6 Visual Image-Tile Launcher Cards on Wallboard Dock (x=848..1856) -->
     <Group id="wallLauncherGroup">
-      <Rectangle id="wallCardBorder0" translation="[848, 910]" width="162" height="118" color="0xFCD34DFF" />
-      <Rectangle id="wallCardBg0" translation="[852, 914]" width="154" height="110" color="0x2B2114FF" />
-      <Rectangle translation="[860, 922]" width="44" height="64" color="0xE8A33DFF" />
-      <Label translation="[860, 944]" scale="[0.58, 0.58]" width="74" height="28" numLines="1" horizAlign="center" color="0x110E0BFF" text="FILM" />
+      <Rectangle id="wallCardBorder0" translation="[848, 910]" width="162" height="118" color="0xFFFFFFFF" />
+      <Rectangle id="wallCardBg0" translation="[850, 912]" width="158" height="114" color="0x172554FF" />
+      <Rectangle translation="[860, 922]" width="44" height="64" color="0x0284C7FF" />
+      <Label translation="[860, 944]" scale="[0.56, 0.56]" width="78" height="28" numLines="1" horizAlign="center" color="0xFFFFFFFF" text="FILM" />
       <Poster id="wallCardPoster0" translation="[860, 922]" width="44" height="64" loadWidth="88" loadHeight="128" loadDisplayMode="scaleToZoom" />
-      <Label id="wallCardTitle0" translation="[912, 926]" scale="[0.46, 0.46]" width="190" height="44" wrap="true" numLines="2" color="0xFCD34DFF" text="MOVIES" />
-      <Label id="wallCardSub0" translation="[860, 994]" scale="[0.40, 0.40]" width="340" height="22" numLines="1" color="0xF1E9DCFF" text="107 Feature Films" />
+      <Label id="wallCardTitle0" translation="[912, 926]" scale="[0.46, 0.46]" width="190" height="44" wrap="true" numLines="2" color="0xFFFFFFFF" text="Movies" />
+      <Label id="wallCardSub0" translation="[860, 994]" scale="[0.40, 0.40]" width="340" height="22" numLines="1" color="0xBAE6FDFF" text="Feature Films" />
 
-      <Rectangle id="wallCardBorder1" translation="[1016, 910]" width="162" height="118" color="0x1E293BFF" />
-      <Rectangle id="wallCardBg1" translation="[1020, 914]" width="154" height="110" color="0x132536FF" />
-      <Rectangle translation="[1028, 922]" width="44" height="64" color="0x38BDF8FF" />
-      <Label translation="[1028, 944]" scale="[0.58, 0.58]" width="74" height="28" numLines="1" horizAlign="center" color="0x090D16FF" text="SHOW" />
+      <Rectangle id="wallCardBorder1" translation="[1016, 910]" width="162" height="118" color="0x111A2EFF" />
+      <Rectangle id="wallCardBg1" translation="[1018, 912]" width="158" height="114" color="0x111A2EFF" />
+      <Rectangle translation="[1028, 922]" width="44" height="64" color="0x1E3A5FFF" />
+      <Label translation="[1028, 944]" scale="[0.56, 0.56]" width="78" height="28" numLines="1" horizAlign="center" color="0xBAE6FDFF" text="SHOW" />
       <Poster id="wallCardPoster1" translation="[1028, 922]" width="44" height="64" loadWidth="88" loadHeight="128" loadDisplayMode="scaleToZoom" />
-      <Label id="wallCardTitle1" translation="[1080, 926]" scale="[0.46, 0.46]" width="190" height="44" wrap="true" numLines="2" color="0x67E8F9FF" text="TV SHOWS" />
-      <Label id="wallCardSub1" translation="[1028, 994]" scale="[0.40, 0.40]" width="340" height="22" numLines="1" color="0xE2E8F0FF" text="48 Series | Seasons" />
+      <Label id="wallCardTitle1" translation="[1080, 926]" scale="[0.46, 0.46]" width="190" height="44" wrap="true" numLines="2" color="0xE2E8F0FF" text="TV Shows" />
+      <Label id="wallCardSub1" translation="[1028, 994]" scale="[0.40, 0.40]" width="340" height="22" numLines="1" color="0x94A3B8FF" text="Series &amp; Seasons" />
 
-      <Rectangle id="wallCardBorder2" translation="[1184, 910]" width="162" height="118" color="0x1E293BFF" />
-      <Rectangle id="wallCardBg2" translation="[1188, 914]" width="154" height="110" color="0x0F2938FF" />
-      <Rectangle translation="[1196, 922]" width="44" height="64" color="0x00BCD4FF" />
-      <Label translation="[1196, 944]" scale="[0.58, 0.58]" width="74" height="28" numLines="1" horizAlign="center" color="0x090D16FF" text="DVR" />
+      <Rectangle id="wallCardBorder2" translation="[1184, 910]" width="162" height="118" color="0x111A2EFF" />
+      <Rectangle id="wallCardBg2" translation="[1186, 912]" width="158" height="114" color="0x111A2EFF" />
+      <Rectangle translation="[1196, 922]" width="44" height="64" color="0x164E63FF" />
+      <Label translation="[1196, 944]" scale="[0.56, 0.56]" width="78" height="28" numLines="1" horizAlign="center" color="0xA5F3FCFF" text="DVR" />
       <Poster id="wallCardPoster2" translation="[1196, 922]" width="44" height="64" loadWidth="88" loadHeight="128" loadDisplayMode="scaleToZoom" />
-      <Label id="wallCardTitle2" translation="[1248, 926]" scale="[0.46, 0.46]" width="190" height="44" wrap="true" numLines="2" color="0x67E8F9FF" text="TABLO DVR" />
-      <Label id="wallCardSub2" translation="[1196, 994]" scale="[0.40, 0.40]" width="340" height="22" numLines="1" color="0xA5F3FCFF" text="OTA Recordings" />
+      <Label id="wallCardTitle2" translation="[1248, 926]" scale="[0.46, 0.46]" width="190" height="44" wrap="true" numLines="2" color="0xE2E8F0FF" text="Tablo DVR" />
+      <Label id="wallCardSub2" translation="[1196, 994]" scale="[0.40, 0.40]" width="340" height="22" numLines="1" color="0x94A3B8FF" text="OTA Recordings" />
 
-      <Rectangle id="wallCardBorder3" translation="[1352, 910]" width="162" height="118" color="0x1E293BFF" />
-      <Rectangle id="wallCardBg3" translation="[1356, 914]" width="154" height="110" color="0x161F30FF" />
-      <Rectangle translation="[1364, 922]" width="44" height="64" color="0x10B981FF" />
-      <Label translation="[1364, 944]" scale="[0.60, 0.60]" width="72" height="28" numLines="1" horizAlign="center" color="0x090D16FF" text="OPS" />
-      <Label id="wallCardTitle3" translation="[1416, 926]" scale="[0.45, 0.45]" width="190" height="44" wrap="true" numLines="2" color="0x6EE7B7FF" text="ENG &amp; AGENTS" />
-      <Label id="wallCardSub3" translation="[1364, 994]" scale="[0.40, 0.40]" width="340" height="22" numLines="1" color="0xCBD5E1FF" text="Slide 1 Dashboard" />
+      <Rectangle id="wallCardBorder3" translation="[1352, 910]" width="162" height="118" color="0x111A2EFF" />
+      <Rectangle id="wallCardBg3" translation="[1354, 912]" width="158" height="114" color="0x111A2EFF" />
+      <Rectangle translation="[1364, 922]" width="44" height="64" color="0x065F46FF" />
+      <Label translation="[1364, 944]" scale="[0.56, 0.56]" width="78" height="28" numLines="1" horizAlign="center" color="0xA7F3D0FF" text="OPS" />
+      <Label id="wallCardTitle3" translation="[1416, 926]" scale="[0.45, 0.45]" width="190" height="44" wrap="true" numLines="2" color="0xE2E8F0FF" text="Eng &amp; Agents" />
+      <Label id="wallCardSub3" translation="[1364, 994]" scale="[0.40, 0.40]" width="340" height="22" numLines="1" color="0x94A3B8FF" text="Dashboard 1" />
 
-      <Rectangle id="wallCardBorder4" translation="[1520, 910]" width="162" height="118" color="0x1E293BFF" />
-      <Rectangle id="wallCardBg4" translation="[1524, 914]" width="154" height="110" color="0x161F30FF" />
-      <Rectangle translation="[1532, 922]" width="44" height="64" color="0xF59E0BFF" />
-      <Label translation="[1532, 944]" scale="[0.60, 0.60]" width="72" height="28" numLines="1" horizAlign="center" color="0x090D16FF" text="CI+" />
-      <Label id="wallCardTitle4" translation="[1584, 926]" scale="[0.45, 0.45]" width="190" height="44" wrap="true" numLines="2" color="0xFCD34DFF" text="CI &amp; STARS" />
-      <Label id="wallCardSub4" translation="[1532, 994]" scale="[0.40, 0.40]" width="340" height="22" numLines="1" color="0xCBD5E1FF" text="Slide 2 Dashboard" />
+      <Rectangle id="wallCardBorder4" translation="[1520, 910]" width="162" height="118" color="0x111A2EFF" />
+      <Rectangle id="wallCardBg4" translation="[1522, 912]" width="158" height="114" color="0x111A2EFF" />
+      <Rectangle translation="[1532, 922]" width="44" height="64" color="0x1E3A8AFF" />
+      <Label translation="[1532, 944]" scale="[0.56, 0.56]" width="78" height="28" numLines="1" horizAlign="center" color="0xBFDBFEFF" text="CI+" />
+      <Label id="wallCardTitle4" translation="[1584, 926]" scale="[0.45, 0.45]" width="190" height="44" wrap="true" numLines="2" color="0xE2E8F0FF" text="CI &amp; Stars" />
+      <Label id="wallCardSub4" translation="[1532, 994]" scale="[0.40, 0.40]" width="340" height="22" numLines="1" color="0x94A3B8FF" text="Dashboard 2" />
 
-      <Rectangle id="wallCardBorder5" translation="[1688, 910]" width="162" height="118" color="0x1E293BFF" />
-      <Rectangle id="wallCardBg5" translation="[1692, 914]" width="154" height="110" color="0x161F30FF" />
-      <Rectangle translation="[1700, 922]" width="44" height="64" color="0xA855F7FF" />
-      <Label translation="[1700, 944]" scale="[0.60, 0.60]" width="72" height="28" numLines="1" horizAlign="center" color="0x090D16FF" text="MIC" />
-      <Label id="wallCardTitle5" translation="[1752, 926]" scale="[0.45, 0.45]" width="190" height="44" wrap="true" numLines="2" color="0xD8B4FEFF" text="VOICE CHATS" />
-      <Label id="wallCardSub5" translation="[1700, 994]" scale="[0.40, 0.40]" width="340" height="22" numLines="1" color="0xCBD5E1FF" text="Slide 3 Dashboard" />
+      <Rectangle id="wallCardBorder5" translation="[1688, 910]" width="162" height="118" color="0x111A2EFF" />
+      <Rectangle id="wallCardBg5" translation="[1690, 912]" width="158" height="114" color="0x111A2EFF" />
+      <Rectangle translation="[1700, 922]" width="44" height="64" color="0x4C1D95FF" />
+      <Label translation="[1700, 944]" scale="[0.56, 0.56]" width="78" height="28" numLines="1" horizAlign="center" color="0xDDD6FEFF" text="MIC" />
+      <Label id="wallCardTitle5" translation="[1752, 926]" scale="[0.45, 0.45]" width="190" height="44" wrap="true" numLines="2" color="0xE2E8F0FF" text="Voice Chats" />
+      <Label id="wallCardSub5" translation="[1700, 994]" scale="[0.40, 0.40]" width="340" height="22" numLines="1" color="0x94A3B8FF" text="Dashboard 3" />
     </Group>
 
-    <!-- Interactive 10-Foot Movie Player & Tablo DVR Library Browser Overlay (3-Row 100% Visual Image-Card Architecture: Row 0 Tabs <-> Row 1 Category/Season Image Cards <-> Row 2 Large Poster Cards) -->
+    <!-- Modern Clean 10-Foot RobOS Media Browser (Midnight Slate + Sky Blue + Single Crisp Focus Ring) -->
     <Group id="cinemaLibraryGroup" visible="${initialCinemaLibActive ? 'true' : 'false'}">
-      <!-- Warm Obsidian Theater Backdrop (#110E0B) -->
-      <Rectangle width="1920" height="1080" color="0x110E0BFF" />
+      <!-- Deep Midnight Theater Canvas (#070B14) -->
+      <Rectangle width="1920" height="1080" color="0x070B14FF" />
 
-      <!-- ============================================================================== -->
-      <!-- ROW 0 (TOP BAR, y=0..94): VISUAL IMAGE TAB CARDS (MOVIES | TV SHOWS | TABLO DVR) -->
-      <!-- D-Pad UP from Row 1 lands here; LEFT/RIGHT switches tabs; DOWN enters Row 1    -->
-      <!-- ============================================================================== -->
-      <Rectangle width="1920" height="94" color="0x17130FFF" />
-      <Rectangle id="cinemaHeaderAccent" translation="[0, 91]" width="1920" height="3" color="0xE8A33DFF" />
+      <!-- Minimal Floating Top Navigation Bar (y=0..76, zero thick lines) -->
+      <Rectangle width="1920" height="76" color="0x090E1AFF" />
+      <Rectangle id="cinemaHeaderAccent" translation="[0, 75]" width="1920" height="1" color="0x162032FF" />
 
-      <!-- Brand Visual Tile (x=36, y=14, w=206, h=66) -->
-      <Rectangle translation="[36, 14]" width="206" height="66" color="0xE8A33DFF" />
-      <Rectangle translation="[40, 18]" width="198" height="58" color="0x1A140EFF" />
-      <Rectangle translation="[48, 24]" width="44" height="46" color="0xE8A33DFF" />
-      <Label translation="[48, 36]" scale="[0.64, 0.64]" width="68" height="28" numLines="1" horizAlign="center" color="0x110E0BFF" text="RC+" />
-      <Label translation="[102, 24]" scale="[0.54, 0.54]" width="230" height="26" numLines="1" color="0xFCD34DFF" text="ROBOS CINEMA+" />
-      <Label translation="[102, 48]" scale="[0.42, 0.42]" width="290" height="22" numLines="1" color="0xD6CFC2FF" text="MOVIES | TV | TABLO" />
+      <!-- Official RobOS Brand Mark + Wordmark (x=56, y=14) -->
+      <Poster translation="[56, 15]" width="62" height="46" uri="pkg:/images/channel-poster_sd.png" loadDisplayMode="scaleToFit" />
+      <Label translation="[130, 22]" scale="[0.64, 0.64]" width="200" height="32" numLines="1" color="0xF8FAFCFF" text="RobOS" />
 
-      <!-- Focusable Visual Image Tab Card 0: MOVIES (x=254, y=10, w=350, h=74) -->
-      <Rectangle id="cinemaTabMoviesBorder" translation="[254, 10]" width="350" height="74" color="0xE8A33DFF" />
-      <Rectangle id="cinemaTabMoviesBg" translation="[258, 14]" width="342" height="66" color="0x2B2114FF" />
-      <Rectangle id="cinemaTabMoviesStripe" translation="[258, 74]" width="342" height="6" color="0xFCD34DFF" />
-      <Rectangle id="cinemaTabMoviesArtBg" translation="[266, 18]" width="42" height="56" color="0xE8A33DFF" />
-      <Label translation="[266, 36]" scale="[0.52, 0.52]" width="80" height="24" numLines="1" horizAlign="center" color="0x110E0BFF" text="FILM" />
-      <Poster id="cinemaTabMoviesPoster" translation="[266, 18]" width="42" height="56" loadWidth="84" loadHeight="112" loadDisplayMode="scaleToZoom" />
-      <Label id="cinemaTabMoviesLabel" translation="[318, 20]" scale="[0.58, 0.58]" width="320" height="30" numLines="1" color="0xFCD34DFF" text="MOVIES" />
-      <Label id="cinemaTabMoviesSub" translation="[318, 48]" scale="[0.43, 0.43]" width="430" height="24" numLines="1" color="0xF1E9DCFF" text="107 Feature Films  |  4K &amp; BluRay" />
-      <Rectangle id="cinemaTabMoviesPillBg" translation="[508, 22]" width="84" height="26" color="0xE8A33DFF" />
-      <Label id="cinemaTabMoviesPillTxt" translation="[508, 27]" scale="[0.40, 0.40]" width="208" height="22" numLines="1" horizAlign="center" color="0x110E0BFF" text="ACTIVE" />
+      <!-- Clean Pill Tab 0: Movies (x=256, y=15, w=204, h=46) -->
+      <Rectangle id="cinemaTabMoviesBorder" translation="[256, 15]" width="204" height="46" color="0x172554FF" />
+      <Rectangle id="cinemaTabMoviesBg" translation="[258, 17]" width="200" height="42" color="0x172554FF" />
+      <Label id="cinemaTabMoviesLabel" translation="[262, 26]" scale="[0.52, 0.52]" width="376" height="28" numLines="1" horizAlign="center" color="0xF8FAFCFF" text="Movies" />
 
-      <!-- Focusable Visual Image Tab Card 1: TV SHOWS (x=616, y=10, w=356, h=74) -->
-      <Rectangle id="cinemaTabShowsBorder" translation="[616, 10]" width="356" height="74" color="0x2E261EFF" />
-      <Rectangle id="cinemaTabShowsBg" translation="[620, 14]" width="348" height="66" color="0x1B1612FF" />
-      <Rectangle id="cinemaTabShowsStripe" translation="[620, 74]" width="348" height="6" color="0x2E261EFF" />
-      <Rectangle id="cinemaTabShowsArtBg" translation="[628, 18]" width="42" height="56" color="0x38BDF8FF" />
-      <Label translation="[628, 36]" scale="[0.52, 0.52]" width="80" height="24" numLines="1" horizAlign="center" color="0x090D16FF" text="SHOW" />
-      <Poster id="cinemaTabShowsPoster" translation="[628, 18]" width="42" height="56" loadWidth="84" loadHeight="112" loadDisplayMode="scaleToZoom" />
-      <Label id="cinemaTabShowsLabel" translation="[680, 20]" scale="[0.58, 0.58]" width="330" height="30" numLines="1" color="0x94A3B8FF" text="TV SHOWS" />
-      <Label id="cinemaTabShowsSub" translation="[680, 48]" scale="[0.43, 0.43]" width="430" height="24" numLines="1" color="0xA89F91FF" text="48 Series  |  Seasons &amp; Episodes" />
-      <Rectangle id="cinemaTabShowsPillBg" translation="[876, 22]" width="84" height="26" color="0x261F18FF" />
-      <Label id="cinemaTabShowsPillTxt" translation="[876, 27]" scale="[0.40, 0.40]" width="208" height="22" numLines="1" horizAlign="center" color="0xA89F91FF" text="TAB &gt;" />
+      <!-- Clean Pill Tab 1: TV Shows (x=474, y=15, w=224, h=46) -->
+      <Rectangle id="cinemaTabShowsBorder" translation="[474, 15]" width="224" height="46" color="0x090E1AFF" />
+      <Rectangle id="cinemaTabShowsBg" translation="[476, 17]" width="220" height="42" color="0x090E1AFF" />
+      <Label id="cinemaTabShowsLabel" translation="[480, 26]" scale="[0.52, 0.52]" width="416" height="28" numLines="1" horizAlign="center" color="0x94A3B8FF" text="TV Shows" />
 
-      <!-- Focusable Visual Image Tab Card 2: TABLO DVR (x=984, y=10, w=416, h=74) -->
+      <!-- Clean Pill Tab 2: Live & DVR (x=712, y=15, w=224, h=46) -->
       <Group id="cinemaTabTabloGroup" visible="true">
-        <Rectangle id="cinemaTabTabloBorder" translation="[984, 10]" width="416" height="74" color="0x00BCD4FF" />
-        <Rectangle id="cinemaTabTabloBg" translation="[988, 14]" width="408" height="66" color="0x0F2938FF" />
-        <Rectangle id="cinemaTabTabloStripe" translation="[988, 74]" width="408" height="6" color="0x00BCD4FF" />
-        <Rectangle id="cinemaTabTabloArtBg" translation="[996, 18]" width="56" height="56" color="0x00BCD4FF" />
-        <Label translation="[996, 36]" scale="[0.52, 0.52]" width="106" height="24" numLines="1" horizAlign="center" color="0x090D16FF" text="DVR" />
-        <Poster id="cinemaTabTabloPoster" translation="[996, 18]" width="56" height="56" loadWidth="112" loadHeight="112" loadDisplayMode="scaleToZoom" />
-        <Label id="cinemaTabTabloLabel" translation="[1062, 20]" scale="[0.58, 0.58]" width="400" height="30" numLines="1" color="0x67E8F9FF" text="TABLO DVR" />
-        <Label id="cinemaTabTabloSub" translation="[1062, 48]" scale="[0.43, 0.43]" width="520" height="24" numLines="1" color="0xA5F3FCFF" text="OTA Recordings" />
-        <Rectangle id="cinemaTabTabloPillBg" translation="[1304, 22]" width="84" height="26" color="0x00BCD4FF" />
-        <Label id="cinemaTabTabloPillTxt" translation="[1304, 27]" scale="[0.40, 0.40]" width="208" height="22" numLines="1" horizAlign="center" color="0x07131AFF" text="TABLO &gt;" />
+        <Rectangle id="cinemaTabTabloBorder" translation="[712, 15]" width="224" height="46" color="0x090E1AFF" />
+        <Rectangle id="cinemaTabTabloBg" translation="[714, 17]" width="220" height="42" color="0x090E1AFF" />
+        <Label id="cinemaTabTabloLabel" translation="[718, 26]" scale="[0.52, 0.52]" width="416" height="28" numLines="1" horizAlign="center" color="0x94A3B8FF" text="DVR" />
       </Group>
 
-      <!-- Focusable Visual Image Tab Card 2 Alternate: <- ALL TV SHOWS (x=984, y=10, w=416, h=74, visible when inside a Show's Seasons) -->
+      <!-- Clean Pill Tab 2 Alternate when inside a Series: <- All Shows -->
       <Group id="cinemaTabBackGroup" visible="false">
-        <Rectangle id="cinemaTabBackBorder" translation="[984, 10]" width="416" height="74" color="0x38BDF8FF" />
-        <Rectangle id="cinemaTabBackBg" translation="[988, 14]" width="408" height="66" color="0x132536FF" />
-        <Rectangle translation="[996, 18]" width="42" height="56" color="0x38BDF8FF" />
-        <Label translation="[996, 36]" scale="[0.56, 0.56]" width="74" height="24" numLines="1" horizAlign="center" color="0x090D16FF" text="ALL" />
-        <Poster id="cinemaTabBackPoster" translation="[996, 18]" width="42" height="56" loadWidth="84" loadHeight="112" loadDisplayMode="scaleToZoom" />
-        <Label id="cinemaTabBackLabel" translation="[1050, 20]" scale="[0.56, 0.56]" width="420" height="28" numLines="1" color="0x67E8F9FF" text="ALL TV SHOWS" />
-        <Label id="cinemaTabBackSub" translation="[1050, 48]" scale="[0.44, 0.44]" width="480" height="22" numLines="1" color="0xE2E8F0FF" text="Back to 48 Series Grid" />
+        <Rectangle id="cinemaTabBackBorder" translation="[712, 15]" width="244" height="46" color="0x0F172AFF" />
+        <Rectangle id="cinemaTabBackBg" translation="[714, 17]" width="240" height="42" color="0x0F172AFF" />
+        <Label id="cinemaTabBackLabel" translation="[718, 26]" scale="[0.50, 0.50]" width="472" height="28" numLines="1" horizAlign="center" color="0x7DD3FCFF" text="&lt; All TV Shows" />
       </Group>
 
-      <!-- Right Header Visual D-Pad Zone Indicator (x=1414, y=14, w=470, h=66) -->
-      <Rectangle translation="[1414, 14]" width="470" height="66" color="0x211B15FF" />
-      <Rectangle id="cinemaZoneCompassBar" translation="[1414, 14]" width="5" height="66" color="0xE8A33DFF" />
-      <Label id="cinemaActiveCatBadge" translation="[1430, 22]" scale="[0.50, 0.50]" width="880" height="26" numLines="1" color="0xFCD34DFF" text="ROW 3 OF 3: POSTER CARDS" />
-      <Label id="cinemaLibSubHeader" translation="[1430, 48]" scale="[0.44, 0.44]" width="980" height="24" numLines="1" color="0xD6CFC2FF" text="[UP/DOWN] SWITCH ROW (TABS / CATEGORIES / POSTERS)   |   [LEFT/RIGHT] MOVE" />
+      <!-- Quiet Right-Aligned Library Summary -->
+      <Label id="cinemaActiveCatBadge" translation="[1240, 26]" scale="[0.48, 0.48]" width="1290" height="26" numLines="1" horizAlign="right" color="0x64748BFF" text="Movies" />
+      <Label id="cinemaLibSubHeader" translation="[1240, 26]" scale="[0.44, 0.44]" width="10" height="10" visible="false" text="" />
 
-      <!-- ============================================================================== -->
-      <!-- HERO SPOTLIGHT BILLBOARD (x=36, y=104, w=1848, h=288)                          -->
-      <!-- Live preview of focused Movie / TV Series / Tablo DVR Recording                -->
-      <!-- ============================================================================== -->
-      <Rectangle id="cinemaHeroBg" translation="[36, 104]" width="1848" height="288" color="0x1B1611FF" />
-      <Rectangle id="cinemaHeroAccentTop" translation="[36, 104]" width="1848" height="4" color="0xE8A33DFF" />
-      <Rectangle id="cinemaHeroGlow1" translation="[1320, 112]" width="548" height="272" color="0x221B14FF" />
-      <Rectangle id="cinemaHeroGlow2" translation="[1490, 120]" width="368" height="256" color="0x2A2017FF" />
+      <!-- Airy, Frameless Spotlight Hero (y=84..350) -->
+      <Rectangle id="cinemaHeroBg" translation="[56, 86]" width="1808" height="258" color="0x0B1220FF" />
+      <Rectangle translation="[56, 86]" width="1808" height="1" color="0x162032FF" />
 
-      <!-- Hero 2:3 Portrait Theatrical Poster Card (x=56, y=118, w=176, h=260) -->
-      <Rectangle id="cinemaHeroPosterFrame" translation="[52, 114]" width="184" height="268" color="0xE8A33DFF" />
-      <Rectangle id="cinemaHeroPosterFallbackBg" translation="[56, 118]" width="176" height="260" color="0x241D16FF" />
-      <Rectangle id="cinemaHeroPosterTopBar" translation="[56, 118]" width="176" height="26" color="0xE8A33DFF" />
-      <Label id="cinemaHeroPosterRibbon" translation="[62, 123]" scale="[0.42, 0.42]" width="390" height="20" numLines="1" color="0x110E0BFF" text="ROBOS CINEMA" />
-      <Label id="cinemaHeroPosterMonogram" translation="[56, 192]" scale="[1.35, 1.35]" width="130" height="56" numLines="1" horizAlign="center" color="0xFCD34DFF" text="RC" />
-      <Label id="cinemaHeroPosterFallbackTitle" translation="[62, 276]" scale="[0.46, 0.46]" width="356" height="48" numLines="2" horizAlign="center" color="0xF8FAFCFF" text="RobOS Cinema" />
-      <Label id="cinemaHeroPosterFallbackYear" translation="[62, 344]" scale="[0.44, 0.44]" width="356" height="24" numLines="1" horizAlign="center" color="0xE8A33DFF" text="1080p HD" />
-      <Poster id="cinemaLibPoster" translation="[56, 118]" width="176" height="260" loadWidth="352" loadHeight="520" loadDisplayMode="scaleToZoom" />
-      <Rectangle id="cinemaHeroProgTrack" translation="[56, 370]" width="176" height="8" color="0x090807FF" visible="false" />
-      <Rectangle id="cinemaHeroProgFill" translation="[56, 370]" width="0" height="8" color="0xE8A33DFF" visible="false" />
+      <!-- Clean 2:3 Spotlight Poster (x=76, y=102, w=152, h=226) -->
+      <Rectangle id="cinemaHeroPosterFallbackBg" translation="[76, 102]" width="152" height="226" color="0x131D31FF" />
+      <Label id="cinemaHeroPosterMonogram" translation="[76, 192]" scale="[1.10, 1.10]" width="138" height="48" numLines="1" horizAlign="center" color="0x7DD3FCFF" text="R" />
+      <Poster id="cinemaLibPoster" translation="[76, 102]" width="152" height="226" loadWidth="304" loadHeight="452" loadDisplayMode="scaleToZoom" />
+      <Rectangle id="cinemaHeroProgTrack" translation="[76, 322]" width="152" height="6" color="0x0F172AFF" visible="false" />
+      <Rectangle id="cinemaHeroProgFill" translation="[76, 322]" width="0" height="6" color="0x38BDF8FF" visible="false" />
 
-      <!-- Hero Spotlight Details (x=256, y=116) -->
-      <Rectangle id="cinemaSpotlightPillBg" translation="[256, 116]" width="156" height="26" color="0xE8A33DFF" />
-      <Label id="cinemaSpotlightPillText" translation="[266, 120]" scale="[0.45, 0.45]" width="300" height="22" numLines="1" color="0x110E0BFF" text="FEATURE FILM" />
-      <Label id="cinemaHeroEyebrow" translation="[424, 119]" scale="[0.50, 0.50]" width="1920" height="26" numLines="1" color="0xFCD34DFF" text="ROBOS CINEMA+  |  DIRECT LAN STREAM" />
+      <!-- Clean Cinematic Spotlight Typography (x=254) -->
+      <Label id="cinemaHeroEyebrow" translation="[254, 104]" scale="[0.46, 0.46]" width="2400" height="24" numLines="1" color="0x38BDF8FF" text="FEATURE FILM" />
+      <Label id="cinemaLibDetailTitle" translation="[254, 132]" scale="[0.90, 0.90]" width="1240" height="46" numLines="1" color="0xFFFFFFFF" text="Select a Title" />
+      <Label id="cinemaLibDetailMeta" translation="[254, 184]" scale="[0.50, 0.50]" width="2200" height="26" numLines="1" color="0xCBD5E1FF" text="" />
+      <Label id="cinemaHeroSynopsis" translation="[254, 218]" scale="[0.49, 0.49]" width="2260" height="68" wrap="true" numLines="2" color="0x94A3B8FF" text="" />
+      <Label id="cinemaLibDetailSub" translation="[254, 296]" scale="[0.46, 0.46]" width="2400" height="24" numLines="1" color="0x7DD3FCFF" text="" />
 
-      <Label id="cinemaLibDetailTitle" translation="[256, 146]" scale="[0.86, 0.86]" width="1310" height="42" numLines="1" color="0xFFFFFFFF" text="Select a Title" />
-
-      <!-- 5 Metadata Badges Row (Year/Season, Star Rating/Episodes, Quality/Network, Genre, Watch Status) -->
-      <Rectangle translation="[256, 194]" width="136" height="32" color="0x261F18FF" />
-      <Rectangle translation="[256, 194]" width="4" height="32" color="0xE8A33DFF" />
-      <Label id="cinemaBadgeYear" translation="[268, 200]" scale="[0.50, 0.50]" width="240" height="26" numLines="1" color="0xFCD34DFF" text="2024" />
-
-      <Rectangle translation="[402, 194]" width="150" height="32" color="0x2B2112FF" />
-      <Rectangle translation="[402, 194]" width="4" height="32" color="0xF59E0BFF" />
-      <Label id="cinemaBadgeRating" translation="[414, 200]" scale="[0.50, 0.50]" width="260" height="26" numLines="1" color="0xFDE68AFF" text="* 8.5 / 10" />
-
-      <Rectangle translation="[562, 194]" width="218" height="32" color="0x152536FF" />
-      <Rectangle translation="[562, 194]" width="4" height="32" color="0x38BDF8FF" />
-      <Label id="cinemaBadgeQuality" translation="[574, 200]" scale="[0.50, 0.50]" width="400" height="26" numLines="1" color="0x67E8F9FF" text="1080p HD | BluRay" />
-
-      <Rectangle translation="[790, 194]" width="300" height="32" color="0x241B2FFF" />
-      <Rectangle translation="[790, 194]" width="4" height="32" color="0xA855F7FF" />
-      <Label id="cinemaBadgeGenre" translation="[802, 200]" scale="[0.50, 0.50]" width="560" height="26" numLines="1" color="0xD8B4FEFF" text="Sci-Fi &amp; Fantasy" />
-
-      <Rectangle id="cinemaBadgeFormatBg" translation="[1100, 194]" width="284" height="32" color="0x11281EFF" />
-      <Rectangle id="cinemaBadgeFormatStripe" translation="[1100, 194]" width="4" height="32" color="0x22C55EFF" />
-      <Label id="cinemaBadgeFormat" translation="[1112, 200]" scale="[0.50, 0.50]" width="520" height="26" numLines="1" color="0x86EFACFF" text="DIRECT PLAY" />
-
-      <!-- Credits / Network / Season Breakdown + Multi-Line Plot Synopsis -->
-      <Label id="cinemaLibDetailMeta" translation="[256, 234]" scale="[0.52, 0.52]" width="2160" height="28" numLines="1" color="0xF1E9DCFF" text="Director &amp; Cast  |  RobOS Cinema+" />
-      <Label id="cinemaHeroSynopsis" translation="[256, 262]" scale="[0.49, 0.49]" width="2280" height="68" wrap="true" numLines="2" color="0xD6CFC2FF" text="Full HD home theater playback with real public metadata, chapter resume, and Roku hardware decoding." />
-      <Label id="cinemaLibDetailSub" translation="[256, 316]" scale="[0.46, 0.46]" width="2420" height="24" numLines="1" color="0x9C9284FF" text="Zero-Cloud LAN Direct Stream (HTTP 206 Byte-Range)" />
-
-      <!-- Hero Action Banner -->
-      <Rectangle id="cinemaPlayBtnBg" translation="[256, 344]" width="520" height="38" color="0xE8A33DFF" />
-      <Label id="cinemaLibPlayPrompt" translation="[274, 352]" scale="[0.54, 0.54]" width="900" height="28" numLines="1" color="0x110E0BFF" text="&gt;&gt;  WATCH NOW (PRESS OK)" />
-      <Rectangle translation="[790, 344]" width="594" height="38" color="0x221C16FF" />
-      <Rectangle translation="[790, 344]" width="4" height="38" color="0x38BDF8FF" />
-      <Label id="cinemaHeroNavHint" translation="[806, 353]" scale="[0.44, 0.44]" width="1300" height="24" numLines="1" color="0x67E8F9FF" text="[UP] CATEGORIES &amp; TABS  |  [LEFT/RIGHT] BROWSE  |  [OK] PLAY" />
-
-      <!-- 16:9 Acquired Tablo Recording Thumbnail Preview Frame (x=1400, y=112, w=472, h=268) -->
+      <!-- Optional 16:9 Tablo Recording Broadcast Frame Preview (x=1404, y=100, w=444, h=230) -->
       <Group id="cinemaHeroThumbGroup" visible="false">
-        <Rectangle id="cinemaHeroThumbBorder" translation="[1400, 112]" width="472" height="268" color="0x00BCD4FF" />
-        <Rectangle translation="[1404, 116]" width="464" height="260" color="0x090D16FF" />
-        <Label translation="[1404, 224]" scale="[0.58, 0.58]" width="800" height="30" numLines="1" horizAlign="center" color="0x38BDF8FF" text="TABLO DVR RECORDING THUMBNAIL" />
-        <Poster id="cinemaHeroThumbPoster" translation="[1404, 116]" width="464" height="260" loadWidth="640" loadHeight="360" loadDisplayMode="scaleToZoom" />
-        <Rectangle translation="[1404, 344]" width="464" height="32" color="0x090D16D8" />
-        <Label id="cinemaHeroThumbCaption" translation="[1414, 350]" scale="[0.43, 0.43]" width="1040" height="22" numLines="1" color="0x67E8F9FF" text="TABLO RECORDING THUMBNAIL" />
+        <Rectangle translation="[1404, 100]" width="444" height="230" color="0x0F172AFF" />
+        <Poster id="cinemaHeroThumbPoster" translation="[1406, 102]" width="440" height="226" loadWidth="640" loadHeight="360" loadDisplayMode="scaleToZoom" />
+        <Rectangle translation="[1406, 298]" width="440" height="30" color="0x070B14D8" />
+        <Label id="cinemaHeroThumbCaption" translation="[1418, 304]" scale="[0.42, 0.42]" width="1000" height="22" numLines="1" color="0xBAE6FDFF" text="" />
       </Group>
 
-      <!-- ============================================================================== -->
-      <!-- ROW 1 (MIDDLE SHELF, y=402..546): 6 VISUAL CATEGORY / SEASON IMAGE CARDS       -->
-      <!-- Every category or season is a visual card with a real 2:3 Poster thumbnail!    -->
-      <!-- D-Pad LEFT/RIGHT filters live; D-Pad UP goes to Row 0 Tabs; DOWN goes to Row 2 -->
-      <!-- ============================================================================== -->
-      <Rectangle id="cinemaCatPaneBg" translation="[36, 402]" width="1848" height="144" color="0x17130FFF" />
-      <Rectangle id="cinemaCatFocusStripe" translation="[36, 402]" width="1848" height="4" color="0x2E261EFF" />
-      <Label id="cinemaCatHeaderLabel" translation="[54, 410]" scale="[0.52, 0.52]" width="2200" height="26" numLines="1" color="0xE8A33DFF" text="ROW 2  |  MOVIE CATEGORIES ([LEFT/RIGHT] FILTER  |  [UP] MOVIES/SHOWS TABS  |  [DOWN] POSTERS)" />
-      <Label id="cinemaCatSubHint" translation="[1320, 410]" scale="[0.48, 0.48]" width="1120" height="26" numLines="1" horizAlign="right" color="0xA89F91FF" text="Category 1 of 12" />
-
+      <!-- Sleek Horizontal Filter / Season Pill Strip (y=360..408, 6 clean borderless pills) -->
       <Group id="cinemaCatCardsRow">
-        <!-- Category / Season Image Card 0 (x=50, y=440, w=292, h=96) -->
-        <Rectangle id="cinemaCatCardBorder0" translation="[50, 440]" width="292" height="96" color="0xE8A33DFF" />
-        <Rectangle id="cinemaCatCardBg0" translation="[54, 444]" width="284" height="88" color="0x261F18FF" />
-        <Rectangle id="cinemaCatCardActiveBar0" translation="[50, 531]" width="292" height="5" color="0xE8A33DFF" />
-        <Rectangle id="cinemaCatCardArtBg0" translation="[62, 448]" width="54" height="80" color="0x3B2314FF" />
-        <Label id="cinemaCatCardMono0" translation="[62, 476]" scale="[0.58, 0.58]" width="92" height="26" numLines="1" horizAlign="center" color="0xFCD34DFF" text="ALL" />
-        <Poster id="cinemaCatCardPoster0" translation="[62, 448]" width="54" height="80" loadWidth="108" loadHeight="160" loadDisplayMode="scaleToZoom" />
-        <Label id="cinemaCatCardTag0" translation="[126, 450]" scale="[0.40, 0.40]" width="500" height="20" numLines="1" color="0x67E8F9FF" text="COLLECTION" />
-        <Label id="cinemaCatCardTitle0" translation="[126, 470]" scale="[0.50, 0.50]" width="410" height="36" wrap="true" numLines="2" color="0xF8FAFCFF" text="All Movies" />
-        <Label id="cinemaCatCardCount0" translation="[126, 508]" scale="[0.44, 0.44]" width="450" height="22" numLines="1" color="0xFCD34DFF" text="107 Films" />
+        <Rectangle id="cinemaCatCardBorder0" translation="[56, 360]" width="288" height="46" color="0x172554FF" />
+        <Rectangle id="cinemaCatCardBg0" translation="[58, 362]" width="284" height="42" color="0x172554FF" />
+        <Label id="cinemaCatCardTitle0" translation="[66, 372]" scale="[0.47, 0.47]" width="570" height="26" numLines="1" horizAlign="center" color="0x7DD3FCFF" text="All Movies" />
 
-        <!-- Category / Season Image Card 1 (x=354, y=440, w=292, h=96) -->
-        <Rectangle id="cinemaCatCardBorder1" translation="[354, 440]" width="292" height="96" color="0x2E261EFF" />
-        <Rectangle id="cinemaCatCardBg1" translation="[358, 444]" width="284" height="88" color="0x1D1813FF" />
-        <Rectangle id="cinemaCatCardActiveBar1" translation="[354, 531]" width="292" height="5" color="0x2E261EFF" />
-        <Rectangle id="cinemaCatCardArtBg1" translation="[366, 448]" width="54" height="80" color="0x172554FF" />
-        <Label id="cinemaCatCardMono1" translation="[366, 476]" scale="[0.58, 0.58]" width="92" height="26" numLines="1" horizAlign="center" color="0x67E8F9FF" text="GO" />
-        <Poster id="cinemaCatCardPoster1" translation="[366, 448]" width="54" height="80" loadWidth="108" loadHeight="160" loadDisplayMode="scaleToZoom" />
-        <Label id="cinemaCatCardTag1" translation="[430, 450]" scale="[0.40, 0.40]" width="500" height="20" numLines="1" color="0x67E8F9FF" text="WATCHLIST" />
-        <Label id="cinemaCatCardTitle1" translation="[430, 470]" scale="[0.50, 0.50]" width="410" height="36" wrap="true" numLines="2" color="0xF8FAFCFF" text="Continue Watching" />
-        <Label id="cinemaCatCardCount1" translation="[430, 508]" scale="[0.44, 0.44]" width="450" height="22" numLines="1" color="0xA89F91FF" text="In Progress" />
+        <Rectangle id="cinemaCatCardBorder1" translation="[360, 360]" width="288" height="46" color="0x0D1526FF" />
+        <Rectangle id="cinemaCatCardBg1" translation="[362, 362]" width="284" height="42" color="0x0D1526FF" />
+        <Label id="cinemaCatCardTitle1" translation="[370, 372]" scale="[0.47, 0.47]" width="570" height="26" numLines="1" horizAlign="center" color="0x94A3B8FF" text="Continue Watching" />
 
-        <!-- Category / Season Image Card 2 (x=658, y=440, w=292, h=96) -->
-        <Rectangle id="cinemaCatCardBorder2" translation="[658, 440]" width="292" height="96" color="0x2E261EFF" />
-        <Rectangle id="cinemaCatCardBg2" translation="[662, 444]" width="284" height="88" color="0x1D1813FF" />
-        <Rectangle id="cinemaCatCardActiveBar2" translation="[658, 531]" width="292" height="5" color="0x2E261EFF" />
-        <Rectangle id="cinemaCatCardArtBg2" translation="[670, 448]" width="54" height="80" color="0x31102FFF" />
-        <Label id="cinemaCatCardMono2" translation="[670, 476]" scale="[0.58, 0.58]" width="92" height="26" numLines="1" horizAlign="center" color="0xD8B4FEFF" text="BOX" />
-        <Poster id="cinemaCatCardPoster2" translation="[670, 448]" width="54" height="80" loadWidth="108" loadHeight="160" loadDisplayMode="scaleToZoom" />
-        <Label id="cinemaCatCardTag2" translation="[734, 450]" scale="[0.40, 0.40]" width="500" height="20" numLines="1" color="0x67E8F9FF" text="BOX SETS" />
-        <Label id="cinemaCatCardTitle2" translation="[734, 470]" scale="[0.50, 0.50]" width="410" height="36" wrap="true" numLines="2" color="0xF8FAFCFF" text="Franchises" />
-        <Label id="cinemaCatCardCount2" translation="[734, 508]" scale="[0.44, 0.44]" width="450" height="22" numLines="1" color="0xA89F91FF" text="Collections" />
+        <Rectangle id="cinemaCatCardBorder2" translation="[664, 360]" width="288" height="46" color="0x0D1526FF" />
+        <Rectangle id="cinemaCatCardBg2" translation="[666, 362]" width="284" height="42" color="0x0D1526FF" />
+        <Label id="cinemaCatCardTitle2" translation="[674, 372]" scale="[0.47, 0.47]" width="570" height="26" numLines="1" horizAlign="center" color="0x94A3B8FF" text="Franchises" />
 
-        <!-- Category / Season Image Card 3 (x=962, y=440, w=292, h=96) -->
-        <Rectangle id="cinemaCatCardBorder3" translation="[962, 440]" width="292" height="96" color="0x2E261EFF" />
-        <Rectangle id="cinemaCatCardBg3" translation="[966, 444]" width="284" height="88" color="0x1D1813FF" />
-        <Rectangle id="cinemaCatCardActiveBar3" translation="[962, 531]" width="292" height="5" color="0x2E261EFF" />
-        <Rectangle id="cinemaCatCardArtBg3" translation="[974, 448]" width="54" height="80" color="0x1E293BFF" />
-        <Label id="cinemaCatCardMono3" translation="[974, 476]" scale="[0.58, 0.58]" width="92" height="26" numLines="1" horizAlign="center" color="0x67E8F9FF" text="SCI" />
-        <Poster id="cinemaCatCardPoster3" translation="[974, 448]" width="54" height="80" loadWidth="108" loadHeight="160" loadDisplayMode="scaleToZoom" />
-        <Label id="cinemaCatCardTag3" translation="[1038, 450]" scale="[0.40, 0.40]" width="500" height="20" numLines="1" color="0x67E8F9FF" text="GENRE" />
-        <Label id="cinemaCatCardTitle3" translation="[1038, 470]" scale="[0.50, 0.50]" width="410" height="36" wrap="true" numLines="2" color="0xF8FAFCFF" text="Sci-Fi &amp; Fantasy" />
-        <Label id="cinemaCatCardCount3" translation="[1038, 508]" scale="[0.44, 0.44]" width="450" height="22" numLines="1" color="0xA89F91FF" text="Films" />
+        <Rectangle id="cinemaCatCardBorder3" translation="[968, 360]" width="288" height="46" color="0x0D1526FF" />
+        <Rectangle id="cinemaCatCardBg3" translation="[970, 362]" width="284" height="42" color="0x0D1526FF" />
+        <Label id="cinemaCatCardTitle3" translation="[978, 372]" scale="[0.47, 0.47]" width="570" height="26" numLines="1" horizAlign="center" color="0x94A3B8FF" text="Sci-Fi &amp; Fantasy" />
 
-        <!-- Category / Season Image Card 4 (x=1266, y=440, w=292, h=96) -->
-        <Rectangle id="cinemaCatCardBorder4" translation="[1266, 440]" width="292" height="96" color="0x2E261EFF" />
-        <Rectangle id="cinemaCatCardBg4" translation="[1270, 444]" width="284" height="88" color="0x1D1813FF" />
-        <Rectangle id="cinemaCatCardActiveBar4" translation="[1266, 531]" width="292" height="5" color="0x2E261EFF" />
-        <Rectangle id="cinemaCatCardArtBg4" translation="[1278, 448]" width="54" height="80" color="0x431407FF" />
-        <Label id="cinemaCatCardMono4" translation="[1278, 476]" scale="[0.58, 0.58]" width="92" height="26" numLines="1" horizAlign="center" color="0xFCD34DFF" text="ACT" />
-        <Poster id="cinemaCatCardPoster4" translation="[1278, 448]" width="54" height="80" loadWidth="108" loadHeight="160" loadDisplayMode="scaleToZoom" />
-        <Label id="cinemaCatCardTag4" translation="[1342, 450]" scale="[0.40, 0.40]" width="500" height="20" numLines="1" color="0x67E8F9FF" text="GENRE" />
-        <Label id="cinemaCatCardTitle4" translation="[1342, 470]" scale="[0.50, 0.50]" width="410" height="36" wrap="true" numLines="2" color="0xF8FAFCFF" text="Action &amp; Adventure" />
-        <Label id="cinemaCatCardCount4" translation="[1342, 508]" scale="[0.44, 0.44]" width="450" height="22" numLines="1" color="0xA89F91FF" text="Films" />
+        <Rectangle id="cinemaCatCardBorder4" translation="[1272, 360]" width="288" height="46" color="0x0D1526FF" />
+        <Rectangle id="cinemaCatCardBg4" translation="[1274, 362]" width="284" height="42" color="0x0D1526FF" />
+        <Label id="cinemaCatCardTitle4" translation="[1282, 372]" scale="[0.47, 0.47]" width="570" height="26" numLines="1" horizAlign="center" color="0x94A3B8FF" text="Action" />
 
-        <!-- Category / Season Image Card 5 (x=1570, y=440, w=292, h=96) -->
-        <Rectangle id="cinemaCatCardBorder5" translation="[1570, 440]" width="292" height="96" color="0x2E261EFF" />
-        <Rectangle id="cinemaCatCardBg5" translation="[1574, 444]" width="284" height="88" color="0x1D1813FF" />
-        <Rectangle id="cinemaCatCardActiveBar5" translation="[1570, 531]" width="292" height="5" color="0x2E261EFF" />
-        <Rectangle id="cinemaCatCardArtBg5" translation="[1582, 448]" width="54" height="80" color="0x450A0AFF" />
-        <Label id="cinemaCatCardMono5" translation="[1582, 476]" scale="[0.58, 0.58]" width="92" height="26" numLines="1" horizAlign="center" color="0xFCA5A5FF" text="HOR" />
-        <Poster id="cinemaCatCardPoster5" translation="[1582, 448]" width="54" height="80" loadWidth="108" loadHeight="160" loadDisplayMode="scaleToZoom" />
-        <Label id="cinemaCatCardTag5" translation="[1646, 450]" scale="[0.40, 0.40]" width="500" height="20" numLines="1" color="0x67E8F9FF" text="GENRE" />
-        <Label id="cinemaCatCardTitle5" translation="[1646, 470]" scale="[0.50, 0.50]" width="410" height="36" wrap="true" numLines="2" color="0xF8FAFCFF" text="Horror" />
-        <Label id="cinemaCatCardCount5" translation="[1646, 508]" scale="[0.44, 0.44]" width="450" height="22" numLines="1" color="0xA89F91FF" text="Films" />
+        <Rectangle id="cinemaCatCardBorder5" translation="[1576, 360]" width="288" height="46" color="0x0D1526FF" />
+        <Rectangle id="cinemaCatCardBg5" translation="[1578, 362]" width="284" height="42" color="0x0D1526FF" />
+        <Label id="cinemaCatCardTitle5" translation="[1586, 372]" scale="[0.47, 0.47]" width="570" height="26" numLines="1" horizAlign="center" color="0x94A3B8FF" text="Comedy" />
       </Group>
 
-      <!-- ============================================================================== -->
-      <!-- ROW 2 (MAIN POSTER GALLERY, y=556..1016): 6 LARGE 2:3 PORTRAIT POSTER CARDS    -->
-      <!-- D-Pad LEFT/RIGHT moves across posters; DOWN pages +6; UP goes to Categories!   -->
-      <!-- ============================================================================== -->
-      <Rectangle id="cinemaListPaneBg" translation="[36, 556]" width="1848" height="460" color="0x17130FFF" />
-      <Rectangle id="cinemaListFocusStripe" translation="[36, 556]" width="1848" height="4" color="0xE8A33DFF" />
-      <Label id="cinemaShelfTitleLabel" translation="[54, 564]" scale="[0.54, 0.54]" width="2300" height="28" numLines="1" color="0xFCD34DFF" text="ROW 3  |  POSTER GALLERY ([LEFT/RIGHT] BROWSE POSTERS  |  [DOWN] NEXT 6  |  [OK] WATCH  |  [UP] CATEGORIES &amp; TABS)" />
-      <Label id="cinemaShelfPosLabel" translation="[1320, 564]" scale="[0.50, 0.50]" width="1080" height="28" numLines="1" horizAlign="right" color="0xA89F91FF" text="Movie 1 of 107" />
+      <!-- Quiet Section Header Above Poster Row (y=422..452) -->
+      <Label id="cinemaShelfTitleLabel" translation="[58, 422]" scale="[0.52, 0.52]" width="1600" height="28" numLines="1" color="0xE2E8F0FF" text="All Movies" />
+      <Label id="cinemaShelfPosLabel" translation="[1260, 424]" scale="[0.46, 0.46]" width="1300" height="24" numLines="1" horizAlign="right" color="0x64748BFF" text="1 of 120" />
 
+      <!-- Spacious, Clean 6-Column Poster Row (x=56 + slot*304, y=456, w=288, h=512; poster 276x406) -->
       <Group id="cinemaPosterShelf">
-        <!-- Poster Card 0 (x=50, y=596, w=292, h=408) -->
-        <Rectangle id="cinemaCardBorder0" translation="[50, 596]" width="292" height="408" color="0xE8A33DFF" />
-        <Rectangle id="cinemaCardBg0" translation="[54, 600]" width="284" height="400" color="0x1E1914FF" />
-        <Rectangle id="cinemaCardArtBg0" translation="[62, 608]" width="268" height="304" color="0x2D1B36FF" />
-        <Label id="cinemaCardMono0" translation="[62, 736]" scale="[1.40, 1.40]" width="190" height="54" numLines="1" horizAlign="center" color="0xFCD34DFF" text="M1" />
-        <Poster id="cinemaCardPoster0" translation="[62, 608]" width="268" height="304" loadWidth="360" loadHeight="480" loadDisplayMode="scaleToZoom" />
-        <Rectangle id="cinemaCardPillBg0" translation="[196, 616]" width="126" height="26" color="0x110E0BE6" />
-        <Label id="cinemaCardBadge0" translation="[200, 621]" scale="[0.42, 0.42]" width="280" height="20" numLines="1" horizAlign="center" color="0xFCD34DFF" text="2024 | * 8.4" />
-        <Rectangle id="cinemaCardProgTrack0" translation="[62, 906]" width="268" height="6" color="0x090807FF" visible="false" />
-        <Rectangle id="cinemaCardProgFill0" translation="[62, 906]" width="0" height="6" color="0xE8A33DFF" visible="false" />
-        <Label id="cinemaCardTitle0" translation="[64, 920]" scale="[0.49, 0.49]" width="540" height="28" numLines="1" color="0xF8FAFCFF" text="Movie 1" />
-        <Label id="cinemaCardGenre0" translation="[64, 946]" scale="[0.42, 0.42]" width="620" height="22" numLines="1" color="0x67E8F9FF" text="Sci-Fi &amp; Fantasy" />
-        <Label id="cinemaCardState0" translation="[64, 970]" scale="[0.43, 0.43]" width="610" height="22" numLines="1" color="0x86EFACFF" text="&gt;&gt; PRESS OK TO WATCH" />
+        <Rectangle id="cinemaCardBorder0" translation="[56, 456]" width="288" height="512" color="0xFFFFFFFF" />
+        <Rectangle id="cinemaCardBg0" translation="[59, 459]" width="282" height="506" color="0x131E33FF" />
+        <Rectangle id="cinemaCardArtBg0" translation="[62, 462]" width="276" height="406" color="0x0F172AFF" />
+        <Label id="cinemaCardMono0" translation="[62, 640]" scale="[1.25, 1.25]" width="220" height="54" numLines="1" horizAlign="center" color="0x475569FF" text="M1" />
+        <Poster id="cinemaCardPoster0" translation="[62, 462]" width="276" height="406" loadWidth="360" loadHeight="530" loadDisplayMode="scaleToZoom" />
+        <Rectangle id="cinemaCardPillBg0" translation="[214, 472]" width="114" height="26" color="0x070B14D8" />
+        <Label id="cinemaCardBadge0" translation="[218, 477]" scale="[0.41, 0.41]" width="260" height="20" numLines="1" horizAlign="center" color="0xE2E8F0FF" text="2024" />
+        <Rectangle id="cinemaCardProgTrack0" translation="[62, 862]" width="276" height="6" color="0x090D16FF" visible="false" />
+        <Rectangle id="cinemaCardProgFill0" translation="[62, 862]" width="0" height="6" color="0x38BDF8FF" visible="false" />
+        <Label id="cinemaCardTitle0" translation="[68, 880]" scale="[0.49, 0.49]" width="540" height="28" numLines="1" color="0xFFFFFFFF" text="" />
+        <Label id="cinemaCardGenre0" translation="[68, 908]" scale="[0.42, 0.42]" width="620" height="22" numLines="1" color="0x94A3B8FF" text="" />
+        <Label id="cinemaCardState0" translation="[68, 934]" scale="[0.42, 0.42]" width="620" height="22" numLines="1" color="0x7DD3FCFF" text="" />
 
-        <!-- Poster Card 1 (x=354, y=596, w=292, h=408) -->
-        <Rectangle id="cinemaCardBorder1" translation="[354, 596]" width="292" height="408" color="0x2E261EFF" />
-        <Rectangle id="cinemaCardBg1" translation="[358, 600]" width="284" height="400" color="0x1E1914FF" />
-        <Rectangle id="cinemaCardArtBg1" translation="[366, 608]" width="268" height="304" color="0x1E293BFF" />
-        <Label id="cinemaCardMono1" translation="[366, 736]" scale="[1.40, 1.40]" width="190" height="54" numLines="1" horizAlign="center" color="0xFCD34DFF" text="M2" />
-        <Poster id="cinemaCardPoster1" translation="[366, 608]" width="268" height="304" loadWidth="360" loadHeight="480" loadDisplayMode="scaleToZoom" />
-        <Rectangle id="cinemaCardPillBg1" translation="[500, 616]" width="126" height="26" color="0x110E0BE6" />
-        <Label id="cinemaCardBadge1" translation="[504, 621]" scale="[0.42, 0.42]" width="280" height="20" numLines="1" horizAlign="center" color="0xFCD34DFF" text="2024 | * 8.4" />
-        <Rectangle id="cinemaCardProgTrack1" translation="[366, 906]" width="268" height="6" color="0x090807FF" visible="false" />
-        <Rectangle id="cinemaCardProgFill1" translation="[366, 906]" width="0" height="6" color="0xE8A33DFF" visible="false" />
-        <Label id="cinemaCardTitle1" translation="[368, 920]" scale="[0.49, 0.49]" width="540" height="28" numLines="1" color="0xF8FAFCFF" text="Movie 2" />
-        <Label id="cinemaCardGenre1" translation="[368, 946]" scale="[0.42, 0.42]" width="620" height="22" numLines="1" color="0x67E8F9FF" text="Action &amp; Adventure" />
-        <Label id="cinemaCardState1" translation="[368, 970]" scale="[0.43, 0.43]" width="610" height="22" numLines="1" color="0xA89F91FF" text="#2 - Direct Play" />
+        <Rectangle id="cinemaCardBorder1" translation="[360, 456]" width="288" height="512" color="0x0D1422FF" />
+        <Rectangle id="cinemaCardBg1" translation="[363, 459]" width="282" height="506" color="0x0D1422FF" />
+        <Rectangle id="cinemaCardArtBg1" translation="[366, 462]" width="276" height="406" color="0x0F172AFF" />
+        <Label id="cinemaCardMono1" translation="[366, 640]" scale="[1.25, 1.25]" width="220" height="54" numLines="1" horizAlign="center" color="0x475569FF" text="M2" />
+        <Poster id="cinemaCardPoster1" translation="[366, 462]" width="276" height="406" loadWidth="360" loadHeight="530" loadDisplayMode="scaleToZoom" />
+        <Rectangle id="cinemaCardPillBg1" translation="[518, 472]" width="114" height="26" color="0x070B14D8" />
+        <Label id="cinemaCardBadge1" translation="[522, 477]" scale="[0.41, 0.41]" width="260" height="20" numLines="1" horizAlign="center" color="0xE2E8F0FF" text="2024" />
+        <Rectangle id="cinemaCardProgTrack1" translation="[366, 862]" width="276" height="6" color="0x090D16FF" visible="false" />
+        <Rectangle id="cinemaCardProgFill1" translation="[366, 862]" width="0" height="6" color="0x38BDF8FF" visible="false" />
+        <Label id="cinemaCardTitle1" translation="[372, 880]" scale="[0.49, 0.49]" width="540" height="28" numLines="1" color="0xE2E8F0FF" text="" />
+        <Label id="cinemaCardGenre1" translation="[372, 908]" scale="[0.42, 0.42]" width="620" height="22" numLines="1" color="0x64748BFF" text="" />
+        <Label id="cinemaCardState1" translation="[372, 934]" scale="[0.42, 0.42]" width="620" height="22" numLines="1" color="0x64748BFF" text="" />
 
-        <!-- Poster Card 2 (x=658, y=596, w=292, h=408) -->
-        <Rectangle id="cinemaCardBorder2" translation="[658, 596]" width="292" height="408" color="0x2E261EFF" />
-        <Rectangle id="cinemaCardBg2" translation="[662, 600]" width="284" height="400" color="0x1E1914FF" />
-        <Rectangle id="cinemaCardArtBg2" translation="[670, 608]" width="268" height="304" color="0x31102FFF" />
-        <Label id="cinemaCardMono2" translation="[670, 736]" scale="[1.40, 1.40]" width="190" height="54" numLines="1" horizAlign="center" color="0xFCD34DFF" text="M3" />
-        <Poster id="cinemaCardPoster2" translation="[670, 608]" width="268" height="304" loadWidth="360" loadHeight="480" loadDisplayMode="scaleToZoom" />
-        <Rectangle id="cinemaCardPillBg2" translation="[804, 616]" width="126" height="26" color="0x110E0BE6" />
-        <Label id="cinemaCardBadge2" translation="[808, 621]" scale="[0.42, 0.42]" width="280" height="20" numLines="1" horizAlign="center" color="0xFCD34DFF" text="2024 | * 8.4" />
-        <Rectangle id="cinemaCardProgTrack2" translation="[670, 906]" width="268" height="6" color="0x090807FF" visible="false" />
-        <Rectangle id="cinemaCardProgFill2" translation="[670, 906]" width="0" height="6" color="0xE8A33DFF" visible="false" />
-        <Label id="cinemaCardTitle2" translation="[672, 920]" scale="[0.49, 0.49]" width="540" height="28" numLines="1" color="0xF8FAFCFF" text="Movie 3" />
-        <Label id="cinemaCardGenre2" translation="[672, 946]" scale="[0.42, 0.42]" width="620" height="22" numLines="1" color="0x67E8F9FF" text="Drama" />
-        <Label id="cinemaCardState2" translation="[672, 970]" scale="[0.43, 0.43]" width="610" height="22" numLines="1" color="0xA89F91FF" text="#3 - Direct Play" />
+        <Rectangle id="cinemaCardBorder2" translation="[664, 456]" width="288" height="512" color="0x0D1422FF" />
+        <Rectangle id="cinemaCardBg2" translation="[667, 459]" width="282" height="506" color="0x0D1422FF" />
+        <Rectangle id="cinemaCardArtBg2" translation="[670, 462]" width="276" height="406" color="0x0F172AFF" />
+        <Label id="cinemaCardMono2" translation="[670, 640]" scale="[1.25, 1.25]" width="220" height="54" numLines="1" horizAlign="center" color="0x475569FF" text="M3" />
+        <Poster id="cinemaCardPoster2" translation="[670, 462]" width="276" height="406" loadWidth="360" loadHeight="530" loadDisplayMode="scaleToZoom" />
+        <Rectangle id="cinemaCardPillBg2" translation="[822, 472]" width="114" height="26" color="0x070B14D8" />
+        <Label id="cinemaCardBadge2" translation="[826, 477]" scale="[0.41, 0.41]" width="260" height="20" numLines="1" horizAlign="center" color="0xE2E8F0FF" text="2024" />
+        <Rectangle id="cinemaCardProgTrack2" translation="[670, 862]" width="276" height="6" color="0x090D16FF" visible="false" />
+        <Rectangle id="cinemaCardProgFill2" translation="[670, 862]" width="0" height="6" color="0x38BDF8FF" visible="false" />
+        <Label id="cinemaCardTitle2" translation="[676, 880]" scale="[0.49, 0.49]" width="540" height="28" numLines="1" color="0xE2E8F0FF" text="" />
+        <Label id="cinemaCardGenre2" translation="[676, 908]" scale="[0.42, 0.42]" width="620" height="22" numLines="1" color="0x64748BFF" text="" />
+        <Label id="cinemaCardState2" translation="[676, 934]" scale="[0.42, 0.42]" width="620" height="22" numLines="1" color="0x64748BFF" text="" />
 
-        <!-- Poster Card 3 (x=962, y=596, w=292, h=408) -->
-        <Rectangle id="cinemaCardBorder3" translation="[962, 596]" width="292" height="408" color="0x2E261EFF" />
-        <Rectangle id="cinemaCardBg3" translation="[966, 600]" width="284" height="400" color="0x1E1914FF" />
-        <Rectangle id="cinemaCardArtBg3" translation="[974, 608]" width="268" height="304" color="0x142E24FF" />
-        <Label id="cinemaCardMono3" translation="[974, 736]" scale="[1.40, 1.40]" width="190" height="54" numLines="1" horizAlign="center" color="0xFCD34DFF" text="M4" />
-        <Poster id="cinemaCardPoster3" translation="[974, 608]" width="268" height="304" loadWidth="360" loadHeight="480" loadDisplayMode="scaleToZoom" />
-        <Rectangle id="cinemaCardPillBg3" translation="[1108, 616]" width="126" height="26" color="0x110E0BE6" />
-        <Label id="cinemaCardBadge3" translation="[1112, 621]" scale="[0.42, 0.42]" width="280" height="20" numLines="1" horizAlign="center" color="0xFCD34DFF" text="2024 | * 8.4" />
-        <Rectangle id="cinemaCardProgTrack3" translation="[974, 906]" width="268" height="6" color="0x090807FF" visible="false" />
-        <Rectangle id="cinemaCardProgFill3" translation="[974, 906]" width="0" height="6" color="0xE8A33DFF" visible="false" />
-        <Label id="cinemaCardTitle3" translation="[976, 920]" scale="[0.49, 0.49]" width="540" height="28" numLines="1" color="0xF8FAFCFF" text="Movie 4" />
-        <Label id="cinemaCardGenre3" translation="[976, 946]" scale="[0.42, 0.42]" width="620" height="22" numLines="1" color="0x67E8F9FF" text="Adventure" />
-        <Label id="cinemaCardState3" translation="[976, 970]" scale="[0.43, 0.43]" width="610" height="22" numLines="1" color="0xA89F91FF" text="#4 - Direct Play" />
+        <Rectangle id="cinemaCardBorder3" translation="[968, 456]" width="288" height="512" color="0x0D1422FF" />
+        <Rectangle id="cinemaCardBg3" translation="[971, 459]" width="282" height="506" color="0x0D1422FF" />
+        <Rectangle id="cinemaCardArtBg3" translation="[974, 462]" width="276" height="406" color="0x0F172AFF" />
+        <Label id="cinemaCardMono3" translation="[974, 640]" scale="[1.25, 1.25]" width="220" height="54" numLines="1" horizAlign="center" color="0x475569FF" text="M4" />
+        <Poster id="cinemaCardPoster3" translation="[974, 462]" width="276" height="406" loadWidth="360" loadHeight="530" loadDisplayMode="scaleToZoom" />
+        <Rectangle id="cinemaCardPillBg3" translation="[1126, 472]" width="114" height="26" color="0x070B14D8" />
+        <Label id="cinemaCardBadge3" translation="[1130, 477]" scale="[0.41, 0.41]" width="260" height="20" numLines="1" horizAlign="center" color="0xE2E8F0FF" text="2024" />
+        <Rectangle id="cinemaCardProgTrack3" translation="[974, 862]" width="276" height="6" color="0x090D16FF" visible="false" />
+        <Rectangle id="cinemaCardProgFill3" translation="[974, 862]" width="0" height="6" color="0x38BDF8FF" visible="false" />
+        <Label id="cinemaCardTitle3" translation="[980, 880]" scale="[0.49, 0.49]" width="540" height="28" numLines="1" color="0xE2E8F0FF" text="" />
+        <Label id="cinemaCardGenre3" translation="[980, 908]" scale="[0.42, 0.42]" width="620" height="22" numLines="1" color="0x64748BFF" text="" />
+        <Label id="cinemaCardState3" translation="[980, 934]" scale="[0.42, 0.42]" width="620" height="22" numLines="1" color="0x64748BFF" text="" />
 
-        <!-- Poster Card 4 (x=1266, y=596, w=292, h=408) -->
-        <Rectangle id="cinemaCardBorder4" translation="[1266, 596]" width="292" height="408" color="0x2E261EFF" />
-        <Rectangle id="cinemaCardBg4" translation="[1270, 600]" width="284" height="400" color="0x1E1914FF" />
-        <Rectangle id="cinemaCardArtBg4" translation="[1278, 608]" width="268" height="304" color="0x3B1D1DFF" />
-        <Label id="cinemaCardMono4" translation="[1278, 736]" scale="[1.40, 1.40]" width="190" height="54" numLines="1" horizAlign="center" color="0xFCD34DFF" text="M5" />
-        <Poster id="cinemaCardPoster4" translation="[1278, 608]" width="268" height="304" loadWidth="360" loadHeight="480" loadDisplayMode="scaleToZoom" />
-        <Rectangle id="cinemaCardPillBg4" translation="[1412, 616]" width="126" height="26" color="0x110E0BE6" />
-        <Label id="cinemaCardBadge4" translation="[1416, 621]" scale="[0.42, 0.42]" width="280" height="20" numLines="1" horizAlign="center" color="0xFCD34DFF" text="2024 | * 8.4" />
-        <Rectangle id="cinemaCardProgTrack4" translation="[1278, 906]" width="268" height="6" color="0x090807FF" visible="false" />
-        <Rectangle id="cinemaCardProgFill4" translation="[1278, 906]" width="0" height="6" color="0xE8A33DFF" visible="false" />
-        <Label id="cinemaCardTitle4" translation="[1280, 920]" scale="[0.49, 0.49]" width="540" height="28" numLines="1" color="0xF8FAFCFF" text="Movie 5" />
-        <Label id="cinemaCardGenre4" translation="[1280, 946]" scale="[0.42, 0.42]" width="620" height="22" numLines="1" color="0x67E8F9FF" text="Cinema" />
-        <Label id="cinemaCardState4" translation="[1280, 970]" scale="[0.43, 0.43]" width="610" height="22" numLines="1" color="0xA89F91FF" text="#5 - Direct Play" />
+        <Rectangle id="cinemaCardBorder4" translation="[1272, 456]" width="288" height="512" color="0x0D1422FF" />
+        <Rectangle id="cinemaCardBg4" translation="[1275, 459]" width="282" height="506" color="0x0D1422FF" />
+        <Rectangle id="cinemaCardArtBg4" translation="[1278, 462]" width="276" height="406" color="0x0F172AFF" />
+        <Label id="cinemaCardMono4" translation="[1278, 640]" scale="[1.25, 1.25]" width="220" height="54" numLines="1" horizAlign="center" color="0x475569FF" text="M5" />
+        <Poster id="cinemaCardPoster4" translation="[1278, 462]" width="276" height="406" loadWidth="360" loadHeight="530" loadDisplayMode="scaleToZoom" />
+        <Rectangle id="cinemaCardPillBg4" translation="[1430, 472]" width="114" height="26" color="0x070B14D8" />
+        <Label id="cinemaCardBadge4" translation="[1434, 477]" scale="[0.41, 0.41]" width="260" height="20" numLines="1" horizAlign="center" color="0xE2E8F0FF" text="2024" />
+        <Rectangle id="cinemaCardProgTrack4" translation="[1278, 862]" width="276" height="6" color="0x090D16FF" visible="false" />
+        <Rectangle id="cinemaCardProgFill4" translation="[1278, 862]" width="0" height="6" color="0x38BDF8FF" visible="false" />
+        <Label id="cinemaCardTitle4" translation="[1284, 880]" scale="[0.49, 0.49]" width="540" height="28" numLines="1" color="0xE2E8F0FF" text="" />
+        <Label id="cinemaCardGenre4" translation="[1284, 908]" scale="[0.42, 0.42]" width="620" height="22" numLines="1" color="0x64748BFF" text="" />
+        <Label id="cinemaCardState4" translation="[1284, 934]" scale="[0.42, 0.42]" width="620" height="22" numLines="1" color="0x64748BFF" text="" />
 
-        <!-- Poster Card 5 (x=1570, y=596, w=292, h=408) -->
-        <Rectangle id="cinemaCardBorder5" translation="[1570, 596]" width="292" height="408" color="0x2E261EFF" />
-        <Rectangle id="cinemaCardBg5" translation="[1574, 600]" width="284" height="400" color="0x1E1914FF" />
-        <Rectangle id="cinemaCardArtBg5" translation="[1582, 608]" width="268" height="304" color="0x172554FF" />
-        <Label id="cinemaCardMono5" translation="[1582, 736]" scale="[1.40, 1.40]" width="190" height="54" numLines="1" horizAlign="center" color="0xFCD34DFF" text="M6" />
-        <Poster id="cinemaCardPoster5" translation="[1582, 608]" width="268" height="304" loadWidth="360" loadHeight="480" loadDisplayMode="scaleToZoom" />
-        <Rectangle id="cinemaCardPillBg5" translation="[1716, 616]" width="126" height="26" color="0x110E0BE6" />
-        <Label id="cinemaCardBadge5" translation="[1720, 621]" scale="[0.42, 0.42]" width="280" height="20" numLines="1" horizAlign="center" color="0xFCD34DFF" text="2024 | * 8.4" />
-        <Rectangle id="cinemaCardProgTrack5" translation="[1582, 906]" width="268" height="6" color="0x090807FF" visible="false" />
-        <Rectangle id="cinemaCardProgFill5" translation="[1582, 906]" width="0" height="6" color="0xE8A33DFF" visible="false" />
-        <Label id="cinemaCardTitle5" translation="[1584, 920]" scale="[0.49, 0.49]" width="540" height="28" numLines="1" color="0xF8FAFCFF" text="Movie 6" />
-        <Label id="cinemaCardGenre5" translation="[1584, 946]" scale="[0.42, 0.42]" width="620" height="22" numLines="1" color="0x67E8F9FF" text="Cinema" />
-        <Label id="cinemaCardState5" translation="[1584, 970]" scale="[0.43, 0.43]" width="610" height="22" numLines="1" color="0xA89F91FF" text="#6 - Direct Play" />
+        <Rectangle id="cinemaCardBorder5" translation="[1576, 456]" width="288" height="512" color="0x0D1422FF" />
+        <Rectangle id="cinemaCardBg5" translation="[1579, 459]" width="282" height="506" color="0x0D1422FF" />
+        <Rectangle id="cinemaCardArtBg5" translation="[1582, 462]" width="276" height="406" color="0x0F172AFF" />
+        <Label id="cinemaCardMono5" translation="[1582, 640]" scale="[1.25, 1.25]" width="220" height="54" numLines="1" horizAlign="center" color="0x475569FF" text="M6" />
+        <Poster id="cinemaCardPoster5" translation="[1582, 462]" width="276" height="406" loadWidth="360" loadHeight="530" loadDisplayMode="scaleToZoom" />
+        <Rectangle id="cinemaCardPillBg5" translation="[1734, 472]" width="114" height="26" color="0x070B14D8" />
+        <Label id="cinemaCardBadge5" translation="[1738, 477]" scale="[0.41, 0.41]" width="260" height="20" numLines="1" horizAlign="center" color="0xE2E8F0FF" text="2024" />
+        <Rectangle id="cinemaCardProgTrack5" translation="[1582, 862]" width="276" height="6" color="0x090D16FF" visible="false" />
+        <Rectangle id="cinemaCardProgFill5" translation="[1582, 862]" width="0" height="6" color="0x38BDF8FF" visible="false" />
+        <Label id="cinemaCardTitle5" translation="[1588, 880]" scale="[0.49, 0.49]" width="540" height="28" numLines="1" color="0xE2E8F0FF" text="" />
+        <Label id="cinemaCardGenre5" translation="[1588, 908]" scale="[0.42, 0.42]" width="620" height="22" numLines="1" color="0x64748BFF" text="" />
+        <Label id="cinemaCardState5" translation="[1588, 934]" scale="[0.42, 0.42]" width="620" height="22" numLines="1" color="0x64748BFF" text="" />
       </Group>
 
-      <!-- Footer Status Bar (y=1024..1068) -->
-      <Rectangle translation="[36, 1024]" width="1848" height="44" color="0x17130FFF" />
-      <Rectangle id="cinemaFooterAccent" translation="[36, 1024]" width="6" height="44" color="0xE8A33DFF" />
-      <Label id="cinemaLibFooter" translation="[56, 1035]" scale="[0.50, 0.50]" width="3500" height="28" numLines="1" color="0xF1E9DCFF" text="RobOS Cinema+  |  [UP/DOWN] Move Between [Row 1: Movies/TV Shows Tabs] - [Row 2: Category/Season Cards] - [Row 3: Poster Cards]  |  [LEFT/RIGHT] Move Across Row" />
-      <Label id="cinemaLibCountLabel" translation="[56, 1035]" scale="[0.50, 0.50]" width="10" height="10" visible="false" text="" />
+      <!-- Subtle Minimal Footer Hint (y=994, no border, no box) -->
+      <Label id="cinemaLibFooter" translation="[58, 998]" scale="[0.44, 0.44]" width="3900" height="24" numLines="1" color="0x475569FF" text="OK Select   |   Play Quick Start   |   FF/Rew Jump 3 Rows   |   * Switch Tab" />
+      <Label id="cinemaLibCountLabel" translation="[58, 998]" scale="[0.44, 0.44]" width="10" height="10" visible="false" text="" />
     </Group>
-    <!-- Double-Buffered 1920x1080 Live Chromium JS Canvas Frame Layer (placed above wallboard & cinemaLibraryGroup so app casts always take top priority) -->
+    <!-- Double-Buffered 1920x1080 Live Chromium JS Canvas Frame Layer -->
     <Poster id="livePosterA" width="1920" height="1080" opacity="0.0" />
     <Poster id="livePosterB" width="1920" height="1080" opacity="0.0" />
-    <!-- Full-screen 1920x1080 Cinema Video Layer for RobOS Movie Player -->
+    <!-- Full-screen 1920x1080 Cinema Video Layer -->
     <Video id="cinemaVideo" translation="[0, 0]" width="1920" height="1080" visible="false" mute="false" loop="false" enableUI="false" />
 
-    <!-- Crisp Cinema On-Screen Subtitle Cue Overlay (supports SRT/WebVTT/ASS tracks, S/M/L font sizes & sync offset) -->
+    <!-- Clean Cinema Subtitle Cue Pill (Midnight Glass, Zero Yellow Stripes) -->
     <Group id="subtitleOverlayGroup" visible="false" translation="[160, 916]">
-      <Rectangle id="subtitleCueBg" translation="[180, 0]" width="1240" height="86" color="0x080A0FE6" />
-      <Rectangle id="subtitleCueAccent" translation="[180, 0]" width="4" height="86" color="0xFCD34DFF" />
+      <Rectangle id="subtitleCueBg" translation="[180, 0]" width="1240" height="86" color="0x050810DC" />
       <Label id="subtitleCueLabel" translation="[200, 10]" scale="[0.80, 0.80]" width="1500" height="84" wrap="true" numLines="2" horizAlign="center" vertAlign="center" color="0xFFFFFFFF" text="" />
     </Group>
 
-    <!-- Plex-Style Rich In-Playback OSD Menu & Metadata Drawer (OK / Up / Down / * Options during playback) -->
+    <!-- Modern Clean In-Playback OSD Menu (Midnight Glass + Sky Blue + Single White Focus Ring) -->
     <Group id="playerOsdGroup" visible="false">
-      <!-- Top Translucent Cinema Header Banner (y=0..108) -->
+      <!-- Top Translucent Glass Header (y=0..96) -->
       <Group id="osdTopBarGroup">
-        <Rectangle width="1920" height="108" color="0x090C12EB" />
-        <Rectangle translation="[0, 105]" width="1920" height="3" color="0xE8A33DFF" />
-        <Rectangle id="osdTypePillBg" translation="[44, 18]" width="168" height="28" color="0xE8A33DFF" />
-        <Label id="osdTypePillTxt" translation="[50, 22]" scale="[0.44, 0.44]" width="356" height="22" numLines="1" horizAlign="center" color="0x110E0BFF" text="NOW PLAYING" />
-        <Label id="osdTopTitle" translation="[226, 14]" scale="[0.74, 0.74]" width="1360" height="38" numLines="1" color="0xFFFFFFFF" text="RobOS Cinema+" />
-        <Label id="osdTopSubMeta" translation="[44, 58]" scale="[0.49, 0.49]" width="2300" height="26" numLines="1" color="0xCBD5E1FF" text="Direct LAN Stream  |  Press [UP/DOWN/OK/*] for Player Menu  |  [BACK] Exit" />
+        <Rectangle width="1920" height="96" color="0x070B14E6" />
+        <Rectangle translation="[0, 95]" width="1920" height="1" color="0x1E293BFF" />
+        <Rectangle id="osdTypePillBg" translation="[56, 18]" width="144" height="26" color="0x0284C7FF" />
+        <Label id="osdTypePillTxt" translation="[62, 22]" scale="[0.42, 0.42]" width="314" height="20" numLines="1" horizAlign="center" color="0xFFFFFFFF" text="PLAYING" />
+        <Label id="osdTopTitle" translation="[216, 14]" scale="[0.72, 0.72]" width="1360" height="36" numLines="1" color="0xFFFFFFFF" text="RobOS" />
+        <Label id="osdTopSubMeta" translation="[56, 56]" scale="[0.46, 0.46]" width="2350" height="24" numLines="1" color="0x94A3B8FF" text="" />
 
-        <Rectangle id="osdStateBadgeBg" translation="[1270, 16]" width="152" height="32" color="0x10B981FF" />
-        <Label id="osdStateBadgeTxt" translation="[1276, 22]" scale="[0.46, 0.46]" width="304" height="22" numLines="1" horizAlign="center" color="0x06130DFF" text="PLAYING" />
+        <Rectangle id="osdStateBadgeBg" translation="[1286, 16]" width="136" height="28" color="0x059669FF" />
+        <Label id="osdStateBadgeTxt" translation="[1290, 21]" scale="[0.43, 0.43]" width="298" height="20" numLines="1" horizAlign="center" color="0xFFFFFFFF" text="PLAYING" />
 
-        <Rectangle id="osdCcBadgeBg" translation="[1434, 16]" width="218" height="32" color="0x1E293BFF" />
-        <Label id="osdCcBadgeTxt" translation="[1442, 22]" scale="[0.44, 0.44]" width="458" height="22" numLines="1" horizAlign="center" color="0xFCD34DFF" text="CC: OFF" />
+        <Rectangle id="osdCcBadgeBg" translation="[1434, 16]" width="208" height="28" color="0x1E293BFF" />
+        <Label id="osdCcBadgeTxt" translation="[1440, 21]" scale="[0.42, 0.42]" width="466" height="20" numLines="1" horizAlign="center" color="0xBAE6FDFF" text="CC: OFF" />
 
-        <Rectangle id="osdAudioBadgeBg" translation="[1664, 16]" width="212" height="32" color="0x1E293BFF" />
-        <Label id="osdAudioBadgeTxt" translation="[1672, 22]" scale="[0.44, 0.44]" width="444" height="22" numLines="1" horizAlign="center" color="0x67E8F9FF" text="AUDIO: TRACK 1" />
+        <Rectangle id="osdAudioBadgeBg" translation="[1654, 16]" width="210" height="28" color="0x1E293BFF" />
+        <Label id="osdAudioBadgeTxt" translation="[1660, 21]" scale="[0.42, 0.42]" width="470" height="20" numLines="1" horizAlign="center" color="0xE2E8F0FF" text="AUDIO" />
 
-        <Label id="osdTopClockTxt" translation="[1270, 58]" scale="[0.52, 0.52]" width="1160" height="28" numLines="1" horizAlign="right" color="0xF8FAFCFF" text="0:00:00 / 0:00:00" />
+        <Label id="osdTopClockTxt" translation="[1286, 56]" scale="[0.50, 0.50]" width="1156" height="26" numLines="1" horizAlign="right" color="0xE2E8F0FF" text="0:00 / 0:00" />
       </Group>
 
-      <!-- Timeline Scrubber Bar (moves to y=948 in Mini-HUD mode or y=496 in Full Drawer mode) -->
-      <Group id="osdScrubberGroup" translation="[0, 496]">
-        <Rectangle id="osdScrubberBg" translation="[36, 0]" width="1848" height="68" color="0x0D111AEF" />
-        <Rectangle id="osdScrubberFocusBorder" translation="[36, 0]" width="1848" height="3" color="0x334155FF" />
-        <Label id="osdTimeElapsed" translation="[58, 12]" scale="[0.52, 0.52]" width="260" height="26" numLines="1" color="0xFCD34DFF" text="0:00:00" />
-        <Label id="osdScrubHint" translation="[210, 13]" scale="[0.45, 0.45]" width="2650" height="24" numLines="1" color="0x94A3B8FF" text="[LEFT/RIGHT] Scrub -15s / +30s   |   [REW/FF] -60s / +60s   |   [PLAY] Pause/Resume   |   [DOWN] Rich Options" />
-        <Label id="osdTimeTotal" translation="[1610, 12]" scale="[0.52, 0.52]" width="480" height="26" numLines="1" horizAlign="right" color="0xE2E8F0FF" text="0:00:00 (0%)" />
-        <Rectangle id="osdTrackBg" translation="[58, 44]" width="1804" height="12" color="0x1E293BFF" />
-        <Rectangle id="osdTrackFill" translation="[58, 44]" width="12" height="12" color="0xE8A33DFF" />
-        <Rectangle id="osdTrackKnob" translation="[64, 39]" width="10" height="22" color="0xFFFFFFFF" />
+      <!-- Clean Sky-Blue Timeline Progress Bar -->
+      <Group id="osdScrubberGroup" translation="[0, 504]">
+        <Rectangle id="osdScrubberBg" translation="[56, 0]" width="1808" height="62" color="0x090F1CEB" />
+        <Rectangle id="osdScrubberFocusBorder" translation="[56, 0]" width="1808" height="2" color="0x1E293BFF" />
+        <Label id="osdTimeElapsed" translation="[76, 10]" scale="[0.50, 0.50]" width="260" height="24" numLines="1" color="0x7DD3FCFF" text="0:00" />
+        <Label id="osdScrubHint" translation="[220, 12]" scale="[0.44, 0.44]" width="2650" height="22" numLines="1" color="0x94A3B8FF" text="" />
+        <Label id="osdTimeTotal" translation="[1600, 10]" scale="[0.50, 0.50]" width="480" height="24" numLines="1" horizAlign="right" color="0xCBD5E1FF" text="0:00" />
+        <Rectangle id="osdTrackBg" translation="[76, 40]" width="1768" height="8" color="0x1E293BFF" />
+        <Rectangle id="osdTrackFill" translation="[76, 40]" width="10" height="8" color="0x38BDF8FF" />
+        <Rectangle id="osdTrackKnob" translation="[82, 35]" width="8" height="18" color="0xFFFFFFFF" />
       </Group>
 
-      <!-- Full Rich Plex-Style Tabbed Drawer (y=570..1064) -->
+      <!-- Clean Modern 7-Tab Player Drawer (y=572..1056) -->
       <Group id="osdFullDrawerGroup" visible="false">
-        <Rectangle translation="[36, 570]" width="1848" height="492" color="0x0B0F18F4" />
-        <Rectangle translation="[36, 570]" width="1848" height="3" color="0xE8A33DFF" />
+        <Rectangle translation="[56, 572]" width="1808" height="480" color="0x080D18F4" />
+        <Rectangle translation="[56, 572]" width="1808" height="1" color="0x1E293BFF" />
 
-        <!-- Row of 7 Rich Player Tabs (x=54..1866, y=582, each 252w x 54h, step 258) -->
-        <Rectangle id="osdTabBorder0" translation="[54, 582]" width="252" height="54" color="0xFCD34DFF" />
-        <Rectangle id="osdTabBg0" translation="[57, 585]" width="246" height="48" color="0x2B2114FF" />
-        <Label id="osdTabLbl0" translation="[62, 597]" scale="[0.50, 0.50]" width="472" height="28" numLines="1" horizAlign="center" color="0xFCD34DFF" text="1. CONTROLS" />
+        <!-- 7 Clean Pill Tabs (x=74 + idx*254, y=586, w=244, h=46) -->
+        <Rectangle id="osdTabBorder0" translation="[74, 586]" width="244" height="46" color="0xFFFFFFFF" />
+        <Rectangle id="osdTabBg0" translation="[76, 588]" width="240" height="42" color="0x172554FF" />
+        <Label id="osdTabLbl0" translation="[80, 598]" scale="[0.48, 0.48]" width="480" height="26" numLines="1" horizAlign="center" color="0xFFFFFFFF" text="Controls" />
 
-        <Rectangle id="osdTabBorder1" translation="[312, 582]" width="252" height="54" color="0x263248FF" />
-        <Rectangle id="osdTabBg1" translation="[315, 585]" width="246" height="48" color="0x131B2BFF" />
-        <Label id="osdTabLbl1" translation="[320, 597]" scale="[0.50, 0.50]" width="472" height="28" numLines="1" horizAlign="center" color="0xE2E8F0FF" text="2. CC CAPTIONS" />
+        <Rectangle id="osdTabBorder1" translation="[328, 586]" width="244" height="46" color="0x0E1628FF" />
+        <Rectangle id="osdTabBg1" translation="[330, 588]" width="240" height="42" color="0x0E1628FF" />
+        <Label id="osdTabLbl1" translation="[334, 598]" scale="[0.48, 0.48]" width="480" height="26" numLines="1" horizAlign="center" color="0x94A3B8FF" text="Subtitles" />
 
-        <Rectangle id="osdTabBorder2" translation="[570, 582]" width="252" height="54" color="0x263248FF" />
-        <Rectangle id="osdTabBg2" translation="[573, 585]" width="246" height="48" color="0x131B2BFF" />
-        <Label id="osdTabLbl2" translation="[578, 597]" scale="[0.50, 0.50]" width="472" height="28" numLines="1" horizAlign="center" color="0xE2E8F0FF" text="3. SEE SEASON" />
+        <Rectangle id="osdTabBorder2" translation="[582, 586]" width="244" height="46" color="0x0E1628FF" />
+        <Rectangle id="osdTabBg2" translation="[584, 588]" width="240" height="42" color="0x0E1628FF" />
+        <Label id="osdTabLbl2" translation="[588, 598]" scale="[0.48, 0.48]" width="480" height="26" numLines="1" horizAlign="center" color="0x94A3B8FF" text="Season" />
 
-        <Rectangle id="osdTabBorder3" translation="[828, 582]" width="252" height="54" color="0x263248FF" />
-        <Rectangle id="osdTabBg3" translation="[831, 585]" width="246" height="48" color="0x131B2BFF" />
-        <Label id="osdTabLbl3" translation="[836, 597]" scale="[0.50, 0.50]" width="472" height="28" numLines="1" horizAlign="center" color="0xE2E8F0FF" text="4. SEE SHOW" />
+        <Rectangle id="osdTabBorder3" translation="[836, 586]" width="244" height="46" color="0x0E1628FF" />
+        <Rectangle id="osdTabBg3" translation="[838, 588]" width="240" height="42" color="0x0E1628FF" />
+        <Label id="osdTabLbl3" translation="[842, 598]" scale="[0.48, 0.48]" width="480" height="26" numLines="1" horizAlign="center" color="0x94A3B8FF" text="Show" />
 
-        <Rectangle id="osdTabBorder4" translation="[1086, 582]" width="252" height="54" color="0x263248FF" />
-        <Rectangle id="osdTabBg4" translation="[1089, 585]" width="246" height="48" color="0x131B2BFF" />
-        <Label id="osdTabLbl4" translation="[1094, 597]" scale="[0.50, 0.50]" width="472" height="28" numLines="1" horizAlign="center" color="0xE2E8F0FF" text="5. EP DETAILS" />
+        <Rectangle id="osdTabBorder4" translation="[1090, 586]" width="244" height="46" color="0x0E1628FF" />
+        <Rectangle id="osdTabBg4" translation="[1092, 588]" width="240" height="42" color="0x0E1628FF" />
+        <Label id="osdTabLbl4" translation="[1096, 598]" scale="[0.48, 0.48]" width="480" height="26" numLines="1" horizAlign="center" color="0x94A3B8FF" text="Details" />
 
-        <Rectangle id="osdTabBorder5" translation="[1344, 582]" width="252" height="54" color="0x263248FF" />
-        <Rectangle id="osdTabBg5" translation="[1347, 585]" width="246" height="48" color="0x131B2BFF" />
-        <Label id="osdTabLbl5" translation="[1352, 597]" scale="[0.50, 0.50]" width="472" height="28" numLines="1" horizAlign="center" color="0xE2E8F0FF" text="6. AUDIO &amp; STREAM" />
+        <Rectangle id="osdTabBorder5" translation="[1344, 586]" width="244" height="46" color="0x0E1628FF" />
+        <Rectangle id="osdTabBg5" translation="[1346, 588]" width="240" height="42" color="0x0E1628FF" />
+        <Label id="osdTabLbl5" translation="[1350, 598]" scale="[0.48, 0.48]" width="480" height="26" numLines="1" horizAlign="center" color="0x94A3B8FF" text="Audio" />
 
-        <Rectangle id="osdTabBorder6" translation="[1602, 582]" width="264" height="54" color="0x263248FF" />
-        <Rectangle id="osdTabBg6" translation="[1605, 585]" width="258" height="48" color="0x131B2BFF" />
-        <Label id="osdTabLbl6" translation="[1610, 597]" scale="[0.50, 0.50]" width="496" height="28" numLines="1" horizAlign="center" color="0xE2E8F0FF" text="7. METADATA" />
+        <Rectangle id="osdTabBorder6" translation="[1598, 586]" width="248" height="46" color="0x0E1628FF" />
+        <Rectangle id="osdTabBg6" translation="[1600, 588]" width="244" height="42" color="0x0E1628FF" />
+        <Label id="osdTabLbl6" translation="[1604, 598]" scale="[0.48, 0.48]" width="488" height="26" numLines="1" horizAlign="center" color="0x94A3B8FF" text="Metadata" />
 
-        <Rectangle translation="[54, 644]" width="1812" height="2" color="0x1E293BFF" />
+        <Rectangle translation="[74, 642]" width="1772" height="1" color="0x162032FF" />
 
-        <!-- Shared Action Button Strip (7 interactive buttons used by Controls, Captions, Audio; y=658..732) -->
+        <!-- Clean Action Button Row (y=656..724) -->
         <Group id="osdActionBtnsGroup" visible="true">
-          <Rectangle id="osdBtnBorder0" translation="[54, 658]" width="250" height="72" color="0xFFFFFFFF" />
-          <Rectangle id="osdBtnBg0" translation="[57, 661]" width="244" height="66" color="0x1E293BFF" />
-          <Label id="osdBtnTop0" translation="[64, 669]" scale="[0.48, 0.48]" width="478" height="26" numLines="1" horizAlign="center" color="0xFCD34DFF" text="PAUSE / PLAY" />
-          <Label id="osdBtnSub0" translation="[64, 697]" scale="[0.41, 0.41]" width="560" height="22" numLines="1" horizAlign="center" color="0xCBD5E1FF" text="Toggle Playback" />
+          <Rectangle id="osdBtnBorder0" translation="[74, 656]" width="244" height="68" color="0x111A2EFF" />
+          <Rectangle id="osdBtnBg0" translation="[76, 658]" width="240" height="64" color="0x111A2EFF" />
+          <Label id="osdBtnTop0" translation="[80, 667]" scale="[0.46, 0.46]" width="504" height="24" numLines="1" horizAlign="center" color="0xF8FAFCFF" text="Pause" />
+          <Label id="osdBtnSub0" translation="[80, 694]" scale="[0.40, 0.40]" width="580" height="20" numLines="1" horizAlign="center" color="0x64748BFF" text="Playback" />
 
-          <Rectangle id="osdBtnBorder1" translation="[314, 658]" width="250" height="72" color="0x263248FF" />
-          <Rectangle id="osdBtnBg1" translation="[317, 661]" width="244" height="66" color="0x131B2BFF" />
-          <Label id="osdBtnTop1" translation="[324, 669]" scale="[0.48, 0.48]" width="478" height="26" numLines="1" horizAlign="center" color="0xF8FAFCFF" text="BACK -15s" />
-          <Label id="osdBtnSub1" translation="[324, 697]" scale="[0.41, 0.41]" width="560" height="22" numLines="1" horizAlign="center" color="0x94A3B8FF" text="Instant Rewind" />
+          <Rectangle id="osdBtnBorder1" translation="[328, 656]" width="244" height="68" color="0x111A2EFF" />
+          <Rectangle id="osdBtnBg1" translation="[330, 658]" width="240" height="64" color="0x111A2EFF" />
+          <Label id="osdBtnTop1" translation="[334, 667]" scale="[0.46, 0.46]" width="504" height="24" numLines="1" horizAlign="center" color="0xF8FAFCFF" text="-15s" />
+          <Label id="osdBtnSub1" translation="[334, 694]" scale="[0.40, 0.40]" width="580" height="20" numLines="1" horizAlign="center" color="0x64748BFF" text="Rewind" />
 
-          <Rectangle id="osdBtnBorder2" translation="[574, 658]" width="250" height="72" color="0x263248FF" />
-          <Rectangle id="osdBtnBg2" translation="[577, 661]" width="244" height="66" color="0x131B2BFF" />
-          <Label id="osdBtnTop2" translation="[584, 669]" scale="[0.48, 0.48]" width="478" height="26" numLines="1" horizAlign="center" color="0xF8FAFCFF" text="SKIP +30s" />
-          <Label id="osdBtnSub2" translation="[584, 697]" scale="[0.41, 0.41]" width="560" height="22" numLines="1" horizAlign="center" color="0x94A3B8FF" text="Fast Forward" />
+          <Rectangle id="osdBtnBorder2" translation="[582, 656]" width="244" height="68" color="0x111A2EFF" />
+          <Rectangle id="osdBtnBg2" translation="[584, 658]" width="240" height="64" color="0x111A2EFF" />
+          <Label id="osdBtnTop2" translation="[588, 667]" scale="[0.46, 0.46]" width="504" height="24" numLines="1" horizAlign="center" color="0xF8FAFCFF" text="+30s" />
+          <Label id="osdBtnSub2" translation="[588, 694]" scale="[0.40, 0.40]" width="580" height="20" numLines="1" horizAlign="center" color="0x64748BFF" text="Forward" />
 
-          <Rectangle id="osdBtnBorder3" translation="[834, 658]" width="250" height="72" color="0x263248FF" />
-          <Rectangle id="osdBtnBg3" translation="[837, 661]" width="244" height="66" color="0x131B2BFF" />
-          <Label id="osdBtnTop3" translation="[844, 669]" scale="[0.48, 0.48]" width="478" height="26" numLines="1" horizAlign="center" color="0xF8FAFCFF" text="PREV EPISODE" />
-          <Label id="osdBtnSub3" translation="[844, 697]" scale="[0.41, 0.41]" width="560" height="22" numLines="1" horizAlign="center" color="0x94A3B8FF" text="Previous Item" />
+          <Rectangle id="osdBtnBorder3" translation="[836, 656]" width="244" height="68" color="0x111A2EFF" />
+          <Rectangle id="osdBtnBg3" translation="[838, 658]" width="240" height="64" color="0x111A2EFF" />
+          <Label id="osdBtnTop3" translation="[842, 667]" scale="[0.46, 0.46]" width="504" height="24" numLines="1" horizAlign="center" color="0xF8FAFCFF" text="Previous" />
+          <Label id="osdBtnSub3" translation="[842, 694]" scale="[0.40, 0.40]" width="580" height="20" numLines="1" horizAlign="center" color="0x64748BFF" text="Episode" />
 
-          <Rectangle id="osdBtnBorder4" translation="[1094, 658]" width="250" height="72" color="0x263248FF" />
-          <Rectangle id="osdBtnBg4" translation="[1097, 661]" width="244" height="66" color="0x131B2BFF" />
-          <Label id="osdBtnTop4" translation="[1104, 669]" scale="[0.48, 0.48]" width="478" height="26" numLines="1" horizAlign="center" color="0xF8FAFCFF" text="NEXT EPISODE" />
-          <Label id="osdBtnSub4" translation="[1104, 697]" scale="[0.41, 0.41]" width="560" height="22" numLines="1" horizAlign="center" color="0x94A3B8FF" text="Up Next" />
+          <Rectangle id="osdBtnBorder4" translation="[1090, 656]" width="244" height="68" color="0x111A2EFF" />
+          <Rectangle id="osdBtnBg4" translation="[1092, 658]" width="240" height="64" color="0x111A2EFF" />
+          <Label id="osdBtnTop4" translation="[1096, 667]" scale="[0.46, 0.46]" width="504" height="24" numLines="1" horizAlign="center" color="0xF8FAFCFF" text="Next" />
+          <Label id="osdBtnSub4" translation="[1096, 694]" scale="[0.40, 0.40]" width="580" height="20" numLines="1" horizAlign="center" color="0x64748BFF" text="Episode" />
 
-          <Rectangle id="osdBtnBorder5" translation="[1354, 658]" width="250" height="72" color="0x263248FF" />
-          <Rectangle id="osdBtnBg5" translation="[1357, 661]" width="244" height="66" color="0x131B2BFF" />
-          <Label id="osdBtnTop5" translation="[1364, 669]" scale="[0.48, 0.48]" width="478" height="26" numLines="1" horizAlign="center" color="0xF8FAFCFF" text="RESTART 0:00" />
-          <Label id="osdBtnSub5" translation="[1364, 697]" scale="[0.41, 0.41]" width="560" height="22" numLines="1" horizAlign="center" color="0x94A3B8FF" text="Play From Start" />
+          <Rectangle id="osdBtnBorder5" translation="[1344, 656]" width="244" height="68" color="0x111A2EFF" />
+          <Rectangle id="osdBtnBg5" translation="[1346, 658]" width="240" height="64" color="0x111A2EFF" />
+          <Label id="osdBtnTop5" translation="[1350, 667]" scale="[0.46, 0.46]" width="504" height="24" numLines="1" horizAlign="center" color="0xF8FAFCFF" text="Restart" />
+          <Label id="osdBtnSub5" translation="[1350, 694]" scale="[0.40, 0.40]" width="580" height="20" numLines="1" horizAlign="center" color="0x64748BFF" text="From 0:00" />
 
-          <Rectangle id="osdBtnBorder6" translation="[1614, 658]" width="252" height="72" color="0x263248FF" />
-          <Rectangle id="osdBtnBg6" translation="[1617, 661]" width="246" height="66" color="0x131B2BFF" />
-          <Label id="osdBtnTop6" translation="[1624, 669]" scale="[0.48, 0.48]" width="482" height="26" numLines="1" horizAlign="center" color="0xF8FAFCFF" text="MARK WATCHED" />
-          <Label id="osdBtnSub6" translation="[1624, 697]" scale="[0.41, 0.41]" width="560" height="22" numLines="1" horizAlign="center" color="0x94A3B8FF" text="Toggle Status" />
+          <Rectangle id="osdBtnBorder6" translation="[1598, 656]" width="248" height="68" color="0x111A2EFF" />
+          <Rectangle id="osdBtnBg6" translation="[1600, 658]" width="244" height="64" color="0x111A2EFF" />
+          <Label id="osdBtnTop6" translation="[1604, 667]" scale="[0.46, 0.46]" width="512" height="24" numLines="1" horizAlign="center" color="0xF8FAFCFF" text="Watched" />
+          <Label id="osdBtnSub6" translation="[1604, 694]" scale="[0.40, 0.40]" width="580" height="20" numLines="1" horizAlign="center" color="0x64748BFF" text="Status" />
         </Group>
 
-        <!-- Rich Lower Info Card for Controls / Captions Transcript / Show / Episode Details / Audio (y=744..1016) -->
+        <!-- Clean Frameless Summary Card (y=738..1008) -->
         <Group id="osdRichSummaryGroup" visible="true">
-          <Rectangle translation="[54, 744]" width="1812" height="268" color="0x111726FF" />
-          <Rectangle id="osdSummaryAccent" translation="[54, 744]" width="6" height="268" color="0x00BCD4FF" />
-          <Rectangle id="osdSummaryPosterFrame" translation="[76, 760]" width="166" height="236" color="0xE8A33DFF" />
-          <Rectangle translation="[80, 764]" width="158" height="228" color="0x1B2234FF" />
-          <Label id="osdSummaryMono" translation="[80, 852]" scale="[1.10, 1.10]" width="144" height="48" numLines="1" horizAlign="center" color="0xFCD34DFF" text="RC" />
-          <Poster id="osdSummaryPoster" translation="[80, 764]" width="158" height="228" loadWidth="316" loadHeight="456" loadDisplayMode="scaleToZoom" />
+          <Rectangle translation="[74, 738]" width="1772" height="268" color="0x0D1424FF" />
+          <Rectangle translation="[94, 756]" width="154" height="230" color="0x131D31FF" />
+          <Label id="osdSummaryMono" translation="[94, 846]" scale="[1.05, 1.05]" width="144" height="44" numLines="1" horizAlign="center" color="0x64748BFF" text="R" />
+          <Poster id="osdSummaryPoster" translation="[94, 756]" width="154" height="230" loadWidth="308" loadHeight="460" loadDisplayMode="scaleToZoom" />
 
-          <Label id="osdSummaryEyebrow" translation="[264, 758]" scale="[0.48, 0.48]" width="3100" height="26" numLines="1" color="0x67E8F9FF" text="NOW PLAYING OVERVIEW" />
-          <Label id="osdSummaryTitle" translation="[264, 786]" scale="[0.70, 0.70]" width="2200" height="36" numLines="1" color="0xFFFFFFFF" text="Select an option above" />
-          <Label id="osdSummaryBadges" translation="[264, 824]" scale="[0.49, 0.49]" width="3150" height="26" numLines="1" color="0xFCD34DFF" text="" />
-          <Label id="osdSummaryBody" translation="[264, 856]" scale="[0.52, 0.52]" width="3000" height="96" wrap="true" numLines="3" color="0xE2E8F0FF" text="" />
-          <Label id="osdSummarySubLine" translation="[264, 966]" scale="[0.47, 0.47]" width="3300" height="26" numLines="1" color="0x86EFACFF" text="" />
+          <Label id="osdSummaryEyebrow" translation="[272, 754]" scale="[0.46, 0.46]" width="3100" height="24" numLines="1" color="0x38BDF8FF" text="" />
+          <Label id="osdSummaryTitle" translation="[272, 782]" scale="[0.68, 0.68]" width="2200" height="36" numLines="1" color="0xFFFFFFFF" text="" />
+          <Label id="osdSummaryBadges" translation="[272, 822]" scale="[0.47, 0.47]" width="3150" height="24" numLines="1" color="0xCBD5E1FF" text="" />
+          <Label id="osdSummaryBody" translation="[272, 854]" scale="[0.50, 0.50]" width="3050" height="96" wrap="true" numLines="3" color="0x94A3B8FF" text="" />
+          <Label id="osdSummarySubLine" translation="[272, 962]" scale="[0.45, 0.45]" width="3300" height="24" numLines="1" color="0x7DD3FCFF" text="" />
         </Group>
 
-        <!-- TAB 2 DEDICATED PANE: SEE SEASON & EPISODES STRIP (y=654..1016) -->
+        <!-- TAB 2 DEDICATED PANE: SEASON & EPISODE CARDS -->
         <Group id="osdSeasonPaneGroup" visible="false">
-          <Rectangle id="osdSeasonBtnBorder0" translation="[54, 654]" width="248" height="46" color="0x263248FF" />
-          <Rectangle id="osdSeasonBtnBg0" translation="[57, 657]" width="242" height="40" color="0x131B2BFF" />
-          <Label id="osdSeasonBtnLbl0" translation="[62, 666]" scale="[0.46, 0.46]" width="504" height="24" numLines="1" horizAlign="center" color="0xF8FAFCFF" text="&lt; PREV SEASON" />
+          <Rectangle id="osdSeasonBtnBorder0" translation="[74, 654]" width="236" height="42" color="0x111A2EFF" />
+          <Rectangle id="osdSeasonBtnBg0" translation="[76, 656]" width="232" height="38" color="0x111A2EFF" />
+          <Label id="osdSeasonBtnLbl0" translation="[80, 664]" scale="[0.45, 0.45]" width="496" height="22" numLines="1" horizAlign="center" color="0xE2E8F0FF" text="&lt; Prev Season" />
 
-          <Rectangle id="osdSeasonBtnBorder1" translation="[314, 654]" width="248" height="46" color="0x263248FF" />
-          <Rectangle id="osdSeasonBtnBg1" translation="[317, 657]" width="242" height="40" color="0x131B2BFF" />
-          <Label id="osdSeasonBtnLbl1" translation="[322, 666]" scale="[0.46, 0.46]" width="504" height="24" numLines="1" horizAlign="center" color="0xF8FAFCFF" text="NEXT SEASON &gt;" />
+          <Rectangle id="osdSeasonBtnBorder1" translation="[322, 654]" width="236" height="42" color="0x111A2EFF" />
+          <Rectangle id="osdSeasonBtnBg1" translation="[324, 656]" width="232" height="38" color="0x111A2EFF" />
+          <Label id="osdSeasonBtnLbl1" translation="[328, 664]" scale="[0.45, 0.45]" width="496" height="22" numLines="1" horizAlign="center" color="0xE2E8F0FF" text="Next Season &gt;" />
 
-          <Rectangle id="osdSeasonBtnBorder2" translation="[574, 654]" width="330" height="46" color="0x263248FF" />
-          <Rectangle id="osdSeasonBtnBg2" translation="[577, 657]" width="324" height="40" color="0x131B2BFF" />
-          <Label id="osdSeasonBtnLbl2" translation="[582, 666]" scale="[0.46, 0.46]" width="680" height="24" numLines="1" horizAlign="center" color="0x67E8F9FF" text="OPEN SEASON IN LIBRARY" />
+          <Rectangle id="osdSeasonBtnBorder2" translation="[570, 654]" width="316" height="42" color="0x111A2EFF" />
+          <Rectangle id="osdSeasonBtnBg2" translation="[572, 656]" width="312" height="38" color="0x111A2EFF" />
+          <Label id="osdSeasonBtnLbl2" translation="[576, 664]" scale="[0.45, 0.45]" width="676" height="22" numLines="1" horizAlign="center" color="0x7DD3FCFF" text="Open in Library" />
 
-          <Label id="osdSeasonHeaderInfo" translation="[926, 664]" scale="[0.50, 0.50]" width="1860" height="28" numLines="1" horizAlign="right" color="0xFCD34DFF" text="Season 1" />
+          <Label id="osdSeasonHeaderInfo" translation="[910, 662]" scale="[0.48, 0.48]" width="1950" height="26" numLines="1" horizAlign="right" color="0x94A3B8FF" text="" />
 
-          <!-- 5 Episode Cards (x=54 + slot*364, w=352, y=710, h=302) -->
-          <Rectangle id="osdEpBorder0" translation="[54, 710]" width="352" height="302" color="0xFFFFFFFF" />
-          <Rectangle id="osdEpBg0" translation="[58, 714]" width="344" height="294" color="0x182032FF" />
-          <Rectangle translation="[66, 722]" width="328" height="178" color="0x0F172AFF" />
-          <Poster id="osdEpPoster0" translation="[66, 722]" width="328" height="178" loadWidth="328" loadHeight="178" loadDisplayMode="scaleToZoom" />
-          <Rectangle translation="[74, 730]" width="114" height="26" color="0x090D16E6" />
-          <Label id="osdEpCode0" translation="[78, 734]" scale="[0.44, 0.44]" width="240" height="22" numLines="1" horizAlign="center" color="0xFCD34DFF" text="S01E01" />
-          <Rectangle id="osdEpProgBg0" translation="[66, 894]" width="328" height="6" color="0x090D16FF" visible="false" />
-          <Rectangle id="osdEpProgFill0" translation="[66, 894]" width="0" height="6" color="0xE8A33DFF" visible="false" />
-          <Label id="osdEpTitle0" translation="[68, 910]" scale="[0.48, 0.48]" width="680" height="46" wrap="true" numLines="2" color="0xFFFFFFFF" text="Episode 1" />
-          <Label id="osdEpMeta0" translation="[68, 976]" scale="[0.42, 0.42]" width="760" height="24" numLines="1" color="0x67E8F9FF" text="Press OK to Play" />
+          <!-- 5 Borderless Episode Cards (x=74 + slot*356, y=708, w=344, h=298) -->
+          <Rectangle id="osdEpBorder0" translation="[74, 708]" width="344" height="298" color="0x111A2EFF" />
+          <Rectangle id="osdEpBg0" translation="[77, 711]" width="338" height="292" color="0x111A2EFF" />
+          <Poster id="osdEpPoster0" translation="[83, 717]" width="326" height="176" loadWidth="326" loadHeight="176" loadDisplayMode="scaleToZoom" />
+          <Rectangle translation="[91, 725]" width="106" height="24" color="0x070B14D8" />
+          <Label id="osdEpCode0" translation="[95, 729]" scale="[0.42, 0.42]" width="232" height="20" numLines="1" horizAlign="center" color="0xBAE6FDFF" text="S01E01" />
+          <Rectangle id="osdEpProgBg0" translation="[83, 887]" width="326" height="6" color="0x090D16FF" visible="false" />
+          <Rectangle id="osdEpProgFill0" translation="[83, 887]" width="0" height="6" color="0x38BDF8FF" visible="false" />
+          <Label id="osdEpTitle0" translation="[85, 904]" scale="[0.47, 0.47]" width="680" height="46" wrap="true" numLines="2" color="0xFFFFFFFF" text="" />
+          <Label id="osdEpMeta0" translation="[85, 970]" scale="[0.41, 0.41]" width="760" height="22" numLines="1" color="0x64748BFF" text="" />
 
-          <Rectangle id="osdEpBorder1" translation="[418, 710]" width="352" height="302" color="0x263248FF" />
-          <Rectangle id="osdEpBg1" translation="[422, 714]" width="344" height="294" color="0x121927FF" />
-          <Rectangle translation="[430, 722]" width="328" height="178" color="0x0F172AFF" />
-          <Poster id="osdEpPoster1" translation="[430, 722]" width="328" height="178" loadWidth="328" loadHeight="178" loadDisplayMode="scaleToZoom" />
-          <Rectangle translation="[438, 730]" width="114" height="26" color="0x090D16E6" />
-          <Label id="osdEpCode1" translation="[442, 734]" scale="[0.44, 0.44]" width="240" height="22" numLines="1" horizAlign="center" color="0xFCD34DFF" text="S01E02" />
-          <Rectangle id="osdEpProgBg1" translation="[430, 894]" width="328" height="6" color="0x090D16FF" visible="false" />
-          <Rectangle id="osdEpProgFill1" translation="[430, 894]" width="0" height="6" color="0xE8A33DFF" visible="false" />
-          <Label id="osdEpTitle1" translation="[432, 910]" scale="[0.48, 0.48]" width="680" height="46" wrap="true" numLines="2" color="0xFFFFFFFF" text="Episode 2" />
-          <Label id="osdEpMeta1" translation="[432, 976]" scale="[0.42, 0.42]" width="760" height="24" numLines="1" color="0x94A3B8FF" text="Press OK to Play" />
+          <Rectangle id="osdEpBorder1" translation="[430, 708]" width="344" height="298" color="0x111A2EFF" />
+          <Rectangle id="osdEpBg1" translation="[433, 711]" width="338" height="292" color="0x111A2EFF" />
+          <Poster id="osdEpPoster1" translation="[439, 717]" width="326" height="176" loadWidth="326" loadHeight="176" loadDisplayMode="scaleToZoom" />
+          <Rectangle translation="[447, 725]" width="106" height="24" color="0x070B14D8" />
+          <Label id="osdEpCode1" translation="[451, 729]" scale="[0.42, 0.42]" width="232" height="20" numLines="1" horizAlign="center" color="0xBAE6FDFF" text="S01E02" />
+          <Rectangle id="osdEpProgBg1" translation="[439, 887]" width="326" height="6" color="0x090D16FF" visible="false" />
+          <Rectangle id="osdEpProgFill1" translation="[439, 887]" width="0" height="6" color="0x38BDF8FF" visible="false" />
+          <Label id="osdEpTitle1" translation="[441, 904]" scale="[0.47, 0.47]" width="680" height="46" wrap="true" numLines="2" color="0xFFFFFFFF" text="" />
+          <Label id="osdEpMeta1" translation="[441, 970]" scale="[0.41, 0.41]" width="760" height="22" numLines="1" color="0x64748BFF" text="" />
 
-          <Rectangle id="osdEpBorder2" translation="[782, 710]" width="352" height="302" color="0x263248FF" />
-          <Rectangle id="osdEpBg2" translation="[786, 714]" width="344" height="294" color="0x121927FF" />
-          <Rectangle translation="[794, 722]" width="328" height="178" color="0x0F172AFF" />
-          <Poster id="osdEpPoster2" translation="[794, 722]" width="328" height="178" loadWidth="328" loadHeight="178" loadDisplayMode="scaleToZoom" />
-          <Rectangle translation="[802, 730]" width="114" height="26" color="0x090D16E6" />
-          <Label id="osdEpCode2" translation="[806, 734]" scale="[0.44, 0.44]" width="240" height="22" numLines="1" horizAlign="center" color="0xFCD34DFF" text="S01E03" />
-          <Rectangle id="osdEpProgBg2" translation="[794, 894]" width="328" height="6" color="0x090D16FF" visible="false" />
-          <Rectangle id="osdEpProgFill2" translation="[794, 894]" width="0" height="6" color="0xE8A33DFF" visible="false" />
-          <Label id="osdEpTitle2" translation="[796, 910]" scale="[0.48, 0.48]" width="680" height="46" wrap="true" numLines="2" color="0xFFFFFFFF" text="Episode 3" />
-          <Label id="osdEpMeta2" translation="[796, 976]" scale="[0.42, 0.42]" width="760" height="24" numLines="1" color="0x94A3B8FF" text="Press OK to Play" />
+          <Rectangle id="osdEpBorder2" translation="[786, 708]" width="344" height="298" color="0x111A2EFF" />
+          <Rectangle id="osdEpBg2" translation="[789, 711]" width="338" height="292" color="0x111A2EFF" />
+          <Poster id="osdEpPoster2" translation="[795, 717]" width="326" height="176" loadWidth="326" loadHeight="176" loadDisplayMode="scaleToZoom" />
+          <Rectangle translation="[803, 725]" width="106" height="24" color="0x070B14D8" />
+          <Label id="osdEpCode2" translation="[807, 729]" scale="[0.42, 0.42]" width="232" height="20" numLines="1" horizAlign="center" color="0xBAE6FDFF" text="S01E03" />
+          <Rectangle id="osdEpProgBg2" translation="[795, 887]" width="326" height="6" color="0x090D16FF" visible="false" />
+          <Rectangle id="osdEpProgFill2" translation="[795, 887]" width="0" height="6" color="0x38BDF8FF" visible="false" />
+          <Label id="osdEpTitle2" translation="[797, 904]" scale="[0.47, 0.47]" width="680" height="46" wrap="true" numLines="2" color="0xFFFFFFFF" text="" />
+          <Label id="osdEpMeta2" translation="[797, 970]" scale="[0.41, 0.41]" width="760" height="22" numLines="1" color="0x64748BFF" text="" />
 
-          <Rectangle id="osdEpBorder3" translation="[1146, 710]" width="352" height="302" color="0x263248FF" />
-          <Rectangle id="osdEpBg3" translation="[1150, 714]" width="344" height="294" color="0x121927FF" />
-          <Rectangle translation="[1158, 722]" width="328" height="178" color="0x0F172AFF" />
-          <Poster id="osdEpPoster3" translation="[1158, 722]" width="328" height="178" loadWidth="328" loadHeight="178" loadDisplayMode="scaleToZoom" />
-          <Rectangle translation="[1166, 730]" width="114" height="26" color="0x090D16E6" />
-          <Label id="osdEpCode3" translation="[1170, 734]" scale="[0.44, 0.44]" width="240" height="22" numLines="1" horizAlign="center" color="0xFCD34DFF" text="S01E04" />
-          <Rectangle id="osdEpProgBg3" translation="[1158, 894]" width="328" height="6" color="0x090D16FF" visible="false" />
-          <Rectangle id="osdEpProgFill3" translation="[1158, 894]" width="0" height="6" color="0xE8A33DFF" visible="false" />
-          <Label id="osdEpTitle3" translation="[1160, 910]" scale="[0.48, 0.48]" width="680" height="46" wrap="true" numLines="2" color="0xFFFFFFFF" text="Episode 4" />
-          <Label id="osdEpMeta3" translation="[1160, 976]" scale="[0.42, 0.42]" width="760" height="24" numLines="1" color="0x94A3B8FF" text="Press OK to Play" />
+          <Rectangle id="osdEpBorder3" translation="[1142, 708]" width="344" height="298" color="0x111A2EFF" />
+          <Rectangle id="osdEpBg3" translation="[1145, 711]" width="338" height="292" color="0x111A2EFF" />
+          <Poster id="osdEpPoster3" translation="[1151, 717]" width="326" height="176" loadWidth="326" loadHeight="176" loadDisplayMode="scaleToZoom" />
+          <Rectangle translation="[1159, 725]" width="106" height="24" color="0x070B14D8" />
+          <Label id="osdEpCode3" translation="[1163, 729]" scale="[0.42, 0.42]" width="232" height="20" numLines="1" horizAlign="center" color="0xBAE6FDFF" text="S01E04" />
+          <Rectangle id="osdEpProgBg3" translation="[1151, 887]" width="326" height="6" color="0x090D16FF" visible="false" />
+          <Rectangle id="osdEpProgFill3" translation="[1151, 887]" width="0" height="6" color="0x38BDF8FF" visible="false" />
+          <Label id="osdEpTitle3" translation="[1153, 904]" scale="[0.47, 0.47]" width="680" height="46" wrap="true" numLines="2" color="0xFFFFFFFF" text="" />
+          <Label id="osdEpMeta3" translation="[1153, 970]" scale="[0.41, 0.41]" width="760" height="22" numLines="1" color="0x64748BFF" text="" />
 
-          <Rectangle id="osdEpBorder4" translation="[1510, 710]" width="356" height="302" color="0x263248FF" />
-          <Rectangle id="osdEpBg4" translation="[1514, 714]" width="348" height="294" color="0x121927FF" />
-          <Rectangle translation="[1522, 722]" width="332" height="178" color="0x0F172AFF" />
-          <Poster id="osdEpPoster4" translation="[1522, 722]" width="332" height="178" loadWidth="332" loadHeight="178" loadDisplayMode="scaleToZoom" />
-          <Rectangle translation="[1530, 730]" width="114" height="26" color="0x090D16E6" />
-          <Label id="osdEpCode4" translation="[1534, 734]" scale="[0.44, 0.44]" width="240" height="22" numLines="1" horizAlign="center" color="0xFCD34DFF" text="S01E05" />
-          <Rectangle id="osdEpProgBg4" translation="[1522, 894]" width="332" height="6" color="0x090D16FF" visible="false" />
-          <Rectangle id="osdEpProgFill4" translation="[1522, 894]" width="0" height="6" color="0xE8A33DFF" visible="false" />
-          <Label id="osdEpTitle4" translation="[1524, 910]" scale="[0.48, 0.48]" width="680" height="46" wrap="true" numLines="2" color="0xFFFFFFFF" text="Episode 5" />
-          <Label id="osdEpMeta4" translation="[1524, 976]" scale="[0.42, 0.42]" width="760" height="24" numLines="1" color="0x94A3B8FF" text="Press OK to Play" />
+          <Rectangle id="osdEpBorder4" translation="[1498, 708]" width="348" height="298" color="0x111A2EFF" />
+          <Rectangle id="osdEpBg4" translation="[1501, 711]" width="342" height="292" color="0x111A2EFF" />
+          <Poster id="osdEpPoster4" translation="[1507, 717]" width="330" height="176" loadWidth="330" loadHeight="176" loadDisplayMode="scaleToZoom" />
+          <Rectangle translation="[1515, 725]" width="106" height="24" color="0x070B14D8" />
+          <Label id="osdEpCode4" translation="[1519, 729]" scale="[0.42, 0.42]" width="232" height="20" numLines="1" horizAlign="center" color="0xBAE6FDFF" text="S01E05" />
+          <Rectangle id="osdEpProgBg4" translation="[1507, 887]" width="330" height="6" color="0x090D16FF" visible="false" />
+          <Rectangle id="osdEpProgFill4" translation="[1507, 887]" width="0" height="6" color="0x38BDF8FF" visible="false" />
+          <Label id="osdEpTitle4" translation="[1509, 904]" scale="[0.47, 0.47]" width="680" height="46" wrap="true" numLines="2" color="0xFFFFFFFF" text="" />
+          <Label id="osdEpMeta4" translation="[1509, 970]" scale="[0.41, 0.41]" width="760" height="22" numLines="1" color="0x64748BFF" text="" />
         </Group>
 
-        <!-- TAB 6 DEDICATED PANE: PLEX-STYLE TECHNICAL & MEDIA METADATA 6-CARD GRID (y=658..1014) -->
+        <!-- TAB 6 DEDICATED PANE: CLEAN STREAM & FILE METADATA GRID -->
         <Group id="osdMetaGridGroup" visible="false">
-          <Rectangle translation="[54, 658]" width="592" height="170" color="0x111827FF" />
-          <Rectangle translation="[54, 658]" width="5" height="170" color="0x00BCD4FF" />
-          <Label id="osdMetaHead0" translation="[74, 670]" scale="[0.48, 0.48]" width="1140" height="24" numLines="1" color="0x67E8F9FF" text="1. MEDIA FILE &amp; CONTAINER" />
-          <Label id="osdMetaVal0" translation="[74, 700]" scale="[0.49, 0.49]" width="1130" height="114" wrap="true" numLines="4" color="0xF8FAFCFF" text="" />
+          <Rectangle translation="[74, 656]" width="578" height="170" color="0x0E1626FF" />
+          <Label id="osdMetaHead0" translation="[94, 670]" scale="[0.46, 0.46]" width="1140" height="24" numLines="1" color="0x38BDF8FF" text="FILE &amp; CONTAINER" />
+          <Label id="osdMetaVal0" translation="[94, 700]" scale="[0.48, 0.48]" width="1110" height="112" wrap="true" numLines="4" color="0xE2E8F0FF" text="" />
 
-          <Rectangle translation="[664, 658]" width="592" height="170" color="0x111827FF" />
-          <Rectangle translation="[664, 658]" width="5" height="170" color="0xE8A33DFF" />
-          <Label id="osdMetaHead1" translation="[684, 670]" scale="[0.48, 0.48]" width="1140" height="24" numLines="1" color="0xFCD34DFF" text="2. VIDEO STREAM &amp; RESOLUTION" />
-          <Label id="osdMetaVal1" translation="[684, 700]" scale="[0.49, 0.49]" width="1130" height="114" wrap="true" numLines="4" color="0xF8FAFCFF" text="" />
+          <Rectangle translation="[670, 656]" width="578" height="170" color="0x0E1626FF" />
+          <Label id="osdMetaHead1" translation="[690, 670]" scale="[0.46, 0.46]" width="1140" height="24" numLines="1" color="0x38BDF8FF" text="VIDEO STREAM" />
+          <Label id="osdMetaVal1" translation="[690, 700]" scale="[0.48, 0.48]" width="1110" height="112" wrap="true" numLines="4" color="0xE2E8F0FF" text="" />
 
-          <Rectangle translation="[1274, 658]" width="592" height="170" color="0x111827FF" />
-          <Rectangle translation="[1274, 658]" width="5" height="170" color="0x10B981FF" />
-          <Label id="osdMetaHead2" translation="[1294, 670]" scale="[0.48, 0.48]" width="1140" height="24" numLines="1" color="0x6EE7B7FF" text="3. AUDIO STREAMS &amp; CHANNELS" />
-          <Label id="osdMetaVal2" translation="[1294, 700]" scale="[0.49, 0.49]" width="1130" height="114" wrap="true" numLines="4" color="0xF8FAFCFF" text="" />
+          <Rectangle translation="[1266, 656]" width="580" height="170" color="0x0E1626FF" />
+          <Label id="osdMetaHead2" translation="[1286, 670]" scale="[0.46, 0.46]" width="1140" height="24" numLines="1" color="0x38BDF8FF" text="AUDIO STREAMS" />
+          <Label id="osdMetaVal2" translation="[1286, 700]" scale="[0.48, 0.48]" width="1110" height="112" wrap="true" numLines="4" color="0xE2E8F0FF" text="" />
 
-          <Rectangle translation="[54, 842]" width="592" height="170" color="0x111827FF" />
-          <Rectangle translation="[54, 842]" width="5" height="170" color="0xA855F7FF" />
-          <Label id="osdMetaHead3" translation="[74, 854]" scale="[0.48, 0.48]" width="1140" height="24" numLines="1" color="0xD8B4FEFF" text="4. SUBTITLES &amp; CLOSED CAPTIONS" />
-          <Label id="osdMetaVal3" translation="[74, 884]" scale="[0.49, 0.49]" width="1130" height="114" wrap="true" numLines="4" color="0xF8FAFCFF" text="" />
+          <Rectangle translation="[74, 838]" width="578" height="170" color="0x0E1626FF" />
+          <Label id="osdMetaHead3" translation="[94, 852]" scale="[0.46, 0.46]" width="1140" height="24" numLines="1" color="0x38BDF8FF" text="SUBTITLES" />
+          <Label id="osdMetaVal3" translation="[94, 882]" scale="[0.48, 0.48]" width="1110" height="112" wrap="true" numLines="4" color="0xE2E8F0FF" text="" />
 
-          <Rectangle translation="[664, 842]" width="592" height="170" color="0x111827FF" />
-          <Rectangle translation="[664, 842]" width="5" height="170" color="0x38BDF8FF" />
-          <Label id="osdMetaHead4" translation="[684, 854]" scale="[0.48, 0.48]" width="1140" height="24" numLines="1" color="0x7DD3FCFF" text="5. LIBRARY, RUNTIME &amp; PROGRESS" />
-          <Label id="osdMetaVal4" translation="[684, 884]" scale="[0.49, 0.49]" width="1130" height="114" wrap="true" numLines="4" color="0xF8FAFCFF" text="" />
+          <Rectangle translation="[670, 838]" width="578" height="170" color="0x0E1626FF" />
+          <Label id="osdMetaHead4" translation="[690, 852]" scale="[0.46, 0.46]" width="1140" height="24" numLines="1" color="0x38BDF8FF" text="LIBRARY &amp; PROGRESS" />
+          <Label id="osdMetaVal4" translation="[690, 882]" scale="[0.48, 0.48]" width="1110" height="112" wrap="true" numLines="4" color="0xE2E8F0FF" text="" />
 
-          <Rectangle translation="[1274, 842]" width="592" height="170" color="0x111827FF" />
-          <Rectangle translation="[1274, 842]" width="5" height="170" color="0xF59E0BFF" />
-          <Label id="osdMetaHead5" translation="[1294, 854]" scale="[0.48, 0.48]" width="1140" height="24" numLines="1" color="0xFDE68AFF" text="6. STREAM DELIVERY &amp; BITRATE" />
-          <Label id="osdMetaVal5" translation="[1294, 884]" scale="[0.49, 0.49]" width="1130" height="114" wrap="true" numLines="4" color="0xF8FAFCFF" text="" />
+          <Rectangle translation="[1266, 838]" width="580" height="170" color="0x0E1626FF" />
+          <Label id="osdMetaHead5" translation="[1286, 852]" scale="[0.46, 0.46]" width="1140" height="24" numLines="1" color="0x38BDF8FF" text="DELIVERY &amp; BITRATE" />
+          <Label id="osdMetaVal5" translation="[1286, 882]" scale="[0.48, 0.48]" width="1110" height="112" wrap="true" numLines="4" color="0xE2E8F0FF" text="" />
         </Group>
 
-        <!-- Drawer Bottom Hint Bar (y=1022..1056) -->
-        <Rectangle translation="[54, 1020]" width="1812" height="34" color="0x151D2EFF" />
-        <Label id="osdFooterHint" translation="[70, 1027]" scale="[0.45, 0.45]" width="3900" height="24" numLines="1" color="0xCBD5E1FF" text="[UP/DOWN] Switch Row (Scrubber / Tabs / Options)   |   [LEFT/RIGHT] Navigate   |   [OK] Select   |   [*] Quick Captions   |   [BACK] Hide Menu" />
+        <!-- Minimal Quiet Footer Hint -->
+        <Label id="osdFooterHint" translation="[76, 1020]" scale="[0.43, 0.43]" width="3900" height="22" numLines="1" color="0x64748BFF" text="Up/Down Switch Row   |   Left/Right Navigate   |   OK Select   |   * Subtitles   |   Back Close" />
       </Group>
     </Group>
     <Timer id="clockTimer" repeat="true" duration="1.0" />
@@ -3060,35 +2903,35 @@ sub init()
     m.cinemaLibHash = ""
     m.movieCategories = [
         { id: "all", tag: "COLLECTION", mono: "ALL", label: "All Movies" },
-        { id: "continue", tag: "RESUME", mono: "GO", label: "Continue Watching" },
-        { id: "franchises", tag: "BOX SETS", mono: "BOX", label: "Franchises & Saga" },
+        { id: "continue", tag: "RESUME", mono: "GO", label: "In Progress" },
+        { id: "franchises", tag: "BOX SETS", mono: "BOX", label: "Franchises" },
         { id: "scifi", tag: "GENRE", mono: "SCI", label: "Sci-Fi & Fantasy" },
-        { id: "action", tag: "GENRE", mono: "ACT", label: "Action & Adventure" },
-        { id: "horror", tag: "GENRE", mono: "HOR", label: "Horror & Mystery" },
-        { id: "family", tag: "GENRE", mono: "FAM", label: "Animation & Family" },
-        { id: "comedy", tag: "GENRE", mono: "COM", label: "Comedy & Romance" },
-        { id: "thriller", tag: "GENRE", mono: "THR", label: "Thriller & Crime" },
-        { id: "uhd", tag: "QUALITY", mono: "4K", label: "4K UHD & BluRay" },
-        { id: "new", tag: "RELEASES", mono: "NEW", label: "New (2023-2026)" },
-        { id: "classics", tag: "ARCHIVE", mono: "CLS", label: "Classics (Pre-2010)" }
+        { id: "action", tag: "GENRE", mono: "ACT", label: "Action" },
+        { id: "horror", tag: "GENRE", mono: "HOR", label: "Horror" },
+        { id: "family", tag: "GENRE", mono: "FAM", label: "Family" },
+        { id: "comedy", tag: "GENRE", mono: "COM", label: "Comedy" },
+        { id: "thriller", tag: "GENRE", mono: "THR", label: "Thriller" },
+        { id: "uhd", tag: "QUALITY", mono: "4K", label: "4K & BluRay" },
+        { id: "new", tag: "RELEASES", mono: "NEW", label: "New Releases" },
+        { id: "classics", tag: "ARCHIVE", mono: "CLS", label: "Classics" }
     ]
     m.showCategories = [
         { id: "all", tag: "COLLECTION", mono: "ALL", label: "All TV Shows" },
-        { id: "continue", tag: "RESUME", mono: "GO", label: "Continue Watching" },
-        { id: "networks", tag: "STREAMING", mono: "TV+", label: "Networks & Originals" },
+        { id: "continue", tag: "RESUME", mono: "GO", label: "In Progress" },
+        { id: "networks", tag: "STREAMING", mono: "TV+", label: "Originals" },
         { id: "scifi", tag: "GENRE", mono: "SCI", label: "Sci-Fi & Fantasy" },
         { id: "drama", tag: "GENRE", mono: "DRM", label: "Drama & Crime" },
-        { id: "action", tag: "GENRE", mono: "ACT", label: "Action & Adventure" },
-        { id: "horror", tag: "GENRE", mono: "HOR", label: "Horror & Supernatural" },
-        { id: "comedy", tag: "GENRE", mono: "COM", label: "Comedy & Animation" }
+        { id: "action", tag: "GENRE", mono: "ACT", label: "Action" },
+        { id: "horror", tag: "GENRE", mono: "HOR", label: "Horror" },
+        { id: "comedy", tag: "GENRE", mono: "COM", label: "Comedy" }
     ]
     m.tabloCategories = [
-        { id: "all", tag: "TABLO DVR", mono: "DVR", label: "All Recordings" },
-        { id: "sports", tag: "LIVE SPORTS", mono: "SPT", label: "NFL & MLB Sports" },
-        { id: "series", tag: "TV SHOWS", mono: "TV", label: "Series & Episodes" },
+        { id: "all", tag: "TABLO DVR", mono: "DVR", label: "All DVR" },
+        { id: "sports", tag: "LIVE SPORTS", mono: "SPT", label: "Live Sports" },
+        { id: "series", tag: "TV SHOWS", mono: "TV", label: "Series" },
         { id: "news", tag: "LOCAL OTA", mono: "NWS", label: "Local News" },
-        { id: "fox", tag: "CH 47.1 FOX", mono: "FOX", label: "47.1 WMSNFOX" },
-        { id: "nbc", tag: "CH 15.1 NBC", mono: "NBC", label: "15.1 WMTVNBC" }
+        { id: "fox", tag: "CH 47.1 FOX", mono: "FOX", label: "47.1 FOX" },
+        { id: "nbc", tag: "CH 15.1 NBC", mono: "NBC", label: "15.1 NBC" }
     ]
     m.lastAppliedDefaultTab = ""
     m.cinemaCategories = m.movieCategories
@@ -3259,7 +3102,7 @@ sub updateSlideshowHud()
     if m.slideshowBadgeLabel <> invalid
         if m.slideshowEnabled = true
             m.slideshowBadgeLabel.text = "SLIDESHOW: " + m.slideNumber.ToStr() + "/" + m.slideTotal.ToStr() + " (" + m.slideIntervalSec.ToStr() + "s) - Next in " + m.slideRemSec.ToStr() + "s"
-            m.slideshowBadgeLabel.color = "0xFCD34DFF"
+            m.slideshowBadgeLabel.color = "0xBAE6FDFF"
         else
             m.slideshowBadgeLabel.text = "SINGLE DASHBOARD (Slideshow Off)"
             m.slideshowBadgeLabel.color = "0x94A3B8FF"
@@ -3398,7 +3241,7 @@ sub onClockTick()
     todayBar = m.top.findNode("commitBar29")
     if todayBar <> invalid
         if (m.tickCount mod 2) = 0
-            todayBar.color = "0xF59E0BFF"
+            todayBar.color = "0x38BDF8FF"
         else
             todayBar.color = "0x10B981FF"
         end if
@@ -3736,12 +3579,12 @@ function cinemaClassifyItem(mv as Object) as Object
     isThriller = hasAnyKeyword(hay, ["ready or not", "missing", "housemaid", "obsession", "passenger", "orphan", "scream", "final destination", "ex machina", "it follows", "malignant", "hunting games", "outpost", "thriller", "crime", "mystery", "breaking bad", "better call saul", "dexter", "fargo", "mindhunter", "mr robot", "narcos", "ozark", "peaky blinders", "severance", "sherlock", "sopranos", "true detective", "wire", "yellowjackets"])
 
     primaryGenre = "Drama & Cinema"
-    bgCol = "0x1E293BFF"
+    bgCol = "0x111C30FF"
     barCol = "0x38BDF8FF"
     if isTablo
         primaryGenre = cleanAscii(mv.genre)
         if primaryGenre = "" then primaryGenre = "Tablo OTA DVR"
-        bgCol = "0x0F2938FF"
+        bgCol = "0x0F2536FF"
         barCol = "0x00BCD4FF"
         if mv.pkgThumbUri <> invalid and mv.pkgThumbUri <> ""
             mv.artUrl = mv.pkgThumbUri
@@ -3752,32 +3595,32 @@ function cinemaClassifyItem(mv as Object) as Object
         end if
     else if isTv
         primaryGenre = "TV Series"
-        bgCol = "0x1E1B4BFF"
-        barCol = "0x818CF8FF"
+        bgCol = "0x132038FF"
+        barCol = "0x38BDF8FF"
     else if isScifi
         primaryGenre = "Sci-Fi & Fantasy"
-        bgCol = "0x172554FF"
+        bgCol = "0x14233DFF"
         barCol = "0x38BDF8FF"
     else if isAction
         primaryGenre = "Action & Adventure"
-        bgCol = "0x431407FF"
-        barCol = "0xF59E0BFF"
+        bgCol = "0x132036FF"
+        barCol = "0x38BDF8FF"
     else if isFamily
         primaryGenre = "Animation & Family"
-        bgCol = "0x064E3BFF"
+        bgCol = "0x112433FF"
         barCol = "0x10B981FF"
     else if isComedy
         primaryGenre = "Comedy & Romance"
-        bgCol = "0x4A044EFF"
-        barCol = "0xE879F9FF"
+        bgCol = "0x152038FF"
+        barCol = "0x7DD3FCFF"
     else if isHorror
         primaryGenre = "Horror & Supernatural"
-        bgCol = "0x450A0AFF"
-        barCol = "0xEF4444FF"
+        bgCol = "0x161D30FF"
+        barCol = "0x60A5FAFF"
     else if isThriller
         primaryGenre = "Thriller & Mystery"
-        bgCol = "0x2E1065FF"
-        barCol = "0xA855F7FF"
+        bgCol = "0x141F36FF"
+        barCol = "0x818CF8FF"
     end if
 
     resStr = "1080p HD"
@@ -3917,31 +3760,27 @@ sub updateWallLauncherUi()
     if wp0 <> invalid and firstMovieArt <> "" then wp0.uri = firstMovieArt
     if wp1 <> invalid and firstShowArt <> "" then wp1.uri = firstShowArt
     if wp2 <> invalid and firstTabloArt <> "" then wp2.uri = firstTabloArt
-    if ws0 <> invalid and moviesCnt > 0 then ws0.text = moviesCnt.ToStr() + " Feature Films"
-    if ws1 <> invalid and showsCnt > 0 then ws1.text = showsCnt.ToStr() + " Series | Seasons"
-    if ws2 <> invalid and tabloCnt > 0 then ws2.text = tabloCnt.ToStr() + " DVR Recordings"
+    if ws0 <> invalid and moviesCnt > 0 then ws0.text = moviesCnt.ToStr() + " Films"
+    if ws1 <> invalid and showsCnt > 0 then ws1.text = showsCnt.ToStr() + " Series"
+    if ws2 <> invalid and tabloCnt > 0 then ws2.text = tabloCnt.ToStr() + " Recordings"
     for i = 0 to 5
         bdr = m.top.findNode("wallCardBorder" + i.ToStr())
         bg = m.top.findNode("wallCardBg" + i.ToStr())
+        ttl = m.top.findNode("wallCardTitle" + i.ToStr())
         isF = (i = m.wallCardIndex)
         if bdr <> invalid
-            if isF
-                if i = 0 then bdr.color = "0xFCD34DFF" else if i = 1 then bdr.color = "0x38BDF8FF" else if i = 2 then bdr.color = "0x00BCD4FF" else bdr.color = "0x10B981FF"
-            else
-                bdr.color = "0x1E293BFF"
-            end if
+            if isF then bdr.color = "0xFFFFFFFF" else bdr.color = "0x111A2EFF"
         end if
         if bg <> invalid
-            if isF
-                if i = 0 then bg.color = "0x362816FF" else if i = 1 then bg.color = "0x16324AFF" else if i = 2 then bg.color = "0x14384CFF" else bg.color = "0x1E293BFF"
-            else
-                if i = 0 then bg.color = "0x241B11FF" else if i = 1 then bg.color = "0x112233FF" else if i = 2 then bg.color = "0x0F2938FF" else bg.color = "0x141C2BFF"
-            end if
+            if isF then bg.color = "0x1E3A5FFF" else bg.color = "0x111A2EFF"
+        end if
+        if ttl <> invalid
+            if isF then ttl.color = "0xFFFFFFFF" else ttl.color = "0xCBD5E1FF"
         end if
     end for
     if m.wallCards <> invalid and m.wallCardIndex >= 0 and m.wallCardIndex < m.wallCards.Count()
         wc = m.wallCards[m.wallCardIndex]
-        if m.heroTitle <> invalid then m.heroTitle.text = wc.title + "   |   [LEFT/RIGHT] SELECT CARD   |   [OK] LAUNCH"
+        if m.heroTitle <> invalid then m.heroTitle.text = wc.title
         if m.heroDesc <> invalid then m.heroDesc.text = wc.desc
     end if
 end sub
@@ -3954,33 +3793,19 @@ sub updateCinemaTabHeaderUi()
     moviesCnt = 0
     showsCnt = 0
     tabloCnt = 0
-    firstMovieArt = ""
-    firstShowArt = ""
-    firstTabloArt = ""
     if m.allCinemaItems <> invalid
         for each mv in m.allCinemaItems
             info = cinemaClassifyItem(mv)
             if info.isTablo
                 tabloCnt = tabloCnt + 1
-                if firstTabloArt = "" and mv.artUrl <> invalid and mv.artUrl <> "" then firstTabloArt = mv.artUrl
             else if info.isTv
                 showsCnt = showsCnt + 1
-                if firstShowArt = "" and mv.artUrl <> invalid and mv.artUrl <> "" then firstShowArt = mv.artUrl
             else
                 moviesCnt = moviesCnt + 1
-                if firstMovieArt = "" and mv.artUrl <> invalid and mv.artUrl <> "" then firstMovieArt = mv.artUrl
             end if
         end for
     end if
-    if m.cinemaTabMoviesPoster <> invalid and firstMovieArt <> ""
-        m.cinemaTabMoviesPoster.uri = firstMovieArt
-    end if
-    if m.cinemaTabShowsPoster <> invalid and firstShowArt <> ""
-        m.cinemaTabShowsPoster.uri = firstShowArt
-    end if
-    if m.cinemaTabTabloPoster <> invalid and firstTabloArt <> ""
-        m.cinemaTabTabloPoster.uri = firstTabloArt
-    end if
+
     isMoviesTabFocused = (inTabsZone and m.cinemaTabCol = 0)
     isShowsTabFocused = (inTabsZone and m.cinemaTabCol = 1)
     isTabloTabFocused = (inTabsZone and m.cinemaTabCol = 2 and m.activeShowGroup = invalid)
@@ -3990,43 +3815,28 @@ sub updateCinemaTabHeaderUi()
         if isMoviesTabFocused
             m.cinemaTabMoviesBorder.color = "0xFFFFFFFF"
         else if isMovies
-            m.cinemaTabMoviesBorder.color = "0xE8A33DFF"
+            m.cinemaTabMoviesBorder.color = "0x172554FF"
         else
-            m.cinemaTabMoviesBorder.color = "0x2E261EFF"
+            m.cinemaTabMoviesBorder.color = "0x090E1AFF"
         end if
     end if
     if m.cinemaTabMoviesBg <> invalid
         if isMoviesTabFocused
-            m.cinemaTabMoviesBg.color = "0x3D2E1AFF"
+            m.cinemaTabMoviesBg.color = "0x1E3A5FFF"
         else if isMovies
-            m.cinemaTabMoviesBg.color = "0x2B2114FF"
+            m.cinemaTabMoviesBg.color = "0x172554FF"
         else
-            m.cinemaTabMoviesBg.color = "0x1B1612FF"
+            m.cinemaTabMoviesBg.color = "0x090E1AFF"
         end if
     end if
-    if m.cinemaTabMoviesStripe <> invalid
-        if isMovies or isMoviesTabFocused then m.cinemaTabMoviesStripe.color = "0xFCD34DFF" else m.cinemaTabMoviesStripe.color = "0x2E261EFF"
-    end if
     if m.cinemaTabMoviesLabel <> invalid
-        m.cinemaTabMoviesLabel.text = "MOVIES (" + moviesCnt.ToStr() + ")"
-        if isMovies or isMoviesTabFocused then m.cinemaTabMoviesLabel.color = "0xFCD34DFF" else m.cinemaTabMoviesLabel.color = "0x94A3B8FF"
-    end if
-    if m.cinemaTabMoviesSub <> invalid
-        m.cinemaTabMoviesSub.text = moviesCnt.ToStr() + " Feature Films  |  4K & BluRay"
-    end if
-    if m.cinemaTabMoviesPillBg <> invalid and m.cinemaTabMoviesPillTxt <> invalid
+        m.cinemaTabMoviesLabel.text = "Movies"
         if isMoviesTabFocused
-            m.cinemaTabMoviesPillBg.color = "0xFFFFFFFF"
-            m.cinemaTabMoviesPillTxt.color = "0x110E0BFF"
-            m.cinemaTabMoviesPillTxt.text = "DOWN v"
+            m.cinemaTabMoviesLabel.color = "0xFFFFFFFF"
         else if isMovies
-            m.cinemaTabMoviesPillBg.color = "0xE8A33DFF"
-            m.cinemaTabMoviesPillTxt.color = "0x110E0BFF"
-            m.cinemaTabMoviesPillTxt.text = "ACTIVE"
+            m.cinemaTabMoviesLabel.color = "0x7DD3FCFF"
         else
-            m.cinemaTabMoviesPillBg.color = "0x261F18FF"
-            m.cinemaTabMoviesPillTxt.color = "0xA89F91FF"
-            m.cinemaTabMoviesPillTxt.text = "< TAB"
+            m.cinemaTabMoviesLabel.color = "0x94A3B8FF"
         end if
     end if
 
@@ -4034,43 +3844,28 @@ sub updateCinemaTabHeaderUi()
         if isShowsTabFocused
             m.cinemaTabShowsBorder.color = "0xFFFFFFFF"
         else if isShows
-            m.cinemaTabShowsBorder.color = "0x38BDF8FF"
+            m.cinemaTabShowsBorder.color = "0x172554FF"
         else
-            m.cinemaTabShowsBorder.color = "0x2E261EFF"
+            m.cinemaTabShowsBorder.color = "0x090E1AFF"
         end if
     end if
     if m.cinemaTabShowsBg <> invalid
         if isShowsTabFocused
-            m.cinemaTabShowsBg.color = "0x1E3A54FF"
+            m.cinemaTabShowsBg.color = "0x1E3A5FFF"
         else if isShows
-            m.cinemaTabShowsBg.color = "0x152536FF"
+            m.cinemaTabShowsBg.color = "0x172554FF"
         else
-            m.cinemaTabShowsBg.color = "0x1B1612FF"
+            m.cinemaTabShowsBg.color = "0x090E1AFF"
         end if
     end if
-    if m.cinemaTabShowsStripe <> invalid
-        if isShows or isShowsTabFocused then m.cinemaTabShowsStripe.color = "0x38BDF8FF" else m.cinemaTabShowsStripe.color = "0x2E261EFF"
-    end if
     if m.cinemaTabShowsLabel <> invalid
-        m.cinemaTabShowsLabel.text = "TV SHOWS (" + showsCnt.ToStr() + ")"
-        if isShows or isShowsTabFocused then m.cinemaTabShowsLabel.color = "0x67E8F9FF" else m.cinemaTabShowsLabel.color = "0x94A3B8FF"
-    end if
-    if m.cinemaTabShowsSub <> invalid
-        m.cinemaTabShowsSub.text = showsCnt.ToStr() + " Series  |  Seasons & Episodes"
-    end if
-    if m.cinemaTabShowsPillBg <> invalid and m.cinemaTabShowsPillTxt <> invalid
+        m.cinemaTabShowsLabel.text = "TV Shows"
         if isShowsTabFocused
-            m.cinemaTabShowsPillBg.color = "0xFFFFFFFF"
-            m.cinemaTabShowsPillTxt.color = "0x090D16FF"
-            if m.activeShowGroup <> invalid then m.cinemaTabShowsPillTxt.text = "OK: ALL" else m.cinemaTabShowsPillTxt.text = "DOWN v"
+            m.cinemaTabShowsLabel.color = "0xFFFFFFFF"
         else if isShows
-            m.cinemaTabShowsPillBg.color = "0x38BDF8FF"
-            m.cinemaTabShowsPillTxt.color = "0x090D16FF"
-            m.cinemaTabShowsPillTxt.text = "ACTIVE"
+            m.cinemaTabShowsLabel.color = "0x7DD3FCFF"
         else
-            m.cinemaTabShowsPillBg.color = "0x261F18FF"
-            m.cinemaTabShowsPillTxt.color = "0xA89F91FF"
-            m.cinemaTabShowsPillTxt.text = "TAB"
+            m.cinemaTabShowsLabel.color = "0x94A3B8FF"
         end if
     end if
 
@@ -4081,63 +3876,60 @@ sub updateCinemaTabHeaderUi()
         if isTabloTabFocused
             m.cinemaTabTabloBorder.color = "0xFFFFFFFF"
         else if isTablo
-            m.cinemaTabTabloBorder.color = "0x00BCD4FF"
+            m.cinemaTabTabloBorder.color = "0x172554FF"
         else
-            m.cinemaTabTabloBorder.color = "0x2E261EFF"
+            m.cinemaTabTabloBorder.color = "0x090E1AFF"
         end if
     end if
     if m.cinemaTabTabloBg <> invalid
         if isTabloTabFocused
-            m.cinemaTabTabloBg.color = "0x16425BFF"
+            m.cinemaTabTabloBg.color = "0x1E3A5FFF"
         else if isTablo
-            m.cinemaTabTabloBg.color = "0x0F2938FF"
+            m.cinemaTabTabloBg.color = "0x172554FF"
         else
-            m.cinemaTabTabloBg.color = "0x1B1612FF"
+            m.cinemaTabTabloBg.color = "0x090E1AFF"
         end if
     end if
-    if m.cinemaTabTabloStripe <> invalid
-        if isTablo or isTabloTabFocused then m.cinemaTabTabloStripe.color = "0x00BCD4FF" else m.cinemaTabTabloStripe.color = "0x2E261EFF"
-    end if
     if m.cinemaTabTabloLabel <> invalid
-        m.cinemaTabTabloLabel.text = "TABLO DVR (" + tabloCnt.ToStr() + ")"
-        if isTablo or isTabloTabFocused then m.cinemaTabTabloLabel.color = "0x67E8F9FF" else m.cinemaTabTabloLabel.color = "0x94A3B8FF"
-    end if
-    if m.cinemaTabTabloSub <> invalid
-        m.cinemaTabTabloSub.text = tabloCnt.ToStr() + " OTA Recordings"
-    end if
-    if m.cinemaTabTabloPillBg <> invalid and m.cinemaTabTabloPillTxt <> invalid
+        m.cinemaTabTabloLabel.text = "DVR"
         if isTabloTabFocused
-            m.cinemaTabTabloPillBg.color = "0xFFFFFFFF"
-            m.cinemaTabTabloPillTxt.color = "0x07131AFF"
-            m.cinemaTabTabloPillTxt.text = "DOWN v"
+            m.cinemaTabTabloLabel.color = "0xFFFFFFFF"
         else if isTablo
-            m.cinemaTabTabloPillBg.color = "0x00BCD4FF"
-            m.cinemaTabTabloPillTxt.color = "0x07131AFF"
-            m.cinemaTabTabloPillTxt.text = "ACTIVE"
+            m.cinemaTabTabloLabel.color = "0x7DD3FCFF"
         else
-            m.cinemaTabTabloPillBg.color = "0x261F18FF"
-            m.cinemaTabTabloPillTxt.color = "0xA89F91FF"
-            m.cinemaTabTabloPillTxt.text = "TABLO >"
+            m.cinemaTabTabloLabel.color = "0x94A3B8FF"
         end if
     end if
 
     if m.cinemaTabBackGroup <> invalid
         if m.activeShowGroup <> invalid
             m.cinemaTabBackGroup.visible = true
-            if m.cinemaTabBackPoster <> invalid and firstShowArt <> ""
-                m.cinemaTabBackPoster.uri = firstShowArt
-            end if
             if m.cinemaTabBackBorder <> invalid
-                if isBackTabFocused then m.cinemaTabBackBorder.color = "0xFFFFFFFF" else m.cinemaTabBackBorder.color = "0x38BDF8FF"
+                if isBackTabFocused then m.cinemaTabBackBorder.color = "0xFFFFFFFF" else m.cinemaTabBackBorder.color = "0x13253AFF"
             end if
             if m.cinemaTabBackBg <> invalid
-                if isBackTabFocused then m.cinemaTabBackBg.color = "0x1E3A54FF" else m.cinemaTabBackBg.color = "0x132536FF"
+                if isBackTabFocused then m.cinemaTabBackBg.color = "0x1E3A5FFF" else m.cinemaTabBackBg.color = "0x13253AFF"
             end if
-            if m.cinemaTabBackSub <> invalid
-                m.cinemaTabBackSub.text = "OK: Return to " + showsCnt.ToStr() + " Series"
+            if m.cinemaTabBackLabel <> invalid
+                if isBackTabFocused then m.cinemaTabBackLabel.color = "0xFFFFFFFF" else m.cinemaTabBackLabel.color = "0x7DD3FCFF"
             end if
         else
             m.cinemaTabBackGroup.visible = false
+        end if
+    end if
+
+    if m.cinemaActiveCatBadge <> invalid
+        m.cinemaActiveCatBadge.color = "0x94A3B8FF"
+        if m.activeShowGroup <> invalid
+            sCountVal = safeInt(m.activeShowGroup.seasonCount)
+            eCountVal = safeInt(m.activeShowGroup.episodeCount)
+            m.cinemaActiveCatBadge.text = Left(cleanAscii(m.activeShowGroup.title), 28) + "   |   " + sCountVal.ToStr() + " Seasons  (" + eCountVal.ToStr() + " Eps)"
+        else if isTablo
+            m.cinemaActiveCatBadge.text = tabloCnt.ToStr() + " DVR Recordings"
+        else if isShows
+            m.cinemaActiveCatBadge.text = showsCnt.ToStr() + " TV Series"
+        else
+            m.cinemaActiveCatBadge.text = moviesCnt.ToStr() + " Movies"
         end if
     end if
 end sub
@@ -4164,102 +3956,9 @@ sub switchCinemaTab(tabName as String)
 end sub
 
 sub updateCinemaPaneFocusUi()
-    zone = m.cinemaFocusZone
-    isTabs = (zone = "tabs")
-    isCat = (zone = "categories")
-    isPosters = (zone = "posters")
-
     if m.cinemaHeaderAccent <> invalid
-        if isTabs then m.cinemaHeaderAccent.color = "0xFFFFFFFF" else if m.cinemaActiveTab = "tablo" then m.cinemaHeaderAccent.color = "0x00BCD4FF" else if m.cinemaActiveTab = "shows" then m.cinemaHeaderAccent.color = "0x38BDF8FF" else m.cinemaHeaderAccent.color = "0xE8A33DFF"
+        m.cinemaHeaderAccent.color = "0x162032FF"
     end if
-    if m.cinemaCatFocusStripe <> invalid
-        if isCat then m.cinemaCatFocusStripe.color = "0xFCD34DFF" else m.cinemaCatFocusStripe.color = "0x2E261EFF"
-    end if
-    if m.cinemaListFocusStripe <> invalid
-        if isPosters
-            if m.cinemaActiveTab = "tablo" then m.cinemaListFocusStripe.color = "0x00BCD4FF" else if m.cinemaActiveTab = "shows" then m.cinemaListFocusStripe.color = "0x38BDF8FF" else m.cinemaListFocusStripe.color = "0xE8A33DFF"
-        else
-            m.cinemaListFocusStripe.color = "0x2E261EFF"
-        end if
-    end if
-
-    if m.cinemaZoneCompassBar <> invalid and m.cinemaActiveCatBadge <> invalid and m.cinemaLibSubHeader <> invalid
-        if isTabs
-            m.cinemaZoneCompassBar.color = "0xFFFFFFFF"
-            m.cinemaActiveCatBadge.color = "0xFFFFFFFF"
-            m.cinemaActiveCatBadge.text = "ROW 1 OF 3: MOVIES | TV SHOWS | TABLO DVR TABS"
-            m.cinemaLibSubHeader.text = "[LEFT/RIGHT] SWITCH MOVIES / SHOWS / TABLO TAB   |   [DOWN] CATEGORIES   |   [OK] SELECT"
-        else if isCat
-            m.cinemaZoneCompassBar.color = "0xFCD34DFF"
-            m.cinemaActiveCatBadge.color = "0xFCD34DFF"
-            if m.activeShowGroup <> invalid
-                m.cinemaActiveCatBadge.text = "ROW 2 OF 3: SEASON IMAGE CARDS (" + UCase(Left(cleanAscii(m.activeShowGroup.title), 18)) + ")"
-                m.cinemaLibSubHeader.text = "[LEFT/RIGHT] PICK SEASON   |   [UP] TABS   |   [DOWN / OK] EPISODE POSTERS"
-            else
-                m.cinemaActiveCatBadge.text = "ROW 2 OF 3: CATEGORY IMAGE CARDS"
-                m.cinemaLibSubHeader.text = "[LEFT/RIGHT] FILTER CATEGORY   |   [UP] MOVIES/SHOWS/TABLO TABS   |   [DOWN / OK] POSTERS"
-            end if
-        else
-            if m.cinemaActiveTab = "tablo" then m.cinemaZoneCompassBar.color = "0x00BCD4FF" else if m.cinemaActiveTab = "shows" then m.cinemaZoneCompassBar.color = "0x38BDF8FF" else m.cinemaZoneCompassBar.color = "0xE8A33DFF"
-            m.cinemaActiveCatBadge.color = "0x67E8F9FF"
-            if m.activeShowGroup <> invalid
-                m.cinemaActiveCatBadge.text = "ROW 3 OF 3: EPISODE POSTER CARDS"
-                m.cinemaLibSubHeader.text = "[LEFT/RIGHT] BROWSE EPISODES   |   [OK] WATCH   |   [UP] SEASONS   |   [UP x2] TABS"
-            else if m.cinemaActiveTab = "tablo"
-                m.cinemaActiveCatBadge.text = "ROW 3 OF 3: TABLO DVR RECORDING THUMBNAIL CARDS"
-                m.cinemaLibSubHeader.text = "[LEFT/RIGHT] BROWSE RECORDINGS   |   [OK] WATCH DVR   |   [UP] CATEGORIES & TABS"
-            else if m.cinemaActiveTab = "shows"
-                m.cinemaActiveCatBadge.text = "ROW 3 OF 3: TV SERIES POSTER CARDS"
-                m.cinemaLibSubHeader.text = "[LEFT/RIGHT] BROWSE SERIES   |   [OK] OPEN SEASONS   |   [UP] CATEGORIES & TABS"
-            else
-                m.cinemaActiveCatBadge.color = "0xFCD34DFF"
-                m.cinemaActiveCatBadge.text = "ROW 3 OF 3: MOVIE POSTER CARDS"
-                m.cinemaLibSubHeader.text = "[LEFT/RIGHT] BROWSE MOVIES   |   [DOWN] NEXT 6   |   [OK] WATCH   |   [UP] CATEGORIES & TABS"
-            end if
-        end if
-    end if
-
-    if m.cinemaCatHeaderLabel <> invalid
-        if m.activeShowGroup <> invalid
-            sName = UCase(Left(cleanAscii(m.activeShowGroup.title), 24))
-            if isCat
-                m.cinemaCatHeaderLabel.text = ">> ROW 2 (ACTIVE)  |  " + sName + " SEASONS  ([LEFT/RIGHT] SELECT SEASON  |  [UP] TABS  |  [DOWN / OK] EPISODES)"
-                m.cinemaCatHeaderLabel.color = "0xFCD34DFF"
-            else
-                m.cinemaCatHeaderLabel.text = "ROW 2  |  " + sName + " SEASONS  (PRESS [UP] FROM POSTERS TO SWITCH SEASON OR RETURN TO ALL SHOWS)"
-                m.cinemaCatHeaderLabel.color = "0xA89F91FF"
-            end if
-        else if m.cinemaActiveTab = "tablo"
-            if isCat
-                m.cinemaCatHeaderLabel.text = ">> ROW 2 (ACTIVE)  |  TABLO DVR CHANNELS & CATEGORIES  ([LEFT/RIGHT] FILTER  |  [UP] TABS  |  [DOWN] RECORDINGS)"
-                m.cinemaCatHeaderLabel.color = "0x67E8F9FF"
-            else
-                m.cinemaCatHeaderLabel.text = "ROW 2  |  TABLO DVR CATEGORIES  (1 [UP] FROM RECORDINGS  |  2 [UP] TO MOVIES / SHOWS / TABLO TABS)"
-                m.cinemaCatHeaderLabel.color = "0xA89F91FF"
-            end if
-        else if m.cinemaActiveTab = "shows"
-            if isCat
-                m.cinemaCatHeaderLabel.text = ">> ROW 2 (ACTIVE)  |  TV SHOW CATEGORIES  ([LEFT/RIGHT] FILTER SERIES  |  [UP] MOVIES/SHOWS/TABLO TABS  |  [DOWN] POSTERS)"
-                m.cinemaCatHeaderLabel.color = "0x67E8F9FF"
-            else
-                m.cinemaCatHeaderLabel.text = "ROW 2  |  TV SHOW CATEGORIES  (1 [UP] FROM POSTERS  |  2 [UP] TO MOVIES / TV SHOWS / TABLO TABS)"
-                m.cinemaCatHeaderLabel.color = "0xA89F91FF"
-            end if
-        else
-            if isCat
-                m.cinemaCatHeaderLabel.text = ">> ROW 2 (ACTIVE)  |  MOVIE CATEGORIES  ([LEFT/RIGHT] FILTER MOVIES  |  [UP] MOVIES/SHOWS TABS  |  [DOWN] POSTERS)"
-                m.cinemaCatHeaderLabel.color = "0xFCD34DFF"
-            else
-                m.cinemaCatHeaderLabel.text = "ROW 2  |  MOVIE CATEGORIES  (1 [UP] FROM POSTERS  |  2 [UP] TO MOVIES / TV SHOWS TABS)"
-                m.cinemaCatHeaderLabel.color = "0xA89F91FF"
-            end if
-        end if
-    end if
-
-    if m.cinemaPlayBtnBg <> invalid
-        if isPosters then m.cinemaPlayBtnBg.color = "0xE8A33DFF" else m.cinemaPlayBtnBg.color = "0x9A6B26FF"
-    end if
-
     updateCinemaTabHeaderUi()
     updateCinemaCategoryCardsUi()
     updateCinemaPosterShelf(m.cinemaPosterIndex)
@@ -4272,92 +3971,52 @@ sub updateCinemaCategoryCardsUi()
         activeIdx = m.activeSeasonIndex
         if activeIdx < 0 then activeIdx = 0
         if activeIdx >= totalS then activeIdx = totalS - 1
-        winStart = activeIdx - 2
-        if winStart + 6 > totalS then winStart = totalS - 6
-        if winStart < 0 then winStart = 0
-        if m.cinemaCatSubHint <> invalid
-            m.cinemaCatSubHint.text = "Season Card " + (activeIdx + 1).ToStr() + " of " + totalS.ToStr() + "  |  [LEFT/RIGHT] Switch  |  [UP] Tabs  |  [DOWN] Posters"
-        end if
+        winStart = Int(activeIdx / 6) * 6
         for slot = 0 to 5
             sIdx = winStart + slot
             bdr = m.top.findNode("cinemaCatCardBorder" + slot.ToStr())
             bg = m.top.findNode("cinemaCatCardBg" + slot.ToStr())
-            bar = m.top.findNode("cinemaCatCardActiveBar" + slot.ToStr())
-            artBg = m.top.findNode("cinemaCatCardArtBg" + slot.ToStr())
-            mono = m.top.findNode("cinemaCatCardMono" + slot.ToStr())
-            pst = m.top.findNode("cinemaCatCardPoster" + slot.ToStr())
-            tag = m.top.findNode("cinemaCatCardTag" + slot.ToStr())
             ttl = m.top.findNode("cinemaCatCardTitle" + slot.ToStr())
-            cnt = m.top.findNode("cinemaCatCardCount" + slot.ToStr())
             if sIdx < totalS
                 sObj = m.activeShowSeasons[sIdx]
                 isSel = (sIdx = activeIdx)
+                epCnt = 0
+                if sObj.episodes <> invalid then epCnt = sObj.episodes.Count()
                 if bdr <> invalid
                     bdr.visible = true
                     if isSel and isCatZone
                         bdr.color = "0xFFFFFFFF"
                     else if isSel
-                        bdr.color = "0x38BDF8FF"
+                        bdr.color = "0x172554FF"
                     else
-                        bdr.color = "0x2E261EFF"
+                        bdr.color = "0x0D1526FF"
                     end if
                 end if
                 if bg <> invalid
                     bg.visible = true
                     if isSel and isCatZone
-                        bg.color = "0x1E3A54FF"
+                        bg.color = "0x1E3A5FFF"
                     else if isSel
-                        bg.color = "0x152536FF"
+                        bg.color = "0x172554FF"
                     else
-                        bg.color = "0x1D1813FF"
+                        bg.color = "0x0D1526FF"
                     end if
-                end if
-                if bar <> invalid
-                    bar.visible = true
-                    if isSel then bar.color = "0x38BDF8FF" else bar.color = "0x2E261EFF"
-                end if
-                if artBg <> invalid
-                    artBg.visible = true
-                    if sObj.id = "__back_shows__" then artBg.color = "0x0F172AFF" else artBg.color = "0x1E1B4BFF"
-                end if
-                if mono <> invalid
-                    mono.visible = true
-                    mono.text = cleanAscii(sObj.mono)
-                end if
-                if pst <> invalid
-                    pst.visible = true
-                    if sObj.artUrl <> invalid and sObj.artUrl <> ""
-                        pst.uri = sObj.artUrl
-                    else if m.activeShowGroup.artUrl <> invalid and m.activeShowGroup.artUrl <> ""
-                        pst.uri = m.activeShowGroup.artUrl
-                    else
-                        pst.uri = ""
-                    end if
-                end if
-                if tag <> invalid
-                    tag.visible = true
-                    tag.text = cleanAscii(sObj.tag)
                 end if
                 if ttl <> invalid
                     ttl.visible = true
-                    ttl.text = cleanAscii(sObj.label)
-                    if isSel then ttl.color = "0x67E8F9FF" else ttl.color = "0xF8FAFCFF"
-                end if
-                if cnt <> invalid
-                    cnt.visible = true
-                    cnt.text = cleanAscii(sObj.countText)
-                    if isSel then cnt.color = "0xFCD34DFF" else cnt.color = "0xA89F91FF"
+                    ttl.text = cleanAscii(sObj.label) + " (" + epCnt.ToStr() + ")"
+                    if isSel and isCatZone
+                        ttl.color = "0xFFFFFFFF"
+                    else if isSel
+                        ttl.color = "0x7DD3FCFF"
+                    else
+                        ttl.color = "0x94A3B8FF"
+                    end if
                 end if
             else
                 if bdr <> invalid then bdr.visible = false
                 if bg <> invalid then bg.visible = false
-                if bar <> invalid then bar.visible = false
-                if artBg <> invalid then artBg.visible = false
-                if mono <> invalid then mono.visible = false
-                if pst <> invalid then pst.visible = false
-                if tag <> invalid then tag.visible = false
                 if ttl <> invalid then ttl.visible = false
-                if cnt <> invalid then cnt.visible = false
             end if
         end for
         return
@@ -4368,36 +4027,21 @@ sub updateCinemaCategoryCardsUi()
     activeIdx = m.cinemaCatIndex
     if activeIdx < 0 then activeIdx = 0
     if activeIdx >= totalC then activeIdx = totalC - 1
-    winStart = activeIdx - 2
-    if winStart + 6 > totalC then winStart = totalC - 6
-    if winStart < 0 then winStart = 0
-    if m.cinemaCatSubHint <> invalid
-        m.cinemaCatSubHint.text = "Category " + (activeIdx + 1).ToStr() + " of " + totalC.ToStr() + "  |  [LEFT/RIGHT] Filter  |  [UP] Tabs  |  [DOWN] Posters"
-    end if
+    winStart = Int(activeIdx / 6) * 6
 
     for slot = 0 to 5
         cIdx = winStart + slot
         bdr = m.top.findNode("cinemaCatCardBorder" + slot.ToStr())
         bg = m.top.findNode("cinemaCatCardBg" + slot.ToStr())
-        bar = m.top.findNode("cinemaCatCardActiveBar" + slot.ToStr())
-        artBg = m.top.findNode("cinemaCatCardArtBg" + slot.ToStr())
-        mono = m.top.findNode("cinemaCatCardMono" + slot.ToStr())
-        pst = m.top.findNode("cinemaCatCardPoster" + slot.ToStr())
-        tag = m.top.findNode("cinemaCatCardTag" + slot.ToStr())
         ttl = m.top.findNode("cinemaCatCardTitle" + slot.ToStr())
-        cnt = m.top.findNode("cinemaCatCardCount" + slot.ToStr())
         if cIdx < totalC
             cat = m.cinemaCategories[cIdx]
             isSel = (cIdx = activeIdx)
             matchCnt = 0
-            repArt = ""
             if m.allCinemaItems <> invalid
                 for each mv in m.allCinemaItems
                     if cinemaItemMatchesCat(mv, cat.id)
                         matchCnt = matchCnt + 1
-                        if repArt = "" and mv.artUrl <> invalid and mv.artUrl <> ""
-                            repArt = mv.artUrl
-                        end if
                     end if
                 end for
             end if
@@ -4406,67 +4050,36 @@ sub updateCinemaCategoryCardsUi()
                 if isSel and isCatZone
                     bdr.color = "0xFFFFFFFF"
                 else if isSel
-                    bdr.color = "0xE8A33DFF"
+                    bdr.color = "0x172554FF"
                 else
-                    bdr.color = "0x2E261EFF"
+                    bdr.color = "0x0D1526FF"
                 end if
             end if
             if bg <> invalid
                 bg.visible = true
                 if isSel and isCatZone
-                    bg.color = "0x382B19FF"
+                    bg.color = "0x1E3A5FFF"
                 else if isSel
-                    bg.color = "0x281F15FF"
+                    bg.color = "0x172554FF"
                 else
-                    bg.color = "0x1D1813FF"
+                    bg.color = "0x0D1526FF"
                 end if
-            end if
-            if bar <> invalid
-                bar.visible = true
-                if isSel then bar.color = "0xE8A33DFF" else bar.color = "0x2E261EFF"
-            end if
-            if artBg <> invalid
-                artBg.visible = true
-                if m.cinemaActiveTab = "tablo" then artBg.color = "0x0F2938FF" else if m.cinemaActiveTab = "shows" then artBg.color = "0x172554FF" else artBg.color = "0x3B2314FF"
-            end if
-            if mono <> invalid
-                mono.visible = true
-                mono.text = cleanAscii(cat.mono)
-            end if
-            if pst <> invalid
-                pst.visible = true
-                pst.uri = repArt
-            end if
-            if tag <> invalid
-                tag.visible = true
-                tag.text = cleanAscii(cat.tag)
             end if
             if ttl <> invalid
                 ttl.visible = true
-                ttl.text = cleanAscii(cat.label)
-                if isSel then ttl.color = "0xFCD34DFF" else ttl.color = "0xF8FAFCFF"
-            end if
-            if cnt <> invalid
-                cnt.visible = true
-                if m.cinemaActiveTab = "tablo"
-                    cnt.text = matchCnt.ToStr() + " Recordings"
-                else if m.cinemaActiveTab = "shows"
-                    cnt.text = matchCnt.ToStr() + " Series"
+                ttl.text = cleanAscii(cat.label) + " (" + matchCnt.ToStr() + ")"
+                if isSel and isCatZone
+                    ttl.color = "0xFFFFFFFF"
+                else if isSel
+                    ttl.color = "0x7DD3FCFF"
                 else
-                    cnt.text = matchCnt.ToStr() + " Films"
+                    ttl.color = "0x94A3B8FF"
                 end if
-                if isSel then cnt.color = "0x67E8F9FF" else cnt.color = "0xA89F91FF"
             end if
         else
             if bdr <> invalid then bdr.visible = false
             if bg <> invalid then bg.visible = false
-            if bar <> invalid then bar.visible = false
-            if artBg <> invalid then artBg.visible = false
-            if mono <> invalid then mono.visible = false
-            if pst <> invalid then pst.visible = false
-            if tag <> invalid then tag.visible = false
             if ttl <> invalid then ttl.visible = false
-            if cnt <> invalid then cnt.visible = false
         end if
     end for
 end sub
@@ -4479,26 +4092,6 @@ sub enterShowSeasons(showObj as Object, showIdx as Integer)
     showArt = ""
     if showObj.artUrl <> invalid then showArt = showObj.artUrl
     seasons = []
-    seasons.Push({
-        id: "__back_shows__",
-        seasonNumber: -1,
-        tag: "RETURN",
-        mono: "ALL",
-        label: "All TV Shows",
-        countText: "Back to Series",
-        artUrl: showArt,
-        episodes: []
-    })
-    seasons.Push({
-        id: "season_all",
-        seasonNumber: 0,
-        tag: "COMPLETE SERIES",
-        mono: "ALL",
-        label: "All Seasons",
-        countText: eps.Count().ToStr() + " Episodes",
-        artUrl: showArt,
-        episodes: eps
-    })
     seenSeasons = {}
     seasonNums = []
     for each ep in eps
@@ -4527,17 +4120,26 @@ sub enterShowSeasons(showObj as Object, showIdx as Integer)
             end for
         end for
     end if
-    for each sNum in seasonNums
+    defaultSIdx = 0
+    foundInProgSeason = false
+    for idxN = 0 to seasonNums.Count() - 1
+        sNum = seasonNums[idxN]
         sEps = []
         sArt = showArt
+        hasInProg = false
         for each ep in eps
-            epS = 1
-            if ep.seasonNumber <> invalid and ep.seasonNumber >= 0 then epS = Int(ep.seasonNumber)
-            if epS = sNum
+            epSeasonNum = 1
+            if ep.seasonNumber <> invalid and ep.seasonNumber >= 0 then epSeasonNum = Int(ep.seasonNumber)
+            if epSeasonNum = sNum
                 sEps.Push(ep)
+                if ep.inProgress = true then hasInProg = true
                 if sArt = showArt and ep.artUrl <> invalid and ep.artUrl <> "" then sArt = ep.artUrl
             end if
         end for
+        if hasInProg and not foundInProgSeason
+            defaultSIdx = seasons.Count()
+            foundInProgSeason = true
+        end if
         sLbl = "Season " + sNum.ToStr()
         sMono = "S" + pad2(sNum)
         sTag = "SEASON " + sNum.ToStr()
@@ -4557,9 +4159,19 @@ sub enterShowSeasons(showObj as Object, showIdx as Integer)
             episodes: sEps
         })
     end for
+    if seasonNums.Count() > 1
+        seasons.Push({
+            id: "season_all",
+            seasonNumber: -1,
+            tag: "COMPLETE SERIES",
+            mono: "ALL",
+            label: "All Seasons",
+            countText: eps.Count().ToStr() + " Episodes",
+            artUrl: showArt,
+            episodes: eps
+        })
+    end if
     m.activeShowSeasons = seasons
-    defaultSIdx = 1
-    if seasons.Count() > 2 then defaultSIdx = 2
     m.activeSeasonIndex = defaultSIdx
     applyShowSeasonFilter(defaultSIdx)
     m.cinemaFocusZone = "posters"
@@ -4586,16 +4198,10 @@ sub applyShowSeasonFilter(sIdx as Integer)
     if sIdx < 0 or sIdx >= m.activeShowSeasons.Count() then return
     m.activeSeasonIndex = sIdx
     sObj = m.activeShowSeasons[sIdx]
-    if sObj.id = "__back_shows__"
-        updateCinemaCategoryCardsUi()
-        return
-    end if
     eps = sObj.episodes
     m.cinemaLibItems = eps
-    showTitleUpper = UCase(Left(cleanAscii(m.activeShowGroup.title), 26))
-    sLabelUpper = UCase(sObj.label)
     if m.cinemaShelfTitleLabel <> invalid
-        m.cinemaShelfTitleLabel.text = "ROW 3  |  " + showTitleUpper + " - " + sLabelUpper + " (" + eps.Count().ToStr() + " EPISODES  |  [LEFT/RIGHT] SELECT EPISODE  |  [OK] WATCH  |  [UP] SEASONS)"
+        m.cinemaShelfTitleLabel.text = Left(cleanAscii(m.activeShowGroup.title), 36) + "   -   " + cleanAscii(sObj.label)
     end if
     resumeIdx = 0
     foundResume = false
@@ -4608,10 +4214,8 @@ sub applyShowSeasonFilter(sIdx as Integer)
     end for
     m.cinemaPosterIndex = resumeIdx
     updateCinemaCategoryCardsUi()
-    if eps.Count() > 0
-        updateCinemaLibDetail(resumeIdx)
-        updateCinemaPosterShelf(resumeIdx)
-    end if
+    updateCinemaLibDetail(resumeIdx)
+    updateCinemaPosterShelf(resumeIdx)
 end sub
 
 sub applyCinemaCategoryFilter(catIdx as Integer)
@@ -4632,45 +4236,60 @@ sub applyCinemaCategoryFilter(catIdx as Integer)
     end if
     m.cinemaLibItems = filtered
     m.cinemaPosterIndex = 0
-    catUpper = UCase(cat.label)
     if m.cinemaShelfTitleLabel <> invalid
-        if m.cinemaActiveTab = "tablo"
-            m.cinemaShelfTitleLabel.text = "ROW 3  |  TABLO DVR RECORDINGS: " + catUpper + " (" + filtered.Count().ToStr() + " RECORDINGS  |  [LEFT/RIGHT] MOVE  |  [OK] WATCH DVR  |  [UP] CATEGORIES & TABS)"
-        else if m.cinemaActiveTab = "shows"
-            m.cinemaShelfTitleLabel.text = "ROW 3  |  TV SERIES POSTERS: " + catUpper + " (" + filtered.Count().ToStr() + " SERIES  |  [LEFT/RIGHT] MOVE  |  [OK] OPEN SEASONS  |  [UP] CATEGORIES & TABS)"
-        else
-            m.cinemaShelfTitleLabel.text = "ROW 3  |  MOVIE POSTERS: " + catUpper + " (" + filtered.Count().ToStr() + " FILMS  |  [LEFT/RIGHT] MOVE  |  [DOWN] NEXT 6  |  [OK] WATCH  |  [UP] CATEGORIES & TABS)"
-        end if
+        m.cinemaShelfTitleLabel.text = cleanAscii(cat.label)
     end if
     updateCinemaCategoryCardsUi()
-    if filtered.Count() > 0
-        updateCinemaLibDetail(0)
-        updateCinemaPosterShelf(0)
-    end if
+    updateCinemaLibDetail(0)
+    updateCinemaPosterShelf(0)
 end sub
 
 sub updateCinemaPosterShelf(focusedIdx as Integer)
     total = 0
     if m.cinemaLibItems <> invalid then total = m.cinemaLibItems.Count()
-    if total = 0 then return
+    if total = 0
+        m.cinemaPosterIndex = 0
+        if m.cinemaShelfPosLabel <> invalid then m.cinemaShelfPosLabel.text = "0 Titles"
+        for slot = 0 to 5
+            bdr = m.top.findNode("cinemaCardBorder" + slot.ToStr())
+            bg = m.top.findNode("cinemaCardBg" + slot.ToStr())
+            artBg = m.top.findNode("cinemaCardArtBg" + slot.ToStr())
+            mono = m.top.findNode("cinemaCardMono" + slot.ToStr())
+            pst = m.top.findNode("cinemaCardPoster" + slot.ToStr())
+            pillBg = m.top.findNode("cinemaCardPillBg" + slot.ToStr())
+            pTrk = m.top.findNode("cinemaCardProgTrack" + slot.ToStr())
+            pFil = m.top.findNode("cinemaCardProgFill" + slot.ToStr())
+            bdg = m.top.findNode("cinemaCardBadge" + slot.ToStr())
+            ttl = m.top.findNode("cinemaCardTitle" + slot.ToStr())
+            gnr = m.top.findNode("cinemaCardGenre" + slot.ToStr())
+            stt = m.top.findNode("cinemaCardState" + slot.ToStr())
+            if bdr <> invalid then bdr.visible = false
+            if bg <> invalid then bg.visible = false
+            if artBg <> invalid then artBg.visible = false
+            if pillBg <> invalid then pillBg.visible = false
+            if mono <> invalid then mono.visible = false
+            if pst <> invalid then pst.visible = false
+            if pTrk <> invalid then pTrk.visible = false
+            if pFil <> invalid then pFil.visible = false
+            if bdg <> invalid then bdg.visible = false
+            if ttl <> invalid then ttl.visible = false
+            if gnr <> invalid then gnr.visible = false
+            if stt <> invalid then stt.visible = false
+        end for
+        return
+    end if
+
     if focusedIdx < 0 then focusedIdx = 0
     if focusedIdx >= total then focusedIdx = total - 1
     m.cinemaPosterIndex = focusedIdx
     isPostersZone = (m.cinemaFocusZone = "posters")
-    winStart = focusedIdx - 2
-    if winStart + 6 > total then winStart = total - 6
-    if winStart < 0 then winStart = 0
+    winStart = Int(focusedIdx / 6) * 6
+    rowNum = Int(focusedIdx / 6) + 1
+    totalRows = Int((total + 5) / 6)
     if m.cinemaShelfPosLabel <> invalid
-        if m.activeShowGroup <> invalid
-            m.cinemaShelfPosLabel.text = "Episode " + (focusedIdx + 1).ToStr() + " of " + total.ToStr() + "  |  [LEFT/RIGHT] Move  |  [DOWN] +6  |  [OK] Play"
-        else if m.cinemaActiveTab = "tablo"
-            m.cinemaShelfPosLabel.text = "Recording " + (focusedIdx + 1).ToStr() + " of " + total.ToStr() + "  |  [LEFT/RIGHT] Move  |  [OK] Play DVR"
-        else if m.cinemaActiveTab = "shows"
-            m.cinemaShelfPosLabel.text = "Series " + (focusedIdx + 1).ToStr() + " of " + total.ToStr() + "  |  [LEFT/RIGHT] Move  |  [DOWN] +6  |  [OK] Seasons"
-        else
-            m.cinemaShelfPosLabel.text = "Movie " + (focusedIdx + 1).ToStr() + " of " + total.ToStr() + "  |  [LEFT/RIGHT] Move  |  [DOWN] +6  |  [OK] Watch"
-        end if
+        m.cinemaShelfPosLabel.text = (focusedIdx + 1).ToStr() + " of " + total.ToStr() + "   |   Row " + rowNum.ToStr() + " of " + totalRows.ToStr()
     end if
+
     for slot = 0 to 5
         itemIdx = winStart + slot
         bdr = m.top.findNode("cinemaCardBorder" + slot.ToStr())
@@ -4694,14 +4313,20 @@ sub updateCinemaPosterShelf(focusedIdx as Integer)
                 if isFocused and isPostersZone
                     bdr.color = "0xFFFFFFFF"
                 else if isFocused
-                    bdr.color = "0xE8A33DFF"
+                    bdr.color = "0x172554FF"
                 else
-                    bdr.color = "0x2E261EFF"
+                    bdr.color = "0x0D1422FF"
                 end if
             end if
             if bg <> invalid
                 bg.visible = true
-                if isFocused then bg.color = "0x2E2318FF" else bg.color = "0x1E1914FF"
+                if isFocused and isPostersZone
+                    bg.color = "0x16243EFF"
+                else if isFocused
+                    bg.color = "0x111C30FF"
+                else
+                    bg.color = "0x0D1422FF"
+                end if
             end if
             if artBg <> invalid
                 artBg.visible = true
@@ -4733,11 +4358,11 @@ sub updateCinemaPosterShelf(focusedIdx as Integer)
                 if pct > 0
                     pTrk.visible = true
                     pFil.visible = true
-                    w = Int((pct / 100.0) * 268)
+                    w = Int((pct / 100.0) * 276)
                     if w < 12 then w = 12
-                    if w > 268 then w = 268
+                    if w > 276 then w = 276
                     pFil.width = w
-                    if mv.completed = true then pFil.color = "0x22C55EFF" else pFil.color = "0xE8A33DFF"
+                    if mv.completed = true then pFil.color = "0x22C55EFF" else pFil.color = "0x38BDF8FF"
                 else
                     pTrk.visible = false
                     pFil.visible = false
@@ -4755,7 +4380,7 @@ sub updateCinemaPosterShelf(focusedIdx as Integer)
                     if mv.rating <> invalid and mv.rating > 0
                         bdg.text = yrTxt + " | * " + mv.rating.ToStr()
                     else
-                        bdg.text = yrTxt + " | " + info.resStr
+                        bdg.text = yrTxt
                     end if
                 end if
             end if
@@ -4766,12 +4391,13 @@ sub updateCinemaPosterShelf(focusedIdx as Integer)
                 else
                     ttl.text = Left(cleanAscii(mv.title), 28)
                 end if
-                if isFocused then ttl.color = "0xFCD34DFF" else ttl.color = "0xF8FAFCFF"
+                if isFocused and isPostersZone then ttl.color = "0xFFFFFFFF" else ttl.color = "0xE2E8F0FF"
             end if
             if gnr <> invalid
                 gnr.visible = true
+                gnr.color = "0x94A3B8FF"
                 if m.activeShowGroup <> invalid and mv.airdate <> invalid and mv.airdate <> ""
-                    gnr.text = cleanAscii(mv.episodeCode) + " | " + Left(cleanAscii(mv.airdate), 10)
+                    gnr.text = cleanAscii(mv.episodeCode) + "  |  " + Left(cleanAscii(mv.airdate), 10)
                 else if mv.network <> invalid and mv.network <> ""
                     gnr.text = Left(cleanAscii(mv.network), 26)
                 else if info.franchise <> ""
@@ -4783,20 +4409,17 @@ sub updateCinemaPosterShelf(focusedIdx as Integer)
             if stt <> invalid
                 stt.visible = true
                 if mv.inProgress = true and mv.progressPct <> invalid
-                    stt.text = ">> RESUME " + mv.progressPct.ToStr() + "%"
-                    stt.color = "0xFCD34DFF"
+                    stt.text = "Resume " + mv.progressPct.ToStr() + "%"
+                    stt.color = "0x38BDF8FF"
                 else if mv.completed = true
-                    stt.text = "WATCHED"
-                    stt.color = "0x86EFACFF"
+                    stt.text = "Watched"
+                    stt.color = "0x34D399FF"
                 else if mv.isShowGroup = true and m.activeShowGroup = invalid
-                    stt.text = "OK: SEASONS (" + cleanAscii(mv.episodeCode) + ")"
-                    if isFocused then stt.color = "0x67E8F9FF" else stt.color = "0xA89F91FF"
-                else if isFocused
-                    stt.text = ">> PRESS OK TO WATCH"
-                    stt.color = "0x86EFACFF"
+                    stt.text = mv.seasonCount.ToStr() + " Seasons  |  " + mv.episodeCount.ToStr() + " Eps"
+                    if isFocused and isPostersZone then stt.color = "0x7DD3FCFF" else stt.color = "0x64748BFF"
                 else
-                    stt.text = "#" + (itemIdx + 1).ToStr() + " | " + info.fmtStr
-                    stt.color = "0xA89F91FF"
+                    stt.text = info.resStr + "  |  " + info.fmtStr
+                    if isFocused and isPostersZone then stt.color = "0x7DD3FCFF" else stt.color = "0x64748BFF"
                 end if
             end if
         else
@@ -4863,109 +4486,52 @@ sub hideCinemaLibrary()
 end sub
 
 sub updateCinemaLibDetail(idx as Integer)
-    if m.cinemaLibItems = invalid or idx < 0 or idx >= m.cinemaLibItems.Count() then return
+    if m.cinemaLibItems = invalid or m.cinemaLibItems.Count() = 0
+        if m.cinemaHeroEyebrow <> invalid then m.cinemaHeroEyebrow.text = "LIBRARY FILTER"
+        if m.cinemaLibDetailTitle <> invalid then m.cinemaLibDetailTitle.text = "No Matching Titles"
+        if m.cinemaLibDetailMeta <> invalid then m.cinemaLibDetailMeta.text = "Use Left / Right on the filter strip to choose another category."
+        if m.cinemaHeroSynopsis <> invalid then m.cinemaHeroSynopsis.text = ""
+        if m.cinemaLibDetailSub <> invalid then m.cinemaLibDetailSub.text = ""
+        if m.cinemaLibPoster <> invalid then m.cinemaLibPoster.uri = ""
+        if m.cinemaHeroPosterMonogram <> invalid then m.cinemaHeroPosterMonogram.text = "--"
+        if m.cinemaHeroProgTrack <> invalid then m.cinemaHeroProgTrack.visible = false
+        if m.cinemaHeroProgFill <> invalid then m.cinemaHeroProgFill.visible = false
+        if m.cinemaHeroThumbGroup <> invalid then m.cinemaHeroThumbGroup.visible = false
+        return
+    end if
+    if idx < 0 or idx >= m.cinemaLibItems.Count() then return
     mv = m.cinemaLibItems[idx]
     info = cinemaClassifyItem(mv)
     titleClean = cleanAscii(mv.title)
     if m.activeShowGroup <> invalid and mv.episodeCode <> invalid and mv.episodeTitle <> invalid
         titleClean = cleanAscii(mv.episodeCode) + " - " + cleanAscii(mv.episodeTitle)
     end if
-    if m.cinemaLibDetailTitle <> invalid then m.cinemaLibDetailTitle.text = Left(titleClean, 46)
-
-    ' Spotlight Pill & Eyebrow
-    if m.cinemaSpotlightPillBg <> invalid and m.cinemaSpotlightPillText <> invalid
-        if info.isTablo
-            m.cinemaSpotlightPillBg.color = "0x00BCD4FF"
-            m.cinemaSpotlightPillText.text = "TABLO DVR"
-        else if m.activeShowGroup <> invalid
-            m.cinemaSpotlightPillBg.color = "0x38BDF8FF"
-            m.cinemaSpotlightPillText.text = "TV EPISODE"
-        else if mv.isShowGroup = true
-            m.cinemaSpotlightPillBg.color = "0x38BDF8FF"
-            m.cinemaSpotlightPillText.text = "TV SERIES"
-        else
-            m.cinemaSpotlightPillBg.color = "0xE8A33DFF"
-            m.cinemaSpotlightPillText.text = "FEATURE FILM"
-        end if
-    end if
+    if m.cinemaLibDetailTitle <> invalid then m.cinemaLibDetailTitle.text = Left(titleClean, 52)
 
     if m.cinemaHeroEyebrow <> invalid
         if info.isTablo
-            netUpper = "OTA CHANNEL"
+            netUpper = "OTA DVR"
             if mv.network <> invalid and mv.network <> "" then netUpper = UCase(cleanAscii(mv.network))
-            m.cinemaHeroEyebrow.text = "TABLO 4G DVR  |  " + netUpper + "  |  " + UCase(cleanAscii(mv.qualityBadge))
+            m.cinemaHeroEyebrow.text = "TABLO DVR   |   " + netUpper
         else if m.activeShowGroup <> invalid
             sNum = 1
             eNum = 1
             if mv.seasonNumber <> invalid then sNum = mv.seasonNumber
             if mv.episodeNumber <> invalid then eNum = mv.episodeNumber
-            m.cinemaHeroEyebrow.text = UCase(cleanAscii(m.activeShowGroup.title)) + "  |  SEASON " + sNum.ToStr() + "  |  EPISODE " + eNum.ToStr()
+            m.cinemaHeroEyebrow.text = UCase(cleanAscii(m.activeShowGroup.title)) + "   |   SEASON " + sNum.ToStr() + "   |   EPISODE " + eNum.ToStr()
         else if mv.isShowGroup = true
             netUpper = "TV SERIES"
             if mv.network <> invalid and mv.network <> "" then netUpper = UCase(cleanAscii(mv.network))
-            m.cinemaHeroEyebrow.text = netUpper + "  |  " + mv.seasonCount.ToStr() + " SEASONS  |  " + mv.episodeCount.ToStr() + " EPISODES"
+            m.cinemaHeroEyebrow.text = netUpper + "   |   " + UCase(info.primaryGenre)
         else if info.franchise <> ""
-            m.cinemaHeroEyebrow.text = UCase(info.franchise) + "  |  " + UCase(info.primaryGenre)
+            m.cinemaHeroEyebrow.text = UCase(info.franchise)
         else
-            m.cinemaHeroEyebrow.text = "ROBOS CINEMA+ FEATURE FILM  |  " + UCase(info.primaryGenre)
+            m.cinemaHeroEyebrow.text = UCase(info.primaryGenre)
         end if
     end if
 
-    ' 5 Metadata Badges
-    yrStr = "Feature"
-    if mv.year <> invalid then yrStr = mv.year.ToStr()
-    if m.activeShowGroup <> invalid and mv.episodeCode <> invalid and mv.episodeCode <> ""
-        yrStr = cleanAscii(mv.episodeCode)
-    else if mv.isShowGroup = true and mv.seasonCount <> invalid
-        yrStr = mv.seasonCount.ToStr() + " Seasons"
-    end if
-    if m.cinemaBadgeYear <> invalid then m.cinemaBadgeYear.text = yrStr
-
-    if m.cinemaBadgeRating <> invalid
-        if mv.rating <> invalid and mv.rating > 0
-            m.cinemaBadgeRating.text = "* " + mv.rating.ToStr() + " / 10"
-        else if mv.isShowGroup = true and mv.episodeCount <> invalid
-            m.cinemaBadgeRating.text = mv.episodeCount.ToStr() + " Episodes"
-        else
-            m.cinemaBadgeRating.text = info.resStr
-        end if
-    end if
-
-    if m.cinemaBadgeQuality <> invalid
-        if mv.network <> invalid and mv.network <> ""
-            m.cinemaBadgeQuality.text = Left(cleanAscii(mv.network), 20)
-        else
-            m.cinemaBadgeQuality.text = info.qualBadge
-        end if
-    end if
-
-    if m.cinemaBadgeGenre <> invalid
-        if mv.genre <> invalid and mv.genre <> ""
-            m.cinemaBadgeGenre.text = Left(cleanAscii(mv.genre), 26)
-        else
-            m.cinemaBadgeGenre.text = info.primaryGenre
-        end if
-    end if
-
-    if m.cinemaBadgeFormat <> invalid
-        if mv.inProgress = true and mv.progressPct <> invalid
-            m.cinemaBadgeFormat.text = "RESUME " + mv.progressPct.ToStr() + "%"
-        else if mv.completed = true
-            m.cinemaBadgeFormat.text = "WATCHED"
-        else if mv.isShowGroup = true and mv.watchedCount <> invalid and mv.episodeCount <> invalid and mv.watchedCount > 0
-            m.cinemaBadgeFormat.text = mv.watchedCount.ToStr() + "/" + mv.episodeCount.ToStr() + " WATCHED"
-        else
-            m.cinemaBadgeFormat.text = info.fmtStr + " DIRECT PLAY"
-        end if
-    end if
-
-    ' Hero Poster & Progress Bar
     if m.cinemaHeroPosterFallbackBg <> invalid then m.cinemaHeroPosterFallbackBg.color = info.bgCol
-    if m.cinemaHeroPosterTopBar <> invalid then m.cinemaHeroPosterTopBar.color = info.barCol
-    if m.cinemaHeroPosterRibbon <> invalid then m.cinemaHeroPosterRibbon.text = UCase(info.primaryGenre)
     if m.cinemaHeroPosterMonogram <> invalid then m.cinemaHeroPosterMonogram.text = info.monogram
-    if m.cinemaHeroPosterFallbackTitle <> invalid then m.cinemaHeroPosterFallbackTitle.text = Left(titleClean, 28)
-    if m.cinemaHeroPosterFallbackYear <> invalid then m.cinemaHeroPosterFallbackYear.text = yrStr + " | " + info.resStr
 
     if m.cinemaLibPoster <> invalid
         if info.isTablo and mv.coverUrl <> invalid and mv.coverUrl <> ""
@@ -4984,7 +4550,7 @@ sub updateCinemaLibDetail(idx as Integer)
             m.cinemaHeroThumbGroup.visible = true
             if m.cinemaHeroThumbPoster <> invalid then m.cinemaHeroThumbPoster.uri = mv.artUrl
             if m.cinemaHeroThumbCaption <> invalid
-                m.cinemaHeroThumbCaption.text = "TABLO THUMBNAIL  |  " + Left(cleanAscii(mv.network), 22) + "  |  " + Left(cleanAscii(mv.qualityBadge), 18)
+                m.cinemaHeroThumbCaption.text = Left(cleanAscii(mv.network), 24) + "  |  " + Left(cleanAscii(mv.qualityBadge), 18)
             end if
         else
             m.cinemaHeroThumbGroup.visible = false
@@ -4998,88 +4564,83 @@ sub updateCinemaLibDetail(idx as Integer)
         if heroPct > 0
             m.cinemaHeroProgTrack.visible = true
             m.cinemaHeroProgFill.visible = true
-            hw = Int((heroPct / 100.0) * 176)
+            hw = Int((heroPct / 100.0) * 152)
             if hw < 10 then hw = 10
-            if hw > 176 then hw = 176
+            if hw > 152 then hw = 152
             m.cinemaHeroProgFill.width = hw
-            if mv.completed = true then m.cinemaHeroProgFill.color = "0x22C55EFF" else m.cinemaHeroProgFill.color = "0xE8A33DFF"
+            if mv.completed = true then m.cinemaHeroProgFill.color = "0x22C55EFF" else m.cinemaHeroProgFill.color = "0x38BDF8FF"
         else
             m.cinemaHeroProgTrack.visible = false
             m.cinemaHeroProgFill.visible = false
         end if
     end if
 
-    ' Credits / Cast / Season Meta Line
+    yrStr = ""
+    if mv.year <> invalid and mv.year.ToStr() <> "" then yrStr = mv.year.ToStr()
     if m.cinemaLibDetailMeta <> invalid
         if m.activeShowGroup <> invalid
             airStr = ""
-            if mv.airdate <> invalid and mv.airdate <> "" then airStr = "   |   Aired: " + cleanAscii(mv.airdate)
-            m.cinemaLibDetailMeta.text = "Series: " + cleanAscii(m.activeShowGroup.title) + "   |   Episode: " + cleanAscii(mv.episodeCode) + airStr + "   |   " + info.qualBadge
+            if mv.airdate <> invalid and mv.airdate <> "" then airStr = "   |   Aired " + cleanAscii(mv.airdate)
+            m.cinemaLibDetailMeta.text = cleanAscii(m.activeShowGroup.title) + "   |   " + cleanAscii(mv.episodeCode) + airStr + "   |   " + info.qualBadge
         else if mv.isShowGroup = true
             upNextStr = "Up Next: " + cleanAscii(mv.episodeCode)
             if mv.episodeTitle <> invalid and mv.episodeTitle <> "" then upNextStr = upNextStr + " (" + Left(cleanAscii(mv.episodeTitle), 28) + ")"
             netInfo = ""
-            if mv.network <> invalid and mv.network <> "" then netInfo = "Network: " + cleanAscii(mv.network) + "   |   "
-            m.cinemaLibDetailMeta.text = netInfo + mv.seasonCount.ToStr() + " Seasons | " + mv.episodeCount.ToStr() + " Episodes   |   " + upNextStr
+            if mv.network <> invalid and mv.network <> "" then netInfo = cleanAscii(mv.network) + "   |   "
+            m.cinemaLibDetailMeta.text = netInfo + mv.seasonCount.ToStr() + " Seasons   |   " + mv.episodeCount.ToStr() + " Episodes   |   " + upNextStr
         else
-            credParts = []
-            if mv.director <> invalid and mv.director <> "" then credParts.Push("Dir: " + Left(cleanAscii(mv.director), 28))
-            if mv.cast <> invalid and mv.cast <> "" then credParts.Push("Cast: " + Left(cleanAscii(mv.cast), 52))
-            if credParts.Count() > 0
-                credLine = credParts[0]
-                if credParts.Count() > 1 then credLine = credLine + "   |   " + credParts[1]
-                m.cinemaLibDetailMeta.text = credLine
+            metaParts = []
+            if yrStr <> "" then metaParts.Push(yrStr)
+            if mv.rating <> invalid and mv.rating > 0 then metaParts.Push("* " + mv.rating.ToStr() + "/10")
+            metaParts.Push(info.qualBadge)
+            if mv.genre <> invalid and mv.genre <> ""
+                metaParts.Push(Left(cleanAscii(mv.genre), 32))
             else
-                franStr = "Standalone Feature Film"
-                if info.franchise <> "" then franStr = "Collection: " + info.franchise
-                m.cinemaLibDetailMeta.text = franStr + "   |   Genre: " + info.primaryGenre + "   |   Quality: " + info.qualBadge
+                metaParts.Push(info.primaryGenre)
             end if
+            if mv.director <> invalid and mv.director <> "" then metaParts.Push("Dir. " + Left(cleanAscii(mv.director), 26))
+            metaLine = ""
+            for mIdx = 0 to metaParts.Count() - 1
+                if mIdx > 0 then metaLine = metaLine + "   |   "
+                metaLine = metaLine + metaParts[mIdx]
+            end for
+            m.cinemaLibDetailMeta.text = metaLine
         end if
     end if
 
-    ' Multi-line Real Plot Synopsis
     if m.cinemaHeroSynopsis <> invalid
         ov = cleanAscii(mv.overview)
         if ov = "" and m.activeShowGroup <> invalid then ov = cleanAscii(m.activeShowGroup.overview)
         if ov <> ""
-            m.cinemaHeroSynopsis.text = Left(ov, 310)
+            m.cinemaHeroSynopsis.text = Left(ov, 290)
         else if mv.isShowGroup = true
-            m.cinemaHeroSynopsis.text = cleanAscii(mv.title) + " (" + mv.seasonCount.ToStr() + " Seasons, " + mv.episodeCount.ToStr() + " Episodes). Press OK to browse seasons and episodes, or press Play to start " + cleanAscii(mv.episodeCode) + "."
+            m.cinemaHeroSynopsis.text = cleanAscii(mv.title) + " (" + mv.seasonCount.ToStr() + " Seasons, " + mv.episodeCount.ToStr() + " Episodes). Press OK to browse seasons and episodes, or Play to start " + cleanAscii(mv.episodeCode) + "."
         else
-            m.cinemaHeroSynopsis.text = "Full HD home theater stream (" + info.qualBadge + ") ready on your LAN. Press OK on your Roku remote for instant full-screen playback."
+            m.cinemaHeroSynopsis.text = "Ready to stream in " + info.qualBadge + " over your local network."
         end if
     end if
 
     if m.cinemaLibDetailSub <> invalid
         if mv.isShowGroup = true and m.activeShowGroup = invalid
-            m.cinemaLibDetailSub.text = "Press [OK] to Open Season & Episode Cards   |   Press [PLAY] to Start " + cleanAscii(mv.episodeCode) + "   |   [UP] Categories & Tabs"
+            m.cinemaLibDetailSub.text = "Press OK to Browse Seasons   |   Press Play to Watch " + cleanAscii(mv.episodeCode)
         else if mv.inProgress = true and mv.positionSec <> invalid and mv.positionSec > 0
             rMin = Int(mv.positionSec / 60)
             rSec = Int(mv.positionSec) mod 60
-            m.cinemaLibDetailSub.text = "Saved Watch Progress: " + rMin.ToStr() + "m " + rSec.ToStr() + "s (" + heroPct.ToStr() + "%)   |   Container: " + info.fmtStr + " Direct Stream"
+            m.cinemaLibDetailSub.text = "Resume from " + rMin.ToStr() + "m " + pad2(rSec) + "s (" + heroPct.ToStr() + "%)   |   " + info.fmtStr + " Direct Play"
+        else if mv.completed = true
+            m.cinemaLibDetailSub.text = "Watched   |   Press OK to Watch Again   |   " + info.fmtStr + " Direct Play"
         else
-            m.cinemaLibDetailSub.text = "Container: " + info.fmtStr + " Direct Stream   |   Source: " + Left(cleanAscii(mv.album), 40) + "   |   Zero-Cloud LAN HTTP 206"
-        end if
-    end if
-
-    ' CTA Button Prompt
-    if m.cinemaLibPlayPrompt <> invalid
-        if mv.isShowGroup = true and m.activeShowGroup = invalid
-            m.cinemaLibPlayPrompt.text = ">>  BROWSE SEASONS & EPISODES (OK)"
-        else if mv.inProgress = true and mv.progressPct <> invalid
-            m.cinemaLibPlayPrompt.text = ">>  RESUME (" + mv.progressPct.ToStr() + "%) - PRESS OK"
-        else
-            m.cinemaLibPlayPrompt.text = ">>  WATCH NOW (PRESS OK)"
+            m.cinemaLibDetailSub.text = "Press OK to Watch   |   " + info.fmtStr + " Direct Play"
         end if
     end if
 
     if m.cinemaLibFooter <> invalid
         if m.activeShowGroup <> invalid
-            m.cinemaLibFooter.text = cleanAscii(m.activeShowGroup.title) + " | " + titleClean + " - [LEFT/RIGHT] Episode  |  [UP] Season Cards  |  [UP x2] Movies/Shows Tabs  |  [OK] Play  |  [BACK] All TV Shows"
+            m.cinemaLibFooter.text = "OK Play Episode   |   Up Seasons & Tabs   |   Back All TV Shows"
         else if mv.isShowGroup = true
-            m.cinemaLibFooter.text = "Series " + (idx + 1).ToStr() + "/" + m.cinemaLibItems.Count().ToStr() + ": " + titleClean + " - [LEFT/RIGHT] Series  |  [UP] Categories  |  [UP x2] Movies/Shows Tabs  |  [OK] Open Seasons  |  [PLAY] Watch " + cleanAscii(mv.episodeCode)
+            m.cinemaLibFooter.text = "OK Browse Seasons   |   Play Quick Start   |   Up Filters & Tabs   |   * Switch Tab"
         else
-            m.cinemaLibFooter.text = "Movie " + (idx + 1).ToStr() + "/" + m.cinemaLibItems.Count().ToStr() + ": " + titleClean + " (" + yrStr + ") - [LEFT/RIGHT] Movie  |  [DOWN] +6 Movies  |  [UP] Categories  |  [UP x2] Movies/Shows Tabs  |  [OK] Watch"
+            m.cinemaLibFooter.text = "OK Watch   |   Up/Down Browse Grid   |   FF/Rew Jump 3 Rows   |   * Switch Tab"
         end if
     end if
 end sub
@@ -5295,7 +4856,7 @@ sub onPayloadUpdated()
                 runTxt = "IDLE - NOT RUNNING"
                 if isRun then runTxt = "RUNNING NOW"
                 if st <> invalid
-                    if isRun then st.color = "0xF59E0BFF" else st.color = "0x10B981FF"
+                    if isRun then st.color = "0x38BDF8FF" else st.color = "0x10B981FF"
                 end if
                 if l1 <> invalid then l1.text = "RELEASE: " + cleanAscii(rel.name) + " (Run #" + cleanAscii(rel.releaseRunNumber) + ") [" + runTxt + "]"
                 if l2 <> invalid then l2.text = "Last Release #" + cleanAscii(rel.releaseRunNumber) + ": " + UCase(cleanAscii(rel.releaseConclusion)) + " | Win EXE Release #" + cleanAscii(rel.windowsReleaseRunNumber) + ": " + UCase(cleanAscii(rel.windowsReleaseConclusion))
@@ -6341,11 +5902,11 @@ sub openPlayerOsd(modeStr as String)
     if modeStr = "mini"
         m.playerMiniHideSec = 4
         if m.osdFullDrawerGroup <> invalid then m.osdFullDrawerGroup.visible = false
-        if m.osdScrubberGroup <> invalid then m.osdScrubberGroup.translation = [0, 948]
+        if m.osdScrubberGroup <> invalid then m.osdScrubberGroup.translation = [0, 964]
     else
         m.playerMiniHideSec = 0
         if m.osdFullDrawerGroup <> invalid then m.osdFullDrawerGroup.visible = true
-        if m.osdScrubberGroup <> invalid then m.osdScrubberGroup.translation = [0, 496]
+        if m.osdScrubberGroup <> invalid then m.osdScrubberGroup.translation = [0, 504]
         if m.osdZone <> "scrubber" and m.osdZone <> "tabs" and m.osdZone <> "seasonTop" and m.osdZone <> "items"
             m.osdZone = "tabs"
         end if
@@ -6378,20 +5939,20 @@ function currentAudioBadgeLabel() as String
             return UCase(cleanAscii(rObj.Language)) + " TRACK " + (idx + 1).ToStr()
         end if
     end if
-    return "STEREO / AUTO"
+    return "STEREO"
 end function
 
 function currentCaptionBadgeLabel() as String
     if m.captionsEnabled <> true and m.captionTempReplaySec <= 0
-        return "CC: OFF"
+        return "CC: Off"
     end if
     if m.captionTempReplaySec > 0 and m.captionsEnabled <> true
-        return "CC: REPLAY (" + m.captionTempReplaySec.ToStr() + "s)"
+        return "CC: Replay (" + m.captionTempReplaySec.ToStr() + "s)"
     end if
     if m.captionChoiceIdx > 0 and m.captionChoiceIdx < m.captionChoices.Count()
         return "CC: " + Left(cleanAscii(m.captionChoices[m.captionChoiceIdx].label), 18)
     end if
-    return "CC: ON"
+    return "CC: On"
 end function
 
 sub updatePlayerOsdHeaderAndScrubber()
@@ -6424,43 +5985,43 @@ sub updatePlayerOsdHeaderAndScrubber()
 
     if typePillTxt <> invalid
         if m.playingShowGroup <> invalid and m.playingEpisodeObj <> invalid
-            typePillTxt.text = "TV | " + cleanAscii(m.playingEpisodeObj.episodeCode)
+            typePillTxt.text = cleanAscii(m.playingEpisodeObj.episodeCode)
         else if m.currentPlayingItem <> invalid and m.currentPlayingItem.isTablo = true
-            typePillTxt.text = "TABLO DVR"
+            typePillTxt.text = "DVR"
         else
-            typePillTxt.text = "FEATURE FILM"
+            typePillTxt.text = "FILM"
         end if
     end if
-    if topTitle <> invalid then topTitle.text = Left(cleanAscii(m.currentPlayingTitle), 56)
+    if topTitle <> invalid then topTitle.text = Left(cleanAscii(m.currentPlayingTitle), 58)
     if topSub <> invalid
         modeLbl = "Direct Play"
-        if m.currentStreamIsHls = true then modeLbl = "HLS Live Stream"
+        if m.currentStreamIsHls = true then modeLbl = "HLS Stream"
         if m.playingShowGroup <> invalid
-            topSub.text = "Series: " + cleanAscii(m.playingShowGroup.title) + "  |  " + modeLbl + "  |  Press [OK / UP / DOWN / *] for Rich Menu  |  [BACK] Exit"
+            topSub.text = cleanAscii(m.playingShowGroup.title) + "   |   " + modeLbl + "   |   Up/Down Menu   |   * Subtitles"
         else if m.playbackMeta <> invalid and m.playbackMeta.video <> invalid and m.playbackMeta.video.summary <> invalid
-            topSub.text = cleanAscii(m.playbackMeta.video.summary) + "  |  " + modeLbl + "  |  Press [OK / UP / DOWN / *] for Rich Menu"
+            topSub.text = cleanAscii(m.playbackMeta.video.summary) + "   |   " + modeLbl + "   |   Up/Down Menu   |   * Subtitles"
         else
-            topSub.text = modeLbl + "  |  Press [OK / UP / DOWN / *] for Captions, Season, Show, Details & Metadata"
+            topSub.text = modeLbl + "   |   Up/Down Menu   |   * Subtitles"
         end if
     end if
 
     vSt = m.cinemaVideo.state
     if stBg <> invalid and stTxt <> invalid
         if vSt = "paused"
-            stBg.color = "0xF59E0BFF"
+            stBg.color = "0x0284C7FF"
             stTxt.text = "PAUSED"
         else if vSt = "buffering"
-            stBg.color = "0x38BDF8FF"
+            stBg.color = "0x4F46E5FF"
             stTxt.text = "BUFFERING"
         else
-            stBg.color = "0x10B981FF"
+            stBg.color = "0x059669FF"
             stTxt.text = "PLAYING"
         end if
     end if
 
     if ccTxt <> invalid then ccTxt.text = currentCaptionBadgeLabel()
     if ccBg <> invalid
-        if m.captionsEnabled = true or m.captionTempReplaySec > 0 then ccBg.color = "0x422006FF" else ccBg.color = "0x1E293BFF"
+        if m.captionsEnabled = true or m.captionTempReplaySec > 0 then ccBg.color = "0x0369A1FF" else ccBg.color = "0x1E293BFF"
     end if
     if auTxt <> invalid then auTxt.text = Left(currentAudioBadgeLabel(), 20)
     if clkTxt <> invalid
@@ -6485,28 +6046,28 @@ sub updatePlayerOsdHeaderAndScrubber()
             totLbl.text = "LIVE"
         end if
     end if
-    fillW = 12
+    fillW = 10
     if durSec > 0
-        fillW = Int(((posSec * 1.0) / (durSec * 1.0)) * 1804)
-        if fillW < 10 then fillW = 10
-        if fillW > 1804 then fillW = 1804
+        fillW = Int(((posSec * 1.0) / (durSec * 1.0)) * 1768)
+        if fillW < 8 then fillW = 8
+        if fillW > 1768 then fillW = 1768
     end if
     if fillRect <> invalid then fillRect.width = fillW
-    if knobRect <> invalid then knobRect.translation = [54 + fillW, 39]
+    if knobRect <> invalid then knobRect.translation = [72 + fillW, 35]
     if scrubBdr <> invalid
         if m.playerOsdMode = "full" and m.osdZone = "scrubber"
             scrubBdr.color = "0xFFFFFFFF"
-            scrubBdr.height = 4
+            scrubBdr.height = 3
         else
-            scrubBdr.color = "0x334155FF"
-            scrubBdr.height = 2
+            scrubBdr.color = "0x1E293BFF"
+            scrubBdr.height = 1
         end if
     end if
     if scrubHint <> invalid
         if m.playerOsdMode = "mini"
-            scrubHint.text = "Press [OK], [UP], [DOWN] or [*] for Captions, Season, Show, Episode Details & Metadata   |   [LEFT/RIGHT] Seek"
+            scrubHint.text = "OK Pause/Resume   |   Up/Down Menu (Subtitles, Season, Show, Details, Metadata)   |   Left/Right Seek"
         else
-            scrubHint.text = "[LEFT/RIGHT] Scrub -15s / +30s   |   [REW/FF] -60s / +60s   |   [OK/PLAY] Pause/Resume   |   [DOWN] Menu Tabs"
+            scrubHint.text = "Left/Right Seek -15s / +30s   |   Rew/FF -60s / +60s   |   OK Pause/Resume   |   Down Tabs"
         end if
     end if
 end sub
@@ -6524,7 +6085,7 @@ sub updateCaptionsTranscriptCard()
     offStr = m.captionOffsetSec.ToStr() + "s"
     if m.captionOffsetSec > 0 then offStr = "+" + offStr
 
-    activeTrackName = "Captions Off"
+    activeTrackName = "Off"
     if m.captionChoiceIdx > 0 and m.captionChoiceIdx < m.captionChoices.Count()
         activeTrackName = cleanAscii(m.captionChoices[m.captionChoiceIdx].label)
     end if
@@ -6532,18 +6093,18 @@ sub updateCaptionsTranscriptCard()
     totalC = 0
     if m.subtitleCues <> invalid then totalC = m.subtitleCues.Count()
 
-    if eyebrow <> invalid then eyebrow.text = "CAPTIONS & LIVE DIALOGUE TRANSCRIPT  (" + (m.captionChoices.Count() - 1).ToStr() + " SUBTITLE SOURCES AVAILABLE)"
+    if eyebrow <> invalid then eyebrow.text = "SUBTITLES & LIVE DIALOGUE   |   " + (m.captionChoices.Count() - 1).ToStr() + " SOURCES"
     if ttl <> invalid
         if m.captionsEnabled = true
-            ttl.text = "Active Subtitle Track: " + activeTrackName
+            ttl.text = "Subtitles: " + activeTrackName
         else
-            ttl.text = "Captions Currently Off  (Select [CC: OFF -> ON] or [Next Track >] Above)"
+            ttl.text = "Subtitles Off"
         end if
     end if
     if bdg <> invalid
-        cueStatus = totalC.ToStr() + " Synced Dialogue Cues Loaded"
-        if m.cuesExtracting = true then cueStatus = "Extracting Embedded Subtitle Track via FFmpeg..."
-        bdg.text = cueStatus + "   |   Font Size: " + szName + "   |   Timing Offset: " + offStr
+        cueStatus = totalC.ToStr() + " Synced Lines"
+        if m.cuesExtracting = true then cueStatus = "Extracting Embedded Subtitles..."
+        bdg.text = cueStatus + "   |   Size: " + szName + "   |   Offset: " + offStr
     end if
 
     if body <> invalid
@@ -6551,29 +6112,29 @@ sub updateCaptionsTranscriptCard()
             curT = safeFloat(m.cinemaVideo.position) + m.captionOffsetSec
             idx = findNearestOrNextCueIdx(curT)
             prevTxt = "(Start of subtitles)"
-            curTxt = "(No dialogue at current second)"
+            curTxt = "(No dialogue at current timestamp)"
             nextTxt = "(End of subtitles)"
             if idx > 0
                 pCue = m.subtitleCues[idx - 1]
-                prevTxt = "[" + formatClockHms(pCue.s) + "] " + Left(cleanAscii(pCue.t), 92)
+                prevTxt = "[" + formatClockHms(pCue.s) + "]  " + Left(cleanAscii(pCue.t), 92)
             end if
             if idx >= 0 and idx < totalC
                 cCue = m.subtitleCues[idx]
-                curTxt = ">> [" + formatClockHms(cCue.s) + "] " + Left(cleanAscii(cCue.t), 98)
+                curTxt = "> [" + formatClockHms(cCue.s) + "]  " + Left(cleanAscii(cCue.t), 96)
             end if
             if idx + 1 < totalC
                 nCue = m.subtitleCues[idx + 1]
-                nextTxt = "[" + formatClockHms(nCue.s) + "] " + Left(cleanAscii(nCue.t), 92)
+                nextTxt = "[" + formatClockHms(nCue.s) + "]  " + Left(cleanAscii(nCue.t), 92)
             end if
             body.text = prevTxt + Chr(10) + curTxt + Chr(10) + nextTxt
         else if m.cuesExtracting = true
-            body.text = "Extracting embedded subtitle stream from container in the background - captions will appear automatically in a moment."
+            body.text = "Extracting embedded subtitle stream in the background - captions will appear automatically in a moment."
         else
-            body.text = "Use [< Prev Track] / [Next Track >] to switch between embedded SRT/WebVTT tracks, external .srt/.vtt files, or Roku Broadcast CC."
+            body.text = "Switch between embedded subtitle tracks, sidecar .srt/.vtt files, or broadcast closed captions above."
         end if
     end if
     if subL <> invalid
-        subL.text = "Tip: Click [< Prev Caption] or [Next Caption >] above to jump the video directly to the previous or next spoken line!"
+        subL.text = "Select Prev Line or Next Line above to jump playback directly to adjacent spoken dialogue."
     end if
 end sub
 
@@ -6594,30 +6155,36 @@ sub setOsdButtonRow(defs as Object)
                 if isFoc
                     bdr.color = "0xFFFFFFFF"
                 else if d.active = true
-                    bdr.color = "0xE8A33DFF"
+                    bdr.color = "0x172554FF"
                 else
-                    bdr.color = "0x263248FF"
+                    bdr.color = "0x111A2EFF"
                 end if
             end if
             if bg <> invalid
                 bg.visible = true
                 if isFoc
-                    bg.color = "0x2B2114FF"
+                    bg.color = "0x1E3A5FFF"
                 else if d.active = true
-                    bg.color = "0x1E293BFF"
+                    bg.color = "0x172554FF"
                 else
-                    bg.color = "0x131B2BFF"
+                    bg.color = "0x111A2EFF"
                 end if
             end if
             if tLbl <> invalid
                 tLbl.visible = true
                 tLbl.text = cleanAscii(d.top)
-                if isFoc or d.active = true then tLbl.color = "0xFCD34DFF" else tLbl.color = "0xF8FAFCFF"
+                if isFoc
+                    tLbl.color = "0xFFFFFFFF"
+                else if d.active = true
+                    tLbl.color = "0x7DD3FCFF"
+                else
+                    tLbl.color = "0xE2E8F0FF"
+                end if
             end if
             if sLbl <> invalid
                 sLbl.visible = true
                 sLbl.text = cleanAscii(d.sub)
-                if isFoc then sLbl.color = "0x67E8F9FF" else sLbl.color = "0x94A3B8FF"
+                if isFoc then sLbl.color = "0xBAE6FDFF" else sLbl.color = "0x64748BFF"
             end if
         else
             if bdr <> invalid then bdr.visible = false
@@ -6650,18 +6217,17 @@ sub renderPlayerOsd()
 
     hasShow = (m.playingShowGroup <> invalid)
     tabTitles = [
-        "1. CONTROLS",
-        "2. CC CAPTIONS",
-        "3. SEE SEASON",
-        "4. SEE SHOW",
-        "5. EP DETAILS",
-        "6. AUDIO & STREAM",
-        "7. METADATA"
+        "Controls",
+        "Subtitles",
+        "Season",
+        "Show",
+        "Details",
+        "Audio",
+        "Metadata"
     ]
     if not hasShow
-        tabTitles[2] = "3. MORE FILMS"
-        tabTitles[3] = "4. COLLECTION"
-        tabTitles[4] = "5. FILM DETAILS"
+        tabTitles[2] = "More Films"
+        tabTitles[3] = "Collection"
     end if
 
     for tIdx = 0 to 6
@@ -6675,16 +6241,28 @@ sub renderPlayerOsd()
             if isFocTab
                 tbBdr.color = "0xFFFFFFFF"
             else if isSelTab
-                tbBdr.color = "0xE8A33DFF"
+                tbBdr.color = "0x172554FF"
             else
-                tbBdr.color = "0x263248FF"
+                tbBdr.color = "0x0E1628FF"
             end if
         end if
         if tbBg <> invalid
-            if isSelTab then tbBg.color = "0x2B2114FF" else tbBg.color = "0x131B2BFF"
+            if isFocTab
+                tbBg.color = "0x1E3A5FFF"
+            else if isSelTab
+                tbBg.color = "0x172554FF"
+            else
+                tbBg.color = "0x0E1628FF"
+            end if
         end if
         if tbLbl <> invalid
-            if isSelTab then tbLbl.color = "0xFCD34DFF" else tbLbl.color = "0xE2E8F0FF"
+            if isFocTab
+                tbLbl.color = "0xFFFFFFFF"
+            else if isSelTab
+                tbLbl.color = "0x7DD3FCFF"
+            else
+                tbLbl.color = "0x94A3B8FF"
+            end if
         end if
     end for
 
@@ -6705,53 +6283,53 @@ sub renderPlayerOsd()
     isWatched = false
     if m.currentPlayingItem <> invalid and m.currentPlayingItem.completed = true then isWatched = true
     if m.playbackMeta <> invalid and m.playbackMeta.watched = true then isWatched = true
-    watchBtnTop = "MARK WATCHED"
-    watchBtnSub = "Set 100% Complete"
+    watchBtnTop = "Mark Watched"
+    watchBtnSub = "Set Complete"
     if isWatched
-        watchBtnTop = "MARK UNWATCHED"
-        watchBtnSub = "Clear Watch State"
+        watchBtnTop = "Watched"
+        watchBtnSub = "Clear Status"
     end if
 
     if m.osdTabIdx = 0
         isPausedNow = (m.cinemaVideo <> invalid and m.cinemaVideo.state = "paused")
-        playTop = "PAUSE"
+        playTop = "Pause"
         playSub = "Pause Video"
         if isPausedNow
-            playTop = "RESUME PLAY"
-            playSub = "Continue Video"
+            playTop = "Resume"
+            playSub = "Continue"
         end if
-        prevTop = "PREV EPISODE"
-        prevSub = "Previous in Series"
-        nextTop = "NEXT EPISODE"
-        nextSub = "Next in Series"
+        prevTop = "Prev Episode"
+        prevSub = "Previous"
+        nextTop = "Next Episode"
+        nextSub = "Up Next"
         if not hasShow
-            prevTop = "PREV FILM"
-            prevSub = "Previous in List"
-            nextTop = "NEXT FILM"
-            nextSub = "Next in List"
+            prevTop = "Prev Film"
+            prevSub = "Previous"
+            nextTop = "Next Film"
+            nextSub = "Up Next"
         end if
         setOsdButtonRow([
             { top: playTop, sub: playSub, active: true },
-            { top: "BACK -15s", sub: "Quick Rewind", active: false },
-            { top: "SKIP +30s", sub: "Quick Forward", active: false },
+            { top: "-15s", sub: "Rewind", active: false },
+            { top: "+30s", sub: "Forward", active: false },
             { top: prevTop, sub: prevSub, active: false },
             { top: nextTop, sub: nextSub, active: false },
-            { top: "RESTART 0:00", sub: "From Beginning", active: false },
+            { top: "Restart", sub: "From 0:00", active: false },
             { top: watchBtnTop, sub: watchBtnSub, active: isWatched }
         ])
         if eyebrow <> invalid
             if hasShow
-                eyebrow.text = "NOW PLAYING SERIES  |  " + UCase(cleanAscii(m.playingShowGroup.title))
+                eyebrow.text = "NOW PLAYING   |   " + UCase(cleanAscii(m.playingShowGroup.title))
             else
-                eyebrow.text = "NOW PLAYING FEATURE FILM  |  ROBOS CINEMA+"
+                eyebrow.text = "NOW PLAYING"
             end if
         end if
         if ttl <> invalid then ttl.text = cleanAscii(m.currentPlayingTitle)
         if bdg <> invalid
             if m.playbackMeta <> invalid
-                bdg.text = cleanAscii(m.playbackMeta.container) + "  |  " + cleanAscii(m.playbackMeta.sizeFormatted) + "  |  " + cleanAscii(m.playbackMeta.durationFormatted) + "  |  " + cleanAscii(m.playbackMeta.video.summary)
+                bdg.text = cleanAscii(m.playbackMeta.container) + "   |   " + cleanAscii(m.playbackMeta.sizeFormatted) + "   |   " + cleanAscii(m.playbackMeta.durationFormatted) + "   |   " + cleanAscii(m.playbackMeta.video.summary)
             else if m.currentPlayingItem <> invalid
-                bdg.text = cleanAscii(m.currentPlayingItem.genre) + "  |  " + cleanAscii(m.currentPlayingItem.qualityBadge)
+                bdg.text = cleanAscii(m.currentPlayingItem.genre) + "   |   " + cleanAscii(m.currentPlayingItem.qualityBadge)
             end if
         end if
         if body <> invalid
@@ -6759,37 +6337,37 @@ sub renderPlayerOsd()
             if m.playbackMeta <> invalid and m.playbackMeta.overview <> "" then ovTxt = cleanAscii(m.playbackMeta.overview)
             if ovTxt = "" and m.currentPlayingItem <> invalid then ovTxt = cleanAscii(m.currentPlayingItem.overview)
             if ovTxt = "" and hasShow then ovTxt = cleanAscii(m.playingShowGroup.overview)
-            if ovTxt = "" then ovTxt = "Streaming directly over your local network with instant D-Pad scrubbing, multi-track subtitles, season jumper, and stream inspector."
+            if ovTxt = "" then ovTxt = "Direct LAN stream with synced subtitles, season & show browser, audio selector, and stream metadata."
             body.text = Left(ovTxt, 280)
         end if
         if subL <> invalid
             if hasShow and m.playingShowGroup.episodes <> invalid and m.playingEpFlatIndex >= 0 and m.playingEpFlatIndex + 1 < m.playingShowGroup.episodes.Count()
                 nxtEp = m.playingShowGroup.episodes[m.playingEpFlatIndex + 1]
-                subL.text = "Up Next in Series: " + cleanAscii(nxtEp.episodeCode) + " - " + cleanAscii(nxtEp.episodeTitle)
+                subL.text = "Up Next: " + cleanAscii(nxtEp.episodeCode) + " - " + cleanAscii(nxtEp.episodeTitle)
             else
                 subL.text = currentCaptionBadgeLabel() + "   |   Audio: " + currentAudioBadgeLabel()
             end if
         end if
     else if m.osdTabIdx = 1
-        ccTop = "CC: OFF (TURN ON)"
-        if m.captionsEnabled = true then ccTop = "CC: ON (TURN OFF)"
-        szName = "MEDIUM"
-        if m.captionSizeMode = 0 then szName = "SMALL"
-        if m.captionSizeMode = 2 then szName = "LARGE"
+        ccTop = "Captions: Off"
+        if m.captionsEnabled = true then ccTop = "Captions: On"
+        szName = "Medium"
+        if m.captionSizeMode = 0 then szName = "Small"
+        if m.captionSizeMode = 2 then szName = "Large"
         offStr = m.captionOffsetSec.ToStr() + "s"
         if m.captionOffsetSec > 0 then offStr = "+" + offStr
-        curTrkShort = "Off"
-        if m.captionChoiceIdx > 0 and m.captionChoiceIdx < m.captionChoices.Count()
+        curTrkShort = "Turn On"
+        if m.captionsEnabled = true and m.captionChoiceIdx > 0 and m.captionChoiceIdx < m.captionChoices.Count()
             curTrkShort = Left(cleanAscii(m.captionChoices[m.captionChoiceIdx].label), 18)
         end if
         setOsdButtonRow([
             { top: ccTop, sub: curTrkShort, active: m.captionsEnabled },
-            { top: "< PREV TRACK", sub: "Previous Subtitle", active: false },
-            { top: "NEXT TRACK >", sub: "Cycle Subtitles", active: false },
-            { top: "< PREV CAPTION", sub: "Jump Prev Line", active: false },
-            { top: "NEXT CAPTION >", sub: "Jump Next Line", active: false },
-            { top: "SIZE: " + szName, sub: "Caption Scale", active: false },
-            { top: "SYNC: " + offStr, sub: "Adjust Timing", active: (m.captionOffsetSec <> 0.0) }
+            { top: "< Prev Track", sub: "Subtitle Source", active: false },
+            { top: "Next Track >", sub: "Subtitle Source", active: false },
+            { top: "< Prev Line", sub: "Seek Dialogue", active: false },
+            { top: "Next Line >", sub: "Seek Dialogue", active: false },
+            { top: "Size: " + szName, sub: "Font Scale", active: false },
+            { top: "Sync: " + offStr, sub: "Timing Offset", active: (m.captionOffsetSec <> 0.0) }
         ])
         updateCaptionsTranscriptCard()
     else if m.osdTabIdx = 2
@@ -6799,88 +6377,88 @@ sub renderPlayerOsd()
             pst = m.top.findNode("osdSummaryPoster")
             if pst <> invalid and m.playingShowGroup.artUrl <> invalid then pst.uri = cleanAscii(m.playingShowGroup.artUrl)
             setOsdButtonRow([
-                { top: "OPEN SHOW PAGE", sub: "Browse All Seasons", active: true },
-                { top: "NEXT UNWATCHED", sub: "Resume Series", active: false },
-                { top: "PLAY S01E01", sub: "Start Series Over", active: false }
+                { top: "Open Show Page", sub: "All Seasons", active: true },
+                { top: "Next Unwatched", sub: "Continue Series", active: false },
+                { top: "Play S01E01", sub: "Start Series Over", active: false }
             ])
-            if eyebrow <> invalid then eyebrow.text = "SERIES OVERVIEW  |  " + cleanAscii(m.playingShowGroup.genre)
+            if eyebrow <> invalid then eyebrow.text = "TV SERIES   |   " + cleanAscii(m.playingShowGroup.genre)
             if ttl <> invalid then ttl.text = cleanAscii(m.playingShowGroup.title)
             if bdg <> invalid
                 sCnt = safeInt(m.playingShowGroup.seasonCount)
                 eCnt = safeInt(m.playingShowGroup.episodeCount)
                 wCnt = safeInt(m.playingShowGroup.watchedCount)
-                bdg.text = sCnt.ToStr() + " Seasons   |   " + eCnt.ToStr() + " Total Episodes   |   " + wCnt.ToStr() + " / " + eCnt.ToStr() + " Watched"
+                bdg.text = sCnt.ToStr() + " Seasons   |   " + eCnt.ToStr() + " Episodes   |   " + wCnt.ToStr() + " / " + eCnt.ToStr() + " Watched"
             end if
             if body <> invalid then body.text = Left(cleanAscii(m.playingShowGroup.overview), 280)
             if subL <> invalid
-                subL.text = "Currently Watching: " + cleanAscii(m.playingEpisodeObj.episodeCode) + " - " + cleanAscii(m.playingEpisodeObj.episodeTitle)
+                subL.text = "Playing: " + cleanAscii(m.playingEpisodeObj.episodeCode) + " - " + cleanAscii(m.playingEpisodeObj.episodeTitle)
             end if
         else
             setOsdButtonRow([
-                { top: "BROWSE MOVIES", sub: "Return to Catalog", active: true },
-                { top: "PREVIOUS FILM", sub: "Play Previous", active: false },
-                { top: "NEXT FILM", sub: "Play Next", active: false }
+                { top: "Browse Library", sub: "Return to Movies", active: true },
+                { top: "Previous Film", sub: "Play Previous", active: false },
+                { top: "Next Film", sub: "Play Next", active: false }
             ])
-            if eyebrow <> invalid then eyebrow.text = "MOVIE LIBRARY & COLLECTION"
+            if eyebrow <> invalid then eyebrow.text = "COLLECTION"
             if ttl <> invalid then ttl.text = cleanAscii(m.currentPlayingTitle)
             if bdg <> invalid and m.currentPlayingItem <> invalid
-                bdg.text = "Genre: " + cleanAscii(m.currentPlayingItem.genre) + "   |   Quality: " + cleanAscii(m.currentPlayingItem.qualityBadge)
+                bdg.text = cleanAscii(m.currentPlayingItem.genre) + "   |   " + cleanAscii(m.currentPlayingItem.qualityBadge)
             end if
-            if body <> invalid then body.text = "Switch to Tab 3 (More Films) to browse other movies right over the live video, or click Browse Movies above to return to the full poster wall."
-            if subL <> invalid then subL.text = "Connected to RobOS Media Server"
+            if body <> invalid then body.text = "Open the More Films tab to switch movies without leaving video playback, or choose Browse Library above."
+            if subL <> invalid then subL.text = "RobOS Media Server"
         end if
     else if m.osdTabIdx = 4
-        nextActionLbl = "NEXT EPISODE"
-        if not hasShow then nextActionLbl = "SKIP +5 MIN"
+        nextActionLbl = "Next Episode"
+        if not hasShow then nextActionLbl = "Skip +5m"
         setOsdButtonRow([
             { top: watchBtnTop, sub: watchBtnSub, active: isWatched },
-            { top: "RESTART 0:00", sub: "Play From Start", active: false },
+            { top: "Restart", sub: "From 0:00", active: false },
             { top: nextActionLbl, sub: "Advance", active: false }
         ])
         if hasShow and m.playingEpisodeObj <> invalid
             if eyebrow <> invalid
-                eyebrow.text = UCase(cleanAscii(m.playingShowGroup.title)) + "   |   SEASON " + safeInt(m.playingEpisodeObj.seasonNumber).ToStr() + "  EPISODE " + safeInt(m.playingEpisodeObj.episodeNumber).ToStr()
+                eyebrow.text = UCase(cleanAscii(m.playingShowGroup.title)) + "   |   SEASON " + safeInt(m.playingEpisodeObj.seasonNumber).ToStr() + "   |   EPISODE " + safeInt(m.playingEpisodeObj.episodeNumber).ToStr()
             end if
             if ttl <> invalid
                 ttl.text = cleanAscii(m.playingEpisodeObj.episodeCode) + " - " + cleanAscii(m.playingEpisodeObj.episodeTitle)
             end if
         else
-            if eyebrow <> invalid then eyebrow.text = "FEATURE FILM DETAILS"
+            if eyebrow <> invalid then eyebrow.text = "FILM DETAILS"
             if ttl <> invalid then ttl.text = cleanAscii(m.currentPlayingTitle)
         end if
         if bdg <> invalid
             yrVal = ""
-            if m.playbackMeta <> invalid and m.playbackMeta.year <> invalid then yrVal = m.playbackMeta.year.ToStr() + "  |  "
+            if m.playbackMeta <> invalid and m.playbackMeta.year <> invalid then yrVal = m.playbackMeta.year.ToStr() + "   |   "
             durVal = formatClockHms(m.cinemaVideo.duration)
             if m.playbackMeta <> invalid and m.playbackMeta.durationFormatted <> invalid then durVal = cleanAscii(m.playbackMeta.durationFormatted)
             szVal = ""
-            if m.playbackMeta <> invalid and m.playbackMeta.sizeFormatted <> invalid then szVal = "  |  " + cleanAscii(m.playbackMeta.sizeFormatted)
-            bdg.text = yrVal + "Runtime: " + durVal + szVal + "  |  Status: " + IIfStr(isWatched, "Watched", "In Progress")
+            if m.playbackMeta <> invalid and m.playbackMeta.sizeFormatted <> invalid then szVal = "   |   " + cleanAscii(m.playbackMeta.sizeFormatted)
+            bdg.text = yrVal + durVal + szVal + "   |   " + IIfStr(isWatched, "Watched", "In Progress")
         end if
         if body <> invalid
             detOv = ""
             if m.playbackMeta <> invalid and m.playbackMeta.overview <> "" then detOv = cleanAscii(m.playbackMeta.overview)
             if detOv = "" and m.currentPlayingItem <> invalid then detOv = cleanAscii(m.currentPlayingItem.overview)
             if detOv = "" and hasShow then detOv = cleanAscii(m.playingShowGroup.overview)
-            if detOv = "" then detOv = "Full HD LAN stream playing from RobOS Media Server."
+            if detOv = "" then detOv = "Streaming from RobOS Media Server."
             body.text = Left(detOv, 300)
         end if
         if subL <> invalid and m.playbackMeta <> invalid
-            subL.text = "File: " + Left(cleanAscii(m.playbackMeta.fileName), 92)
+            subL.text = "Source: " + Left(cleanAscii(m.playbackMeta.fileName), 92)
         end if
     else if m.osdTabIdx = 5
         setOsdButtonRow([
-            { top: "< PREV AUDIO", sub: "Previous Track", active: false },
-            { top: "NEXT AUDIO >", sub: "Switch Language", active: true },
-            { top: "DIRECT PLAY", sub: "Original Stream", active: (not m.currentStreamIsHls) },
-            { top: "HLS TRANSCODE", sub: "Compatibility Mode", active: m.currentStreamIsHls }
+            { top: "< Prev Audio", sub: "Audio Track", active: false },
+            { top: "Next Audio >", sub: "Switch Language", active: true },
+            { top: "Direct Play", sub: "Original Stream", active: (not m.currentStreamIsHls) },
+            { top: "HLS Stream", sub: "Compatibility", active: m.currentStreamIsHls }
         ])
-        if eyebrow <> invalid then eyebrow.text = "AUDIO TRACKS & STREAM DELIVERY MODE"
-        if ttl <> invalid then ttl.text = "Active Audio: " + currentAudioBadgeLabel()
+        if eyebrow <> invalid then eyebrow.text = "AUDIO & DELIVERY"
+        if ttl <> invalid then ttl.text = "Audio: " + currentAudioBadgeLabel()
         if bdg <> invalid
-            modeDesc = "Direct Play (Zero-CPU HTTP 206 Byte-Range)"
-            if m.currentStreamIsHls = true then modeDesc = "FFmpeg Live HLS Remux / Stereo AAC Transcode"
-            bdg.text = "Delivery: " + modeDesc
+            modeDesc = "Direct Play (HTTP 206 Byte-Range)"
+            if m.currentStreamIsHls = true then modeDesc = "FFmpeg Live HLS Stream"
+            bdg.text = modeDesc
         end if
         if body <> invalid
             if m.playbackMeta <> invalid and m.playbackMeta.audioTracks <> invalid and m.playbackMeta.audioTracks.Count() > 0
@@ -6888,18 +6466,18 @@ sub renderPlayerOsd()
                 for aI = 0 to m.playbackMeta.audioTracks.Count() - 1
                     aTrk = m.playbackMeta.audioTracks[aI]
                     prefixA = "   "
-                    if aI = m.activeAudioChoiceIdx then prefixA = ">> "
+                    if aI = m.activeAudioChoiceIdx then prefixA = "> "
                     if linesA <> "" then linesA = linesA + Chr(10)
                     linesA = linesA + prefixA + cleanAscii(aTrk.label)
                     if aI >= 2 then exit for
                 end for
                 body.text = linesA
             else
-                body.text = "Audio Stream: " + currentAudioBadgeLabel() + " (Use Next Audio > if multiple language tracks are embedded)"
+                body.text = "Active Audio: " + currentAudioBadgeLabel()
             end if
         end if
         if subL <> invalid
-            subL.text = "If a 10-bit HEVC or multi-channel EAC3 file stutters or lacks audio on TV speakers, select [HLS TRANSCODE] above."
+            subL.text = "Switch to HLS Stream above if a multi-channel audio track or codec needs live transcoding."
         end if
     else if m.osdTabIdx = 6
         renderOsdMetadataGrid()
@@ -6912,21 +6490,24 @@ function IIfStr(cond as Boolean, tVal as String, fVal as String) as String
 end function
 
 sub renderOsdSeasonPane(hasShow as Boolean)
-    topLabels = ["< PREV SEASON", "NEXT SEASON >", "OPEN SEASON IN LIBRARY"]
+    topLabels = ["< Prev Season", "Next Season >", "Open in Library"]
     if not hasShow
-        topLabels = ["< PREV PAGE", "NEXT PAGE >", "OPEN MOVIE LIBRARY"]
+        topLabels = ["< Prev Page", "Next Page >", "Open Library"]
     end if
     for bI = 0 to 2
         sBdr = m.top.findNode("osdSeasonBtnBorder" + bI.ToStr())
         sBg = m.top.findNode("osdSeasonBtnBg" + bI.ToStr())
         sLbl = m.top.findNode("osdSeasonBtnLbl" + bI.ToStr())
         isTopFoc = (m.osdZone = "seasonTop" and m.osdSeasonTopIdx = bI)
-        if sLbl <> invalid then sLbl.text = topLabels[bI]
+        if sLbl <> invalid
+            sLbl.text = topLabels[bI]
+            if isTopFoc then sLbl.color = "0xFFFFFFFF" else if bI = 2 then sLbl.color = "0x7DD3FCFF" else sLbl.color = "0xCBD5E1FF"
+        end if
         if sBdr <> invalid
-            if isTopFoc then sBdr.color = "0xFFFFFFFF" else sBdr.color = "0x263248FF"
+            if isTopFoc then sBdr.color = "0xFFFFFFFF" else sBdr.color = "0x111A2EFF"
         end if
         if sBg <> invalid
-            if isTopFoc then sBg.color = "0x2B2114FF" else sBg.color = "0x131B2BFF"
+            if isTopFoc then sBg.color = "0x1E3A5FFF" else sBg.color = "0x111A2EFF"
         end if
     end for
 
@@ -6936,17 +6517,15 @@ sub renderOsdSeasonPane(hasShow as Boolean)
     if hdrInfo <> invalid
         if hasShow and m.osdSeasonsList.Count() > 0 and m.osdBrowseSeasonIdx < m.osdSeasonsList.Count()
             sObj = m.osdSeasonsList[m.osdBrowseSeasonIdx]
-            hdrInfo.text = cleanAscii(m.playingShowGroup.title) + "  |  " + cleanAscii(sObj.label) + " (" + (m.osdBrowseSeasonIdx + 1).ToStr() + "/" + m.osdSeasonsList.Count().ToStr() + ")  |  " + totalEps.ToStr() + " Episodes"
+            hdrInfo.text = cleanAscii(m.playingShowGroup.title) + "   |   " + cleanAscii(sObj.label) + " (" + totalEps.ToStr() + " Episodes)"
         else
-            hdrInfo.text = "More Movies in Library (" + totalEps.ToStr() + " Titles  |  Press OK on Any Card to Switch)"
+            hdrInfo.text = totalEps.ToStr() + " Related Films"
         end if
     end if
 
     if m.osdEpFocusIdx < 0 then m.osdEpFocusIdx = 0
     if totalEps > 0 and m.osdEpFocusIdx >= totalEps then m.osdEpFocusIdx = totalEps - 1
-    winStart = m.osdEpFocusIdx - 2
-    if winStart + 5 > totalEps then winStart = totalEps - 5
-    if winStart < 0 then winStart = 0
+    winStart = Int(m.osdEpFocusIdx / 5) * 5
 
     for slot = 0 to 4
         idxE = winStart + slot
@@ -6967,19 +6546,19 @@ sub renderOsdSeasonPane(hasShow as Boolean)
                 if isCardFoc
                     eBdr.color = "0xFFFFFFFF"
                 else if isPlayingNow
-                    eBdr.color = "0x10B981FF"
+                    eBdr.color = "0x172554FF"
                 else
-                    eBdr.color = "0x263248FF"
+                    eBdr.color = "0x111A2EFF"
                 end if
             end if
             if eBg <> invalid
                 eBg.visible = true
                 if isCardFoc
-                    eBg.color = "0x2B2114FF"
+                    eBg.color = "0x1E3A5FFF"
                 else if isPlayingNow
-                    eBg.color = "0x0F291EFF"
+                    eBg.color = "0x15253DFF"
                 else
-                    eBg.color = "0x121927FF"
+                    eBg.color = "0x111A2EFF"
                 end if
             end if
             if ePst <> invalid
@@ -7009,6 +6588,7 @@ sub renderOsdSeasonPane(hasShow as Boolean)
                 else
                     eTtl.text = cleanAscii(ep.title)
                 end if
+                if isCardFoc then eTtl.color = "0xFFFFFFFF" else eTtl.color = "0xE2E8F0FF"
             end if
             epPct = safeInt(ep.progressPct)
             if ep.completed = true then epPct = 100
@@ -7016,8 +6596,8 @@ sub renderOsdSeasonPane(hasShow as Boolean)
                 if epPct > 0
                     ePBg.visible = true
                     ePFl.visible = true
-                    ePFl.width = Int((epPct / 100.0) * 328)
-                    if ep.completed = true then ePFl.color = "0x10B981FF" else ePFl.color = "0xE8A33DFF"
+                    ePFl.width = Int((epPct / 100.0) * 326)
+                    if ep.completed = true then ePFl.color = "0x10B981FF" else ePFl.color = "0x38BDF8FF"
                 else
                     ePBg.visible = false
                     ePFl.visible = false
@@ -7026,17 +6606,17 @@ sub renderOsdSeasonPane(hasShow as Boolean)
             if eMt <> invalid
                 eMt.visible = true
                 if isPlayingNow
-                    eMt.text = "* NOW PLAYING"
-                    eMt.color = "0x6EE7B7FF"
+                    eMt.text = "Now Playing"
+                    eMt.color = "0x7DD3FCFF"
                 else if ep.completed = true
-                    eMt.text = "Watched  |  OK to Replay"
-                    eMt.color = "0x86EFACFF"
+                    eMt.text = "Watched"
+                    eMt.color = "0x34D399FF"
                 else if ep.inProgress = true
-                    eMt.text = "Resume " + epPct.ToStr() + "%  |  OK to Play"
-                    eMt.color = "0xFCD34DFF"
+                    eMt.text = "Resume " + epPct.ToStr() + "%"
+                    eMt.color = "0x38BDF8FF"
                 else
-                    eMt.text = "Episode " + (idxE + 1).ToStr() + "/" + totalEps.ToStr() + "  |  OK to Play"
-                    eMt.color = "0x94A3B8FF"
+                    eMt.text = (idxE + 1).ToStr() + " of " + totalEps.ToStr()
+                    eMt.color = "0x64748BFF"
                 end if
             end if
         else
@@ -7179,7 +6759,9 @@ sub activateOsdCurrentItem()
                 if m.playingShowGroup <> invalid
                     applyPlayerBrowseSeason(m.osdBrowseSeasonIdx + 1)
                 else if m.osdSeasonEps.Count() > 0
-                    m.osdEpFocusIdx = (m.osdEpFocusIdx + 5) mod m.osdSeasonEps.Count()
+                    nxtEpPage = m.osdEpFocusIdx + 5
+                    if nxtEpPage >= m.osdSeasonEps.Count() then nxtEpPage = m.osdSeasonEps.Count() - 1
+                    m.osdEpFocusIdx = nxtEpPage
                 end if
                 renderPlayerOsd()
             else if m.osdSeasonTopIdx = 2
@@ -7260,6 +6842,7 @@ function handleCinemaVideoKeyEvent(key as String) as Boolean
         if m.playerOsdOpen <> true
             openPlayerOsd("mini")
         else
+            if m.playerOsdMode = "mini" then m.playerMiniHideSec = 3
             renderPlayerOsd()
         end if
         return true
@@ -7267,11 +6850,21 @@ function handleCinemaVideoKeyEvent(key as String) as Boolean
         ns = safeInt(m.cinemaVideo.position) - 60
         if ns < 0 then ns = 0
         m.cinemaVideo.seek = ns
-        if m.playerOsdOpen <> true then openPlayerOsd("mini") else updatePlayerOsdHeaderAndScrubber()
+        if m.playerOsdOpen <> true
+            openPlayerOsd("mini")
+        else
+            if m.playerOsdMode = "mini" then m.playerMiniHideSec = 4
+            updatePlayerOsdHeaderAndScrubber()
+        end if
         return true
     else if key = "fastforward"
         m.cinemaVideo.seek = safeInt(m.cinemaVideo.position) + 60
-        if m.playerOsdOpen <> true then openPlayerOsd("mini") else updatePlayerOsdHeaderAndScrubber()
+        if m.playerOsdOpen <> true
+            openPlayerOsd("mini")
+        else
+            if m.playerOsdMode = "mini" then m.playerMiniHideSec = 4
+            updatePlayerOsdHeaderAndScrubber()
+        end if
         return true
     else if key = "replay"
         ns = safeInt(m.cinemaVideo.position) - 10
@@ -7279,11 +6872,16 @@ function handleCinemaVideoKeyEvent(key as String) as Boolean
         m.cinemaVideo.seek = ns
         if m.captionsEnabled <> true then m.captionTempReplaySec = 12
         onSubTimerTick()
-        if m.playerOsdOpen <> true then openPlayerOsd("mini") else updatePlayerOsdHeaderAndScrubber()
+        if m.playerOsdOpen <> true
+            openPlayerOsd("mini")
+        else
+            if m.playerOsdMode = "mini" then m.playerMiniHideSec = 4
+            updatePlayerOsdHeaderAndScrubber()
+        end if
         return true
     end if
 
-    ' When Full Rich OSD Menu is open
+    ' When Full 7-Tab Player Menu is open
     if m.playerOsdOpen = true and m.playerOsdMode = "full"
         if key = "back"
             closePlayerOsd()
@@ -7323,14 +6921,18 @@ function handleCinemaVideoKeyEvent(key as String) as Boolean
             return true
         else if m.osdZone = "tabs"
             if key = "left"
-                m.osdTabIdx = (m.osdTabIdx + 6) mod 7
-                m.osdItemIdx = 0
-                renderPlayerOsd()
+                if m.osdTabIdx > 0
+                    m.osdTabIdx = m.osdTabIdx - 1
+                    m.osdItemIdx = 0
+                    renderPlayerOsd()
+                end if
                 return true
             else if key = "right"
-                m.osdTabIdx = (m.osdTabIdx + 1) mod 7
-                m.osdItemIdx = 0
-                renderPlayerOsd()
+                if m.osdTabIdx < 6
+                    m.osdTabIdx = m.osdTabIdx + 1
+                    m.osdItemIdx = 0
+                    renderPlayerOsd()
+                end if
                 return true
             else if key = "up"
                 m.osdZone = "scrubber"
@@ -7344,7 +6946,7 @@ function handleCinemaVideoKeyEvent(key as String) as Boolean
                         m.osdZone = "seasonTop"
                     end if
                 else if m.osdTabIdx = 6
-                    ' Metadata tab has no sub-buttons; OK refreshes
+                    ' Metadata tab is read-only grid
                 else
                     m.osdZone = "items"
                     m.osdItemIdx = 0
@@ -7355,12 +6957,16 @@ function handleCinemaVideoKeyEvent(key as String) as Boolean
             return true
         else if m.osdZone = "seasonTop"
             if key = "left"
-                m.osdSeasonTopIdx = (m.osdSeasonTopIdx + 2) mod 3
-                renderPlayerOsd()
+                if m.osdSeasonTopIdx > 0
+                    m.osdSeasonTopIdx = m.osdSeasonTopIdx - 1
+                    renderPlayerOsd()
+                end if
                 return true
             else if key = "right"
-                m.osdSeasonTopIdx = (m.osdSeasonTopIdx + 1) mod 3
-                renderPlayerOsd()
+                if m.osdSeasonTopIdx < 2
+                    m.osdSeasonTopIdx = m.osdSeasonTopIdx + 1
+                    renderPlayerOsd()
+                end if
                 return true
             else if key = "up"
                 m.osdZone = "tabs"
@@ -7383,17 +6989,32 @@ function handleCinemaVideoKeyEvent(key as String) as Boolean
                 totalEp = 0
                 if m.osdSeasonEps <> invalid then totalEp = m.osdSeasonEps.Count()
                 if key = "left" and totalEp > 0
-                    m.osdEpFocusIdx = m.osdEpFocusIdx - 1
-                    if m.osdEpFocusIdx < 0 then m.osdEpFocusIdx = totalEp - 1
-                    renderPlayerOsd()
+                    if m.osdEpFocusIdx > 0
+                        m.osdEpFocusIdx = m.osdEpFocusIdx - 1
+                        renderPlayerOsd()
+                    end if
                     return true
                 else if key = "right" and totalEp > 0
-                    m.osdEpFocusIdx = m.osdEpFocusIdx + 1
-                    if m.osdEpFocusIdx >= totalEp then m.osdEpFocusIdx = 0
-                    renderPlayerOsd()
+                    if m.osdEpFocusIdx + 1 < totalEp
+                        m.osdEpFocusIdx = m.osdEpFocusIdx + 1
+                        renderPlayerOsd()
+                    end if
+                    return true
+                else if key = "down" and totalEp > 0
+                    if m.osdEpFocusIdx + 5 < totalEp
+                        m.osdEpFocusIdx = m.osdEpFocusIdx + 5
+                        renderPlayerOsd()
+                    else if Int(m.osdEpFocusIdx / 5) < Int((totalEp - 1) / 5)
+                        m.osdEpFocusIdx = totalEp - 1
+                        renderPlayerOsd()
+                    end if
                     return true
                 else if key = "up"
-                    m.osdZone = "seasonTop"
+                    if m.osdEpFocusIdx >= 5
+                        m.osdEpFocusIdx = m.osdEpFocusIdx - 5
+                    else
+                        m.osdZone = "seasonTop"
+                    end if
                     renderPlayerOsd()
                     return true
                 else if key = "OK"
@@ -7405,12 +7026,16 @@ function handleCinemaVideoKeyEvent(key as String) as Boolean
 
             maxBtns = osdMaxItemCountForTab(m.osdTabIdx)
             if key = "left" and maxBtns > 0
-                m.osdItemIdx = (m.osdItemIdx + maxBtns - 1) mod maxBtns
-                renderPlayerOsd()
+                if m.osdItemIdx > 0
+                    m.osdItemIdx = m.osdItemIdx - 1
+                    renderPlayerOsd()
+                end if
                 return true
             else if key = "right" and maxBtns > 0
-                m.osdItemIdx = (m.osdItemIdx + 1) mod maxBtns
-                renderPlayerOsd()
+                if m.osdItemIdx + 1 < maxBtns
+                    m.osdItemIdx = m.osdItemIdx + 1
+                    renderPlayerOsd()
+                end if
                 return true
             else if key = "up"
                 m.osdZone = "tabs"
@@ -7424,7 +7049,8 @@ function handleCinemaVideoKeyEvent(key as String) as Boolean
         end if
     end if
 
-    ' When OSD is closed or in transient Mini-HUD mode
+    ' When OSD is closed or in transient Mini-HUD mode:
+    ' OK pauses/resumes naturally (with transient mini-bar); Up/Down opens Full Rich Menu; * opens Subtitles
     if key = "back"
         if m.playerOsdOpen = true and m.playerOsdMode = "mini"
             closePlayerOsd()
@@ -7432,7 +7058,16 @@ function handleCinemaVideoKeyEvent(key as String) as Boolean
         end if
         exitPlaybackToLibrary()
         return true
-    else if key = "OK" or key = "up" or key = "down"
+    else if key = "OK"
+        if m.cinemaVideo.state = "playing"
+            m.cinemaVideo.control = "pause"
+        else if m.cinemaVideo.state = "paused"
+            m.cinemaVideo.control = "resume"
+        end if
+        openPlayerOsd("mini")
+        if m.cinemaVideo.state = "playing" then m.playerMiniHideSec = 3
+        return true
+    else if key = "up" or key = "down"
         m.osdZone = "tabs"
         openPlayerOsd("full")
         return true
@@ -7462,12 +7097,12 @@ function onKeyEvent(key as String, press as Boolean) as Boolean
     end if
     if press <> true then return false
 
-    ' 1. Active Full-Screen Cinema Video Playback Controls + Rich Plex-Style OSD Menu
+    ' 1. Active Full-Screen Cinema Video Playback Controls + Rich OSD Menu
     if m.cinemaVideoActive = true
         return handleCinemaVideoKeyEvent(key)
     end if
 
-    ' 2. 3-Row Visual Image-Card Cinema Library Navigation (Row 0: Tabs <-> Row 1: Category/Season Cards <-> Row 2: Poster Cards)
+    ' 2. Natural 2D Grid Navigation in Cinema Library (Top Nav Pills <-> Filter/Season Strip <-> 6-Column Poster Grid)
     if m.cinemaLibraryActive = true
         if key = "options"
             if m.cinemaActiveTab = "movies"
@@ -7485,8 +7120,8 @@ function onKeyEvent(key as String, press as Boolean) as Boolean
             totalP = 0
             if m.cinemaLibItems <> invalid then totalP = m.cinemaLibItems.Count()
             if totalP > 0
-                nextP = m.cinemaPosterIndex + 6
-                if nextP >= totalP then nextP = 0
+                nextP = m.cinemaPosterIndex + 18
+                if nextP >= totalP then nextP = totalP - 1
                 m.cinemaPosterIndex = nextP
                 updateCinemaLibDetail(m.cinemaPosterIndex)
                 updateCinemaPosterShelf(m.cinemaPosterIndex)
@@ -7496,8 +7131,8 @@ function onKeyEvent(key as String, press as Boolean) as Boolean
             totalP = 0
             if m.cinemaLibItems <> invalid then totalP = m.cinemaLibItems.Count()
             if totalP > 0
-                prevP = m.cinemaPosterIndex - 6
-                if prevP < 0 then prevP = totalP - 1
+                prevP = m.cinemaPosterIndex - 18
+                if prevP < 0 then prevP = 0
                 m.cinemaPosterIndex = prevP
                 updateCinemaLibDetail(m.cinemaPosterIndex)
                 updateCinemaPosterShelf(m.cinemaPosterIndex)
@@ -7508,6 +7143,12 @@ function onKeyEvent(key as String, press as Boolean) as Boolean
                 exitShowSeasons()
                 return true
             end if
+            if m.cinemaFocusZone = "posters" and m.cinemaPosterIndex >= 6
+                m.cinemaPosterIndex = m.cinemaPosterIndex mod 6
+                updateCinemaLibDetail(m.cinemaPosterIndex)
+                updateCinemaPosterShelf(m.cinemaPosterIndex)
+                return true
+            end if
             m.localLibraryOpened = false
             hideCinemaLibrary()
             return true
@@ -7516,67 +7157,53 @@ function onKeyEvent(key as String, press as Boolean) as Boolean
         if m.cinemaFocusZone = "tabs"
             maxTab = 2
             if key = "left"
-                nextCol = m.cinemaTabCol - 1
-                if nextCol < 0 then nextCol = maxTab
-                m.cinemaTabCol = nextCol
-                if m.cinemaTabCol = 0 and m.cinemaActiveTab <> "movies"
-                    switchCinemaTab("movies")
-                    m.cinemaFocusZone = "tabs"
-                    m.cinemaTabCol = 0
-                else if m.cinemaTabCol = 1 and m.cinemaActiveTab <> "shows"
-                    switchCinemaTab("shows")
-                    m.cinemaFocusZone = "tabs"
-                    m.cinemaTabCol = 1
-                else if m.cinemaTabCol = 2 and m.activeShowGroup = invalid and m.cinemaActiveTab <> "tablo"
-                    switchCinemaTab("tablo")
-                    m.cinemaFocusZone = "tabs"
-                    m.cinemaTabCol = 2
+                if m.cinemaTabCol > 0
+                    m.cinemaTabCol = m.cinemaTabCol - 1
+                    if m.activeShowGroup = invalid
+                        if m.cinemaTabCol = 0 and m.cinemaActiveTab <> "movies"
+                            switchCinemaTab("movies")
+                            m.cinemaFocusZone = "tabs"
+                            m.cinemaTabCol = 0
+                        else if m.cinemaTabCol = 1 and m.cinemaActiveTab <> "shows"
+                            switchCinemaTab("shows")
+                            m.cinemaFocusZone = "tabs"
+                            m.cinemaTabCol = 1
+                        end if
+                    end if
+                    updateCinemaPaneFocusUi()
                 end if
-                updateCinemaPaneFocusUi()
                 return true
             else if key = "right"
-                nextCol = m.cinemaTabCol + 1
-                if nextCol > maxTab then nextCol = 0
-                m.cinemaTabCol = nextCol
-                if m.cinemaTabCol = 0 and m.cinemaActiveTab <> "movies"
-                    switchCinemaTab("movies")
-                    m.cinemaFocusZone = "tabs"
-                    m.cinemaTabCol = 0
-                else if m.cinemaTabCol = 1 and m.cinemaActiveTab <> "shows"
-                    switchCinemaTab("shows")
-                    m.cinemaFocusZone = "tabs"
-                    m.cinemaTabCol = 1
-                else if m.cinemaTabCol = 2 and m.activeShowGroup = invalid and m.cinemaActiveTab <> "tablo"
-                    switchCinemaTab("tablo")
-                    m.cinemaFocusZone = "tabs"
-                    m.cinemaTabCol = 2
+                if m.cinemaTabCol < maxTab
+                    m.cinemaTabCol = m.cinemaTabCol + 1
+                    if m.activeShowGroup = invalid
+                        if m.cinemaTabCol = 1 and m.cinemaActiveTab <> "shows"
+                            switchCinemaTab("shows")
+                            m.cinemaFocusZone = "tabs"
+                            m.cinemaTabCol = 1
+                        else if m.cinemaTabCol = 2 and m.cinemaActiveTab <> "tablo"
+                            switchCinemaTab("tablo")
+                            m.cinemaFocusZone = "tabs"
+                            m.cinemaTabCol = 2
+                        end if
+                    end if
+                    updateCinemaPaneFocusUi()
                 end if
-                updateCinemaPaneFocusUi()
                 return true
             else if key = "down"
                 m.cinemaFocusZone = "categories"
                 updateCinemaPaneFocusUi()
                 return true
             else if key = "up"
-                if m.cinemaActiveTab = "movies"
-                    switchCinemaTab("shows")
-                    m.cinemaFocusZone = "tabs"
-                    m.cinemaTabCol = 1
-                else if m.cinemaActiveTab = "shows"
-                    switchCinemaTab("tablo")
-                    m.cinemaFocusZone = "tabs"
-                    m.cinemaTabCol = 2
-                else
-                    switchCinemaTab("movies")
-                    m.cinemaFocusZone = "tabs"
-                    m.cinemaTabCol = 0
-                end if
-                updateCinemaPaneFocusUi()
                 return true
             else if key = "OK"
-                if m.activeShowGroup <> invalid and (m.cinemaTabCol = 1 or m.cinemaTabCol = 2)
-                    exitShowSeasons()
-                    return true
+                if m.activeShowGroup <> invalid
+                    if m.cinemaTabCol = 0
+                        switchCinemaTab("movies")
+                    else
+                        exitShowSeasons()
+                        return true
+                    end if
                 else if m.cinemaTabCol = 0 and m.cinemaActiveTab <> "movies"
                     switchCinemaTab("movies")
                 else if m.cinemaTabCol = 1 and m.cinemaActiveTab <> "shows"
@@ -7584,42 +7211,44 @@ function onKeyEvent(key as String, press as Boolean) as Boolean
                 else if m.cinemaTabCol = 2 and m.cinemaActiveTab <> "tablo"
                     switchCinemaTab("tablo")
                 end if
-                m.cinemaFocusZone = "posters"
+                if m.cinemaLibItems <> invalid and m.cinemaLibItems.Count() > 0
+                    m.cinemaFocusZone = "posters"
+                else
+                    m.cinemaFocusZone = "categories"
+                end if
                 updateCinemaPaneFocusUi()
                 return true
             end if
         else if m.cinemaFocusZone = "categories"
             if key = "left"
                 if m.activeShowGroup <> invalid and m.activeShowSeasons <> invalid and m.activeShowSeasons.Count() > 0
-                    sCnt = m.activeShowSeasons.Count()
-                    nextS = m.activeSeasonIndex - 1
-                    if nextS < 0 then nextS = sCnt - 1
-                    applyShowSeasonFilter(nextS)
+                    if m.activeSeasonIndex > 0
+                        applyShowSeasonFilter(m.activeSeasonIndex - 1)
+                        updateCinemaPaneFocusUi()
+                    end if
                 else if m.cinemaCategories <> invalid and m.cinemaCategories.Count() > 0
-                    cCnt = m.cinemaCategories.Count()
-                    nextC = m.cinemaCatIndex - 1
-                    if nextC < 0 then nextC = cCnt - 1
-                    applyCinemaCategoryFilter(nextC)
+                    if m.cinemaCatIndex > 0
+                        applyCinemaCategoryFilter(m.cinemaCatIndex - 1)
+                        updateCinemaPaneFocusUi()
+                    end if
                 end if
-                updateCinemaPaneFocusUi()
                 return true
             else if key = "right"
                 if m.activeShowGroup <> invalid and m.activeShowSeasons <> invalid and m.activeShowSeasons.Count() > 0
-                    sCnt = m.activeShowSeasons.Count()
-                    nextS = m.activeSeasonIndex + 1
-                    if nextS >= sCnt then nextS = 0
-                    applyShowSeasonFilter(nextS)
+                    if m.activeSeasonIndex + 1 < m.activeShowSeasons.Count()
+                        applyShowSeasonFilter(m.activeSeasonIndex + 1)
+                        updateCinemaPaneFocusUi()
+                    end if
                 else if m.cinemaCategories <> invalid and m.cinemaCategories.Count() > 0
-                    cCnt = m.cinemaCategories.Count()
-                    nextC = m.cinemaCatIndex + 1
-                    if nextC >= cCnt then nextC = 0
-                    applyCinemaCategoryFilter(nextC)
+                    if m.cinemaCatIndex + 1 < m.cinemaCategories.Count()
+                        applyCinemaCategoryFilter(m.cinemaCatIndex + 1)
+                        updateCinemaPaneFocusUi()
+                    end if
                 end if
-                updateCinemaPaneFocusUi()
                 return true
             else if key = "up"
                 m.cinemaFocusZone = "tabs"
-                if m.activeShowGroup <> invalid and m.activeSeasonIndex = 0
+                if m.activeShowGroup <> invalid
                     m.cinemaTabCol = 2
                 else if m.cinemaActiveTab = "tablo"
                     m.cinemaTabCol = 2
@@ -7630,56 +7259,59 @@ function onKeyEvent(key as String, press as Boolean) as Boolean
                 end if
                 updateCinemaPaneFocusUi()
                 return true
-            else if key = "down"
-                m.cinemaFocusZone = "posters"
-                updateCinemaPaneFocusUi()
-                return true
-            else if key = "OK"
-                if m.activeShowGroup <> invalid and m.activeSeasonIndex = 0
-                    exitShowSeasons()
-                    return true
+            else if key = "down" or key = "OK"
+                if m.cinemaLibItems <> invalid and m.cinemaLibItems.Count() > 0
+                    m.cinemaFocusZone = "posters"
+                    updateCinemaPaneFocusUi()
                 end if
-                m.cinemaFocusZone = "posters"
-                updateCinemaPaneFocusUi()
                 return true
             end if
         else
-            ' m.cinemaFocusZone = "posters" (Row 2: 6 Large 2:3 Portrait Poster Cards)
+            ' m.cinemaFocusZone = "posters" (2D 6-Column Poster Grid)
             totalP = 0
             if m.cinemaLibItems <> invalid then totalP = m.cinemaLibItems.Count()
+            if totalP = 0
+                m.cinemaFocusZone = "categories"
+                updateCinemaPaneFocusUi()
+                return true
+            end if
             if key = "left"
-                if totalP > 0
-                    prevP = m.cinemaPosterIndex - 1
-                    if prevP < 0 then prevP = totalP - 1
-                    m.cinemaPosterIndex = prevP
+                if m.cinemaPosterIndex > 0
+                    m.cinemaPosterIndex = m.cinemaPosterIndex - 1
                     updateCinemaLibDetail(m.cinemaPosterIndex)
                     updateCinemaPosterShelf(m.cinemaPosterIndex)
                 end if
                 return true
             else if key = "right"
-                if totalP > 0
-                    nextP = m.cinemaPosterIndex + 1
-                    if nextP >= totalP then nextP = 0
-                    m.cinemaPosterIndex = nextP
+                if m.cinemaPosterIndex + 1 < totalP
+                    m.cinemaPosterIndex = m.cinemaPosterIndex + 1
                     updateCinemaLibDetail(m.cinemaPosterIndex)
                     updateCinemaPosterShelf(m.cinemaPosterIndex)
                 end if
                 return true
             else if key = "down"
-                if totalP > 0
-                    nextPageP = m.cinemaPosterIndex + 6
-                    if nextPageP >= totalP then nextPageP = 0
-                    m.cinemaPosterIndex = nextPageP
+                if m.cinemaPosterIndex + 6 < totalP
+                    m.cinemaPosterIndex = m.cinemaPosterIndex + 6
+                    updateCinemaLibDetail(m.cinemaPosterIndex)
+                    updateCinemaPosterShelf(m.cinemaPosterIndex)
+                else if Int(m.cinemaPosterIndex / 6) < Int((totalP - 1) / 6)
+                    m.cinemaPosterIndex = totalP - 1
                     updateCinemaLibDetail(m.cinemaPosterIndex)
                     updateCinemaPosterShelf(m.cinemaPosterIndex)
                 end if
                 return true
             else if key = "up"
-                m.cinemaFocusZone = "categories"
-                updateCinemaPaneFocusUi()
+                if m.cinemaPosterIndex >= 6
+                    m.cinemaPosterIndex = m.cinemaPosterIndex - 6
+                    updateCinemaLibDetail(m.cinemaPosterIndex)
+                    updateCinemaPosterShelf(m.cinemaPosterIndex)
+                else
+                    m.cinemaFocusZone = "categories"
+                    updateCinemaPaneFocusUi()
+                end if
                 return true
             else if key = "OK"
-                if totalP > 0 and m.cinemaPosterIndex >= 0 and m.cinemaPosterIndex < totalP
+                if m.cinemaPosterIndex >= 0 and m.cinemaPosterIndex < totalP
                     mv = m.cinemaLibItems[m.cinemaPosterIndex]
                     if m.cinemaActiveTab = "shows" and m.activeShowGroup = invalid and mv <> invalid and mv.isShowGroup = true and mv.episodes <> invalid and mv.episodes.Count() > 0
                         enterShowSeasons(mv, m.cinemaPosterIndex)
@@ -7693,14 +7325,18 @@ function onKeyEvent(key as String, press as Boolean) as Boolean
         return true
     end if
 
-    ' 3. Main Wallboard Bottom Visual Image-Card Launcher (wallCard0..5)
+    ' 3. Main Wallboard Bottom Launcher Cards (wallCard0..5, clamped edges)
     if key = "left"
-        m.wallCardIndex = (m.wallCardIndex + 5) mod 6
-        updateWallLauncherUi()
+        if m.wallCardIndex > 0
+            m.wallCardIndex = m.wallCardIndex - 1
+            updateWallLauncherUi()
+        end if
         return true
     else if key = "right"
-        m.wallCardIndex = (m.wallCardIndex + 1) mod 6
-        updateWallLauncherUi()
+        if m.wallCardIndex < 5
+            m.wallCardIndex = m.wallCardIndex + 1
+            updateWallLauncherUi()
+        end if
         return true
     else if key = "OK" or key = "play"
         launchWallCard(m.wallCardIndex)
