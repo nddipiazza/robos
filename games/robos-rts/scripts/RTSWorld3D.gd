@@ -1052,21 +1052,52 @@ func sync_3d_entities(selected_tags: Array[int], delta: float, local_player: int
 	_viewing_player = local_player
 
 	# Resources
+	var capped_vents: Array[Vector2] = []
+	for u_chk in SimEngine.units.values():
+		if bool(u_chk.get("is_extractor", false)):
+			capped_vents.append(u_chk["pos"] as Vector2)
+
 	for r_tag in SimEngine.resources.keys():
 		var r: Dictionary = SimEngine.resources[r_tag]
 		if not SimEngine.deposit_present(r):
 			continue
 		var rn: Node3D = resource_nodes[r_tag] if resource_nodes.has(r_tag) else _add_resource_node(r)
-		rn.position = Vector3(r["pos"].x, SimEngine.get_elevation_at(r["pos"]), r["pos"].y)
+		var r_pos: Vector2 = r["pos"]
+		rn.position = Vector3(r_pos.x, SimEngine.get_elevation_at(r_pos), r_pos.y)
 		if r["resource_type"] == "crystal_field":
 			if not SimEngine.unlimited_resources:
 				var frac := clampf(float(r["amount"]) / 1500.0, 0.25, 1.0)
 				rn.scale = Vector3(1.0, 0.45 + 0.55 * frac, 1.0)
 		else:
-			for i in range(3):
-				var pl := rn.get_node_or_null("Plume%d" % i)
-				if pl:
-					pl.position.y = 1.2 + float(i) * 0.9 + sin(anim_time * 1.6 + float(i)) * 0.25
+			var is_capped := false
+			for cv in capped_vents:
+				if cv.distance_squared_to(r_pos) <= 1.25:
+					is_capped = true
+					break
+			var depleted_gas: bool = (not SimEngine.unlimited_resources) and int(r.get("amount", 0)) <= 0
+			var jet := rn.get_node_or_null("UnboundJet") as Node3D
+			if jet:
+				jet.visible = (not is_capped) and (not depleted_gas)
+				if jet.visible:
+					for i in range(4):
+						var pl := jet.get_node_or_null("Plume%d" % i) as Node3D
+						if pl:
+							var cyc := fposmod(anim_time * 0.52 + float(i) * 0.25, 1.0)
+							pl.position.y = 0.85 + cyc * 3.15
+							pl.position.x = sin(anim_time * 1.9 + float(i) * 1.7) * (0.12 + cyc * 0.22)
+							pl.position.z = cos(anim_time * 1.7 + float(i) * 2.1) * (0.12 + cyc * 0.22)
+							var s_pl := (0.72 + cyc * 0.58) * sin(cyc * PI) + 0.38
+							pl.scale = Vector3(s_pl, s_pl * 1.28, s_pl)
+			var g_light := rn.get_node_or_null("GeyserLight") as OmniLight3D
+			if g_light:
+				g_light.visible = not depleted_gas
+				g_light.light_energy = (0.55 if is_capped else 0.92) + 0.16 * sin(anim_time * 2.9 + float(int(r_tag)))
+			var g_bloom := rn.get_node_or_null("GroundBloom") as Node3D
+			if g_bloom:
+				g_bloom.visible = not depleted_gas
+			var c_bloom := rn.get_node_or_null("CoreBloom") as Node3D
+			if c_bloom:
+				c_bloom.visible = not depleted_gas
 	for r_tag in resource_nodes.keys():
 		if not SimEngine.resources.has(r_tag) or not SimEngine.deposit_present(SimEngine.resources[r_tag]):
 			resource_nodes[r_tag].queue_free()
@@ -1546,7 +1577,7 @@ func _create_unit_node_3d(u: Dictionary) -> Node3D:
 		cargo.position = Vector3(-0.59, 0.96, 0.0)
 		cargo.rotation = Vector3(0.2, 0.45, 0.4)
 		cargo.set_meta("crystal", Models.mat("worker_crystal_cargo", Color("#5eead4"), Color("#0d9488"), 0.9, 0.1, 0.35))
-		cargo.set_meta("aether", Models.mat("worker_aether_cargo", Color("#a5f273"), Color("#65a30d"), 0.9, 0.1, 0.35))
+		cargo.set_meta("aether", Models.neon_extractor_core_mat())
 		cargo.material_override = cargo.get_meta("crystal")
 		cargo.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		cargo.hide()

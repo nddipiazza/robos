@@ -62,8 +62,142 @@ const ACID := Color("#5f9a1a")
 const IVORY := Color("#bdb297")
 const GOLD := Color("#b68d2c")
 const CRYSTAL := Color("#4fd1ff")
-const GAS := Color("#53dea0")
+const GAS := Color("#28ff38")
 const STONE_DARK := Color("#3a4150")
+
+static var _shader_mats: Dictionary = {}
+
+static func neon_gas_pool_mat(rich: bool = false) -> ShaderMaterial:
+	var key := "neon_pool_rich" if rich else "neon_pool_std"
+	if _shader_mats.has(key):
+		return _shader_mats[key]
+	var sh := Shader.new()
+	sh.code = """
+shader_type spatial;
+render_mode unshaded, cull_disabled;
+uniform vec3 rim_col : source_color;
+uniform vec3 neon_col : source_color;
+uniform vec3 core_col : source_color;
+void fragment() {
+	vec2 d = (UV - vec2(0.5)) * 2.0;
+	float r = clamp(length(d), 0.0, 1.0);
+	float ang = atan(d.y, d.x);
+	float swirl = 0.5 + 0.5 * sin(r * 11.0 - TIME * 3.4 + sin(ang * 3.0 + TIME * 1.6) * 1.3);
+	vec3 col = mix(neon_col, rim_col, smoothstep(0.58, 1.0, r));
+	float hot = smoothstep(0.52, 0.0, r) * (0.65 + 0.35 * swirl);
+	col = mix(col, core_col, clamp(hot + swirl * 0.25 * (1.0 - r), 0.0, 1.0));
+	ALBEDO = col;
+}
+"""
+	var sm := ShaderMaterial.new()
+	sm.shader = sh
+	if rich:
+		sm.set_shader_parameter("rim_col", Color(0.10, 0.55, 0.02))
+		sm.set_shader_parameter("neon_col", Color(0.38, 1.00, 0.05))
+		sm.set_shader_parameter("core_col", Color(0.84, 1.00, 0.24))
+	else:
+		sm.set_shader_parameter("rim_col", Color(0.01, 0.42, 0.05))
+		sm.set_shader_parameter("neon_col", Color(0.09, 1.00, 0.14))
+		sm.set_shader_parameter("core_col", Color(0.58, 1.00, 0.22))
+	_shader_mats[key] = sm
+	return sm
+
+static func neon_gas_bloom_mat(rich: bool = false, strength: float = 0.72, exp_k: float = 3.2) -> ShaderMaterial:
+	var key := "neon_bloom_%s_%.2f_%.2f" % ["r" if rich else "s", strength, exp_k]
+	if _shader_mats.has(key):
+		return _shader_mats[key]
+	var sh := Shader.new()
+	sh.code = """
+shader_type spatial;
+render_mode unshaded, blend_add, depth_draw_never, cull_disabled;
+uniform vec3 glow_col : source_color;
+uniform vec3 center_col : source_color;
+uniform float strength = 0.72;
+uniform float exp_k = 3.2;
+void fragment() {
+	vec2 d = (UV - vec2(0.5)) * 2.0;
+	float r2 = dot(d, d);
+	float r = sqrt(r2);
+	float falloff = exp(-r2 * exp_k) * smoothstep(1.0, 0.08, r);
+	float pulse = 0.90 + 0.10 * sin(TIME * 2.8);
+	vec3 col = mix(glow_col, center_col, exp(-r2 * 6.5));
+	float a = clamp(falloff * strength * pulse, 0.0, 1.0);
+	ALBEDO = col;
+	ALPHA = a;
+}
+"""
+	var sm := ShaderMaterial.new()
+	sm.shader = sh
+	sm.render_priority = 2
+	if rich:
+		sm.set_shader_parameter("glow_col", Color(0.34, 1.00, 0.06))
+		sm.set_shader_parameter("center_col", Color(0.76, 1.00, 0.20))
+	else:
+		sm.set_shader_parameter("glow_col", Color(0.08, 1.00, 0.14))
+		sm.set_shader_parameter("center_col", Color(0.46, 1.00, 0.20))
+	sm.set_shader_parameter("strength", strength)
+	sm.set_shader_parameter("exp_k", exp_k)
+	_shader_mats[key] = sm
+	return sm
+
+static func neon_gas_sphere_glow_mat(rich: bool = false, strength: float = 0.56, power: float = 2.35) -> ShaderMaterial:
+	var key := "neon_sph_%s_%.2f_%.2f" % ["r" if rich else "s", strength, power]
+	if _shader_mats.has(key):
+		return _shader_mats[key]
+	var sh := Shader.new()
+	sh.code = """
+shader_type spatial;
+render_mode unshaded, blend_add, depth_draw_never, cull_back;
+uniform vec3 outer_col : source_color;
+uniform vec3 inner_col : source_color;
+uniform float strength = 0.56;
+uniform float power = 2.35;
+void fragment() {
+	float ndotv = clamp(dot(normalize(NORMAL), normalize(VIEW)), 0.0, 1.0);
+	float soft = pow(ndotv, power);
+	float pulse = 0.90 + 0.10 * sin(TIME * 3.1);
+	vec3 col = mix(outer_col, inner_col, pow(ndotv, 4.0));
+	ALBEDO = col;
+	ALPHA = clamp(soft * strength * pulse, 0.0, 1.0);
+}
+"""
+	var sm := ShaderMaterial.new()
+	sm.shader = sh
+	sm.render_priority = 3
+	if rich:
+		sm.set_shader_parameter("outer_col", Color(0.36, 1.00, 0.06))
+		sm.set_shader_parameter("inner_col", Color(0.82, 1.00, 0.24))
+	else:
+		sm.set_shader_parameter("outer_col", Color(0.08, 1.00, 0.14))
+		sm.set_shader_parameter("inner_col", Color(0.52, 1.00, 0.22))
+	sm.set_shader_parameter("strength", strength)
+	sm.set_shader_parameter("power", power)
+	_shader_mats[key] = sm
+	return sm
+
+static func neon_extractor_core_mat() -> ShaderMaterial:
+	var key := "neon_extractor_core"
+	if _shader_mats.has(key):
+		return _shader_mats[key]
+	var sh := Shader.new()
+	sh.code = """
+shader_type spatial;
+render_mode unshaded, cull_back;
+void fragment() {
+	float ndotv = clamp(dot(normalize(NORMAL), normalize(VIEW)), 0.0, 1.0);
+	float band = 0.5 + 0.5 * sin(UV.y * 18.0 - TIME * 4.2);
+	vec3 rim = vec3(0.02, 0.50, 0.07);
+	vec3 mid = vec3(0.11, 1.00, 0.16);
+	vec3 hot = vec3(0.56, 1.00, 0.24);
+	vec3 col = mix(rim, mid, smoothstep(0.05, 0.58, ndotv));
+	col = mix(col, hot, pow(ndotv, 3.0) * (0.55 + 0.45 * band));
+	ALBEDO = col;
+}
+"""
+	var sm := ShaderMaterial.new()
+	sm.shader = sh
+	_shader_mats[key] = sm
+	return sm
 
 static func mat(key: String, color: Color, emit: Color = Color.BLACK, emit_energy: float = 1.0, metallic: float = 0.15, rough: float = 0.7, alpha: float = 1.0) -> StandardMaterial3D:
 	if _mats.has(key):
@@ -449,6 +583,20 @@ static func _build_baked_model(unit_type: String, owner_id: int, is_vale: bool) 
 			part.material_override = team
 		for part in root.find_children("*Surf_GLOW*", "MeshInstance3D", true, false):
 			part.material_override = glow
+		if unit_type in ["aether_tap", "spore_tap", "aether_prism"]:
+			var gas_core := neon_extractor_core_mat()
+			var gas_plume := neon_gas_sphere_glow_mat(false, 0.62, 2.15)
+			for part in root.find_children("*Surf_gas*", "MeshInstance3D", true, false):
+				part.material_override = gas_core
+			for part in root.find_children("*Surf_lime*", "MeshInstance3D", true, false):
+				part.material_override = gas_core
+			for part in root.find_children("*Surf_plume*", "MeshInstance3D", true, false):
+				part.material_override = gas_plume
+			var aura_y := 2.25 if unit_type == "aether_tap" else (2.05 if unit_type == "spore_tap" else 2.15)
+			var aura := sph(root, 2.35, neon_gas_sphere_glow_mat(false, 0.52, 2.55), Vector3(0.0, aura_y, 0.0), Vector3(1.0, 1.18, 1.0), 16)
+			aura.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			var top_puff := sph(root, 0.95, gas_plume, Vector3(0.0, aura_y + 1.55, 0.0), Vector3(0.88, 1.45, 0.88), 12)
+			top_puff.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	else:
 		for part in root.find_children("*", "MeshInstance3D", true, false):
 			part.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
@@ -909,7 +1057,7 @@ static func _sentry_turret(root: Node3D, r: float, team: Material, missiles := t
 static func _aether_tap(root: Node3D, r: float, team: Material) -> void:
 	var armor := mat("h_armor", STEEL, Color.BLACK, 1.0, 0.35, 0.55)
 	var dark := mat("h_dark", STEEL_DARK, Color.BLACK, 1.0, 0.4, 0.6)
-	var core := mat("aether_core", Color("#6ee7a8"), Color("#34d399"), 2.4, 0.0, 0.3)
+	var core := neon_extractor_core_mat()
 	cyl(root, r * 0.9, r * 1.0, 0.45, dark, Vector3(0, 0.22, 0), Vector3.ZERO, 18)
 	for i in range(4):
 		var a := TAU * float(i) / 4.0 + 0.4
@@ -917,6 +1065,8 @@ static func _aether_tap(root: Node3D, r: float, team: Material) -> void:
 	cyl(root, 0.42, 0.5, 3.4, armor, Vector3(0, 1.9, 0), Vector3.ZERO, 12)
 	cyl(root, 0.5, 0.5, 0.28, team, Vector3(0, 2.4, 0), Vector3.ZERO, 12)
 	sph(root, 0.55, core, Vector3(0, 3.75, 0))
+	var aura := sph(root, 2.2, neon_gas_sphere_glow_mat(false, 0.50, 2.5), Vector3(0, 2.4, 0), Vector3(1.0, 1.2, 1.0), 14)
+	aura.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	sph(root, 0.9, armor, Vector3(1.55, 0.95, 0.3), Vector3.ONE, 14)
 	cyl(root, 0.1, 0.1, 1.6, dark, Vector3(1.0, 1.4, 0.15), Vector3(0, 0, 70), 6)
 
@@ -1441,14 +1591,63 @@ static func build_resource(res_type: String, seed_val: int, rich: bool = false) 
 			var c := cyl(root, 0.0, 0.3 + rng.randf() * 0.25, h, cm[i % 2], Vector3(cos(a2) * rad, h * 0.5, sin(a2) * rad), Vector3(rng.randf_range(-14, 14), rng.randf() * 360.0, rng.randf_range(-14, 14)), 5)
 			c.name = "Crystal%d" % i
 	else:
-		var rock2 := mat("res_rock", Color("#4a4540"), Color.BLACK, 1.0, 0.1, 0.95)
-		var green := mat("res_aether_rich", Color("#c6f77d"), Color("#a3e635"), 2.2, 0.0, 0.3) if rich else mat("res_aether", Color("#6ee7a8"), Color("#34d399"), 2.2, 0.0, 0.3)
-		ring(root, 1.5, 2.7, rock2, Vector3(0, 0.35, 0))
-		cyl(root, 1.55, 1.55, 0.12, green, Vector3(0, 0.28, 0), Vector3.ZERO, 18)
-		for i in range(3):
-			var plume := mat("res_plume_rich", Color("#e5ffa8"), Color("#a3e635"), 0.9, 0.0, 0.6, 0.35) if rich else mat("res_plume", Color("#9ff3c8"), Color("#34d399"), 0.9, 0.0, 0.6, 0.35)
-			var p := sph(root, 0.7 + float(i) * 0.12, plume, Vector3(0, 1.2 + float(i) * 0.9, 0), Vector3.ONE, 10)
+		var basalt := mat("res_geyser_basalt", Color("#1d2420"), Color.BLACK, 1.0, 0.12, 0.90)
+		var basalt_rim := mat("res_geyser_rim", Color("#2a342d"), Color.BLACK, 1.0, 0.18, 0.82)
+		var fissure_key := "res_fissure_rich" if rich else "res_fissure_std"
+		var fissure := _mats[fissure_key] as StandardMaterial3D if _mats.has(fissure_key) else null
+		if fissure == null:
+			fissure = StandardMaterial3D.new()
+			fissure.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+			fissure.albedo_color = Color("#8cff1a") if rich else Color("#24ff38")
+			_mats[fissure_key] = fissure
+
+		var ground_bloom := quad(root, Vector2(9.2, 9.2), neon_gas_bloom_mat(rich, 0.68, 3.1), Vector3(0.0, 0.05, 0.0), Vector3(-90.0, 0.0, 0.0))
+		ground_bloom.name = "GroundBloom"
+		ground_bloom.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+
+		cyl(root, 1.62, 2.78, 0.46, basalt, Vector3(0.0, 0.23, 0.0), Vector3.ZERO, 20)
+		ring(root, 1.42, 2.15, basalt_rim, Vector3(0.0, 0.48, 0.0))
+		for i in range(8):
+			var ang := TAU * float(i) / 8.0 + rng.randf_range(-0.14, 0.14)
+			var crag_r := 1.92 + rng.randf_range(-0.12, 0.16)
+			var crag_h := 0.68 + rng.randf_range(0.0, 0.42)
+			var crag := cyl(root, 0.10, 0.46, crag_h, basalt_rim if i % 2 == 0 else basalt,
+				Vector3(cos(ang) * crag_r, crag_h * 0.48 + 0.18, sin(ang) * crag_r),
+				Vector3(-sin(ang) * 18.0, rad_to_deg(-ang), cos(ang) * 18.0), 5)
+			crag.name = "Crag%d" % i
+			var vein_a := ang + TAU / 16.0
+			var vein := box(root, Vector3(0.92, 0.07, 0.11), fissure,
+				Vector3(cos(vein_a) * 1.98, 0.40, sin(vein_a) * 1.98),
+				Vector3(0.0, rad_to_deg(-vein_a), -14.0))
+			vein.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+
+		var pool := cyl(root, 1.50, 1.50, 0.16, neon_gas_pool_mat(rich), Vector3(0.0, 0.34, 0.0), Vector3.ZERO, 24)
+		pool.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		var collar := ring(root, 1.34, 1.54, fissure, Vector3(0.0, 0.44, 0.0))
+		collar.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+
+		var core_aura := sph(root, 2.45, neon_gas_sphere_glow_mat(rich, 0.58, 2.45), Vector3(0.0, 1.05, 0.0), Vector3(1.0, 0.82, 1.0), 18)
+		core_aura.name = "CoreBloom"
+		core_aura.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+
+		var g_light := OmniLight3D.new()
+		g_light.name = "GeyserLight"
+		g_light.position = Vector3(0.0, 1.35, 0.0)
+		g_light.light_color = Color("#7eff1f") if rich else Color("#22ff38")
+		g_light.light_energy = 0.88
+		g_light.omni_range = 7.6
+		root.add_child(g_light)
+
+		var jet := Node3D.new()
+		jet.name = "UnboundJet"
+		root.add_child(jet)
+		var col_spire := sph(jet, 1.05, neon_gas_sphere_glow_mat(rich, 0.72, 2.05), Vector3(0.0, 1.65, 0.0), Vector3(0.82, 1.95, 0.82), 16)
+		col_spire.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		for i in range(4):
+			var plume_mat := neon_gas_sphere_glow_mat(rich, 0.62 - float(i) * 0.09, 2.15)
+			var p := sph(jet, 0.88 + float(i) * 0.16, plume_mat, Vector3(0.0, 1.15 + float(i) * 0.88, 0.0), Vector3(1.0, 1.28, 1.0), 14)
 			p.name = "Plume%d" % i
+			p.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	return root
 
 static func footprint_half(unit_type: String) -> float:

@@ -61,7 +61,7 @@ const C_TEXT := Color("#e9eef4")
 const C_MUTED := Color("#95a2b3")
 const C_GOLD := Color("#e6b83e")
 const C_CRYSTAL := Color("#35d3c0")
-const C_AETHER := Color("#52e08a")
+const C_AETHER := Color("#2eff3c")
 const C_RED := Color("#f0645a")
 
 func _draw() -> void:
@@ -191,9 +191,11 @@ func _gem(c: Vector2, s: float) -> void:
 	draw_polyline(PackedVector2Array([pts[0], pts[1], pts[2], pts[3], pts[4], pts[5], pts[0]]), Color(0, 0, 0, 0.55), 1.0)
 
 func _drop(c: Vector2, s: float) -> void:
+	draw_circle(c + Vector2(0, s * 0.08), s * 1.38, Color(0.14, 1.0, 0.22, 0.16))
+	draw_circle(c + Vector2(0, s * 0.08), s * 0.98, Color(0.18, 1.0, 0.24, 0.24))
 	var pts := PackedVector2Array([c + Vector2(0, -s), c + Vector2(s * 0.62, s * 0.15), c + Vector2(s * 0.5, s * 0.62), c + Vector2(0, s), c + Vector2(-s * 0.5, s * 0.62), c + Vector2(-s * 0.62, s * 0.15)])
 	draw_colored_polygon(pts, C_AETHER)
-	draw_colored_polygon(PackedVector2Array([c + Vector2(-s * 0.2, -s * 0.2), c + Vector2(0, -s * 0.7), c + Vector2(-s * 0.05, s * 0.2)]), Color("#c5f7da"))
+	draw_colored_polygon(PackedVector2Array([c + Vector2(-s * 0.2, -s * 0.2), c + Vector2(0, -s * 0.7), c + Vector2(-s * 0.05, s * 0.2)]), Color("#c8ff78"))
 	draw_polyline(PackedVector2Array([pts[0], pts[1], pts[2], pts[3], pts[4], pts[5], pts[0]]), Color(0, 0, 0, 0.5), 1.0)
 
 func _person(c: Vector2, s: float, col: Color) -> void:

@@ -20,7 +20,7 @@ const COLOR_CLIFF = Color("#475569")
 const COLOR_GRID = Color(1, 1, 1, 0.045)
 const COLOR_GRID_MAJOR = Color(1, 1, 1, 0.1)
 const COLOR_MINERAL = Color("#38bdf8")
-const COLOR_GEYSER = Color("#4ade80")
+const COLOR_GEYSER = Color("#2eff3c")
 const COLOR_SELECT = Color("#ffffff")
 const HANDLE_PX = 9.0
 
