@@ -1,0 +1,140 @@
+---
+title: "A Standalone RobOS Movie Player Channel for Roku, and Smart TV Casting Without a Desktop"
+nav_label: "Roku Channel &amp; TV Casting"
+date: 2026-11-24 22:00:00 +0000
+date_label: "Nov 24, 2026"
+tags:
+  - "Roku OS"
+  - "RobOS Movie Player"
+  - "RobOS Media Server"
+  - "Voice Assistant"
+summary: "The Roku TV channel no longer needs a RobOS desktop running in the background. <code>robos-tv install-movie-player</code> builds and sideloads a <strong>RobOS Movie Player</strong> channel that reads movies, shows and watch progress straight from <a href=\"/media-server/\">RobOS Media Server</a>, with a proper RobOS logo tile and a 1080p splash screen. A server with no screen attached can now cast to the TV by voice, wake it from the screensaver, pause and resume it, and hand control back to the normal Roku remote. Movie Player gained a <strong>Default Smart TV</strong> setting, the Android assistant gained one-tap Cinema commands, and speech recognition got two fixes for real living-room phrasing."
+description: "A standalone RobOS Movie Player Roku channel backed by RobOS Media Server, a RobOS logo tile and 1080p splash, headless Smart TV casting by voice, screensaver wake, native remote controls, a Default Smart TV setting and speech recognition fixes."
+seo_title: "Standalone Roku Channel and Headless Smart TV Casting · RobOS Movie Player"
+og_image: /assets/blog/roku-channel-and-smart-tv-casting/01-roku-home-tile.png
+og_image_alt: "RobOS logo Home Screen tile for the RobOS Movie Player Roku channel, with a cyan bar along the top"
+---
+<div class="blog-body">
+  <div class="blog-fig-grid">
+    <figure class="blog-fig">
+      <img src="{{ '/assets/blog/roku-channel-and-smart-tv-casting/01-roku-home-tile.png' | relative_url }}" alt="RobOS logo Home Screen tile for the RobOS Movie Player Roku channel, with a cyan bar along the top" loading="lazy">
+      <figcaption><strong>Roku Home Screen tile</strong> (540&times;405, the size Roku asks for on full-HD TVs). It is the exact image the channel installer generated and packaged, rendered from the RobOS logo in the repository.</figcaption>
+    </figure>
+    <figure class="blog-fig">
+      <img src="{{ '/assets/blog/roku-channel-and-smart-tv-casting/02-roku-splash-1080p.jpg' | relative_url }}" alt="RobOS 1080p splash screen shown while the Roku channel loads: the RobOS robot logo centred on white with a cyan top bar and dark bottom bar" loading="lazy">
+      <figcaption><strong>1080p splash screen</strong> shown while the channel starts. Generated at 1920&times;1080 by the same build step and scaled down here for the page.</figcaption>
+    </figure>
+  </div>
+
+  <p><strong>What this is.</strong> Most people watch TV with the remote that came with it, not a laptop. Our earlier work, described in the <a href="{{ '/blog/robos-movie-player/' | relative_url }}">Movie Player introduction</a> and the <a href="{{ '/blog/tablo-dvr-smart-tv-and-roku/' | relative_url }}">Tablo DVR and Roku post</a>, already put a RobOS channel on a Roku TV, but it depended on a RobOS desktop staying awake to feed it. Close the laptop lid and the TV lost its library.</p>
+  <p>The new <a href="{{ '/media-server/' | relative_url }}">RobOS Media Server</a>, introduced in the companion post <a href="{{ '/blog/robos-media-server-and-watch-history/' | relative_url }}">RobOS Media Server and Watch History</a>, is always on. So the TV now talks to it directly. You get a Roku channel that behaves like a normal streaming app: pick a show with the remote, it resumes where you stopped, and the next laptop or phone you pick up knows how far you got. And because the server is always on, it can also act as the &ldquo;remote&rdquo; when you say &ldquo;play a random episode of House on the Roku TV&rdquo; to a speaker or a phone.</p>
+
+  <h2>1. The standalone channel</h2>
+  <p>One command builds and installs it on a Roku in developer mode:</p>
+  <div class="blog-log">./packages/robos-cli/robos-tv install-movie-player --ip &lt;roku-ip&gt; --server http://192.0.2.10:19234</div>
+  <p><code>installRokuMoviePlayer()</code> in <a href="https://github.com/nddipiazza/robos/blob/main/packages/robos-lib/tv-engine.js"><code>robos-lib/tv-engine.js</code></a> does four things. It reads the server address from <code>media-servers.json</code> if you leave out <code>--server</code>. It downloads the server's grouped library from <code>GET /api/roku-cinema</code>, where every TV show arrives as one card with its seasons, episodes and watch counts inside. It writes a SceneGraph channel package with that library baked in, so the first screen appears instantly. Then it sideloads the package and opens it.</p>
+  <p>After that, the channel keeps itself current by polling the server. It sends the library revision it already has (<code>?knownRev=</code>), and the server only sends a full library when something changed. On our home server the full feed for 120 movies and 73 grouped shows is 1.77&nbsp;MB; the &ldquo;nothing changed&rdquo; reply is 60 bytes. While a video plays, the channel reports its position to <code>/api/tv-progress</code>, and when an episode finishes it marks it watched, so the Watch History tab on any computer updates without the computer being involved.</p>
+  <p>The server side lives in <a href="https://github.com/nddipiazza/robos/blob/main/packages/media-server/server.js"><code>packages/media-server/server.js</code></a> and <code>getRokuCinemaLibrary()</code> in <a href="https://github.com/nddipiazza/robos/blob/main/packages/media-server/lib/catalog-store.js"><code>lib/catalog-store.js</code></a>. Older formats that Roku cannot play directly (<code>.avi</code>, <code>.wmv</code>, <code>.flv</code>, <code>.mpg</code>, <code>.ts</code> and similar) are sent as HLS from <code>/hls/:id/index.m3u8</code>. Everything else plays from the original file, and if the Roku reports an error on a direct stream, the channel retries once with the HLS version before giving up.</p>
+
+  <h2>2. A real logo on the Home Screen</h2>
+  <p>The first build of the channel drew its own tile pixel by pixel in Node.js: a gold film frame with a play button, encoded as PNG with nothing but <code>zlib</code>. That still exists as a fallback. Commit <a href="https://github.com/nddipiazza/robos/commit/e0c6829d">e0c6829d</a> replaced it with the official logo: the build runs FFmpeg on <code>robos-transparent-background.png</code> from the repository root, fits it onto a white canvas at each size Roku needs (540&times;405, 290&times;218 and 214&times;144 for the tiles, 1920&times;1080 for the splash), and adds a thin cyan bar at the top and a dark navy bar at the bottom. The manifest sets <code>splash_color=#0B1120</code> and <code>splash_min_time=350</code> so the splash does not flash past. Asking our TV which channels are installed (<code>GET /query/apps</code> on its control port) lists the sideloaded channel as <code>dev</code>, version <code>2.1.2</code>, which matches the manifest's 2 / 1 / 2 version fields.</p>
+
+  <h2>3. Casting from a server with no screen</h2>
+  <p>Before, &ldquo;play House on the Roku TV&rdquo; only worked if the Movie Player window was open somewhere, because Movie Player did the casting. The new <a href="https://github.com/nddipiazza/robos/blob/main/packages/robos-lib/headless-tv-cast.js"><code>robos-lib/headless-tv-cast.js</code></a> does it without any window. The voice router uses it when <code>ROBOS_HEADLESS=1</code> is set, or when it runs on Linux with no display, which is exactly the situation on a media server in a closet.</p>
+
+  <pre class="mermaid">
+flowchart LR
+  A["You: speaker, phone app,<br/>or robos-voice CLI"] --> B["Voice router<br/>nabu-command-router.js"]
+  B --> C["headless-tv-cast.js<br/>picks episode, resume point"]
+  C -->|"POST /api/roku-cast"| D["RobOS Media Server<br/>:19234"]
+  C -->|"ECP wake / launch"| E["Roku TV"]
+  E -->|"polls /api/roku-cinema"| D
+  D -->|"/stream or /hls"| E
+  E -->|"/api/tv-progress"| D
+  </pre>
+
+  <ul>
+    <li><strong>Picking what to play.</strong> <code>playTracksHeadless()</code> builds the stream address for the chosen episode or movie, looks up where you stopped last time (anything over 5 seconds counts as a resume point), records the play in your history, and saves a small session file with the queue (up to 50 items) so &ldquo;next episode&rdquo; and &ldquo;previous episode&rdquo; work afterwards.</li>
+    <li><strong>Telling the TV.</strong> The cast is posted to <code>/api/roku-cast</code> on every configured Media Server. The channel picks it up on its next poll, which it does twice a second while a cast is active.</li>
+    <li><strong>Waking the TV.</strong> Through Roku's External Control Protocol (ECP) on port <code>8060</code>, the caster sends <code>PowerOn</code> and launches the channel if something else is on screen. If the screensaver is showing, it sends <code>PowerOn</code> and a harmless keypress to dismiss it (commit <a href="https://github.com/nddipiazza/robos/commit/7db080fa">7db080fa</a>). Two seconds later a watchdog checks again; if the TV is still on the screensaver, paused, closed, or only playing the channel's 60-second keep-alive clip, it goes Home and relaunches the channel so the new cast loads.</li>
+    <li><strong>Replacing a paused cast.</strong> Starting something new while an older cast sat paused used to leave the old one stuck on screen. The channel now clears the old video before loading the new one and ignores player state changes while the switch is happening.</li>
+  </ul>
+
+  <h2>4. Pause, resume, and the remote in your hand</h2>
+  <p>Two control paths now have to agree: voice commands going through the server, and the physical Roku remote. Commits <a href="https://github.com/nddipiazza/robos/commit/5986b84a">5986b84a</a> and <a href="https://github.com/nddipiazza/robos/commit/7cdb3ed9">7cdb3ed9</a> sorted out the conflicts:</p>
+  <ul>
+    <li><strong>Plain phrasing.</strong> &ldquo;Pause the Roku TV&rdquo;, &ldquo;resume the Roku TV&rdquo; and &ldquo;stop the Roku TV&rdquo; now work, not only &ldquo;pause on the Roku TV&rdquo;. Speech-to-text often hears &ldquo;paused&rdquo; or &ldquo;resumed&rdquo;, so those are accepted too. The rest of the sentence has to match a paired TV closely (a match score of at least 115), so &ldquo;pause the music&rdquo; still goes to the music player.</li>
+    <li><strong>Pause is a one-time instruction.</strong> Each voice pause or resume now carries a fresh <code>pauseKey</code>. The channel acts on a key once and then forgets it. Previously the server kept saying &ldquo;paused&rdquo; on every poll, so pressing Play on the real remote was undone a second later.</li>
+    <li><strong>Belt and braces.</strong> After a voice pause or resume, the caster reads the TV's own player state over ECP and sends a <code>Play</code> keypress if the TV did not follow.</li>
+    <li><strong>The remote works as you expect.</strong> During a cast, the video keeps focus, Play or OK toggles pause, Right or Fast-forward skips 15 seconds, Left or Rewind goes back 15, and Instant Replay goes back 10.</li>
+    <li><strong>Browsing on the TV wins.</strong> If you press Back and start something else with the remote, the channel calls <code>/api/roku-cast-clear</code> so the server forgets the remote cast and does not pull you back into it on the next poll.</li>
+  </ul>
+
+  <h2>5. A Default Smart TV, and one-tap commands on the phone</h2>
+  <div class="blog-fig-grid">
+    <figure class="blog-fig">
+      <img src="{{ '/assets/blog/roku-channel-and-smart-tv-casting/04-default-smart-tv.png' | relative_url }}" alt="Smart TVs tab in RobOS Movie Player with the first TV marked Default TV with a star and a Set Default TV button on the second TV" loading="lazy">
+      <figcaption><strong>Default Smart TV</strong> in Movie Player's Smart TVs tab. The starred TV becomes the target for voice commands that do not name a TV, and Movie Player opens with its Display Output already set to it. TV names, addresses and model lines in this capture were replaced or hidden before it was taken.</figcaption>
+    </figure>
+    <figure class="blog-fig">
+      <img src="{{ '/assets/blog/roku-channel-and-smart-tv-casting/03-voice-commands-modal.png' | relative_url }}" alt="Voice Commands dialog in RobOS Movie Player listing example phrases such as play a random episode of House on the Roku TV, each with a Run button" loading="lazy">
+      <figcaption><strong>Voice Commands dialog</strong> (<a href="https://github.com/nddipiazza/robos/blob/main/packages/movie-player/src/VoiceCommandsModal.jsx"><code>VoiceCommandsModal.jsx</code></a>): every supported phrase with a <strong>Run</strong> button, written for whichever TV you pick at the top.</figcaption>
+    </figure>
+  </div>
+  <p>With several TVs in a house, saying &ldquo;on the Roku TV&rdquo; every time gets old. Commit <a href="https://github.com/nddipiazza/robos/commit/5ab95bbe">5ab95bbe</a> adds a Default Smart TV, stored as <code>defaultTvId</code> and <code>defaultTvIp</code> in <code>~/.config/robos/tv-studio.json</code>; Smart TV Studio keeps those two keys when it rewrites that file. You can set it with the star button above, by voice (&ldquo;set my default TV to Roku TV&rdquo;, &ldquo;what is my default TV?&rdquo;, &ldquo;clear my default TV&rdquo;), with <code>robos-movie-watchlist set-default-tv</code>, or through the MCP tools <code>robos_media_get_default_tv</code> and <code>robos_media_set_default_tv</code>. After that, &ldquo;play Atypical season 2 episode 2&rdquo; goes to that TV without naming it.</p>
+  <p>The <a href="{{ '/robos-assistant-android/' | relative_url }}">RobOS Assistant Android app</a> also got a scrolling row of Cinema quick commands on its server screen (commit <a href="https://github.com/nddipiazza/robos/commit/2ff91c6f">2ff91c6f</a>): a random House episode, a random unwatched House episode, continue Ghosts, a random 90s movie, read the watchlist, list Smart TVs, pause, next episode and stop casting. Most of the same buttons appear on the small web page the app serves on the local network. Each one sends the same sentence you could have spoken, so the phone is just a shortcut to the voice router.</p>
+
+  <h2>6. Two speech recognition fixes from real use</h2>
+  <ul>
+    <li><strong>Split words.</strong> Speech-to-text heard &ldquo;Atypical&rdquo; as &ldquo;a typical&rdquo;, which matched nothing. Show and title matching now also compares both sides with spaces removed, and accepts a close fuzzy match on those collapsed forms (Jaro-Winkler similarity of 0.89 or more). &ldquo;Put&rdquo; and &ldquo;throw on&rdquo; were added as ways to say &ldquo;play&rdquo;.</li>
+    <li><strong>Cutting people off.</strong> On the Android assistant, the voice detector ended an utterance after 420&nbsp;ms of silence, so a natural pause after &ldquo;Commander,&rdquo; split one request into two. The default is now 1,050&nbsp;ms with 400&nbsp;ms of pre-roll, and phones still on the old 420&nbsp;ms setting are migrated automatically (<a href="https://github.com/nddipiazza/robos/blob/main/packages/robos-assistant-android/app/src/main/java/com/robos/assistant/core/Model.kt"><code>Model.kt</code></a>).</li>
+  </ul>
+
+  <h2>Verified</h2>
+  <p>We ran the relevant suites on the current tree on Nov 25, 2026:</p>
+  <ul>
+    <li><code>packages/media-server/test/media-server.test.js</code>: pass. Among other checks, it fetches <code>/api/roku-cinema</code> and confirms the grouped counts, that a repeat request with the same revision returns <code>unchanged</code>, that <code>/api/tv-progress</code> marks an item in progress, and that the channel builder writes a manifest titled <code>RobOS Movie Player</code> with the library embedded (2 movies plus 1 grouped show in the fixture).</li>
+    <li><code>packages/robos-test/tests/media-watch/unit.test.js</code>: 15 of 15 pass, including the random-episode and named-TV routing test and &ldquo;casts and controls Smart TV playback headlessly when ROBOS_HEADLESS=1 (no Electron window)&rdquo;, which also checks that &ldquo;paused the Roku TV&rdquo; and &ldquo;resume the Roku TV&rdquo; toggle the cast while keeping the same video loaded.</li>
+    <li><code>packages/robos-test/tests/robos-tv/unit.test.js</code>: 9 of 9 pass.</li>
+  </ul>
+  <p>We did not capture screenshots of the channel running on the TV for this post. The TV was on its own Home Screen, and the developer screenshot tool only works while the channel is open, so we left it alone rather than switch the living-room TV over.</p>
+
+  <div class="blog-log"># Run the tests quoted above
+node --test packages/media-server/test/media-server.test.js
+node --test packages/robos-test/tests/media-watch/unit.test.js
+node --test packages/robos-test/tests/robos-tv/unit.test.js
+
+# Build and sideload the standalone channel (Roku must be in developer mode)
+./packages/robos-cli/robos-tv install-movie-player --ip &lt;roku-ip&gt; --server http://192.0.2.10:19234
+
+# See what the channel sees: full feed, then the tiny "unchanged" reply
+curl -s http://192.0.2.10:19234/api/roku-cinema | jq '{rev, counts}'
+curl -s "http://192.0.2.10:19234/api/roku-cinema?knownRev=&lt;rev&gt;"
+
+# Read-only checks against the TV's control port
+curl -s http://&lt;roku-ip&gt;:8060/query/active-app
+curl -s http://&lt;roku-ip&gt;:8060/query/media-player
+
+# Default TV and voice phrases from the command line
+./packages/robos-cli/robos-movie-watchlist default-tv
+./packages/robos-cli/robos-movie-watchlist set-default-tv "Roku TV"
+./packages/robos-cli/robos-voice assistant "play a random unwatched episode of House on the Roku TV"
+./packages/robos-cli/robos-voice assistant "pause the Roku TV"</div>
+</div>
+<div class="blog-links">
+  <a href="{{ '/movie-player/' | relative_url }}">RobOS Movie Player guide →</a>
+  <a href="{{ '/media-server/' | relative_url }}">RobOS Media Server docs →</a>
+  <a href="{{ '/tv/' | relative_url }}">RobOS on your Smart TV →</a>
+  <a href="{{ '/blog/robos-media-server-and-watch-history/' | relative_url }}">Companion post: Media Server and Watch History →</a>
+  <a href="https://github.com/nddipiazza/robos/blob/main/packages/robos-lib/headless-tv-cast.js">headless-tv-cast.js source →</a>
+  <span class="blog-commits">Commits:
+    <a href="https://github.com/nddipiazza/robos/commit/3d1c8bd2">3d1c8bd2</a> ·
+    <a href="https://github.com/nddipiazza/robos/commit/2ff91c6f">2ff91c6f</a> ·
+    <a href="https://github.com/nddipiazza/robos/commit/7db080fa">7db080fa</a> ·
+    <a href="https://github.com/nddipiazza/robos/commit/5986b84a">5986b84a</a> ·
+    <a href="https://github.com/nddipiazza/robos/commit/7cdb3ed9">7cdb3ed9</a> ·
+    <a href="https://github.com/nddipiazza/robos/commit/e0c6829d">e0c6829d</a> ·
+    <a href="https://github.com/nddipiazza/robos/commit/5ab95bbe">5ab95bbe</a>
+  </span>
+</div>
+{% include mermaid.html %}

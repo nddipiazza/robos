@@ -1,0 +1,170 @@
+---
+title: "\"Commander\": an always-listening Android room assistant that hands its speech to a RobOS Server"
+nav_label: "Commander Phone Assistant"
+date: 2026-11-23 20:00:00 +0000
+date_label: "Nov 23, 2026"
+tags:
+  - "RobOS Assistant for Android"
+  - "RobOS Voice"
+  - "Speech Recognition"
+  - "Shopping Lists"
+summary: "We built <a href=\"/robos-assistant-android/\"><strong>RobOS Assistant for Android</strong></a>, an app that turns a spare phone into a room microphone. It records every spoken sentence as audio and text on the phone, and only when it can reach a <a href=\"/voice-prompt/\"><strong>RobOS Voice</strong></a> server does it act on commands that start with <strong>\"Commander\"</strong>. Speech recognition moved off the phone to the server (first Whisper, then the faster Moonshine model), a one-line installer keeps the server running, and an evening of real-room testing taught the wake word to ignore the TV. The first big use is the <a href=\"/shopping-lists/\">household grocery lists</a>: \"Commander, we're out of eggs\" now just works."
+description: "RobOS Assistant for Android records room speech as audio and text, and runs \"Commander, ...\" voice commands only when a RobOS Voice server is connected. Speech recognition runs on the server (Whisper, then Moonshine), with a systemd installer, latency work, a stricter wake phrase, and new grocery list commands."
+seo_title: "Commander: an Android room assistant with server-side speech recognition · RobOS"
+og_image: /assets/blog/commander-voice-assistant-android-and-whisper/01-commander-architecture.png
+og_image_alt: "Diagram: an Android phone running RobOS Assistant records utterances and sends them to a RobOS Voice server on port 19188, which transcribes them, checks for the Commander wake phrase, runs a skill and sends back a spoken reply"
+---
+<div class="blog-body">
+  <figure class="blog-fig documentary">
+    <img src="{{ '/assets/blog/commander-voice-assistant-android-and-whisper/01-commander-architecture.png' | relative_url }}" alt="Diagram: on the left, the Android phone running RobOS Assistant: microphone, voice activity detector, an archive of every utterance, an offline recorder mode, the upload to the server, the speaker, and a LAN console on port 8090. On the right, the RobOS Voice server on port 19188: speech to text, the Commander wake gate, skills, text to speech and a phone registry. Arrows show the phone finding the server on Wi-Fi, sending an utterance, and receiving a transcript and spoken reply." loading="lazy">
+    <figcaption><strong>How the pieces fit.</strong> The phone does the listening and the record keeping. The RobOS Voice server does the understanding and the acting. If the server is not reachable, the phone keeps recording but never acts. (Diagram drawn for this post from the code in the six commits listed at the bottom.)</figcaption>
+  </figure>
+
+  <p><strong>What this is.</strong> Most of us have an old phone in a drawer. <a href="{{ '/robos-assistant-android/' | relative_url }}">RobOS Assistant for Android</a> turns one into a room assistant you can leave on a kitchen counter or mount on a wall. It listens all the time, the way a security camera watches all the time: each time someone speaks, it saves the audio clip and a text transcript on the phone. When you start a sentence with <strong>"Commander,"</strong> and the phone can reach your RobOS computer, that sentence becomes a command: "Commander, we're out of eggs" adds eggs to the grocery list, and the phone answers out loud.</p>
+
+  <p><strong>Why someone would care.</strong> Commercial smart speakers send your voice to a company's cloud. This setup never leaves your home network: the phone talks only to a RobOS computer on your Wi-Fi (we call it the RobOS Server), which runs open-source speech models locally. It works on the <a href="{{ '/blog/robos-phone-lineageos-moto-g100/' | relative_url }}">RobOS phone image</a> with no Google Play Services, and the app now ships inside that image. It also borrows the always-on design of <a href="{{ '/blog/robos-ip-camera-android-surveillance/' | relative_url }}">RobOS IP Camera for Android</a>, so the screen can be off, locked or blacked out and it keeps listening.</p>
+
+  <p><strong>Prerequisites, if you want to follow along:</strong> an Android 11 or newer phone, a Linux machine running RobOS with Node.js, and both on the same Wi-Fi. Everything below happened over one evening, on November 23, 2026, in six commits.</p>
+
+  <h2>What you can say, and what it ignores</h2>
+  <p>The rule ended up simple: <em>"Commander" has to be the first word, and a real command has to follow it in the same breath.</em> Everything else in the room is recorded, but nothing happens. We checked this against the real server code while writing this post, using a test server with a throwaway shopping list:</p>
+
+  <figure class="blog-fig documentary">
+    <img src="{{ '/assets/blog/commander-voice-assistant-android-and-whisper/02-commander-wake-gate.png' | relative_url }}" alt="Table of eight sentences and the server's response. Remember to pick up groceries later: nothing. I built a new Commander deck yesterday: nothing, Commander was mid-sentence. Commander alone: nothing. Commander, we're out of eggs and butter: added 2 items. Commander, is milk on my grocery list: answered yes without adding anything. Commander, add taco night: added 7 items. Commander, take butter off my grocery list: removed. Commander, undo: put butter back." loading="lazy">
+    <figcaption><strong>The wake gate in action.</strong> Each row is a real reply from <code>POST /api/assistant/process-audio</code>, the same endpoint the phone calls. Sentences were sent as text (<code>mockTranscript</code>) so the result shows the decision logic rather than microphone quality. The full output is in the log further down.</figcaption>
+  </figure>
+
+  <h2>1. The phone: always recording, never acting on its own</h2>
+  <p>The Android app (<a href="https://github.com/nddipiazza/robos/tree/main/packages/robos-assistant-android"><code>packages/robos-assistant-android</code></a>, commit <a href="https://github.com/nddipiazza/robos/commit/96c9168b">96c9168b</a>) is about 6,000 lines of Kotlin with four tabs: <strong>Listen</strong> (live waveform and transcript), <strong>Recordings</strong> (searchable archive), <strong>Assistant</strong> (wake phrase, voice and storage settings) and <strong>Server</strong> (connect to RobOS).</p>
+  <ul>
+    <li><strong>It keeps listening with the screen off.</strong> Capture runs in an Android foreground service of type <code>microphone</code> that holds a CPU wake lock and a low-latency Wi-Fi lock, and restarts after a reboot (<a href="https://github.com/nddipiazza/robos/blob/main/packages/robos-assistant-android/app/src/main/java/com/robos/assistant/android/AssistantServerService.kt"><code>AssistantServerService.kt</code></a>, <a href="https://github.com/nddipiazza/robos/blob/main/packages/robos-assistant-android/app/src/main/java/com/robos/assistant/android/MicrophoneEngine.kt"><code>MicrophoneEngine.kt</code></a>).</li>
+    <li><strong>It cuts speech into sentences.</strong> A voice activity detector watches loudness, keeps a short "pre-roll" buffer so the first syllable is not lost, and closes an utterance after a stretch of silence (<code>AdaptiveVadSegmenter</code> in <a href="https://github.com/nddipiazza/robos/blob/main/packages/robos-assistant-android/app/src/main/java/com/robos/assistant/core/AudioSurveillancePipeline.kt"><code>AudioSurveillancePipeline.kt</code></a>).</li>
+    <li><strong>Every utterance is saved twice: a <code>.wav</code> clip and text.</strong> Storage is capped (by default 500 clips or 512 MB, oldest deleted first) in <a href="https://github.com/nddipiazza/robos/blob/main/packages/robos-assistant-android/app/src/main/java/com/robos/assistant/core/Model.kt"><code>Model.kt</code></a>.</li>
+    <li><strong>No server, no actions.</strong> When the RobOS Server is unreachable the app shows <strong>Recorder Mode Only</strong>, transcribes on the phone with the offline Vosk model (<code>vosk-model-small-en-us-0.15</code>, <a href="https://github.com/nddipiazza/robos/blob/main/packages/robos-assistant-android/app/src/main/java/com/robos/assistant/android/OfflineVoskEngine.kt"><code>OfflineVoskEngine.kt</code></a>) and labels even a "Commander, ..." sentence as <em>Server Offline, Recorded Only</em>. The unit test <code>disconnectedFromRobosServerRecordsAudioAndTextWithoutRunningActions</code> pins this down.</li>
+    <li><strong>It does not hear itself.</strong> While the phone plays a reply, microphone input is thrown away, with a short cooldown afterwards, and a transcript that repeats the start of the last spoken reply is dropped.</li>
+    <li><strong>A small web console on the LAN.</strong> The phone serves a browser page on port <code>8090</code> with a live audio stream (<code>/audio.wav</code>), live transcripts (<code>/api/stream</code>) and clip playback (<code>/recordings/&lt;id&gt;.wav</code>), with optional HTTP Basic auth whose password is stored with the Android Keystore (<a href="https://github.com/nddipiazza/robos/blob/main/packages/robos-assistant-android/app/src/main/java/com/robos/assistant/core/HttpAssistantServer.kt"><code>HttpAssistantServer.kt</code></a>).</li>
+  </ul>
+  <p>A note on privacy, since this is a microphone that never turns off: recordings stay on the phone, the console is reachable only on your own network, and the clip and size limits stop it from growing without bound. It is meant for your own home.</p>
+
+  <h2>2. The server: one always-on service the phones talk to</h2>
+  <p>The phone needs something to talk to. The existing RobOS Voice app (<a href="https://github.com/nddipiazza/robos/blob/main/packages/voice-prompt/main.js"><code>packages/voice-prompt/main.js</code></a>) gained a few HTTP endpoints for phones on port <code>19188</code>:</p>
+  <ul>
+    <li><code>GET /api/robos-assistant-hub</code>: the phone's "are you there?" probe. It also registers the phone (name, room) so the server knows who is connected. <code>GET /api/assistant-nodes</code> lists phones seen in the last minute.</li>
+    <li><code>POST /api/assistant/phone-turn</code>: run a typed request from the phone's <strong>Ask RobOS</strong> box and return the reply as text and audio.</li>
+    <li><code>POST /api/assistant/process-audio</code>: the main path, added in the next commit. The phone uploads an utterance and gets back the transcript, whether it was a command, what happened, and a spoken reply.</li>
+  </ul>
+  <p>To find the server, the phone first retries the last address that worked, then probes every address on its Wi-Fi subnet, 40 at a time with a short timeout, and keeps the first one that answers (<code>discoverServerHostIp</code> in <a href="https://github.com/nddipiazza/robos/blob/main/packages/robos-assistant-android/app/src/main/java/com/robos/assistant/core/RobosVoiceServerClient.kt"><code>RobosVoiceServerClient.kt</code></a>). No cloud relay is involved.</p>
+  <p>For the server to be there whenever someone speaks, it has to survive logouts and reboots. Commit <a href="https://github.com/nddipiazza/robos/commit/1f59ced2">1f59ced2</a> added <a href="https://github.com/nddipiazza/robos/blob/main/packages/voice-prompt/bin/install-voice-server.sh"><code>install-voice-server.sh</code></a>, which writes a <code>robos-voice-server.service</code> systemd user unit (<code>Restart=always</code>, <code>NoNewPrivileges=true</code>, <code>PrivateTmp=true</code>), turns on lingering so it runs without anyone logged in, and starts the server headless. You can also run it in the foreground with <code>robos-voice serve</code> and list connected phones with <code>robos-voice assistants</code> (<a href="https://github.com/nddipiazza/robos/blob/main/packages/robos-cli/robos-voice"><code>packages/robos-cli/robos-voice</code></a>).</p>
+
+  <h2>3. Speech recognition moves to the server: Whisper first, then Moonshine</h2>
+  <p>Vosk on a phone is small and works offline, but it makes mistakes, and a misheard word in a command means the wrong thing gets added to a list. A RobOS desktop has far more computing power than an old phone, so commit <a href="https://github.com/nddipiazza/robos/commit/332ca165">332ca165</a> made the phone send each utterance's <code>.wav</code> to the server whenever it is connected. The server transcribes it with OpenAI's open-source <strong>Whisper</strong> model (<code>whisper-base.en</code>, with <code>whisper-tiny.en</code> as a fallback) in <a href="https://github.com/nddipiazza/robos/blob/main/packages/voice-prompt/lib/whisper-worker.js"><code>whisper-worker.js</code></a>, then checks for the wake phrase and runs the command. The same commit renamed the wake word from "Hey Nabu" / "RobOS" to <strong>"Commander"</strong>, everywhere RobOS listens: the desktop app, the Home Speaker router, the dashboards and the skills.</p>
+  <p>Whisper was accurate, but it pads every clip to 30 seconds of audio before decoding, so a two-word command cost as much work as a long sentence. An hour later commit <a href="https://github.com/nddipiazza/robos/commit/42d296ec">42d296ec</a> put a faster model in front of it. <a href="https://github.com/nddipiazza/robos/blob/main/packages/voice-prompt/lib/stt-engine.js"><code>stt-engine.js</code></a> now trims leading and trailing silence and decodes with <strong>Moonshine</strong>, a speech model built for short phrases, running as 8-bit (INT8) ONNX through the <code>sherpa-onnx</code> C++ runtime. If Moonshine is not installed, it falls back to Whisper, so the title of this post is still true on a fresh machine.</p>
+
+  <h2>4. Making it fast, then backing off a little</h2>
+  <p>A voice assistant that takes several seconds to answer feels broken. Commit <a href="https://github.com/nddipiazza/robos/commit/42d296ec">42d296ec</a> went after every delay it could find:</p>
+  <ul>
+    <li><strong>Smaller audio chunks on the phone.</strong> The microphone thread now reads 30 ms frames instead of about 160 ms, at Android's <code>URGENT_AUDIO</code> thread priority.</li>
+    <li><strong>Less waiting for you to finish.</strong> The silence that ends a sentence dropped from 1,100 ms to 420 ms.</li>
+    <li><strong>A voice that is already warm.</strong> Instead of starting the Piper text-to-speech program for every reply, <a href="https://github.com/nddipiazza/robos/blob/main/packages/voice-prompt/lib/tts-engine.js"><code>tts-engine.js</code></a> keeps one Piper process running and feeds it requests line by line (<code>--json-input</code>). The installer loads both models as soon as the service starts, so the first request of the day is not slow.</li>
+    <li><strong>No desktop lookups on a headless server.</strong> <a href="https://github.com/nddipiazza/robos/blob/main/packages/voice-prompt/lib/context-provider.js"><code>context-provider.js</code></a> stops asking the window manager which app is open when there is no desktop.</li>
+  </ul>
+  <p>The commit message records about 180 to 250 ms for server speech recognition and about 190 ms for a fresh spoken reply, roughly ten times faster than before. Those are the author's measurements on the RobOS Server. We did not re-measure them for this post: the laptop used to write it has no Moonshine install and only the slower Python build of Piper.</p>
+  <p>Two parts of that speed push did not last. The commit also added a "reflex": a tiny on-phone recognizer listening only for "Commander", which immediately played a cached "Yes, Commander?" and waited for the command. Three hours later it was removed (next section). And the 420 ms silence cutoff turned out to be too eager: people pause after "Commander," and the sentence got split in two. A later commit, <a href="https://github.com/nddipiazza/robos/commit/5ab95bbe">5ab95bbe</a>, raised it to 1,050 ms and moves existing phones over automatically.</p>
+
+  <h2>5. Teaching it to ignore the TV</h2>
+  <p>Leaving a room microphone running all evening showed the problem fast: "commander" is a common word. It turns up in conversation, in TV shows, in games, and in the name of a popular card-game format. Commit <a href="https://github.com/nddipiazza/robos/commit/f5d0c84e">f5d0c84e</a> made three changes, matching on both the phone (<code>WakeWordParser</code>) and the server (<a href="https://github.com/nddipiazza/robos/blob/main/packages/voice-prompt/lib/wake-word.js"><code>wake-word.js</code></a>):</p>
+  <ul>
+    <li><strong>"Commander" must start the sentence.</strong> The pattern is anchored to the start, allowing only a filler word in front ("and", "um", "uh", "so", "well", "oh") and an optional greeting such as "hey" or "ok". "I built a new Commander deck yesterday" no longer matches.</li>
+    <li><strong>"Commander" on its own does nothing.</strong> The "Yes, Commander?" reply, the follow-up listening window and the on-phone wake spotter were all removed. One sentence, one command.</li>
+    <li><strong>Fixes for how real rooms sound.</strong> Speech recognition heard "add" as "at" ("Commander at garbage bags to the Costco shopping list") and "grocery list" as "grocery label"; both are now understood. A bare "Commander, undo" works. And an open question such as "Commander, what kind of things can I do..." can no longer be added to the list as if it were an item.</li>
+  </ul>
+  <pre class="blog-log">// packages/voice-prompt/lib/wake-word.js (after f5d0c84e)
+const WAKE_PATTERNS = [
+  /^(?:(?:and|um|uh|so|well|oh)[,.\s]+)?(?:hello|hey|hi|ok|okay|yo)[,\s.-]*commander\b/i,
+  /^(?:(?:and|um|uh|so|well|oh)[,.\s]+)?commander\b/i,
+];</pre>
+
+  <h2>6. The first real job: the grocery list</h2>
+  <p>The household <a href="{{ '/shopping-lists/' | relative_url }}">Shopping Lists</a> (see the earlier <a href="{{ '/blog/robos-shopping-lists-android-pwa-google-gated-voice-sync/' | relative_url }}">Android PWA and voice sync post</a>) already understood "add milk to grocery". Commit <a href="https://github.com/nddipiazza/robos/commit/f08c3aae">f08c3aae</a> taught it to understand how people actually talk in a kitchen (<a href="https://github.com/nddipiazza/robos/blob/main/packages/shopping-lists/lib/text-commands.js"><code>text-commands.js</code></a>, <a href="https://github.com/nddipiazza/robos/blob/main/packages/shopping-lists/lib/defaults.js"><code>defaults.js</code></a>):</p>
+  <ul>
+    <li><strong>You don't have to say "grocery list".</strong> A shared check, <code>isLikelyShoppingVoiceCommand</code>, recognizes "we're out of eggs", "running low on olive oil" and "do we need avocados?" as shopping requests, while leaving "add a task to fix login" alone.</li>
+    <li><strong>Questions are answered, not added.</strong> "Is milk on my grocery list?" looks the item up, including on the other stores' lists and in the cart, instead of adding "is milk".</li>
+    <li><strong>Reading the list back by aisle.</strong> "What do we need in Produce?", "What's in my cart?", "How much is my Costco list?", and filters for urgent, organic or deal items.</li>
+    <li><strong>Twelve meal and household bundles</strong> that work offline: taco night, pasta night, breakfast, burger night, pizza night, smoothies, stir fry, salad, lunchbox, baking, party snacks and a sick-day kit, plus one-command store staples.</li>
+    <li><strong>Editing by voice:</strong> check off several items at once, "double the avocados", notes, prices, moving an item to another store, clearing a list, creating a new store list, and a spoken cheat sheet ("Commander, what can I say for grocery lists?"). The printable guide in <a href="https://github.com/nddipiazza/robos/blob/main/packages/shopping-lists/PRINTABLE-GUIDE.md"><code>PRINTABLE-GUIDE.md</code></a> lists every phrase.</li>
+  </ul>
+  <p>One thing we noticed while testing for this post: "Commander, undo" reverses removals and clears, but not additions. Saying it right after "add taco night" answers "No command undo." because adding items does not record an undo step in <a href="https://github.com/nddipiazza/robos/blob/main/packages/shopping-lists/lib/store.js"><code>store.js</code></a>.</p>
+
+  <h2>Try it and check it</h2>
+  <p>These commands exist in the repository. The test results below are from runs on November 25, 2026.</p>
+  <div class="blog-log"># 1. Install the always-on RobOS Voice server (systemd user service on port 19188)
+packages/voice-prompt/bin/install-voice-server.sh
+systemctl --user status robos-voice-server.service --no-pager
+
+# ...or run it in the foreground, and list phones that have checked in
+packages/robos-cli/robos-voice serve --port 19188
+packages/robos-cli/robos-voice assistants
+
+# 2. Build, test and install the Android app
+cd packages/robos-assistant-android
+./gradlew testDebugUnitTest
+./gradlew assembleDebug
+adb install -r app/build/outputs/apk/debug/app-debug.apk
+cd ../..
+
+# 3. Ask the server a question as if a phone had heard it (read-only example)
+curl -s -X POST http://localhost:19188/api/assistant/process-audio \
+  -H 'Content-Type: application/json' \
+  -d '{"deviceUuid":"demo-phone","mockTranscript":"Commander, is milk on my grocery list?","returnAudio":false}'
+
+# 4. Server-side unit tests (wake gate, phone hub, process-audio) and grocery commands
+node --test --test-force-exit packages/robos-test/tests/voice-prompt/unit.test.js
+node --test --test-force-exit packages/robos-test/tests/shopping-lists/unit.test.js</div>
+
+  <div class="blog-log"># Results on Nov 25, 2026
+voice-prompt/unit.test.js     tests 32  pass 32  fail 0
+shopping-lists/unit.test.js   tests 11  pass 11  fail 0
+  ok 11 - handles full suite of "Commander, _____" grocery &amp; shopping list voice commands end-to-end
+RobosAssistantCoreTest (JVM)  tests 6   failures 0  errors 0
+  wakeWordParserMatchesCommanderAtStartAndRejectsMidSentenceFalsePositives
+  disconnectedFromRobosServerRecordsAudioAndTextWithoutRunningActions
+  connectedRobosServerExecutesWakeWordActionsAndPlaysReplyWithEchoGuard
+  httpAssistantServerServesStatusRecordingsWavRangesAndEnforcesServerGate</div>
+
+  <p>And the full output from the wake-gate check shown in the figure above. It started the real RobOS Voice API in test mode with an empty temporary home folder, so the shopping list was a fresh default list rather than anyone's real one. Timings include the shopping-list work and exclude speech recognition, since text was sent instead of audio.</p>
+  <div class="blog-log">&gt; "Remember to pick up groceries later"
+  wakeWordDetected=false actionExecuted=false (80 ms)
+&gt; "I built a new Commander deck yesterday"
+  wakeWordDetected=false actionExecuted=false (11 ms)
+&gt; "Commander"
+  wakeWordDetected=false actionExecuted=false (11 ms)
+&gt; "Commander, we're out of eggs and butter"
+  wakeWordDetected=true actionExecuted=true skill=shopping-lists:add (217 ms)
+  reply: Added 2 items: 1 Eggs → Grocery (Dairy &amp; Eggs); 1 Butter → Grocery (Dairy &amp; Eggs).
+&gt; "Commander, is milk on my grocery list?"
+  wakeWordDetected=true actionExecuted=true skill=shopping-lists:has-item (39 ms)
+  reply: Yes, Commander — you have Organic Whole Milk on your Grocery list in Dairy &amp; Eggs (note: Whole or 2% if out).
+&gt; "Commander, add taco night to my grocery list"
+  wakeWordDetected=true actionExecuted=true skill=shopping-lists:bundle (49 ms)
+  reply: Added Taco Night (7 items) to your Grocery list, Commander: Ground Beef (85/15), Corn &amp; Flour Tortillas, Hass Avocados, Fresh Cilantro, Limes, Shredded Mexican Cheese, and Restaurant Salsa.
+&gt; "Commander, take butter off my grocery list"
+  wakeWordDetected=true actionExecuted=true skill=shopping-lists:remove (12 ms)
+  reply: Removed "Butter" from Grocery.
+&gt; "Commander, undo"
+  wakeWordDetected=true actionExecuted=true skill=shopping-lists:undo (17 ms)
+  reply: Undid: Removed "Butter" from Grocery.</div>
+</div>
+<div class="blog-links">
+  <a href="{{ '/robos-assistant-android/' | relative_url }}">RobOS Assistant for Android →</a>
+  <a href="{{ '/voice-prompt/' | relative_url }}">RobOS Voice →</a>
+  <a href="{{ '/blog/robos-voice-and-parse-portal/' | relative_url }}">RobOS Voice Assistant post →</a>
+  <a href="{{ '/blog/robos-phone-lineageos-moto-g100/' | relative_url }}">RobOS phone post →</a>
+  <span class="blog-commits">Commits:
+    <a href="https://github.com/nddipiazza/robos/commit/96c9168b">96c9168b</a> ·
+    <a href="https://github.com/nddipiazza/robos/commit/1f59ced2">1f59ced2</a> ·
+    <a href="https://github.com/nddipiazza/robos/commit/332ca165">332ca165</a> ·
+    <a href="https://github.com/nddipiazza/robos/commit/42d296ec">42d296ec</a> ·
+    <a href="https://github.com/nddipiazza/robos/commit/f08c3aae">f08c3aae</a> ·
+    <a href="https://github.com/nddipiazza/robos/commit/f5d0c84e">f5d0c84e</a>
+  </span>
+</div>

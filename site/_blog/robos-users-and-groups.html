@@ -1,0 +1,155 @@
+---
+title: "RobOS Users & Groups: one list of the people in your home, for the CLI, AI agents and the Voice Assistant"
+nav_label: "Users & Groups"
+date: 2026-11-25 18:00:00 +0000
+date_label: "Nov 25, 2026"
+tags:
+  - "Users & Groups"
+  - "AI Skills"
+  - "Voice Assistant"
+  - "CLI"
+summary: "RobOS now has <strong>RobOS Users</strong> and <strong>RobOS Groups</strong>: one place that knows who the people on your machines are and which groups they belong to. Two new CLIs, <code>robos-users</code> and <code>robos-groups</code>, two AI skills that work in Claude Code, Codex, Antigravity, Copilot and Gemini CLI, and new <a href=\"/voice-prompt/\">Voice Assistant</a> commands all read and write the same files. Adding someone to a group updates the group and the person together, and a sync command copies everything into RobOS Services on this machine or another one. Shown here with example people in a test home folder; 3 of 3 unit tests pass."
+description: "RobOS Users and RobOS Groups give the CLI, AI agents and the Voice Assistant one shared list of household members and their groups, with two-way membership updates, a Knowledge Graph export and sync to RobOS Services."
+seo_title: "RobOS Users & Groups: household members for CLI, AI skills and voice"
+og_image: /assets/blog/robos-users-and-groups/hero.png
+og_image_alt: "Terminal session with example people: robos-users switches the active user to Alex Rivera and answers Jordan Lee's email, then robos-groups lists the Band Practice emails, removes Sam Carter from the group and confirms Sam is not in Weekend Crew"
+---
+<div class="blog-body">
+  <figure class="blog-fig">
+    <img src="{{ '/assets/blog/robos-users-and-groups/hero.png' | relative_url }}" alt="Terminal session with example people: robos-users switches the active user to Alex Rivera and answers Jordan Lee's email, then robos-groups lists the Band Practice emails, removes Sam Carter from the group and confirms Sam is not in Weekend Crew" loading="lazy" width="1200" height="630">
+    <figcaption><strong>Real output, example people.</strong> Every line is copied from a run of the two new CLIs against a throwaway home folder. Alex, Jordan and Sam are made-up people created for this post.</figcaption>
+  </figure>
+
+  <h2>What are RobOS users and groups?</h2>
+  <p>A <strong>RobOS user</strong> is a person who uses your RobOS machines: you, your partner, your kids, a roommate. Each one has a small profile file with a name, a nickname, an email address, a birthday, a job, hobbies, music they like or can't stand, a gamer tag, and so on. A <strong>RobOS group</strong> is a named set of those people: <em>Family</em>, <em>Household</em>, <em>Kids</em>, <em>Game Night</em>, a book club.</p>
+  <p>Why would a household care? Because lots of everyday questions are really questions about people. "What's Jordan's email?" "Who is in the book club?" "Send this to everyone in the family." "Who am I logged in as right now?" Before this change, the answers lived in several RobOS apps that each kept their own idea of who is who. Now there is one list, and everything that needs to know about people (the command line, AI agents, and the Voice Assistant) reads and writes that same list. Change it in one place and every other place sees the change.</p>
+  <p><strong>Before you start.</strong> All of this lives in plain JSON files in your own home folder, under <code>~/.config/robos/</code>. Nothing is sent anywhere unless you run the sync command and name a machine to sync to. To follow along you only need a RobOS source checkout and Node.js.</p>
+
+  <h2>Where the data lives</h2>
+  <p>The new library, <a href="https://github.com/nddipiazza/robos/blob/main/packages/robos-lib/users-groups.js"><code>packages/robos-lib/users-groups.js</code></a>, sits on top of the existing people store (<a href="https://github.com/nddipiazza/robos/blob/main/packages/robos-lib/people-store.js"><code>people-store.js</code></a>) that the <a href="{{ '/people-directory/' | relative_url }}">People Directory</a> already used. It works with these files:</p>
+  <ul>
+    <li><code>~/.config/robos/people/&lt;uid&gt;.json</code>: one file per user. The <code>uid</code> is the name turned into a slug, so "Jordan Lee" becomes <code>jordan-lee</code>.</li>
+    <li><code>~/.config/robos/groups/&lt;id&gt;.json</code>: one file per group, with a <code>members</code> list of user ids.</li>
+    <li><code>~/.config/robos/settings.json</code> (<code>myProfileUid</code>) and <code>active-voice-context.json</code>: who the active user on this machine is.</li>
+    <li><code>~/.config/robos/search-index/people.txt</code> and <code>groups.txt</code>, a Knowledge Graph file at <code>kgraph/users-groups.jsonld</code>, and <code>services/data/users-groups.json</code> for RobOS Services. These three are rebuilt after every change.</li>
+  </ul>
+  <p>There are two kinds of group. A group with its own file is an <strong>explicit</strong> group. A user's profile can also carry free-form group tags, such as <code>"groups": ["Weekend Crew"]</code>. When no file matches a tag, RobOS shows it as a <strong>derived</strong> group, built from every profile that carries the tag. <code>robos-groups list --explicit-only</code> leaves the derived ones out.</p>
+
+  <h2>The two CLIs</h2>
+  <p><a href="https://github.com/nddipiazza/robos/blob/main/packages/robos-cli/robos-users"><code>packages/robos-cli/robos-users</code></a> and <a href="https://github.com/nddipiazza/robos/blob/main/packages/robos-cli/robos-groups"><code>packages/robos-cli/robos-groups</code></a> are thin wrappers around the library. Each prints a plain-English answer by default and the full result with <code>--json</code>. For this post we pointed <code>HOME</code> at an empty temporary folder, so nothing touched a real household's files, and created three example people:</p>
+  <div class="blog-log">$ export HOME=$(mktemp -d)
+$ robos-users add "Alex Rivera" --email alex@example.com --nickname Alex --role "Science Teacher" \
+    --groups "Weekend Crew,Book Club" --gamer-tag "AlexTheBold"
+Added RobOS user Alex Rivera (alex@example.com) in Weekend Crew, Book Club.
+$ robos-users add "Jordan Lee" --email jordan@example.com --nickname Jordy --role "Nurse" \
+    --groups "Weekend Crew" --gamer-tag "JordyPlays"
+Added RobOS user Jordan Lee (jordan@example.com) in Weekend Crew.
+$ robos-users add "Sam Carter" --email sam@example.com --nickname Sam --role "Systems Engineer" --groups "Book Club"
+Added RobOS user Sam Carter (sam@example.com) in Book Club.
+$ robos-users update "Jordy" --birthday 1990-04-12 --hobby "Rock climbing"
+Updated RobOS user Jordan Lee.
+
+$ robos-users list --group "Weekend Crew"
+RobOS Users (2):
+  • Alex Rivera &lt;alex@example.com&gt; — Science Teacher [Weekend Crew, Book Club]
+  • Jordan Lee ("Jordy") &lt;jordan@example.com&gt; — Nurse [Weekend Crew]
+
+$ robos-users switch "Alex"
+Switched the active RobOS user to Alex Rivera.
+$ robos-users whoami
+The active RobOS user is Alex Rivera (Alex), alex@example.com.
+$ robos-users ask "Jordy" birthday
+Jordan Lee's birthday is 1990-04-12.
+$ robos-users ask "Alex" gamerTag
+Alex's gamer tag is AlexTheBold.</div>
+  <p>(The CLI also starts each user line with the person's avatar. We left that character out above.)</p>
+  <p>Look-ups are forgiving. <code>resolveUser()</code> checks the uid, email, username, nickname, first name, display name and gamer tag for an exact match first. If nothing matches, it accepts a first name or nickname that starts with what you typed (three letters or more), then any part of the display name. That is why <code>"Jordy"</code> finds Jordan Lee. <code>ask</code> knows these topics: summary, email, phone, birthday, age, role, gamerTag, rpg, music, music-dislikes, books, hobbies, pet-peeves, personality, games, family and groups.</p>
+
+  <h2>Two-way group membership</h2>
+  <p>Membership is written down in two places: the group file's <code>members</code> list and each person's <code>groups</code> tags. If those two drift apart, one app says Sam is in the band and another says he isn't. So <code>addMemberToGroup()</code>, <code>removeMemberFromGroup()</code>, <code>createGroup()</code> and <code>deleteGroup()</code> always change both. <code>createUser()</code> and <code>deleteUser()</code> also add and remove the person in any explicit group files they match.</p>
+  <div class="blog-log">$ robos-groups create "Band Practice" --description "Garage band rehearsal crew" --members "Alex,Sam"
+Created RobOS group "Band Practice" with 2 members.
+$ robos-groups emails "Band Practice"
+Band Practice emails (2):
+  • Alex Rivera &lt;alex@example.com&gt;
+  • Sam Carter &lt;sam@example.com&gt;
+$ robos-groups user-groups "Sam"
+Sam Carter belongs to 2 RobOS groups: Band Practice, Book Club.
+$ robos-groups remove-member "Sam" "Band Practice"
+Removed Sam Carter from Band Practice.
+$ robos-groups user-groups "Sam"
+Sam Carter belongs to 1 RobOS group: Book Club.
+
+$ robos-groups list --explicit-only
+RobOS Groups (1):
+  • Band Practice [band-practice] (1 member) — Garage band rehearsal crew</div>
+  <p>A voice command later added Jordan to the same group (see the next section). Both files changed together:</p>
+  <div class="blog-log"># ~/.config/robos/groups/band-practice.json
+{ "id": "band-practice", "name": "Band Practice", "description": "Garage band rehearsal crew",
+  "members": ["alex-rivera", "jordan-lee"], "contexts": [], "settings": {}, "workspaces": [] }
+
+# ~/.config/robos/people/jordan-lee.json (excerpt)
+{ "uid": "jordan-lee", "groups": ["Weekend Crew", "Band Practice"], ... }</div>
+  <p><strong>Two things we noticed while testing.</strong> First, on any machine, even an empty test folder, the people store creates the machine owner's two default profiles the first time it loads. They show up in lists and in derived groups: our full <code>robos-groups list</code> showed 8 groups, and 5 of them came only from those two default profiles. We cut them from the output above. Second, <code>add --role</code> fills in both the job title and the relationship field, so <code>show</code> prints the role twice (<code>Role: Nurse · Nurse</code>).</p>
+
+  <h2>Voice Assistant commands</h2>
+  <p>The <a href="{{ '/voice-prompt/' | relative_url }}">Voice Assistant</a> gets two new skills, <code>robos-users</code> and <code>robos-groups</code>. They are listed in <a href="https://github.com/nddipiazza/robos/blob/main/packages/voice-prompt/lib/skills-executor.js"><code>skills-executor.js</code></a> and in the command catalog in <a href="https://github.com/nddipiazza/robos/blob/main/packages/voice-prompt/lib/voice-commands-registry.js"><code>voice-commands-registry.js</code></a>, in a new "People &amp; Groups" category. The executor now asks <code>isUsersOrGroupsVoiceCommand()</code> about each phrase. If the answer is yes, it hands the phrase to <code>executeVoiceCommand()</code> and returns the spoken reply. All of this runs locally with no AI model call.</p>
+  <p>The hard part is not stealing other skills' phrases. "Add dentist appointment to family calendar" mentions <em>family</em>, and "open group manager" mentions <em>group</em>, but neither is about users. The check strips wake words like "Commander", then turns down anything about calendars, appointments, watchlists or shopping lists, anything starting with play, watch or cast, and plain "open ..." app launches. Questions about a person only count when they name a known user. We ran six phrases through the real <code>SkillsExecutor</code> against the test home folder:</p>
+  <div class="blog-log">"Commander, who am I" -> robos-users: The active RobOS user is Alex Rivera (Alex), alex@example.com.
+"what is Alex's gamer tag" -> robos-users: Alex's gamer tag is AlexTheBold.
+"who is in the Weekend Crew group" -> robos-groups: Weekend Crew has 2 members: Alex Rivera, Jordan Lee.
+"add Jordy to the Band Practice group" -> robos-groups: Added Jordan Lee to Band Practice.
+"open group manager" -> not a Users/Groups command (left for the next skill)
+"add dentist appointment on Friday at 3pm to family calendar" -> not a Users/Groups command (left for the next skill)</div>
+  <p>"Open RobOS users", "open people directory" and "open group manager" now open the <a href="{{ '/people-directory/' | relative_url }}">People Directory</a> and the <a href="{{ '/group-manager/' | relative_url }}">Group Manager</a> instead. The same phrases also work from the command line through <code>say</code>, for example <code>robos-users say "what is Jordy's email"</code>.</p>
+
+  <h2>AI skills for every agent</h2>
+  <p><code>/robos-users</code> and <code>/robos-groups</code> ship as skill files in every place RobOS keeps them: <a href="https://github.com/nddipiazza/robos/blob/main/plugins/robos/skills/robos-users/SKILL.md"><code>plugins/robos/skills/robos-users/SKILL.md</code></a>, <a href="https://github.com/nddipiazza/robos/blob/main/plugins/robos/skills/robos-groups/SKILL.md"><code>robos-groups/SKILL.md</code></a>, and the copies in <code>.agents/skills/</code> and <code>.github/skills/</code>, plus slash commands for Claude Code, Antigravity and Gemini CLI. Both are added to <code>plugins/robos/plugin.json</code>. The skills tell the agent which CLI command answers which kind of question, so an agent asked "email the book club" can run <code>robos-groups emails "Book Club"</code> instead of guessing addresses.</p>
+
+  <h2>Knowledge Graph and RobOS Services sync</h2>
+  <p>After every change, the library rebuilds three things. The first is the search index. The second is a JSON-LD Knowledge Graph with one node per person and per group, using <code>oslc:Person</code>/<code>schema:Person</code> types (13 nodes for 5 users and 8 groups in our test folder). The third is the RobOS Services data file. That file holds the active user id, every user and every group, and it is written with file mode <code>600</code>, so only you can read it:</p>
+  <div class="blog-log">$ robos-users kgraph
+Synced 13 Users &amp; Groups Knowledge Graph nodes to $HOME/.config/robos/kgraph/users-groups.jsonld.
+$ robos-users sync
+Synced 5 RobOS users and 8 RobOS groups into local RobOS Services ($HOME/.config/robos/services/data/users-groups.json).
+$ stat -c '%a' $HOME/.config/robos/services/data/users-groups.json
+600</div>
+  <p><code>robos-users sync --host &lt;machine&gt;</code> (or saying "sync RobOS users and groups to &lt;machine&gt;") copies the same files to another RobOS machine. First it refreshes everything locally. Then it uses <code>ssh</code> with <code>BatchMode=yes</code>, so it never stops to ask for a password, and <code>rsync</code> to copy <code>people/</code>, <code>groups/</code>, the Knowledge Graph, the indexes and the services file. On the other machine it restarts <code>robos-services-users-groups.service</code> if that service exists, and sets <code>myProfileUid</code> only if that machine has none yet. Last, it asks RobOS Services on port 19400 for <code>/users-groups</code>, using that machine's own access token, and reports whether the answer came back. The host name and SSH user are checked against strict patterns before any command runs. We did <strong>not</strong> run a remote sync for this post. The RobOS Services gateway itself is not in this repository, so the remote check is described here from the code, not from a run.</p>
+
+  <h2>Tests</h2>
+  <p><a href="https://github.com/nddipiazza/robos/blob/main/packages/robos-lib/users-groups.test.cjs"><code>packages/robos-lib/users-groups.test.cjs</code></a> builds a fresh temporary config folder for each test. The tests cover user create, update and delete (including the automatic group file update), nickname look-up, switching the active user, fact questions, two-way group membership, the Knowledge Graph and services file, and the Voice Assistant routing, including the calendar and "open ..." phrases it must leave alone.</p>
+  <div class="blog-log">$ node --test packages/robos-lib/users-groups.test.cjs
+ok 1 - users CRUD, nickname lookup, active user switch, and rich Q&amp;A
+ok 2 - groups CRUD, two-way membership sync, KGraph, and RobOS Services state payload
+ok 3 - Voice Assistant commands via VoiceCommandsRegistry and SkillsExecutor
+# tests 3
+# pass 3
+# fail 0</div>
+
+  <h2>Try it yourself</h2>
+  <p>These commands use a throwaway home folder, so they never touch your real users and groups. Leave out the first line to work with your real ones.</p>
+  <div class="blog-log"># from a RobOS checkout; a temp HOME keeps your real ~/.config/robos untouched
+export HOME=$(mktemp -d)
+U=./packages/robos-cli/robos-users; G=./packages/robos-cli/robos-groups
+
+$U add "Alex Rivera" --email alex@example.com --nickname Alex --groups "Weekend Crew"
+$U add "Sam Carter" --email sam@example.com --nickname Sam --groups "Book Club"
+$U switch "Alex" &amp;&amp; $U whoami
+$U ask "Sam" email
+$G create "Band Practice" --members "Alex,Sam"
+$G emails "Band Practice"
+$G remove-member "Sam" "Band Practice"
+$G user-groups "Sam"
+$G say "who is in the Weekend Crew group"
+$U sync          # local RobOS Services file only; add --host &lt;machine&gt; to copy over SSH
+$U --help; $G --help
+
+# unit tests
+node --test packages/robos-lib/users-groups.test.cjs</div>
+</div>
+<div class="blog-links">
+  <a href="{{ '/people-directory/' | relative_url }}">People Directory →</a>
+  <a href="{{ '/group-manager/' | relative_url }}">Group Manager →</a>
+  <a href="{{ '/voice-prompt/' | relative_url }}">Voice Assistant →</a>
+  <span class="blog-commits">Commits: <a href="https://github.com/nddipiazza/robos/commit/93c82f482f229df23ee094b462f05283460e1901">93c82f48</a></span>
+</div>

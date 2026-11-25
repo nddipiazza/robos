@@ -1,0 +1,125 @@
+---
+title: "RobOS VPN Sandbox: Next-in-Line Server Failover and a VPN-Only App Guard"
+nav_label: "VPN Failover & App Guard"
+date: 2026-11-25 15:00:00 +0000
+date_label: "Nov 24 – Nov 25, 2026"
+tags:
+  - "RobOS VPN Sandbox"
+  - "Auto-Failover"
+  - "VPN-Only App Guard"
+  - "Linux ip-netns &amp; iptables"
+summary: "Two follow-ups to the <a href=\"/blog/vpn-sandbox-and-killswitch-proof/\">per-app VPN sandbox and kill-switch proof</a>. <strong>RobOS VPN Sandbox</strong> now notices when a VPN server is down, at launch or mid-session, and moves the running app to the next server in line (Chicago 2, then Chicago 3, then Chicago 4) without restarting it. A new <strong>VPN-Only App Guard</strong> makes an app such as <code>qbittorrent</code> refuse to start outside the sandbox (exit 126) and kills any copy that does get started on the normal network. The guard's live kernel proof passed all 5 phases, and the 10 unit tests pass."
+description: "RobOS VPN Sandbox now switches a running app to the next VPN server when a tunnel goes down, and can lock apps like qBittorrent so they never run outside the VPN."
+seo_title: "VPN Server Failover and VPN-Only App Lock · RobOS"
+og_image: /assets/blog/vpn-sandbox-failover-and-app-guard/hero.png
+og_image_alt: "RobOS VPN Sandbox with a running app switched from one Chicago VPN server to the next, and qBittorrent locked by the VPN-Only App Guard"
+---
+<div class="blog-body">
+  <figure class="blog-fig">
+    <img src="{{ '/assets/blog/vpn-sandbox-failover-and-app-guard/hero.png' | relative_url }}" alt="RobOS VPN Sandbox with a running app switched from one Chicago VPN server to the next, and qBittorrent locked by the VPN-Only App Guard" loading="lazy">
+    <figcaption><strong>RobOS VPN Sandbox</strong> after both changes. Top right: a sandboxed app that was moved from <code>chi-b02</code> to <code>chi-b03</code> with no restart, and the next server in line (<code>chi-b04</code>) shown in advance. Bottom right: <code>qbittorrent</code> locked to VPN-Only, with one blocked launch and one killed copy in the log. This was captured from source in test mode (<code>ROBOS_TEST=1</code>) using a separate config folder and a demo account, so no real tunnel was opened. All IP addresses have been replaced with <code>[redacted]</code>.</figcaption>
+  </figure>
+
+  <p><strong>The short version.</strong> A per-app VPN sandbox runs one program, such as a browser or a torrent client, inside its own private network room. The only way out of that room is the VPN tunnel. The rest of your computer uses your normal connection as usual. The <a href="{{ '/blog/vpn-sandbox-and-killswitch-proof/' | relative_url }}">previous post</a> showed the kill switch: if the VPN connection dies, the app inside the room goes offline. It does not fall back to your real address. That is safe, but it leaves you with a dead app until you pick a new server yourself. And the room only protects a program that was started inside it. If you open qBittorrent from the app grid out of habit, it runs on your normal connection. These two changes close both gaps.</p>
+  <ul>
+    <li><strong>Failover</strong> means that when the VPN server you picked stops responding, RobOS moves the app to the next server in the list. The app keeps running, and the kill switch stays on during the switch.</li>
+    <li><strong>The App Guard</strong> means that once you mark an app as VPN-Only, starting it any other way fails. Any copy found running outside the sandbox is shut down immediately.</li>
+  </ul>
+  <p>You only need the earlier post's background: Linux network namespaces (<code>ip netns</code>), which make the private room, and the three-layer <code>iptables</code> kill switch.</p>
+
+  <figure class="blog-fig">
+    <img src="{{ '/assets/blog/vpn-sandbox-failover-and-app-guard/failover-session.png' | relative_url }}" alt="Running VPN Apps card showing a sleep 600 session moved from chi-b02 to chi-b03, with chi-b04 listed as next if down" loading="lazy">
+    <figcaption>A sandboxed <code>sleep 600</code> after one switch. The <strong>Next Server</strong> button calls the same <code>failoverSession()</code> that the health monitor calls. In test mode no real tunnel goes down, so the switch here was started with that button. The badge says "Auto-switched" for both automatic and manual switches.</figcaption>
+  </figure>
+
+  <p><strong>How a down tunnel is detected.</strong> Every running session with auto-failover turned on is checked every 10 seconds by <code>runHealthCheckCycle()</code> in <a href="https://github.com/nddipiazza/robos/blob/main/packages/robos-lib/vpn-sandbox-engine.js"><code>packages/robos-lib/vpn-sandbox-engine.js</code></a>. The check, <code>checkSessionTunnelHealth()</code>, has three steps, from cheapest to most thorough:</p>
+  <ol>
+    <li>Inside the namespace, it confirms that <code>openvpn</code> is still running and that <code>tun0</code> still has an IPv4 address.</li>
+    <li>It reads the session's <code>openvpn.log</code> for signs of failure written after the last <code>Initialization Sequence Completed</code>: <code>--ping-restart</code> timeouts, TLS handshake failures, <code>Connection reset, restarting</code>, or a fatal exit. This catches the case where <code>persist-tun</code> keeps <code>tun0</code> up while the connection behind it is dead.</li>
+    <li>As the unprivileged app user, it tries a TCP connection to port 443 on three public DNS providers in turn (Cloudflare, Google, Quad9) through the tunnel.</li>
+  </ol>
+  <p>A failed probe only counts once two failures happen in a row. Before blaming the VPN server, the engine checks whether the host has a default route at all. If the laptop itself is offline, the session is reported as <code>host_offline</code> and the kill switch simply stays closed. RobOS does not cycle through servers that cannot be reached anyway. An <code>AUTH_FAILED</code> in the log marks the session <code>auth-error</code> and stops there. Trying other servers will not fix a wrong password, and the unit test checks that exactly one connection attempt is made.</p>
+
+  <p><strong>What "next in line" means.</strong> <code>getFailoverCandidates()</code> in <a href="https://github.com/nddipiazza/robos/blob/main/packages/robos-lib/ovpn-providers.js"><code>packages/robos-lib/ovpn-providers.js</code></a> builds the order. First come the other servers in the same city or name series, starting after the current one and wrapping around. Next come other servers in the same country, then everything else. Profile files are now sorted by number (<code>naturalProfileCompare</code>), so <code>chi-b02</code> is followed by <code>chi-b03</code>, <code>chi-b04</code> and <code>chi-b10</code>, then <code>chi-c01</code>, wrapping to <code>chi-b01</code> before leaving Chicago. Before this change, a plain text sort would put a custom profile named <code>chicago10</code> before <code>chicago2</code>. The unit test covers both naming styles. A server that fails is skipped for 10 minutes. Each round tries up to 5 candidates. If all of them fail, the session is marked <code>down</code>, the kill switch keeps blocking, and the next health cycle tries again. The <strong>Test VPN Connection</strong> button uses the same order (<code>testAccountConnection({ autoFailover: true })</code>). It reports which servers it tried and which one answered.</p>
+
+  <p><strong>Switching servers without restarting the app.</strong> The namespace, its <code>veth</code> pair and the app's process all stay in place. <code>buildSwitchTunnelShellScript()</code> stops only the old OpenVPN daemon (using its pid file, then a <code>pkill</code> inside the namespace) and deletes the stale <code>tun0</code>. It then sets the namespace's <code>INPUT</code>, <code>FORWARD</code> and <code>OUTPUT</code> policies back to <code>DROP</code> for IPv4 and IPv6. It removes the host <code>POSTROUTING</code> <code>MASQUERADE</code> rule for the old server IP, adds the <code>FORWARD</code> and NAT rules for the new server's IP and port, and starts a new <code>openvpn</code>. During the gap, the app can reach only an interface that drops everything. After the new tunnel comes up, the same exit-IP check from the first release runs again. If the namespace's public IP equals your normal IP, the switch is aborted as <code>fatalLeakGate</code> and no other server is tried. The renderer receives each switch as a <code>vpn-failover</code> IPC event, added in <a href="https://github.com/nddipiazza/robos/blob/main/packages/vpn-sandbox/main.js"><code>packages/vpn-sandbox/main.js</code></a> along with the <strong>Auto-Failover Next Server</strong> toggle and the <strong>Next Server</strong> button.</p>
+
+  <figure class="blog-fig">
+    <img src="{{ '/assets/blog/vpn-sandbox-failover-and-app-guard/app-guard.png' | relative_url }}" alt="VPN-Only App Guard card with qBittorrent locked, showing one killed outside-VPN process and one blocked base launch in the log" loading="lazy">
+    <figcaption>The VPN-Only App Guard card with <code>qbittorrent</code> locked. Both log entries come from real engine calls against the separate test config. The killed entry is a decoy script named <code>qbittorrent</code>, started on the normal network and killed when the lock was added. The blocked entry is a run of the PATH gate that exited with status 126. In test mode the gate is written inside the test config folder rather than <code>~/.local/bin</code>, and the real <code>/usr/bin/qbittorrent</code> was never touched.</figcaption>
+  </figure>
+
+  <p><strong>Layer one: the app will not start outside the sandbox.</strong> Locking an app calls <code>installBaseLaunchLock()</code>, which adds up to four gates:</p>
+  <ul>
+    <li><strong>Binary gate.</strong> With root or passwordless <code>sudo</code>, the real binary is moved aside to <code>&lt;binary&gt;.robos-vpn-real</code>. For files under <code>/usr</code>, <code>/bin</code> or <code>/sbin</code> this uses <code>dpkg-divert</code>, so package upgrades respect the move. A small gate script then takes the binary's place.</li>
+    <li><strong>PATH gate.</strong> The same gate script is placed in <code>~/.local/bin</code>, so the lock also works without root.</li>
+    <li><strong>Desktop launchers.</strong> Each matching <code>.desktop</code> file gets a copy in <code>~/.local/share/applications</code> with <code>NoDisplay=true</code>, and its <code>Exec=</code> points at the gate. This covers the app grid and magnet or <code>.torrent</code> file opens.</li>
+    <li><strong>Autostart.</strong> Matching autostart entries are set to <code>Hidden=true</code>.</li>
+  </ul>
+  <p>The gate itself, built by <code>buildBinaryGateScript()</code>, compares <code>readlink /proc/$$/ns/net</code> with the inode of every <code>/run/netns/robos_vpn_*</code> file. If there is no match, it writes a <code>blocked-launch</code> event, shows a desktop notification and exits with status 126 before the real program starts. If there is a match, it runs the real binary with <code>exec</code>. Unlocking restores the moved binary and removes the launcher copies, using the backups in <code>vpn-sandbox-desktop-backups/</code>.</p>
+
+  <p><strong>Layer two: copies that slip through are killed.</strong> Someone could run the <code>.robos-vpn-real</code> file directly, use an AppImage, or have a copy already running when the lock is added. To catch these, <code>enforceGuardedAppsOnce()</code> scans <code>/proc</code>. For every process that matches a locked app, it reads <code>/proc/&lt;pid&gt;/ns/net</code>. Any process that is not inside a live <code>robos_vpn_*</code> namespace gets <code>SIGKILL</code>, falling back to <code>sudo -n kill -9</code> if needed. That includes processes in some other namespace, such as a Docker container. A process matches on its executable, its <code>argv[0]</code>, an AppImage name, or the script argument when it runs under an interpreter. Some companion binaries are covered automatically: <code>qbittorrent-nox</code> for qBittorrent, and the Qt, CLI and daemon builds for Transmission.</p>
+  <p>Some processes are deliberately left alone. Wrapper processes such as the host-side <code>sudo ip netns exec robos_vpn_…</code> that launched the sandboxed copy are never matched. Neither are tools like <code>vim</code>, <code>grep</code>, <code>tail</code> or <code>pkill</code> that just have the app's name in their arguments. Core system programs such as <code>bash</code>, <code>sudo</code>, <code>openvpn</code>, <code>ip</code>, <code>node</code> and <code>gnome-shell</code> cannot be locked at all.</p>
+  <p>Adding a lock runs one scan right away. After that, a <code>systemd --user</code> service keeps scanning even with the window closed. <a href="https://github.com/nddipiazza/robos/blob/main/packages/vpn-sandbox/bin/install-vpn-sandbox-guard.sh"><code>install-vpn-sandbox-guard.sh</code></a> installs <code>robos-vpn-sandbox-guard.service</code>, which runs <a href="https://github.com/nddipiazza/robos/blob/main/packages/vpn-sandbox/bin/vpn-sandbox-guard.js"><code>vpn-sandbox-guard.js --daemon</code></a> every 400 ms with <code>Restart=always</code>. The daemon re-reads the guard config only when the file's modification time changes.</p>
+
+  <p><strong>What was verified for this post.</strong> The 10 tests in <a href="https://github.com/nddipiazza/robos/blob/main/packages/robos-lib/ovpn-providers.test.cjs"><code>packages/robos-lib/ovpn-providers.test.cjs</code></a> passed:</p>
+  <ul>
+    <li><strong>Failover test.</strong> Mocked connect and health hooks run the real engine logic. The test launches on <code>chi-b02</code> while it is "down", lands on <code>chi-b03</code>, then takes <code>chi-b03</code> down and confirms the health cycle moves the same PID to <code>chi-b04</code>. It also checks that the switch script keeps <code>OUTPUT DROP</code> and swaps the NAT rule to the new server.</li>
+    <li><strong>Guard tests.</strong> These run a real gate on a fake <code>qbittorrent</code> (exit 126, real binary never runs) and send real <code>SIGKILL</code>s to throwaway processes. They also confirm that the sandboxed copy, the <code>sudo</code> wrapper and a <code>vim qbittorrent.conf</code> survive.</li>
+  </ul>
+  <p>We also ran the guard's live kernel proof on the dev machine with a separate config folder. It creates a real <code>robos_vpn_g…</code> namespace with a randomly named probe binary, so none of your own apps can match it, and deletes the namespace afterwards.</p>
+  <div class="blog-log"># node --test packages/robos-lib/ovpn-providers.test.cjs
+ok 6 - getFailoverCandidates orders next VPN servers in line naturally (e.g. Chicago 2 -> Chicago 3 -> Chicago 4)
+ok 7 - VPN Sandbox detects down VPN at launch AND mid-session and automatically fails over to next VPN in line (Chicago 2 -> Chicago 3 -> Chicago 4)
+ok 8 - qBittorrent default profile is automatically seeded when qbittorrent is installed and critical system binaries cannot be locked
+ok 9 - VPN-Only App Guard makes an app (e.g. qbittorrent) unlaunchable from its base state, shadows desktop/autostart launchers, and cleanly restores on unlock
+ok 10 - Outside-Sandbox Process Killer SIGKILLs any guarded app (qbittorrent / companion / AppImage) outside robos_vpn_* while preserving sandboxed instances and supervisors
+# tests 10
+# pass 10
+# fail 0
+
+# ROBOS_CONFIG_DIR=$(mktemp -d) node packages/vpn-sandbox/bin/vpn-sandbox-guard.js --prove
+{
+  "ok": true,
+  "mode": "live-kernel-guard-proof",
+  "baseLaunchBlockedExitCode": 126,
+  "outsideSandboxKilled": true,
+  "sandboxedAppSurvived": true,
+  "steps": [
+    { "step": 1, "name": "Install Base-State Binary Gate &amp; Desktop Lock", "passed": true },
+    { "step": 2, "name": "Block Base-State Launch Before Execution", "passed": true,
+      "detail": "Launching outside VPN sandbox exited immediately with status 126 (0 instructions of real app executed)" },
+    { "step": 3, "name": "Immediate SIGKILL of Outside-Sandbox Process (/proc Watchdog)", "passed": true },
+    { "step": 4, "name": "Allow Inside robos_vpn_* Namespace While Killing Outside Instance", "passed": true,
+      "detail": "App inside robos_vpn_gfa3c passed gate and stayed running while simultaneous host-namespace instance was SIGKILLed" },
+    { "step": 5, "name": "Clean Unlock &amp; Binary Restoration", "passed": true }
+  ]
+}</div>
+  <p><strong>What was not run here.</strong> The live failover proof (<code>proveAutoFailoverOnVpnDrop()</code> in <a href="https://github.com/nddipiazza/robos/blob/main/tests/e2e/vpn-sandbox-killswitch-proof.test.cjs"><code>tests/e2e/vpn-sandbox-killswitch-proof.test.cjs</code></a>) kills OpenVPN inside a real namespace on <code>chi-b02</code> and expects the app to land on <code>chi-b03</code>. It needs a real VPN account, so it was not run for this post. Without <code>ROBOS_VPN_LIVE_E2E=1</code>, that function returns a canned "simulated-failover-proof" result that does not exercise the tunnel. Treat it as a placeholder, not evidence. The real evidence for failover today is the unit test above.</p>
+
+  <div class="blog-log"># Unit tests (failover ordering, launch + mid-session failover, App Guard gate and /proc killer)
+node --test packages/robos-lib/ovpn-providers.test.cjs
+
+# Live 5-phase VPN-Only Guard proof (live-kernel mode needs passwordless sudo; falls back to simulated-guard-proof otherwise)
+ROBOS_CONFIG_DIR=$(mktemp -d) node packages/vpn-sandbox/bin/vpn-sandbox-guard.js --prove
+
+# Lock an app, install the always-on guard service, inspect, unlock
+node packages/vpn-sandbox/bin/vpn-sandbox-guard.js --lock qbittorrent
+bash packages/vpn-sandbox/bin/install-vpn-sandbox-guard.sh
+node packages/vpn-sandbox/bin/vpn-sandbox-guard.js --status
+node packages/vpn-sandbox/bin/vpn-sandbox-guard.js --unlock qbittorrent
+
+# Live kernel kill-switch, auto-failover and guard E2E (uses your saved VPN account)
+ROBOS_VPN_LIVE_E2E=1 node --test tests/e2e/vpn-sandbox-killswitch-proof.test.cjs
+
+# Launch the app from source and capture it
+scripts/dev-launch.sh vpn-sandbox
+node packages/robos-lib/snapshot-cli.js vpn-sandbox --screenshot &gt; vpn-sandbox.png</div>
+</div>
+<div class="blog-links">
+  <a href="{{ '/blog/vpn-sandbox-and-killswitch-proof/' | relative_url }}">Previous post: VPN Sandbox &amp; Kill-Switch Proof →</a>
+  <a href="{{ '/vpn-sandbox/' | relative_url }}">RobOS VPN Sandbox docs →</a>
+  <a href="{{ '/security/#zero-leak-vpn-app-sandbox' | relative_url }}">Security proof &amp; architecture →</a>
+  <a href="https://github.com/nddipiazza/robos/blob/main/packages/vpn-sandbox/README.md">VPN Sandbox README →</a>
+  <span class="blog-commits">Commits: <a href="https://github.com/nddipiazza/robos/commit/337487bb">337487bb</a> · <a href="https://github.com/nddipiazza/robos/commit/f2a5c3d4">f2a5c3d4</a></span>
+</div>

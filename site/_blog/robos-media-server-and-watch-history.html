@@ -1,0 +1,132 @@
+---
+title: "RobOS Media Server: One Library for Every Machine, and a Watch History That Follows You"
+nav_label: "Media Server &amp; Watch History"
+date: 2026-11-24 16:00:00 +0000
+date_label: "Nov 24, 2026"
+tags:
+  - "RobOS Media Server"
+  - "RobOS Movie Player"
+  - "Watch History"
+  - "MCP"
+summary: "<a href=\"/media-server/\"><strong>RobOS Media Server</strong></a> is a new always-on service that indexes movies, TV shows, music, books and courses once, on one machine, and streams them to every other RobOS computer. <a href=\"/robos-preferences/\">RobOS Preferences</a> keeps <a href=\"/movie-player/\">RobOS Movie Player</a> and Audio Player pointed at it automatically, and the server exposes the whole catalog to AI agents over MCP. On top of it, Movie Player now remembers where you stopped in every episode, shows a compact <strong>Watch History</strong> tab, imports history files from Plex, Tautulli, Jellyfin, Trakt and Letterboxd, and answers voice commands such as &ldquo;our current episode of Severance is season 2 episode 4&rdquo;."
+description: "RobOS Media Server indexes movies, shows, music and books once and streams them to every RobOS machine, with MCP tools, automatic Preferences sync, resume points, a Watch History tab, history import from Plex and Trakt, and voice watchlist commands."
+seo_title: "RobOS Media Server, Resume Points and Watch History Import · RobOS"
+og_image: /assets/blog/robos-media-server-and-watch-history/01-watch-history-tab.png
+og_image_alt: "RobOS Movie Player Watch History tab listing TV episodes with Stopped and Watched states, play counts and last-watched times"
+---
+<div class="blog-body">
+  <figure class="blog-fig">
+    <img src="{{ '/assets/blog/robos-media-server-and-watch-history/01-watch-history-tab.png' | relative_url }}" alt="RobOS Movie Player Watch History tab listing TV episodes with Stopped and Watched states, play counts and last-watched times" loading="lazy">
+    <figcaption><strong>The new Watch History tab in RobOS Movie Player.</strong> One row per thing you watched: the show, the episode code, where you stopped (<code>Stopped 0:59 / 44:03 (2%)</code>) or a green <strong>Watched</strong> bar, how many times you have seen it, and when. Filters across the top split the list into In Progress, Watched, TV Episodes and Movies; <strong>Import History&hellip;</strong> pulls in a file exported from another media server. Captured from a real Movie Player session running from source, with titles and times blurred.</figcaption>
+  </figure>
+
+  <p><strong>What this is.</strong> If you keep movies and TV shows on a home server, you have probably used Plex or Jellyfin: one box holds the files, every screen in the house streams from it, and the box remembers what you watched. Until this week, RobOS did not have that box. Each RobOS computer scanned its own folders, kept its own library, and kept its own idea of what you had watched. Two laptops meant two libraries that slowly disagreed.</p>
+
+  <p><strong>RobOS Media Server</strong> fixes that. You install it once on the machine that holds your files. It scans the folders, works out which files are movies, which are episodes of which show, which are albums and which are eBooks, and serves all of it over your home network. Every other RobOS machine just points at it. RobOS Movie Player and RobOS Audio Player fill themselves in from the server, start where you left off, and report back what you watched so the next screen knows too.</p>
+
+  <p>This post builds on the original <a href="{{ '/blog/robos-movie-player/' | relative_url }}">RobOS Movie Player introduction</a> and the <a href="{{ '/blog/tablo-dvr-smart-tv-and-roku/' | relative_url }}">Tablo DVR and Roku post</a>. The companion post, <a href="{{ '/blog/roku-channel-and-smart-tv-casting/' | relative_url }}">a standalone Roku channel and Smart TV casting</a>, covers what we built on the TV side using the same server.</p>
+
+  <h2>1. The server: index once, stream everywhere</h2>
+  <p>The server lives in <a href="https://github.com/nddipiazza/robos/tree/main/packages/media-server"><code>packages/media-server</code></a> and listens on port <code>19234</code>. You organise your files into <em>services</em> (Movies, TV Shows, Music &amp; Audio, Books &amp; eBooks, Courses &amp; Education), each pointing at one or more folders. On the server we run at home, a full scan currently reports 120 movies, 73 TV shows with 3,251 episodes, 14,654 music tracks, 1,057 books and 585 course videos, all from one <code>GET /api/info</code> call.</p>
+  <ul>
+    <li><strong>Understanding messy file names.</strong> <a href="https://github.com/nddipiazza/robos/blob/main/packages/media-server/lib/media-parser.js"><code>lib/media-parser.js</code></a> turns release-style names into a show, a season, an episode number and, when there is one, an episode title. A later fix stopped it from inventing episode titles: when nothing but quality and release tags follow <code>S01E01</code> (as in <code>Show.S01E01.1080p.WEB-DL.mkv</code>), the episode is left without a title instead of borrowing the tags or the raw file name.</li>
+    <li><strong>Streaming without converting when possible.</strong> <code>/stream/:id</code> serves the original file with HTTP range requests, so a player can jump anywhere in it. When a browser cannot decode a file, <code>/transcode/:id.mp4</code> converts it on the fly with FFmpeg, and <code>/hls/:id/index.m3u8</code> cuts it into an HLS playlist for TVs. Subtitles are served as WebVTT from <code>/api/subtitles/:id.vtt</code>, and cover art from <code>/api/art/:id.jpg</code>.</li>
+    <li><strong>Books, too.</strong> <a href="https://github.com/nddipiazza/robos/blob/main/packages/media-server/lib/epub-reader.js"><code>lib/epub-reader.js</code></a> reads EPUB chapters directly, and the server includes a simple web reader at <code>/books/read/:id</code>.</li>
+    <li><strong>Runs without a desktop.</strong> <a href="https://github.com/nddipiazza/robos/blob/main/packages/media-server/bin/install-media-server.sh"><code>bin/install-media-server.sh</code></a> installs it as a <code>systemd --user</code> service (<code>robos-media-server.service</code>) with automatic restart, so it keeps running on a headless box after you log out.</li>
+  </ul>
+
+  <h2>2. Your AI agent can browse the library (MCP)</h2>
+  <p>The Model Context Protocol (MCP) is a standard way for AI assistants to call tools. The server speaks it three ways: plain HTTP JSON-RPC at <code>/mcp</code>, server-sent events at <code>/mcp/sse</code>, and a stdio bridge in <a href="https://github.com/nddipiazza/robos/blob/main/packages/media-server/bin/media-server-mcp.js"><code>bin/media-server-mcp.js</code></a>. Asking our home server for <code>tools/list</code> returns 14 tools, including <code>robos_media_search</code>, <code>robos_media_list_shows</code>, <code>robos_media_get_show</code>, <code>robos_media_read_book</code> and <code>robos_media_continue</code>. That means an agent can answer &ldquo;which House episodes have I not seen?&rdquo; or read you a chapter of a book without any extra glue code. The dispatcher lives in <a href="https://github.com/nddipiazza/robos/blob/main/packages/media-server/lib/mcp-handler.js"><code>lib/mcp-handler.js</code></a>.</p>
+
+  <h2>3. Set it up once, and every machine follows</h2>
+  <figure class="blog-fig">
+    <img src="{{ '/assets/blog/robos-media-server-and-watch-history/02-media-service-picker.png' | relative_url }}" alt="Choose RobOS Media Service dialog in Movie Player showing one discovered server, Online and MCP badges, 120 movies and 73 TV shows, and a field to connect by server URL" loading="lazy">
+    <figcaption><strong>Choosing a Media Server from Movie Player.</strong> The dialog lists servers it found on the network, with live counts (120 movies, 73 TV shows, 3,251 episodes) and an <strong>Online · MCP</strong> badge, or you can type an address. The server name and address in this capture were replaced with the placeholders <code>media-box</code> and <code>192.0.2.10</code> before the screenshot was taken.</figcaption>
+  </figure>
+  <p>The connection is stored in one small file, <code>~/.config/robos/media-servers.json</code>. Three pieces keep everything in step:</p>
+  <ul>
+    <li><strong>Discovery.</strong> <code>discoverMediaServersOnLan()</code> in <a href="https://github.com/nddipiazza/robos/blob/main/packages/robos-lib/media-service-client.js"><code>robos-lib/media-service-client.js</code></a> first tries hosts you already know about (saved servers, RobOS Services SSH hosts, Data Sources SFTP hosts), then knocks on port <code>19234</code> across your local <code>/24</code> network, 64 addresses at a time with a 450&nbsp;ms timeout each, and asks anything that answers who it is.</li>
+    <li><strong>Background sync.</strong> A new <code>robos-preferences-sync.service</code> (<a href="https://github.com/nddipiazza/robos/blob/main/packages/robos-preferences/bin/preferences-service.js"><code>preferences-service.js</code></a>) runs even with no app windows open. It checks each server every 45 seconds, reacts within about 400&nbsp;ms when <code>media-servers.json</code> changes, and only rewrites a player's library when the server's catalog revision has moved. It also registers the server's MCP endpoint with MCP Manager.</li>
+    <li><strong>Config Sync.</strong> <code>media-servers.json</code> is now part of the RobOS Preferences group in the Config Sync backup vault. Set up the server on your desktop, sign in to the vault on a fresh laptop, and the laptop's Movie Player and Audio Player fill themselves in without you adding a single folder.</li>
+  </ul>
+  <p>Two clean-up changes made the first run on a new machine less confusing. When a Media Server is configured, the players stop auto-importing every SFTP share from Data Sources as a separate library, so you are not looking at the same films twice. And <code>preferences-service.js --reset-players</code> wipes the local Movie Player and Audio Player library, caches and history files and reloads them straight from the server, which is the quickest way to get a muddled machine back to a known state. We also removed a placeholder &ldquo;Lo-Fi Synth Session&rdquo; track that the players used to seed into a brand-new queue (it streamed from a third-party CDN), so a first launch now opens with an empty queue and plays nothing until you ask.</p>
+
+  <h2>4. Playback fixes: correct length, MKV without conversion, seeking while converting</h2>
+  <p>Streaming from a server surfaced three bugs that a local file never showed (commit <a href="https://github.com/nddipiazza/robos/commit/4060b04b">4060b04b</a>):</p>
+  <ul>
+    <li><strong>Every MKV was being converted.</strong> The parser assumed any <code>.mkv</code> needed remuxing. Now <code>GET /api/playback-info/:id</code> runs <code>ffprobe</code> and only asks for conversion when the codecs need it. Direct play is allowed for MP4, M4V, WebM, MKV and OGV containers holding H.264 (8-bit), VP8, VP9, AV1 or Theora video with AAC, MP3, Opus, Vorbis, FLAC or PCM audio (<code>analyzePlaybackSupport()</code> in <a href="https://github.com/nddipiazza/robos/blob/main/packages/media-server/lib/transcoder.js"><code>lib/transcoder.js</code></a>).</li>
+    <li><strong>Converted video had no length.</strong> A live FFmpeg stream does not know how long it is, so the progress bar was useless. The same probe now returns the real duration, and transcode responses carry it in an <code>X-Media-Duration</code> header.</li>
+    <li><strong>Seeking during conversion.</strong> If you drag to a point the player has already buffered, it simply jumps. If you drag past it, Movie Player restarts the conversion at that second (<code>/transcode/:id.mp4?start=&lt;seconds&gt;</code>) and keeps the timeline in the right place, instead of silently snapping back to zero.</li>
+  </ul>
+  <p>A related scan fix keeps services that have not been rescanned yet visible while another one rescans, so your Movies tab no longer empties itself for a minute while 14,000 music files are being re-read.</p>
+
+  <h2>5. Resume points and the Watch History tab</h2>
+  <p>Movie Player now tracks how far into each movie and episode you got and sends it to the server (<code>POST /api/progress</code>, batched per server). Any other machine pulls it back with <code>pullProgressFromMediaServers()</code>; the newer timestamp wins, so two computers watching at once do not overwrite each other. The rules live in <code>updateProgress()</code> in <a href="https://github.com/nddipiazza/robos/blob/main/packages/media-server/lib/catalog-store.js"><code>lib/catalog-store.js</code></a>: anything longer than a minute counts as <strong>Watched</strong> once you reach 92% of it, or once you are within the last 45 seconds after at least a minute of viewing, which handles end credits. Anything you started and stopped earlier is <strong>In Progress</strong> with a resume point.</p>
+  <p>Shows are summarised the same way. Each show card counts watched and in-progress episodes and points at the episode you were most recently in the middle of, so &ldquo;Continue Watching&rdquo; takes you to the right place even when you jump around seasons (<code>getTrackWatchState()</code> and friends in <a href="https://github.com/nddipiazza/robos/blob/main/packages/movie-player/lib/library-index.js"><code>lib/library-index.js</code></a>).</p>
+  <p>The <strong>Watch History</strong> tab (<a href="https://github.com/nddipiazza/robos/blob/main/packages/movie-player/src/WatchHistoryTab.jsx"><code>src/WatchHistoryTab.jsx</code></a>) puts all of that in one skinny table. Each row has resume, start-over, mark-watched and remove actions, and the list renders in pages of 300 rows so a history of several thousand entries stays responsive. In the capture above, the filters show 2,943 entries, 6 in progress and 2,937 watched.</p>
+  <p>One smaller change is easy to miss: if you leave the Now Playing tab while a video is playing on the computer, the video now shrinks into a small live picture-in-picture slot instead of being replaced by a still thumbnail (commit <a href="https://github.com/nddipiazza/robos/commit/27799c5f">27799c5f</a>). It is the same video element moved into a measured slot, so playback never restarts, and clicking it takes you back to the full stage.</p>
+
+  <h2>6. Bring your history with you</h2>
+  <p>Nobody wants to re-mark 3,000 episodes by hand. <a href="https://github.com/nddipiazza/robos/blob/main/packages/robos-lib/watch-history-import.js"><code>robos-lib/watch-history-import.js</code></a> reads history exported from other tools and applies it to your RobOS library:</p>
+  <ul>
+    <li>Plex watch-history JSON and raw Plex <code>MediaContainer</code> JSON;</li>
+    <li>Tautulli, Jellyfin and Trakt JSON;</li>
+    <li>Letterboxd, Trakt and Tautulli CSV;</li>
+    <li>RobOS's own portable history format (<code>robos-media-history/1</code>).</li>
+  </ul>
+  <p>The hard part is matching names. Your old server may call a show <code>Ghosts (US)</code> while the folder on disk says <code>Ghosts</code>, or <code>Stargate SG-1</code> versus <code>Stargate SG1</code>. The importer reduces both sides to a canonical key, keeps remakes from different years apart, and counts repeated plays of the same item only once per timestamp, so importing the same file twice changes nothing. Results go to Movie Player and Audio Player history and are pushed to the Media Server in one batch, so a Roku TV or another laptop sees them straight away. You can drop a <code>.json</code> or <code>.csv</code> file on the Watch History tab, click <strong>Import History&hellip;</strong>, or use the CLI.</p>
+
+  <h2>7. Watchlist and &ldquo;where we are&rdquo; by voice, CLI and MCP</h2>
+  <p>The new <a href="https://github.com/nddipiazza/robos/blob/main/plugins/robos/skills/movie-watchlist/SKILL.md"><code>movie-watchlist</code> skill</a> gives the same five operations to every front end: list the watchlist, add, remove, mark a show (or one season) as new, and set the current episode. The last one is the useful one for couples and families. Saying &ldquo;our current episode of Severance is season 2 episode 4&rdquo; marks everything before S02E04 as watched and S02E04 onwards as unwatched, so Continue Watching lands exactly there. The episode can be given as <code>S02E04</code>, <code>2x04</code>, &ldquo;season two episode four&rdquo;, &ldquo;season 3&rdquo; (meaning its first episode) or an episode title (<code>parseEpisodeSpec()</code> in <a href="https://github.com/nddipiazza/robos/blob/main/packages/robos-lib/media-history.js"><code>robos-lib/media-history.js</code></a>).</p>
+  <p>The same phrases work through the RobOS Voice desktop assistant and the Home Speaker router (<a href="https://github.com/nddipiazza/robos/blob/main/packages/home-speaker/lib/nabu-command-router.js"><code>nabu-command-router.js</code></a>), through <a href="https://github.com/nddipiazza/robos/blob/main/packages/robos-cli/robos-movie-watchlist"><code>robos-movie-watchlist</code></a> on the command line, and through Movie Player's own MCP server (<a href="https://github.com/nddipiazza/robos/blob/main/packages/movie-player/bin/media-mcp.js"><code>bin/media-mcp.js</code></a>, with tools such as <code>robos_media_watchlist_add</code>, <code>robos_media_set_current_episode</code> and <code>robos_media_import_watch_history</code>). The last commit in this batch added random picks (&ldquo;play a random unwatched episode of House&rdquo;, &ldquo;play a random 90s movie&rdquo;) and the ability to name a Smart TV in any of these phrases; the companion post covers how those reach the TV.</p>
+
+  <h2>Verified</h2>
+  <p>We ran the relevant suites on the current tree on Nov 25, 2026:</p>
+  <ul>
+    <li><code>packages/media-server/test/media-server.test.js</code>: 1 end-to-end test, pass (about 8 s). It builds a temporary library of movies, shows, music, books and courses, checks HTTP 206 range streaming, WebVTT subtitles, the EPUB reader, MCP calls, Preferences auto-sync into a fresh client config, the reset command and the Roku feed.</li>
+    <li><code>packages/robos-test/tests/media-watch/unit.test.js</code>: 15 tests in 4 suites, all pass. They cover two computers sharing history through a sync vault, merge rules where play counts never go down, flexible episode parsing, watchlist and current-episode commands via voice, CLI and MCP, and idempotent Plex JSON and CSV import across folder-name variants and same-name remakes.</li>
+    <li><code>packages/movie-player/lib/tv-grouping.test.js</code>: 7 tests, all pass (show and season grouping, resume positions and next-episode summaries, and exact stop positions even before the duration is known).</li>
+  </ul>
+
+  <div class="blog-log"># Run the tests quoted above
+node --test packages/media-server/test/media-server.test.js
+node --test packages/robos-test/tests/media-watch/unit.test.js
+node --test packages/movie-player/lib/tv-grouping.test.js
+
+# Install the server and the background Preferences sync as user services
+bash packages/media-server/bin/install-media-server.sh
+bash packages/robos-preferences/bin/install-preferences-service.sh
+
+# Ask a server what it holds, and list its MCP tools (replace 192.0.2.10 with your server)
+curl -s http://192.0.2.10:19234/api/info | jq .counts
+curl -s -X POST http://192.0.2.10:19234/mcp -H 'Content-Type: application/json' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | jq -r '.result.tools[].name'
+
+# Force a sync now, or wipe local player libraries and reload them from the server
+node packages/robos-preferences/bin/preferences-service.js --sync-once
+node packages/robos-preferences/bin/preferences-service.js --reset-players
+
+# Watchlist, episode cursor and history import from the CLI
+./packages/robos-cli/robos-movie-watchlist list
+./packages/robos-cli/robos-movie-watchlist current "Severance" "season 2 episode 4"
+./packages/robos-cli/robos-movie-watchlist import ~/Downloads/plex-watch-history.json
+./packages/robos-cli/robos-movie-watchlist say "mark all episodes of Severance as new"</div>
+</div>
+<div class="blog-links">
+  <a href="{{ '/media-server/' | relative_url }}">RobOS Media Server docs →</a>
+  <a href="{{ '/movie-player/' | relative_url }}">RobOS Movie Player guide →</a>
+  <a href="{{ '/robos-preferences/' | relative_url }}">RobOS Preferences →</a>
+  <a href="{{ '/blog/roku-channel-and-smart-tv-casting/' | relative_url }}">Companion post: Roku channel and Smart TV casting →</a>
+  <a href="https://github.com/nddipiazza/robos/tree/main/packages/media-server">packages/media-server source →</a>
+  <span class="blog-commits">Commits:
+    <a href="https://github.com/nddipiazza/robos/commit/1c5f51ad">1c5f51ad</a> ·
+    <a href="https://github.com/nddipiazza/robos/commit/36a678b0">36a678b0</a> ·
+    <a href="https://github.com/nddipiazza/robos/commit/76f0dfd6">76f0dfd6</a> ·
+    <a href="https://github.com/nddipiazza/robos/commit/4060b04b">4060b04b</a> ·
+    <a href="https://github.com/nddipiazza/robos/commit/0076bd7c">0076bd7c</a> ·
+    <a href="https://github.com/nddipiazza/robos/commit/27799c5f">27799c5f</a> ·
+    <a href="https://github.com/nddipiazza/robos/commit/a62bb417">a62bb417</a> ·
+    <a href="https://github.com/nddipiazza/robos/commit/b3cd644b">b3cd644b</a> ·
+    <a href="https://github.com/nddipiazza/robos/commit/8655a74f">8655a74f</a>
+  </span>
+</div>

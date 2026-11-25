@@ -1,0 +1,165 @@
+---
+title: "Starfall Command gets a flagship hub, voiced cutscenes and a 3D opening film"
+nav_label: "Flagship Hub & Cinematics"
+date: 2026-11-24 19:00:00 +0000
+date_label: "Nov 23 – Nov 24, 2026"
+tags:
+  - "Starfall Command"
+  - "RTS Campaigns"
+  - "Cutscenes"
+  - "Text to Speech"
+summary: "Between missions you now walk a four-room flagship instead of picking from a list. A new campaign opens with a five-shot real-time 3D film that drops straight into Mission 01, and all 192 hub and cutscene lines are voiced with Qwen3-TTS."
+description: "Starfall Command replaces its campaign menu with a four-room flagship hub, adds action-triggered cutscenes, a Cinema Archive and pre-mission movies, a five-shot real-time 3D opening film that hands off to Mission 01, and 192 pre-generated Qwen3-TTS voice lines."
+seo_title: "Starfall Command flagship hub, cutscenes and 3D opening film"
+og_image: /assets/blog/starfall-command-cinematics-and-campaign-hub/bridge.webp
+og_image_alt: "The Starfall Command flagship bridge with Captain Vale at the holographic star map and the Deploy button for Mission 01"
+---
+<div class="blog-body">
+  <p>Until this week, the Starfall Command campaign was a menu page. You picked a mission from a list, chose a difficulty, and the battle started. The missions had grown into real stories, like the <a href="{{ '/blog/starfall-command-hold-for-dawn/' | relative_url }}">Hold for Dawn evacuation</a> and the <a href="{{ '/blog/starfall-command-the-last-road/' | relative_url }}">Last Road convoy</a>, but nothing tied them together between battles.</p>
+  <p>Now the campaign lives on a ship. Between missions you stand on the flagship and move between four rooms: the Bridge, the Armory, the Cantina and the Laboratory. You click on people and objects in each room. Clicking the star map opens Mission Select. Clicking the quartermaster plays his briefing. The TV in the Cantina plays a news report about the war so far. A brand-new campaign starts with a short 3D film made from the game’s own models, and when the film ends Mission 01 begins. Every line spoken in the hub, the cutscenes and the mission films is voiced: 192 recordings, almost 20 minutes in total.</p>
+
+  <figure class="blog-fig">
+    <img src="{{ '/assets/blog/starfall-command-cinematics-and-campaign-hub/bridge.webp' | relative_url }}" width="1280" height="720" loading="lazy" alt="The flagship bridge with labels on the Intro Cinematic, Mission Console, Captain Vale and Mutator Matrix, a 100,000 credit balance, and a Deploy button for 01 Cut the Signal">
+    <figcaption>The Bridge on a fresh save. Each green label is a clickable hotspot. The tabs along the bottom switch rooms, and Deploy launches the next operation without opening any console.</figcaption>
+  </figure>
+
+  <h2>Four rooms instead of one menu</h2>
+  <p>Each room is a painted backdrop with clickable hotspots placed over it. Hovering a hotspot draws a callout line to the person or object it belongs to. The <strong>Bridge</strong> has the Mission Console on the holographic star map, Captain Vale, the Mutator Matrix and a replay of the opening film. The <strong>Armory</strong> is a hangar bay. Clicking a vehicle on the floor, like the Rail Skimmer or the Warden Walker, opens its upgrades. The <strong>Cantina</strong> has Corporal Rook, the Frontier News TV, the jukebox, the mercenary contract board, a job board that also opens Mission Select, and the Cinema Archive. The <strong>Laboratory</strong> has Dr. Aster, a Brood specimen tank and a Concord relic.</p>
+  <div class="blog-fig-grid">
+    <figure class="blog-fig">
+      <img src="{{ '/assets/blog/starfall-command-cinematics-and-campaign-hub/armory.webp' | relative_url }}" width="1280" height="720" loading="lazy" alt="Bay 07 armory with labels on the Rail Skimmer, Torchguard, Kestrel Fighter, Warden Walker, Rampart Dropship, Breacher, Armory Console and Quartermaster Vane">
+      <figcaption>Bay 07. Each vehicle on the floor opens its own page in the Tech Purchase console.</figcaption>
+    </figure>
+    <figure class="blog-fig">
+      <img src="{{ '/assets/blog/starfall-command-cinematics-and-campaign-hub/cantina.webp' | relative_url }}" width="1280" height="720" loading="lazy" alt="The cantina with labels on the Jukebox, Frontier News, Cinema Archive, Corporal Rook, Mercenaries and Job Board">
+      <figcaption>The Cantina holds the story pieces: Rook, the news TV and the Cinema Archive.</figcaption>
+    </figure>
+  </div>
+  <p>The keyboard still works. <code>M</code> opens Mission Select, <code>C</code> opens the Cinema Archive, and <code>Esc</code> closes the open console first and returns to the title screen on the second press. The test suite checks that order.</p>
+
+  <h2>What the consoles sell, and what that does today</h2>
+  <p>A campaign starts with 100,000 credits, and each cleared mission pays between 45,000 and 135,000. The Armory’s Tech Purchase console lists <strong>48 upgrades for 24 units</strong> in five categories: Base, Infantry, Vehicles, Starships and Special Ops. The Cantina’s contract board lists <strong>6 mercenary companies</strong>. The first, the Bracken Roadwardens, is free, and the others cost 35,000 to 75,000 credits. The Laboratory has two research tracks, Gnarl Brood Xenobiology and Aurelian Concord Relics. Each has five tiers with a choice of two perks per tier, <strong>20 perks</strong> in total. The tiers are paid for with research samples, not credits.</p>
+  <div class="blog-fig-grid">
+    <figure class="blog-fig">
+      <img src="{{ '/assets/blog/starfall-command-cinematics-and-campaign-hub/tech-purchase.webp' | relative_url }}" width="1280" height="720" loading="lazy" alt="The Tech Purchase console on the Vehicles tab with the Rail Skimmer selected, the Tri-Lithium Rails upgrade at 70,000 credits, and a live 3D preview of the Rail Skimmer">
+      <figcaption>Tech Purchase on the Vehicles tab. The preview at the lower right is a live 3D render of the selected unit, not a picture.</figcaption>
+    </figure>
+    <figure class="blog-fig">
+      <img src="{{ '/assets/blog/starfall-command-cinematics-and-campaign-hub/research-console.webp' | relative_url }}" width="1280" height="720" loading="lazy" alt="The Research Console on the Brood Xenobiology track showing five tiers costing 2, 4, 6, 9 and 12 samples, with Chitin-Lined Bunkers selected">
+      <figcaption>The Brood track needs 2, 4, 6, 9 and 12 samples per tier. The Concord track needs 2, 4, 6, 8 and 10.</figcaption>
+    </figure>
+  </div>
+  <p>To be clear about the current state: purchases, contracts and perks are saved to the campaign save file, and credits are deducted correctly. The hub test buys the Rifleman’s Ballistic Riot Shield and checks that exactly 45,000 credits leave the balance. But the battle code doesn’t read any of these yet, so an upgrade you buy doesn’t change a unit in the next mission. Connecting the two is the next step for the hub.</p>
+
+  <h2>Cutscenes that follow what you do</h2>
+  <p>The new cutscene player starts scenes in response to what you do in the hub. The first time you enter the Armory, the Cantina or the Laboratory, that room plays its introduction once. Clicking Rook, Vale or the news TV plays their scenes. Buying an upgrade, signing a contract or finishing research plays a short scene in which the unit shows off its new gear. Clearing missions 01, 03, 08 and 11 queues the story scenes for Act I, Act II, Act III and the finale. Each one plays once, the next time you return to the flagship.</p>
+  <p>The <strong>Cinema Archive</strong> in the Cantina lets you rewatch scenes. It lists 11 story scenes and 11 mission movies. Act scenes stay locked until their mission is cleared, and a mission movie unlocks along with its mission.</p>
+  <div class="blog-fig-grid">
+    <figure class="blog-fig">
+      <img src="{{ '/assets/blog/starfall-command-cinematics-and-campaign-hub/cinema-archive.webp' | relative_url }}" width="1280" height="720" loading="lazy" alt="The Cinema Archive console listing the opening movie, room cutscenes, locked act cutscenes and pre-mission movies, with only Cut the Signal unlocked">
+      <figcaption>The archive on a fresh save. Only the first mission movie is available.</figcaption>
+    </figure>
+    <figure class="blog-fig">
+      <img src="{{ '/assets/blog/starfall-command-cinematics-and-campaign-hub/mission-select.webp' | relative_url }}" width="1280" height="720" loading="lazy" alt="The Mission Select console showing Cut the Signal on Vesper IV, a 45,000 credit reward, Captain Vale as mission contact, a Rifleman as available technology, and a rendered planet">
+      <figcaption>Mission Select. The planet is drawn by a shader with different colors and clouds for each mission. The contact’s line is voiced too.</figcaption>
+    </figure>
+  </div>
+  <p>Every one of the 11 missions now opens with a <strong>three-shot movie</strong>. The first shot is a 3D view of the fleet in orbit, or, for the first three missions, before the campaign has a flagship, a low flyover with Pilot Sable. The second is a slow push across the launch bay painting while the mission’s usual opening line plays. The third is a small 3D scene of that mission’s units in combat. The battle clock is held while the movie plays. When the movie ends, the gameplay camera starts at the mission’s landing point.</p>
+  <div class="blog-fig-grid three">
+    <figure class="blog-fig">
+      <img src="{{ '/assets/blog/starfall-command-cinematics-and-campaign-hub/m04-1-orbit.webp' | relative_url }}" width="1280" height="720" loading="lazy" alt="Operation 04 movie, shot 1: Meridian ships in orbit over a green shader-rendered planet">
+      <figcaption>The Last Road, shot 1: orbital insertion.</figcaption>
+    </figure>
+    <figure class="blog-fig">
+      <img src="{{ '/assets/blog/starfall-command-cinematics-and-campaign-hub/m04-2-launch-bay.webp' | relative_url }}" width="1280" height="720" loading="lazy" alt="Operation 04 movie, shot 2: the dropship launch bay painting with Pilot Sable's caption">
+      <figcaption>Shot 2: Launch Bay 02, with Sable’s opening line.</figcaption>
+    </figure>
+    <figure class="blog-fig">
+      <img src="{{ '/assets/blog/starfall-command-cinematics-and-campaign-hub/m04-3-surface.webp' | relative_url }}" width="1280" height="720" loading="lazy" alt="Operation 04 movie, shot 3: a settlement truck and Torchguard flame streams against two Skitterlings">
+      <figcaption>Shot 3: Torchguards burning Skitterlings off a colonist truck.</figcaption>
+    </figure>
+  </div>
+  <figure class="blog-fig">
+    <img src="{{ '/assets/blog/starfall-command-cinematics-and-campaign-hub/frn-broadcast.webp' | relative_url }}" width="1280" height="720" loading="lazy" alt="The FRN Interstellar news studio with anchor Kade Vance at the desk and live 3D footage of Meridian units on the wall monitor">
+    <figcaption>The Cantina TV’s news cutscene. The studio is a painting, and the footage on the wall monitor is the same real-time 3D stage composited into the frame. The headline moves forward with your campaign progress.</figcaption>
+  </figure>
+
+  <h2>The opening film</h2>
+  <p>A new campaign, with no missions cleared and the film never watched, now opens with a five-shot film called <strong>Operation: Cut the Signal</strong>. It is rendered in real time from the game’s own unit and building models. The skip button reads <code>START MISSION 01 ▸</code>, and when the film ends, by skipping or by finishing, Mission 01 launches directly. The mission would normally play its own pre-mission movie next. Here it is skipped, so you don’t sit through two intros in a row. The title screen also has an Intro Cinematic button to rewatch the film.</p>
+  <div class="blog-fig-grid">
+    <figure class="blog-fig">
+      <img src="{{ '/assets/blog/starfall-command-cinematics-and-campaign-hub/opening-1-relay.webp' | relative_url }}" width="1280" height="720" loading="lazy" alt="Shot 1: a Directorate propaganda statue and a red-pulsing relay tower over a highway as guards march captured colonists">
+      <figcaption>1. A Frontier News special report over occupied Vesper Gate. The relay tower pulses red jamming rings as guards march captured colonists down the avenue.</figcaption>
+    </figure>
+    <figure class="blog-fig">
+      <img src="{{ '/assets/blog/starfall-command-cinematics-and-campaign-hub/opening-2-safehouse.webp' | relative_url }}" width="1280" height="720" loading="lazy" alt="Shot 2: a dark safehouse room around a glowing holo-table, captioned by Corporal Rook">
+      <figcaption>2. The safehouse. The camera circles the holo-table while Rook tells Vale why the relay went dark.</figcaption>
+    </figure>
+    <figure class="blog-fig">
+      <img src="{{ '/assets/blog/starfall-command-cinematics-and-campaign-hub/opening-3-suit-up.webp' | relative_url }}" width="1280" height="720" loading="lazy" alt="Shot 3: the armor gantry in the drop bay with the Rampart dropship behind, captioned by Quartermaster Vane">
+      <figcaption>3. Suit-up on the armor gantry, with Sable’s Rampart waiting behind.</figcaption>
+    </figure>
+    <figure class="blog-fig">
+      <img src="{{ '/assets/blog/starfall-command-cinematics-and-campaign-hub/opening-4-boarding.webp' | relative_url }}" width="1280" height="720" loading="lazy" alt="Shot 4: Captain Vale and six Riflemen run in two columns toward a Rampart dropship on a lit staging pad">
+      <figcaption>4. Vale and his six Riflemen run for the Rampart while a crane shot rises over the pad.</figcaption>
+    </figure>
+  </div>
+  <figure class="blog-fig">
+    <img src="{{ '/assets/blog/starfall-command-cinematics-and-campaign-hub/opening-5-touchdown.webp' | relative_url }}" width="1280" height="720" loading="lazy" alt="Shot 5: the Rampart lands on the Vesper Gate highway while Riflemen trade fire with a Directorate checkpoint at a propaganda statue">
+    <figcaption>5. Touchdown on the Vesper Gate highway, facing a Directorate checkpoint. The camera finishes by rising to the RTS gameplay angle, so the cut to Mission 01 feels continuous.</figcaption>
+  </figure>
+  <p>The first version, from earlier the same day, was a seven-shot montage of the whole war: an armor forge, a visor close-up, a fleet rollout, a warp jump, the Brood rising, Concord warships and a final clash. It looked like a trailer, but it didn’t lead anywhere. The remake tells one smaller story, how Vale’s squad ends up on the Vesper Gate road, and it ends at the exact moment the first mission begins.</p>
+  <figure class="blog-fig">
+    <audio controls preload="metadata" style="display:block;width:100%" src="{{ '/assets/blog/starfall-command-cinematics-and-campaign-hub/opening-voices.mp3' | relative_url }}"></audio>
+    <figcaption>The five voice lines from the opening film, in order: Anchor Kade Vance, Corporal Rook, Quartermaster Vane, Captain Vale and Pilot Sable (45 seconds, joined from the shipped WAVs).</figcaption>
+  </figure>
+
+  <h3>How the film is put together</h3>
+  <p>Each film is a list of shots described as data in <a href="https://github.com/nddipiazza/robos/blob/main/games/robos-rts/scripts/campaign/RTSCutsceneData.gd"><code>RTSCutsceneData.gd</code></a>. A shot has a kind, a voice cue, timed sound effects, a caption, a speaker and a portrait. <a href="https://github.com/nddipiazza/robos/blob/main/games/robos-rts/scripts/campaign/RTSCutsceneTheater.gd"><code>RTSCutsceneTheater.gd</code></a> builds the scene for each kind inside a <code>SubViewport</code>: ground plane, lights, fog, models and effects. A shot lasts for its scripted duration or for its voice line plus 0.45 seconds, whichever is longer, so a line never gets cut off. That makes the opening film about 45 seconds long.</p>
+  <p>The camera follows a quadratic Bézier curve. Each shot sets a start, a middle and an end point, and the theater blends them with de Casteljau’s method at an eased time <code>u</code>. At the same time, it moves the look-at point, changes the field of view, and adds a small handheld sway plus a decaying shake when shells land. Each shot in the opening film also plays sound effects at set times, such as a radar ping, an arc welder or rifle fire.</p>
+  <div class="blog-log"># RTSCutsceneTheater.gd, per frame
+var u := smoothstep(0.0, 1.0, progress)
+var q0 := _cam_from.lerp(_cam_mid, u)
+var q1 := _cam_mid.lerp(_cam_to, u)
+cam_pos = q0.lerp(q1, u)
+look_pt = _cam_look.lerp(_cam_look_to, u)</div>
+  <p>The handoff to the mission uses two flags. <a href="https://github.com/nddipiazza/robos/blob/main/games/robos-rts/scripts/campaign/RTSCampaignHub.gd"><code>RTSCampaignHub.gd</code></a> starts the opening sequence and, when the film finishes, sets a <code>skip_redundant_m0_movie</code> flag before launching Mission 01. <a href="https://github.com/nddipiazza/robos/blob/main/games/robos-rts/scripts/RTSCampaignHud.gd"><code>RTSCampaignHud.gd</code></a> reads and clears that flag, so it never suppresses a later replay.</p>
+
+  <h2>192 voice lines from seven characters</h2>
+  <p><a href="https://github.com/nddipiazza/robos/blob/main/games/robos-rts/generate_campaign_voices.py"><code>generate_campaign_voices.py</code></a> builds the script for every spoken line from the game data. That includes the mission contacts, all 48 Armory upgrades, the 6 contracts, the 20 perks and each hub hotspot. It then synthesizes the lines on the GPU with Qwen3-TTS. Four characters, Vale, Sable, Aster and Rook, are cloned with the 0.6B Base model from campaign recordings that already shipped with the game, so they sound the same in battle and on the ship. The other three, Quartermaster Vane, news anchor Kade Vance and the Starfall helm officer, had no recordings yet. For each one, the 1.7B VoiceDesign model generates a reference line from a written description, such as “older burly chief ordnance engineer… deep gravelly baritone”, and that reference is then cloned like the others.</p>
+  <p>Each clip is resampled to 22,050 Hz mono 16-bit, trimmed of silence, faded in and out to prevent clicks, and normalized to the same loudness. The script only synthesizes lines that don’t have a WAV yet, unless you pass <code>--force</code>. It then writes <code>manifest.json</code> with each line’s speaker, text and measured duration. The first pass produced 176 lines. The seven-shot film added 7 more, and the Vesper Gate remake added 9: five for the new film, three new low-altitude flyover lines for missions 01–03, and one early Cantina line. The manifest now has <strong>192 lines and 1,188 seconds of speech</strong>. Vane has the most lines, 59, because he voices every Armory upgrade.</p>
+
+  <h2>Testing and how the screenshots were taken</h2>
+  <p><a href="https://github.com/nddipiazza/robos/blob/main/games/robos-rts/tests/test_campaign_hub.gd"><code>tests/test_campaign_hub.gd</code></a> drives the hub through the same <code>apply_ui_state</code> calls that the control server exposes, using a throwaway save file. It checks that the room intros play once and skip cleanly, and that seven hub cutscenes start and stop when asked. It checks that each of the 11 missions has a three-shot movie with a real voice WAV on every shot. It also checks that every hub cutscene, Armory upgrade, contract, perk and hotspot has a WAV, along with the <code>Esc</code> order, a purchase, a contract, a perk and the Act I milestone. Both suites passed on the current tree:</p>
+  <div class="blog-log">$ godot --headless --path games/robos-rts --script res://tests/test_campaign_hub.gd
+Campaign Hub: passed          (6.6 s wall time)
+
+$ godot --headless --path games/robos-rts --script res://tests/test_audio_sfx.gd
+PASS test_audio_sfx (121 SFX and 781 voice streams verified)</div>
+  <p>Every image in this post is a frame from the running game. A small script started the game in a virtual 1920×1080 display with a fresh campaign save. It drove the hub through the control server’s <code>/ui</code> endpoint, which accepts <code>hub_room</code>, <code>hub_console</code> and <code>play_cutscene</code>, and saved frames with <code>/screenshot</code>. That display has no GPU, so frames rendered slowly. The 45-second film took about three and a half minutes to play through, and the script kept taking frames until the film ended.</p>
+
+  <h2>Run it yourself</h2>
+  <div class="blog-log"># From games/robos-rts. Needs Godot 4.3 (GODOT_BIN or on PATH)
+./play.sh                      # title screen; Campaign opens the flagship hub
+                               # (first run with no progress plays the opening film, then Mission 01)
+
+# Hub, cutscene and voice coverage tests
+godot --headless --path . --script res://tests/test_campaign_hub.gd
+godot --headless --path . --script res://tests/test_audio_sfx.gd
+
+# Regenerate any missing voice WAVs + manifest.json (CUDA GPU, qwen_tts package)
+python3 generate_campaign_voices.py
+python3 generate_campaign_voices.py --force   # re-synthesize all 192</div>
+</div>
+<div class="blog-links">
+  <a href="{{ '/games/robos-rts/' | relative_url }}">Starfall Command →</a>
+  <a href="{{ '/games/robos-rts/docs/' | relative_url }}">Game guide →</a>
+  <a href="{{ '/blog/starfall-command-the-last-road/' | relative_url }}">The Last Road →</a>
+  <span class="blog-commits">Commits:
+    <a href="https://github.com/nddipiazza/robos/commit/acd37ab17781015db050d7194bbcce2ab24ed3fe">acd37ab1</a>
+    <a href="https://github.com/nddipiazza/robos/commit/a02f9a8bd22852942e06981088017db469c191d1">a02f9a8b</a>
+    <a href="https://github.com/nddipiazza/robos/commit/102c04ccb5733add771aabc52a3d0d9a093c86dd">102c04cc</a>
+    <a href="https://github.com/nddipiazza/robos/commit/e023e7305feac275556c260588d862f436c27666">e023e730</a>
+    <a href="https://github.com/nddipiazza/robos/commit/a310bd7bcbe910dc11089f08f973a4c9924b20a6">a310bd7b</a>
+  </span>
+</div>

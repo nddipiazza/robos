@@ -1,0 +1,149 @@
+---
+title: "RobOS DAW Studio: Build a Click Track by Tapping Along, Pick Its Sound From 16 Instruments, and a Fullscreen Button on Every Camera Viewer"
+nav_label: "DAW Click Tracks & Camera Fullscreen"
+date: 2026-11-23 15:00:00 +0000
+date_label: "Nov 23, 2026"
+tags:
+  - "RobOS DAW Studio"
+  - "Click Tracks"
+  - "Gemini"
+  - "Camera Viewers"
+summary: "<a href=\"/daw/\"><strong>RobOS DAW Studio</strong></a> has a new <strong>Create Click Track</strong> window. You tap along to a song with a drumstick, a mic or the space bar, and DAW Studio combines your taps with the song's own drum hits to work out the tempo and where each bar starts. Gemini checks the result, and a click track built from a library of <strong>16 metronome sounds and 8 presets</strong> (closed hi-hat on the beat, open hi-hat on the last beat of each bar by default) lands under the song. We also added a double-tap and a fullscreen icon to the camera viewers in <a href=\"/camera-watcher/\">Camera Watch</a>, <a href=\"/ip-camera-android/\">RobOS IP Camera</a> and <a href=\"/smart-home-android/\">Smart Home for Android</a>."
+description: "RobOS DAW Studio's new Create Click Track window combines your tap-along with the song's own beats and a Gemini check to build a click track from 16 metronome sounds and 8 presets. Plus a double-tap and fullscreen icon on the RobOS camera viewers."
+seo_title: "DAW Studio Tap-Along Click Tracks, 16-Sound Metronome Library & Camera Fullscreen · RobOS"
+og_image: /assets/blog/daw-click-track-library-and-camera-fullscreen/01-create-click-track-modal.jpg
+og_image_alt: "The Create Click Track window in RobOS DAW Studio, with the song to tap along to, the tap input, countdown and count-in settings, the AI producer choice, and the metronome preset and instrument pickers"
+---
+<div class="blog-body">
+  <figure class="blog-fig">
+    <img src="{{ '/assets/blog/daw-click-track-library-and-camera-fullscreen/01-create-click-track-modal.jpg' | relative_url }}" alt="The Create Click Track window in RobOS DAW Studio: song track to tap along to, tap input set to keyboard or on-screen tap pad, a 4-count countdown at 120 BPM, a 1-bar count-in, Gemini CLI as the AI producer, and the default Closed Hi-Hat plus Open Hi-Hat preset" loading="lazy">
+    <figcaption><strong>The new Create Click Track window</strong>, captured from DAW Studio running from source. On the left you pick what you will tap on and how the song starts. On the right you pick what the click will sound like. The song here is a 42-second groove we generated for this post, so no commercial audio is involved.</figcaption>
+  </figure>
+
+  <h2>What a click track is, and why this matters</h2>
+  <p>A <strong>click track</strong> is a metronome recorded as its own track in your session: a steady tick on every beat that only the players hear in their headphones. Drummers use it to stay locked to the song when they play along to a backing track, and because every take then sits on the same grid, takes can be cut together, layered and lined up with video later.</p>
+  <p>The catch is that the click has to match the song. Real recordings speed up and slow down a little, songs can be in 3/4 or 6/8 instead of 4/4, and software that only listens to the audio can easily pick half or double the real tempo, or start the bar on the wrong beat. In the <a href="{{ '/blog/robos-daw-studio-mp4-filmstrip-kdenlive-and-headphone-mix/' | relative_url }}">previous DAW Studio post</a> we made the automatic click generator work out the time signature first. This time we let the drummer help: <strong>you tap along to the song, and DAW Studio uses your taps together with the song's own drum hits</strong>. You know where beat 1 is; the audio knows the exact timing. Together they get both right.</p>
+  <p>What's new, in short:</p>
+  <ul>
+    <li><strong>A Create Click Track window</strong> with three steps: pick your input and sounds, tap along after a countdown, then let Gemini check the tempo map and build the click.</li>
+    <li><strong>A click track library</strong> of 16 metronome sounds (hi-hats, ride, sticks, cowbells, woodblocks, tambourine, shaker, a classic electronic click, snare and kick) and 8 ready-made pairs. One sound plays on ordinary beats and a second marks the "transition" beat, so you can hear where the bar turns around.</li>
+    <li><strong>An Auto-Generate (No Tap) button</strong> for when you just want a click from the song audio and Gemini, without tapping.</li>
+    <li><strong>A fullscreen icon and double-tap</strong> on the camera viewers we use to frame the drum kit (covered at the end).</li>
+  </ul>
+
+  <h2>Using it</h2>
+  <figure class="blog-fig">
+    <img src="{{ '/assets/blog/daw-click-track-library-and-camera-fullscreen/03-right-click-create-click-track.jpg' | relative_url }}" alt="Right-click menu on the Synthetic Groove 124 BPM track header in RobOS DAW Studio, with Create Click Track (Tap + Gemini AI) as the first item above Remove Drums and Create Lyrics Track" loading="lazy">
+    <figcaption><strong>Right-click a song track and choose Create Click Track.</strong> It is also on the timeline and take right-click menus and in the <strong>Track</strong> menu, which also has <strong>Quick Auto Click Track (No Tap)</strong>. The audio input names on the track strips are blurred.</figcaption>
+  </figure>
+  <ol>
+    <li><strong>Pick the song and your tap input.</strong> The input list puts your session's mic tracks first, then every audio input on the machine, then <em>Keyboard [SPACE / T] or On-Screen Tap Pad (No Mic Needed)</em>. <strong>Strike Mic / Drum to Auto-Detect</strong> listens to every input and selects whichever one you hit. Set how many countdown clicks you want before the song starts (4 by default, at the session tempo) and how many bars of count-in the finished click should have (0, 1, 2 or 4 bars; 1 by default).</li>
+    <li><strong>Pick the sound.</strong> Choose a preset or any two of the 16 sounds, and where the second sound goes (see the library below). <strong>Preview Sound</strong> is meant to play two bars of your choice in your headphones.</li>
+    <li><strong>Tap along.</strong> <strong>Start Countdown &amp; Tap Along</strong> counts you in and plays the song. Play on your chosen drum or mic, or tap <kbd>SPACE</kbd>, <kbd>T</kbd> or the on-screen pad, with <kbd>SHIFT+SPACE</kbd> on transition beats. The window shows taps recorded, your live tempo, the input level and how much of the song you have covered. The more of the song you tap through, the better the click.</li>
+    <li><strong>Finish &amp; Build Click Track with Gemini</strong> analyses everything and drops a new click track directly under the song. The job shows up in the bottom <strong>JOBS</strong> bar, and one <kbd>Ctrl+Z</kbd> undoes it.</li>
+  </ol>
+
+  <h2>The click track library</h2>
+  <p>The sounds are generated in code (<a href="https://github.com/nddipiazza/robos/blob/main/packages/daw-studio/lib/human-click-track.js"><code>human-click-track.js</code></a>, <code>METRONOME_INSTRUMENTS</code> and <code>synthesizeMetronomeInstrumentHit</code>), not loaded from sample files. Each one starts at full attack on its very first sample, so a click lands exactly on its beat. The 16 sounds come in five groups:</p>
+  <ul>
+    <li><strong>Hi-hats and cymbals:</strong> closed hi-hat, open hi-hat, pedal hi-hat, ride (bow), ride bell</li>
+    <li><strong>Sticks and shells:</strong> drumsticks (stick on stick), snare cross-stick, tight snare, tight kick</li>
+    <li><strong>Bells and blocks:</strong> high cowbell, low cowbell, high woodblock, low woodblock</li>
+    <li><strong>Percussion:</strong> tambourine, shaker</li>
+    <li><strong>Studio clicks:</strong> a classic electronic metronome click</li>
+  </ul>
+  <p>The default pair is a <strong>closed hi-hat</strong> on ordinary beats and an <strong>open hi-hat</strong> on the transition beat. Like a real hi-hat, the open hat's ring is cut off ("choked") the moment the next closed hat hits. The test suite checks that the open hat is almost silent (below 0.05) just before beat 1. The other seven presets are ride bow plus ride bell, drumsticks plus open hat, closed hat plus high cowbell, cross-stick plus open hat, low plus high woodblock, the classic click plus high woodblock, and <strong>Gemini Smart Pick</strong>, which lets Gemini choose the pair that will cut through the song best.</p>
+  <p>Where the transition sound goes is up to you:</p>
+  <ul>
+    <li><strong>Bar turnaround</strong> (default): the last beat of every bar, and the beat before a new section, so you hear the bar coming round to beat 1.</li>
+    <li><strong>Downbeat</strong>: beat 1 of every bar and the first beat of each new section.</li>
+    <li><strong>Section</strong>: only the turnaround at the end of every 4-bar phrase and at section changes.</li>
+  </ul>
+  <p>Run from a terminal, the preview renderer shows the default pattern. The <code>*</code> marks the transition beat, which is the open hat on beat 4 of each bar:</p>
+  <div class="blog-log">$ node -e "const H=require('./packages/daw-studio/lib/human-click-track'); ..."
+16 instruments, 8 presets
+hihat-closed + hihat-open 4.20s hihat-closed hihat-closed hihat-closed hihat-open* hihat-closed hihat-closed hihat-closed hihat-open*</div>
+
+  <h2>How your taps and the song are combined</h2>
+  <p>Nobody taps perfectly. You will rush a little, drop a beat, or bounce a stick. <code>fuseHumanTapsWithMusic</code> is written for that. In order, it:</p>
+  <ol>
+    <li><strong>Finds your taps</strong> in the recorded input in 3&nbsp;ms windows (<code>extractHumanTapsFromWav</code>), ignoring hits closer than 140&nbsp;ms together, and notes how hard each tap was compared to the others. Keyboard and pad taps are added in too.</li>
+    <li><strong>Works out the tempo you felt</strong> from the gaps between taps. A gap about two, three or four times the usual one counts as skipped beats and is divided down, and stray double bounces are thrown away.</li>
+    <li><strong>Analyses the song</strong> with the meter-first beat-grid analyser from the previous release (<code>analyzeAudioBeatGrid</code> in <a href="https://github.com/nddipiazza/robos/blob/main/packages/daw-studio/lib/click-track-generator.js"><code>click-track-generator.js</code></a>), giving it your tempo as a starting hint.</li>
+    <li><strong>Measures how early or late you are.</strong> It slides all your taps up to 70&nbsp;ms either way against the song's drum hits and keeps the shift that lines up best. Most players are consistently a little ahead or behind, and that constant offset is removed.</li>
+    <li><strong>Settles half time versus double time</strong> by picking the song's strongest tempo candidate within 7% of the tempo you tapped, using a candidate an octave up or down if needed. You decide the feel; the audio supplies the exact number.</li>
+    <li><strong>Watches for tempo changes</strong> with a sliding window over your taps, so a song that speeds up in the chorus gets several tempo sections instead of one average tempo.</li>
+    <li><strong>Finds beat 1</strong>: if you hit harder every 3, 4, 5, 6 or 7 beats, that counts as a vote for the time signature and for where the bar starts. That vote is combined with the downbeat the song analysis found.</li>
+  </ol>
+  <p>Coverage counts too. Taps that span at least 70% of the song are rated <code>full</code>, at least 25% <code>partial</code>, and anything less is just a <code>seed</code> for the audio analysis. The unit test proves the point: tapping the whole song raises coverage by more than 40 points over a short burst of taps.</p>
+
+  <h2>Where Gemini comes in</h2>
+  <p>Once the numbers are in, <code>generateHumanGuidedClickTrackForProject</code> writes two files to a temporary work folder under <code>~/.local/share/robos/daw-studio/human-click-analysis/</code>. One is <code>human-tap-fusion.json</code>, holding your tap summary (count, coverage, felt tempo, timing spread, early/late offset, accent hints, local tempo windows), the combined estimate, the audio analysis's top tempo and meter candidates, and the list of available sounds. The other is <code>song-excerpt.wav</code>, about 18 seconds of the song as 16&nbsp;kHz mono. It then asks the AI provider you picked to read the JSON and reply with only a small JSON object: tempo, time signature, any tempo sections, the two sounds, the transition placement and one sentence of reasoning. The provider list puts <strong>Gemini CLI / Antigravity</strong> first and falls back to any other provider installed on the machine. A reply is used only if it parses and the tempo is between 42 and 250 BPM (or it returns sections). If no provider answers, the click is built from the combined estimate alone. Either way the work folder is deleted afterwards.</p>
+  <p>The result is a new track named like <code>Click (124 BPM · 4/4 · Closed Hi-Hat + Open Hi-Hat)</code>, placed directly under the song. If you asked for a count-in that is longer than the silence before the song, every clip in the session moves right just far enough to fit it. Songs with tempo changes also get <code>Tempo … BPM</code> markers on the timeline. With <strong>Replace any previous generated Click Track</strong> ticked (the default), earlier click tracks are removed first.</p>
+
+  <h2>A real run</h2>
+  <figure class="blog-fig">
+    <img src="{{ '/assets/blog/daw-click-track-library-and-camera-fullscreen/02-click-track-on-timeline.jpg' | relative_url }}" alt="RobOS DAW Studio timeline with the Synthetic Groove 124 BPM song track and a new Click (124 BPM · 4/4 · Closed Hi-Hat + Open Hi-Hat) track directly below it, whose 43.1-second clip is labelled 1-Bar Count + Click, with the tempo display reading 124" loading="lazy">
+    <figcaption><strong>The click track Auto-Generate produced</strong> for our 124 BPM test groove: 124 BPM, 4/4, closed and open hi-hat, with a 1-bar count-in. The song clip moved right by 0.536&nbsp;s to make room for the count-in, and the session tempo now reads 124. Input names on the track strips are blurred.</figcaption>
+  </figure>
+  <p>To capture these screenshots we ran DAW Studio from source in a separate scratch home folder, so nothing touched our real sessions. We imported a 42-second groove we had generated for the test: 20 bars at exactly 124 BPM in 4/4, built from the library's own kick, snare and hi-hat sounds plus a sine bass. Then we clicked <strong>Auto-Generate (No Tap)</strong>. The JOBS bar recorded each step:</p>
+  <div class="blog-log">CLICK AI  Create Click Track (Synthetic Groove 124 BPM)  completed in 28.7 s
+     0 ms  Analyzing "Synthetic Groove 124 BPM" &amp; rendering hihat-closed + hihat-open...
+   277 ms  Analyzing "Synthetic Groove 124 BPM" transients, meter &amp; harmonic bar grid...
+  2081 ms  Refining human-guided click map &amp; transition beats with Gemini CLI / Antigravity...
+ 28530 ms  Synthesizing Closed Hi-Hat + Open Hi-Hat click track (4/4)...
+ 28698 ms  124 BPM · 4/4 (0 taps)
+
+Status: Click Track under "Synthetic Groove 124 BPM" (124 BPM · 4/4, hihat-closed + hihat-open)
+        from song transients via Gemini CLI / Antigravity</div>
+  <p>The tempo and time signature came out right. Almost all of the 28.7 seconds was spent waiting for Gemini (about 26.4&nbsp;s). Our own analysis and the synthesis together took under 2.5&nbsp;s. The track's label, <code>AI Click Track (Gemini CLI / Antigravity)</code>, is only set when Gemini's reply was accepted, so this run used Gemini's answer rather than the fallback.</p>
+  <p><strong>What we could not run live.</strong> At commit <code>5b918fbb</code>, both <strong>Preview Sound</strong> and <strong>Start Countdown &amp; Tap Along</strong> stop with <code>ensureLiveAudioContext is not defined</code>. The renderer calls a helper that does not exist in <a href="https://github.com/nddipiazza/robos/blob/main/packages/daw-studio/renderer/app.js"><code>renderer/app.js</code></a>. So in this build the tap-along step cannot be reached from the window, and the Auto-Generate path above is the one we ran end to end. The tap path itself (finding taps, combining them with the song, the Gemini hand-off, placing the track) is covered by the unit test. That test synthesizes drumstick taps over a 138 BPM song with up to 22&nbsp;ms of timing wobble, a constant 12&nbsp;ms early lean, harder hits on beat 1 and one skipped beat, and checks that the result is 138 BPM in 4/4 with every tap found. We will fix the missing helper and report back.</p>
+
+  <h2>Camera viewers: double-tap or press the corner icon for fullscreen</h2>
+  <p>The studio uses an Android phone running <a href="{{ '/ip-camera-android/' | relative_url }}">RobOS IP Camera</a> as the overhead drum camera, and you check the framing from wherever you are: the phone itself, a browser, or the Smart Home app. Commit <code>a80146c0</code> gives all of those viewers the same control as a video player: a <strong>four-corner fullscreen icon</strong> in the bottom-right corner of the picture, and <strong>double-tap (or double-click) to go fullscreen and back</strong>.</p>
+  <div class="blog-fig-grid">
+    <figure class="blog-fig">
+      <img src="{{ '/assets/blog/daw-click-track-library-and-camera-fullscreen/04-camera-watch-fullscreen-icon.jpg' | relative_url }}" alt="Camera Watch browser viewer showing a colour-bar test pattern from a camera named Test Pattern Camera, with the four-corner fullscreen icon in the bottom-right corner of the picture" loading="lazy">
+      <figcaption><strong>Camera Watch's browser viewer</strong> with the new fullscreen icon in the corner of the picture. The feed is a colour-bar test pattern served through the real viewer code, not a home camera.</figcaption>
+    </figure>
+    <figure class="blog-fig">
+      <img src="{{ '/assets/blog/daw-click-track-library-and-camera-fullscreen/05-camera-watch-exit-fullscreen-corner.jpg' | relative_url }}" alt="Bottom-right corner of the same viewer after a double-click, filling the whole screen, with the icon switched to the inward-pointing exit-fullscreen shape" loading="lazy">
+      <figcaption><strong>After a double-click</strong>: the picture fills the screen and the icon turns into the inward-pointing exit shape (bottom-right corner shown at full size).</figcaption>
+    </figure>
+  </div>
+  <ul>
+    <li><strong>Camera Watch browser viewer</strong> (<a href="https://github.com/nddipiazza/robos/blob/main/packages/camera-watch/lib/web-viewer.js"><code>web-viewer.js</code></a>): the icon uses the browser's Fullscreen API, falls back to the WebKit version, and if neither works, falls back to a CSS class that pins the picture to the whole window. Double-click works on a desktop. On a phone, two taps within 320&nbsp;ms count as a double-tap. The icon follows the real fullscreen state, so pressing <kbd>Esc</kbd> swaps it back too. We drove this in Electron: a double-click entered fullscreen and swapped the icon, and clicking the icon left fullscreen.</li>
+    <li><strong>RobOS IP Camera's own browser page</strong> (<a href="https://github.com/nddipiazza/robos/blob/main/packages/ip-camera-android/app/src/main/java/com/robos/ipcamera/core/HttpOnvifServer.kt"><code>HttpOnvifServer.kt</code></a>) gets the same icon and double-tap.</li>
+    <li><strong>RobOS IP Camera app</strong> (<a href="https://github.com/nddipiazza/robos/blob/main/packages/ip-camera-android/app/src/main/java/com/robos/ipcamera/ui/Components.kt"><code>Components.kt</code></a>, <a href="https://github.com/nddipiazza/robos/blob/main/packages/ip-camera-android/app/src/main/java/com/robos/ipcamera/ui/Screens.kt"><code>Screens.kt</code></a>, <a href="https://github.com/nddipiazza/robos/blob/main/packages/ip-camera-android/app/src/main/java/com/robos/ipcamera/ui/MainActivity.kt"><code>MainActivity.kt</code></a>): the text "Fullscreen" button on the live preview is now the icon, and double-tapping the preview opens fullscreen. In fullscreen, double-tap now leaves fullscreen (it used to switch between cropped and fitted), and a matching exit icon sits in the corner. One behaviour from the last post is gone: <strong>turning the phone sideways no longer jumps to fullscreen by itself</strong>. Fullscreen now only happens when you ask for it.</li>
+    <li><strong>Smart Home for Android</strong> (<a href="https://github.com/nddipiazza/robos/blob/main/packages/smart-home-android/app/src/main/java/com/robos/smarthome/ui/CamerasScreen.kt"><code>CamerasScreen.kt</code></a>): each camera tile has the icon and responds to double-tap. Both open a full-screen black view of the camera (it used to open a small pop-up card) that refreshes about five times a second, with the camera's name and battery level in a corner. Double-tap or the exit icon closes it.</li>
+  </ul>
+  <p>We captured the browser viewer only. The two Android apps were not built or run for this post.</p>
+
+  <h2>Try it yourself</h2>
+  <div class="blog-log"># Full DAW Studio suite: 36 tests, 36 pass, 0 fail (23.6 s)
+node --test packages/daw-studio/test/daw-studio.test.js
+
+# Just the two new click track tests (16-sound library + choke, tap fusion + Gemini hand-off): 2 pass
+node --test --test-name-pattern="metronome instruments|human tap recording" packages/daw-studio/test/daw-studio.test.js
+
+# Camera Watch browser viewer test, now also checks for the fullscreen icon and double-tap handler: 3 pass
+node --test packages/robos-test/tests/camera-watch/web-share.test.js
+
+# Run DAW Studio from source, then drive the window from a second terminal (debug port 19232)
+scripts/dev-launch.sh daw-studio
+node packages/robos-lib/snapshot-cli.js daw-studio --eval "openCreateClickTrackModal()"
+node packages/robos-lib/snapshot-cli.js daw-studio --screenshot &gt; create-click-track.png
+node packages/robos-lib/snapshot-cli.js daw-studio --click '#btn-hclick-autogen-notap'
+node packages/robos-lib/snapshot-cli.js daw-studio --eval "JSON.stringify(window.__dawStudioState().jobs.jobs.map(j =&gt; [j.title, j.status, j.detail]))"</div>
+</div>
+<div class="blog-links">
+  <a href="{{ '/daw/' | relative_url }}">RobOS DAW Studio →</a>
+  <a href="{{ '/camera-watcher/' | relative_url }}">RobOS Camera Watch →</a>
+  <a href="{{ '/ip-camera-android/' | relative_url }}">RobOS IP Camera for Android →</a>
+  <a href="{{ '/smart-home-android/' | relative_url }}">Smart Home for Android →</a>
+  <a href="{{ '/blog/robos-daw-studio-mp4-filmstrip-kdenlive-and-headphone-mix/' | relative_url }}">Previous DAW post: Filmstrip, MP4 &amp; Kdenlive →</a>
+  <span class="blog-commits">Commits:
+    <a href="https://github.com/nddipiazza/robos/commit/5b918fbb">5b918fbb</a> ·
+    <a href="https://github.com/nddipiazza/robos/commit/a80146c0">a80146c0</a>
+  </span>
+</div>
