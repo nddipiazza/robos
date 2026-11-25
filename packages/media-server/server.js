@@ -22,6 +22,9 @@ const {
   serveHlsSegment,
   serveSubtitlesVtt,
   serveItemArtwork,
+  parseWebVttCues,
+  listSubtitleTracks,
+  extractSubtitleTrackVtt,
 } = require('./lib/transcoder');
 const { readEpubChapters, readEpubChapterContent } = require('./lib/epub-reader');
 const { createMcpDispatcher } = require('./lib/mcp-handler');
@@ -92,6 +95,7 @@ function createMediaServer(options = {}) {
   const lanIp = detectLanIp();
   const store = options.store || new MediaCatalogStore(options);
   const artCacheDir = path.join(store.cacheDir, 'art');
+  const subCacheDir = path.join(store.cacheDir, 'subtitles');
   const sseClients = new Map(); // sessionId -> res
   let activeRokuCast = null;
 
@@ -127,7 +131,7 @@ function createMediaServer(options = {}) {
 
       // Optional bearer token check if configured
       const requiredToken = process.env.ROBOS_MEDIA_SERVER_TOKEN || store.config.authToken || '';
-      if (requiredToken && pathname.startsWith('/api/') && pathname !== '/api/health' && pathname !== '/api/info' && !pathname.startsWith('/api/art/') && !pathname.startsWith('/api/subtitles/') && !pathname.startsWith('/api/playback-info/') && !pathname.startsWith('/api/roku-cinema') && !pathname.startsWith('/api/tv-progress')) {
+      if (requiredToken && pathname.startsWith('/api/') && pathname !== '/api/health' && pathname !== '/api/info' && !pathname.startsWith('/api/art/') && !pathname.startsWith('/api/subtitles/') && !pathname.startsWith('/api/playback-info/') && !pathname.startsWith('/api/roku-') && !pathname.startsWith('/api/tv-progress')) {
         const provided = (req.headers.authorization || '').replace(/^Bearer\s+/i, '').trim()
           || req.headers['x-robos-token']
           || url.searchParams.get('token')
@@ -381,16 +385,185 @@ function createMediaServer(options = {}) {
         const id = url.searchParams.get('id') || '';
         if (!id) return sendJson(res, 400, { ok: false, error: 'id required' });
         const watched = url.searchParams.get('watched') === 'true';
+        const unwatched = url.searchParams.get('unwatched') === 'true';
         const pos = Number(url.searchParams.get('positionSec') || 0);
         const dur = Number(url.searchParams.get('durationSec') || 0);
         const entry = store.updateProgress({
           itemId: id,
-          positionSec: pos,
+          positionSec: unwatched ? 0 : pos,
           durationSec: dur,
-          completed: watched,
+          completed: unwatched ? false : watched,
+          unwatched,
           deviceName: url.searchParams.get('device') || 'Roku TV',
         });
         return sendJson(res, 200, { ok: true, entry });
+      }
+
+      if (req.method === 'GET' && pathname.startsWith('/api/roku-playback-meta/')) {
+        const id = cleanItemId(pathname.slice('/api/roku-playback-meta/'.length));
+        const raw = store.byId.get(id);
+        if (!raw) return sendJson(res, 404, { ok: false, error: 'Item not found' });
+
+        const cleanAscii = (v) => String(v || '')
+          .replace(/[—–·•]/g, '-')
+          .replace(/[^\x20-\x7E]+/g, '')
+          .trim();
+        const fmtBytes = (bytes) => {
+          const n = Number(bytes) || 0;
+          if (n <= 0) return 'Unknown size';
+          if (n >= 1024 * 1024 * 1024) return `${(n / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+          return `${(n / (1024 * 1024)).toFixed(1)} MB`;
+        };
+        const fmtDur = (sec) => {
+          const s = Math.max(0, Math.round(Number(sec) || 0));
+          const h = Math.floor(s / 3600);
+          const m = Math.floor((s % 3600) / 60);
+          const r = s % 60;
+          if (h > 0) return `${h}h ${m}m ${r}s`;
+          return `${m}m ${r}s`;
+        };
+
+        const analysis = await analyzePlaybackSupport(raw.filePath, Boolean(raw.needsTranscode));
+        const { tracks: subTracks, allEmbedded, probe } = await listSubtitleTracks(raw);
+        const durSec = Math.round(Number(analysis.durationSec) || Number(probe?.durationSec) || Number(raw.duration) || 0);
+        const bitRate = Number(probe?.bitRate) || 0;
+        const bitRateMbps = bitRate > 0
+          ? `${(bitRate / 1e6).toFixed(2)} Mbps`
+          : (durSec > 0 && raw.sizeBytes > 0 ? `${((raw.sizeBytes * 8) / durSec / 1e6).toFixed(2)} Mbps` : 'VBR');
+
+        const v = analysis.video || probe?.video || null;
+        const videoSummary = v
+          ? cleanAscii(`${String(v.codec || '').toUpperCase()}${v.profile ? ` (${v.profile})` : ''} | ${v.width || 0}x${v.height || 0}${v.pixFmt ? ` | ${v.pixFmt}` : ''}`)
+          : cleanAscii(raw.qualityBadge || '1080p HD');
+
+        const audioTracks = (analysis.audio || probe?.audio || []).map((a, idx) => {
+          const ch = Number(a.channels) || 2;
+          const chStr = ch === 6 ? '5.1ch' : ch === 8 ? '7.1ch' : ch === 1 ? '1.0ch' : `${ch}.0ch`;
+          const lang = cleanAscii(a.language || 'und').toUpperCase();
+          const titleClean = cleanAscii(a.title || '');
+          const codecStr = cleanAscii(a.codec || 'aac').toUpperCase();
+          return {
+            index: idx,
+            streamIndex: a.streamIndex,
+            codec: codecStr,
+            channels: ch,
+            channelsLabel: chStr,
+            language: lang,
+            label: titleClean
+              ? `${idx + 1}. ${lang} ${codecStr} ${chStr} (${titleClean.slice(0, 28)})`
+              : `${idx + 1}. ${lang} ${codecStr} ${chStr}`,
+          };
+        });
+        const audioSummary = audioTracks.length
+          ? audioTracks.map(a => `${a.language} ${a.codec} ${a.channelsLabel}`).join(' | ')
+          : cleanAscii(raw.audioCodec || 'Stereo AAC');
+
+        const subtitleTracks = subTracks.map((t) => ({
+          trackIndex: t.trackIndex,
+          source: t.source,
+          streamIndex: t.streamIndex,
+          codec: cleanAscii(t.codec).toUpperCase(),
+          language: cleanAscii(t.language).toUpperCase(),
+          label: cleanAscii(t.label),
+          srtUrl: `${baseUrl}/api/subtitles/${encodeURIComponent(raw.id)}.srt?track=${t.trackIndex}`,
+          vttUrl: `${baseUrl}/api/subtitles/${encodeURIComponent(raw.id)}.vtt?track=${t.trackIndex}`,
+        }));
+
+        const allSubtitleStreams = [
+          ...subTracks.filter(t => t.source === 'sidecar').map((t, i) => ({
+            index: i,
+            codec: cleanAscii(t.codec).toUpperCase(),
+            language: cleanAscii(t.language).toUpperCase(),
+            title: cleanAscii(t.label),
+            extractable: true,
+          })),
+          ...(allEmbedded || []).map((s, i) => ({
+            index: i,
+            streamIndex: s.streamIndex,
+            codec: cleanAscii(s.codec).toUpperCase(),
+            language: cleanAscii(s.language || 'und').toUpperCase(),
+            title: cleanAscii(s.title || ''),
+            extractable: subTracks.some(t => t.streamIndex === s.streamIndex),
+          })),
+        ];
+
+        const cueTrackRaw = url.searchParams.get('cueTrack');
+        let cueTrackIdx = cueTrackRaw !== null && cueTrackRaw !== '' ? Number(cueTrackRaw) : -1;
+        if (cueTrackIdx < 0 && subtitleTracks.length > 0) {
+          const engIdx = subtitleTracks.findIndex(t => /^EN/i.test(t.language) || /ENG|ENGLISH/i.test(t.label));
+          cueTrackIdx = engIdx >= 0 ? engIdx : 0;
+        }
+
+        let cues = [];
+        let cuesReady = false;
+        let cuesExtracting = false;
+        if (cueTrackIdx >= 0 && cueTrackIdx < subtitleTracks.length) {
+          const waitCues = url.searchParams.get('waitCues') === '1';
+          const extRes = await extractSubtitleTrackVtt(raw, cueTrackIdx, subCacheDir, {
+            waitMs: waitCues ? 25000 : 2200,
+          });
+          if (extRes.found && extRes.vtt) {
+            cues = parseWebVttCues(extRes.vtt, 3500);
+            cuesReady = true;
+          } else if (extRes.extracting) {
+            cuesExtracting = true;
+          }
+        }
+
+        const prog = store.progress[raw.mediaKey] || store.progress[raw.id] || null;
+        return sendJson(res, 200, {
+          ok: true,
+          id: raw.id,
+          mediaType: raw.mediaType || 'movie',
+          title: cleanAscii(raw.title),
+          showName: cleanAscii(raw.showName || ''),
+          seasonNumber: raw.seasonNumber || null,
+          episodeNumber: raw.episodeNumber || null,
+          episodeCode: cleanAscii(raw.episodeCode || ''),
+          episodeTitle: cleanAscii(raw.episodeTitle || ''),
+          year: raw.year || null,
+          genre: cleanAscii(raw.genre || ''),
+          qualityBadge: cleanAscii(raw.qualityBadge || ''),
+          overview: cleanAscii(raw.overview || ''),
+          fileName: cleanAscii(raw.filePath ? path.basename(raw.filePath) : ''),
+          folderPath: cleanAscii(raw.filePath ? path.dirname(raw.filePath) : ''),
+          serviceName: cleanAscii(raw.serviceName || raw.serviceId || 'Media Library'),
+          container: cleanAscii(String(raw.ext || '').replace(/^\./, '').toUpperCase() || 'MP4'),
+          sizeBytes: Number(raw.sizeBytes) || 0,
+          sizeFormatted: fmtBytes(raw.sizeBytes),
+          durationSec: durSec,
+          durationFormatted: fmtDur(durSec),
+          bitRate,
+          bitRateFormatted: bitRateMbps,
+          canDirectPlay: Boolean(analysis.canDirectPlay),
+          needsTranscode: Boolean(analysis.needsTranscode),
+          streamMode: analysis.canDirectPlay ? 'Direct Play (HTTP 206)' : 'Direct Stream / HLS Compatible',
+          serverName: cleanAscii(store.config.serverName || 'RobOS Media Server'),
+          serverUrl: baseUrl,
+          video: v ? {
+            codec: cleanAscii(v.codec || '').toUpperCase(),
+            profile: cleanAscii(v.profile || ''),
+            width: Number(v.width) || 0,
+            height: Number(v.height) || 0,
+            pixFmt: cleanAscii(v.pixFmt || ''),
+            summary: videoSummary,
+          } : { summary: videoSummary },
+          audioTracks,
+          audioSummary: cleanAscii(audioSummary),
+          subtitleTracks,
+          allSubtitleStreams,
+          subtitleSummary: allSubtitleStreams.length
+            ? cleanAscii(allSubtitleStreams.map(s => `${s.language} ${s.codec}${s.extractable ? '' : ' (Bitmap)'}`).join(' | '))
+            : 'None Detected',
+          cueTrackIndex: cueTrackIdx,
+          cuesReady,
+          cuesExtracting,
+          cuesCount: cues.length,
+          cues,
+          watched: Boolean(prog?.completed),
+          inProgress: Boolean(prog?.inProgress),
+          positionSec: Number(prog?.positionSec) || 0,
+        });
       }
 
       if (req.method === 'GET' && pathname === '/api/shows') {
@@ -539,10 +712,16 @@ function createMediaServer(options = {}) {
       }
 
       if ((req.method === 'GET' || req.method === 'HEAD') && pathname.startsWith('/api/subtitles/')) {
-        const id = cleanItemId(pathname.slice('/api/subtitles/'.length));
+        const tail = pathname.slice('/api/subtitles/'.length);
+        const isSrt = /\.srt$/i.test(tail);
+        const id = cleanItemId(tail);
         const raw = store.byId.get(id);
         if (!raw) return sendJson(res, 404, { ok: false, error: 'Item not found' });
-        await serveSubtitlesVtt(res, raw);
+        await serveSubtitlesVtt(res, raw, {
+          trackIndex: Number(url.searchParams.get('track') || 0),
+          format: isSrt ? 'srt' : 'vtt',
+          subCacheDir,
+        });
         return;
       }
 
@@ -589,13 +768,14 @@ function createMediaServer(options = {}) {
         const sub = parts[1] || 'index.m3u8';
         const raw = store.byId.get(id);
         if (!raw) return sendJson(res, 404, { ok: false, error: 'Item not found' });
+        const audioIdx = Number(url.searchParams.get('audio') || 0);
         if (sub.endsWith('.m3u8')) {
-          await serveHlsPlaylist(res, raw, baseUrl);
+          await serveHlsPlaylist(res, raw, baseUrl, { audioIdx });
           return;
         }
         const segMatch = sub.match(/^seg_(\d+)\.ts$/i);
         if (segMatch) {
-          await serveHlsSegment(req, res, raw, Number(segMatch[1]));
+          await serveHlsSegment(req, res, raw, Number(segMatch[1]), { audioIdx });
           return;
         }
         return sendJson(res, 404, { ok: false, error: 'Unknown HLS segment' });

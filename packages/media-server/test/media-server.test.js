@@ -385,6 +385,25 @@ test('RobOS Media Server indexes movies, shows, music, books & courses, serves H
   assert.equal(progRes.status, 200);
   assert.equal(JSON.parse(progRes.body.toString('utf8')).entry.inProgress, true);
 
+  const unwatchedRes = await httpGetRaw(`${serverUrl}/api/tv-progress?id=${encodeURIComponent(movieItem.id)}&unwatched=true`);
+  assert.equal(unwatchedRes.status, 200);
+  assert.equal(JSON.parse(unwatchedRes.body.toString('utf8')).entry.completed, false);
+  assert.equal(JSON.parse(unwatchedRes.body.toString('utf8')).entry.inProgress, false);
+
+  const rokuMetaRes = await httpGetRaw(`${serverUrl}/api/roku-playback-meta/${encodeURIComponent(movieItem.id)}?cueTrack=0&waitCues=1`);
+  assert.equal(rokuMetaRes.status, 200);
+  const rokuMeta = JSON.parse(rokuMetaRes.body.toString('utf8'));
+  assert.equal(rokuMeta.ok, true);
+  assert.equal(rokuMeta.container, 'MP4');
+  assert.ok(rokuMeta.subtitleTracks.length >= 1);
+  assert.equal(rokuMeta.cuesReady, true);
+  assert.ok(rokuMeta.cues.some(c => /Whatever it takes/i.test(c.t)));
+
+  const srtRes = await httpGetRaw(`${serverUrl}/api/subtitles/${encodeURIComponent(movieItem.id)}.srt?track=0`);
+  assert.equal(srtRes.status, 200);
+  assert.match(srtRes.body.toString('utf8'), /-->/);
+  assert.match(srtRes.body.toString('utf8'), /Whatever it takes/);
+
   const { createTvEngine } = require('../../robos-lib/tv-engine');
   const tvEng = createTvEngine({ configDir: clientConfigDir });
   const rokuBuild = await tvEng.installRokuMoviePlayer({
@@ -399,6 +418,17 @@ test('RobOS Media Server indexes movies, shows, music, books & courses, serves H
   assert.match(manifestTxt, /splash_color=#FFFFFF/);
   const fhdPosterBuf = fs.readFileSync(path.join(rokuBuild.targetDir, 'images', 'channel-poster_fhd.png'));
   assert.equal(fhdPosterBuf[25], 2, 'Roku channel poster must be 24-bit opaque RGB (colorType=2) with no alpha channel');
+  const sceneXml = fs.readFileSync(path.join(rokuBuild.targetDir, 'components', 'MainScene.xml'), 'utf8');
+  assert.match(sceneXml, /id="playerOsdGroup"/);
+  assert.match(sceneXml, /id="subtitleOverlayGroup"/);
+  assert.match(sceneXml, /2\. CC CAPTIONS/);
+  assert.match(sceneXml, /3\. SEE SEASON/);
+  assert.match(sceneXml, /4\. SEE SHOW/);
+  assert.match(sceneXml, /5\. EP DETAILS/);
+  assert.match(sceneXml, /7\. METADATA/);
+  const sceneBrs = fs.readFileSync(path.join(rokuBuild.targetDir, 'components', 'MainScene.brs'), 'utf8');
+  assert.match(sceneBrs, /function handleCinemaVideoKeyEvent/);
+  assert.match(sceneBrs, /sub jumpToNeighborCaption/);
   const embeddedLib = JSON.parse(fs.readFileSync(path.join(rokuBuild.targetDir, 'source', 'cinema-library.json'), 'utf8'));
   assert.equal(embeddedLib.active, true);
   assert.equal(embeddedLib.items.length, 3); // 2 movies + 1 grouped TV series

@@ -251,62 +251,261 @@ function srtToVtt(srtText) {
   return 'WEBVTT\n\n' + normalized.trim() + '\n';
 }
 
-async function serveSubtitlesVtt(res, item) {
-  const headers = {
-    'Content-Type': 'text/vtt; charset=utf-8',
-    'Access-Control-Allow-Origin': '*',
-    'Cache-Control': 'public, max-age=3600',
+function vttToSrt(vttText) {
+  const raw = String(vttText || '').replace(/^\uFEFF/, '').replace(/\r\n/g, '\n');
+  const blocks = raw.replace(/^WEBVTT[^\n]*\n+/i, '').trim().split(/\n{2,}/);
+  const out = [];
+  let seq = 1;
+  for (const blk of blocks) {
+    const lines = blk.split('\n').map(l => l.trim()).filter(Boolean);
+    if (!lines.length) continue;
+    const timeIdx = lines.findIndex(l => l.includes('-->'));
+    if (timeIdx < 0) continue;
+    const timeLine = lines[timeIdx]
+      .replace(/(^|\s)(\d{2}:\d{2}\.\d{3})/g, '$100:$2')
+      .replace(/(\d{2}:\d{2}:\d{2})\.(\d{3})/g, '$1,$2')
+      .replace(/\s+(align|position|line|size):.*$/i, '');
+    const textLines = lines.slice(timeIdx + 1)
+      .map(l => l.replace(/<[^>]+>/g, '').replace(/\{\\[^}]+\}/g, '').trim())
+      .filter(Boolean);
+    if (!textLines.length) continue;
+    out.push(`${seq}\n${timeLine}\n${textLines.join('\n')}`);
+    seq += 1;
+  }
+  return out.join('\n\n') + (out.length ? '\n' : '');
+}
+
+function parseVttTimestampSec(ts) {
+  const clean = String(ts || '').trim().split(/\s+/)[0].replace(',', '.');
+  const parts = clean.split(':');
+  if (parts.length === 3) {
+    return (Number(parts[0]) || 0) * 3600 + (Number(parts[1]) || 0) * 60 + (Number(parts[2]) || 0);
+  }
+  if (parts.length === 2) {
+    return (Number(parts[0]) || 0) * 60 + (Number(parts[1]) || 0);
+  }
+  return Number(clean) || 0;
+}
+
+function parseWebVttCues(vttText, maxCues = 3500) {
+  const raw = String(vttText || '').replace(/^\uFEFF/, '').replace(/\r\n/g, '\n');
+  const blocks = raw.replace(/^WEBVTT[^\n]*\n+/i, '').trim().split(/\n{2,}/);
+  const cues = [];
+  for (const blk of blocks) {
+    if (cues.length >= maxCues) break;
+    const lines = blk.split('\n').map(l => l.trim()).filter(Boolean);
+    if (!lines.length) continue;
+    const timeIdx = lines.findIndex(l => l.includes('-->'));
+    if (timeIdx < 0) continue;
+    const [startStr, endStr] = lines[timeIdx].split('-->');
+    const s = Math.round(parseVttTimestampSec(startStr) * 100) / 100;
+    const e = Math.round(parseVttTimestampSec(endStr) * 100) / 100;
+    if (!(e > s)) continue;
+    const text = lines.slice(timeIdx + 1)
+      .map(l => l
+        .replace(/<[^>]+>/g, '')
+        .replace(/\{\\[^}]+\}/g, '')
+        .replace(/&amp;/g, '&')
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&quot;/g, '"')
+        .replace(/[—–]/g, '-')
+        .replace(/[^\x20-\x7E]+/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+      )
+      .filter(Boolean)
+      .join('\n');
+    if (!text) continue;
+    cues.push({ s, e, t: text });
+  }
+  return cues;
+}
+
+const TEXT_SUBTITLE_CODECS = new Set(['subrip', 'srt', 'ass', 'ssa', 'mov_text', 'webvtt', 'text']);
+const inFlightSubtitleExtracts = new Map();
+
+async function listSubtitleTracks(item) {
+  const tracks = [];
+  const seenFiles = new Set();
+
+  const addSidecarFile = (fp, hintLabel = '') => {
+    if (!fp || seenFiles.has(fp) || !fs.existsSync(fp)) return;
+    const ext = path.extname(fp).toLowerCase();
+    if (ext !== '.srt' && ext !== '.vtt') return;
+    seenFiles.add(fp);
+    const stem = path.basename(fp, ext);
+    const baseStem = item.filePath ? path.basename(item.filePath, path.extname(item.filePath)) : '';
+    let suffix = baseStem && stem.toLowerCase().startsWith(baseStem.toLowerCase())
+      ? stem.slice(baseStem.length).replace(/^[._-\s]+/, '')
+      : '';
+    const lang = suffix ? suffix.slice(0, 12) : 'eng';
+    tracks.push({
+      trackIndex: tracks.length,
+      source: 'sidecar',
+      filePath: fp,
+      streamIndex: null,
+      codec: ext.slice(1),
+      language: lang,
+      extractable: true,
+      label: hintLabel || (suffix ? `External (${suffix} · ${ext.toUpperCase().slice(1)})` : `External (${ext.toUpperCase().slice(1)})`),
+    });
   };
-  if (item.sidecarSubtitle && fs.existsSync(item.sidecarSubtitle)) {
+
+  if (item.sidecarSubtitle) {
+    addSidecarFile(item.sidecarSubtitle);
+  }
+  if (item.filePath) {
     try {
-      const raw = fs.readFileSync(item.sidecarSubtitle, 'utf8');
-      const ext = path.extname(item.sidecarSubtitle).toLowerCase();
-      if (ext === '.vtt') {
-        res.writeHead(200, headers);
-        res.end(raw);
-        return;
-      }
-      if (ext === '.srt') {
-        res.writeHead(200, headers);
-        res.end(srtToVtt(raw));
-        return;
-      }
-      if (ext === '.lrc') {
-        res.writeHead(200, { ...headers, 'Content-Type': 'text/plain; charset=utf-8' });
-        res.end(raw);
-        return;
+      const dir = path.dirname(item.filePath);
+      const baseLower = path.basename(item.filePath, path.extname(item.filePath)).toLowerCase();
+      if (fs.existsSync(dir)) {
+        for (const fn of fs.readdirSync(dir)) {
+          const ext = path.extname(fn).toLowerCase();
+          if (ext !== '.srt' && ext !== '.vtt') continue;
+          const fnStem = path.basename(fn, ext).toLowerCase();
+          if (fnStem === baseLower || fnStem.startsWith(`${baseLower}.`) || fnStem.startsWith(`${baseLower}_`) || fnStem.startsWith(`${baseLower}-`)) {
+            addSidecarFile(path.join(dir, fn));
+          }
+        }
       }
     } catch {}
   }
 
-  // Try embedded text subtitles via FFmpeg if video
-  if (HAS_FFMPEG && (item.mediaType === 'movie' || item.mediaType === 'tv')) {
-    const probe = await probeMediaFile(item.filePath);
-    const textSub = probe?.subtitles?.find(s => ['subrip', 'srt', 'ass', 'ssa', 'mov_text', 'webvtt'].includes(s.codec));
-    if (textSub) {
-      await new Promise((resolve) => {
+  const probe = (item.mediaType === 'movie' || item.mediaType === 'tv' || item.mediaType === 'education')
+    ? await probeMediaFile(item.filePath)
+    : null;
+  const allEmbedded = Array.isArray(probe?.subtitles) ? probe.subtitles : [];
+  for (const s of allEmbedded) {
+    const codecLower = String(s.codec || '').toLowerCase();
+    if (!TEXT_SUBTITLE_CODECS.has(codecLower)) continue;
+    const lang = String(s.language || 'und').trim() || 'und';
+    const cleanTitle = String(s.title || '').replace(/[^\x20-\x7E]+/g, '').trim();
+    const label = cleanTitle
+      ? `${cleanTitle} (${lang.toUpperCase()})`
+      : `${lang.toUpperCase()} (${codecLower.toUpperCase()})`;
+    tracks.push({
+      trackIndex: tracks.length,
+      source: 'embedded',
+      filePath: item.filePath,
+      streamIndex: s.streamIndex,
+      codec: codecLower,
+      language: lang,
+      extractable: true,
+      label,
+    });
+  }
+
+  return { tracks, allEmbedded, probe };
+}
+
+async function extractSubtitleTrackVtt(item, trackIndex = 0, subCacheDir = '', { waitMs = 15000 } = {}) {
+  const { tracks } = await listSubtitleTracks(item);
+  if (!tracks.length) return { found: false, extracting: false, vtt: '', track: null, tracks };
+  const idx = Math.max(0, Math.min(tracks.length - 1, Number(trackIndex) || 0));
+  const track = tracks[idx];
+
+  if (track.source === 'sidecar' && track.filePath && fs.existsSync(track.filePath)) {
+    try {
+      const raw = fs.readFileSync(track.filePath, 'utf8');
+      const ext = path.extname(track.filePath).toLowerCase();
+      const vtt = ext === '.vtt' ? raw : srtToVtt(raw);
+      return { found: true, extracting: false, vtt, track, tracks };
+    } catch {}
+  }
+
+  if (track.source === 'embedded' && HAS_FFMPEG && track.streamIndex !== null) {
+    const cacheFile = subCacheDir
+      ? path.join(subCacheDir, `${item.id}_s${track.streamIndex}.vtt`)
+      : '';
+    if (cacheFile && fs.existsSync(cacheFile)) {
+      try {
+        const cached = fs.readFileSync(cacheFile, 'utf8');
+        if (cached.includes('WEBVTT')) {
+          return { found: true, extracting: false, vtt: cached, track, tracks };
+        }
+      } catch {}
+    }
+
+    const jobKey = `${item.id}:s${track.streamIndex}`;
+    let job = inFlightSubtitleExtracts.get(jobKey);
+    if (!job) {
+      job = new Promise((resolve) => {
         execFile('ffmpeg', [
           '-hide_banner', '-loglevel', 'error',
           '-i', item.filePath,
-          '-map', `0:${textSub.streamIndex}`,
+          '-map', `0:${track.streamIndex}`,
           '-f', 'webvtt', 'pipe:1',
-        ], { timeout: 12000, maxBuffer: 4 * 1024 * 1024 }, (err, stdout) => {
+        ], { timeout: 45000, maxBuffer: 8 * 1024 * 1024 }, (err, stdout) => {
+          inFlightSubtitleExtracts.delete(jobKey);
           if (!err && stdout && stdout.includes('WEBVTT')) {
-            res.writeHead(200, headers);
-            res.end(stdout);
+            if (cacheFile) {
+              try {
+                fs.mkdirSync(path.dirname(cacheFile), { recursive: true });
+                fs.writeFileSync(cacheFile, stdout, 'utf8');
+              } catch {}
+            }
+            resolve(stdout);
           } else {
-            res.writeHead(404, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
-            res.end(JSON.stringify({ found: false }));
+            resolve('');
           }
-          resolve();
         });
       });
-      return;
+      inFlightSubtitleExtracts.set(jobKey, job);
+    }
+
+    const timed = await Promise.race([
+      job.then(vtt => ({ done: true, vtt })),
+      new Promise(r => setTimeout(() => r({ done: false, vtt: '' }), Math.max(250, Number(waitMs) || 15000))),
+    ]);
+    if (!timed.done) {
+      return { found: false, extracting: true, vtt: '', track, tracks };
+    }
+    if (timed.vtt) {
+      return { found: true, extracting: false, vtt: timed.vtt, track, tracks };
     }
   }
 
+  return { found: false, extracting: false, vtt: '', track, tracks };
+}
+
+async function serveSubtitlesVtt(res, item, { trackIndex = 0, format = 'vtt', subCacheDir = '' } = {}) {
+  if (item.sidecarSubtitle && path.extname(item.sidecarSubtitle).toLowerCase() === '.lrc' && fs.existsSync(item.sidecarSubtitle)) {
+    try {
+      const raw = fs.readFileSync(item.sidecarSubtitle, 'utf8');
+      res.writeHead(200, {
+        'Content-Type': 'text/plain; charset=utf-8',
+        'Access-Control-Allow-Origin': '*',
+        'Cache-Control': 'public, max-age=3600',
+      });
+      res.end(raw);
+      return;
+    } catch {}
+  }
+
+  const extracted = await extractSubtitleTrackVtt(item, trackIndex, subCacheDir, { waitMs: 30000 });
+  if (extracted.found && extracted.vtt) {
+    if (format === 'srt') {
+      const srtBody = vttToSrt(extracted.vtt);
+      res.writeHead(200, {
+        'Content-Type': 'application/x-subrip; charset=utf-8',
+        'Access-Control-Allow-Origin': '*',
+        'Cache-Control': 'public, max-age=3600',
+      });
+      res.end(srtBody);
+      return;
+    }
+    res.writeHead(200, {
+      'Content-Type': 'text/vtt; charset=utf-8',
+      'Access-Control-Allow-Origin': '*',
+      'Cache-Control': 'public, max-age=3600',
+    });
+    res.end(extracted.vtt);
+    return;
+  }
+
   res.writeHead(404, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
-  res.end(JSON.stringify({ found: false }));
+  res.end(JSON.stringify({ found: false, extracting: extracted.extracting }));
 }
 
 function generatePosterSvg(item) {
@@ -442,11 +641,12 @@ async function analyzePlaybackSupport(filePath, fallbackNeedsTranscode = false) 
 
 const HLS_SEG_DURATION = 6;
 
-async function serveHlsPlaylist(res, item, baseUrl = '') {
+async function serveHlsPlaylist(res, item, baseUrl = '', { audioIdx = 0 } = {}) {
   const probe = await probeMediaFile(item.filePath);
   const dur = Math.max(HLS_SEG_DURATION, Number(probe?.durationSec) || Number(item.duration) || 1800);
   const segCount = Math.max(1, Math.ceil(dur / HLS_SEG_DURATION));
   const cleanBase = String(baseUrl || '').replace(/\/+$/, '');
+  const audioQuery = Number(audioIdx) > 0 ? `?audio=${Number(audioIdx)}` : '';
   const lines = [
     '#EXTM3U',
     '#EXT-X-VERSION:3',
@@ -459,7 +659,7 @@ async function serveHlsPlaylist(res, item, baseUrl = '') {
       ? Math.max(0.5, dur - i * HLS_SEG_DURATION)
       : HLS_SEG_DURATION;
     lines.push(`#EXTINF:${segDur.toFixed(3)},`);
-    lines.push(`${cleanBase}/hls/${encodeURIComponent(item.id)}/seg_${i}.ts`);
+    lines.push(`${cleanBase}/hls/${encodeURIComponent(item.id)}/seg_${i}.ts${audioQuery}`);
   }
   lines.push('#EXT-X-ENDLIST');
   res.writeHead(200, {
@@ -470,7 +670,7 @@ async function serveHlsPlaylist(res, item, baseUrl = '') {
   res.end(lines.join('\n') + '\n');
 }
 
-async function serveHlsSegment(req, res, item, segIndex) {
+async function serveHlsSegment(req, res, item, segIndex, { audioIdx = 0 } = {}) {
   if (!HAS_FFMPEG) {
     res.writeHead(501, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ error: 'FFmpeg not available' }));
@@ -481,6 +681,8 @@ async function serveHlsSegment(req, res, item, segIndex) {
   const pixFmt = probe?.video?.pixFmt || '';
   const canCopyVideo = vCodec === 'h264' && !String(pixFmt).includes('10');
   const startSec = Math.max(0, Number(segIndex) || 0) * HLS_SEG_DURATION;
+  const aCount = Array.isArray(probe?.audio) ? probe.audio.length : 1;
+  const safeAudioIdx = aCount > 0 ? Math.max(0, Math.min(aCount - 1, Number(audioIdx) || 0)) : 0;
 
   const args = [
     '-hide_banner', '-loglevel', 'error',
@@ -488,7 +690,7 @@ async function serveHlsSegment(req, res, item, segIndex) {
     '-i', item.filePath,
     '-t', String(HLS_SEG_DURATION),
     '-map', '0:v:0',
-    '-map', '0:a:0?',
+    '-map', `0:a:${safeAudioIdx}?`,
   ];
   if (canCopyVideo) {
     args.push('-c:v', 'copy');
@@ -533,4 +735,8 @@ module.exports = {
   serveSubtitlesVtt,
   serveItemArtwork,
   srtToVtt,
+  vttToSrt,
+  parseWebVttCues,
+  listSubtitleTracks,
+  extractSubtitleTrackVtt,
 };

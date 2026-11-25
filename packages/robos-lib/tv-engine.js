@@ -1894,6 +1894,8 @@ end sub
     <field id="knownRev" type="string" />
     <field id="progressUrl" type="string" />
     <field id="castActionUrl" type="string" />
+    <field id="metaRequestUrl" type="string" />
+    <field id="playbackMetaJson" type="string" alwaysNotify="true" />
     <field id="payloadJson" type="string" alwaysNotify="true" />
     <field id="localFrameUri" type="string" alwaysNotify="true" />
   </interface>
@@ -1907,6 +1909,7 @@ end sub
 sub pollDashboard()
     lastProgUrl = ""
     lastCastUrl = ""
+    lastMetaUrl = ""
     lastFrameSeq = -1
     localFileIdx = 0
     curRev = m.top.knownRev
@@ -1925,6 +1928,16 @@ sub pollDashboard()
             pHttp = CreateObject("roUrlTransfer")
             pHttp.SetUrl(pUrl)
             pHttp.GetToString()
+        end if
+        mUrl = m.top.metaRequestUrl
+        if mUrl <> "" and mUrl <> lastMetaUrl
+            lastMetaUrl = mUrl
+            mHttp = CreateObject("roUrlTransfer")
+            mHttp.SetUrl(mUrl)
+            mRaw = mHttp.GetToString()
+            if mRaw <> ""
+                m.top.playbackMetaJson = mRaw
+            end if
         end if
         raw = ""
         msUrl = m.top.mediaServerUrl
@@ -2672,9 +2685,254 @@ ${voiceSlide2RowsXml}
     <!-- Double-Buffered 1920x1080 Live Chromium JS Canvas Frame Layer (placed above wallboard & cinemaLibraryGroup so app casts always take top priority) -->
     <Poster id="livePosterA" width="1920" height="1080" opacity="0.0" />
     <Poster id="livePosterB" width="1920" height="1080" opacity="0.0" />
-    <!-- Full-screen 1920x1080 Cinema Video Layer for RobOS Movie Player Cast -->
-    <Video id="cinemaVideo" translation="[0, 0]" width="1920" height="1080" visible="false" mute="false" loop="false" enableUI="true" />
+    <!-- Full-screen 1920x1080 Cinema Video Layer for RobOS Movie Player -->
+    <Video id="cinemaVideo" translation="[0, 0]" width="1920" height="1080" visible="false" mute="false" loop="false" enableUI="false" />
+
+    <!-- Crisp Cinema On-Screen Subtitle Cue Overlay (supports SRT/WebVTT/ASS tracks, S/M/L font sizes & sync offset) -->
+    <Group id="subtitleOverlayGroup" visible="false" translation="[160, 916]">
+      <Rectangle id="subtitleCueBg" translation="[180, 0]" width="1240" height="86" color="0x080A0FE6" />
+      <Rectangle id="subtitleCueAccent" translation="[180, 0]" width="4" height="86" color="0xFCD34DFF" />
+      <Label id="subtitleCueLabel" translation="[200, 10]" scale="[0.80, 0.80]" width="1500" height="84" wrap="true" numLines="2" horizAlign="center" vertAlign="center" color="0xFFFFFFFF" text="" />
+    </Group>
+
+    <!-- Plex-Style Rich In-Playback OSD Menu & Metadata Drawer (OK / Up / Down / * Options during playback) -->
+    <Group id="playerOsdGroup" visible="false">
+      <!-- Top Translucent Cinema Header Banner (y=0..108) -->
+      <Group id="osdTopBarGroup">
+        <Rectangle width="1920" height="108" color="0x090C12EB" />
+        <Rectangle translation="[0, 105]" width="1920" height="3" color="0xE8A33DFF" />
+        <Rectangle id="osdTypePillBg" translation="[44, 18]" width="168" height="28" color="0xE8A33DFF" />
+        <Label id="osdTypePillTxt" translation="[50, 22]" scale="[0.44, 0.44]" width="356" height="22" numLines="1" horizAlign="center" color="0x110E0BFF" text="NOW PLAYING" />
+        <Label id="osdTopTitle" translation="[226, 14]" scale="[0.74, 0.74]" width="1360" height="38" numLines="1" color="0xFFFFFFFF" text="RobOS Cinema+" />
+        <Label id="osdTopSubMeta" translation="[44, 58]" scale="[0.49, 0.49]" width="2300" height="26" numLines="1" color="0xCBD5E1FF" text="Direct LAN Stream  |  Press [UP/DOWN/OK/*] for Player Menu  |  [BACK] Exit" />
+
+        <Rectangle id="osdStateBadgeBg" translation="[1270, 16]" width="152" height="32" color="0x10B981FF" />
+        <Label id="osdStateBadgeTxt" translation="[1276, 22]" scale="[0.46, 0.46]" width="304" height="22" numLines="1" horizAlign="center" color="0x06130DFF" text="PLAYING" />
+
+        <Rectangle id="osdCcBadgeBg" translation="[1434, 16]" width="218" height="32" color="0x1E293BFF" />
+        <Label id="osdCcBadgeTxt" translation="[1442, 22]" scale="[0.44, 0.44]" width="458" height="22" numLines="1" horizAlign="center" color="0xFCD34DFF" text="CC: OFF" />
+
+        <Rectangle id="osdAudioBadgeBg" translation="[1664, 16]" width="212" height="32" color="0x1E293BFF" />
+        <Label id="osdAudioBadgeTxt" translation="[1672, 22]" scale="[0.44, 0.44]" width="444" height="22" numLines="1" horizAlign="center" color="0x67E8F9FF" text="AUDIO: TRACK 1" />
+
+        <Label id="osdTopClockTxt" translation="[1270, 58]" scale="[0.52, 0.52]" width="1160" height="28" numLines="1" horizAlign="right" color="0xF8FAFCFF" text="0:00:00 / 0:00:00" />
+      </Group>
+
+      <!-- Timeline Scrubber Bar (moves to y=948 in Mini-HUD mode or y=496 in Full Drawer mode) -->
+      <Group id="osdScrubberGroup" translation="[0, 496]">
+        <Rectangle id="osdScrubberBg" translation="[36, 0]" width="1848" height="68" color="0x0D111AEF" />
+        <Rectangle id="osdScrubberFocusBorder" translation="[36, 0]" width="1848" height="3" color="0x334155FF" />
+        <Label id="osdTimeElapsed" translation="[58, 12]" scale="[0.52, 0.52]" width="260" height="26" numLines="1" color="0xFCD34DFF" text="0:00:00" />
+        <Label id="osdScrubHint" translation="[210, 13]" scale="[0.45, 0.45]" width="2650" height="24" numLines="1" color="0x94A3B8FF" text="[LEFT/RIGHT] Scrub -15s / +30s   |   [REW/FF] -60s / +60s   |   [PLAY] Pause/Resume   |   [DOWN] Rich Options" />
+        <Label id="osdTimeTotal" translation="[1610, 12]" scale="[0.52, 0.52]" width="480" height="26" numLines="1" horizAlign="right" color="0xE2E8F0FF" text="0:00:00 (0%)" />
+        <Rectangle id="osdTrackBg" translation="[58, 44]" width="1804" height="12" color="0x1E293BFF" />
+        <Rectangle id="osdTrackFill" translation="[58, 44]" width="12" height="12" color="0xE8A33DFF" />
+        <Rectangle id="osdTrackKnob" translation="[64, 39]" width="10" height="22" color="0xFFFFFFFF" />
+      </Group>
+
+      <!-- Full Rich Plex-Style Tabbed Drawer (y=570..1064) -->
+      <Group id="osdFullDrawerGroup" visible="false">
+        <Rectangle translation="[36, 570]" width="1848" height="492" color="0x0B0F18F4" />
+        <Rectangle translation="[36, 570]" width="1848" height="3" color="0xE8A33DFF" />
+
+        <!-- Row of 7 Rich Player Tabs (x=54..1866, y=582, each 252w x 54h, step 258) -->
+        <Rectangle id="osdTabBorder0" translation="[54, 582]" width="252" height="54" color="0xFCD34DFF" />
+        <Rectangle id="osdTabBg0" translation="[57, 585]" width="246" height="48" color="0x2B2114FF" />
+        <Label id="osdTabLbl0" translation="[62, 597]" scale="[0.50, 0.50]" width="472" height="28" numLines="1" horizAlign="center" color="0xFCD34DFF" text="1. CONTROLS" />
+
+        <Rectangle id="osdTabBorder1" translation="[312, 582]" width="252" height="54" color="0x263248FF" />
+        <Rectangle id="osdTabBg1" translation="[315, 585]" width="246" height="48" color="0x131B2BFF" />
+        <Label id="osdTabLbl1" translation="[320, 597]" scale="[0.50, 0.50]" width="472" height="28" numLines="1" horizAlign="center" color="0xE2E8F0FF" text="2. CC CAPTIONS" />
+
+        <Rectangle id="osdTabBorder2" translation="[570, 582]" width="252" height="54" color="0x263248FF" />
+        <Rectangle id="osdTabBg2" translation="[573, 585]" width="246" height="48" color="0x131B2BFF" />
+        <Label id="osdTabLbl2" translation="[578, 597]" scale="[0.50, 0.50]" width="472" height="28" numLines="1" horizAlign="center" color="0xE2E8F0FF" text="3. SEE SEASON" />
+
+        <Rectangle id="osdTabBorder3" translation="[828, 582]" width="252" height="54" color="0x263248FF" />
+        <Rectangle id="osdTabBg3" translation="[831, 585]" width="246" height="48" color="0x131B2BFF" />
+        <Label id="osdTabLbl3" translation="[836, 597]" scale="[0.50, 0.50]" width="472" height="28" numLines="1" horizAlign="center" color="0xE2E8F0FF" text="4. SEE SHOW" />
+
+        <Rectangle id="osdTabBorder4" translation="[1086, 582]" width="252" height="54" color="0x263248FF" />
+        <Rectangle id="osdTabBg4" translation="[1089, 585]" width="246" height="48" color="0x131B2BFF" />
+        <Label id="osdTabLbl4" translation="[1094, 597]" scale="[0.50, 0.50]" width="472" height="28" numLines="1" horizAlign="center" color="0xE2E8F0FF" text="5. EP DETAILS" />
+
+        <Rectangle id="osdTabBorder5" translation="[1344, 582]" width="252" height="54" color="0x263248FF" />
+        <Rectangle id="osdTabBg5" translation="[1347, 585]" width="246" height="48" color="0x131B2BFF" />
+        <Label id="osdTabLbl5" translation="[1352, 597]" scale="[0.50, 0.50]" width="472" height="28" numLines="1" horizAlign="center" color="0xE2E8F0FF" text="6. AUDIO &amp; STREAM" />
+
+        <Rectangle id="osdTabBorder6" translation="[1602, 582]" width="264" height="54" color="0x263248FF" />
+        <Rectangle id="osdTabBg6" translation="[1605, 585]" width="258" height="48" color="0x131B2BFF" />
+        <Label id="osdTabLbl6" translation="[1610, 597]" scale="[0.50, 0.50]" width="496" height="28" numLines="1" horizAlign="center" color="0xE2E8F0FF" text="7. METADATA" />
+
+        <Rectangle translation="[54, 644]" width="1812" height="2" color="0x1E293BFF" />
+
+        <!-- Shared Action Button Strip (7 interactive buttons used by Controls, Captions, Audio; y=658..732) -->
+        <Group id="osdActionBtnsGroup" visible="true">
+          <Rectangle id="osdBtnBorder0" translation="[54, 658]" width="250" height="72" color="0xFFFFFFFF" />
+          <Rectangle id="osdBtnBg0" translation="[57, 661]" width="244" height="66" color="0x1E293BFF" />
+          <Label id="osdBtnTop0" translation="[64, 669]" scale="[0.48, 0.48]" width="478" height="26" numLines="1" horizAlign="center" color="0xFCD34DFF" text="PAUSE / PLAY" />
+          <Label id="osdBtnSub0" translation="[64, 697]" scale="[0.41, 0.41]" width="560" height="22" numLines="1" horizAlign="center" color="0xCBD5E1FF" text="Toggle Playback" />
+
+          <Rectangle id="osdBtnBorder1" translation="[314, 658]" width="250" height="72" color="0x263248FF" />
+          <Rectangle id="osdBtnBg1" translation="[317, 661]" width="244" height="66" color="0x131B2BFF" />
+          <Label id="osdBtnTop1" translation="[324, 669]" scale="[0.48, 0.48]" width="478" height="26" numLines="1" horizAlign="center" color="0xF8FAFCFF" text="BACK -15s" />
+          <Label id="osdBtnSub1" translation="[324, 697]" scale="[0.41, 0.41]" width="560" height="22" numLines="1" horizAlign="center" color="0x94A3B8FF" text="Instant Rewind" />
+
+          <Rectangle id="osdBtnBorder2" translation="[574, 658]" width="250" height="72" color="0x263248FF" />
+          <Rectangle id="osdBtnBg2" translation="[577, 661]" width="244" height="66" color="0x131B2BFF" />
+          <Label id="osdBtnTop2" translation="[584, 669]" scale="[0.48, 0.48]" width="478" height="26" numLines="1" horizAlign="center" color="0xF8FAFCFF" text="SKIP +30s" />
+          <Label id="osdBtnSub2" translation="[584, 697]" scale="[0.41, 0.41]" width="560" height="22" numLines="1" horizAlign="center" color="0x94A3B8FF" text="Fast Forward" />
+
+          <Rectangle id="osdBtnBorder3" translation="[834, 658]" width="250" height="72" color="0x263248FF" />
+          <Rectangle id="osdBtnBg3" translation="[837, 661]" width="244" height="66" color="0x131B2BFF" />
+          <Label id="osdBtnTop3" translation="[844, 669]" scale="[0.48, 0.48]" width="478" height="26" numLines="1" horizAlign="center" color="0xF8FAFCFF" text="PREV EPISODE" />
+          <Label id="osdBtnSub3" translation="[844, 697]" scale="[0.41, 0.41]" width="560" height="22" numLines="1" horizAlign="center" color="0x94A3B8FF" text="Previous Item" />
+
+          <Rectangle id="osdBtnBorder4" translation="[1094, 658]" width="250" height="72" color="0x263248FF" />
+          <Rectangle id="osdBtnBg4" translation="[1097, 661]" width="244" height="66" color="0x131B2BFF" />
+          <Label id="osdBtnTop4" translation="[1104, 669]" scale="[0.48, 0.48]" width="478" height="26" numLines="1" horizAlign="center" color="0xF8FAFCFF" text="NEXT EPISODE" />
+          <Label id="osdBtnSub4" translation="[1104, 697]" scale="[0.41, 0.41]" width="560" height="22" numLines="1" horizAlign="center" color="0x94A3B8FF" text="Up Next" />
+
+          <Rectangle id="osdBtnBorder5" translation="[1354, 658]" width="250" height="72" color="0x263248FF" />
+          <Rectangle id="osdBtnBg5" translation="[1357, 661]" width="244" height="66" color="0x131B2BFF" />
+          <Label id="osdBtnTop5" translation="[1364, 669]" scale="[0.48, 0.48]" width="478" height="26" numLines="1" horizAlign="center" color="0xF8FAFCFF" text="RESTART 0:00" />
+          <Label id="osdBtnSub5" translation="[1364, 697]" scale="[0.41, 0.41]" width="560" height="22" numLines="1" horizAlign="center" color="0x94A3B8FF" text="Play From Start" />
+
+          <Rectangle id="osdBtnBorder6" translation="[1614, 658]" width="252" height="72" color="0x263248FF" />
+          <Rectangle id="osdBtnBg6" translation="[1617, 661]" width="246" height="66" color="0x131B2BFF" />
+          <Label id="osdBtnTop6" translation="[1624, 669]" scale="[0.48, 0.48]" width="482" height="26" numLines="1" horizAlign="center" color="0xF8FAFCFF" text="MARK WATCHED" />
+          <Label id="osdBtnSub6" translation="[1624, 697]" scale="[0.41, 0.41]" width="560" height="22" numLines="1" horizAlign="center" color="0x94A3B8FF" text="Toggle Status" />
+        </Group>
+
+        <!-- Rich Lower Info Card for Controls / Captions Transcript / Show / Episode Details / Audio (y=744..1016) -->
+        <Group id="osdRichSummaryGroup" visible="true">
+          <Rectangle translation="[54, 744]" width="1812" height="268" color="0x111726FF" />
+          <Rectangle id="osdSummaryAccent" translation="[54, 744]" width="6" height="268" color="0x00BCD4FF" />
+          <Rectangle id="osdSummaryPosterFrame" translation="[76, 760]" width="166" height="236" color="0xE8A33DFF" />
+          <Rectangle translation="[80, 764]" width="158" height="228" color="0x1B2234FF" />
+          <Label id="osdSummaryMono" translation="[80, 852]" scale="[1.10, 1.10]" width="144" height="48" numLines="1" horizAlign="center" color="0xFCD34DFF" text="RC" />
+          <Poster id="osdSummaryPoster" translation="[80, 764]" width="158" height="228" loadWidth="316" loadHeight="456" loadDisplayMode="scaleToZoom" />
+
+          <Label id="osdSummaryEyebrow" translation="[264, 758]" scale="[0.48, 0.48]" width="3100" height="26" numLines="1" color="0x67E8F9FF" text="NOW PLAYING OVERVIEW" />
+          <Label id="osdSummaryTitle" translation="[264, 786]" scale="[0.70, 0.70]" width="2200" height="36" numLines="1" color="0xFFFFFFFF" text="Select an option above" />
+          <Label id="osdSummaryBadges" translation="[264, 824]" scale="[0.49, 0.49]" width="3150" height="26" numLines="1" color="0xFCD34DFF" text="" />
+          <Label id="osdSummaryBody" translation="[264, 856]" scale="[0.52, 0.52]" width="3000" height="96" wrap="true" numLines="3" color="0xE2E8F0FF" text="" />
+          <Label id="osdSummarySubLine" translation="[264, 966]" scale="[0.47, 0.47]" width="3300" height="26" numLines="1" color="0x86EFACFF" text="" />
+        </Group>
+
+        <!-- TAB 2 DEDICATED PANE: SEE SEASON & EPISODES STRIP (y=654..1016) -->
+        <Group id="osdSeasonPaneGroup" visible="false">
+          <Rectangle id="osdSeasonBtnBorder0" translation="[54, 654]" width="248" height="46" color="0x263248FF" />
+          <Rectangle id="osdSeasonBtnBg0" translation="[57, 657]" width="242" height="40" color="0x131B2BFF" />
+          <Label id="osdSeasonBtnLbl0" translation="[62, 666]" scale="[0.46, 0.46]" width="504" height="24" numLines="1" horizAlign="center" color="0xF8FAFCFF" text="&lt; PREV SEASON" />
+
+          <Rectangle id="osdSeasonBtnBorder1" translation="[314, 654]" width="248" height="46" color="0x263248FF" />
+          <Rectangle id="osdSeasonBtnBg1" translation="[317, 657]" width="242" height="40" color="0x131B2BFF" />
+          <Label id="osdSeasonBtnLbl1" translation="[322, 666]" scale="[0.46, 0.46]" width="504" height="24" numLines="1" horizAlign="center" color="0xF8FAFCFF" text="NEXT SEASON &gt;" />
+
+          <Rectangle id="osdSeasonBtnBorder2" translation="[574, 654]" width="330" height="46" color="0x263248FF" />
+          <Rectangle id="osdSeasonBtnBg2" translation="[577, 657]" width="324" height="40" color="0x131B2BFF" />
+          <Label id="osdSeasonBtnLbl2" translation="[582, 666]" scale="[0.46, 0.46]" width="680" height="24" numLines="1" horizAlign="center" color="0x67E8F9FF" text="OPEN SEASON IN LIBRARY" />
+
+          <Label id="osdSeasonHeaderInfo" translation="[926, 664]" scale="[0.50, 0.50]" width="1860" height="28" numLines="1" horizAlign="right" color="0xFCD34DFF" text="Season 1" />
+
+          <!-- 5 Episode Cards (x=54 + slot*364, w=352, y=710, h=302) -->
+          <Rectangle id="osdEpBorder0" translation="[54, 710]" width="352" height="302" color="0xFFFFFFFF" />
+          <Rectangle id="osdEpBg0" translation="[58, 714]" width="344" height="294" color="0x182032FF" />
+          <Rectangle translation="[66, 722]" width="328" height="178" color="0x0F172AFF" />
+          <Poster id="osdEpPoster0" translation="[66, 722]" width="328" height="178" loadWidth="328" loadHeight="178" loadDisplayMode="scaleToZoom" />
+          <Rectangle translation="[74, 730]" width="114" height="26" color="0x090D16E6" />
+          <Label id="osdEpCode0" translation="[78, 734]" scale="[0.44, 0.44]" width="240" height="22" numLines="1" horizAlign="center" color="0xFCD34DFF" text="S01E01" />
+          <Rectangle id="osdEpProgBg0" translation="[66, 894]" width="328" height="6" color="0x090D16FF" visible="false" />
+          <Rectangle id="osdEpProgFill0" translation="[66, 894]" width="0" height="6" color="0xE8A33DFF" visible="false" />
+          <Label id="osdEpTitle0" translation="[68, 910]" scale="[0.48, 0.48]" width="680" height="46" wrap="true" numLines="2" color="0xFFFFFFFF" text="Episode 1" />
+          <Label id="osdEpMeta0" translation="[68, 976]" scale="[0.42, 0.42]" width="760" height="24" numLines="1" color="0x67E8F9FF" text="Press OK to Play" />
+
+          <Rectangle id="osdEpBorder1" translation="[418, 710]" width="352" height="302" color="0x263248FF" />
+          <Rectangle id="osdEpBg1" translation="[422, 714]" width="344" height="294" color="0x121927FF" />
+          <Rectangle translation="[430, 722]" width="328" height="178" color="0x0F172AFF" />
+          <Poster id="osdEpPoster1" translation="[430, 722]" width="328" height="178" loadWidth="328" loadHeight="178" loadDisplayMode="scaleToZoom" />
+          <Rectangle translation="[438, 730]" width="114" height="26" color="0x090D16E6" />
+          <Label id="osdEpCode1" translation="[442, 734]" scale="[0.44, 0.44]" width="240" height="22" numLines="1" horizAlign="center" color="0xFCD34DFF" text="S01E02" />
+          <Rectangle id="osdEpProgBg1" translation="[430, 894]" width="328" height="6" color="0x090D16FF" visible="false" />
+          <Rectangle id="osdEpProgFill1" translation="[430, 894]" width="0" height="6" color="0xE8A33DFF" visible="false" />
+          <Label id="osdEpTitle1" translation="[432, 910]" scale="[0.48, 0.48]" width="680" height="46" wrap="true" numLines="2" color="0xFFFFFFFF" text="Episode 2" />
+          <Label id="osdEpMeta1" translation="[432, 976]" scale="[0.42, 0.42]" width="760" height="24" numLines="1" color="0x94A3B8FF" text="Press OK to Play" />
+
+          <Rectangle id="osdEpBorder2" translation="[782, 710]" width="352" height="302" color="0x263248FF" />
+          <Rectangle id="osdEpBg2" translation="[786, 714]" width="344" height="294" color="0x121927FF" />
+          <Rectangle translation="[794, 722]" width="328" height="178" color="0x0F172AFF" />
+          <Poster id="osdEpPoster2" translation="[794, 722]" width="328" height="178" loadWidth="328" loadHeight="178" loadDisplayMode="scaleToZoom" />
+          <Rectangle translation="[802, 730]" width="114" height="26" color="0x090D16E6" />
+          <Label id="osdEpCode2" translation="[806, 734]" scale="[0.44, 0.44]" width="240" height="22" numLines="1" horizAlign="center" color="0xFCD34DFF" text="S01E03" />
+          <Rectangle id="osdEpProgBg2" translation="[794, 894]" width="328" height="6" color="0x090D16FF" visible="false" />
+          <Rectangle id="osdEpProgFill2" translation="[794, 894]" width="0" height="6" color="0xE8A33DFF" visible="false" />
+          <Label id="osdEpTitle2" translation="[796, 910]" scale="[0.48, 0.48]" width="680" height="46" wrap="true" numLines="2" color="0xFFFFFFFF" text="Episode 3" />
+          <Label id="osdEpMeta2" translation="[796, 976]" scale="[0.42, 0.42]" width="760" height="24" numLines="1" color="0x94A3B8FF" text="Press OK to Play" />
+
+          <Rectangle id="osdEpBorder3" translation="[1146, 710]" width="352" height="302" color="0x263248FF" />
+          <Rectangle id="osdEpBg3" translation="[1150, 714]" width="344" height="294" color="0x121927FF" />
+          <Rectangle translation="[1158, 722]" width="328" height="178" color="0x0F172AFF" />
+          <Poster id="osdEpPoster3" translation="[1158, 722]" width="328" height="178" loadWidth="328" loadHeight="178" loadDisplayMode="scaleToZoom" />
+          <Rectangle translation="[1166, 730]" width="114" height="26" color="0x090D16E6" />
+          <Label id="osdEpCode3" translation="[1170, 734]" scale="[0.44, 0.44]" width="240" height="22" numLines="1" horizAlign="center" color="0xFCD34DFF" text="S01E04" />
+          <Rectangle id="osdEpProgBg3" translation="[1158, 894]" width="328" height="6" color="0x090D16FF" visible="false" />
+          <Rectangle id="osdEpProgFill3" translation="[1158, 894]" width="0" height="6" color="0xE8A33DFF" visible="false" />
+          <Label id="osdEpTitle3" translation="[1160, 910]" scale="[0.48, 0.48]" width="680" height="46" wrap="true" numLines="2" color="0xFFFFFFFF" text="Episode 4" />
+          <Label id="osdEpMeta3" translation="[1160, 976]" scale="[0.42, 0.42]" width="760" height="24" numLines="1" color="0x94A3B8FF" text="Press OK to Play" />
+
+          <Rectangle id="osdEpBorder4" translation="[1510, 710]" width="356" height="302" color="0x263248FF" />
+          <Rectangle id="osdEpBg4" translation="[1514, 714]" width="348" height="294" color="0x121927FF" />
+          <Rectangle translation="[1522, 722]" width="332" height="178" color="0x0F172AFF" />
+          <Poster id="osdEpPoster4" translation="[1522, 722]" width="332" height="178" loadWidth="332" loadHeight="178" loadDisplayMode="scaleToZoom" />
+          <Rectangle translation="[1530, 730]" width="114" height="26" color="0x090D16E6" />
+          <Label id="osdEpCode4" translation="[1534, 734]" scale="[0.44, 0.44]" width="240" height="22" numLines="1" horizAlign="center" color="0xFCD34DFF" text="S01E05" />
+          <Rectangle id="osdEpProgBg4" translation="[1522, 894]" width="332" height="6" color="0x090D16FF" visible="false" />
+          <Rectangle id="osdEpProgFill4" translation="[1522, 894]" width="0" height="6" color="0xE8A33DFF" visible="false" />
+          <Label id="osdEpTitle4" translation="[1524, 910]" scale="[0.48, 0.48]" width="680" height="46" wrap="true" numLines="2" color="0xFFFFFFFF" text="Episode 5" />
+          <Label id="osdEpMeta4" translation="[1524, 976]" scale="[0.42, 0.42]" width="760" height="24" numLines="1" color="0x94A3B8FF" text="Press OK to Play" />
+        </Group>
+
+        <!-- TAB 6 DEDICATED PANE: PLEX-STYLE TECHNICAL & MEDIA METADATA 6-CARD GRID (y=658..1014) -->
+        <Group id="osdMetaGridGroup" visible="false">
+          <Rectangle translation="[54, 658]" width="592" height="170" color="0x111827FF" />
+          <Rectangle translation="[54, 658]" width="5" height="170" color="0x00BCD4FF" />
+          <Label id="osdMetaHead0" translation="[74, 670]" scale="[0.48, 0.48]" width="1140" height="24" numLines="1" color="0x67E8F9FF" text="1. MEDIA FILE &amp; CONTAINER" />
+          <Label id="osdMetaVal0" translation="[74, 700]" scale="[0.49, 0.49]" width="1130" height="114" wrap="true" numLines="4" color="0xF8FAFCFF" text="" />
+
+          <Rectangle translation="[664, 658]" width="592" height="170" color="0x111827FF" />
+          <Rectangle translation="[664, 658]" width="5" height="170" color="0xE8A33DFF" />
+          <Label id="osdMetaHead1" translation="[684, 670]" scale="[0.48, 0.48]" width="1140" height="24" numLines="1" color="0xFCD34DFF" text="2. VIDEO STREAM &amp; RESOLUTION" />
+          <Label id="osdMetaVal1" translation="[684, 700]" scale="[0.49, 0.49]" width="1130" height="114" wrap="true" numLines="4" color="0xF8FAFCFF" text="" />
+
+          <Rectangle translation="[1274, 658]" width="592" height="170" color="0x111827FF" />
+          <Rectangle translation="[1274, 658]" width="5" height="170" color="0x10B981FF" />
+          <Label id="osdMetaHead2" translation="[1294, 670]" scale="[0.48, 0.48]" width="1140" height="24" numLines="1" color="0x6EE7B7FF" text="3. AUDIO STREAMS &amp; CHANNELS" />
+          <Label id="osdMetaVal2" translation="[1294, 700]" scale="[0.49, 0.49]" width="1130" height="114" wrap="true" numLines="4" color="0xF8FAFCFF" text="" />
+
+          <Rectangle translation="[54, 842]" width="592" height="170" color="0x111827FF" />
+          <Rectangle translation="[54, 842]" width="5" height="170" color="0xA855F7FF" />
+          <Label id="osdMetaHead3" translation="[74, 854]" scale="[0.48, 0.48]" width="1140" height="24" numLines="1" color="0xD8B4FEFF" text="4. SUBTITLES &amp; CLOSED CAPTIONS" />
+          <Label id="osdMetaVal3" translation="[74, 884]" scale="[0.49, 0.49]" width="1130" height="114" wrap="true" numLines="4" color="0xF8FAFCFF" text="" />
+
+          <Rectangle translation="[664, 842]" width="592" height="170" color="0x111827FF" />
+          <Rectangle translation="[664, 842]" width="5" height="170" color="0x38BDF8FF" />
+          <Label id="osdMetaHead4" translation="[684, 854]" scale="[0.48, 0.48]" width="1140" height="24" numLines="1" color="0x7DD3FCFF" text="5. LIBRARY, RUNTIME &amp; PROGRESS" />
+          <Label id="osdMetaVal4" translation="[684, 884]" scale="[0.49, 0.49]" width="1130" height="114" wrap="true" numLines="4" color="0xF8FAFCFF" text="" />
+
+          <Rectangle translation="[1274, 842]" width="592" height="170" color="0x111827FF" />
+          <Rectangle translation="[1274, 842]" width="5" height="170" color="0xF59E0BFF" />
+          <Label id="osdMetaHead5" translation="[1294, 854]" scale="[0.48, 0.48]" width="1140" height="24" numLines="1" color="0xFDE68AFF" text="6. STREAM DELIVERY &amp; BITRATE" />
+          <Label id="osdMetaVal5" translation="[1294, 884]" scale="[0.49, 0.49]" width="1130" height="114" wrap="true" numLines="4" color="0xF8FAFCFF" text="" />
+        </Group>
+
+        <!-- Drawer Bottom Hint Bar (y=1022..1056) -->
+        <Rectangle translation="[54, 1020]" width="1812" height="34" color="0x151D2EFF" />
+        <Label id="osdFooterHint" translation="[70, 1027]" scale="[0.45, 0.45]" width="3900" height="24" numLines="1" color="0xCBD5E1FF" text="[UP/DOWN] Switch Row (Scrubber / Tabs / Options)   |   [LEFT/RIGHT] Navigate   |   [OK] Select   |   [*] Quick Captions   |   [BACK] Hide Menu" />
+      </Group>
+    </Group>
     <Timer id="clockTimer" repeat="true" duration="1.0" />
+    <Timer id="subTimer" repeat="true" duration="0.25" />
   </children>
 </component>
 `;
@@ -2840,8 +3098,55 @@ sub init()
     m.dismissedCinemaLoadKey = ""
     m.lastCinemaSeekKey = ""
     m.lastCinemaPauseKey = ""
+    m.currentPlayingMediaUrl = ""
+    m.currentStreamIsHls = false
+    m.subtitleOverlayGroup = m.top.findNode("subtitleOverlayGroup")
+    m.subtitleCueBg = m.top.findNode("subtitleCueBg")
+    m.subtitleCueAccent = m.top.findNode("subtitleCueAccent")
+    m.subtitleCueLabel = m.top.findNode("subtitleCueLabel")
+    m.playerOsdGroup = m.top.findNode("playerOsdGroup")
+    m.osdScrubberGroup = m.top.findNode("osdScrubberGroup")
+    m.osdFullDrawerGroup = m.top.findNode("osdFullDrawerGroup")
+    m.osdActionBtnsGroup = m.top.findNode("osdActionBtnsGroup")
+    m.osdRichSummaryGroup = m.top.findNode("osdRichSummaryGroup")
+    m.osdSeasonPaneGroup = m.top.findNode("osdSeasonPaneGroup")
+    m.osdMetaGridGroup = m.top.findNode("osdMetaGridGroup")
+    m.subTimer = m.top.findNode("subTimer")
+    m.playerOsdOpen = false
+    m.playerOsdMode = "full"
+    m.playerMiniHideSec = 0
+    m.osdZone = "tabs"
+    m.osdTabIdx = 0
+    m.osdItemIdx = 0
+    m.osdSeasonTopIdx = 0
+    m.osdEpFocusIdx = 0
+    m.osdBrowseSeasonIdx = 0
+    m.osdSeasonsList = []
+    m.osdSeasonEps = []
+    m.playingShowGroup = invalid
+    m.playingShowGroupIdx = -1
+    m.playingEpisodeObj = invalid
+    m.playingEpFlatIndex = -1
+    m.playbackMeta = invalid
+    m.captionsEnabled = false
+    m.captionTempReplaySec = 0
+    m.captionChoiceIdx = 0
+    m.captionChoices = [
+        { kind: "off", label: "Captions Off", trackIndex: -1 },
+        { kind: "native_cc", label: "Broadcast / Stream CC", trackIndex: -2 }
+    ]
+    m.subtitleCues = []
+    m.cuesExtracting = false
+    m.lastCueIdx = -1
+    m.captionSizeMode = 1
+    m.captionOffsetSec = 0.0
+    m.activeAudioChoiceIdx = 0
     if m.cinemaVideo <> invalid
         m.cinemaVideo.observeField("state", "onCinemaVideoState")
+    end if
+    if m.subTimer <> invalid
+        m.subTimer.observeField("fire", "onSubTimerTick")
+        m.subTimer.control = "start"
     end if
     m.clockTimer = m.top.findNode("clockTimer")
     m.tickCount = 0
@@ -2899,10 +3204,41 @@ sub init()
     m.dashTask.mediaServerUrl = "${effectiveMediaServerUrl}"
     m.dashTask.knownRev = initKnownRev
     m.dashTask.observeField("payloadJson", "onPayloadUpdated")
+    m.dashTask.observeField("playbackMetaJson", "onPlaybackMetaLoaded")
     m.dashTask.observeField("localFrameUri", "onLocalFrameReady")
     m.dashTask.control = "RUN"
     onClockTick()
 end sub
+
+function safeInt(v as Dynamic) as Integer
+    if v = invalid then return 0
+    t = type(v)
+    if t = "Integer" or t = "roInt" or t = "LongInteger" then return v
+    if t = "Float" or t = "roFloat" or t = "Double" or t = "roDouble" then return Int(v)
+    if t = "String" or t = "roString" then return Int(Val(v))
+    return 0
+end function
+
+function safeFloat(v as Dynamic) as Float
+    if v = invalid then return 0.0
+    t = type(v)
+    if t = "Float" or t = "roFloat" or t = "Double" or t = "roDouble" then return v
+    if t = "Integer" or t = "roInt" or t = "LongInteger" then return v * 1.0
+    if t = "String" or t = "roString" then return Val(v)
+    return 0.0
+end function
+
+function formatClockHms(secVal as Dynamic) as String
+    s = safeInt(secVal)
+    if s < 0 then s = 0
+    h = Int(s / 3600)
+    mn = Int((s mod 3600) / 60)
+    sc = s mod 60
+    if h > 0
+        return h.ToStr() + ":" + pad2(mn) + ":" + pad2(sc)
+    end if
+    return mn.ToStr() + ":" + pad2(sc)
+end function
 
 function pad2(n as Integer) as String
     if n < 10 then return "0" + n.ToStr()
@@ -2954,8 +3290,31 @@ sub onClockTick()
         end if
     end if
     if m.cinemaVideoActive = true and m.cinemaVideo <> invalid
-        if m.cinemaVideo.hasFocus() <> true
-            m.cinemaVideo.setFocus(true)
+        if m.top.hasFocus() <> true
+            m.top.setFocus(true)
+        end if
+        if m.captionTempReplaySec > 0
+            m.captionTempReplaySec = m.captionTempReplaySec - 1
+        end if
+        if m.playerOsdOpen = true
+            updatePlayerOsdHeaderAndScrubber()
+            if m.playerOsdMode = "mini" and m.cinemaVideo.state = "playing"
+                if m.playerMiniHideSec > 1
+                    m.playerMiniHideSec = m.playerMiniHideSec - 1
+                else
+                    closePlayerOsd()
+                end if
+            else if m.playerOsdMode = "full" and m.osdTabIdx = 6
+                renderPlayerOsd()
+            end if
+        end if
+        if m.cuesExtracting = true and m.dashTask <> invalid and m.currentPlayingTrackId <> "" and (m.tickCount mod 3) = 0
+            reqCueIdx = 0
+            if m.captionChoiceIdx > 0 and m.captionChoiceIdx < m.captionChoices.Count()
+                ch = m.captionChoices[m.captionChoiceIdx]
+                if ch <> invalid and ch.trackIndex <> invalid and ch.trackIndex >= 0 then reqCueIdx = ch.trackIndex
+            end if
+            m.dashTask.metaRequestUrl = "${progressBaseUrl}/api/roku-playback-meta/" + m.currentPlayingTrackId + "?cueTrack=" + reqCueIdx.ToStr() + "&waitCues=1&seq=" + m.tickCount.ToStr()
         end if
     end if
     if m.cinemaVideoActive = true and m.cinemaVideo <> invalid and m.dashTask <> invalid and m.currentPlayingTrackId <> ""
@@ -3256,16 +3615,22 @@ sub playCinemaVideo(cinema as Object)
         content.streamFormat = fmt
         startSec = 0
         if cinema.startAt <> invalid and cinema.startAt > 0
-            startSec = Int(cinema.startAt)
+            startSec = safeInt(cinema.startAt)
             content.PlayStart = startSec
         end if
         m.currentPlayingStartSec = startSec
+        m.currentPlayingMediaUrl = cleanAscii(cinema.mediaUrl)
+        m.currentStreamIsHls = (fmt = "hls")
         m.cinemaVideo.content = content
-        m.cinemaVideo.setFocus(true)
+        m.top.setFocus(true)
         m.cinemaVideo.control = "play"
         m.switchingCinemaLoad = false
         if cinema.seekKey <> invalid then m.lastCinemaSeekKey = cinema.seekKey.ToStr()
         if cinema.pauseKey <> invalid then m.lastCinemaPauseKey = cinema.pauseKey.ToStr()
+        if cinema.preserveMeta <> true
+            initPlaybackContextForCurrentTrack()
+        end if
+        openPlayerOsd("mini")
         return
     end if
     if cinema.seekKey <> invalid
@@ -3295,6 +3660,8 @@ sub stopCinemaVideo()
     m.cinemaVideoActive = false
     m.lastCinemaLoadKey = ""
     m.lastCinemaSeekKey = ""
+    closePlayerOsd()
+    if m.subtitleOverlayGroup <> invalid then m.subtitleOverlayGroup.visible = false
     if m.cinemaVideo <> invalid
         m.cinemaVideo.control = "stop"
         m.cinemaVideo.visible = false
@@ -4773,9 +5140,10 @@ sub onCinemaVideoState()
     if m.cinemaVideo = invalid or m.cinemaVideoActive <> true then return
     st = m.cinemaVideo.state
     if st = "playing" or st = "buffering" or st = "paused"
-        if m.cinemaVideo.hasFocus() <> true
-            m.cinemaVideo.setFocus(true)
+        if m.top.hasFocus() <> true
+            m.top.setFocus(true)
         end if
+        if m.playerOsdOpen = true then updatePlayerOsdHeaderAndScrubber()
         return
     end if
     if st = "error" and m.triedHlsFallback <> true and m.currentPlayingHlsUrl <> invalid and m.currentPlayingHlsUrl <> ""
@@ -5274,71 +5642,1829 @@ sub launchWallCard(idx as Integer)
     end if
 end sub
 
+sub initPlaybackContextForCurrentTrack()
+    m.playbackMeta = invalid
+    m.subtitleCues = []
+    m.cuesExtracting = false
+    m.lastCueIdx = -1
+    m.activeAudioChoiceIdx = 0
+    m.captionChoices = [
+        { kind: "off", label: "Captions Off", trackIndex: -1 },
+        { kind: "native_cc", label: "Broadcast / Stream CC", trackIndex: -2 }
+    ]
+    if m.captionsEnabled = true
+        m.captionChoiceIdx = 1
+    else
+        m.captionChoiceIdx = 0
+    end if
+    m.playingShowGroup = invalid
+    m.playingShowGroupIdx = -1
+    m.playingEpisodeObj = invalid
+    m.playingEpFlatIndex = -1
+    m.osdSeasonsList = []
+    m.osdSeasonEps = []
+    m.osdBrowseSeasonIdx = 0
+    m.osdEpFocusIdx = 0
+
+    allSource = m.allCinemaItems
+    if (allSource = invalid or allSource.Count() = 0) and m.latestCinemaLibrary <> invalid and m.latestCinemaLibrary.items <> invalid
+        allSource = m.latestCinemaLibrary.items
+    end if
+
+    tid = m.currentPlayingTrackId
+    if allSource <> invalid and allSource.Count() > 0
+        for sIdx = 0 to allSource.Count() - 1
+            cand = allSource[sIdx]
+            if cand <> invalid and cand.isShowGroup = true and cand.episodes <> invalid and cand.episodes.Count() > 0
+                if m.activeShowGroup <> invalid and cleanAscii(cand.id) = cleanAscii(m.activeShowGroup.id)
+                    m.playingShowGroup = cand
+                    m.playingShowGroupIdx = sIdx
+                end if
+                for eIdx = 0 to cand.episodes.Count() - 1
+                    epItem = cand.episodes[eIdx]
+                    if epItem <> invalid and tid <> "" and (cleanAscii(epItem.id) = tid or cleanAscii(epItem.repTrackId) = tid)
+                        m.playingShowGroup = cand
+                        m.playingShowGroupIdx = sIdx
+                        m.playingEpisodeObj = epItem
+                        m.playingEpFlatIndex = eIdx
+                        if m.currentPlayingItem = invalid or m.currentPlayingItem.isShowGroup = true
+                            m.currentPlayingItem = epItem
+                        end if
+                        exit for
+                    end if
+                end for
+                if m.playingEpisodeObj <> invalid then exit for
+            else if cand <> invalid and tid <> "" and (cleanAscii(cand.id) = tid or cleanAscii(cand.repTrackId) = tid)
+                if m.currentPlayingItem = invalid
+                    m.currentPlayingItem = cand
+                end if
+            end if
+        end for
+    end if
+
+    if m.playingShowGroup <> invalid
+        targetSNum = 1
+        if m.playingEpisodeObj <> invalid and m.playingEpisodeObj.seasonNumber <> invalid
+            targetSNum = safeInt(m.playingEpisodeObj.seasonNumber)
+        end if
+        buildPlayerSeasonsForShow(m.playingShowGroup, targetSNum)
+    else if allSource <> invalid
+        relMovies = []
+        curGenre = ""
+        if m.currentPlayingItem <> invalid and m.currentPlayingItem.genre <> invalid
+            curGenre = LCase(cleanAscii(m.currentPlayingItem.genre))
+        end if
+        for each mvCand in allSource
+            if mvCand <> invalid and mvCand.isShowGroup <> true and mvCand.streamUrl <> invalid and mvCand.streamUrl <> ""
+                if curGenre = "" or Instr(1, LCase(cleanAscii(mvCand.genre)), Left(curGenre, 5)) > 0 or relMovies.Count() < 12
+                    relMovies.Push(mvCand)
+                end if
+                if relMovies.Count() >= 24 then exit for
+            end if
+        end for
+        m.osdSeasonEps = relMovies
+        m.osdSeasonsList = [{ seasonNumber: 1, label: "Related Films", episodes: relMovies }]
+        m.osdBrowseSeasonIdx = 0
+        m.osdEpFocusIdx = 0
+        for rIdx = 0 to relMovies.Count() - 1
+            if tid <> "" and cleanAscii(relMovies[rIdx].id) = tid
+                m.osdEpFocusIdx = rIdx
+                exit for
+            end if
+        end for
+    end if
+
+    isTabloStream = false
+    if m.currentPlayingItem <> invalid and (m.currentPlayingItem.isTablo = true or cleanAscii(m.currentPlayingItem.mediaType) = "tablo")
+        isTabloStream = true
+    end if
+    if Instr(1, LCase(m.currentPlayingMediaUrl), "/api/tablo/") > 0 then isTabloStream = true
+
+    if m.dashTask <> invalid and tid <> "" and not isTabloStream
+        m.dashTask.metaRequestUrl = "${progressBaseUrl}/api/roku-playback-meta/" + tid + "?seq=" + m.tickCount.ToStr()
+    end if
+end sub
+
+sub buildPlayerSeasonsForShow(showObj as Object, targetSeasonNum as Integer)
+    m.osdSeasonsList = []
+    m.osdSeasonEps = []
+    if showObj = invalid or showObj.episodes = invalid or showObj.episodes.Count() = 0 then return
+    eps = showObj.episodes
+    seenS = {}
+    sNums = []
+    for each ep in eps
+        sn = 1
+        if ep.seasonNumber <> invalid and safeInt(ep.seasonNumber) >= 0 then sn = safeInt(ep.seasonNumber)
+        sk = sn.ToStr()
+        if not seenS.DoesExist(sk)
+            seenS[sk] = true
+            sNums.Push(sn)
+        end if
+    end for
+    if sNums.Count() > 1
+        for i = 0 to sNums.Count() - 2
+            for j = i + 1 to sNums.Count() - 1
+                if sNums[j] < sNums[i]
+                    tmpS = sNums[i]
+                    sNums[i] = sNums[j]
+                    sNums[j] = tmpS
+                end if
+            end for
+        end for
+    end if
+    matchBrowseIdx = 0
+    for idxS = 0 to sNums.Count() - 1
+        snVal = sNums[idxS]
+        sEpArr = []
+        for each ep in eps
+            epSn = 1
+            if ep.seasonNumber <> invalid and safeInt(ep.seasonNumber) >= 0 then epSn = safeInt(ep.seasonNumber)
+            if epSn = snVal then sEpArr.Push(ep)
+        end for
+        sTitle = "Season " + snVal.ToStr()
+        if snVal = 0 then sTitle = "Specials"
+        m.osdSeasonsList.Push({
+            seasonNumber: snVal,
+            label: sTitle,
+            episodes: sEpArr
+        })
+        if snVal = targetSeasonNum then matchBrowseIdx = idxS
+    end for
+    applyPlayerBrowseSeason(matchBrowseIdx)
+end sub
+
+sub applyPlayerBrowseSeason(browseIdx as Integer)
+    if m.osdSeasonsList = invalid or m.osdSeasonsList.Count() = 0 then return
+    if browseIdx < 0 then browseIdx = m.osdSeasonsList.Count() - 1
+    if browseIdx >= m.osdSeasonsList.Count() then browseIdx = 0
+    m.osdBrowseSeasonIdx = browseIdx
+    sEntry = m.osdSeasonsList[browseIdx]
+    m.osdSeasonEps = sEntry.episodes
+    m.osdEpFocusIdx = 0
+    if m.osdSeasonEps <> invalid and m.osdSeasonEps.Count() > 0 and m.currentPlayingTrackId <> ""
+        for i = 0 to m.osdSeasonEps.Count() - 1
+            if cleanAscii(m.osdSeasonEps[i].id) = m.currentPlayingTrackId
+                m.osdEpFocusIdx = i
+                exit for
+            end if
+        end for
+    end if
+end sub
+
+sub onPlaybackMetaLoaded()
+    if m.dashTask = invalid then return
+    rawMeta = m.dashTask.playbackMetaJson
+    if rawMeta = "" then return
+    parsed = ParseJson(rawMeta)
+    if parsed = invalid or parsed.ok <> true then return
+    if m.currentPlayingTrackId <> "" and parsed.id <> invalid and cleanAscii(parsed.id) <> m.currentPlayingTrackId
+        return
+    end if
+    m.playbackMeta = parsed
+
+    choices = [{ kind: "off", label: "Captions Off", trackIndex: -1 }]
+    if parsed.subtitleTracks <> invalid and parsed.subtitleTracks.Count() > 0
+        for each st in parsed.subtitleTracks
+            choices.Push({
+                kind: "server",
+                label: cleanAscii(st.label),
+                trackIndex: safeInt(st.trackIndex),
+                srtUrl: cleanAscii(st.srtUrl)
+            })
+        end for
+    end if
+    choices.Push({ kind: "native_cc", label: "Broadcast / Stream CC", trackIndex: -2 })
+    m.captionChoices = choices
+
+    if parsed.cues <> invalid and parsed.cuesReady = true
+        m.subtitleCues = parsed.cues
+        m.cuesExtracting = false
+        m.lastCueIdx = -1
+    else if parsed.cuesExtracting = true
+        m.cuesExtracting = true
+    else
+        m.cuesExtracting = false
+    end if
+
+    if m.captionsEnabled = true
+        matchedIdx = 0
+        if parsed.cueTrackIndex <> invalid and safeInt(parsed.cueTrackIndex) >= 0
+            wantTrk = safeInt(parsed.cueTrackIndex)
+            for cIdx = 1 to m.captionChoices.Count() - 1
+                if m.captionChoices[cIdx].kind = "server" and m.captionChoices[cIdx].trackIndex = wantTrk
+                    matchedIdx = cIdx
+                    exit for
+                end if
+            end for
+        end if
+        if matchedIdx = 0 and m.captionChoices.Count() > 1
+            matchedIdx = 1
+        end if
+        m.captionChoiceIdx = matchedIdx
+    else
+        m.captionChoiceIdx = 0
+    end if
+
+    if m.playerOsdOpen = true then renderPlayerOsd()
+end sub
+
+function findCueIdxAtTime(tSec as Float) as Integer
+    totalC = 0
+    if m.subtitleCues <> invalid then totalC = m.subtitleCues.Count()
+    if totalC = 0 then return -1
+
+    if m.lastCueIdx >= 0 and m.lastCueIdx < totalC
+        curC = m.subtitleCues[m.lastCueIdx]
+        if tSec >= safeFloat(curC.s) and tSec <= safeFloat(curC.e)
+            return m.lastCueIdx
+        end if
+        if m.lastCueIdx + 1 < totalC
+            nxtC = m.subtitleCues[m.lastCueIdx + 1]
+            if tSec >= safeFloat(nxtC.s) and tSec <= safeFloat(nxtC.e)
+                m.lastCueIdx = m.lastCueIdx + 1
+                return m.lastCueIdx
+            end if
+        end if
+    end if
+
+    lo = 0
+    hi = totalC - 1
+    while lo <= hi
+        midIdx = Int((lo + hi) / 2)
+        cObj = m.subtitleCues[midIdx]
+        cs = safeFloat(cObj.s)
+        ce = safeFloat(cObj.e)
+        if tSec < cs
+            hi = midIdx - 1
+        else if tSec > ce
+            lo = midIdx + 1
+        else
+            m.lastCueIdx = midIdx
+            return midIdx
+        end if
+    end while
+    return -1
+end function
+
+function findNearestOrNextCueIdx(tSec as Float) as Integer
+    totalC = 0
+    if m.subtitleCues <> invalid then totalC = m.subtitleCues.Count()
+    if totalC = 0 then return -1
+    for i = 0 to totalC - 1
+        cObj = m.subtitleCues[i]
+        if safeFloat(cObj.e) >= tSec then return i
+    end for
+    return totalC - 1
+end function
+
+sub onSubTimerTick()
+    if m.subtitleOverlayGroup = invalid then return
+    if m.cinemaVideoActive <> true or m.cinemaVideo = invalid
+        m.subtitleOverlayGroup.visible = false
+        return
+    end if
+
+    effectiveCc = (m.captionsEnabled = true or m.captionTempReplaySec > 0)
+    if not effectiveCc
+        m.subtitleOverlayGroup.visible = false
+        if m.cinemaVideo.globalCaptionMode <> "Off"
+            m.cinemaVideo.globalCaptionMode = "Off"
+        end if
+        return
+    end if
+
+    activeChoice = { kind: "native_cc", label: "Broadcast CC", trackIndex: -2 }
+    if m.captionChoiceIdx > 0 and m.captionChoiceIdx < m.captionChoices.Count()
+        activeChoice = m.captionChoices[m.captionChoiceIdx]
+    else if m.captionChoices.Count() > 1
+        activeChoice = m.captionChoices[1]
+    end if
+
+    if m.playerOsdOpen = true and m.playerOsdMode = "full"
+        m.subtitleOverlayGroup.translation = [160, 396]
+    else if m.playerOsdOpen = true and m.playerOsdMode = "mini"
+        m.subtitleOverlayGroup.translation = [160, 842]
+    else
+        m.subtitleOverlayGroup.translation = [160, 916]
+    end if
+
+    if m.subtitleCueLabel <> invalid
+        if m.captionSizeMode = 0
+            m.subtitleCueLabel.scale = [0.66, 0.66]
+            m.subtitleCueLabel.width = 1820
+        else if m.captionSizeMode = 2
+            m.subtitleCueLabel.scale = [0.94, 0.94]
+            m.subtitleCueLabel.width = 1280
+        else
+            m.subtitleCueLabel.scale = [0.80, 0.80]
+            m.subtitleCueLabel.width = 1500
+        end if
+    end if
+
+    if activeChoice.kind = "server" and m.subtitleCues <> invalid and m.subtitleCues.Count() > 0
+        if m.cinemaVideo.globalCaptionMode <> "Off"
+            m.cinemaVideo.globalCaptionMode = "Off"
+        end if
+        curT = safeFloat(m.cinemaVideo.position) + m.captionOffsetSec
+        cIdx = findCueIdxAtTime(curT)
+        if cIdx >= 0 and cIdx < m.subtitleCues.Count()
+            cueTxt = cleanAscii(m.subtitleCues[cIdx].t)
+            if cueTxt <> ""
+                m.subtitleCueLabel.text = cueTxt
+                m.subtitleOverlayGroup.visible = true
+            else
+                m.subtitleOverlayGroup.visible = false
+            end if
+        else
+            m.subtitleOverlayGroup.visible = false
+        end if
+        if m.playerOsdOpen = true and m.playerOsdMode = "full" and m.osdTabIdx = 1
+            updateCaptionsTranscriptCard()
+        end if
+    else
+        m.subtitleOverlayGroup.visible = false
+        if m.cinemaVideo.globalCaptionMode <> "On"
+            m.cinemaVideo.globalCaptionMode = "On"
+        end if
+    end if
+end sub
+
+sub toggleCaptionsOnOff()
+    if m.captionsEnabled = true
+        m.captionsEnabled = false
+        m.captionTempReplaySec = 0
+        m.captionChoiceIdx = 0
+    else
+        m.captionsEnabled = true
+        if m.captionChoices.Count() > 1
+            m.captionChoiceIdx = 1
+            ch = m.captionChoices[1]
+            if ch.kind = "server" and m.subtitleCues.Count() = 0 and m.dashTask <> invalid and m.currentPlayingTrackId <> ""
+                m.dashTask.metaRequestUrl = "${progressBaseUrl}/api/roku-playback-meta/" + m.currentPlayingTrackId + "?cueTrack=" + ch.trackIndex.ToStr() + "&waitCues=1&seq=" + m.tickCount.ToStr()
+            end if
+        end if
+    end if
+    onSubTimerTick()
+    if m.playerOsdOpen = true then renderPlayerOsd()
+end sub
+
+sub cycleCaptionChoice(delta as Integer)
+    totalCh = m.captionChoices.Count()
+    if totalCh <= 1 then return
+    nextIdx = m.captionChoiceIdx + delta
+    if nextIdx < 0 then nextIdx = totalCh - 1
+    if nextIdx >= totalCh then nextIdx = 0
+    m.captionChoiceIdx = nextIdx
+    chosen = m.captionChoices[nextIdx]
+    if chosen.kind = "off"
+        m.captionsEnabled = false
+        m.captionTempReplaySec = 0
+    else
+        m.captionsEnabled = true
+        if chosen.kind = "server" and m.dashTask <> invalid and m.currentPlayingTrackId <> ""
+            m.dashTask.metaRequestUrl = "${progressBaseUrl}/api/roku-playback-meta/" + m.currentPlayingTrackId + "?cueTrack=" + chosen.trackIndex.ToStr() + "&waitCues=1&seq=" + m.tickCount.ToStr()
+        end if
+    end if
+    onSubTimerTick()
+    if m.playerOsdOpen = true then renderPlayerOsd()
+end sub
+
+sub jumpToNeighborCaption(delta as Integer)
+    if m.cinemaVideo = invalid then return
+    totalC = 0
+    if m.subtitleCues <> invalid then totalC = m.subtitleCues.Count()
+    if totalC = 0
+        ns = safeInt(m.cinemaVideo.position) + (delta * 10)
+        if ns < 0 then ns = 0
+        m.cinemaVideo.seek = ns
+        return
+    end if
+    if m.captionsEnabled <> true
+        m.captionsEnabled = true
+        if m.captionChoiceIdx = 0 and m.captionChoices.Count() > 1 then m.captionChoiceIdx = 1
+    end if
+    curT = safeFloat(m.cinemaVideo.position) + m.captionOffsetSec
+    anchorIdx = findNearestOrNextCueIdx(curT)
+    targetIdx = anchorIdx + delta
+    if delta < 0 and anchorIdx >= 0 and anchorIdx < totalC
+        if curT - safeFloat(m.subtitleCues[anchorIdx].s) > 2.2
+            targetIdx = anchorIdx
+        else
+            targetIdx = anchorIdx - 1
+        end if
+    end if
+    if targetIdx < 0 then targetIdx = 0
+    if targetIdx >= totalC then targetIdx = totalC - 1
+    targetSec = safeFloat(m.subtitleCues[targetIdx].s) - m.captionOffsetSec
+    if targetSec < 0 then targetSec = 0
+    m.lastCueIdx = targetIdx
+    m.cinemaVideo.seek = targetSec
+    onSubTimerTick()
+    if m.playerOsdOpen = true then renderPlayerOsd()
+end sub
+
+sub cycleCaptionSize()
+    m.captionSizeMode = (m.captionSizeMode + 1) mod 3
+    onSubTimerTick()
+    if m.playerOsdOpen = true then renderPlayerOsd()
+end sub
+
+sub cycleCaptionOffset()
+    if m.captionOffsetSec >= 1.4
+        m.captionOffsetSec = -1.5
+    else
+        m.captionOffsetSec = m.captionOffsetSec + 0.5
+    end if
+    onSubTimerTick()
+    if m.playerOsdOpen = true then renderPlayerOsd()
+end sub
+
+sub cycleAudioTrack(delta as Integer)
+    if m.cinemaVideo = invalid then return
+    rokuTracks = m.cinemaVideo.availableAudioTracks
+    metaTracks = []
+    if m.playbackMeta <> invalid and m.playbackMeta.audioTracks <> invalid
+        metaTracks = m.playbackMeta.audioTracks
+    end if
+
+    if m.currentStreamIsHls = true and metaTracks.Count() > 1 and m.currentPlayingHlsUrl <> ""
+        nextA = m.activeAudioChoiceIdx + delta
+        if nextA < 0 then nextA = metaTracks.Count() - 1
+        if nextA >= metaTracks.Count() then nextA = 0
+        m.activeAudioChoiceIdx = nextA
+        curPos = safeInt(m.cinemaVideo.position)
+        hlsBase = m.currentPlayingHlsUrl
+        qPos = Instr(1, hlsBase, "?")
+        if qPos > 0 then hlsBase = Left(hlsBase, qPos - 1)
+        newUrl = hlsBase + "?audio=" + nextA.ToStr()
+        playCinemaVideo({
+            active: true,
+            isLocal: m.localVideoPlaying,
+            preserveMeta: true,
+            loadKey: "audio-hls-" + nextA.ToStr() + "-" + m.tickCount.ToStr(),
+            mediaUrl: newUrl,
+            streamFormat: "hls",
+            title: m.currentPlayingTitle,
+            startAt: curPos,
+            paused: false
+        })
+        openPlayerOsd("full")
+        return
+    end if
+
+    if rokuTracks <> invalid and rokuTracks.Count() > 1
+        nextR = m.activeAudioChoiceIdx + delta
+        if nextR < 0 then nextR = rokuTracks.Count() - 1
+        if nextR >= rokuTracks.Count() then nextR = 0
+        m.activeAudioChoiceIdx = nextR
+        rkEntry = rokuTracks[nextR]
+        if rkEntry <> invalid and rkEntry.Track <> invalid
+            m.cinemaVideo.audioTrack = rkEntry.Track.ToStr()
+        end if
+    else if metaTracks.Count() > 1 and m.currentPlayingHlsUrl <> ""
+        ' Switch to HLS transcode to select secondary audio track cleanly
+        nextM = m.activeAudioChoiceIdx + delta
+        if nextM < 0 then nextM = metaTracks.Count() - 1
+        if nextM >= metaTracks.Count() then nextM = 0
+        m.activeAudioChoiceIdx = nextM
+        switchStreamDeliveryMode(true)
+        return
+    end if
+    if m.playerOsdOpen = true then renderPlayerOsd()
+end sub
+
+sub switchStreamDeliveryMode(useHls as Boolean)
+    if m.cinemaVideo = invalid or m.currentPlayingItem = invalid then return
+    curPos = safeInt(m.cinemaVideo.position)
+    if useHls = true and m.currentPlayingHlsUrl <> ""
+        hlsBase = m.currentPlayingHlsUrl
+        qPos = Instr(1, hlsBase, "?")
+        if qPos > 0 then hlsBase = Left(hlsBase, qPos - 1)
+        hlsTarget = hlsBase
+        if m.activeAudioChoiceIdx > 0 then hlsTarget = hlsBase + "?audio=" + m.activeAudioChoiceIdx.ToStr()
+        playCinemaVideo({
+            active: true,
+            isLocal: m.localVideoPlaying,
+            preserveMeta: true,
+            loadKey: "mode-hls-" + m.tickCount.ToStr(),
+            mediaUrl: hlsTarget,
+            streamFormat: "hls",
+            title: m.currentPlayingTitle,
+            startAt: curPos,
+            paused: false
+        })
+        openPlayerOsd("full")
+    else if useHls <> true and m.currentPlayingItem.streamUrl <> invalid and m.currentPlayingItem.streamUrl <> ""
+        directFmt = "mp4"
+        if m.currentPlayingItem.streamFormat <> invalid and m.currentPlayingItem.streamFormat <> ""
+            directFmt = LCase(cleanAscii(m.currentPlayingItem.streamFormat))
+        else if Instr(1, LCase(cleanAscii(m.currentPlayingItem.streamUrl)), ".mkv") > 0
+            directFmt = "mkv"
+        end if
+        playCinemaVideo({
+            active: true,
+            isLocal: m.localVideoPlaying,
+            preserveMeta: true,
+            loadKey: "mode-direct-" + m.tickCount.ToStr(),
+            mediaUrl: m.currentPlayingItem.streamUrl,
+            streamFormat: directFmt,
+            title: m.currentPlayingTitle,
+            startAt: curPos,
+            paused: false
+        })
+        openPlayerOsd("full")
+    end if
+end sub
+
+sub toggleCurrentWatchedStatus()
+    if m.currentPlayingTrackId = "" or m.dashTask = invalid then return
+    nowWatched = true
+    if m.currentPlayingItem <> invalid and m.currentPlayingItem.completed = true
+        nowWatched = false
+    else if m.playbackMeta <> invalid and m.playbackMeta.watched = true
+        nowWatched = false
+    end if
+    if nowWatched = true
+        m.dashTask.progressUrl = "${progressBaseUrl}/api/tv-progress?id=" + m.currentPlayingTrackId + "&watched=true&seq=" + m.tickCount.ToStr()
+        if m.currentPlayingItem <> invalid
+            m.currentPlayingItem.completed = true
+            m.currentPlayingItem.inProgress = false
+            m.currentPlayingItem.progressPct = 100
+        end if
+        if m.playbackMeta <> invalid then m.playbackMeta.watched = true
+    else
+        m.dashTask.progressUrl = "${progressBaseUrl}/api/tv-progress?id=" + m.currentPlayingTrackId + "&unwatched=true&seq=" + m.tickCount.ToStr()
+        if m.currentPlayingItem <> invalid
+            m.currentPlayingItem.completed = false
+            m.currentPlayingItem.inProgress = false
+            m.currentPlayingItem.progressPct = 0
+            m.currentPlayingItem.positionSec = 0
+        end if
+        if m.playbackMeta <> invalid then m.playbackMeta.watched = false
+    end if
+    if m.playerOsdOpen = true then renderPlayerOsd()
+end sub
+
+sub playSpecificEpisodeObj(epObj as Object, showObj as Object)
+    if epObj = invalid or epObj.streamUrl = invalid or epObj.streamUrl = "" then return
+    m.localVideoPlaying = true
+    m.currentPlayingTrackId = cleanAscii(epObj.id)
+    m.currentPlayingItem = epObj
+    m.currentPlayingHlsUrl = cleanAscii(epObj.hlsUrl)
+    m.triedHlsFallback = false
+    fmt = "mp4"
+    if epObj.streamFormat <> invalid and epObj.streamFormat <> ""
+        fmt = LCase(cleanAscii(epObj.streamFormat))
+    else if Instr(1, LCase(cleanAscii(epObj.streamUrl)), ".m3u8") > 0
+        fmt = "hls"
+    else if Instr(1, LCase(cleanAscii(epObj.streamUrl)), ".mkv") > 0
+        fmt = "mkv"
+    end if
+    resumeSec = 0
+    if epObj.inProgress = true and epObj.positionSec <> invalid and safeInt(epObj.positionSec) > 5
+        resumeSec = safeInt(epObj.positionSec)
+    end if
+    playTitle = cleanAscii(epObj.title)
+    if showObj <> invalid and epObj.episodeCode <> invalid and epObj.episodeCode <> ""
+        playTitle = cleanAscii(showObj.title) + " - " + cleanAscii(epObj.episodeCode) + " " + cleanAscii(epObj.episodeTitle)
+    end if
+    m.currentPlayingTitle = playTitle
+    m.currentPlayingStartSec = resumeSec
+    closePlayerOsd()
+    playCinemaVideo({
+        active: true,
+        isLocal: true,
+        trackId: m.currentPlayingTrackId,
+        hlsUrl: m.currentPlayingHlsUrl,
+        loadKey: "osd-ep-" + m.currentPlayingTrackId + "-" + m.tickCount.ToStr(),
+        mediaUrl: epObj.streamUrl,
+        streamFormat: fmt,
+        title: playTitle,
+        startAt: resumeSec,
+        paused: false
+    })
+end sub
+
+sub playAdjacentEpisode(delta as Integer)
+    if m.playingShowGroup <> invalid and m.playingShowGroup.episodes <> invalid and m.playingShowGroup.episodes.Count() > 0
+        eps = m.playingShowGroup.episodes
+        baseIdx = m.playingEpFlatIndex
+        if baseIdx < 0 then baseIdx = 0
+        nextIdx = baseIdx + delta
+        if nextIdx < 0 then nextIdx = 0
+        if nextIdx >= eps.Count() then nextIdx = eps.Count() - 1
+        playSpecificEpisodeObj(eps[nextIdx], m.playingShowGroup)
+        return
+    end if
+    if m.osdSeasonEps <> invalid and m.osdSeasonEps.Count() > 1
+        nextM = m.osdEpFocusIdx + delta
+        if nextM < 0 then nextM = m.osdSeasonEps.Count() - 1
+        if nextM >= m.osdSeasonEps.Count() then nextM = 0
+        playSpecificEpisodeObj(m.osdSeasonEps[nextM], invalid)
+    else if m.cinemaVideo <> invalid
+        ns = safeInt(m.cinemaVideo.position) + (delta * 60)
+        if ns < 0 then ns = 0
+        m.cinemaVideo.seek = ns
+    end if
+end sub
+
+sub exitPlaybackToLibrary()
+    if m.dashTask <> invalid
+        if m.cinemaVideo <> invalid and m.currentPlayingTrackId <> ""
+            posSec = safeInt(m.cinemaVideo.position)
+            durSec = safeInt(m.cinemaVideo.duration)
+            if posSec > 0
+                m.dashTask.progressUrl = "${progressBaseUrl}/api/tv-progress?id=" + m.currentPlayingTrackId + "&positionSec=" + posSec.ToStr() + "&durationSec=" + durSec.ToStr() + "&seq=" + m.tickCount.ToStr()
+                if m.currentPlayingItem <> invalid and posSec >= 5
+                    m.currentPlayingItem.positionSec = posSec
+                    m.currentPlayingItem.inProgress = true
+                    m.currentPlayingItem.completed = false
+                    if durSec > 0
+                        pct = Int(((posSec * 1.0) / (durSec * 1.0)) * 100)
+                        if pct < 1 then pct = 1
+                        if pct > 99 then pct = 99
+                        m.currentPlayingItem.progressPct = pct
+                    end if
+                end if
+            end if
+        end if
+        m.dashTask.castActionUrl = "${progressBaseUrl}/api/roku-cast-clear?loadKey=all&seq=" + m.tickCount.ToStr()
+    end if
+    m.currentPlayingTrackId = ""
+    m.currentPlayingItem = invalid
+    if m.lastRemoteCastKey <> "" then m.dismissedCinemaLoadKey = m.lastRemoteCastKey else m.dismissedCinemaLoadKey = m.lastCinemaLoadKey
+    m.localVideoPlaying = false
+    m.localLibraryOpened = true
+    stopCinemaVideo()
+    if m.cinemaLibraryActive <> true and m.latestCinemaLibrary <> invalid
+        showCinemaLibrary(m.latestCinemaLibrary)
+    end if
+    m.cinemaFocusZone = "posters"
+    m.top.setFocus(true)
+    updateCinemaPaneFocusUi()
+end sub
+
+sub openShowInLibraryFromPlayer(jumpToBrowsedSeason as Boolean)
+    targetShow = m.playingShowGroup
+    targetShowIdx = m.playingShowGroupIdx
+    targetBrowseSNum = -1
+    if jumpToBrowsedSeason = true and m.osdSeasonsList <> invalid and m.osdBrowseSeasonIdx >= 0 and m.osdBrowseSeasonIdx < m.osdSeasonsList.Count()
+        targetBrowseSNum = safeInt(m.osdSeasonsList[m.osdBrowseSeasonIdx].seasonNumber)
+    end if
+    exitPlaybackToLibrary()
+    if targetShow <> invalid
+        switchCinemaTab("shows")
+        if targetShowIdx < 0 then targetShowIdx = 0
+        enterShowSeasons(targetShow, targetShowIdx)
+        if targetBrowseSNum >= 0 and m.activeShowSeasons <> invalid
+            for sIdx = 0 to m.activeShowSeasons.Count() - 1
+                if safeInt(m.activeShowSeasons[sIdx].seasonNumber) = targetBrowseSNum
+                    applyShowSeasonFilter(sIdx)
+                    exit for
+                end if
+            end for
+        end if
+        m.cinemaFocusZone = "posters"
+        updateCinemaPaneFocusUi()
+    else
+        switchCinemaTab("movies")
+        m.cinemaFocusZone = "posters"
+        updateCinemaPaneFocusUi()
+    end if
+end sub
+
+sub openPlayerOsd(modeStr as String)
+    if m.playerOsdGroup = invalid then return
+    m.playerOsdOpen = true
+    m.playerOsdMode = modeStr
+    m.playerOsdGroup.visible = true
+    if modeStr = "mini"
+        m.playerMiniHideSec = 4
+        if m.osdFullDrawerGroup <> invalid then m.osdFullDrawerGroup.visible = false
+        if m.osdScrubberGroup <> invalid then m.osdScrubberGroup.translation = [0, 948]
+    else
+        m.playerMiniHideSec = 0
+        if m.osdFullDrawerGroup <> invalid then m.osdFullDrawerGroup.visible = true
+        if m.osdScrubberGroup <> invalid then m.osdScrubberGroup.translation = [0, 496]
+        if m.osdZone <> "scrubber" and m.osdZone <> "tabs" and m.osdZone <> "seasonTop" and m.osdZone <> "items"
+            m.osdZone = "tabs"
+        end if
+    end if
+    onSubTimerTick()
+    renderPlayerOsd()
+end sub
+
+sub closePlayerOsd()
+    m.playerOsdOpen = false
+    m.playerMiniHideSec = 0
+    if m.playerOsdGroup <> invalid then m.playerOsdGroup.visible = false
+    onSubTimerTick()
+end sub
+
+function currentAudioBadgeLabel() as String
+    if m.playbackMeta <> invalid and m.playbackMeta.audioTracks <> invalid and m.playbackMeta.audioTracks.Count() > 0
+        aTracks = m.playbackMeta.audioTracks
+        idx = m.activeAudioChoiceIdx
+        if idx < 0 or idx >= aTracks.Count() then idx = 0
+        aObj = aTracks[idx]
+        return cleanAscii(aObj.language) + " " + cleanAscii(aObj.codec) + " " + cleanAscii(aObj.channelsLabel)
+    end if
+    if m.cinemaVideo <> invalid and m.cinemaVideo.availableAudioTracks <> invalid and m.cinemaVideo.availableAudioTracks.Count() > 0
+        rTracks = m.cinemaVideo.availableAudioTracks
+        idx = m.activeAudioChoiceIdx
+        if idx < 0 or idx >= rTracks.Count() then idx = 0
+        rObj = rTracks[idx]
+        if rObj <> invalid and rObj.Language <> invalid and rObj.Language <> ""
+            return UCase(cleanAscii(rObj.Language)) + " TRACK " + (idx + 1).ToStr()
+        end if
+    end if
+    return "STEREO / AUTO"
+end function
+
+function currentCaptionBadgeLabel() as String
+    if m.captionsEnabled <> true and m.captionTempReplaySec <= 0
+        return "CC: OFF"
+    end if
+    if m.captionTempReplaySec > 0 and m.captionsEnabled <> true
+        return "CC: REPLAY (" + m.captionTempReplaySec.ToStr() + "s)"
+    end if
+    if m.captionChoiceIdx > 0 and m.captionChoiceIdx < m.captionChoices.Count()
+        return "CC: " + Left(cleanAscii(m.captionChoices[m.captionChoiceIdx].label), 18)
+    end if
+    return "CC: ON"
+end function
+
+sub updatePlayerOsdHeaderAndScrubber()
+    if m.cinemaVideo = invalid then return
+    posSec = safeInt(m.cinemaVideo.position)
+    durSec = safeInt(m.cinemaVideo.duration)
+    if durSec <= 0 and m.playbackMeta <> invalid and m.playbackMeta.durationSec <> invalid
+        durSec = safeInt(m.playbackMeta.durationSec)
+    else if durSec <= 0 and m.currentPlayingItem <> invalid and m.currentPlayingItem.durationSec <> invalid
+        durSec = safeInt(m.currentPlayingItem.durationSec)
+    end if
+    pct = 0
+    if durSec > 0
+        pct = Int(((posSec * 1.0) / (durSec * 1.0)) * 100)
+        if pct < 0 then pct = 0
+        if pct > 100 then pct = 100
+    end if
+    remSec = durSec - posSec
+    if remSec < 0 then remSec = 0
+
+    typePillTxt = m.top.findNode("osdTypePillTxt")
+    topTitle = m.top.findNode("osdTopTitle")
+    topSub = m.top.findNode("osdTopSubMeta")
+    stBg = m.top.findNode("osdStateBadgeBg")
+    stTxt = m.top.findNode("osdStateBadgeTxt")
+    ccBg = m.top.findNode("osdCcBadgeBg")
+    ccTxt = m.top.findNode("osdCcBadgeTxt")
+    auTxt = m.top.findNode("osdAudioBadgeTxt")
+    clkTxt = m.top.findNode("osdTopClockTxt")
+
+    if typePillTxt <> invalid
+        if m.playingShowGroup <> invalid and m.playingEpisodeObj <> invalid
+            typePillTxt.text = "TV | " + cleanAscii(m.playingEpisodeObj.episodeCode)
+        else if m.currentPlayingItem <> invalid and m.currentPlayingItem.isTablo = true
+            typePillTxt.text = "TABLO DVR"
+        else
+            typePillTxt.text = "FEATURE FILM"
+        end if
+    end if
+    if topTitle <> invalid then topTitle.text = Left(cleanAscii(m.currentPlayingTitle), 56)
+    if topSub <> invalid
+        modeLbl = "Direct Play"
+        if m.currentStreamIsHls = true then modeLbl = "HLS Live Stream"
+        if m.playingShowGroup <> invalid
+            topSub.text = "Series: " + cleanAscii(m.playingShowGroup.title) + "  |  " + modeLbl + "  |  Press [OK / UP / DOWN / *] for Rich Menu  |  [BACK] Exit"
+        else if m.playbackMeta <> invalid and m.playbackMeta.video <> invalid and m.playbackMeta.video.summary <> invalid
+            topSub.text = cleanAscii(m.playbackMeta.video.summary) + "  |  " + modeLbl + "  |  Press [OK / UP / DOWN / *] for Rich Menu"
+        else
+            topSub.text = modeLbl + "  |  Press [OK / UP / DOWN / *] for Captions, Season, Show, Details & Metadata"
+        end if
+    end if
+
+    vSt = m.cinemaVideo.state
+    if stBg <> invalid and stTxt <> invalid
+        if vSt = "paused"
+            stBg.color = "0xF59E0BFF"
+            stTxt.text = "PAUSED"
+        else if vSt = "buffering"
+            stBg.color = "0x38BDF8FF"
+            stTxt.text = "BUFFERING"
+        else
+            stBg.color = "0x10B981FF"
+            stTxt.text = "PLAYING"
+        end if
+    end if
+
+    if ccTxt <> invalid then ccTxt.text = currentCaptionBadgeLabel()
+    if ccBg <> invalid
+        if m.captionsEnabled = true or m.captionTempReplaySec > 0 then ccBg.color = "0x422006FF" else ccBg.color = "0x1E293BFF"
+    end if
+    if auTxt <> invalid then auTxt.text = Left(currentAudioBadgeLabel(), 20)
+    if clkTxt <> invalid
+        if durSec > 0
+            clkTxt.text = formatClockHms(posSec) + " / " + formatClockHms(durSec) + "  (-" + formatClockHms(remSec) + ")"
+        else
+            clkTxt.text = formatClockHms(posSec) + " / LIVE"
+        end if
+    end if
+
+    elLbl = m.top.findNode("osdTimeElapsed")
+    totLbl = m.top.findNode("osdTimeTotal")
+    fillRect = m.top.findNode("osdTrackFill")
+    knobRect = m.top.findNode("osdTrackKnob")
+    scrubBdr = m.top.findNode("osdScrubberFocusBorder")
+    scrubHint = m.top.findNode("osdScrubHint")
+    if elLbl <> invalid then elLbl.text = formatClockHms(posSec)
+    if totLbl <> invalid
+        if durSec > 0
+            totLbl.text = formatClockHms(durSec) + " (" + pct.ToStr() + "%)"
+        else
+            totLbl.text = "LIVE"
+        end if
+    end if
+    fillW = 12
+    if durSec > 0
+        fillW = Int(((posSec * 1.0) / (durSec * 1.0)) * 1804)
+        if fillW < 10 then fillW = 10
+        if fillW > 1804 then fillW = 1804
+    end if
+    if fillRect <> invalid then fillRect.width = fillW
+    if knobRect <> invalid then knobRect.translation = [54 + fillW, 39]
+    if scrubBdr <> invalid
+        if m.playerOsdMode = "full" and m.osdZone = "scrubber"
+            scrubBdr.color = "0xFFFFFFFF"
+            scrubBdr.height = 4
+        else
+            scrubBdr.color = "0x334155FF"
+            scrubBdr.height = 2
+        end if
+    end if
+    if scrubHint <> invalid
+        if m.playerOsdMode = "mini"
+            scrubHint.text = "Press [OK], [UP], [DOWN] or [*] for Captions, Season, Show, Episode Details & Metadata   |   [LEFT/RIGHT] Seek"
+        else
+            scrubHint.text = "[LEFT/RIGHT] Scrub -15s / +30s   |   [REW/FF] -60s / +60s   |   [OK/PLAY] Pause/Resume   |   [DOWN] Menu Tabs"
+        end if
+    end if
+end sub
+
+sub updateCaptionsTranscriptCard()
+    eyebrow = m.top.findNode("osdSummaryEyebrow")
+    ttl = m.top.findNode("osdSummaryTitle")
+    bdg = m.top.findNode("osdSummaryBadges")
+    body = m.top.findNode("osdSummaryBody")
+    subL = m.top.findNode("osdSummarySubLine")
+
+    szName = "Medium"
+    if m.captionSizeMode = 0 then szName = "Small"
+    if m.captionSizeMode = 2 then szName = "Large"
+    offStr = m.captionOffsetSec.ToStr() + "s"
+    if m.captionOffsetSec > 0 then offStr = "+" + offStr
+
+    activeTrackName = "Captions Off"
+    if m.captionChoiceIdx > 0 and m.captionChoiceIdx < m.captionChoices.Count()
+        activeTrackName = cleanAscii(m.captionChoices[m.captionChoiceIdx].label)
+    end if
+
+    totalC = 0
+    if m.subtitleCues <> invalid then totalC = m.subtitleCues.Count()
+
+    if eyebrow <> invalid then eyebrow.text = "CAPTIONS & LIVE DIALOGUE TRANSCRIPT  (" + (m.captionChoices.Count() - 1).ToStr() + " SUBTITLE SOURCES AVAILABLE)"
+    if ttl <> invalid
+        if m.captionsEnabled = true
+            ttl.text = "Active Subtitle Track: " + activeTrackName
+        else
+            ttl.text = "Captions Currently Off  (Select [CC: OFF -> ON] or [Next Track >] Above)"
+        end if
+    end if
+    if bdg <> invalid
+        cueStatus = totalC.ToStr() + " Synced Dialogue Cues Loaded"
+        if m.cuesExtracting = true then cueStatus = "Extracting Embedded Subtitle Track via FFmpeg..."
+        bdg.text = cueStatus + "   |   Font Size: " + szName + "   |   Timing Offset: " + offStr
+    end if
+
+    if body <> invalid
+        if totalC > 0 and m.cinemaVideo <> invalid
+            curT = safeFloat(m.cinemaVideo.position) + m.captionOffsetSec
+            idx = findNearestOrNextCueIdx(curT)
+            prevTxt = "(Start of subtitles)"
+            curTxt = "(No dialogue at current second)"
+            nextTxt = "(End of subtitles)"
+            if idx > 0
+                pCue = m.subtitleCues[idx - 1]
+                prevTxt = "[" + formatClockHms(pCue.s) + "] " + Left(cleanAscii(pCue.t), 92)
+            end if
+            if idx >= 0 and idx < totalC
+                cCue = m.subtitleCues[idx]
+                curTxt = ">> [" + formatClockHms(cCue.s) + "] " + Left(cleanAscii(cCue.t), 98)
+            end if
+            if idx + 1 < totalC
+                nCue = m.subtitleCues[idx + 1]
+                nextTxt = "[" + formatClockHms(nCue.s) + "] " + Left(cleanAscii(nCue.t), 92)
+            end if
+            body.text = prevTxt + Chr(10) + curTxt + Chr(10) + nextTxt
+        else if m.cuesExtracting = true
+            body.text = "Extracting embedded subtitle stream from container in the background - captions will appear automatically in a moment."
+        else
+            body.text = "Use [< Prev Track] / [Next Track >] to switch between embedded SRT/WebVTT tracks, external .srt/.vtt files, or Roku Broadcast CC."
+        end if
+    end if
+    if subL <> invalid
+        subL.text = "Tip: Click [< Prev Caption] or [Next Caption >] above to jump the video directly to the previous or next spoken line!"
+    end if
+end sub
+
+sub setOsdButtonRow(defs as Object)
+    count = defs.Count()
+    if m.osdItemIdx >= count then m.osdItemIdx = count - 1
+    if m.osdItemIdx < 0 then m.osdItemIdx = 0
+    for i = 0 to 6
+        bdr = m.top.findNode("osdBtnBorder" + i.ToStr())
+        bg = m.top.findNode("osdBtnBg" + i.ToStr())
+        tLbl = m.top.findNode("osdBtnTop" + i.ToStr())
+        sLbl = m.top.findNode("osdBtnSub" + i.ToStr())
+        if i < count
+            d = defs[i]
+            isFoc = (m.osdZone = "items" and m.osdItemIdx = i)
+            if bdr <> invalid
+                bdr.visible = true
+                if isFoc
+                    bdr.color = "0xFFFFFFFF"
+                else if d.active = true
+                    bdr.color = "0xE8A33DFF"
+                else
+                    bdr.color = "0x263248FF"
+                end if
+            end if
+            if bg <> invalid
+                bg.visible = true
+                if isFoc
+                    bg.color = "0x2B2114FF"
+                else if d.active = true
+                    bg.color = "0x1E293BFF"
+                else
+                    bg.color = "0x131B2BFF"
+                end if
+            end if
+            if tLbl <> invalid
+                tLbl.visible = true
+                tLbl.text = cleanAscii(d.top)
+                if isFoc or d.active = true then tLbl.color = "0xFCD34DFF" else tLbl.color = "0xF8FAFCFF"
+            end if
+            if sLbl <> invalid
+                sLbl.visible = true
+                sLbl.text = cleanAscii(d.sub)
+                if isFoc then sLbl.color = "0x67E8F9FF" else sLbl.color = "0x94A3B8FF"
+            end if
+        else
+            if bdr <> invalid then bdr.visible = false
+            if bg <> invalid then bg.visible = false
+            if tLbl <> invalid then tLbl.visible = false
+            if sLbl <> invalid then sLbl.visible = false
+        end if
+    end for
+end sub
+
+sub populateSummaryPosterAndFallback()
+    pst = m.top.findNode("osdSummaryPoster")
+    mono = m.top.findNode("osdSummaryMono")
+    artUri = ""
+    if m.playingEpisodeObj <> invalid and m.playingEpisodeObj.artUrl <> invalid and m.playingEpisodeObj.artUrl <> ""
+        artUri = cleanAscii(m.playingEpisodeObj.artUrl)
+    else if m.currentPlayingItem <> invalid and m.currentPlayingItem.artUrl <> invalid and m.currentPlayingItem.artUrl <> ""
+        artUri = cleanAscii(m.currentPlayingItem.artUrl)
+    else if m.playingShowGroup <> invalid and m.playingShowGroup.artUrl <> invalid
+        artUri = cleanAscii(m.playingShowGroup.artUrl)
+    end if
+    if pst <> invalid then pst.uri = artUri
+    if mono <> invalid then mono.text = makeMonogram(cleanAscii(m.currentPlayingTitle))
+end sub
+
+sub renderPlayerOsd()
+    if m.playerOsdGroup = invalid or m.playerOsdOpen <> true then return
+    updatePlayerOsdHeaderAndScrubber()
+    if m.playerOsdMode = "mini" then return
+
+    hasShow = (m.playingShowGroup <> invalid)
+    tabTitles = [
+        "1. CONTROLS",
+        "2. CC CAPTIONS",
+        "3. SEE SEASON",
+        "4. SEE SHOW",
+        "5. EP DETAILS",
+        "6. AUDIO & STREAM",
+        "7. METADATA"
+    ]
+    if not hasShow
+        tabTitles[2] = "3. MORE FILMS"
+        tabTitles[3] = "4. COLLECTION"
+        tabTitles[4] = "5. FILM DETAILS"
+    end if
+
+    for tIdx = 0 to 6
+        tbBdr = m.top.findNode("osdTabBorder" + tIdx.ToStr())
+        tbBg = m.top.findNode("osdTabBg" + tIdx.ToStr())
+        tbLbl = m.top.findNode("osdTabLbl" + tIdx.ToStr())
+        isSelTab = (tIdx = m.osdTabIdx)
+        isFocTab = (isSelTab and m.osdZone = "tabs")
+        if tbLbl <> invalid then tbLbl.text = tabTitles[tIdx]
+        if tbBdr <> invalid
+            if isFocTab
+                tbBdr.color = "0xFFFFFFFF"
+            else if isSelTab
+                tbBdr.color = "0xE8A33DFF"
+            else
+                tbBdr.color = "0x263248FF"
+            end if
+        end if
+        if tbBg <> invalid
+            if isSelTab then tbBg.color = "0x2B2114FF" else tbBg.color = "0x131B2BFF"
+        end if
+        if tbLbl <> invalid
+            if isSelTab then tbLbl.color = "0xFCD34DFF" else tbLbl.color = "0xE2E8F0FF"
+        end if
+    end for
+
+    isSeasonTab = (m.osdTabIdx = 2)
+    isMetaTab = (m.osdTabIdx = 6)
+    if m.osdSeasonPaneGroup <> invalid then m.osdSeasonPaneGroup.visible = isSeasonTab
+    if m.osdMetaGridGroup <> invalid then m.osdMetaGridGroup.visible = isMetaTab
+    if m.osdActionBtnsGroup <> invalid then m.osdActionBtnsGroup.visible = (not isSeasonTab and not isMetaTab)
+    if m.osdRichSummaryGroup <> invalid then m.osdRichSummaryGroup.visible = (not isSeasonTab and not isMetaTab)
+
+    eyebrow = m.top.findNode("osdSummaryEyebrow")
+    ttl = m.top.findNode("osdSummaryTitle")
+    bdg = m.top.findNode("osdSummaryBadges")
+    body = m.top.findNode("osdSummaryBody")
+    subL = m.top.findNode("osdSummarySubLine")
+    populateSummaryPosterAndFallback()
+
+    isWatched = false
+    if m.currentPlayingItem <> invalid and m.currentPlayingItem.completed = true then isWatched = true
+    if m.playbackMeta <> invalid and m.playbackMeta.watched = true then isWatched = true
+    watchBtnTop = "MARK WATCHED"
+    watchBtnSub = "Set 100% Complete"
+    if isWatched
+        watchBtnTop = "MARK UNWATCHED"
+        watchBtnSub = "Clear Watch State"
+    end if
+
+    if m.osdTabIdx = 0
+        isPausedNow = (m.cinemaVideo <> invalid and m.cinemaVideo.state = "paused")
+        playTop = "PAUSE"
+        playSub = "Pause Video"
+        if isPausedNow
+            playTop = "RESUME PLAY"
+            playSub = "Continue Video"
+        end if
+        prevTop = "PREV EPISODE"
+        prevSub = "Previous in Series"
+        nextTop = "NEXT EPISODE"
+        nextSub = "Next in Series"
+        if not hasShow
+            prevTop = "PREV FILM"
+            prevSub = "Previous in List"
+            nextTop = "NEXT FILM"
+            nextSub = "Next in List"
+        end if
+        setOsdButtonRow([
+            { top: playTop, sub: playSub, active: true },
+            { top: "BACK -15s", sub: "Quick Rewind", active: false },
+            { top: "SKIP +30s", sub: "Quick Forward", active: false },
+            { top: prevTop, sub: prevSub, active: false },
+            { top: nextTop, sub: nextSub, active: false },
+            { top: "RESTART 0:00", sub: "From Beginning", active: false },
+            { top: watchBtnTop, sub: watchBtnSub, active: isWatched }
+        ])
+        if eyebrow <> invalid
+            if hasShow
+                eyebrow.text = "NOW PLAYING SERIES  |  " + UCase(cleanAscii(m.playingShowGroup.title))
+            else
+                eyebrow.text = "NOW PLAYING FEATURE FILM  |  ROBOS CINEMA+"
+            end if
+        end if
+        if ttl <> invalid then ttl.text = cleanAscii(m.currentPlayingTitle)
+        if bdg <> invalid
+            if m.playbackMeta <> invalid
+                bdg.text = cleanAscii(m.playbackMeta.container) + "  |  " + cleanAscii(m.playbackMeta.sizeFormatted) + "  |  " + cleanAscii(m.playbackMeta.durationFormatted) + "  |  " + cleanAscii(m.playbackMeta.video.summary)
+            else if m.currentPlayingItem <> invalid
+                bdg.text = cleanAscii(m.currentPlayingItem.genre) + "  |  " + cleanAscii(m.currentPlayingItem.qualityBadge)
+            end if
+        end if
+        if body <> invalid
+            ovTxt = ""
+            if m.playbackMeta <> invalid and m.playbackMeta.overview <> "" then ovTxt = cleanAscii(m.playbackMeta.overview)
+            if ovTxt = "" and m.currentPlayingItem <> invalid then ovTxt = cleanAscii(m.currentPlayingItem.overview)
+            if ovTxt = "" and hasShow then ovTxt = cleanAscii(m.playingShowGroup.overview)
+            if ovTxt = "" then ovTxt = "Streaming directly over your local network with instant D-Pad scrubbing, multi-track subtitles, season jumper, and stream inspector."
+            body.text = Left(ovTxt, 280)
+        end if
+        if subL <> invalid
+            if hasShow and m.playingShowGroup.episodes <> invalid and m.playingEpFlatIndex >= 0 and m.playingEpFlatIndex + 1 < m.playingShowGroup.episodes.Count()
+                nxtEp = m.playingShowGroup.episodes[m.playingEpFlatIndex + 1]
+                subL.text = "Up Next in Series: " + cleanAscii(nxtEp.episodeCode) + " - " + cleanAscii(nxtEp.episodeTitle)
+            else
+                subL.text = currentCaptionBadgeLabel() + "   |   Audio: " + currentAudioBadgeLabel()
+            end if
+        end if
+    else if m.osdTabIdx = 1
+        ccTop = "CC: OFF (TURN ON)"
+        if m.captionsEnabled = true then ccTop = "CC: ON (TURN OFF)"
+        szName = "MEDIUM"
+        if m.captionSizeMode = 0 then szName = "SMALL"
+        if m.captionSizeMode = 2 then szName = "LARGE"
+        offStr = m.captionOffsetSec.ToStr() + "s"
+        if m.captionOffsetSec > 0 then offStr = "+" + offStr
+        curTrkShort = "Off"
+        if m.captionChoiceIdx > 0 and m.captionChoiceIdx < m.captionChoices.Count()
+            curTrkShort = Left(cleanAscii(m.captionChoices[m.captionChoiceIdx].label), 18)
+        end if
+        setOsdButtonRow([
+            { top: ccTop, sub: curTrkShort, active: m.captionsEnabled },
+            { top: "< PREV TRACK", sub: "Previous Subtitle", active: false },
+            { top: "NEXT TRACK >", sub: "Cycle Subtitles", active: false },
+            { top: "< PREV CAPTION", sub: "Jump Prev Line", active: false },
+            { top: "NEXT CAPTION >", sub: "Jump Next Line", active: false },
+            { top: "SIZE: " + szName, sub: "Caption Scale", active: false },
+            { top: "SYNC: " + offStr, sub: "Adjust Timing", active: (m.captionOffsetSec <> 0.0) }
+        ])
+        updateCaptionsTranscriptCard()
+    else if m.osdTabIdx = 2
+        renderOsdSeasonPane(hasShow)
+    else if m.osdTabIdx = 3
+        if hasShow
+            pst = m.top.findNode("osdSummaryPoster")
+            if pst <> invalid and m.playingShowGroup.artUrl <> invalid then pst.uri = cleanAscii(m.playingShowGroup.artUrl)
+            setOsdButtonRow([
+                { top: "OPEN SHOW PAGE", sub: "Browse All Seasons", active: true },
+                { top: "NEXT UNWATCHED", sub: "Resume Series", active: false },
+                { top: "PLAY S01E01", sub: "Start Series Over", active: false }
+            ])
+            if eyebrow <> invalid then eyebrow.text = "SERIES OVERVIEW  |  " + cleanAscii(m.playingShowGroup.genre)
+            if ttl <> invalid then ttl.text = cleanAscii(m.playingShowGroup.title)
+            if bdg <> invalid
+                sCnt = safeInt(m.playingShowGroup.seasonCount)
+                eCnt = safeInt(m.playingShowGroup.episodeCount)
+                wCnt = safeInt(m.playingShowGroup.watchedCount)
+                bdg.text = sCnt.ToStr() + " Seasons   |   " + eCnt.ToStr() + " Total Episodes   |   " + wCnt.ToStr() + " / " + eCnt.ToStr() + " Watched"
+            end if
+            if body <> invalid then body.text = Left(cleanAscii(m.playingShowGroup.overview), 280)
+            if subL <> invalid
+                subL.text = "Currently Watching: " + cleanAscii(m.playingEpisodeObj.episodeCode) + " - " + cleanAscii(m.playingEpisodeObj.episodeTitle)
+            end if
+        else
+            setOsdButtonRow([
+                { top: "BROWSE MOVIES", sub: "Return to Catalog", active: true },
+                { top: "PREVIOUS FILM", sub: "Play Previous", active: false },
+                { top: "NEXT FILM", sub: "Play Next", active: false }
+            ])
+            if eyebrow <> invalid then eyebrow.text = "MOVIE LIBRARY & COLLECTION"
+            if ttl <> invalid then ttl.text = cleanAscii(m.currentPlayingTitle)
+            if bdg <> invalid and m.currentPlayingItem <> invalid
+                bdg.text = "Genre: " + cleanAscii(m.currentPlayingItem.genre) + "   |   Quality: " + cleanAscii(m.currentPlayingItem.qualityBadge)
+            end if
+            if body <> invalid then body.text = "Switch to Tab 3 (More Films) to browse other movies right over the live video, or click Browse Movies above to return to the full poster wall."
+            if subL <> invalid then subL.text = "Connected to RobOS Media Server"
+        end if
+    else if m.osdTabIdx = 4
+        nextActionLbl = "NEXT EPISODE"
+        if not hasShow then nextActionLbl = "SKIP +5 MIN"
+        setOsdButtonRow([
+            { top: watchBtnTop, sub: watchBtnSub, active: isWatched },
+            { top: "RESTART 0:00", sub: "Play From Start", active: false },
+            { top: nextActionLbl, sub: "Advance", active: false }
+        ])
+        if hasShow and m.playingEpisodeObj <> invalid
+            if eyebrow <> invalid
+                eyebrow.text = UCase(cleanAscii(m.playingShowGroup.title)) + "   |   SEASON " + safeInt(m.playingEpisodeObj.seasonNumber).ToStr() + "  EPISODE " + safeInt(m.playingEpisodeObj.episodeNumber).ToStr()
+            end if
+            if ttl <> invalid
+                ttl.text = cleanAscii(m.playingEpisodeObj.episodeCode) + " - " + cleanAscii(m.playingEpisodeObj.episodeTitle)
+            end if
+        else
+            if eyebrow <> invalid then eyebrow.text = "FEATURE FILM DETAILS"
+            if ttl <> invalid then ttl.text = cleanAscii(m.currentPlayingTitle)
+        end if
+        if bdg <> invalid
+            yrVal = ""
+            if m.playbackMeta <> invalid and m.playbackMeta.year <> invalid then yrVal = m.playbackMeta.year.ToStr() + "  |  "
+            durVal = formatClockHms(m.cinemaVideo.duration)
+            if m.playbackMeta <> invalid and m.playbackMeta.durationFormatted <> invalid then durVal = cleanAscii(m.playbackMeta.durationFormatted)
+            szVal = ""
+            if m.playbackMeta <> invalid and m.playbackMeta.sizeFormatted <> invalid then szVal = "  |  " + cleanAscii(m.playbackMeta.sizeFormatted)
+            bdg.text = yrVal + "Runtime: " + durVal + szVal + "  |  Status: " + IIfStr(isWatched, "Watched", "In Progress")
+        end if
+        if body <> invalid
+            detOv = ""
+            if m.playbackMeta <> invalid and m.playbackMeta.overview <> "" then detOv = cleanAscii(m.playbackMeta.overview)
+            if detOv = "" and m.currentPlayingItem <> invalid then detOv = cleanAscii(m.currentPlayingItem.overview)
+            if detOv = "" and hasShow then detOv = cleanAscii(m.playingShowGroup.overview)
+            if detOv = "" then detOv = "Full HD LAN stream playing from RobOS Media Server."
+            body.text = Left(detOv, 300)
+        end if
+        if subL <> invalid and m.playbackMeta <> invalid
+            subL.text = "File: " + Left(cleanAscii(m.playbackMeta.fileName), 92)
+        end if
+    else if m.osdTabIdx = 5
+        setOsdButtonRow([
+            { top: "< PREV AUDIO", sub: "Previous Track", active: false },
+            { top: "NEXT AUDIO >", sub: "Switch Language", active: true },
+            { top: "DIRECT PLAY", sub: "Original Stream", active: (not m.currentStreamIsHls) },
+            { top: "HLS TRANSCODE", sub: "Compatibility Mode", active: m.currentStreamIsHls }
+        ])
+        if eyebrow <> invalid then eyebrow.text = "AUDIO TRACKS & STREAM DELIVERY MODE"
+        if ttl <> invalid then ttl.text = "Active Audio: " + currentAudioBadgeLabel()
+        if bdg <> invalid
+            modeDesc = "Direct Play (Zero-CPU HTTP 206 Byte-Range)"
+            if m.currentStreamIsHls = true then modeDesc = "FFmpeg Live HLS Remux / Stereo AAC Transcode"
+            bdg.text = "Delivery: " + modeDesc
+        end if
+        if body <> invalid
+            if m.playbackMeta <> invalid and m.playbackMeta.audioTracks <> invalid and m.playbackMeta.audioTracks.Count() > 0
+                linesA = ""
+                for aI = 0 to m.playbackMeta.audioTracks.Count() - 1
+                    aTrk = m.playbackMeta.audioTracks[aI]
+                    prefixA = "   "
+                    if aI = m.activeAudioChoiceIdx then prefixA = ">> "
+                    if linesA <> "" then linesA = linesA + Chr(10)
+                    linesA = linesA + prefixA + cleanAscii(aTrk.label)
+                    if aI >= 2 then exit for
+                end for
+                body.text = linesA
+            else
+                body.text = "Audio Stream: " + currentAudioBadgeLabel() + " (Use Next Audio > if multiple language tracks are embedded)"
+            end if
+        end if
+        if subL <> invalid
+            subL.text = "If a 10-bit HEVC or multi-channel EAC3 file stutters or lacks audio on TV speakers, select [HLS TRANSCODE] above."
+        end if
+    else if m.osdTabIdx = 6
+        renderOsdMetadataGrid()
+    end if
+end sub
+
+function IIfStr(cond as Boolean, tVal as String, fVal as String) as String
+    if cond = true then return tVal
+    return fVal
+end function
+
+sub renderOsdSeasonPane(hasShow as Boolean)
+    topLabels = ["< PREV SEASON", "NEXT SEASON >", "OPEN SEASON IN LIBRARY"]
+    if not hasShow
+        topLabels = ["< PREV PAGE", "NEXT PAGE >", "OPEN MOVIE LIBRARY"]
+    end if
+    for bI = 0 to 2
+        sBdr = m.top.findNode("osdSeasonBtnBorder" + bI.ToStr())
+        sBg = m.top.findNode("osdSeasonBtnBg" + bI.ToStr())
+        sLbl = m.top.findNode("osdSeasonBtnLbl" + bI.ToStr())
+        isTopFoc = (m.osdZone = "seasonTop" and m.osdSeasonTopIdx = bI)
+        if sLbl <> invalid then sLbl.text = topLabels[bI]
+        if sBdr <> invalid
+            if isTopFoc then sBdr.color = "0xFFFFFFFF" else sBdr.color = "0x263248FF"
+        end if
+        if sBg <> invalid
+            if isTopFoc then sBg.color = "0x2B2114FF" else sBg.color = "0x131B2BFF"
+        end if
+    end for
+
+    hdrInfo = m.top.findNode("osdSeasonHeaderInfo")
+    totalEps = 0
+    if m.osdSeasonEps <> invalid then totalEps = m.osdSeasonEps.Count()
+    if hdrInfo <> invalid
+        if hasShow and m.osdSeasonsList.Count() > 0 and m.osdBrowseSeasonIdx < m.osdSeasonsList.Count()
+            sObj = m.osdSeasonsList[m.osdBrowseSeasonIdx]
+            hdrInfo.text = cleanAscii(m.playingShowGroup.title) + "  |  " + cleanAscii(sObj.label) + " (" + (m.osdBrowseSeasonIdx + 1).ToStr() + "/" + m.osdSeasonsList.Count().ToStr() + ")  |  " + totalEps.ToStr() + " Episodes"
+        else
+            hdrInfo.text = "More Movies in Library (" + totalEps.ToStr() + " Titles  |  Press OK on Any Card to Switch)"
+        end if
+    end if
+
+    if m.osdEpFocusIdx < 0 then m.osdEpFocusIdx = 0
+    if totalEps > 0 and m.osdEpFocusIdx >= totalEps then m.osdEpFocusIdx = totalEps - 1
+    winStart = m.osdEpFocusIdx - 2
+    if winStart + 5 > totalEps then winStart = totalEps - 5
+    if winStart < 0 then winStart = 0
+
+    for slot = 0 to 4
+        idxE = winStart + slot
+        eBdr = m.top.findNode("osdEpBorder" + slot.ToStr())
+        eBg = m.top.findNode("osdEpBg" + slot.ToStr())
+        ePst = m.top.findNode("osdEpPoster" + slot.ToStr())
+        eCd = m.top.findNode("osdEpCode" + slot.ToStr())
+        ePBg = m.top.findNode("osdEpProgBg" + slot.ToStr())
+        ePFl = m.top.findNode("osdEpProgFill" + slot.ToStr())
+        eTtl = m.top.findNode("osdEpTitle" + slot.ToStr())
+        eMt = m.top.findNode("osdEpMeta" + slot.ToStr())
+        if idxE < totalEps
+            ep = m.osdSeasonEps[idxE]
+            isCardFoc = (m.osdZone = "items" and idxE = m.osdEpFocusIdx)
+            isPlayingNow = (m.currentPlayingTrackId <> "" and cleanAscii(ep.id) = m.currentPlayingTrackId)
+            if eBdr <> invalid
+                eBdr.visible = true
+                if isCardFoc
+                    eBdr.color = "0xFFFFFFFF"
+                else if isPlayingNow
+                    eBdr.color = "0x10B981FF"
+                else
+                    eBdr.color = "0x263248FF"
+                end if
+            end if
+            if eBg <> invalid
+                eBg.visible = true
+                if isCardFoc
+                    eBg.color = "0x2B2114FF"
+                else if isPlayingNow
+                    eBg.color = "0x0F291EFF"
+                else
+                    eBg.color = "0x121927FF"
+                end if
+            end if
+            if ePst <> invalid
+                ePst.visible = true
+                if ep.artUrl <> invalid and ep.artUrl <> ""
+                    ePst.uri = cleanAscii(ep.artUrl)
+                else if hasShow and m.playingShowGroup.artUrl <> invalid
+                    ePst.uri = cleanAscii(m.playingShowGroup.artUrl)
+                else
+                    ePst.uri = ""
+                end if
+            end if
+            if eCd <> invalid
+                eCd.visible = true
+                if ep.episodeCode <> invalid and ep.episodeCode <> ""
+                    eCd.text = cleanAscii(ep.episodeCode)
+                else if ep.year <> invalid
+                    eCd.text = ep.year.ToStr()
+                else
+                    eCd.text = "#" + (idxE + 1).ToStr()
+                end if
+            end if
+            if eTtl <> invalid
+                eTtl.visible = true
+                if ep.episodeTitle <> invalid and ep.episodeTitle <> ""
+                    eTtl.text = cleanAscii(ep.episodeTitle)
+                else
+                    eTtl.text = cleanAscii(ep.title)
+                end if
+            end if
+            epPct = safeInt(ep.progressPct)
+            if ep.completed = true then epPct = 100
+            if ePBg <> invalid and ePFl <> invalid
+                if epPct > 0
+                    ePBg.visible = true
+                    ePFl.visible = true
+                    ePFl.width = Int((epPct / 100.0) * 328)
+                    if ep.completed = true then ePFl.color = "0x10B981FF" else ePFl.color = "0xE8A33DFF"
+                else
+                    ePBg.visible = false
+                    ePFl.visible = false
+                end if
+            end if
+            if eMt <> invalid
+                eMt.visible = true
+                if isPlayingNow
+                    eMt.text = "* NOW PLAYING"
+                    eMt.color = "0x6EE7B7FF"
+                else if ep.completed = true
+                    eMt.text = "Watched  |  OK to Replay"
+                    eMt.color = "0x86EFACFF"
+                else if ep.inProgress = true
+                    eMt.text = "Resume " + epPct.ToStr() + "%  |  OK to Play"
+                    eMt.color = "0xFCD34DFF"
+                else
+                    eMt.text = "Episode " + (idxE + 1).ToStr() + "/" + totalEps.ToStr() + "  |  OK to Play"
+                    eMt.color = "0x94A3B8FF"
+                end if
+            end if
+        else
+            if eBdr <> invalid then eBdr.visible = false
+            if eBg <> invalid then eBg.visible = false
+            if ePst <> invalid then ePst.visible = false
+            if eCd <> invalid then eCd.visible = false
+            if ePBg <> invalid then ePBg.visible = false
+            if ePFl <> invalid then ePFl.visible = false
+            if eTtl <> invalid then eTtl.visible = false
+            if eMt <> invalid then eMt.visible = false
+        end if
+    end for
+end sub
+
+sub renderOsdMetadataGrid()
+    v0 = m.top.findNode("osdMetaVal0")
+    v1 = m.top.findNode("osdMetaVal1")
+    v2 = m.top.findNode("osdMetaVal2")
+    v3 = m.top.findNode("osdMetaVal3")
+    v4 = m.top.findNode("osdMetaVal4")
+    v5 = m.top.findNode("osdMetaVal5")
+
+    pm = m.playbackMeta
+    mv = m.currentPlayingItem
+    rokuVidFmt = "1080p FHD"
+    if m.cinemaVideo <> invalid and m.cinemaVideo.videoFormat <> invalid and m.cinemaVideo.videoFormat <> ""
+        rokuVidFmt = cleanAscii(m.cinemaVideo.videoFormat)
+    end if
+
+    if v0 <> invalid
+        if pm <> invalid
+            v0.text = "File: " + Left(cleanAscii(pm.fileName), 48) + Chr(10) + "Container: " + cleanAscii(pm.container) + "   |   Size: " + cleanAscii(pm.sizeFormatted) + Chr(10) + "Folder: " + Left(cleanAscii(pm.folderPath), 46)
+        else if mv <> invalid
+            v0.text = "Title: " + Left(cleanAscii(mv.title), 46) + Chr(10) + "Format: " + UCase(cleanAscii(mv.streamFormat)) + Chr(10) + "Track ID: " + m.currentPlayingTrackId
+        end if
+    end if
+
+    if v1 <> invalid
+        if pm <> invalid and pm.video <> invalid
+            v1.text = "Stream: " + cleanAscii(pm.video.summary) + Chr(10) + "Roku Decoder Output: " + rokuVidFmt + Chr(10) + "Direct Play Eligible: " + IIfStr(pm.canDirectPlay = true, "Yes (Native Hardware)", "Transcode Available")
+        else
+            v1.text = "Quality: " + IIfStr(mv <> invalid, cleanAscii(mv.qualityBadge), "1080p HD") + Chr(10) + "Roku Decoder Output: " + rokuVidFmt
+        end if
+    end if
+
+    if v2 <> invalid
+        if pm <> invalid and pm.audioSummary <> invalid
+            v2.text = "Active: " + currentAudioBadgeLabel() + Chr(10) + "Streams: " + Left(cleanAscii(pm.audioSummary), 88)
+        else
+            v2.text = "Active: " + currentAudioBadgeLabel() + Chr(10) + "Roku Hardware Audio Passthrough / Stereo"
+        end if
+    end if
+
+    if v3 <> invalid
+        cCnt = 0
+        if m.subtitleCues <> invalid then cCnt = m.subtitleCues.Count()
+        subSum = "Broadcast / Sidecar"
+        if pm <> invalid and pm.subtitleSummary <> invalid then subSum = cleanAscii(pm.subtitleSummary)
+        v3.text = "Status: " + currentCaptionBadgeLabel() + Chr(10) + "Detected: " + Left(subSum, 76) + Chr(10) + "Loaded Cues: " + cCnt.ToStr()
+    end if
+
+    if v4 <> invalid
+        posS = 0
+        durS = 0
+        if m.cinemaVideo <> invalid
+            posS = safeInt(m.cinemaVideo.position)
+            durS = safeInt(m.cinemaVideo.duration)
+        end if
+        if durS <= 0 and pm <> invalid then durS = safeInt(pm.durationSec)
+        svcName = "RobOS Cinema+"
+        if pm <> invalid and pm.serviceName <> invalid then svcName = cleanAscii(pm.serviceName)
+        v4.text = "Library: " + svcName + Chr(10) + "Position: " + formatClockHms(posS) + " / " + formatClockHms(durS) + Chr(10) + "Genre: " + IIfStr(pm <> invalid, cleanAscii(pm.genre), "Cinema")
+    end if
+
+    if v5 <> invalid
+        deliv = "Direct Play (HTTP 206 Byte-Range)"
+        if m.currentStreamIsHls = true then deliv = "FFmpeg HLS Live Segment Stream"
+        brStr = "LAN High-Speed"
+        srvStr = "${progressBaseUrl}"
+        if pm <> invalid
+            if pm.bitRateFormatted <> invalid then brStr = cleanAscii(pm.bitRateFormatted)
+            if pm.serverName <> invalid then srvStr = cleanAscii(pm.serverName)
+        end if
+        v5.text = "Mode: " + deliv + Chr(10) + "Bitrate: " + brStr + Chr(10) + "Source: " + Left(srvStr, 44)
+    end if
+end sub
+
+sub activateOsdCurrentItem()
+    if m.cinemaVideo = invalid then return
+    if m.osdTabIdx = 0
+        if m.osdItemIdx = 0
+            if m.cinemaVideo.state = "playing" then m.cinemaVideo.control = "pause" else if m.cinemaVideo.state = "paused" then m.cinemaVideo.control = "resume"
+            renderPlayerOsd()
+        else if m.osdItemIdx = 1
+            ns = safeInt(m.cinemaVideo.position) - 15
+            if ns < 0 then ns = 0
+            m.cinemaVideo.seek = ns
+            updatePlayerOsdHeaderAndScrubber()
+        else if m.osdItemIdx = 2
+            m.cinemaVideo.seek = safeInt(m.cinemaVideo.position) + 30
+            updatePlayerOsdHeaderAndScrubber()
+        else if m.osdItemIdx = 3
+            playAdjacentEpisode(-1)
+        else if m.osdItemIdx = 4
+            playAdjacentEpisode(1)
+        else if m.osdItemIdx = 5
+            m.cinemaVideo.seek = 0
+            updatePlayerOsdHeaderAndScrubber()
+        else if m.osdItemIdx = 6
+            toggleCurrentWatchedStatus()
+        end if
+    else if m.osdTabIdx = 1
+        if m.osdItemIdx = 0
+            toggleCaptionsOnOff()
+        else if m.osdItemIdx = 1
+            cycleCaptionChoice(-1)
+        else if m.osdItemIdx = 2
+            cycleCaptionChoice(1)
+        else if m.osdItemIdx = 3
+            jumpToNeighborCaption(-1)
+        else if m.osdItemIdx = 4
+            jumpToNeighborCaption(1)
+        else if m.osdItemIdx = 5
+            cycleCaptionSize()
+        else if m.osdItemIdx = 6
+            cycleCaptionOffset()
+        end if
+    else if m.osdTabIdx = 2
+        if m.osdZone = "seasonTop"
+            if m.osdSeasonTopIdx = 0
+                if m.playingShowGroup <> invalid
+                    applyPlayerBrowseSeason(m.osdBrowseSeasonIdx - 1)
+                else if m.osdSeasonEps.Count() > 0
+                    m.osdEpFocusIdx = m.osdEpFocusIdx - 5
+                    if m.osdEpFocusIdx < 0 then m.osdEpFocusIdx = 0
+                end if
+                renderPlayerOsd()
+            else if m.osdSeasonTopIdx = 1
+                if m.playingShowGroup <> invalid
+                    applyPlayerBrowseSeason(m.osdBrowseSeasonIdx + 1)
+                else if m.osdSeasonEps.Count() > 0
+                    m.osdEpFocusIdx = (m.osdEpFocusIdx + 5) mod m.osdSeasonEps.Count()
+                end if
+                renderPlayerOsd()
+            else if m.osdSeasonTopIdx = 2
+                openShowInLibraryFromPlayer(true)
+            end if
+        else if m.osdSeasonEps <> invalid and m.osdEpFocusIdx >= 0 and m.osdEpFocusIdx < m.osdSeasonEps.Count()
+            playSpecificEpisodeObj(m.osdSeasonEps[m.osdEpFocusIdx], m.playingShowGroup)
+        end if
+    else if m.osdTabIdx = 3
+        if m.osdItemIdx = 0
+            openShowInLibraryFromPlayer(false)
+        else if m.osdItemIdx = 1
+            if m.playingShowGroup <> invalid and m.playingShowGroup.episodes <> invalid
+                chosenEp = m.playingShowGroup.episodes[0]
+                for each candEp in m.playingShowGroup.episodes
+                    if candEp.completed <> true
+                        chosenEp = candEp
+                        exit for
+                    end if
+                end for
+                playSpecificEpisodeObj(chosenEp, m.playingShowGroup)
+            else
+                playAdjacentEpisode(-1)
+            end if
+        else if m.osdItemIdx = 2
+            if m.playingShowGroup <> invalid and m.playingShowGroup.episodes <> invalid and m.playingShowGroup.episodes.Count() > 0
+                playSpecificEpisodeObj(m.playingShowGroup.episodes[0], m.playingShowGroup)
+            else
+                playAdjacentEpisode(1)
+            end if
+        end if
+    else if m.osdTabIdx = 4
+        if m.osdItemIdx = 0
+            toggleCurrentWatchedStatus()
+        else if m.osdItemIdx = 1
+            m.cinemaVideo.seek = 0
+            updatePlayerOsdHeaderAndScrubber()
+        else if m.osdItemIdx = 2
+            if m.playingShowGroup <> invalid
+                playAdjacentEpisode(1)
+            else
+                m.cinemaVideo.seek = safeInt(m.cinemaVideo.position) + 300
+                updatePlayerOsdHeaderAndScrubber()
+            end if
+        end if
+    else if m.osdTabIdx = 5
+        if m.osdItemIdx = 0
+            cycleAudioTrack(-1)
+        else if m.osdItemIdx = 1
+            cycleAudioTrack(1)
+        else if m.osdItemIdx = 2
+            switchStreamDeliveryMode(false)
+        else if m.osdItemIdx = 3
+            switchStreamDeliveryMode(true)
+        end if
+    end if
+end sub
+
+function osdMaxItemCountForTab(tabNum as Integer) as Integer
+    if tabNum = 0 then return 7
+    if tabNum = 1 then return 7
+    if tabNum = 3 then return 3
+    if tabNum = 4 then return 3
+    if tabNum = 5 then return 4
+    return 0
+end function
+
+function handleCinemaVideoKeyEvent(key as String) as Boolean
+    if m.cinemaVideo = invalid then return false
+
+    ' Global transport keys that always work during video playback
+    if key = "play"
+        if m.cinemaVideo.state = "playing"
+            m.cinemaVideo.control = "pause"
+        else if m.cinemaVideo.state = "paused"
+            m.cinemaVideo.control = "resume"
+        end if
+        if m.playerOsdOpen <> true
+            openPlayerOsd("mini")
+        else
+            renderPlayerOsd()
+        end if
+        return true
+    else if key = "rewind"
+        ns = safeInt(m.cinemaVideo.position) - 60
+        if ns < 0 then ns = 0
+        m.cinemaVideo.seek = ns
+        if m.playerOsdOpen <> true then openPlayerOsd("mini") else updatePlayerOsdHeaderAndScrubber()
+        return true
+    else if key = "fastforward"
+        m.cinemaVideo.seek = safeInt(m.cinemaVideo.position) + 60
+        if m.playerOsdOpen <> true then openPlayerOsd("mini") else updatePlayerOsdHeaderAndScrubber()
+        return true
+    else if key = "replay"
+        ns = safeInt(m.cinemaVideo.position) - 10
+        if ns < 0 then ns = 0
+        m.cinemaVideo.seek = ns
+        if m.captionsEnabled <> true then m.captionTempReplaySec = 12
+        onSubTimerTick()
+        if m.playerOsdOpen <> true then openPlayerOsd("mini") else updatePlayerOsdHeaderAndScrubber()
+        return true
+    end if
+
+    ' When Full Rich OSD Menu is open
+    if m.playerOsdOpen = true and m.playerOsdMode = "full"
+        if key = "back"
+            closePlayerOsd()
+            return true
+        else if key = "options"
+            if m.osdTabIdx <> 1
+                m.osdTabIdx = 1
+                m.osdZone = "items"
+                m.osdItemIdx = 0
+                renderPlayerOsd()
+            else
+                closePlayerOsd()
+            end if
+            return true
+        end if
+
+        if m.osdZone = "scrubber"
+            if key = "left"
+                ns = safeInt(m.cinemaVideo.position) - 15
+                if ns < 0 then ns = 0
+                m.cinemaVideo.seek = ns
+                updatePlayerOsdHeaderAndScrubber()
+                return true
+            else if key = "right"
+                m.cinemaVideo.seek = safeInt(m.cinemaVideo.position) + 30
+                updatePlayerOsdHeaderAndScrubber()
+                return true
+            else if key = "OK"
+                if m.cinemaVideo.state = "playing" then m.cinemaVideo.control = "pause" else if m.cinemaVideo.state = "paused" then m.cinemaVideo.control = "resume"
+                renderPlayerOsd()
+                return true
+            else if key = "down"
+                m.osdZone = "tabs"
+                renderPlayerOsd()
+                return true
+            end if
+            return true
+        else if m.osdZone = "tabs"
+            if key = "left"
+                m.osdTabIdx = (m.osdTabIdx + 6) mod 7
+                m.osdItemIdx = 0
+                renderPlayerOsd()
+                return true
+            else if key = "right"
+                m.osdTabIdx = (m.osdTabIdx + 1) mod 7
+                m.osdItemIdx = 0
+                renderPlayerOsd()
+                return true
+            else if key = "up"
+                m.osdZone = "scrubber"
+                renderPlayerOsd()
+                return true
+            else if key = "down" or key = "OK"
+                if m.osdTabIdx = 2
+                    if m.osdSeasonEps <> invalid and m.osdSeasonEps.Count() > 0
+                        m.osdZone = "items"
+                    else
+                        m.osdZone = "seasonTop"
+                    end if
+                else if m.osdTabIdx = 6
+                    ' Metadata tab has no sub-buttons; OK refreshes
+                else
+                    m.osdZone = "items"
+                    m.osdItemIdx = 0
+                end if
+                renderPlayerOsd()
+                return true
+            end if
+            return true
+        else if m.osdZone = "seasonTop"
+            if key = "left"
+                m.osdSeasonTopIdx = (m.osdSeasonTopIdx + 2) mod 3
+                renderPlayerOsd()
+                return true
+            else if key = "right"
+                m.osdSeasonTopIdx = (m.osdSeasonTopIdx + 1) mod 3
+                renderPlayerOsd()
+                return true
+            else if key = "up"
+                m.osdZone = "tabs"
+                renderPlayerOsd()
+                return true
+            else if key = "down"
+                if m.osdSeasonEps <> invalid and m.osdSeasonEps.Count() > 0
+                    m.osdZone = "items"
+                    renderPlayerOsd()
+                end if
+                return true
+            else if key = "OK"
+                activateOsdCurrentItem()
+                return true
+            end if
+            return true
+        else
+            ' m.osdZone = "items"
+            if m.osdTabIdx = 2
+                totalEp = 0
+                if m.osdSeasonEps <> invalid then totalEp = m.osdSeasonEps.Count()
+                if key = "left" and totalEp > 0
+                    m.osdEpFocusIdx = m.osdEpFocusIdx - 1
+                    if m.osdEpFocusIdx < 0 then m.osdEpFocusIdx = totalEp - 1
+                    renderPlayerOsd()
+                    return true
+                else if key = "right" and totalEp > 0
+                    m.osdEpFocusIdx = m.osdEpFocusIdx + 1
+                    if m.osdEpFocusIdx >= totalEp then m.osdEpFocusIdx = 0
+                    renderPlayerOsd()
+                    return true
+                else if key = "up"
+                    m.osdZone = "seasonTop"
+                    renderPlayerOsd()
+                    return true
+                else if key = "OK"
+                    activateOsdCurrentItem()
+                    return true
+                end if
+                return true
+            end if
+
+            maxBtns = osdMaxItemCountForTab(m.osdTabIdx)
+            if key = "left" and maxBtns > 0
+                m.osdItemIdx = (m.osdItemIdx + maxBtns - 1) mod maxBtns
+                renderPlayerOsd()
+                return true
+            else if key = "right" and maxBtns > 0
+                m.osdItemIdx = (m.osdItemIdx + 1) mod maxBtns
+                renderPlayerOsd()
+                return true
+            else if key = "up"
+                m.osdZone = "tabs"
+                renderPlayerOsd()
+                return true
+            else if key = "OK"
+                activateOsdCurrentItem()
+                return true
+            end if
+            return true
+        end if
+    end if
+
+    ' When OSD is closed or in transient Mini-HUD mode
+    if key = "back"
+        if m.playerOsdOpen = true and m.playerOsdMode = "mini"
+            closePlayerOsd()
+            return true
+        end if
+        exitPlaybackToLibrary()
+        return true
+    else if key = "OK" or key = "up" or key = "down"
+        m.osdZone = "tabs"
+        openPlayerOsd("full")
+        return true
+    else if key = "options"
+        m.osdTabIdx = 1
+        m.osdZone = "items"
+        m.osdItemIdx = 0
+        openPlayerOsd("full")
+        return true
+    else if key = "left"
+        ns = safeInt(m.cinemaVideo.position) - 15
+        if ns < 0 then ns = 0
+        m.cinemaVideo.seek = ns
+        openPlayerOsd("mini")
+        return true
+    else if key = "right"
+        m.cinemaVideo.seek = safeInt(m.cinemaVideo.position) + 30
+        openPlayerOsd("mini")
+        return true
+    end if
+    return true
+end function
+
 function onKeyEvent(key as String, press as Boolean) as Boolean
     if key = "Lit_~" or Left(key, 4) = "Lit_"
         return true
     end if
     if press <> true then return false
 
-    ' 1. Active Full-Screen Cinema Video Playback Controls
+    ' 1. Active Full-Screen Cinema Video Playback Controls + Rich Plex-Style OSD Menu
     if m.cinemaVideoActive = true
-        if key = "back"
-            if m.dashTask <> invalid
-                if m.cinemaVideo <> invalid and m.currentPlayingTrackId <> ""
-                    posSec = Int(m.cinemaVideo.position)
-                    durSec = Int(m.cinemaVideo.duration)
-                    if posSec > 0
-                        m.dashTask.progressUrl = "${progressBaseUrl}/api/tv-progress?id=" + m.currentPlayingTrackId + "&positionSec=" + posSec.ToStr() + "&durationSec=" + durSec.ToStr() + "&seq=" + m.tickCount.ToStr()
-                        if m.currentPlayingItem <> invalid and posSec >= 5
-                            m.currentPlayingItem.positionSec = posSec
-                            m.currentPlayingItem.inProgress = true
-                            m.currentPlayingItem.completed = false
-                            if durSec > 0
-                                pct = Int(((posSec * 1.0) / (durSec * 1.0)) * 100)
-                                if pct < 1 then pct = 1
-                                if pct > 99 then pct = 99
-                                m.currentPlayingItem.progressPct = pct
-                            end if
-                        end if
-                    end if
-                end if
-                m.dashTask.castActionUrl = "${progressBaseUrl}/api/roku-cast-clear?loadKey=all&seq=" + m.tickCount.ToStr()
-            end if
-            m.currentPlayingTrackId = ""
-            m.currentPlayingItem = invalid
-            if m.lastRemoteCastKey <> "" then m.dismissedCinemaLoadKey = m.lastRemoteCastKey else m.dismissedCinemaLoadKey = m.lastCinemaLoadKey
-            m.localVideoPlaying = false
-            m.localLibraryOpened = true
-            stopCinemaVideo()
-            if m.cinemaLibraryActive <> true and m.latestCinemaLibrary <> invalid
-                showCinemaLibrary(m.latestCinemaLibrary)
-            end if
-            m.cinemaFocusZone = "posters"
-            m.top.setFocus(true)
-            updateCinemaPaneFocusUi()
-            return true
-        end if
-        if m.cinemaVideo <> invalid and m.cinemaVideo.hasFocus() <> true
-            m.cinemaVideo.setFocus(true)
-            if key = "play" or key = "OK"
-                if m.cinemaVideo.state = "playing" then m.cinemaVideo.control = "pause" else if m.cinemaVideo.state = "paused" then m.cinemaVideo.control = "resume"
-                return true
-            else if key = "right" or key = "fastforward"
-                m.cinemaVideo.seek = Int(m.cinemaVideo.position) + 15
-                return true
-            else if key = "left" or key = "rewind"
-                ns = Int(m.cinemaVideo.position) - 15
-                if ns < 0 then ns = 0
-                m.cinemaVideo.seek = ns
-                return true
-            else if key = "replay"
-                ns = Int(m.cinemaVideo.position) - 10
-                if ns < 0 then ns = 0
-                m.cinemaVideo.seek = ns
-                return true
-            end if
-        end if
-        return false
+        return handleCinemaVideoKeyEvent(key)
     end if
 
     ' 2. 3-Row Visual Image-Card Cinema Library Navigation (Row 0: Tabs <-> Row 1: Category/Season Cards <-> Row 2: Poster Cards)
