@@ -2,6 +2,7 @@ extends RefCounted
 
 const Campaign = preload("res://scripts/engine/RTSCampaign.gd")
 const HubData = preload("res://scripts/engine/RTSCampaignHubData.gd")
+const HubState = preload("res://scripts/campaign/RTSHubState.gd")
 
 const MISSION_LANDING_POINTS := [
 	Vector2(121, 119),   # 01 Cut the Signal
@@ -418,8 +419,8 @@ static func hub_cutscene(id: String, ctx: Dictionary = {}) -> Dictionary:
 			}
 		"frn_broadcast":
 			var news_idx := mini(completed.size(), HubData.NEWS_HEADLINES.size() - 1)
-			var headline_pair: Array = HubData.NEWS_HEADLINES[news_idx]
-			var feed_idx := maxi(0, completed.size() - 1)
+			var headline_pair: Array = HubState.latest_news_pair()
+			var feed_idx := clampi(completed.size() - 1, 0, DIORAMA_KEYS.size() - 1)
 			var feed_code := "%02d" % (feed_idx + 1)
 			var news_code := "%02d" % news_idx
 			return {
@@ -430,18 +431,18 @@ static func hub_cutscene(id: String, ctx: Dictionary = {}) -> Dictionary:
 				"shots": [
 					{
 						"kind": "frn_broadcast",
-						"diorama": DIORAMA_KEYS[clampi(feed_idx, 0, DIORAMA_KEYS.size() - 1)],
+						"diorama": DIORAMA_KEYS[feed_idx],
 						"duration": 6.2,
 						"voice_cue": "frn_news_%s" % news_code,
 						"headline": str(headline_pair[0]),
 						"ticker": str(headline_pair[1]),
 						"telemetry": "FRN STUDIO 01  //  LIVE SECTOR FEED",
 						"speaker": "ANCHOR KADE VANCE  ·  FRN LIVE",
-						"line": FRN_SPOKEN_REPORTS[news_idx] if news_idx < FRN_SPOKEN_REPORTS.size() else str(headline_pair[0]),
+						"line": FRN_SPOKEN_REPORTS[news_idx] if completed.size() <= 11 and news_idx < FRN_SPOKEN_REPORTS.size() else (str(headline_pair[0]) + " — " + FRN_SPOKEN_REPORTS[news_idx]),
 					},
 					{
 						"kind": "diorama_3d",
-						"diorama": DIORAMA_KEYS[clampi(feed_idx, 0, DIORAMA_KEYS.size() - 1)],
+						"diorama": DIORAMA_KEYS[feed_idx],
 						"duration": 5.6,
 						"voice_cue": "frn_drone_%s" % feed_code,
 						"telemetry": "RECON DRONE FEED  //  %s" % str(HubData.mission_meta(feed_idx).sector).to_upper(),
@@ -784,12 +785,70 @@ static func hub_cutscene(id: String, ctx: Dictionary = {}) -> Dictionary:
 					},
 				],
 			}
+		"neral_crystal_arrival":
+			return {
+				"id": "neral_crystal_arrival",
+				"title": "MSV STARFALL  ·  SHADOW OF PROPHECY",
+				"voice_cue": "neral_crystal_1",
+				"planet": HubData.mission_meta(10).planet,
+				"shots": [
+					{
+						"kind": "neral_arrival_3d",
+						"duration": 6.2,
+						"voice_cue": "neral_crystal_1",
+						"sfx_cues": [[0.10, "phase_burst"], [1.60, "archon_warp"]],
+						"telemetry": "MSV STARFALL  //  POWER GRID ANOMALY — DECK LIGHTS OUT",
+						"speaker": "SEER NERAL",
+						"portrait": "",
+						"line": "From the shadow between stars I bring this Memory Crystal, Captain Vale. Look within, before the Brood extinguishes every world.",
+					},
+					{
+						"kind": "neral_pedestal_3d",
+						"duration": 5.6,
+						"voice_cue": "neral_crystal_2",
+						"sfx_cues": [[0.15, "beacon_ready"]],
+						"telemetry": "LAB 01 CONTAINMENT  //  MEMORY CRYSTAL ONLINE",
+						"speaker": "CAPTAIN VALE",
+						"portrait": "vale",
+						"line": "Aster, secure that crystal on the lab pedestal. Whatever Neral saw at the end of time, we need to know how to stop it.",
+					},
+				],
+			}
+		"arden_bridge_comm":
+			return {
+				"id": "arden_bridge_comm",
+				"title": "BRIDGE COMMUNICATOR  ·  ALLIED FLEET STAGING",
+				"voice_cue": "arden_comm_1",
+				"planet": HubData.mission_meta(10).planet,
+				"shots": [
+					{
+						"kind": "arden_comm_3d",
+						"duration": 6.2,
+						"voice_cue": "arden_comm_1",
+						"sfx_cues": [[0.12, "radar_ping"]],
+						"telemetry": "MSV STARFALL BRIDGE  //  ENCRYPTED FLEET HOLOLINK",
+						"speaker": "MARSHAL ARDEN",
+						"portrait": "",
+						"line": "Captain Vale, this is Marshal Arden. Our fleet is staging above Cinderfall, and once your crew finishes assembling that Aurelian Relic, we drop straight into the fire.",
+					},
+					{
+						"kind": "orbital_fleet",
+						"duration": 4.8,
+						"voice_cue": "arden_comm_2",
+						"telemetry": "CINDERFALL INVASION CORRIDOR  //  FINAL PREPARATIONS",
+						"speaker": "CAPTAIN VALE",
+						"portrait": "vale",
+						"line": "Copy that, Marshal. Finish your refits and research, everyone. Next stop is Cinderfall.",
+					},
+				],
+			}
 	return hub_cutscene("hub_prologue")
 
 static func pending_milestone_cutscene() -> String:
 	var completed := Campaign.completed_missions()
 	var milestones := [
-		["campaign-vaultbreaker", "arc_4_victory"],
+		["campaign-last-charge", "arc_4_victory"],
+		["campaign-vaultbreaker", "neral_crystal_arrival"],
 		["campaign-sanctuary-skies", "arc_3_sanctuary"],
 		["campaign-hold-for-dawn", "arc_2_dawn"],
 		["campaign-cut-the-signal", "arc_1_vesper"],
@@ -802,7 +861,7 @@ static func pending_milestone_cutscene() -> String:
 static func archive_entries() -> Array[Dictionary]:
 	var completed := Campaign.completed_missions()
 	var items: Array[Dictionary] = [
-		{"id": "intro_cinematic", "title": "Intro Cinematic: Suiting Up", "category": "Opening 3D Movie", "unlocked": true},
+		{"id": "intro_cinematic", "title": "Intro Cinematic: Operation Cut the Signal", "category": "Opening 3D Movie", "unlocked": true},
 		{"id": "hub_prologue", "title": "Prologue: The Ashfall Signal", "category": "Story Cutscene", "unlocked": true},
 		{"id": "bridge_vale", "title": "Command Bridge: Strategic Briefing", "category": "Bridge Cutscene", "unlocked": true},
 		{"id": "armory_intro", "title": "Bay 07: Quartermaster Vane", "category": "Armory Cutscene", "unlocked": true},
@@ -810,9 +869,11 @@ static func archive_entries() -> Array[Dictionary]:
 		{"id": "frn_broadcast", "title": "FRN Live: Sector News Broadcast", "category": "News Cutscene", "unlocked": true},
 		{"id": "lab_intro", "title": "Science Deck: Dr. Aster's Lab", "category": "Laboratory Cutscene", "unlocked": true},
 		{"id": "arc_1_vesper", "title": "Act I: The Signal Breaks", "category": "Milestone Cutscene", "unlocked": "campaign-cut-the-signal" in completed},
-		{"id": "arc_2_dawn", "title": "Act II: Shadow of the Brood", "category": "Milestone Cutscene", "unlocked": "campaign-hold-for-dawn" in completed},
+		{"id": "arc_2_dawn", "title": "Act II: Boarding MSV Starfall", "category": "Milestone Cutscene", "unlocked": "campaign-hold-for-dawn" in completed},
 		{"id": "arc_3_sanctuary", "title": "Act III: Spear of Sanctuary", "category": "Milestone Cutscene", "unlocked": "campaign-sanctuary-skies" in completed},
-		{"id": "arc_4_victory", "title": "Finale: Dawn Over Aurelia", "category": "Milestone Cutscene", "unlocked": "campaign-vaultbreaker" in completed},
+		{"id": "neral_crystal_arrival", "title": "Prophecy: Seer Neral & Memory Crystal", "category": "Lab Cutscene", "unlocked": "campaign-vaultbreaker" in completed},
+		{"id": "arden_bridge_comm", "title": "Bridge Comm: Marshal Arden", "category": "Bridge Cutscene", "unlocked": completed.size() >= 18 or "campaign-fireline" in completed},
+		{"id": "arc_4_victory", "title": "Finale: Dawn Over Cinderfall", "category": "Milestone Cutscene", "unlocked": "campaign-last-charge" in completed},
 	]
 	for idx in Campaign.MISSIONS.size():
 		var avail := Campaign.mission_available(idx, completed)

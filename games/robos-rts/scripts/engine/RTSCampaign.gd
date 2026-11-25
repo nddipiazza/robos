@@ -252,8 +252,9 @@ static func save_completion(index: int, brood_research: int = 0, concord_researc
 	config.load(_progress_path())
 	var prior := int(config.get_value("brood_research", id, 0))
 	var prior_concord := int(config.get_value("concord_research", id, 0))
+	config.set_value("hub_state", "last_completed_id", id)
 	if id in completed and brood_research <= prior and concord_research <= prior_concord:
-		return OK
+		return config.save(_progress_path())
 	if id not in completed:
 		completed.append(id)
 	config.set_value("ashfall_signal", "completed_ids", completed)

@@ -91,6 +91,30 @@ DESIGNED_SPEAKERS = {
             "steady military helm telemetry cadence."
         ),
     },
+    "neral": {
+        "speaker_name": "Seer Neral",
+        "ref_text": "From the shadow between stars I bring this Memory Crystal, Captain Vale.",
+        "instruct": (
+            "Ancient stoic male alien prelate with a deep resonant bass-baritone voice, measured solemn prophetic cadence, "
+            "calm gravitas and quiet urgency."
+        ),
+    },
+    "arden": {
+        "speaker_name": "Marshal Arden",
+        "ref_text": "Captain Vale, this is Marshal Arden. Our fleet is staging above Cinderfall.",
+        "instruct": (
+            "Battle-hardened veteran military general in his late fifties, commanding gravelly baritone, "
+            "resolute frontline authority and grit."
+        ),
+    },
+    "voss": {
+        "speaker_name": "Shade Agent Voss",
+        "ref_text": "I'm inside. Watch for detectors and hold the support team back until I clear a route.",
+        "instruct": (
+            "Cool composed female covert intelligence operative in her thirties, low controlled alto voice, "
+            "sharp tactical precision."
+        ),
+    },
 }
 
 CLONED_EXISTING_SPEAKERS = {
@@ -172,6 +196,15 @@ def build_voice_lines() -> list[dict]:
     add("intro_vesper_01", "sable", "Skimming low under Directorate radar. Vesper Gate outskirts right ahead, prepare for combat drop.")
     add("intro_vesper_02", "sable", "Approaching the White Ridge excavation zone. Pioneers and base rigs are touching down at the staging camp.")
     add("intro_vesper_03", "sable", "Gnarl Brood signatures closing on Dawn Reach from every canyon! Hold that outpost until my Rampart can get back for extraction!")
+
+    # Dynamic Story-Mode Hub stage transitions, visitors, & communicators
+    add("neral_crystal_1", "neral", "From the shadow between stars I bring this Memory Crystal, Captain Vale. Look within, before the Brood extinguishes every world.")
+    add("neral_crystal_2", "vale", "Aster, secure that crystal on the lab pedestal. Whatever Neral saw at the end of time, we need to know how to stop it.")
+    add("arden_comm_1", "arden", "Captain Vale, this is Marshal Arden. Our fleet is staging above Cinderfall, and once your crew finishes assembling that Aurelian Relic, we drop straight into the fire.")
+    add("arden_comm_2", "vale", "Copy that, Marshal. Finish your refits and research, everyone. Next stop is Cinderfall.")
+    add("voss_cantina_1", "voss", "Directorate intelligence keeps its darkest secrets behind Blackgate's walls and Korhal's black labs. Give the word when you're ready to strike from the shadows.")
+    add("lira_lab_1", "aster", "Refugee transports from Bracken and Ashfall are crowding the sector. Until we break the Sanctuary blockade or purge the infestation, every colony remains at risk.")
+    add("cinderfall_camp_1", "arden", "Welcome to Cinderfall, Vale. Starfall is holding orbital defense overhead while we dig in here. Hit the tunnels or shatter their sky platforms before we charge the Relic!")
 
     # Legacy 7-shot cues preserved in manifest
     add("intro_cine_1", "vane", " Reactor seals locked. Neosteel chestplate fused and pressurized. Bay Seven gantry is clear.")
@@ -411,6 +444,9 @@ def main() -> None:
             "vane": {"name": "Quartermaster Vane", "source": "Qwen3-TTS VoiceDesign (Bay 07 Chief Engineer)"},
             "vance": {"name": "Anchor Kade Vance", "source": "Qwen3-TTS VoiceDesign (FRN Interstellar Anchor)"},
             "helm": {"name": "Starfall Helm", "source": "Qwen3-TTS VoiceDesign (MSV Starfall Navigation)"},
+            "neral": {"name": "Seer Neral", "source": "Qwen3-TTS VoiceDesign (Aurelian Prelate)"},
+            "arden": {"name": "Marshal Arden", "source": "Qwen3-TTS VoiceDesign (Cinderfall Expedition General)"},
+            "voss": {"name": "Shade Agent Voss", "source": "Qwen3-TTS VoiceDesign (Covert Operative)"},
         },
         "cues": {},
     }

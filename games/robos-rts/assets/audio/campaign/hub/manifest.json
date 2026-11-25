@@ -29,6 +29,18 @@
     "helm": {
       "name": "Starfall Helm",
       "source": "Qwen3-TTS VoiceDesign (MSV Starfall Navigation)"
+    },
+    "neral": {
+      "name": "Seer Neral",
+      "source": "Qwen3-TTS VoiceDesign (Aurelian Prelate)"
+    },
+    "arden": {
+      "name": "Marshal Arden",
+      "source": "Qwen3-TTS VoiceDesign (Cinderfall Expedition General)"
+    },
+    "voss": {
+      "name": "Shade Agent Voss",
+      "source": "Qwen3-TTS VoiceDesign (Covert Operative)"
     }
   },
   "cues": {
@@ -217,6 +229,48 @@
       "text": "Gnarl Brood signatures closing on Dawn Reach from every canyon! Hold that outpost until my Rampart can get back for extraction!",
       "duration": 6.811,
       "path": "res://assets/audio/campaign/hub/intro_vesper_03.wav"
+    },
+    "neral_crystal_1": {
+      "speaker": "neral",
+      "text": "From the shadow between stars I bring this Memory Crystal, Captain Vale. Look within, before the Brood extinguishes every world.",
+      "duration": 8.01,
+      "path": "res://assets/audio/campaign/hub/neral_crystal_1.wav"
+    },
+    "neral_crystal_2": {
+      "speaker": "vale",
+      "text": "Aster, secure that crystal on the lab pedestal. Whatever Neral saw at the end of time, we need to know how to stop it.",
+      "duration": 5.998,
+      "path": "res://assets/audio/campaign/hub/neral_crystal_2.wav"
+    },
+    "arden_comm_1": {
+      "speaker": "arden",
+      "text": "Captain Vale, this is Marshal Arden. Our fleet is staging above Cinderfall, and once your crew finishes assembling that Aurelian Relic, we drop straight into the fire.",
+      "duration": 9.628,
+      "path": "res://assets/audio/campaign/hub/arden_comm_1.wav"
+    },
+    "arden_comm_2": {
+      "speaker": "vale",
+      "text": "Copy that, Marshal. Finish your refits and research, everyone. Next stop is Cinderfall.",
+      "duration": 5.035,
+      "path": "res://assets/audio/campaign/hub/arden_comm_2.wav"
+    },
+    "voss_cantina_1": {
+      "speaker": "voss",
+      "text": "Directorate intelligence keeps its darkest secrets behind Blackgate's walls and Korhal's black labs. Give the word when you're ready to strike from the shadows.",
+      "duration": 7.905,
+      "path": "res://assets/audio/campaign/hub/voss_cantina_1.wav"
+    },
+    "lira_lab_1": {
+      "speaker": "aster",
+      "text": "Refugee transports from Bracken and Ashfall are crowding the sector. Until we break the Sanctuary blockade or purge the infestation, every colony remains at risk.",
+      "duration": 9.823,
+      "path": "res://assets/audio/campaign/hub/lira_lab_1.wav"
+    },
+    "cinderfall_camp_1": {
+      "speaker": "arden",
+      "text": "Welcome to Cinderfall, Vale. Starfall is holding orbital defense overhead while we dig in here. Hit the tunnels or shatter their sky platforms before we charge the Relic!",
+      "duration": 10.683,
+      "path": "res://assets/audio/campaign/hub/cinderfall_camp_1.wav"
     },
     "intro_cine_1": {
       "speaker": "vane",

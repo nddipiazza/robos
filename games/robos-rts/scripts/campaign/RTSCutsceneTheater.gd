@@ -659,6 +659,18 @@ func _enter_shot(idx: int) -> void:
 			if _vp_container:
 				_vp_container.show()
 				_stage_intro_touchdown()
+		"neral_arrival_3d":
+			if _vp_container:
+				_vp_container.show()
+				_stage_neral_arrival()
+		"neral_pedestal_3d":
+			if _vp_container:
+				_vp_container.show()
+				_stage_neral_pedestal()
+		"arden_comm_3d":
+			if _vp_container:
+				_vp_container.show()
+				_stage_arden_comm()
 		"intro_gantry":
 			if _vp_container:
 				_vp_container.show()
@@ -2149,3 +2161,117 @@ func _stage_intro_clash() -> void:
 	_fov_to = 43.0
 	_roll_from = -3.0
 	_roll_to = 1.5
+
+func _stage_neral_arrival() -> void:
+	_clear_3d_stage()
+	if _world_root == null:
+		return
+	# Lights-out starship deck ambush/visitation (Zeratul -> Raynor counterpart!)
+	_env.background_mode = Environment.BG_COLOR
+	_env.background_color = Color("#040710")
+	_env.fog_enabled = true
+	_env.fog_light_color = Color("#0c1428")
+	_env.fog_density = 0.032
+	_env.ambient_light_color = Color("#566892")
+	_env.ambient_light_energy = 0.36
+	_key_light.light_color = Color("#a878ff")
+	_key_light.light_energy = 1.15
+	_rim_light.light_color = Color("#4cf2ff")
+	_rim_light.light_energy = 0.85
+
+	_make_ground_plane("res://assets/terrain/military-paving.webp", Color("#192230"), 0.45, 18.0, 120.0)
+	var crys_mat := Models.mat("cine_neral_crys", Color("#b478ff"), Color("#863cf5"), 2.0, 0.1, 0.2)
+	var steel := Models.mat("cine_neral_steel", Color("#1d2632"), Color.BLACK, 1.0, 0.55, 0.45)
+	Models.box(_world_root, Vector3(18.0, 6.4, 0.6), steel, Vector3(0.0, 3.2, -7.8))
+
+	_spawn_model("rifleman", 1, Vector3(-1.95, 0.0, 0.6), Vector3(1.8, 0.0, 0.0), 1.08, true)
+	var neral := _spawn_model("seer_neral", 3, Vector3(1.85, 0.0, 0.2), Vector3(-1.8, 0.0, 0.6), 1.12)
+	if neral:
+		_spawn_warp_ring(Vector3(1.85, 0.2, 0.2), 3.6)
+
+	var crystal := Node3D.new()
+	crystal.position = Vector3(0.0, 1.48, 0.35)
+	Models.cone(crystal, 0.26, 0.64, crys_mat, Vector3(0, 0.2, 0), Vector3.ZERO, 6)
+	Models.cone(crystal, 0.26, 0.48, crys_mat, Vector3(0, -0.26, 0), Vector3(180, 0, 0), 6)
+	_world_root.add_child(crystal)
+	_fx_items.append({"kind": "spin_holo", "node": crystal, "speed": 1.15})
+	_add_omni(Vector3(0.0, 1.55, 0.35), Color("#a86cff"), 1.65, 6.5, 4.0)
+
+	_use_bezier_cam = true
+	_cam_from = Vector3(3.8, 2.25, 5.8)
+	_cam_mid = Vector3(0.2, 2.05, 5.2)
+	_cam_to = Vector3(-3.2, 1.95, 4.8)
+	_cam_look = Vector3(0.3, 1.35, 0.2)
+	_cam_look_to = Vector3(0.0, 1.42, 0.3)
+	_fov_from = 38.0
+	_fov_to = 32.0
+
+func _stage_neral_pedestal() -> void:
+	_clear_3d_stage()
+	if _world_root == null:
+		return
+	_env.background_mode = Environment.BG_COLOR
+	_env.background_color = Color("#06121e")
+	_env.fog_enabled = true
+	_env.fog_light_color = Color("#0f2438")
+	_env.fog_density = 0.020
+	_make_ground_plane("res://assets/terrain/military-paving.webp", Color("#1e313e"), 0.42, 18.0, 120.0)
+
+	var steel := Models.mat("cine_ped_steel", Color("#223240"), Color.BLACK, 1.0, 0.58, 0.38)
+	var crys_violet := Models.mat("cine_ped_violet", Color("#b87eff"), Color("#8842f5"), 2.1, 0.1, 0.2)
+	var cyan_mat := Models.mat("cine_ped_cyan", Color("#54f4ff"), Color("#22c4f0"), 1.8, 0.0, 0.2)
+	Models.cyl(_world_root, 0.95, 1.15, 1.05, steel, Vector3(0.0, 0.52, 0.0), Vector3.ZERO, 20)
+	Models.ring(_world_root, 0.78, 0.92, crys_violet, Vector3(0.0, 1.08, 0.0))
+
+	var crystal := Node3D.new()
+	crystal.position = Vector3(0.0, 1.92, 0.0)
+	Models.cone(crystal, 0.42, 0.95, crys_violet, Vector3(0, 0.3, 0), Vector3.ZERO, 6)
+	Models.cone(crystal, 0.42, 0.68, cyan_mat, Vector3(0, -0.38, 0), Vector3(180, 0, 0), 6)
+	Models.ring(crystal, 0.68, 0.76, cyan_mat, Vector3.ZERO, Vector3(28, 0, -16))
+	_world_root.add_child(crystal)
+	_fx_items.append({"kind": "spin_holo", "node": crystal, "speed": 0.95})
+	_add_omni(Vector3(0.0, 2.0, 0.0), Color("#a86cff"), 1.75, 7.0, 3.5)
+
+	_spawn_model("doctor_aster", 1, Vector3(2.2, 0.0, 0.6), Vector3(0.0, 0.0, 0.0), 1.08)
+	_spawn_model("rifleman", 1, Vector3(-2.3, 0.0, 0.8), Vector3(0.0, 0.0, 0.0), 1.08, true)
+
+	_use_bezier_cam = true
+	_cam_from = Vector3(-3.6, 2.65, 6.2)
+	_cam_mid = Vector3(0.0, 2.35, 5.4)
+	_cam_to = Vector3(2.8, 2.15, 4.6)
+	_cam_look = Vector3(0.0, 1.75, 0.0)
+	_cam_look_to = Vector3(0.0, 1.88, 0.0)
+	_fov_from = 37.0
+	_fov_to = 31.0
+
+func _stage_arden_comm() -> void:
+	_clear_3d_stage()
+	if _world_root == null:
+		return
+	_env.background_mode = Environment.BG_COLOR
+	_env.background_color = Color("#08111c")
+	_env.fog_enabled = true
+	_env.fog_light_color = Color("#102234")
+	_env.fog_density = 0.018
+	_make_ground_plane("res://assets/terrain/military-paving.webp", Color("#202c38"), 0.45, 18.0, 120.0)
+
+	var steel := Models.mat("cine_comm_steel", Color("#1e2934"), Color.BLACK, 1.0, 0.58, 0.42)
+	var holo_cyan := Models.mat("cine_comm_cyan", Color("#4af0ff"), Color("#1cb8e8"), 1.9, 0.0, 0.2)
+	Models.cyl(_world_root, 1.55, 1.82, 0.92, steel, Vector3(0.8, 0.46, -0.4), Vector3.ZERO, 22)
+	Models.ring(_world_root, 1.25, 1.42, holo_cyan, Vector3(0.8, 0.94, -0.4))
+
+	var arden := _spawn_model("marshal_arden", 1, Vector3(0.8, 0.96, -0.4), Vector3(-2.4, 0.96, 1.2), 1.18)
+	if arden:
+		for mi in arden.find_children("*", "MeshInstance3D", true, false):
+			mi.material_override = holo_cyan
+	_add_omni(Vector3(0.8, 2.1, -0.4), Color("#4af0ff"), 1.55, 6.5, 4.2)
+	_spawn_model("rifleman", 1, Vector3(-2.2, 0.0, 0.9), Vector3(0.8, 0.0, -0.4), 1.08, true)
+
+	_use_bezier_cam = true
+	_cam_from = Vector3(-4.2, 2.45, 5.6)
+	_cam_mid = Vector3(-1.4, 2.25, 5.2)
+	_cam_to = Vector3(1.8, 2.15, 4.8)
+	_cam_look = Vector3(0.1, 1.65, -0.1)
+	_cam_look_to = Vector3(0.6, 1.82, -0.3)
+	_fov_from = 36.0
+	_fov_to = 32.0

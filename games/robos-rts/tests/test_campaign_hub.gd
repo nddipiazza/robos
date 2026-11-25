@@ -30,13 +30,23 @@ func _run() -> void:
 	title._build_campaign_page()
 	await process_frame
 
-	# 1. Enter Flagship Campaign Hub -> lands on Command Bridge
+	# 1. Fresh save enters Stage 1 Vesper Outpost Saloon (cantina), then completing Act I unlocks MSV Starfall rooms
 	var state: Dictionary = title.apply_ui_state({"page": "campaign"})
 	_check(state.page == "campaign", "Campaign page opens from title")
-	_check(state.campaign_room == "bridge", "Campaign hub opens on the Flagship Bridge")
-	_check(state.campaign_console == "", "No modal console blocks the Bridge initially")
+	_check(state.campaign_room == "cantina", "Fresh campaign opens in Stage 1 Vesper Saloon")
+	_check(state.campaign_console == "", "No modal console blocks the Saloon initially")
 	_check(state.campaign_credits == HubData.INITIAL_CREDITS, "Initial Meridian Charter credits match")
 	_check(state.campaign_unlocked[0] == true and state.campaign_unlocked[1] == false, "Only Mission 01 starts unlocked on a fresh save")
+	_check(Campaign.save_completion(0, 0, 0) == OK, "Saves Mission 01 completion")
+	_check(CutsceneData.pending_milestone_cutscene() == "arc_1_vesper", "Completing Mission 01 queues Act I milestone cutscene")
+	title._campaign.check_milestone_cutscene()
+	_check(title.ui_state().campaign_cutscene_id == "arc_1_vesper", "Milestone cutscene plays upon returning to Hub")
+	title.apply_ui_state({"skip_cutscene": true})
+	_check(Campaign.save_completion(1, 0, 0) == OK and Campaign.save_completion(2, 2, 2) == OK, "Completes Act I through Hold for Dawn")
+	title._campaign.open_hub()
+	CutsceneData.mark_seen("arc_2_dawn")
+	state = title.ui_state()
+	_check(state.campaign_room == "bridge", "Post-Hold for Dawn hub opens on the MSV Starfall Bridge")
 
 	# 2. First-visit room cutscenes trigger automatically & skip cleanly on Escape
 	var esc_event := InputEventKey.new()
@@ -131,11 +141,6 @@ func _run() -> void:
 	_check(bool(HubData.purchase_tech("rifle_shield").get("ok", false)), "Purchases Rifleman Ballistic Riot Shield")
 	_check(HubData.credits_available() == before_credits - 45000, "Deducts 45,000 credits accurately")
 	_check(bool(HubData.hire_mercenary("merc_ashhounds").get("ok", false)), "Charters Ashfall Hellhounds mercenary company")
-	_check(Campaign.save_completion(0, 2, 2) == OK, "Saves Mission 01 completion and research samples")
-	_check(CutsceneData.pending_milestone_cutscene() == "arc_1_vesper", "Completing Mission 01 queues Act I milestone cutscene")
-	title._campaign.check_milestone_cutscene()
-	_check(title.ui_state().campaign_cutscene_id == "arc_1_vesper", "Milestone cutscene plays upon returning to Flagship Hub")
-	title.apply_ui_state({"skip_cutscene": true})
 	_check(CutsceneData.pending_milestone_cutscene() == "", "Seen milestone cutscene does not repeat")
 	_check(bool(HubData.select_lab_perk("brood", 0, "brood_t1_bunker").get("ok", false)), "Unlocks Tier 1 Brood adaptation")
 
