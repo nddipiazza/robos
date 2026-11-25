@@ -798,6 +798,40 @@ document.getElementById('ask-btn').onclick = async () => {
 };
 refresh();
 setInterval(refresh, 4000);
+function playBrowserWakePing() {
+  try {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return;
+    const ctx = new Ctx();
+    const now = ctx.currentTime;
+    [[659.25, 0, 0.075], [987.77, 0.075, 0.115]].forEach(([f, start, dur]) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = f;
+      gain.gain.setValueAtTime(0.18, now + start);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + start + dur);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now + start);
+      osc.stop(now + start + dur);
+    });
+  } catch (_) {}
+}
+try {
+  const es = new EventSource('/api/stream');
+  es.onmessage = (ev) => {
+    try {
+      const msg = JSON.parse(ev.data);
+      if (msg.type === 'wake_ack') {
+        document.getElementById('live-partial').textContent = '🔔 Heard ' + (msg.trigger || 'Commander') + ' — working on: "' + (msg.query || '') + '"';
+        playBrowserWakePing();
+      } else {
+        refresh();
+      }
+    } catch (_) {}
+  };
+} catch (_) {}
 </script>
 </body>
 </html>

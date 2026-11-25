@@ -11,6 +11,8 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import java.io.BufferedInputStream
+import java.io.ByteArrayOutputStream
 import java.net.InetSocketAddress
 import java.net.Socket
 import java.net.URLEncoder
@@ -50,6 +52,7 @@ data class PhoneTurnInnerDto(
 
 @Serializable
 data class ProcessAudioDto(
+    val type: String = "",
     val ok: Boolean = false,
     val error: String = "",
     val isSpeech: Boolean = false,
@@ -69,6 +72,15 @@ data class ProcessAudioDto(
     val speakerConfidencePct: Int = 0,
     val audioWavBase64: String = "",
     val audioDurationMs: Long = 0L,
+)
+
+@Serializable
+data class WakeAckStreamEventDto(
+    val type: String = "",
+    val ok: Boolean = false,
+    val trigger: String = "",
+    val query: String = "",
+    val transcript: String = "",
 )
 
 @Serializable
@@ -289,8 +301,9 @@ class RobosVoiceServerClient {
     }
 
     /**
-     * Offloads raw `.wav` utterance processing to the connected RobOS Server's Whisper engine
-     * (`POST /api/assistant/process-audio`) for high-accuracy speech recognition + `"Commander"` execution.
+     * Offloads raw `.wav` utterance processing to the connected RobOS Server's Moonshine/Whisper engine
+     * (`POST /api/assistant/process-audio`) with NDJSON `ackStream`: as soon as `"Commander, <command>"`
+     * is read, `onWakeAck` fires immediately (~150ms) so the phone pings BEFORE skill & TTS finish!
      */
     suspend fun processUtteranceAudio(
         hostIp: String,
@@ -300,6 +313,7 @@ class RobosVoiceServerClient {
         fallbackTranscript: String = "",
         followupArmed: Boolean = false,
         armedTrigger: String = "",
+        onWakeAck: (trigger: String, query: String, transcript: String) -> Unit = { _, _, _ -> },
     ): ServerAudioProcessResult = withContext(Dispatchers.IO) {
         val cleanHost = hostIp.trim()
         if (cleanHost.isEmpty()) {
@@ -318,20 +332,32 @@ class RobosVoiceServerClient {
             if (armedTrigger.isNotBlank()) put("armedTrigger", armedTrigger)
             put("returnAudio", config.speakServerReplies)
             put("speakOnServer", false)
+            put("ackStream", true)
         }.toString()
 
-        val (code, body) = rawHttp(
+        var ackDelivered = false
+        val (code, finalBody) = rawHttpNdjsonPost(
             hostIp = cleanHost,
             port = port,
-            method = "POST",
             path = "/api/assistant/process-audio",
             bodyJson = payload,
             connectTimeoutMs = 3_000,
             readTimeoutMs = 45_000,
-        )
+        ) { jsonLine ->
+            if (jsonLine.contains("\"wake_ack\"")) {
+                try {
+                    val ack = json.decodeFromString(WakeAckStreamEventDto.serializer(), jsonLine)
+                    if (ack.type == "wake_ack" && !ackDelivered) {
+                        ackDelivered = true
+                        onWakeAck(ack.trigger.ifBlank { "Commander" }, ack.query, ack.transcript)
+                    }
+                } catch (_: Exception) {
+                }
+            }
+        }
 
         val dto = try {
-            json.decodeFromString(ProcessAudioDto.serializer(), body)
+            json.decodeFromString(ProcessAudioDto.serializer(), finalBody)
         } catch (_: Exception) {
             return@withContext ServerAudioProcessResult(ok = false, error = "Invalid response from RobOS Server (HTTP $code)")
         }
@@ -341,6 +367,11 @@ class RobosVoiceServerClient {
                 ok = false,
                 error = dto.error.ifBlank { "RobOS Server returned HTTP $code" },
             )
+        }
+
+        if (!ackDelivered && dto.wakeWordDetected && !dto.greetingOnly && dto.query.isNotBlank()) {
+            ackDelivered = true
+            onWakeAck(dto.trigger.ifBlank { "Commander" }, dto.query, dto.transcript)
         }
 
         val replyWav = if (dto.audioWavBase64.isNotBlank()) {
@@ -538,6 +569,83 @@ class RobosVoiceServerClient {
 
     private fun enc(value: String): String =
         URLEncoder.encode(value, StandardCharsets.UTF_8.name())
+
+    private fun rawHttpNdjsonPost(
+        hostIp: String,
+        port: Int,
+        path: String,
+        bodyJson: String,
+        connectTimeoutMs: Int = 3_000,
+        readTimeoutMs: Int = 45_000,
+        onJsonLine: (String) -> Unit,
+    ): Pair<Int, String> {
+        val bodyBytes = bodyJson.toByteArray(StandardCharsets.UTF_8)
+        Socket().use { sock ->
+            sock.tcpNoDelay = true
+            sock.soTimeout = readTimeoutMs
+            sock.connect(InetSocketAddress(hostIp, port), connectTimeoutMs)
+            val reqHead = buildString {
+                append("POST $path HTTP/1.0\r\n")
+                append("Host: $hostIp:$port\r\n")
+                append("Connection: close\r\n")
+                append("Accept: application/x-ndjson, application/json\r\n")
+                append("Content-Type: application/json; charset=utf-8\r\n")
+                append("Content-Length: ${bodyBytes.size}\r\n")
+                append("\r\n")
+            }
+            val out = sock.getOutputStream()
+            out.write(reqHead.toByteArray(StandardCharsets.UTF_8))
+            out.write(bodyBytes)
+            out.flush()
+
+            val input = BufferedInputStream(sock.getInputStream())
+            val headerBuf = ByteArrayOutputStream()
+            var state = 0
+            while (headerBuf.size() < 32_768) {
+                val b = input.read()
+                if (b < 0) break
+                headerBuf.write(b)
+                state = when {
+                    state == 0 && b == '\r'.code -> 1
+                    state == 1 && b == '\n'.code -> 2
+                    state == 2 && b == '\r'.code -> 3
+                    state == 3 && b == '\n'.code -> 4
+                    b == '\r'.code -> 1
+                    else -> 0
+                }
+                if (state == 4) break
+            }
+            val headerStr = String(headerBuf.toByteArray(), StandardCharsets.ISO_8859_1)
+            val statusLine = headerStr.lineSequence().firstOrNull().orEmpty()
+            val code = statusLine.split(' ').getOrNull(1)?.toIntOrNull() ?: 0
+
+            val lineBuf = ByteArrayOutputStream(1024)
+            var lastJsonLine = ""
+            fun emitBufferedLine() {
+                if (lineBuf.size() == 0) return
+                val str = String(lineBuf.toByteArray(), StandardCharsets.UTF_8).trim()
+                lineBuf.reset()
+                if (str.startsWith("{")) {
+                    onJsonLine(str)
+                    lastJsonLine = str
+                }
+            }
+
+            while (true) {
+                val b = input.read()
+                if (b < 0) {
+                    emitBufferedLine()
+                    break
+                }
+                if (b == '\n'.code) {
+                    emitBufferedLine()
+                } else if (b != '\r'.code) {
+                    lineBuf.write(b)
+                }
+            }
+            return code to lastJsonLine
+        }
+    }
 
     private fun rawHttp(
         hostIp: String,

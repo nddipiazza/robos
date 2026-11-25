@@ -47,6 +47,45 @@ function getCacheKey(text, engine = 'kokoro', voice = 'af_heart', speed = 1.0) {
   return `tts-${norm}-${hash}.wav`;
 }
 
+/**
+ * Synthesize a crisp 190ms two-note ascending fifth (E5 659.25Hz -> B5 987.77Hz) WAV buffer
+ * played immediately when "Commander, <command>" is read so the user knows they were heard.
+ */
+function generateWakePingWavBuffer(sampleRate = 24000) {
+  const durationMs = 190;
+  const totalSamples = Math.floor((sampleRate * durationMs) / 1000);
+  const splitSample = Math.floor((sampleRate * 75) / 1000);
+  const buf = Buffer.alloc(44 + totalSamples * 2);
+  buf.write('RIFF', 0);
+  buf.writeUInt32LE(36 + totalSamples * 2, 4);
+  buf.write('WAVE', 8);
+  buf.write('fmt ', 12);
+  buf.writeUInt32LE(16, 16);
+  buf.writeUInt16LE(1, 20);
+  buf.writeUInt16LE(1, 22);
+  buf.writeUInt32LE(sampleRate, 24);
+  buf.writeUInt32LE(sampleRate * 2, 28);
+  buf.writeUInt16LE(2, 32);
+  buf.writeUInt16LE(16, 34);
+  buf.write('data', 36);
+  buf.writeUInt32LE(totalSamples * 2, 40);
+
+  const attackSamples = Math.max(1, Math.floor(sampleRate * 0.006));
+  for (let i = 0; i < totalSamples; i++) {
+    const inNote2 = i >= splitSample;
+    const localIdx = inNote2 ? (i - splitSample) : i;
+    const noteLen = inNote2 ? (totalSamples - splitSample) : splitSample;
+    const freq = inNote2 ? 987.77 : 659.25; // E5 -> B5
+    const t = localIdx / sampleRate;
+    const attack = localIdx < attackSamples ? 0.5 * (1 - Math.cos((Math.PI * localIdx) / attackSamples)) : 1.0;
+    const decay = Math.exp((-3.2 * localIdx) / noteLen);
+    const wave = 0.84 * Math.sin(2 * Math.PI * freq * t) + 0.16 * Math.sin(2 * Math.PI * (freq * 2) * t);
+    const sample = Math.max(-32767, Math.min(32767, Math.round(wave * attack * decay * 21000)));
+    buf.writeInt16LE(sample, 44 + i * 2);
+  }
+  return buf;
+}
+
 class TTSEngine extends EventEmitter {
   constructor(options = {}) {
     super();
@@ -641,6 +680,34 @@ except Exception as e:
 
   // ── Audio Playback Helper ───────────────────────────────────────────────────
 
+  getWakePingWavBuffer() {
+    return generateWakePingWavBuffer(24000);
+  }
+
+  /**
+   * Play an immediate ~190ms acknowledgment chime when "Commander, <command>" is read
+   * so the user immediately hears that RobOS heard them and is working on the command.
+   */
+  playWakePing() {
+    try {
+      fs.mkdirSync(AUDIO_CACHE_DIR, { recursive: true });
+      const pingPath = path.join(AUDIO_CACHE_DIR, 'commander-wake-ping-v1.wav');
+      if (!fs.existsSync(pingPath) || fs.statSync(pingPath).size < 200) {
+        fs.writeFileSync(pingPath, generateWakePingWavBuffer(24000));
+      }
+      if (process.env.ROBOS_TEST === '1' || process.env.ROBOS_HEADLESS === '1') {
+        return Promise.resolve({ ok: true, filePath: pingPath, durationMs: 190 });
+      }
+      const player = fs.existsSync('/usr/bin/pw-play') ? 'pw-play' : 'aplay';
+      const args = player === 'pw-play' ? [pingPath] : ['-q', pingPath];
+      const proc = spawn(player, args, { stdio: 'ignore', detached: true });
+      proc.unref();
+      return Promise.resolve({ ok: true, filePath: pingPath, durationMs: 190 });
+    } catch {
+      return Promise.resolve({ ok: false, durationMs: 0 });
+    }
+  }
+
   _playAudioFile(filePath, durationMs = 1500, speechId = null) {
     return new Promise((resolve) => {
       if (process.env.ROBOS_TEST === '1' || process.env.ROBOS_HEADLESS === '1') {
@@ -728,4 +795,5 @@ except Exception as e:
 module.exports = {
   TTSEngine,
   DEFAULT_PREFS,
+  generateWakePingWavBuffer,
 };

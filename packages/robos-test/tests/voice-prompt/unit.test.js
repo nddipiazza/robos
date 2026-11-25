@@ -368,6 +368,44 @@ describe('Voice Prompt Unit Tests', () => {
       assert.strictEqual(procUnknown.data.actionExecuted, false);
       assert.strictEqual(procUnknown.data.skill, 'unknown-command');
       assert.strictEqual(procUnknown.data.response, 'No command activate hyperdrive warp nine.');
+
+      // Wake-acknowledgment ping WAV endpoint & NDJSON ackStream check
+      const pingWavRes = await httpReq('GET', '/api/tts/wake-ping');
+      assert.strictEqual(pingWavRes.status, 200);
+      assert.strictEqual(pingWavRes.data.ok, true);
+      assert.strictEqual(pingWavRes.data.durationMs, 190);
+      const pingBuf = Buffer.from(pingWavRes.data.audioWavBase64, 'base64');
+      assert.strictEqual(pingBuf.toString('ascii', 0, 4), 'RIFF');
+
+      const streamLines = await new Promise((resolve, reject) => {
+        const payload = JSON.stringify({
+          deviceUuid: 'phone-123',
+          mockTranscript: 'Commander, what time is it',
+          ackStream: true,
+          returnAudio: false,
+        });
+        const req = http.request({
+          hostname: '127.0.0.1',
+          port: 19199,
+          path: '/api/assistant/process-audio',
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(payload) },
+        }, (res) => {
+          let raw = '';
+          res.setEncoding('utf8');
+          res.on('data', (c) => { raw += c; });
+          res.on('end', () => resolve(raw.trim().split('\n').map((l) => JSON.parse(l))));
+        });
+        req.on('error', reject);
+        req.write(payload);
+        req.end();
+      });
+      assert.strictEqual(streamLines.length, 2);
+      assert.strictEqual(streamLines[0].type, 'wake_ack');
+      assert.strictEqual(streamLines[0].trigger, 'Commander');
+      assert.strictEqual(streamLines[0].query, 'what time is it');
+      assert.strictEqual(streamLines[1].type, 'result');
+      assert.strictEqual(streamLines[1].actionExecuted, true);
     });
 
     it('Speaker Identification enrolls voices, links RobOS Users, tags every utterance, and answers "who is talking"', async () => {

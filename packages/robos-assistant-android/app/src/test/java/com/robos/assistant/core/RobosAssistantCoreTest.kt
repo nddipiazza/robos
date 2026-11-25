@@ -191,19 +191,30 @@ class RobosAssistantCoreTest {
                     val raw = ByteArray(4096)
                     val n = sock.getInputStream().read(raw)
                     val reqStr = if (n > 0) String(raw, 0, n, StandardCharsets.UTF_8) else ""
-                    val bodyJson = when {
-                        reqStr.startsWith("GET /api/robos-assistant-hub") ->
-                            """{"ok":true,"service":"robos-voice-server","hostname":"robos-workstation","port":$mockPort,"ttsEngine":"kokoro"}"""
-                        reqStr.startsWith("POST /api/assistant/process-audio") ->
-                            """{"ok":true,"isSpeech":true,"transcript":"Commander, what is the git status","sttSource":"robos-server-whisper","wakeWordDetected":true,"greetingOnly":false,"actionExecuted":true,"trigger":"Commander","query":"what is the git status","response":"Branch main is clean with 0 uncommitted files.","skill":"git-status","actionDone":"Checked git status","audioWavBase64":"$replyWavB64"}"""
-                        else ->
-                            """{"ok":true,"response":"Branch main is clean with 0 uncommitted files.","skill":"git-status","actionDone":"Checked git status","audioWavBase64":"$replyWavB64"}"""
+                    if (reqStr.startsWith("POST /api/assistant/process-audio")) {
+                        val ackLine = """{"type":"wake_ack","ok":true,"trigger":"Commander","query":"what is the git status","transcript":"Commander, what is the git status"}""" + "\n"
+                        val resLine = """{"type":"result","ok":true,"isSpeech":true,"transcript":"Commander, what is the git status","sttSource":"robos-server-whisper","wakeWordDetected":true,"greetingOnly":false,"actionExecuted":true,"trigger":"Commander","query":"what is the git status","response":"Branch main is clean with 0 uncommitted files.","skill":"git-status","actionDone":"Checked git status","audioWavBase64":"$replyWavB64"}""" + "\n"
+                        val respHead = "HTTP/1.0 200 OK\r\nContent-Type: application/x-ndjson; charset=utf-8\r\nConnection: close\r\n\r\n"
+                        val out = sock.getOutputStream()
+                        out.write(respHead.toByteArray(StandardCharsets.US_ASCII))
+                        out.write(ackLine.toByteArray(StandardCharsets.UTF_8))
+                        out.flush()
+                        Thread.sleep(35)
+                        out.write(resLine.toByteArray(StandardCharsets.UTF_8))
+                        out.flush()
+                    } else {
+                        val bodyJson = when {
+                            reqStr.startsWith("GET /api/robos-assistant-hub") ->
+                                """{"ok":true,"service":"robos-voice-server","hostname":"robos-workstation","port":$mockPort,"ttsEngine":"kokoro"}"""
+                            else ->
+                                """{"ok":true,"response":"Branch main is clean with 0 uncommitted files.","skill":"git-status","actionDone":"Checked git status","audioWavBase64":"$replyWavB64"}"""
+                        }
+                        val bytes = bodyJson.toByteArray(StandardCharsets.UTF_8)
+                        val resp = "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: ${bytes.size}\r\nConnection: close\r\n\r\n"
+                        sock.getOutputStream().write(resp.toByteArray(StandardCharsets.US_ASCII))
+                        sock.getOutputStream().write(bytes)
+                        sock.getOutputStream().flush()
                     }
-                    val bytes = bodyJson.toByteArray(StandardCharsets.UTF_8)
-                    val resp = "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: ${bytes.size}\r\nConnection: close\r\n\r\n"
-                    sock.getOutputStream().write(resp.toByteArray(StandardCharsets.US_ASCII))
-                    sock.getOutputStream().write(bytes)
-                    sock.getOutputStream().flush()
                 }
             }
         }.apply { isDaemon = true; start() }
@@ -216,18 +227,25 @@ class RobosAssistantCoreTest {
 
             val store = RecordingArchiveStore(dir)
             val spokenReplies = ArrayList<String>()
+            val wakeAckEvents = ArrayList<String>()
+            val timeline = ArrayList<String>()
             val coordinator = SurveillanceCoordinator(
                 archiveStore = store,
                 serverGateway = { cfg, trigger, query, full ->
                     client.executePhoneTurn("127.0.0.1", mockPort, cfg, trigger, query, full)
                 },
                 isServerConnected = { true },
-                serverAudioProcessor = { cfg, wavBytes, fb, armed, trig ->
-                    client.processUtteranceAudio("127.0.0.1", mockPort, cfg, wavBytes, fb, armed, trig)
+                serverAudioProcessor = { cfg, wavBytes, fb, armed, trig, onWakeAck ->
+                    client.processUtteranceAudio("127.0.0.1", mockPort, cfg, wavBytes, fb, armed, trig, onWakeAck)
+                },
+                onWakeAck = { _, query, _ ->
+                    wakeAckEvents.add(query)
+                    timeline.add("ping:$query")
                 },
                 onSpeakWav = { wavBytes, text ->
                     assertEquals(replyWav.size, wavBytes.size)
                     spokenReplies.add(text)
+                    timeline.add("reply:$text")
                 },
             )
 
@@ -254,6 +272,10 @@ class RobosAssistantCoreTest {
             assertEquals("git-status", executed.actionSkill)
             assertEquals("Branch main is clean with 0 uncommitted files.", executed.assistantReply)
             assertEquals(1, spokenReplies.size)
+            assertEquals(listOf("what is the git status"), wakeAckEvents)
+            // Verify wake-ack ping fired BEFORE the final spoken reply!
+            assertEquals("ping:what is the git status", timeline.first())
+            assertEquals("reply:Branch main is clean with 0 uncommitted files.", timeline.last())
 
             // 2. Acoustic echo of the spoken reply is suppressed automatically
             val echo = coordinator.handleCapturedUtterance(
@@ -284,6 +306,8 @@ class RobosAssistantCoreTest {
             )
             assertNotNull(subsequentAmbient)
             assertEquals(ActionOutcomeStatus.AMBIENT_RECORDED, subsequentAmbient!!.actionStatus)
+            // Neither standalone "Commander" nor ambient speech may trigger wake-ack ping!
+            assertEquals(1, wakeAckEvents.size)
         } finally {
             serverRunning.set(false)
             mockVoiceServer.close()
@@ -445,8 +469,8 @@ class RobosAssistantCoreTest {
                 archiveStore = store,
                 serverGateway = { cfg, trig, q, full -> client.executePhoneTurn("127.0.0.1", mockPort, cfg, trig, q, full) },
                 isServerConnected = { true },
-                serverAudioProcessor = { cfg, wavBytes, fb, armed, trig ->
-                    client.processUtteranceAudio("127.0.0.1", mockPort, cfg, wavBytes, fb, armed, trig)
+                serverAudioProcessor = { cfg, wavBytes, fb, armed, trig, onWakeAck ->
+                    client.processUtteranceAudio("127.0.0.1", mockPort, cfg, wavBytes, fb, armed, trig, onWakeAck)
                 },
             )
             val cfg = AssistantConfig(room = "Kitchen", robosServerEnabled = true, robosServerHost = "127.0.0.1", robosServerPort = mockPort)

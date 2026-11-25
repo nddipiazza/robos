@@ -966,6 +966,16 @@ function startApiServer(overridePort) {
         }));
       }
 
+      if (pathname === '/api/tts/wake-ping' && method === 'GET') {
+        const pingBuf = ttsEngine.getWakePingWavBuffer();
+        res.writeHead(200);
+        return res.end(JSON.stringify({
+          ok: true,
+          durationMs: 190,
+          audioWavBase64: pingBuf.toString('base64'),
+        }));
+      }
+
       if (pathname === '/api/tts/synthesize' && method === 'POST') {
         const body = await parseBody(req);
         const text = typeof body === 'string' ? body : (body.text || '');
@@ -1065,20 +1075,33 @@ function startApiServer(overridePort) {
           }
         }
 
-        if (!transcript) {
+        const ackStream = Boolean(body && body.ackStream);
+        const sendFinalResult = (payloadObj) => {
+          if (ackStream) {
+            if (!res.headersSent) {
+              if (req.socket && typeof req.socket.setNoDelay === 'function') {
+                req.socket.setNoDelay(true);
+              }
+              res.writeHead(200, {
+                'Content-Type': 'application/x-ndjson; charset=utf-8',
+                'Cache-Control': 'no-cache, no-transform',
+                'X-Accel-Buffering': 'no',
+              });
+            }
+            return res.end(JSON.stringify({ type: 'result', ...payloadObj }) + '\n');
+          }
           res.writeHead(200);
-          return res.end(JSON.stringify({
+          return res.end(JSON.stringify(payloadObj));
+        };
+
+        if (!transcript) {
+          return sendFinalResult({
             ok: true,
             isSpeech: false,
             transcript: '',
             sttSource,
-          }));
+          });
         }
-
-        // Identify who is speaking via 512-dim CAM++ neural voiceprint (~44ms on CPU)
-        let speakerMatch = (rawWavBuffer && rawWavBuffer.length > 44)
-          ? speakerIdentifier.identifyWav(rawWavBuffer)
-          : { identified: false, speakerId: '', speakerName: '', fullName: '', robosUserUid: '', confidencePct: 0 };
 
         const wakeEnabled = !body || body.wakeWordEnabled !== false;
         const returnAudio = !body || body.returnAudio !== false;
@@ -1097,8 +1120,10 @@ function startApiServer(overridePort) {
           query.replace(/[^a-z0-9]/gi, '').length < 2;
 
         if (!localWake.matched || isGreetingOnly) {
-          res.writeHead(200);
-          return res.end(JSON.stringify({
+          const ambientSpeaker = (rawWavBuffer && rawWavBuffer.length > 44)
+            ? speakerIdentifier.identifyWav(rawWavBuffer)
+            : { identified: false, speakerId: '', speakerName: '', fullName: '', robosUserUid: '', confidencePct: 0 };
+          return sendFinalResult({
             ok: true,
             isSpeech: true,
             transcript,
@@ -1106,12 +1131,40 @@ function startApiServer(overridePort) {
             wakeWordDetected: false,
             greetingOnly: Boolean(localWake.matched && isGreetingOnly),
             actionExecuted: false,
-            speakerId: speakerMatch.identified ? speakerMatch.speakerId : '',
-            speakerName: speakerMatch.identified ? speakerMatch.speakerName : '',
-            speakerFullName: speakerMatch.identified ? speakerMatch.fullName : '',
-            speakerConfidencePct: speakerMatch.identified ? speakerMatch.confidencePct : 0,
-          }));
+            speakerId: ambientSpeaker.identified ? ambientSpeaker.speakerId : '',
+            speakerName: ambientSpeaker.identified ? ambientSpeaker.speakerName : '',
+            speakerFullName: ambientSpeaker.identified ? ambientSpeaker.fullName : '',
+            speakerConfidencePct: ambientSpeaker.identified ? ambientSpeaker.confidencePct : 0,
+          });
         }
+
+        // IMMEDIATELY flush `wake_ack` as soon as "Commander, <command>" is read — BEFORE speaker-ID,
+        // skill execution, and TTS synthesis — so the phone/speaker pings right away while working on it!
+        if (ackStream) {
+          if (req.socket && typeof req.socket.setNoDelay === 'function') {
+            req.socket.setNoDelay(true);
+          }
+          res.writeHead(200, {
+            'Content-Type': 'application/x-ndjson; charset=utf-8',
+            'Cache-Control': 'no-cache, no-transform',
+            'X-Accel-Buffering': 'no',
+          });
+          res.write(JSON.stringify({
+            type: 'wake_ack',
+            ok: true,
+            trigger,
+            query,
+            transcript,
+          }) + '\n');
+        }
+        if (speakOnServer) {
+          try { ttsEngine.playWakePing(); } catch {}
+        }
+
+        // Identify who is speaking via 512-dim CAM++ neural voiceprint (~44ms on CPU)
+        let speakerMatch = (rawWavBuffer && rawWavBuffer.length > 44)
+          ? speakerIdentifier.identifyWav(rawWavBuffer)
+          : { identified: false, speakerId: '', speakerName: '', fullName: '', robosUserUid: '', confidencePct: 0 };
 
         const result = await desktopAssistant.processQuery(query, {
           ...(typeof body === 'object' ? body : {}),
@@ -1120,8 +1173,7 @@ function startApiServer(overridePort) {
           preIdentified: speakerMatch,
         });
         if (!result.ok) {
-          res.writeHead(200);
-          return res.end(JSON.stringify({
+          return sendFinalResult({
             ok: true,
             isSpeech: true,
             transcript,
@@ -1136,7 +1188,7 @@ function startApiServer(overridePort) {
             speakerName: speakerMatch.identified ? speakerMatch.speakerName : '',
             speakerFullName: speakerMatch.identified ? speakerMatch.fullName : '',
             speakerConfidencePct: speakerMatch.identified ? speakerMatch.confidencePct : 0,
-          }));
+          });
         }
 
         const turn = result.turn || {};
@@ -1169,8 +1221,7 @@ function startApiServer(overridePort) {
         }
 
         const wasRecognized = turn.skill !== 'unknown-command';
-        res.writeHead(200);
-        return res.end(JSON.stringify({
+        return sendFinalResult({
           ok: true,
           isSpeech: true,
           transcript,
@@ -1191,7 +1242,7 @@ function startApiServer(overridePort) {
           audioWavBase64,
           audioDurationMs,
           audioEngine,
-        }));
+        });
       }
 
       // 11. Debug / Testing endpoints for harness & snapshot-cli: /eval, /health

@@ -11,6 +11,8 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
 import java.io.File
 import kotlin.math.PI
+import kotlin.math.cos
+import kotlin.math.exp
 import kotlin.math.sin
 
 /**
@@ -32,15 +34,28 @@ class SpeakerPlayer(context: Context) {
         private set
 
     val builtinWakeAckWav: ByteArray by lazy {
-        // Crisp 180ms ascending dual-tone tactical confirm chime fallback if server WAV hasn't cached yet
+        // Crisp 190ms two-note ascending fifth (E5 659.25 Hz -> B5 987.77 Hz) acknowledgment ping
+        // played immediately when "Commander, <command>" is read so the user knows it heard them and is working on it.
         val sr = 24000
-        val samples = (sr * 180) / 1000
-        val pcm = ByteArray(samples * 2)
-        for (i in 0 until samples) {
-            val t = i.toDouble() / sr
-            val freq = if (i < samples / 2) 784.0 else 1174.66 // G5 -> D6
-            val env = sin(PI * (i.toDouble() / samples))
-            val v = (sin(2.0 * PI * freq * t) * env * 9500.0).toInt().coerceIn(-32767, 32767)
+        val durationMs = 190
+        val totalSamples = (sr * durationMs) / 1000
+        val splitSample = (sr * 75) / 1000
+        val attackSamples = ((sr * 6) / 1000).coerceAtLeast(1)
+        val pcm = ByteArray(totalSamples * 2)
+        for (i in 0 until totalSamples) {
+            val inNote2 = i >= splitSample
+            val localIdx = if (inNote2) (i - splitSample) else i
+            val noteLen = if (inNote2) (totalSamples - splitSample) else splitSample
+            val freq = if (inNote2) 987.77 else 659.25 // E5 -> B5
+            val t = localIdx.toDouble() / sr
+            val attack = if (localIdx < attackSamples) {
+                0.5 * (1.0 - cos((PI * localIdx) / attackSamples))
+            } else {
+                1.0
+            }
+            val decay = exp((-3.2 * localIdx.toDouble()) / noteLen.toDouble())
+            val wave = 0.84 * sin(2.0 * PI * freq * t) + 0.16 * sin(2.0 * PI * (freq * 2.0) * t)
+            val v = (wave * attack * decay * 21000.0).toInt().coerceIn(-32767, 32767)
             pcm[i * 2] = (v and 0xFF).toByte()
             pcm[i * 2 + 1] = ((v shr 8) and 0xFF).toByte()
         }

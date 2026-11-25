@@ -99,6 +99,7 @@ class AssistantApp : Application() {
 
     private val modelDownloadInProgress = AtomicBoolean(false)
     private var playbackJob: Job? = null
+    private var wakeAckPingJob: Job? = null
     val ready = CountDownLatch(1)
 
     override fun onCreate() {
@@ -130,7 +131,7 @@ class AssistantApp : Application() {
                 )
             },
             isServerConnected = { _status.value.serverState == ServerConnectionState.CONNECTED },
-            serverAudioProcessor = { cfg, wavBytes, fallbackTranscript, followupArmed, armedTrigger ->
+            serverAudioProcessor = { cfg, wavBytes, fallbackTranscript, followupArmed, armedTrigger, onWakeAck ->
                 val host = _status.value.serverHost.ifBlank { cfg.robosServerHost }
                 serverClient.processUtteranceAudio(
                     hostIp = host,
@@ -140,7 +141,24 @@ class AssistantApp : Application() {
                     fallbackTranscript = fallbackTranscript,
                     followupArmed = followupArmed,
                     armedTrigger = armedTrigger,
+                    onWakeAck = onWakeAck,
                 )
+            },
+            onWakeAck = { trigger, query, transcript ->
+                triggerWakeAckPing()
+                updateStatus {
+                    it.copy(
+                        listeningState = ListeningState.PROCESSING_ACTION,
+                        livePartialTranscript = "🔔 Heard $trigger — working on: \"$query\"",
+                    )
+                }
+                val ackPayload = buildJsonObject {
+                    put("type", "wake_ack")
+                    put("trigger", trigger)
+                    put("query", query)
+                    put("transcript", transcript)
+                }.toString()
+                liveHub.publishSseJson(ackPayload)
             },
             onSpeakWav = { wavBytes, _ ->
                 speakReplyWavWithEchoGate(wavBytes)
@@ -152,7 +170,14 @@ class AssistantApp : Application() {
                     "wake_armed" -> updateStatus { it.copy(listeningState = ListeningState.AWAITING_QUERY) }
                     else -> {
                         if (_status.value.running && !speakerPlayer.isPlaying) {
-                            updateStatus { it.copy(listeningState = ListeningState.LISTENING) }
+                            updateStatus {
+                                it.copy(
+                                    listeningState = ListeningState.LISTENING,
+                                    livePartialTranscript = "",
+                                )
+                            }
+                        } else {
+                            updateStatus { it.copy(livePartialTranscript = "") }
                         }
                     }
                 }
@@ -415,8 +440,30 @@ class AssistantApp : Application() {
         }
     }
 
+    fun triggerWakeAckPing() {
+        if (!_config.value.wakeWordEnabled) return
+        if (wakeAckPingJob?.isActive == true) return
+        echoCooldownUntilElapsedMs = Long.MAX_VALUE
+        wakeAckPingJob = scope.launch {
+            try {
+                speakerPlayer.playWavBytes(speakerPlayer.builtinWakeAckWav)
+            } finally {
+                if (!speakerPlayer.isPlaying) {
+                    echoCooldownUntilElapsedMs = SystemClock.elapsedRealtime() + 260L
+                }
+            }
+        }
+    }
+
     suspend fun speakReplyWavWithEchoGate(wavBytes: ByteArray) {
         echoCooldownUntilElapsedMs = Long.MAX_VALUE
+        // Ensure the ~190ms wake-acknowledgment ping finishes cleanly before the voice reply begins
+        wakeAckPingJob?.let { pingJob ->
+            if (pingJob.isActive) {
+                pingJob.join()
+                delay(45L)
+            }
+        }
         updateStatus { it.copy(listeningState = ListeningState.SPEAKING_REPLY) }
         try {
             speakerPlayer.playWavBytes(wavBytes)
@@ -424,7 +471,10 @@ class AssistantApp : Application() {
             voskEngine.resetStream()
             echoCooldownUntilElapsedMs = SystemClock.elapsedRealtime() + 260L
             updateStatus {
-                it.copy(listeningState = if (it.running) ListeningState.LISTENING else ListeningState.PAUSED)
+                it.copy(
+                    listeningState = if (it.running) ListeningState.LISTENING else ListeningState.PAUSED,
+                    livePartialTranscript = "",
+                )
             }
         }
     }

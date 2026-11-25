@@ -71,6 +71,11 @@ class DesktopAssistant extends EventEmitter {
 
     if (!isPureGreeting) {
       // User said wake-word AND query in one breath: "Commander, what is the git status?"
+      // Immediately ping so the user knows "Commander" was read and RobOS is working on it!
+      this.emit('wake-ack', { trigger: evt.trigger || 'Commander', query });
+      if (this.autoSpeak && this.ttsEngine && typeof this.ttsEngine.playWakePing === 'function') {
+        try { this.ttsEngine.playWakePing(); } catch {}
+      }
       await this.processQuery(query);
     } else {
       // User just said "Commander" and nothing else

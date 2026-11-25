@@ -681,6 +681,7 @@ fun interface ServerAudioGateway {
         fallbackTranscript: String,
         followupArmed: Boolean,
         armedTrigger: String,
+        onWakeAck: (trigger: String, query: String, transcript: String) -> Unit,
     ): ServerAudioProcessResult
 }
 
@@ -699,6 +700,7 @@ class SurveillanceCoordinator(
     private val serverGateway: RobosServerGateway,
     private val isServerConnected: () -> Boolean,
     private val serverAudioProcessor: ServerAudioGateway? = null,
+    private val onWakeAck: (trigger: String, query: String, transcript: String) -> Unit = { _, _, _ -> },
     private val onSpeakWav: suspend (ByteArray, String) -> Unit = { _, _ -> },
     private val onEvent: (String, AudioRecordingEntry?) -> Unit = { _, _ -> },
 ) {
@@ -734,7 +736,6 @@ class SurveillanceCoordinator(
         // Primary path when connected to RobOS Server: offload `.wav` to server Moonshine ASR + "Commander, <command>" router!
         if (serverOnline && serverAudioProcessor != null && rawTranscript.isBlank() && sttSource != "manual-ask") {
             disarmFollowup()
-            onEvent("processing_action", null)
 
             val srvRes = try {
                 serverAudioProcessor.processAudio(
@@ -743,6 +744,10 @@ class SurveillanceCoordinator(
                     fallbackTranscript = "",
                     followupArmed = false,
                     armedTrigger = "",
+                    onWakeAck = { trig, q, tr ->
+                        onEvent("processing_action", null)
+                        onWakeAck(trig, q, tr)
+                    },
                 )
             } catch (e: Exception) {
                 ServerAudioProcessResult(ok = false, error = e.message ?: "Server audio processing failed")
@@ -931,6 +936,9 @@ class SurveillanceCoordinator(
         }
 
         onEvent("processing_action", entry)
+        if (sttSource != "manual-ask") {
+            onWakeAck(effectiveTrigger, effectiveQuery, displayTranscript)
+        }
         val turnRes = try {
             serverGateway.executeTurn(
                 config = config,
