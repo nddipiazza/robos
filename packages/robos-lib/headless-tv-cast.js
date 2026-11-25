@@ -414,6 +414,30 @@ async function controlHeadlessTv(action, { targetIp = null, configDir } = {}) {
     return { ok: true, via: 'headless-tv-cast', active: false };
   }
 
+  if (action === 'volume-up' || action === 'volume-down' || action === 'mute' || action === 'unmute') {
+    if (!ip) return { ok: false, error: 'No Smart TV IP specified.' };
+    const tvInfo = loadTvInfo(ip, dir);
+    if ((tvInfo.platformId || 'roku-os') === 'roku-os') {
+      const ecpPort = tvInfo?.ports?.ecp || 8060;
+      if (action === 'mute' || action === 'unmute') {
+        if (!(process.env.ROBOS_TEST === '1' || process.env.NODE_TEST_CONTEXT)) {
+          await postEcpKey(ip, ecpPort, '/keypress/VolumeMute');
+        }
+        return { ok: true, via: 'roku-ecp', targetIp: ip, action, key: 'VolumeMute' };
+      }
+      const key = action === 'volume-up' ? 'VolumeUp' : 'VolumeDown';
+      const steps = Math.max(1, Math.min(15, Math.round(Number(arguments[1]?.steps) || 3)));
+      if (!(process.env.ROBOS_TEST === '1' || process.env.NODE_TEST_CONTEXT)) {
+        for (let i = 0; i < steps; i++) {
+          await postEcpKey(ip, ecpPort, `/keypress/${key}`);
+          if (i + 1 < steps) await new Promise(r => setTimeout(r, 85));
+        }
+      }
+      return { ok: true, via: 'roku-ecp', targetIp: ip, action, key, steps };
+    }
+    return { ok: false, error: `Volume ECP keypresses require a Roku OS TV (${tvInfo.platformId || 'unknown'}).` };
+  }
+
   if (action === 'pause' || action === 'resume') {
     const paused = action === 'pause';
     if (session && session.active) {

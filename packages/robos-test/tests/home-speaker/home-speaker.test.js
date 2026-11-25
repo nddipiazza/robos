@@ -493,6 +493,75 @@ describe('RobOS Home Speaker Tests', () => {
         fs.rmSync(tmpCfg, { recursive: true, force: true });
       }
     });
+
+    it('controls volume (0-100%, up/down, mute/unmute, status) across Cast speakers and Roku Smart TVs', async () => {
+      const os = require('os');
+      const router = require(path.join(APP_DIR, 'lib', 'nabu-command-router'));
+      const tmpCfg = fs.mkdtempSync(path.join(os.tmpdir(), 'robos-volume-ctrl-'));
+      try {
+        fs.writeFileSync(path.join(tmpCfg, 'home-speakers.json'), JSON.stringify({
+          speakers: [
+            { ip: '192.168.1.10', name: 'Kitchen speaker', model: 'Google Cast Speaker', protocol: 'google-cast', online: true, volume: 0.65, muted: false },
+            { ip: '192.168.1.2', name: 'Master Bedroom clock', model: 'Google Cast Speaker', protocol: 'google-cast', online: true, volume: 0.50, muted: false },
+          ],
+        }));
+        fs.writeFileSync(path.join(tmpCfg, 'tv-studio.json'), JSON.stringify({
+          defaultTvId: 'tv-roku',
+          defaultTvIp: '192.168.1.15',
+          tvs: [
+            { id: 'tv-roku', name: '65" TCL Roku TV (Living room)', ip: '192.168.1.15', platformId: 'roku-os', isRealLanDevice: true },
+          ],
+        }));
+
+        // 1. Bare "volume up" before selecting a session device prompts cleanly
+        const noDev = await router.executeNabuCommand('volume up', { configDir: tmpCfg, autoLaunchPlayers: false });
+        assert.strictEqual(noDev.ok, false);
+        assert.strictEqual(noDev.skill, 'volume-control');
+
+        // 2. Explicit speaker volume set ("set Kitchen speaker volume to 40%")
+        const set40 = await router.executeNabuCommand('set Kitchen speaker volume to 40%', { configDir: tmpCfg, autoLaunchPlayers: false });
+        assert.strictEqual(set40.ok, true);
+        assert.strictEqual(set40.skill, 'volume-control');
+        assert.strictEqual(set40.targetIp, '192.168.1.10');
+        assert.strictEqual(set40.data.volumePct, 40);
+
+        // 3. Set session listening device, then bare "turn it up by 15%", "mute", "unmute", "what is the volume?"
+        await router.executeNabuCommand('set current listening device to Kitchen speaker', { configDir: tmpCfg, autoLaunchPlayers: false });
+        const up15 = await router.executeNabuCommand('turn it up by 15%', { configDir: tmpCfg, autoLaunchPlayers: false });
+        assert.strictEqual(up15.ok, true);
+        assert.strictEqual(up15.data.volumePct, 55);
+
+        const muted = await router.executeNabuCommand('mute', { configDir: tmpCfg, autoLaunchPlayers: false });
+        assert.strictEqual(muted.ok, true);
+        assert.strictEqual(muted.data.muted, true);
+
+        const getVol = await router.executeNabuCommand('what is the volume?', { configDir: tmpCfg, autoLaunchPlayers: false });
+        assert.strictEqual(getVol.ok, true);
+        assert.match(getVol.response, /55%.*muted/i);
+
+        const unmuted = await router.executeNabuCommand('unmute Kitchen speaker', { configDir: tmpCfg, autoLaunchPlayers: false });
+        assert.strictEqual(unmuted.ok, true);
+        assert.strictEqual(unmuted.data.muted, false);
+
+        // 4. Roku TV ECP step volume & mute ("turn up the Roku TV by 5", "turn down the TV", "mute the Roku TV")
+        const rokuUp = await router.executeNabuCommand('turn up the Roku TV by 5', { configDir: tmpCfg, autoLaunchPlayers: false });
+        assert.strictEqual(rokuUp.ok, true);
+        assert.strictEqual(rokuUp.targetIp, '192.168.1.15');
+        assert.strictEqual(rokuUp.data.steps, 5);
+        assert.match(rokuUp.response, /5 steps/);
+
+        const tvDown = await router.executeNabuCommand('turn down the TV', { configDir: tmpCfg, autoLaunchPlayers: false });
+        assert.strictEqual(tvDown.ok, true);
+        assert.strictEqual(tvDown.targetIp, '192.168.1.15');
+        assert.strictEqual(tvDown.data.steps, 3);
+
+        const rokuMute = await router.executeNabuCommand('mute the Roku TV', { configDir: tmpCfg, autoLaunchPlayers: false });
+        assert.strictEqual(rokuMute.ok, true);
+        assert.strictEqual(rokuMute.targetIp, '192.168.1.15');
+      } finally {
+        fs.rmSync(tmpCfg, { recursive: true, force: true });
+      }
+    });
   });
 
 });

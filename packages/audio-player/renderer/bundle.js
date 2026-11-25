@@ -21115,8 +21115,14 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
       if (typeof p.setOutputFromControl === "function") return p.setOutputFromControl(payload);
       return { ok: false, error: "setOutputFromControl unavailable" };
     }, [getPlayer]);
+    const volume = (0, import_react24.useCallback)(async (payload = {}) => {
+      const p = getPlayer();
+      if (payload.robosUser && typeof p.setRobosUser === "function") p.setRobosUser(payload.robosUser);
+      if (typeof p.setVolumeFromControl === "function") return p.setVolumeFromControl(payload);
+      return { ok: false, error: "setVolumeFromControl unavailable" };
+    }, [getPlayer]);
     const handlers = (0, import_react24.useRef)({});
-    handlers.current = { status, "speak-clip": speakClip, play, next, previous, pause, resume, "set-output": setOutput };
+    handlers.current = { status, "speak-clip": speakClip, play, next, previous, pause, resume, "set-output": setOutput, volume };
     (0, import_react24.useEffect)(() => {
       if (!window.robosAudio?.onControlRequest) return void 0;
       return window.robosAudio.onControlRequest((action, payload) => {
@@ -22477,6 +22483,15 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
             }
             showStatus(`\u{1F50A} Current listening device: ${deviceName || nextTarget}`);
             return { ok: true, outputTarget: nextTarget, transferred: Boolean(wasPlaying && curSong) };
+          },
+          setVolumeFromControl: async ({ level, delta, muted } = {}) => {
+            if (audio) {
+              let nextVol = typeof level === "number" ? Math.max(0, Math.min(1, level)) : typeof delta === "number" ? Math.max(0, Math.min(1, (audio.volume ?? 1) + delta)) : audio.volume ?? 1;
+              audio.volume = nextVol;
+              if (typeof muted === "boolean") audio.muted = muted;
+              return { ok: true, volume: nextVol, muted: Boolean(audio.muted) };
+            }
+            return { ok: true, volume: typeof level === "number" ? level : 1, muted: Boolean(muted) };
           }
         };
       },

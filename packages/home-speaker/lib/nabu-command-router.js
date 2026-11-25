@@ -632,6 +632,436 @@ function parseListeningDeviceCommand(cleanedText, {
   return null;
 }
 
+const SPOKEN_TENS = {
+  twenty: 20, thirty: 30, forty: 40, fifty: 50, sixty: 60, seventy: 70, eighty: 80, ninety: 90,
+};
+const SPOKEN_SMALL = {
+  zero: 0, one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9,
+  ten: 10, eleven: 11, twelve: 12, thirteen: 13, fourteen: 14, fifteen: 15, sixteen: 16,
+  seventeen: 17, eighteen: 18, nineteen: 19, hundred: 100, max: 100, maximum: 100, full: 100,
+};
+
+function parseSpokenPercentOrNumber(raw) {
+  const s = foldText(String(raw || '')).replace(/\b(?:percent|pct)\b/g, '').trim();
+  if (!s) return null;
+  if (/^\d{1,3}$/.test(s)) return Math.max(0, Math.min(100, Number(s)));
+  const outOfTen = s.match(/^(\d{1,2})\s+out\s+of\s+(?:10|ten)$/);
+  if (outOfTen) return Math.max(0, Math.min(100, Number(outOfTen[1]) * 10));
+  if (Object.prototype.hasOwnProperty.call(SPOKEN_SMALL, s)) return SPOKEN_SMALL[s];
+  if (Object.prototype.hasOwnProperty.call(SPOKEN_TENS, s)) return SPOKEN_TENS[s];
+  const parts = s.split(/[\s-]+/).filter(Boolean);
+  if (parts.length === 2 && SPOKEN_TENS[parts[0]] !== undefined && SPOKEN_SMALL[parts[1]] !== undefined && SPOKEN_SMALL[parts[1]] < 10) {
+    return SPOKEN_TENS[parts[0]] + SPOKEN_SMALL[parts[1]];
+  }
+  if (parts.length === 2 && parts[0] === 'one' && parts[1] === 'hundred') return 100;
+  return null;
+}
+
+/**
+ * Parse natural-language volume & mute commands across Smart Speakers, Smart TVs, and Local Audio:
+ *   - "set volume to 50%" / "set Kitchen speaker volume to 40%" / "Kitchen speaker volume 30"
+ *   - "volume up" / "turn it down" / "louder" / "turn up Kitchen speaker by 20%" / "turn down the Roku TV by 5"
+ *   - "mute" / "unmute" / "mute Kitchen speaker" / "mute the Roku TV" / "mute all speakers"
+ *   - "what is the volume on Kitchen speaker?"
+ */
+function parseVolumeCommand(cleanedText, {
+  configDir = path.join(os.homedir(), '.config', 'robos'),
+  devices = null,
+} = {}) {
+  const qRawOrig = String(cleanedText || '').trim();
+  const qFull = foldText(qRawOrig)
+    .replace(/%/g, ' percent ')
+    .replace(/\s+/g, ' ')
+    .replace(/\s+(?:please|right\s+now|now|for\s+me|for\s+us)$/, '')
+    .trim();
+  if (!qFull) return null;
+
+  // Never intercept media play commands like "play Turn It Up" or "watch Quiet Place"
+  const firstWord = qFull.split(' ')[0] || '';
+  if (PLAY_VERB_VARIANTS.has(firstWord) || /^(?:watch|watching|listen|put\s+on|shuffle|queue|open|launch)\b/.test(qFull)) {
+    return null;
+  }
+
+  // 1. Mute / Unmute
+  if (/^(?:mute|unmute)(?:\s+(?:the\s+|my\s+|our\s+)?(?:music|audio|sound|volume|playback|it))?$/.test(qFull)) {
+    return {
+      type: 'volume-control',
+      action: qFull.startsWith('unmute') ? 'unmute' : 'mute',
+      targetQuery: null,
+    };
+  }
+  const muteDevMatch = qFull.match(/^(mute|unmute)\s+(?:the\s+|my\s+|our\s+)?(?:volume\s+(?:on|for|in)\s+)?(.+)$/);
+  if (muteDevMatch && muteDevMatch[2]) {
+    const cand = muteDevMatch[2].replace(/^(?:on|in|for)\s+(?:the\s+|my\s+|our\s+)?/, '').trim();
+    return {
+      type: 'volume-control',
+      action: muteDevMatch[1] === 'unmute' ? 'unmute' : 'mute',
+      targetQuery: cand,
+    };
+  }
+
+  // 2. Query Volume ("what is the volume?", "what is the volume on Kitchen speaker?", "what volume is Kitchen speaker at?")
+  const getPatterns = [
+    /^(?:what(?:\s+is|\s+s)?|check)\s+(?:the\s+|my\s+|our\s+)?volume(?:\s+(?:on|of|for|in|at)\s+(.+))?$/,
+    /^what\s+volume\s+is\s+(.+?)(?:\s+at)?$/,
+    /^how\s+loud\s+is\s+(.+)$/,
+  ];
+  for (const re of getPatterns) {
+    const m = qFull.match(re);
+    if (m) {
+      return {
+        type: 'volume-control',
+        action: 'get',
+        targetQuery: m[1] ? m[1].trim() : null,
+      };
+    }
+  }
+
+  // 3. Explicit Absolute Set Volume ("set volume to 50%", "set Kitchen speaker volume to 40", "set volume on Kitchen speaker to fifty percent")
+  const setDevFirstPatterns = [
+    /^(?:set|change|put|adjust|make)\s+(?:the\s+|my\s+|our\s+)?volume\s+(?:on|of|for|in)\s+(.+?)\s+(?:to|at)\s+(.+)$/,
+    /^(?:set|change|put|adjust|make)\s+(?:the\s+|my\s+|our\s+)?(.+?)\s+volume\s+(?:to|at)\s+(.+)$/,
+    /^(.+?)\s+volume\s+(?:to\s+|at\s+)?(\d{1,3}(?:\s*percent)?|zero|ten|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|one\s+hundred|max|maximum|full)$/,
+  ];
+  for (const re of setDevFirstPatterns) {
+    const m = qFull.match(re);
+    if (m && m[1] && m[2]) {
+      const level = parseSpokenPercentOrNumber(m[2]);
+      if (level !== null) {
+        const devCand = m[1].replace(/^(?:the|my|our)\s+/, '').trim();
+        // Guard against matching bare "the" as device
+        const targetQuery = /^(?:the|my|our|current|audio|music|sound|playback)$/.test(devCand) ? null : devCand;
+        return { type: 'volume-control', action: 'set', levelPct: level, targetQuery };
+      }
+    }
+  }
+
+  const setNumFirstPatterns = [
+    /^(?:set|change|put|adjust|make)\s+(?:the\s+|my\s+|our\s+)?(?:audio\s+|music\s+|speaker\s+|tv\s+)?volume\s+(?:to|at)\s+([a-z0-9\s-]+?)(?:\s+(?:on|in|for|at)\s+(.+))?$/,
+    /^volume\s+(?:to\s+|at\s+)?([a-z0-9\s-]+?)(?:\s+(?:on|in|for|at)\s+(.+))?$/,
+  ];
+  for (const re of setNumFirstPatterns) {
+    const m = qFull.match(re);
+    if (m && m[1]) {
+      // Avoid matching "volume up" / "volume down" here
+      if (/^(?:up|down)\b/.test(m[1].trim())) continue;
+      const level = parseSpokenPercentOrNumber(m[1]);
+      if (level !== null) {
+        const targetQuery = m[2] ? m[2].trim() : (/\btv\s+volume\b/.test(qFull) ? 'tv' : null);
+        return { type: 'volume-control', action: 'set', levelPct: level, targetQuery };
+      }
+    }
+  }
+
+  // 4. Relative Volume Up / Down ("volume up", "turn it down", "louder", "turn up Kitchen speaker by 15%", "turn down the Roku TV by 5")
+  if (/^(?:(?:a\s+(?:little|bit)\s+)?(?:louder|quieter|softer)|make\s+it\s+(?:a\s+(?:little|bit)\s+)?(?:louder|quieter|softer))$/.test(qFull)) {
+    const isUp = /louder/.test(qFull);
+    const smallStep = /\b(?:little|bit)\b/.test(qFull) ? 5 : null;
+    return { type: 'volume-control', action: isUp ? 'up' : 'down', deltaPct: smallStep, targetQuery: null };
+  }
+
+  const relSimpleMatch = qFull.match(/^(?:(?:turn|bring)\s+(?:it|the\s+volume|volume|the\s+music|the\s+sound)\s+(up|down)|(?:turn|bring)\s+(up|down)\s+(?:the\s+)?(?:volume|music|sound)|volume\s+(up|down)|(?:raise|increase|boost)\s+(?:the\s+)?volume|(?:lower|decrease|drop|reduce)\s+(?:the\s+)?volume)(?:\s+by\s+([a-z0-9\s-]+?))?(?:\s+(?:on|in|for)\s+(.+))?$/);
+  if (relSimpleMatch) {
+    const dirWord = relSimpleMatch[1] || relSimpleMatch[2] || relSimpleMatch[3] || (/^(?:raise|increase|boost)\b/.test(qFull) ? 'up' : 'down');
+    const delta = relSimpleMatch[4] ? parseSpokenPercentOrNumber(relSimpleMatch[4]) : null;
+    return {
+      type: 'volume-control',
+      action: dirWord === 'up' ? 'up' : 'down',
+      deltaPct: delta,
+      targetQuery: relSimpleMatch[5] ? relSimpleMatch[5].trim() : null,
+    };
+  }
+
+  // "turn up Kitchen speaker [by 20%]" / "turn Kitchen speaker [volume] down [by 10%]" / "Kitchen speaker volume up"
+  const list = Array.isArray(devices) ? devices : loadCastDevices(configDir);
+  const isKnownVolumeTarget = (cand) => {
+    const c = foldText(cand).replace(/^(?:the|my|our)\s+/, '').trim();
+    if (!c || /\b(?:light|lights|lamp|lamps|scene|fan|thermostat|heat|ac)\b/.test(c)) return false;
+    if (/^(?:tv|television|smart\s+tv|speaker|speakers|all\s+speakers|this\s+computer|computer)$/.test(c)) return true;
+    return Boolean(resolveTargetDevice(c, { configDir, devices: list }));
+  };
+
+  const turnDevPatterns = [
+    { re: /^(?:turn|bring)\s+(up|down)\s+(.+?)(?:\s+by\s+([a-z0-9\s-]+))?$/, dirIdx: 1, devIdx: 2, deltaIdx: 3 },
+    { re: /^(?:turn|bring)\s+(.+?)\s+(?:volume\s+)?(up|down)(?:\s+by\s+([a-z0-9\s-]+))?$/, dirIdx: 2, devIdx: 1, deltaIdx: 3 },
+    { re: /^(.+?)\s+volume\s+(up|down)(?:\s+by\s+([a-z0-9\s-]+))?$/, dirIdx: 2, devIdx: 1, deltaIdx: 3 },
+    { re: /^(?:raise|increase|boost|lower|decrease|drop|reduce)\s+(?:the\s+)?volume\s+(?:on|of|for|in)\s+(.+?)(?:\s+by\s+([a-z0-9\s-]+))?$/, dirIdx: 0, devIdx: 1, deltaIdx: 2 },
+  ];
+  for (const spec of turnDevPatterns) {
+    const m = qFull.match(spec.re);
+    if (!m) continue;
+    const rawDev = m[spec.devIdx].replace(/\s+volume$/, '').trim();
+    if (!isKnownVolumeTarget(rawDev)) continue;
+    const dir = spec.dirIdx === 0
+      ? (/^(?:raise|increase|boost)\b/.test(qFull) ? 'up' : 'down')
+      : m[spec.dirIdx];
+    const delta = m[spec.deltaIdx] ? parseSpokenPercentOrNumber(m[spec.deltaIdx]) : null;
+    return {
+      type: 'volume-control',
+      action: dir === 'up' ? 'up' : 'down',
+      deltaPct: delta,
+      targetQuery: rawDev,
+    };
+  }
+
+  return null;
+}
+
+/**
+ * Execute a parsed `volume-control` command against Google Cast speakers, Roku OS Smart TVs,
+ * or Local Computer / RobOS Audio Player.
+ */
+async function executeVolumeCommand(intent, {
+  configDir = path.join(os.homedir(), '.config', 'robos'),
+  devices = null,
+  autoLaunchPlayers = process.env.ROBOS_TEST !== '1',
+  robosUser = null,
+} = {}) {
+  const headlessTvCast = require('../../robos-lib/headless-tv-cast');
+  const { createAudioPlayerClient } = require('../../audio-player/lib/control-server');
+  let allDevices = Array.isArray(devices) ? devices : loadCastDevices(configDir);
+  if (!filterRealListeningDevices(allDevices).length && autoLaunchPlayers && !(process.env.ROBOS_TEST === '1' || process.env.NODE_TEST_CONTEXT)) {
+    allDevices = await discoverAndCacheCastSpeakers(configDir);
+  }
+
+  // 1. Resolve Target Playback Device
+  let targetDevice = null;
+  const rawTarget = String(intent.targetQuery || '').trim();
+  if (rawTarget) {
+    const tNorm = foldText(rawTarget).replace(/^(?:the|my|our|current)\s+/, '').trim();
+    if (/^(?:tv|television|smart\s+tv)$/.test(tNorm)) {
+      const hs = headlessTvCast.readHeadlessSession(configDir);
+      if (hs && hs.active && hs.targetIp) {
+        targetDevice = allDevices.find(d => d.ip === hs.targetIp) || hs.targetDevice || { ip: hs.targetIp, name: 'Smart TV', deviceType: 'tv', protocol: 'roku-ecp', platformId: 'roku-os' };
+      } else {
+        targetDevice = getDefaultSmartTv(configDir, allDevices);
+      }
+      if (!targetDevice) {
+        return { ok: false, error: 'No default Smart TV is configured.', response: 'No default Smart TV is set. Name your TV or set a default Smart TV first.' };
+      }
+    } else if (/^(?:speaker|music|listening\s+device|output\s+device)$/.test(tNorm)) {
+      targetDevice = getCurrentListeningDevice(configDir, allDevices);
+      if (!targetDevice) {
+        return { ok: false, error: 'No current listening device set.', response: 'No current listening device is set for this session. Specify a speaker like "set Kitchen speaker volume to 50%".' };
+      }
+    } else if (/^(?:all\s+speakers|every\s+speaker|everywhere|all)$/.test(tNorm)) {
+      targetDevice = { ip: 'all', id: 'all', name: 'All Speakers', deviceType: 'speaker', protocol: 'cast' };
+    } else if (/^(?:local|this\s+computer|my\s+computer|computer|desktop|laptop)$/.test(tNorm)) {
+      targetDevice = { ip: 'local', id: 'local', name: 'This Computer', deviceType: 'local', protocol: 'local' };
+    } else {
+      const resolved = resolveTargetDevice(rawTarget, { configDir, devices: allDevices });
+      if (resolved) {
+        targetDevice = allDevices.find(d => d.ip === resolved.ip) || resolved;
+      } else {
+        const avail = filterRealListeningDevices(allDevices);
+        targetDevice = avail.find(d => foldText(d.name || '').includes(tNorm) || cleanSpeakerNameForSpeech(d.name).toLowerCase().includes(tNorm)) || null;
+      }
+      if (!targetDevice) {
+        const names = [...filterRealListeningDevices(allDevices), ...allDevices.filter(d => d.deviceType === 'tv' && d.isRealLanDevice)].map(d => cleanSpeakerNameForSpeech(d.name));
+        const msg = names.length
+          ? `Could not match "${rawTarget}" to a playback device. Available devices: ${[...new Set(names)].join(', ')}.`
+          : `Could not match "${rawTarget}" to a playback device.`;
+        return { ok: false, error: msg, response: msg };
+      }
+    }
+  } else {
+    // No explicit device named: inspect active music session vs active Smart TV session
+    const sessionSpk = getCurrentListeningDevice(configDir, allDevices);
+    const hs = headlessTvCast.readHeadlessSession(configDir);
+    const tvPlaying = Boolean(hs && hs.active && !hs.castState?.paused && hs.targetIp);
+    let audioPlaying = false;
+    if (autoLaunchPlayers) {
+      const ac = createAudioPlayerClient({ configDir });
+      if (ac.running()) {
+        const st = await ac.status().catch(() => null);
+        audioPlaying = Boolean(st && st.playing);
+      }
+    }
+    if (tvPlaying && !audioPlaying) {
+      targetDevice = allDevices.find(d => d.ip === hs.targetIp) || hs.targetDevice || { ip: hs.targetIp, name: 'Smart TV', deviceType: 'tv', protocol: 'roku-ecp', platformId: 'roku-os' };
+    } else if (sessionSpk) {
+      targetDevice = sessionSpk;
+    } else if (hs && hs.active && hs.targetIp) {
+      targetDevice = allDevices.find(d => d.ip === hs.targetIp) || hs.targetDevice || { ip: hs.targetIp, name: 'Smart TV', deviceType: 'tv', protocol: 'roku-ecp', platformId: 'roku-os' };
+    } else {
+      const msg = 'No active playback or current listening device is selected for this session. Specify a device, such as "set Kitchen speaker volume to 50%" or "turn up the Roku TV".';
+      return { ok: false, needsListeningDevice: true, error: msg, response: msg };
+    }
+  }
+
+  const devName = cleanSpeakerNameForSpeech(targetDevice.name || targetDevice.ip);
+  const isRokuTv = targetDevice.protocol === 'roku-ecp' || targetDevice.platformId === 'roku-os';
+  const isOfflineTest = !autoLaunchPlayers || process.env.ROBOS_TEST === '1' || Boolean(process.env.NODE_TEST_CONTEXT);
+
+  // 2. Roku OS Smart TV Volume Control (ECP VolumeUp / VolumeDown / VolumeMute)
+  if (isRokuTv) {
+    if (intent.action === 'mute' || intent.action === 'unmute') {
+      const r = await headlessTvCast.controlHeadlessTv(intent.action, { targetIp: targetDevice.ip, configDir });
+      const msg = intent.action === 'mute' ? `Toggled mute on ${devName}.` : `Toggled unmute on ${devName}.`;
+      return { ok: Boolean(r && r.ok !== false), targetDevice, targetIp: targetDevice.ip, response: msg, data: { ...(r || {}), targetDevice } };
+    }
+    if (intent.action === 'up' || intent.action === 'down') {
+      const steps = intent.deltaPct != null ? Math.max(1, Math.min(15, Math.round(intent.deltaPct))) : 3;
+      const r = await headlessTvCast.controlHeadlessTv(intent.action === 'up' ? 'volume-up' : 'volume-down', {
+        targetIp: targetDevice.ip,
+        steps,
+        configDir,
+      });
+      const verb = intent.action === 'up' ? 'Turned up' : 'Turned down';
+      const msg = `${verb} ${devName} volume (${steps} step${steps === 1 ? '' : 's'}).`;
+      return { ok: Boolean(r && r.ok !== false), targetDevice, targetIp: targetDevice.ip, response: msg, data: { ...(r || {}), steps, targetDevice } };
+    }
+    const msg = `${devName} only supports step volume up, volume down, and mute over Roku network control. Say "turn up ${devName}", "turn down ${devName} by 5", or "mute ${devName}".`;
+    return { ok: false, targetDevice, targetIp: targetDevice.ip, error: msg, response: msg };
+  }
+
+  // 3. Local Computer Audio Volume Control
+  if (targetDevice.ip === 'local') {
+    const audioClient = createAudioPlayerClient({ configDir });
+    const curSt = (!isOfflineTest && audioClient.running()) ? await audioClient.status().catch(() => null) : null;
+    let level = intent.action === 'set' ? (intent.levelPct / 100) : null;
+    const delta = intent.action === 'up'
+      ? ((intent.deltaPct ?? 10) / 100)
+      : (intent.action === 'down' ? -((intent.deltaPct ?? 10) / 100) : null);
+    const muted = intent.action === 'mute' ? true : (intent.action === 'unmute' ? false : null);
+    if (!isOfflineTest) {
+      if (audioClient.running() && typeof audioClient.setVolume === 'function') {
+        const vr = await audioClient.setVolume({ level, delta, muted, robosUser }).catch(() => null);
+        if (vr && typeof vr.volume === 'number') level = vr.volume;
+      }
+      try {
+        const { execFileSync } = require('child_process');
+        if (intent.action === 'mute' || intent.action === 'unmute') {
+          execFileSync('pactl', ['set-sink-mute', '@DEFAULT_SINK@', intent.action === 'mute' ? '1' : '0'], { stdio: 'ignore', timeout: 1500 });
+        } else if (intent.action === 'set') {
+          execFileSync('pactl', ['set-sink-volume', '@DEFAULT_SINK@', `${intent.levelPct}%`], { stdio: 'ignore', timeout: 1500 });
+        } else if (intent.action === 'up' || intent.action === 'down') {
+          const sign = intent.action === 'up' ? '+' : '-';
+          execFileSync('pactl', ['set-sink-volume', '@DEFAULT_SINK@', `${sign}${intent.deltaPct ?? 10}%`], { stdio: 'ignore', timeout: 1500 });
+        }
+      } catch {}
+    }
+    const pct = level != null ? Math.round(level * 100) : intent.levelPct;
+    const msg = intent.action === 'mute'
+      ? 'Muted This Computer.'
+      : intent.action === 'unmute'
+      ? 'Unmuted This Computer.'
+      : intent.action === 'set'
+      ? `Set This Computer volume to ${pct}%.`
+      : `${intent.action === 'up' ? 'Turned up' : 'Turned down'} This Computer volume${pct != null ? ` to ${pct}%` : ` by ${intent.deltaPct ?? 10}%`}.`;
+    return { ok: true, targetDevice, targetIp: 'local', response: msg, data: { targetDevice, volumePct: pct ?? null, muted: muted ?? false, curSt } };
+  }
+
+  // 4. Google Cast Speaker(s) / Cast TV Volume Control (0-100% + Mute/Unmute + Query)
+  const spkFile = path.join(configDir, 'home-speakers.json');
+  let spkCache = { speakers: [] };
+  try {
+    if (fs.existsSync(spkFile)) spkCache = JSON.parse(fs.readFileSync(spkFile, 'utf8'));
+  } catch {}
+  const spkList = Array.isArray(spkCache.speakers) ? spkCache.speakers : [];
+
+  const targetIps = targetDevice.ip === 'all'
+    ? filterRealListeningDevices(allDevices).map(d => d.ip).filter(ip => ip && ip !== 'local' && ip !== 'all')
+    : [targetDevice.ip];
+
+  if (!targetIps.length) {
+    const msg = 'No network speakers were found to adjust volume on.';
+    return { ok: false, error: msg, response: msg };
+  }
+
+  const { CastService } = require('../../audio-player/lib/cast-service');
+  const cs = !isOfflineTest ? new CastService() : null;
+  try {
+    let reportedPct = null;
+    let reportedMuted = false;
+
+    for (const ip of targetIps) {
+      const cachedEntry = spkList.find(s => s && s.ip === ip);
+      let curLevel = typeof cachedEntry?.volume === 'number' ? cachedEntry.volume : 0.65;
+      let curMuted = Boolean(cachedEntry?.muted);
+
+      if (cs && (intent.action === 'get' || intent.action === 'up' || intent.action === 'down' || intent.action === 'mute' || intent.action === 'unmute')) {
+        try {
+          const live = await cs.getSpeakerStatus(ip);
+          if (typeof live?.volume === 'number') curLevel = live.volume;
+          if (typeof live?.muted === 'boolean') curMuted = live.muted;
+        } catch {}
+      }
+
+      if (intent.action === 'get') {
+        reportedPct = Math.round(curLevel * 100);
+        reportedMuted = curMuted;
+        continue;
+      }
+
+      let nextLevel = curLevel;
+      let nextMuted = curMuted;
+      if (intent.action === 'set') {
+        nextLevel = Math.max(0, Math.min(1, intent.levelPct / 100));
+        nextMuted = intent.levelPct === 0;
+      } else if (intent.action === 'up') {
+        nextLevel = Math.max(0, Math.min(1, curLevel + ((intent.deltaPct ?? 10) / 100)));
+        nextMuted = false;
+      } else if (intent.action === 'down') {
+        nextLevel = Math.max(0, Math.min(1, curLevel - ((intent.deltaPct ?? 10) / 100)));
+      } else if (intent.action === 'mute') {
+        nextMuted = true;
+      } else if (intent.action === 'unmute') {
+        nextMuted = false;
+      }
+
+      if (cs) {
+        await cs.setSpeakerVolume(ip, nextLevel, nextMuted);
+      }
+      if (cachedEntry) {
+        cachedEntry.volume = Number(nextLevel.toFixed(2));
+        cachedEntry.muted = nextMuted;
+      }
+      reportedPct = Math.round(nextLevel * 100);
+      reportedMuted = nextMuted;
+    }
+
+    if (intent.action !== 'get' && spkList.length) {
+      try {
+        fs.mkdirSync(configDir, { recursive: true });
+        fs.writeFileSync(spkFile, JSON.stringify({ ...spkCache, updatedAt: new Date().toISOString(), speakers: spkList }, null, 2));
+      } catch {}
+    }
+
+    let response;
+    if (intent.action === 'get') {
+      response = `${devName} volume is at ${reportedPct ?? 65}%${reportedMuted ? ' (muted)' : ''}.`;
+    } else if (intent.action === 'mute') {
+      response = `Muted ${devName}.`;
+    } else if (intent.action === 'unmute') {
+      response = `Unmuted ${devName} (${reportedPct ?? 65}%).`;
+    } else {
+      response = `Set ${devName} volume to ${reportedPct}%.`;
+    }
+
+    return {
+      ok: true,
+      targetDevice,
+      targetIp: targetDevice.ip,
+      volumePct: reportedPct,
+      muted: reportedMuted,
+      response,
+      data: {
+        action: intent.action,
+        targetDevice,
+        targetIp: targetDevice.ip,
+        volumePct: reportedPct,
+        muted: reportedMuted,
+      },
+    };
+  } catch (err) {
+    const msg = `Could not update volume on ${devName}: ${err.message}`;
+    return { ok: false, targetDevice, targetIp: targetDevice.ip, error: msg, response: msg };
+  } finally {
+    try { cs?.streamServer?.close?.(); } catch {}
+  }
+}
+
 /**
  * Resolve a natural language device phrase (e.g. "the roku", "living room tv",
  * "kitchen speaker", "basement tv", "bedroom clock") to the closest configured
@@ -2338,9 +2768,11 @@ function classifyVoiceCommand(cleanedText, { audioTracks = null, movieTracks = n
   const watchIntent = parseWatchStatusQuery(cleanedText, { configDir });
   if (watchIntent) return { ...watchIntent, query: cleanedText };
 
-  // 1.65 Session Current Listening Device Commands ("set current listening device to Kitchen speaker", "what is my listening device?", "list speakers")
+  // 1.65 Session Current Listening Device & Volume Controls
   const listeningDevIntent = parseListeningDeviceCommand(cleanedText, { configDir });
   if (listeningDevIntent) return { ...listeningDevIntent, query: cleanedText };
+  const volumeIntent = parseVolumeCommand(cleanedText, { configDir });
+  if (volumeIntent) return { ...volumeIntent, query: cleanedText };
 
   // 1.7 Specialized Cinema & Named Smart TV Commands ("play a random episode of House on the Roku TV", "move playback to the Roku TV", etc.)
   const cinemaSpecial = parseCinemaSpecialCommand(cleanedText, { configDir, movieTracks });
@@ -2754,6 +3186,26 @@ async function executeNabuCommand(rawTranscript, {
         data: res,
       };
     }
+  }
+
+  // ── 0.69 Playback Device Volume & Mute Controls (Google Cast Speakers, Roku OS TVs, Local Audio) ──
+  if (intent.type === 'volume-control') {
+    const volRes = await executeVolumeCommand(intent, {
+      configDir,
+      devices: castDevices,
+      autoLaunchPlayers,
+      robosUser: activeUser,
+    });
+    return {
+      ok: Boolean(volRes.ok),
+      skill: 'volume-control',
+      cleanedCommand: cleaned,
+      robosUser: activeUser,
+      targetDevice: volRes.targetDevice || null,
+      targetIp: volRes.targetIp || null,
+      response: volRes.response || volRes.error,
+      data: volRes.data || volRes,
+    };
   }
 
   // ── 0.7 Smart TV Session Controls (list TVs, default TV, open 10-foot library, transfer playback, stop casting) ──
@@ -3259,6 +3711,8 @@ module.exports = {
   touchCurrentListeningDevice,
   discoverAndCacheCastSpeakers,
   parseListeningDeviceCommand,
+  parseVolumeCommand,
+  executeVolumeCommand,
   resolveTargetDevice,
   extractDeviceFromCommand,
   parseSeasonEpisode,

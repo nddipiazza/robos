@@ -140,6 +140,9 @@ function createControlServer({ handlers, configDir = defaultConfigDir(), port = 
     if (url.pathname === '/api/set-output' && typeof handlers.setOutput === 'function') {
       return [200, await handlers.setOutput(body || {})];
     }
+    if (url.pathname === '/api/volume' && typeof handlers.setVolume === 'function') {
+      return [200, await handlers.setVolume(body || {})];
+    }
     return [404, { ok: false, error: 'Not found' }];
   }
 
@@ -249,6 +252,7 @@ function createAudioPlayerClient({ configDir = defaultConfigDir(), timeoutMs = 8
     pause: (opts = {}) => call('POST', '/api/pause', opts),
     resume: (opts = {}) => call('POST', '/api/resume', opts),
     setOutput: (opts = {}) => call('POST', '/api/set-output', opts),
+    setVolume: (opts = {}) => call('POST', '/api/volume', opts),
     // Movie Player watch status (null when the app is not running).
     watchStatus: (show) => call('GET', `/api/watch-status?show=${encodeURIComponent(show || '')}`),
     movieStatus: (title) => call('GET', `/api/movie-status?title=${encodeURIComponent(title || '')}`),

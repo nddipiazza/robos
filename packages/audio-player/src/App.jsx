@@ -1481,6 +1481,17 @@ export default function App() {
           showStatus(`🔊 Current listening device: ${deviceName || nextTarget}`);
           return { ok: true, outputTarget: nextTarget, transferred: Boolean(wasPlaying && curSong) };
         },
+        setVolumeFromControl: async ({ level, delta, muted } = {}) => {
+          if (audio) {
+            let nextVol = typeof level === 'number'
+              ? Math.max(0, Math.min(1, level))
+              : (typeof delta === 'number' ? Math.max(0, Math.min(1, (audio.volume ?? 1) + delta)) : (audio.volume ?? 1));
+            audio.volume = nextVol;
+            if (typeof muted === 'boolean') audio.muted = muted;
+            return { ok: true, volume: nextVol, muted: Boolean(audio.muted) };
+          }
+          return { ok: true, volume: typeof level === 'number' ? level : 1, muted: Boolean(muted) };
+        },
       };
     },
     // After a DJ break the queue may have changed: find the planned song again.

@@ -330,6 +330,12 @@ const controlHandlers = {
       clear: Boolean(body.clear),
       robosUser: body.robosUser || null,
     }),
+    setVolume: (body = {}) => askRenderer('volume', {
+      level: typeof body.level === 'number' ? body.level : null,
+      delta: typeof body.delta === 'number' ? body.delta : null,
+      muted: typeof body.muted === 'boolean' ? body.muted : null,
+      robosUser: body.robosUser || null,
+    }),
 };
 
 // Play history, answered from the portable history file without the renderer.
