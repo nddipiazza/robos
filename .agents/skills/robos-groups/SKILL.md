@@ -69,6 +69,10 @@ Both **RobOS Voice Desktop & Phone Assistant** (`packages/voice-prompt`, `:19188
   - *"What are the emails for the Family group?"* / *"Emails for Dipiazza Kids group"*
   - *"What groups is Leo in?"* / *"Which RobOS groups does Diana belong to?"*
   - *"Is Jennilyn in the Dipiazza Kids group?"*
+- **Email an Entire RobOS Group (via Thunderbird Bridge)**:
+  - *"Email the Family group saying Dinner is at 6 PM"*
+  - *"Send an email to the Dipiazza Kids group with subject Saturday Schedule and body Leo's game is at noon"*
+  - *"Confirm email"* / *"Send it"* / *"Cancel email"*
 - **Create, Edit & Sync Groups by Voice**:
   - *"Create a RobOS group called Band Night with Nick and Diana"*
   - *"Add Viv to the Game Night group"*

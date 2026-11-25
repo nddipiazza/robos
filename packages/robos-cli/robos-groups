@@ -15,6 +15,7 @@
  *   robos-groups add-member "<user>" "<group>" [--json]
  *   robos-groups remove-member "<user>" "<group>" [--json]
  *   robos-groups user-groups "<user>" [--json]
+ *   robos-groups email "<group>" --subject "<subj>" --body "<msg>" [--cc "<user>"] [--draft|--send-now] [--json]
  *   robos-groups sync [--host <ip-or-host>] [--user <ssh-user>] [--port <22>] [--json]
  *   robos-groups say "<natural-language command>" [--json]
  *
@@ -46,11 +47,13 @@ function resolveModule(relFromPackages) {
 const ug = resolveModule('robos-lib/users-groups');
 
 function parseArgs(argv) {
-  const out = { _: [], json: false, explicitOnly: false };
+  const out = { _: [], json: false, explicitOnly: false, sendNow: false, draft: false };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--json') out.json = true;
     else if (a === '--explicit-only') out.explicitOnly = true;
+    else if (a === '--send-now') out.sendNow = true;
+    else if (a === '--draft' || a === '--send-later') out.draft = true;
     else if (a === '-h' || a === '--help') out.help = true;
     else if (a.startsWith('--')) out[a.slice(2)] = argv[++i];
     else out._.push(a);
@@ -166,6 +169,21 @@ async function main() {
     case 'user-groups':
       res = ug.answerUserQuestion(joined || args.user, 'groups', opts);
       break;
+    case 'email':
+    case 'mail': {
+      const grpTarget = joined || args.group || args.to || '';
+      res = await ug.sendOrStageEmailToUsers({
+        to: /\bgroups?$/i.test(grpTarget) ? grpTarget : `${grpTarget} group`,
+        cc: args.cc || '',
+        from: args.from || '',
+        subject: args.subject || '',
+        body: args['body-file'] ? fs.readFileSync(args['body-file'], 'utf8') : (args.body || args.message || ''),
+        attachments: args.attach ? String(args.attach).split(',').map((s) => s.trim()).filter(Boolean) : [],
+        sendLater: Boolean(args.draft),
+        sendNow: Boolean(args.sendNow),
+      }, opts);
+      break;
+    }
     case 'sync':
       if (args.host || joined) {
         res = await ug.syncUsersAndGroupsToHost({ host: args.host || joined, user: args.user, port: args.port }, opts);

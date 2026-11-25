@@ -15,6 +15,8 @@
  *   robos-users update "<user>" [--email <addr>] [--nickname <nick>] [--role <role>] [--birthday <date>] [--gamer-tag <tag>] [--hobby <hobby>] [--bio <text>] [--json]
  *   robos-users remove "<user>" [--json]
  *   robos-users party-profile "<user>" [--json]
+ *   robos-users email "<user(s)>" --subject "<subj>" --body "<msg>" [--cc "<user>"] [--draft|--send-now] [--json]
+ *   robos-users confirm-email | cancel-email | pending-email [--json]
  *   robos-users kgraph [--json]
  *   robos-users sync [--host <ip-or-host>] [--user <ssh-user>] [--port <22>] [--json]
  *   robos-users say "<natural-language command>" [--json]
@@ -48,12 +50,14 @@ const ug = resolveModule('robos-lib/users-groups');
 const peopleStore = resolveModule('robos-lib/people-store');
 
 function parseArgs(argv) {
-  const out = { _: [], json: false, full: false, overwrite: false };
+  const out = { _: [], json: false, full: false, overwrite: false, sendNow: false, draft: false };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--json') out.json = true;
     else if (a === '--full') out.full = true;
     else if (a === '--overwrite') out.overwrite = true;
+    else if (a === '--send-now') out.sendNow = true;
+    else if (a === '--draft' || a === '--send-later') out.draft = true;
     else if (a === '-h' || a === '--help') out.help = true;
     else if (a.startsWith('--')) out[a.slice(2)] = argv[++i];
     else out._.push(a);
@@ -190,6 +194,29 @@ async function main() {
     case 'kgraph':
       res = ug.syncUsersGroupsKGraph(opts);
       res.spoken = `Synced ${res.nodeCount} Users & Groups Knowledge Graph nodes to ${res.kgraphFile}.`;
+      break;
+    case 'email':
+    case 'mail':
+      res = await ug.sendOrStageEmailToUsers({
+        to: joined || args.to || args.user,
+        cc: args.cc || '',
+        from: args.from || '',
+        subject: args.subject || '',
+        body: args['body-file'] ? fs.readFileSync(args['body-file'], 'utf8') : (args.body || args.message || ''),
+        attachments: args.attach ? String(args.attach).split(',').map((s) => s.trim()).filter(Boolean) : [],
+        sendLater: Boolean(args.draft),
+        sendNow: Boolean(args.sendNow),
+      }, opts);
+      break;
+    case 'confirm-email':
+    case 'send-pending-email':
+      res = await ug.executeVoiceCommand('confirm email', opts);
+      break;
+    case 'cancel-email':
+      res = await ug.executeVoiceCommand('cancel email', opts);
+      break;
+    case 'pending-email':
+      res = await ug.executeVoiceCommand('read pending email', opts);
       break;
     case 'sync':
       if (args.host || joined) {

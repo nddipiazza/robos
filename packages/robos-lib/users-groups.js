@@ -1293,6 +1293,404 @@ if (!tok) { console.log(JSON.stringify({ gatewayVerified: false })); process.exi
   };
 }
 
+// ── Voice & CLI Email to RobOS Users & Groups (via Thunderbird Bridge) ───────
+
+const PENDING_VOICE_EMAIL_TTL_MS = 15 * 60 * 1000;
+
+function getPendingVoiceEmailPath(opts = {}) {
+  return path.join(getConfigDir(opts), 'pending-voice-email.json');
+}
+
+function loadPendingVoiceEmail(opts = {}) {
+  const fp = getPendingVoiceEmailPath(opts);
+  const doc = readJsonSafe(fp, null);
+  if (!doc || typeof doc !== 'object') return null;
+  if (doc.expiresAt && Date.now() > Number(doc.expiresAt)) {
+    try { fs.unlinkSync(fp); } catch {}
+    return null;
+  }
+  return doc;
+}
+
+function savePendingVoiceEmail(draft, opts = {}) {
+  const fp = getPendingVoiceEmailPath(opts);
+  const next = {
+    ...draft,
+    updatedAt: new Date().toISOString(),
+    expiresAt: Date.now() + PENDING_VOICE_EMAIL_TTL_MS,
+  };
+  writeJsonAtomic(fp, next, 0o600);
+  return next;
+}
+
+function clearPendingVoiceEmail(opts = {}) {
+  const fp = getPendingVoiceEmailPath(opts);
+  try {
+    if (fs.existsSync(fp)) fs.unlinkSync(fp);
+  } catch {}
+}
+
+function resolveEmailRecipients(rawInput, opts = {}) {
+  const items = Array.isArray(rawInput)
+    ? rawInput.map((x) => String(x || '').trim()).filter(Boolean)
+    : [String(rawInput || '').trim()].filter(Boolean);
+
+  const recipients = [];
+  const unresolved = [];
+  const missingEmail = [];
+  const seenEmails = new Set();
+
+  const addRecipient = (rec) => {
+    const em = String(rec.email || '').trim().toLowerCase();
+    if (!em || seenEmails.has(em)) return;
+    seenEmails.add(em);
+    recipients.push(rec);
+  };
+
+  for (const rawChunk of items) {
+    const chunk = rawChunk.replace(/^to\s+/i, '').trim();
+    if (!chunk) continue;
+
+    // 1. Check if the whole chunk explicitly names a RobOS Group (e.g. "the Family group", "Dipiazza Kids group", "Household")
+    const hasExplicitGroupWord = /\bgroups?$/i.test(chunk);
+    const wholeUser = !hasExplicitGroupWord ? resolveUser(chunk, opts) : null;
+    const wholeGroup = !wholeUser ? resolveGroup(chunk, opts) : null;
+
+    if (wholeGroup) {
+      const withMail = wholeGroup.memberProfiles.filter((m) => m.email);
+      if (withMail.length === 0) {
+        missingEmail.push(`${wholeGroup.name} group`);
+      } else {
+        for (const m of withMail) {
+          addRecipient({
+            uid: m.uid,
+            name: m.displayName,
+            email: m.email,
+            sourceGroup: wholeGroup.name,
+          });
+        }
+      }
+      continue;
+    }
+
+    // 2. Otherwise split multiple recipients on commas, semicolons, or "and"
+    const parts = chunk
+      .split(/\s*(?:,|;|\band\b)\s*/i)
+      .map((s) => s.replace(/^to\s+/i, '').trim())
+      .filter(Boolean);
+
+    for (const part of parts) {
+      if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(part)) {
+        const matchedByEmail = resolveUser(part, opts);
+        addRecipient({
+          uid: matchedByEmail?.uid || '',
+          name: matchedByEmail?.displayName || part,
+          email: part,
+        });
+        continue;
+      }
+
+      const partHasGroup = /\bgroups?$/i.test(part);
+      const u = !partHasGroup ? resolveUser(part, opts) : null;
+      if (u) {
+        if (!u.email) {
+          missingEmail.push(u.displayName);
+        } else {
+          addRecipient({
+            uid: u.uid,
+            name: u.displayName,
+            email: u.email,
+          });
+        }
+        continue;
+      }
+
+      const g = resolveGroup(part, opts);
+      if (g) {
+        const withMail = g.memberProfiles.filter((m) => m.email);
+        if (withMail.length === 0) missingEmail.push(`${g.name} group`);
+        for (const m of withMail) {
+          addRecipient({
+            uid: m.uid,
+            name: m.displayName,
+            email: m.email,
+            sourceGroup: g.name,
+          });
+        }
+        continue;
+      }
+
+      unresolved.push(part);
+    }
+  }
+
+  return {
+    ok: recipients.length > 0 && unresolved.length === 0 && missingEmail.length === 0,
+    recipients,
+    emails: recipients.map((r) => r.email),
+    unresolved,
+    missingEmail,
+  };
+}
+
+function synthesizeSubjectFromBody(bodyText, senderName = '') {
+  const clean = String(bodyText || '').replace(/\s+/g, ' ').trim().replace(/[.!?]+$/, '');
+  if (!clean) return senderName ? `Message from ${senderName}` : 'Message from RobOS';
+  const words = clean.split(' ');
+  const clipped = words.slice(0, 7).join(' ');
+  const titled = clipped.charAt(0).toUpperCase() + clipped.slice(1);
+  return words.length > 7 ? `${titled}...` : titled;
+}
+
+function formatSentenceBody(text) {
+  const trimmed = String(text || '').trim();
+  if (!trimmed) return '';
+  const cap = trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
+  return /[.!?]$/.test(cap) ? cap : `${cap}.`;
+}
+
+function parseVoiceEmailCommand(rawText, opts = {}) {
+  const cleaned = stripCommandFiller(rawText);
+  if (!cleaned) return null;
+
+  const pending = loadPendingVoiceEmail(opts);
+
+  // 1. Explicit or contextual pending-email follow-ups
+  if (/^(?:confirm\s+(?:the\s+|pending\s+)?email|send\s+(?:the\s+|pending\s+)email|yes[,]?\s+send\s+(?:the\s+)?email)[.!?]*$/i.test(cleaned)) {
+    return { intent: 'confirm-email' };
+  }
+  if (pending && /^(?:send\s+it|yes[,]?\s+send\s+it|confirm(?:\s+and\s+send)?|go\s+ahead\s+and\s+send(?:\s+it)?)[.!?]*$/i.test(cleaned)) {
+    return { intent: 'confirm-email' };
+  }
+  if (/^(?:queue\s+(?:the\s+|pending\s+)?email|save\s+(?:the\s+|pending\s+)?email\s+to\s+outbox)[.!?]*$/i.test(cleaned) || (pending && /^(?:queue\s+it|save\s+to\s+outbox)[.!?]*$/i.test(cleaned))) {
+    return { intent: 'queue-email' };
+  }
+  if (/^(?:cancel|discard|clear|abort)\s+(?:the\s+|pending\s+)?email[.!?]*$/i.test(cleaned) || (pending && /^(?:cancel\s+it|discard\s+it|never\s*mind)[.!?]*$/i.test(cleaned))) {
+    return { intent: 'cancel-email' };
+  }
+  if (/^(?:read|show|check|what\s+is)\s+(?:the\s+|my\s+)?(?:pending|queued|staged)\s+email[.!?]*$/i.test(cleaned) || /^what\s+email\s+is\s+(?:pending|queued|staged)[.!?]*$/i.test(cleaned)) {
+    return { intent: 'read-pending-email' };
+  }
+  if (pending && !pending.body) {
+    const fillSubBody = cleaned.match(/^(?:with\s+)?subject\s+(.+?)\s+(?:and\s+)?(?:saying|body|message|that)\s*[:,-]?\s*(.+)$/i);
+    if (fillSubBody) {
+      return { intent: 'complete-pending-email', subject: fillSubBody[1].trim(), body: fillSubBody[2].trim() };
+    }
+    const fillBodyOnly = cleaned.match(/^(?:message|body|saying)\s*[:,-]?\s*(.+)$/i);
+    if (fillBodyOnly) {
+      return { intent: 'complete-pending-email', subject: '', body: fillBodyOnly[1].trim() };
+    }
+  }
+
+  // 2. Compose / Send / Draft Email to RobOS User(s) or Group(s)
+  // Guard against "what is Diana's email" / "emails for Family group" / "set Leo's email to ..."
+  if (/^(?:what|which|list|show|get|set|update|change)\b/i.test(cleaned)) return null;
+
+  const composeMatch = cleaned.match(
+    /^(?:(draft|queue)\s+(?:an?\s+)?(?:email|mail(?:\s+message)?)|(?:send|write|compose)\s+(?:an?\s+)?(?:email|mail(?:\s+message)?)|email)\s+(?:to\s+)?(.+)$/i
+  );
+  if (!composeMatch) return null;
+
+  const isDraft = Boolean(composeMatch[1]);
+  let rest = composeMatch[2].trim();
+
+  // Check trailing explicit immediate-send modifier ("... and send it now" / "... send immediately")
+  let sendNow = false;
+  const sendNowTrail = rest.match(/\s+(?:and\s+)?(?:send\s+(?:it\s+)?now|send\s+immediately|without\s+confirmation)[.!?]*$/i);
+  if (sendNowTrail) {
+    sendNow = true;
+    rest = rest.slice(0, rest.length - sendNowTrail[0].length).trim();
+  }
+
+  let recipientsRaw = '';
+  let ccRaw = '';
+  let subject = '';
+  let body = '';
+
+  // Pattern A: "<recipients> [with] subject <S> [and] (body|message|saying|telling them|that) <B>"
+  const patSubAndBody = rest.match(
+    /^(.+?)\s+(?:with\s+)?subject\s*[:,-]?\s*(.+?)\s+(?:and\s+)?(?:with\s+)?(?:body|message|saying|telling\s+(?:him|her|them)|that)\s*[:,-]?\s*(.+)$/i
+  );
+  // Pattern B: "<recipients> about <S>: <B>" or "<recipients> about <S> saying <B>"
+  const patAboutBody = !patSubAndBody && rest.match(
+    /^(.+?)\s+about\s+(.+?)(?:\s*:\s*|\s+(?:saying|telling\s+(?:him|her|them)|with\s+(?:body|message)|message)\s*[:,-]?\s*)(.+)$/i
+  );
+  // Pattern C: "<recipients> (saying|telling him/her/them|with message|with body|message:|body:|that) <B>"
+  const patBodyOnly = !patSubAndBody && !patAboutBody && rest.match(
+    /^(.+?)\s+(?:saying|telling\s+(?:him|her|them)|with\s+(?:message|body)|message\s*:|body\s*:|that)\s*[:,-]?\s*(.+)$/i
+  );
+  // Pattern D: "<recipients> [with] subject <S>" (subject only, no body yet)
+  const patSubOnly = !patSubAndBody && !patAboutBody && !patBodyOnly && rest.match(
+    /^(.+?)\s+(?:with\s+)?subject\s*[:,-]?\s*(.+)$/i
+  );
+
+  if (patSubAndBody) {
+    recipientsRaw = patSubAndBody[1].trim();
+    subject = patSubAndBody[2].trim().replace(/^["']|["']$/g, '');
+    body = patSubAndBody[3].trim();
+  } else if (patAboutBody) {
+    recipientsRaw = patAboutBody[1].trim();
+    subject = patAboutBody[2].trim().replace(/^["']|["']$/g, '');
+    body = patAboutBody[3].trim();
+  } else if (patBodyOnly) {
+    recipientsRaw = patBodyOnly[1].trim();
+    body = patBodyOnly[2].trim();
+  } else if (patSubOnly) {
+    recipientsRaw = patSubOnly[1].trim();
+    subject = patSubOnly[2].trim().replace(/^["']|["']$/g, '');
+  } else {
+    recipientsRaw = rest.replace(/[.!?]+$/, '').trim();
+  }
+
+  // Extract optional "cc <who>" from recipientsRaw (e.g. "Diana cc Nick")
+  const ccSplit = recipientsRaw.match(/^(.+?)\s+cc\s+(.+)$/i);
+  if (ccSplit) {
+    recipientsRaw = ccSplit[1].trim();
+    ccRaw = ccSplit[2].trim();
+  }
+
+  return {
+    intent: 'compose-email',
+    recipientsRaw,
+    ccRaw,
+    subject,
+    body,
+    sendLater: isDraft,
+    sendNow,
+  };
+}
+
+async function dispatchVoiceEmail(draft, opts = {}) {
+  const sendMailFn = opts.sendMailFn || (async (msg, mailOpts) => {
+    const tbMail = require('./thunderbird-mail');
+    const st = await tbMail.getStatus(mailOpts);
+    if (st.thunderbirdInstalled && !st.bridgeInstalled) {
+      tbMail.installBridge(mailOpts);
+    }
+    return tbMail.sendEmail(msg, mailOpts);
+  });
+
+  const toEmails = draft.recipients.map((r) => r.email);
+  const ccEmails = (draft.ccRecipients || []).map((r) => r.email);
+  const recipientNames = draft.recipients.map((r) => `${r.name} (${r.email})`).join(', ');
+
+  try {
+    const result = await sendMailFn(
+      {
+        to: toEmails,
+        cc: ccEmails,
+        from: draft.from || undefined,
+        subject: draft.subject,
+        text: draft.body,
+        attachments: draft.attachments || [],
+        sendLater: Boolean(draft.sendLater),
+      },
+      { homeDir: getHomeDir(opts), configDir: getConfigDir(opts) }
+    );
+    clearPendingVoiceEmail(opts);
+    const modeLabel = (result?.mode === 'sendLater' || draft.sendLater) ? 'Queued' : 'Sent';
+    const whereLabel = modeLabel === 'Queued' ? ' in Thunderbird Outbox' : '';
+    const spoken = `${modeLabel} email to ${recipientNames}${whereLabel} with subject "${draft.subject}".`;
+    return {
+      ok: true,
+      sent: modeLabel === 'Sent',
+      queued: modeLabel === 'Queued',
+      mode: result?.mode || (draft.sendLater ? 'sendLater' : 'sendNow'),
+      headerMessageId: result?.headerMessageId || null,
+      from: result?.from || draft.from || null,
+      draft,
+      spoken,
+    };
+  } catch (err) {
+    // Preserve draft so the user can retry with "send it" once Thunderbird / Bridge is ready
+    savePendingVoiceEmail(draft, opts);
+    const errText = String(err?.message || err);
+    const friendly = /not running with the RobOS Bridge|BRIDGE_UNAVAILABLE/i.test(errText)
+      ? `Thunderbird Bridge is not active yet. Open Thunderbird, ensure Google sign-in and the RobOS Thunderbird Bridge add-on are enabled, then say "send it". Your draft to ${recipientNames} is saved.`
+      : `Could not send email via Thunderbird: ${errText}. Your draft to ${recipientNames} is still saved — say "send it" to retry or "cancel email" to discard.`;
+    return {
+      ok: false,
+      staged: true,
+      error: errText,
+      draft,
+      spoken: friendly,
+    };
+  }
+}
+
+async function sendOrStageEmailToUsers(input = {}, opts = {}) {
+  const resolvedTo = resolveEmailRecipients(input.to || input.recipients || '', opts);
+  if (resolvedTo.unresolved.length > 0) {
+    const msg = `Could not find RobOS user or group matching: ${resolvedTo.unresolved.join(', ')}.`;
+    return { ok: false, error: msg, spoken: msg, unresolved: resolvedTo.unresolved };
+  }
+  if (resolvedTo.missingEmail.length > 0 && resolvedTo.recipients.length === 0) {
+    const msg = `${resolvedTo.missingEmail.join(', ')} does not have an email address configured in RobOS Users.`;
+    return { ok: false, error: msg, spoken: msg, missingEmail: resolvedTo.missingEmail };
+  }
+  if (resolvedTo.recipients.length === 0) {
+    const msg = 'Please specify at least one RobOS user or group to email.';
+    return { ok: false, error: msg, spoken: msg };
+  }
+
+  let ccRecipients = [];
+  if (input.cc) {
+    const resolvedCc = resolveEmailRecipients(input.cc, opts);
+    if (resolvedCc.unresolved.length > 0) {
+      const msg = `Could not find CC user or group matching: ${resolvedCc.unresolved.join(', ')}.`;
+      return { ok: false, error: msg, spoken: msg };
+    }
+    ccRecipients = resolvedCc.recipients;
+  }
+
+  const active = getActiveUser(opts);
+  const senderName = active.user?.nickname || active.user?.firstName || active.user?.displayName || 'RobOS';
+  const body = formatSentenceBody(input.body || input.text || '');
+  const subject = String(input.subject || '').trim() || (body ? synthesizeSubjectFromBody(body, senderName) : '');
+  const recipientSummary = resolvedTo.recipients.map((r) => `${r.name} (${r.email})`).join(', ');
+
+  const draft = {
+    recipients: resolvedTo.recipients,
+    ccRecipients,
+    from: input.from || '',
+    subject,
+    body,
+    attachments: Array.isArray(input.attachments) ? input.attachments : [],
+    sendLater: Boolean(input.sendLater),
+    createdBy: active.activeUserUid || '',
+  };
+
+  // If neither body nor subject was spoken yet ("send an email to Diana"), stage recipient and ask for message
+  if (!body && !subject) {
+    const saved = savePendingVoiceEmail(draft, opts);
+    const spoken = `Ready to email ${recipientSummary}. Say "message" followed by what you want to say, or "cancel email".`;
+    return { ok: true, staged: true, needsMessage: true, draft: saved, spoken };
+  }
+
+  const finalDraft = {
+    ...draft,
+    subject: subject || synthesizeSubjectFromBody(body, senderName),
+    body: body || subject,
+  };
+
+  // Immediate dispatch when explicitly requested (`sendNow: true` or `sendLater: true` draft-to-Outbox)
+  if (input.sendNow || input.sendLater) {
+    return dispatchVoiceEmail(finalDraft, opts);
+  }
+
+  // Safe two-step voice confirmation by default (matches outward-email rule)
+  const saved = savePendingVoiceEmail(finalDraft, opts);
+  const ccNote = ccRecipients.length ? `, CC ${ccRecipients.map((r) => r.name).join(', ')}` : '';
+  const spoken = `Ready to send email to ${recipientSummary}${ccNote} with subject "${finalDraft.subject}" and message: "${finalDraft.body}" Say "send it" or "confirm email" to send, or "cancel email" to discard.`;
+  return {
+    ok: true,
+    staged: true,
+    requiresConfirmation: true,
+    draft: saved,
+    spoken,
+  };
+}
+
 // ── Voice & Natural-Language Command Router ──────────────────────────────────
 
 const NON_USER_GROUP_APP_OPEN_RE = /^(?:open|launch|start|switch\s+to|focus)\s+(?:the\s+)?(?:robos\s+)?(?:users?|people(?:\s+directory|\s+manager)?|user\s+profiles?|groups?|group\s+manager)(?:\s+app|\s+window)?[.!?]*$/i;
@@ -1321,6 +1719,12 @@ function isUsersOrGroupsVoiceCommand(rawText, opts = {}) {
   }
   if (/^(?:play|watch|cast|resume|continue\s+watching|pause|stop)\b/i.test(cleaned)) {
     return false;
+  }
+
+  // Voice Email to RobOS Users & Groups (compose, confirm, queue, cancel, inspect)
+  const emailCmd = parseVoiceEmailCommand(rawText, opts);
+  if (emailCmd) {
+    return true;
   }
 
   // Explicit RobOS Users / RobOS Groups cues
@@ -1380,6 +1784,95 @@ async function executeVoiceCommand(rawText, opts = {}) {
     const users = listUsers(opts);
     const spoken = `You have ${users.length} RobOS users: ${users.map((u) => u.displayName).join(', ')}.`;
     return { ok: true, skill: forcedGroupSkill ? 'robos-groups' : 'robos-users', action: 'list-users', response: spoken, spoken, data: { users: users.map(summarizeUser) } };
+  }
+
+  // 0. Voice Email to RobOS Users & Groups
+  const emailCmd = parseVoiceEmailCommand(rawText, opts);
+  if (emailCmd) {
+    if (emailCmd.intent === 'confirm-email' || emailCmd.intent === 'queue-email') {
+      const pending = loadPendingVoiceEmail(opts);
+      if (!pending) {
+        const msg = 'There is no pending email waiting to be sent.';
+        return { ok: false, skill: 'robos-users', action: emailCmd.intent, response: msg, spoken: msg, error: msg };
+      }
+      if (!pending.body && !pending.subject) {
+        const who = (pending.recipients || []).map((r) => r.name).join(', ');
+        const msg = `Your pending email to ${who} still needs a message. Say "message" followed by what you want to say.`;
+        return { ok: false, skill: 'robos-users', action: emailCmd.intent, response: msg, spoken: msg, error: msg, data: { draft: pending } };
+      }
+      const dispatched = await dispatchVoiceEmail(
+        { ...pending, sendLater: emailCmd.intent === 'queue-email' ? true : Boolean(pending.sendLater) },
+        opts
+      );
+      return {
+        ok: dispatched.ok,
+        skill: 'robos-users',
+        action: emailCmd.intent,
+        response: dispatched.spoken,
+        spoken: dispatched.spoken,
+        ...(dispatched.error ? { error: dispatched.error } : {}),
+        data: dispatched,
+      };
+    }
+
+    if (emailCmd.intent === 'cancel-email') {
+      const pending = loadPendingVoiceEmail(opts);
+      clearPendingVoiceEmail(opts);
+      const who = (pending?.recipients || []).map((r) => r.name).join(', ');
+      const spoken = pending
+        ? `Cancelled the pending email${who ? ` to ${who}` : ''}.`
+        : 'There is no pending email to cancel.';
+      return { ok: true, skill: 'robos-users', action: 'cancel-email', response: spoken, spoken, data: { cancelled: Boolean(pending) } };
+    }
+
+    if (emailCmd.intent === 'read-pending-email') {
+      const pending = loadPendingVoiceEmail(opts);
+      if (!pending) {
+        const spoken = 'There is no pending email queued right now.';
+        return { ok: true, skill: 'robos-users', action: 'read-pending-email', response: spoken, spoken, data: { draft: null } };
+      }
+      const who = (pending.recipients || []).map((r) => `${r.name} (${r.email})`).join(', ');
+      const spoken = pending.body
+        ? `Pending email to ${who} with subject "${pending.subject}" and message: "${pending.body}" Say "send it" to send or "cancel email" to discard.`
+        : `Pending email to ${who} (waiting for message). Say "message" followed by your text.`;
+      return { ok: true, skill: 'robos-users', action: 'read-pending-email', response: spoken, spoken, data: { draft: pending } };
+    }
+
+    if (emailCmd.intent === 'complete-pending-email') {
+      const pending = loadPendingVoiceEmail(opts);
+      const active = getActiveUser(opts);
+      const senderName = active.user?.nickname || active.user?.firstName || active.user?.displayName || 'RobOS';
+      const body = formatSentenceBody(emailCmd.body);
+      const subject = String(emailCmd.subject || pending?.subject || '').trim() || synthesizeSubjectFromBody(body, senderName);
+      const updated = savePendingVoiceEmail({ ...pending, subject, body }, opts);
+      const who = (updated.recipients || []).map((r) => `${r.name} (${r.email})`).join(', ');
+      const spoken = `Ready to send email to ${who} with subject "${subject}" and message: "${body}" Say "send it" or "confirm email" to send, or "cancel email" to discard.`;
+      return { ok: true, skill: 'robos-users', action: 'stage-email', response: spoken, spoken, data: { staged: true, requiresConfirmation: true, draft: updated } };
+    }
+
+    if (emailCmd.intent === 'compose-email') {
+      const emailRes = await sendOrStageEmailToUsers(
+        {
+          to: emailCmd.recipientsRaw,
+          cc: emailCmd.ccRaw,
+          subject: emailCmd.subject,
+          body: emailCmd.body,
+          sendLater: emailCmd.sendLater,
+          sendNow: emailCmd.sendNow,
+        },
+        opts
+      );
+      const targetGroupUsed = (emailRes.draft?.recipients || []).some((r) => r.sourceGroup);
+      return {
+        ok: emailRes.ok,
+        skill: targetGroupUsed ? 'robos-groups' : 'robos-users',
+        action: emailRes.sent ? 'send-email' : emailRes.queued ? 'queue-email' : 'stage-email',
+        response: emailRes.spoken,
+        spoken: emailRes.spoken,
+        ...(emailRes.error ? { error: emailRes.error } : {}),
+        data: emailRes,
+      };
+    }
   }
 
   // 1. Sync to remote host / RobOS Services
@@ -1643,6 +2136,14 @@ module.exports = {
   syncLocalRobosServicesData,
   syncUsersAndGroupsToHost,
   httpJsonRequest,
+  getPendingVoiceEmailPath,
+  loadPendingVoiceEmail,
+  savePendingVoiceEmail,
+  clearPendingVoiceEmail,
+  resolveEmailRecipients,
+  parseVoiceEmailCommand,
+  dispatchVoiceEmail,
+  sendOrStageEmailToUsers,
   isUsersOrGroupsVoiceCommand,
   executeVoiceCommand,
 };

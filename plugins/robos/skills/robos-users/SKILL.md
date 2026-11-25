@@ -57,9 +57,17 @@ Use this skill whenever the user asks to:
 ./packages/robos-cli/robos-users sync
 ./packages/robos-cli/robos-users sync --host 192.168.1.25
 
-# 7. Execute any natural-language / Voice Assistant phrase directly
+# 7. Send or stage email to RobOS User(s) via RobOS Thunderbird Bridge
+./packages/robos-cli/robos-users email "Diana" --subject "Dinner" --body "Dinner is at 6 PM."
+./packages/robos-cli/robos-users confirm-email
+./packages/robos-cli/robos-users email "Leo,Bella" --subject "Weekend Plans" --body "Movie night Friday at 7 PM." --send-now
+./packages/robos-cli/robos-users email "Viv" --subject "Charger" --body "Don't forget your charger." --draft
+
+# 8. Execute any natural-language / Voice Assistant phrase directly
 ./packages/robos-cli/robos-users say "tell me about Diana"
 ./packages/robos-cli/robos-users say "what is Jennilyn's email"
+./packages/robos-cli/robos-users say "send an email to Diana saying I am on my way home"
+./packages/robos-cli/robos-users say "confirm email"
 ./packages/robos-cli/robos-users say "what is Diana's Baldur's Gate 3 character"
 ./packages/robos-cli/robos-users say "sync robos users and groups to 192.168.1.25"
 ```
@@ -84,6 +92,14 @@ Both **RobOS Voice Desktop & Phone Assistant** (`packages/voice-prompt`, `:19188
   - *"What is Diana's Baldur's Gate 3 character?"* / *"What RPG class does Nick play?"*
   - *"What music does Diana like?"* / *"What music does Diana hate?"*
   - *"What books does Diana read?"* / *"What are Diana's pet peeves?"* / *"What are Nick's hobbies?"*
+- **Send & Draft Email to RobOS Users (via Thunderbird Bridge)**:
+  - *"Send an email to Diana saying dinner is ready at 6 PM"* → stages email to `Diana Arrington` and reads back subject & body for safe 1-phrase confirmation
+  - *"Email Leo and Bella with subject Weekend Plans and body Movie night is Friday at 7 PM"*
+  - *"Email Jennilyn about Friday Pickup: I will pick up Leo and Bella at 5 PM"*
+  - *"Send an email to Diana"* → stages recipient, then follow up with *"message I'm heading home now"*
+  - *"Confirm email"* / *"Send it"* / *"Cancel email"* / *"Read pending email"*
+  - *"Draft an email to Viv saying Don't forget your charger"* → queues directly in Thunderbird Outbox (`sendLater`)
+  - *"Send an email to Diana saying Running 5 minutes late and send it now"* → sends immediately in one step
 - **Create / Update / Sync by Voice**:
   - *"Add RobOS user Sam Carter with email sam@example.com in group Engineering"*
   - *"Set Leo's gamer tag to LeoTheBrave"* / *"Add hobby Chess to Leo"*

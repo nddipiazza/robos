@@ -170,3 +170,89 @@ test('Voice Assistant commands via VoiceCommandsRegistry and SkillsExecutor', as
     env.cleanup();
   }
 });
+
+test('Voice Assistant email commands for RobOS Users and Groups (stage, confirm, cancel, draft, send-now)', async () => {
+  const env = makeTempConfig();
+  try {
+    // Give Nicholas & Diana real-looking test emails
+    ug.updateUser('Nick', { email: 'nick@example.com' }, { configDir: env.configDir });
+    ug.updateUser('Diana', { email: 'diana@example.com' }, { configDir: env.configDir });
+    ug.createUser({ displayName: 'Leo DiPiazza', nickname: 'Leo', email: 'leo@example.com', groups: ['Family'] }, { configDir: env.configDir });
+
+    const sentPayloads = [];
+    const mockOpts = {
+      configDir: env.configDir,
+      homeDir: env.homeDir,
+      sendMailFn: async (msg) => {
+        sentPayloads.push(msg);
+        return { mode: msg.sendLater ? 'sendLater' : 'sendNow', headerMessageId: `<msg-${sentPayloads.length}@robos>`, from: 'nick@example.com' };
+      },
+    };
+
+    // 1. Safe two-step voice email to single RobOS User ("Diana") -> stages first, then "send it" dispatches
+    const stageRes = await ug.executeVoiceCommand('send an email to Diana saying I am on my way home', mockOpts);
+    assert.equal(stageRes.ok, true);
+    assert.equal(stageRes.action, 'stage-email');
+    assert.equal(sentPayloads.length, 0);
+    assert.match(stageRes.response, /diana@example\.com/);
+    assert.equal(ug.isUsersOrGroupsVoiceCommand('send it', mockOpts), true);
+
+    const confirmRes = await ug.executeVoiceCommand('send it', mockOpts);
+    assert.equal(confirmRes.ok, true);
+    assert.equal(sentPayloads.length, 1);
+    assert.deepEqual(sentPayloads[0].to, ['diana@example.com']);
+    assert.equal(sentPayloads[0].text, 'I am on my way home.');
+
+    // Once sent, bare "send it" is no longer claimed
+    assert.equal(ug.isUsersOrGroupsVoiceCommand('send it', mockOpts), false);
+
+    // 2. Multi-recipient + explicit subject + cancel flow
+    const stageMulti = await ug.executeVoiceCommand(
+      'email Diana and Leo with subject Weekend Plans and body Want to play BG3 at 7 PM',
+      mockOpts
+    );
+    assert.equal(stageMulti.ok, true);
+    assert.deepEqual(stageMulti.data.draft.recipients.map((r) => r.email), ['diana@example.com', 'leo@example.com']);
+    assert.equal(stageMulti.data.draft.subject, 'Weekend Plans');
+
+    const readRes = await ug.executeVoiceCommand('read pending email', mockOpts);
+    assert.match(readRes.response, /Weekend Plans/);
+
+    const cancelRes = await ug.executeVoiceCommand('cancel email', mockOpts);
+    assert.equal(cancelRes.ok, true);
+    assert.equal(ug.loadPendingVoiceEmail(mockOpts), null);
+    assert.equal(sentPayloads.length, 1);
+
+    // 3. Recipient-only ("send an email to Diana") followed by "message: Dinner is ready" + "confirm email"
+    const recOnly = await ug.executeVoiceCommand('send an email to Diana', mockOpts);
+    assert.equal(recOnly.ok, true);
+    assert.equal(recOnly.data.needsMessage, true);
+
+    const fillMsg = await ug.executeVoiceCommand('message Dinner is ready downstairs', mockOpts);
+    assert.equal(fillMsg.ok, true);
+    assert.match(fillMsg.response, /Dinner is ready downstairs/);
+
+    const confirm2 = await ug.executeVoiceCommand('confirm email', mockOpts);
+    assert.equal(confirm2.ok, true);
+    assert.equal(sentPayloads.length, 2);
+    assert.equal(sentPayloads[1].text, 'Dinner is ready downstairs.');
+
+    // 4. Draft to Outbox ("draft an email to ...") & explicit one-shot ("... and send it now") to a RobOS Group!
+    const draftRes = await ug.executeVoiceCommand('draft an email to Leo saying Great job today', mockOpts);
+    assert.equal(draftRes.ok, true);
+    assert.equal(sentPayloads.length, 3);
+    assert.equal(sentPayloads[2].sendLater, true);
+
+    const groupImmediate = await ug.executeVoiceCommand(
+      'email the Family group saying Tacos are ready at 6 PM and send it now',
+      mockOpts
+    );
+    assert.equal(groupImmediate.ok, true);
+    assert.equal(groupImmediate.skill, 'robos-groups');
+    assert.equal(sentPayloads.length, 4);
+    assert.equal(sentPayloads[3].sendLater, false);
+    assert.deepEqual(sentPayloads[3].to.sort(), ['diana@example.com', 'leo@example.com', 'nick@example.com']);
+  } finally {
+    env.cleanup();
+  }
+});
