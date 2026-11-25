@@ -21109,8 +21109,14 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
       if (typeof p.previousTrack === "function") return p.previousTrack(payload);
       return { ok: false, error: "previousTrack unavailable" };
     }, [getPlayer]);
+    const setOutput = (0, import_react24.useCallback)(async (payload = {}) => {
+      const p = getPlayer();
+      if (payload.robosUser && typeof p.setRobosUser === "function") p.setRobosUser(payload.robosUser);
+      if (typeof p.setOutputFromControl === "function") return p.setOutputFromControl(payload);
+      return { ok: false, error: "setOutputFromControl unavailable" };
+    }, [getPlayer]);
     const handlers = (0, import_react24.useRef)({});
-    handlers.current = { status, "speak-clip": speakClip, play, next, previous, pause, resume };
+    handlers.current = { status, "speak-clip": speakClip, play, next, previous, pause, resume, "set-output": setOutput };
     (0, import_react24.useEffect)(() => {
       if (!window.robosAudio?.onControlRequest) return void 0;
       return window.robosAudio.onControlRequest((action, payload) => {
@@ -22431,6 +22437,46 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
           previousTrack: async () => {
             handlePlayPrev();
             return { ok: true };
+          },
+          setOutputFromControl: async ({ targetIp, deviceName, clear, robosUser } = {}) => {
+            if (robosUser) setActiveRobosUser(robosUser);
+            if (clear) {
+              try {
+                await window.robosAudio?.castStopAll?.();
+              } catch {
+              }
+              playerRef.current?.audio?.current?.pause();
+              setActiveCastSession(null);
+              setIsPlaying(false);
+              setOutputTarget("local");
+              showStatus("\u{1F507} Disconnected listening device");
+              return { ok: true, outputTarget: "local", cleared: true };
+            }
+            const nextTarget = targetIp || "local";
+            if (nextTarget === "local") {
+              try {
+                await window.robosAudio?.castStopAll?.();
+              } catch {
+              }
+              setActiveCastSession(null);
+              setOutputTarget("local");
+              showStatus("\u{1F3A7} Listening device set to This Computer");
+              return { ok: true, outputTarget: "local" };
+            }
+            if (nextTarget !== "all" && !speakers.some((s) => s.ip === nextTarget)) {
+              setSpeakers((prev) => prev.some((s) => s.ip === nextTarget) ? prev : [...prev, { ip: nextTarget, name: deviceName || `Speaker (${nextTarget})`, model: "Google Cast Speaker", online: true }]);
+            }
+            const wasPlaying = isPlaying || !!(audio && !audio.paused);
+            const curSong = playlist[currentTrackIndex] || null;
+            setOutputTarget(nextTarget);
+            if (wasPlaying && curSong) {
+              const pos = outputTarget === "local" && audio ? audio.currentTime : castClock.now();
+              playerRef.current?.audio?.current?.pause();
+              await castTrack(nextTarget, curSong, { startAt: pos || 0 });
+              setIsPlaying(true);
+            }
+            showStatus(`\u{1F50A} Current listening device: ${deviceName || nextTarget}`);
+            return { ok: true, outputTarget: nextTarget, transferred: Boolean(wasPlaying && curSong) };
           }
         };
       },

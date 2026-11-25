@@ -157,8 +157,15 @@ export function useSpeakerTakeover({ getPlayer, showStatus }) {
     return { ok: false, error: 'previousTrack unavailable' };
   }, [getPlayer]);
 
+  const setOutput = useCallback(async (payload = {}) => {
+    const p = getPlayer();
+    if (payload.robosUser && typeof p.setRobosUser === 'function') p.setRobosUser(payload.robosUser);
+    if (typeof p.setOutputFromControl === 'function') return p.setOutputFromControl(payload);
+    return { ok: false, error: 'setOutputFromControl unavailable' };
+  }, [getPlayer]);
+
   const handlers = useRef({});
-  handlers.current = { status, 'speak-clip': speakClip, play, next, previous, pause, resume };
+  handlers.current = { status, 'speak-clip': speakClip, play, next, previous, pause, resume, 'set-output': setOutput };
   useEffect(() => {
     if (!window.robosAudio?.onControlRequest) return undefined;
     return window.robosAudio.onControlRequest((action, payload) => {

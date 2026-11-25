@@ -372,6 +372,266 @@ function setDefaultSmartTv(queryOrClear, { configDir = path.join(os.homedir(), '
   };
 }
 
+const LISTENING_SESSION_FILE = 'listening-session.json';
+const LISTENING_SESSION_TTL_MS = 4 * 60 * 60 * 1000; // 4-hour idle session window
+
+function cleanSpeakerNameForSpeech(name) {
+  return String(name || '').replace(/\brooom\b/gi, 'Room').trim();
+}
+
+function filterRealListeningDevices(devices = []) {
+  const speakers = devices.filter(d => d.deviceType === 'speaker');
+  const realCastTvs = devices.filter(d => d.deviceType === 'tv' && d.isRealLanDevice === true && d.protocol !== 'roku-ecp');
+  // Put Kitchen / dedicated speakers first, then any real Google Cast TVs on the LAN
+  return [
+    ...speakers.sort((a, b) => (/kitchen/i.test(b.name) ? 1 : 0) - (/kitchen/i.test(a.name) ? 1 : 0)),
+    ...realCastTvs,
+  ];
+}
+
+/**
+ * Discover Google Cast speakers on the LAN via CastService and merge them into
+ * `~/.config/robos/home-speakers.json` so fresh RobOS Server installs immediately
+ * know available listening devices without manual setup.
+ */
+async function discoverAndCacheCastSpeakers(configDir = path.join(os.homedir(), '.config', 'robos')) {
+  try {
+    const { CastService } = require('../../audio-player/lib/cast-service');
+    const cs = new CastService();
+    const discovered = await cs.scanSubnet();
+    try { cs.streamServer?.close?.(); } catch {}
+    if (Array.isArray(discovered) && discovered.length > 0) {
+      const spkFile = path.join(configDir, 'home-speakers.json');
+      let existing = [];
+      try {
+        if (fs.existsSync(spkFile)) {
+          const parsed = JSON.parse(fs.readFileSync(spkFile, 'utf8'));
+          if (Array.isArray(parsed.speakers)) existing = parsed.speakers;
+        }
+      } catch {}
+      const byIp = new Map(existing.filter(s => s && s.ip).map(s => [s.ip, s]));
+      for (const d of discovered) {
+        if (!d || !d.ip) continue;
+        const prev = byIp.get(d.ip) || {};
+        byIp.set(d.ip, {
+          ...prev,
+          ip: d.ip,
+          name: d.name || prev.name || `Speaker (${d.ip})`,
+          model: d.model || prev.model || 'Google Cast Speaker',
+          protocol: prev.protocol || 'google-cast',
+          online: true,
+          volume: typeof d.volume === 'number' ? d.volume : (prev.volume ?? 0.65),
+          muted: Boolean(d.muted ?? prev.muted),
+          lastSeen: d.lastSeen || Date.now(),
+        });
+      }
+      fs.mkdirSync(configDir, { recursive: true });
+      fs.writeFileSync(spkFile, JSON.stringify({ updatedAt: new Date().toISOString(), speakers: [...byIp.values()] }, null, 2));
+    }
+  } catch {}
+  return loadCastDevices(configDir);
+}
+
+/**
+ * Return the active session's Current Listening Device (from `~/.config/robos/listening-session.json`),
+ * or `null` if no listening device has been set for this session (or if the session expired).
+ */
+function getCurrentListeningDevice(configDir = path.join(os.homedir(), '.config', 'robos'), devices = null) {
+  const file = path.join(configDir, LISTENING_SESSION_FILE);
+  try {
+    if (!fs.existsSync(file)) return null;
+    const data = JSON.parse(fs.readFileSync(file, 'utf8'));
+    if (!data || !data.device || !data.device.ip) return null;
+    const refTs = Date.parse(data.lastActiveAt || data.setAt || '');
+    if (Number.isFinite(refTs) && (Date.now() - refTs) > LISTENING_SESSION_TTL_MS) {
+      return null;
+    }
+    const list = Array.isArray(devices) ? devices : loadCastDevices(configDir);
+    if (data.device.ip === 'local' || data.device.ip === 'all') {
+      return { ...data.device };
+    }
+    const matched = list.find(d => d.ip === data.device.ip);
+    return matched ? { ...matched, ...data.device, name: matched.name || data.device.name } : { ...data.device };
+  } catch {
+    return null;
+  }
+}
+
+function touchCurrentListeningDevice(configDir = path.join(os.homedir(), '.config', 'robos')) {
+  const file = path.join(configDir, LISTENING_SESSION_FILE);
+  try {
+    if (!fs.existsSync(file)) return;
+    const data = JSON.parse(fs.readFileSync(file, 'utf8'));
+    if (!data || !data.device) return;
+    data.lastActiveAt = new Date().toISOString();
+    fs.writeFileSync(file, JSON.stringify(data, null, 2));
+  } catch {}
+}
+
+function clearCurrentListeningDevice(configDir = path.join(os.homedir(), '.config', 'robos')) {
+  const file = path.join(configDir, LISTENING_SESSION_FILE);
+  try {
+    fs.mkdirSync(configDir, { recursive: true });
+    fs.writeFileSync(file, JSON.stringify({ device: null, clearedAt: new Date().toISOString() }, null, 2));
+  } catch {}
+  return {
+    ok: true,
+    cleared: true,
+    device: null,
+    spoken: 'Cleared your current listening device for this session.',
+  };
+}
+
+/**
+ * Set (or clear) the Current Listening Device for the active session by speaker/device name, ID, IP, or object.
+ */
+function setCurrentListeningDevice(queryOrDevice, { configDir = path.join(os.homedir(), '.config', 'robos'), devices = null } = {}) {
+  const list = Array.isArray(devices) ? devices : loadCastDevices(configDir);
+  const availSpeakers = filterRealListeningDevices(list);
+
+  if (queryOrDevice && typeof queryOrDevice === 'object' && queryOrDevice.ip) {
+    const now = new Date().toISOString();
+    const chosen = {
+      ip: queryOrDevice.ip,
+      id: queryOrDevice.id || `spk-${queryOrDevice.ip}`,
+      name: queryOrDevice.name || (queryOrDevice.ip === 'local' ? 'This Computer (Local)' : `Speaker (${queryOrDevice.ip})`),
+      model: queryOrDevice.model || 'Speaker',
+      deviceType: queryOrDevice.deviceType || (queryOrDevice.ip === 'local' ? 'local' : 'speaker'),
+      protocol: queryOrDevice.protocol || 'cast',
+    };
+    fs.mkdirSync(configDir, { recursive: true });
+    fs.writeFileSync(path.join(configDir, LISTENING_SESSION_FILE), JSON.stringify({ device: chosen, setAt: now, lastActiveAt: now }, null, 2));
+    return {
+      ok: true,
+      device: chosen,
+      devices: availSpeakers,
+      spoken: `Set your current listening device for this session to ${cleanSpeakerNameForSpeech(chosen.name)}.`,
+    };
+  }
+
+  const rawQ = String(queryOrDevice ?? '').trim();
+  if (!rawQ || /^(?:none|null|clear|off|unset|reset|disconnect)$/i.test(rawQ)) {
+    return clearCurrentListeningDevice(configDir);
+  }
+
+  let chosen = null;
+  if (/^(?:local|this\s+computer|my\s+computer|computer|desktop|laptop|workstation)$/i.test(rawQ)) {
+    chosen = { ip: 'local', id: 'local', name: 'This Computer (Local)', model: 'Local Audio', deviceType: 'local', protocol: 'local' };
+  } else if (/^(?:all\s+speakers|every\s+speaker|everywhere|all)$/i.test(rawQ)) {
+    chosen = { ip: 'all', id: 'all', name: 'All Speakers', model: 'Multi-Room Cast', deviceType: 'speaker', protocol: 'cast' };
+  } else {
+    const qFold = foldText(rawQ);
+    chosen = list.find(d => d.ip === rawQ || (d.id && d.id.toLowerCase() === rawQ.toLowerCase()) || foldText(d.name || '') === qFold) || null;
+    if (!chosen) {
+      // Prefer speaker devices when resolving ambiguous names like "Basement" if a speaker matches
+      const resolvedSpk = availSpeakers.length ? resolveTargetDevice(`${rawQ} speaker`, { configDir, devices: availSpeakers }) : null;
+      const resolvedAny = resolveTargetDevice(rawQ, { configDir, devices: list });
+      if (resolvedAny && resolvedAny.ip !== 'local') {
+        chosen = list.find(d => d.ip === resolvedAny.ip) || resolvedAny;
+      } else if (resolvedSpk && resolvedSpk.ip !== 'local') {
+        chosen = availSpeakers.find(d => d.ip === resolvedSpk.ip) || resolvedSpk;
+      }
+    }
+    if (!chosen && qFold) {
+      chosen = availSpeakers.find(d => foldText(d.name || '').includes(qFold) || cleanSpeakerNameForSpeech(d.name).toLowerCase().includes(qFold)) || null;
+    }
+  }
+
+  if (!chosen) {
+    const names = (availSpeakers.length ? availSpeakers : list).map(d => cleanSpeakerNameForSpeech(d.name)).join(', ');
+    const error = names
+      ? `Could not match "${rawQ}" to an available listening device. Available devices: ${names}.`
+      : `No listening devices were found on the network yet. Open RobOS Audio Player or say "list listening devices" to scan.`;
+    return { ok: false, error, spoken: error, devices: availSpeakers };
+  }
+
+  const now = new Date().toISOString();
+  const normalizedChosen = {
+    ip: chosen.ip,
+    id: chosen.id || `spk-${chosen.ip}`,
+    name: chosen.name,
+    model: chosen.model || 'Google Cast Speaker',
+    deviceType: chosen.deviceType || 'speaker',
+    protocol: chosen.protocol || 'cast',
+  };
+  fs.mkdirSync(configDir, { recursive: true });
+  fs.writeFileSync(path.join(configDir, LISTENING_SESSION_FILE), JSON.stringify({
+    device: normalizedChosen,
+    setAt: now,
+    lastActiveAt: now,
+  }, null, 2));
+
+  return {
+    ok: true,
+    device: normalizedChosen,
+    devices: availSpeakers,
+    spoken: `Set your current listening device for this session to ${cleanSpeakerNameForSpeech(normalizedChosen.name)}.`,
+  };
+}
+
+/**
+ * Parse voice commands that inspect, list, set, or clear the session's Current Listening Device:
+ *   - "set current listening device to Kitchen speaker" / "set output device to Master Bedroom clock"
+ *   - "use Kitchen speaker as my listening device" / "listen on Kitchen speaker"
+ *   - "what is my current listening device?" / "list listening devices" / "clear current listening device"
+ */
+function parseListeningDeviceCommand(cleanedText, {
+  configDir = path.join(os.homedir(), '.config', 'robos'),
+  devices = null,
+} = {}) {
+  const qFull = foldText(cleanedText).replace(/\s+(?:please|right\s+now|now|for\s+me|for\s+us|for\s+this\s+session)$/, '').trim();
+  if (!qFull) return null;
+
+  const DEV_NOUN = String.raw`(?:listening\s+device|output\s+device|audio\s+output(?:\s+device)?|audio\s+device|music\s+speaker|speaker)`;
+
+  // 1. List available speakers / listening devices
+  if (new RegExp(`^(?:list|show|what\\s+are|read)\\s+(?:(?:my|our|the|all)\\s+)?(?:paired\\s+|configured\\s+|available\\s+)?(?:robos\\s+)?(?:listening\\s+devices?|output\\s+devices?|audio\\s+devices?|speakers?)$`).test(qFull) ||
+      new RegExp(`^(?:what|which)\\s+(?:listening\\s+devices?|output\\s+devices?|speakers?)\\s+(?:do\\s+(?:i|we)\\s+have|are\\s+(?:paired|available|connected|online))$`).test(qFull)) {
+    return { type: 'listening-device-control', action: 'list-listening-devices' };
+  }
+
+  // 2. Query current listening device
+  if (new RegExp(`^(?:what|which)\\s+(?:is\\s+)?(?:my|our|the)\\s+(?:current\\s+|active\\s+)?${DEV_NOUN}$`).test(qFull) ||
+      new RegExp(`^(?:what|which)\\s+${DEV_NOUN}\\s+(?:is\\s+(?:active|selected|connected|current)|(?:am\\s+i|are\\s+we)\\s+(?:using|listening\\s+on|connected\\s+to))$`).test(qFull)) {
+    return { type: 'listening-device-control', action: 'get-listening-device' };
+  }
+
+  // 3. Clear / disconnect current listening device
+  if (new RegExp(`^(?:clear|unset|remove|reset|disable|disconnect)\\s+(?:from\\s+)?(?:my\\s+|our\\s+|the\\s+)?(?:current\\s+|active\\s+)?${DEV_NOUN}$`).test(qFull)) {
+    return { type: 'listening-device-control', action: 'clear-listening-device' };
+  }
+
+  // 4. Set / switch current listening device
+  const setPatterns = [
+    new RegExp(`^(?:set|change|update|switch|select|choose)\\s+(?:my\\s+|our\\s+|the\\s+)?(?:current\\s+|session\\s+)?${DEV_NOUN}\\s+(?:for\\s+this\\s+session\\s+)?(?:to|as)\\s+(.+)$`),
+    new RegExp(`^(?:set|change|update|switch)\\s+(?:my\\s+|our\\s+|the\\s+)?(?:current\\s+)?output\\s+(?:for\\s+this\\s+session\\s+)?to\\s+(.+)$`),
+    new RegExp(`^(?:make|use)\\s+(.+?)\\s+(?:as\\s+)?(?:my\\s+|our\\s+|the\\s+)?(?:current\\s+|session\\s+)?${DEV_NOUN}$`),
+    new RegExp(`^(?:my\\s+|our\\s+|the\\s+)?(?:current\\s+|session\\s+)?${DEV_NOUN}\\s+(?:is|should\\s+be)\\s+(.+)$`),
+    /^(?:move|switch|send|transfer|cast)\s+(?:(?:the|my|our|current)\s+)?(?:music|song|songs|audio|track|tracks)\s+(?:to|on|onto)\s+(.+)$/,
+  ];
+  for (const re of setPatterns) {
+    const m = qFull.match(re);
+    if (m && m[1] && m[1].trim()) {
+      const targetQuery = m[1].replace(/\s+for\s+this\s+session$/i, '').trim();
+      // Let Smart TV handler own explicit TV-only default commands if someone said "output to Roku TV" for video, unless they asked for speaker/listening device
+      return { type: 'listening-device-control', action: 'set-listening-device', targetQuery };
+    }
+  }
+
+  // "listen on Kitchen speaker" / "connect to Kitchen speaker" (NOT "listen to {artist}")
+  const listenOnMatch = qFull.match(/^(?:listen\s+on|connect\s+(?:audio\s+)?to)\s+(.+)$/);
+  if (listenOnMatch && listenOnMatch[1]) {
+    const cand = listenOnMatch[1].trim();
+    const list = Array.isArray(devices) ? devices : loadCastDevices(configDir);
+    const resolved = resolveTargetDevice(cand, { configDir, devices: list });
+    if ((resolved && (resolved.deviceType === 'speaker' || resolved.ip === 'local' || resolved.ip === 'all')) || /\bspeaker|clock\b/i.test(cand)) {
+      return { type: 'listening-device-control', action: 'set-listening-device', targetQuery: cand };
+    }
+  }
+
+  return null;
+}
+
 /**
  * Resolve a natural language device phrase (e.g. "the roku", "living room tv",
  * "kitchen speaker", "basement tv", "bedroom clock") to the closest configured
@@ -2078,6 +2338,10 @@ function classifyVoiceCommand(cleanedText, { audioTracks = null, movieTracks = n
   const watchIntent = parseWatchStatusQuery(cleanedText, { configDir });
   if (watchIntent) return { ...watchIntent, query: cleanedText };
 
+  // 1.65 Session Current Listening Device Commands ("set current listening device to Kitchen speaker", "what is my listening device?", "list speakers")
+  const listeningDevIntent = parseListeningDeviceCommand(cleanedText, { configDir });
+  if (listeningDevIntent) return { ...listeningDevIntent, query: cleanedText };
+
   // 1.7 Specialized Cinema & Named Smart TV Commands ("play a random episode of House on the Roku TV", "move playback to the Roku TV", etc.)
   const cinemaSpecial = parseCinemaSpecialCommand(cleanedText, { configDir, movieTracks });
   if (cinemaSpecial) return { ...cinemaSpecial, query: cleanedText };
@@ -2390,6 +2654,106 @@ async function executeNabuCommand(rawTranscript, {
       response: ((res.spoken || res.error || `I could not start ${intent.title}.`) + tvNote).trim(),
       data: { ...(res || {}), targetDevice: targetDev || null, targetIp: targetDev ? targetDev.ip : null },
     };
+  }
+
+  // ── 0.68 Session Current Listening Device Controls (set / get / clear / list speakers) ──
+  if (intent.type === 'listening-device-control') {
+    let currentDevices = castDevices;
+    let realListening = filterRealListeningDevices(currentDevices);
+    if (!realListening.length && autoLaunchPlayers) {
+      currentDevices = await discoverAndCacheCastSpeakers(configDir);
+      realListening = filterRealListeningDevices(currentDevices);
+    }
+
+    if (intent.action === 'list-listening-devices') {
+      const speakers = realListening;
+      const cur = getCurrentListeningDevice(configDir, currentDevices);
+      if (!speakers.length) {
+        return {
+          ok: true,
+          skill: 'listening-device-control',
+          cleanedCommand: cleaned,
+          robosUser: activeUser,
+          response: 'No network speakers were discovered on your LAN yet. You can also say "set current listening device to this computer".',
+          data: { speakers: [], currentListeningDevice: cur },
+        };
+      }
+      const names = speakers.map(s => `${cleanSpeakerNameForSpeech(s.name)}${cur && cur.ip === s.ip ? ' [Current]' : ''}`).join(', ');
+      return {
+        ok: true,
+        skill: 'listening-device-control',
+        cleanedCommand: cleaned,
+        robosUser: activeUser,
+        targetDevice: cur,
+        targetIp: cur ? cur.ip : null,
+        response: `Available listening devices: ${names}.${cur ? ` Current session listening device: ${cleanSpeakerNameForSpeech(cur.name)}.` : ' No current listening device is set for this session yet.'}`,
+        data: { speakers, currentListeningDevice: cur },
+      };
+    }
+
+    if (intent.action === 'get-listening-device') {
+      const cur = getCurrentListeningDevice(configDir, currentDevices);
+      const response = cur
+        ? `Your current listening device for this session is ${cleanSpeakerNameForSpeech(cur.name)}${cur.ip && cur.ip !== 'local' && cur.ip !== 'all' ? ` (${cur.ip})` : ''}.`
+        : 'No current listening device is set for this session yet. Say "set current listening device to Kitchen speaker" to choose one.';
+      return {
+        ok: true,
+        skill: 'listening-device-control',
+        cleanedCommand: cleaned,
+        robosUser: activeUser,
+        targetDevice: cur,
+        targetIp: cur ? cur.ip : null,
+        response,
+        data: { currentListeningDevice: cur },
+      };
+    }
+
+    if (intent.action === 'clear-listening-device') {
+      const res = clearCurrentListeningDevice(configDir);
+      if (autoLaunchPlayers) {
+        const audioClient = createAudioPlayerClient({ configDir });
+        if (audioClient.running() && typeof audioClient.setOutput === 'function') {
+          await audioClient.setOutput({ clear: true, robosUser: activeUser }).catch(() => {});
+        }
+      }
+      return {
+        ok: true,
+        skill: 'listening-device-control',
+        cleanedCommand: cleaned,
+        robosUser: activeUser,
+        targetDevice: null,
+        targetIp: null,
+        response: res.spoken,
+        data: res,
+      };
+    }
+
+    if (intent.action === 'set-listening-device') {
+      const res = setCurrentListeningDevice(intent.targetQuery, {
+        configDir,
+        devices: currentDevices,
+      });
+      if (res.ok && res.device && autoLaunchPlayers) {
+        const audioClient = createAudioPlayerClient({ configDir });
+        if (audioClient.running() && typeof audioClient.setOutput === 'function') {
+          await audioClient.setOutput({
+            targetIp: res.device.ip,
+            deviceName: cleanSpeakerNameForSpeech(res.device.name),
+            robosUser: activeUser,
+          }).catch(() => {});
+        }
+      }
+      return {
+        ok: res.ok,
+        skill: 'listening-device-control',
+        cleanedCommand: cleaned,
+        robosUser: activeUser,
+        targetDevice: res.device || null,
+        targetIp: res.device ? res.device.ip : null,
+        response: res.spoken || res.error,
+        data: res,
+      };
+    }
   }
 
   // ── 0.7 Smart TV Session Controls (list TVs, default TV, open 10-foot library, transfer playback, stop casting) ──
@@ -2726,6 +3090,74 @@ async function executeNabuCommand(rawTranscript, {
         .replace(/\s+in RobOS Movie Player$/, ` on ${defaultSmartTv.name}`);
     }
 
+    if (chosenKind === 'audio') {
+      if (match.targetDevice) {
+        // Explicit "on Kitchen speaker" / "on this computer" sets the listening device for this session too
+        setCurrentListeningDevice(match.targetDevice, { configDir, devices: castDevices });
+      } else {
+        let sessionDevice = getCurrentListeningDevice(configDir, castDevices);
+        if (!sessionDevice && autoLaunchPlayers) {
+          const runningAudio = createAudioPlayerClient({ configDir });
+          if (runningAudio.running()) {
+            const aSt = await runningAudio.status();
+            if (aSt && aSt.output === 'cast' && Array.isArray(aSt.speakerIps) && aSt.speakerIps.length > 0) {
+              const activeIp = aSt.speakerIps.length > 1 ? 'all' : aSt.speakerIps[0];
+              const foundDev = activeIp === 'all'
+                ? { ip: 'all', id: 'all', name: 'All Speakers', deviceType: 'speaker', protocol: 'cast' }
+                : (castDevices.find(d => d.ip === activeIp) || { ip: activeIp, id: `spk-${activeIp}`, name: `Speaker (${activeIp})`, deviceType: 'speaker', protocol: 'cast' });
+              setCurrentListeningDevice(foundDev, { configDir, devices: castDevices });
+              sessionDevice = foundDev;
+            }
+          }
+        }
+
+        if (!sessionDevice) {
+          let currentDevices = castDevices;
+          let availSpeakers = filterRealListeningDevices(currentDevices);
+          if (!availSpeakers.length && autoLaunchPlayers) {
+            currentDevices = await discoverAndCacheCastSpeakers(configDir);
+            availSpeakers = filterRealListeningDevices(currentDevices);
+          }
+          const displayNames = availSpeakers.map(d => cleanSpeakerNameForSpeech(d.name));
+          const exampleDev = displayNames[0] || 'Kitchen speaker';
+          const cleanReq = String(cleaned || '').replace(/[.!?]+$/, '').trim();
+          const availClause = displayNames.length
+            ? ` Available devices: ${displayNames.join(', ')}.`
+            : '';
+          const promptResponse = `You need to set a current listening device for this session first.${availClause} Say "set current listening device to ${exampleDev}", or "${cleanReq} on ${exampleDev}".`;
+          return {
+            ok: false,
+            needsListeningDevice: true,
+            skill: 'audio-play',
+            cleanedCommand: cleaned,
+            robosUser: activeUser,
+            availableDevices: availSpeakers,
+            response: promptResponse,
+            data: {
+              kind: 'audio',
+              needsListeningDevice: true,
+              pendingQuery: cleaned,
+              bestTrack: match.bestTrack,
+              trackCount: match.tracks.length,
+              availableDevices: availSpeakers,
+              robosUser: activeUser,
+            },
+          };
+        }
+
+        touchCurrentListeningDevice(configDir);
+        match.targetDevice = sessionDevice;
+        match.targetIp = sessionDevice.ip;
+        match.onSpeaker = sessionDevice.ip !== 'local';
+        if (sessionDevice.ip !== 'local') {
+          const spkLabel = cleanSpeakerNameForSpeech(sessionDevice.name);
+          if (!String(match.summaryText || '').toLowerCase().includes(` on ${spkLabel.toLowerCase()}`)) {
+            match.summaryText = `${match.summaryText} on ${spkLabel}`;
+          }
+        }
+      }
+    }
+
     const appId = chosenKind === 'movie' ? 'movie-player' : 'audio-player';
     const factory = chosenKind === 'movie' ? createMoviePlayerClient : createAudioPlayerClient;
     let playResult = null;
@@ -2821,6 +3253,12 @@ module.exports = {
   loadCastDevices,
   getDefaultSmartTv,
   setDefaultSmartTv,
+  getCurrentListeningDevice,
+  setCurrentListeningDevice,
+  clearCurrentListeningDevice,
+  touchCurrentListeningDevice,
+  discoverAndCacheCastSpeakers,
+  parseListeningDeviceCommand,
   resolveTargetDevice,
   extractDeviceFromCommand,
   parseSeasonEpisode,

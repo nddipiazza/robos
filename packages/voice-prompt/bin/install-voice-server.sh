@@ -26,6 +26,12 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 try {
+  // Start each Voice Server boot with a fresh listening-device session so music never
+  // plays silently or unexpectedly before the user chooses a current listening device.
+  const sessFile = path.join(os.homedir(), '.config', 'robos', 'listening-session.json');
+  if (fs.existsSync(sessFile)) fs.unlinkSync(sessFile);
+} catch {}
+try {
   const kokoroModel = path.join(os.homedir(), '.local/share/kokoro/kokoro-v1.0.onnx');
   if (!fs.existsSync(kokoroModel)) {
     voiceMain.ttsEngine.savePrefs({ engine: 'piper', voice: 'en_US-lessac-medium' });

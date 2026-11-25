@@ -1444,6 +1444,43 @@ export default function App() {
           handlePlayPrev();
           return { ok: true };
         },
+        setOutputFromControl: async ({ targetIp, deviceName, clear, robosUser } = {}) => {
+          if (robosUser) setActiveRobosUser(robosUser);
+          if (clear) {
+            try { await window.robosAudio?.castStopAll?.(); } catch {}
+            playerRef.current?.audio?.current?.pause();
+            setActiveCastSession(null);
+            setIsPlaying(false);
+            setOutputTarget('local');
+            showStatus('🔇 Disconnected listening device');
+            return { ok: true, outputTarget: 'local', cleared: true };
+          }
+          const nextTarget = targetIp || 'local';
+          if (nextTarget === 'local') {
+            try { await window.robosAudio?.castStopAll?.(); } catch {}
+            setActiveCastSession(null);
+            setOutputTarget('local');
+            showStatus('🎧 Listening device set to This Computer');
+            return { ok: true, outputTarget: 'local' };
+          }
+          // Ensure speaker list contains the selected device if discovered
+          if (nextTarget !== 'all' && !speakers.some(s => s.ip === nextTarget)) {
+            setSpeakers(prev => prev.some(s => s.ip === nextTarget)
+              ? prev
+              : [...prev, { ip: nextTarget, name: deviceName || `Speaker (${nextTarget})`, model: 'Google Cast Speaker', online: true }]);
+          }
+          const wasPlaying = isPlaying || !!(audio && !audio.paused);
+          const curSong = playlist[currentTrackIndex] || null;
+          setOutputTarget(nextTarget);
+          if (wasPlaying && curSong) {
+            const pos = outputTarget === 'local' && audio ? audio.currentTime : castClock.now();
+            playerRef.current?.audio?.current?.pause();
+            await castTrack(nextTarget, curSong, { startAt: pos || 0 });
+            setIsPlaying(true);
+          }
+          showStatus(`🔊 Current listening device: ${deviceName || nextTarget}`);
+          return { ok: true, outputTarget: nextTarget, transferred: Boolean(wasPlaying && curSong) };
+        },
       };
     },
     // After a DJ break the queue may have changed: find the planned song again.

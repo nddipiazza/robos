@@ -251,6 +251,14 @@ app.whenReady().then(() => {
     }).catch(err => console.error('Startup folder check failed:', err.message));
   });
 
+  // Discover LAN Google Cast speakers in the background so Voice & Session Listening Device
+  // resolution immediately knows every speaker on the network even on a fresh install.
+  setTimeout(() => {
+    castService.scanSubnet()
+      .then(devs => persistDiscoveredSpeakersToConfig(devs))
+      .catch(() => {});
+  }, 2500);
+
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
@@ -316,6 +324,12 @@ const controlHandlers = {
     previous: (body = {}) => askRenderer('previous', { robosUser: body.robosUser || null }),
     pause: (body = {}) => askRenderer('pause', { robosUser: body.robosUser || null }),
     resume: (body = {}) => askRenderer('resume', { robosUser: body.robosUser || null }),
+    setOutput: (body = {}) => askRenderer('set-output', {
+      targetIp: body.targetIp || null,
+      deviceName: body.deviceName || null,
+      clear: Boolean(body.clear),
+      robosUser: body.robosUser || null,
+    }),
 };
 
 // Play history, answered from the portable history file without the renderer.
@@ -399,9 +413,44 @@ function scanUpdates({ onDone } = {}) {
 
 // ── IPC Handlers ────────────────────────────────────────────────────────────
 
+function persistDiscoveredSpeakersToConfig(discovered = []) {
+  if (!Array.isArray(discovered) || !discovered.length) return;
+  try {
+    const cfgDir = process.env.ROBOS_CONFIG_DIR || path.join(os.homedir(), '.config', 'robos');
+    const spkFile = path.join(cfgDir, 'home-speakers.json');
+    let existing = [];
+    if (fs.existsSync(spkFile)) {
+      const parsed = JSON.parse(fs.readFileSync(spkFile, 'utf8'));
+      if (Array.isArray(parsed.speakers)) existing = parsed.speakers;
+    }
+    const byIp = new Map(existing.filter(s => s && s.ip).map(s => [s.ip, s]));
+    for (const d of discovered) {
+      if (!d || !d.ip) continue;
+      const prev = byIp.get(d.ip) || {};
+      byIp.set(d.ip, {
+        ...prev,
+        ip: d.ip,
+        name: d.name || prev.name || `Speaker (${d.ip})`,
+        model: d.model || prev.model || 'Google Cast Speaker',
+        protocol: prev.protocol || 'google-cast',
+        online: true,
+        volume: typeof d.volume === 'number' ? d.volume : (prev.volume ?? 0.65),
+        muted: Boolean(d.muted ?? prev.muted),
+        lastSeen: d.lastSeen || Date.now(),
+      });
+    }
+    fs.mkdirSync(cfgDir, { recursive: true });
+    fs.writeFileSync(spkFile, JSON.stringify({ updatedAt: new Date().toISOString(), speakers: [...byIp.values()] }, null, 2));
+  } catch (err) {
+    console.warn('[AudioPlayer] Could not persist discovered speakers:', err.message);
+  }
+}
+
 ipcMain.handle('audio:discover-speakers', async () => {
   try {
-    return await castService.scanSubnet();
+    const found = await castService.scanSubnet();
+    persistDiscoveredSpeakersToConfig(found);
+    return found;
   } catch (err) {
     console.error('[AudioPlayer] Error scanning speakers:', err);
     return [];

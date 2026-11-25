@@ -410,6 +410,89 @@ describe('RobOS Home Speaker Tests', () => {
       assert.strictEqual(audioRes.targetIp, '192.168.1.10');
       assert.ok(audioRes.summaryText.includes('Kitchen speaker'));
     });
+
+    it('blocks session music playback until a current listening device is set, and plays on that device once set', async () => {
+      const os = require('os');
+      const router = require(path.join(APP_DIR, 'lib', 'nabu-command-router'));
+      const tmpCfg = fs.mkdtempSync(path.join(os.tmpdir(), 'robos-listening-session-'));
+      try {
+        fs.writeFileSync(path.join(tmpCfg, 'audio-library.json'), JSON.stringify({
+          tracks: [
+            { id: 'dt1', title: 'Void of Tranquility', artist: 'Dark Tranquility', album: 'Trail Of Life Decayed', trackNumber: 1 },
+            { id: 'dt2', title: "Misery's Crown", artist: 'Dark Tranquillity', album: 'Fiction', trackNumber: 3 },
+          ],
+        }));
+        fs.writeFileSync(path.join(tmpCfg, 'home-speakers.json'), JSON.stringify({
+          speakers: [
+            { ip: '192.168.1.10', name: 'Kitchen speaker', model: 'Google Cast Speaker', protocol: 'google-cast', online: true },
+            { ip: '192.168.1.2', name: 'Master Bedroom clock', model: 'Google Cast Speaker', protocol: 'google-cast', online: true },
+          ],
+        }));
+
+        // 1. Without a session listening device set, playing music stops and prompts the user
+        const blocked = await router.executeNabuCommand('place the dark tranquility.', {
+          configDir: tmpCfg,
+          autoLaunchPlayers: false,
+        });
+        assert.strictEqual(blocked.ok, false);
+        assert.strictEqual(blocked.needsListeningDevice, true);
+        assert.strictEqual(blocked.skill, 'audio-play');
+        assert.match(blocked.response, /set a current listening device/i);
+        assert.match(blocked.response, /Kitchen speaker/);
+
+        // 2. Setting the current listening device for the session succeeds
+        const setRes = await router.executeNabuCommand('set my current listening device to Kitchen speaker', {
+          configDir: tmpCfg,
+          autoLaunchPlayers: false,
+        });
+        assert.strictEqual(setRes.ok, true);
+        assert.strictEqual(setRes.skill, 'listening-device-control');
+        assert.strictEqual(setRes.targetIp, '192.168.1.10');
+        assert.match(setRes.response, /Kitchen speaker/);
+
+        const getRes = await router.executeNabuCommand('what is my current listening device?', {
+          configDir: tmpCfg,
+          autoLaunchPlayers: false,
+        });
+        assert.strictEqual(getRes.ok, true);
+        assert.strictEqual(getRes.targetIp, '192.168.1.10');
+        assert.match(getRes.response, /Kitchen speaker/);
+
+        // 3. Playing music now automatically uses Kitchen speaker for this session
+        const allowed = await router.executeNabuCommand('place the dark tranquility.', {
+          configDir: tmpCfg,
+          autoLaunchPlayers: false,
+        });
+        assert.strictEqual(allowed.ok, true);
+        assert.strictEqual(allowed.skill, 'audio-play');
+        assert.strictEqual(allowed.targetIp, '192.168.1.10');
+        assert.match(allowed.response, /on Kitchen speaker/);
+
+        // 4. Clearing the session listening device re-arms the prompt gate
+        const clearRes = await router.executeNabuCommand('clear current listening device', {
+          configDir: tmpCfg,
+          autoLaunchPlayers: false,
+        });
+        assert.strictEqual(clearRes.ok, true);
+        const blockedAgain = await router.executeNabuCommand('play Void of Tranquility', {
+          configDir: tmpCfg,
+          autoLaunchPlayers: false,
+        });
+        assert.strictEqual(blockedAgain.ok, false);
+        assert.strictEqual(blockedAgain.needsListeningDevice, true);
+
+        // 5. Explicit "on Master Bedroom clock" in one command both plays and sets the session listening device
+        const explicitPlay = await router.executeNabuCommand('play Void of Tranquility on Master Bedroom clock', {
+          configDir: tmpCfg,
+          autoLaunchPlayers: false,
+        });
+        assert.strictEqual(explicitPlay.ok, true);
+        assert.strictEqual(explicitPlay.targetIp, '192.168.1.2');
+        assert.strictEqual(router.getCurrentListeningDevice(tmpCfg).ip, '192.168.1.2');
+      } finally {
+        fs.rmSync(tmpCfg, { recursive: true, force: true });
+      }
+    });
   });
 
 });
