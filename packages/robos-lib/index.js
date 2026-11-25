@@ -124,6 +124,7 @@ const voiceModule = require('./voice');
 const ovpnProviders = require('./ovpn-providers');
 const vpnSandboxEngine = require('./vpn-sandbox-engine');
 const dashboardEngine = require('./dashboard-engine');
+const usersGroups = require('./users-groups');
 
 module.exports = {
   CATEGORIES,
@@ -153,6 +154,7 @@ module.exports = {
   DASHBOARD_LAYOUTS: dashboardEngine.DASHBOARD_LAYOUTS,
   DASHBOARD_WIDGET_CATALOG: dashboardEngine.DASHBOARD_WIDGET_CATALOG,
   createDashboardEngine: dashboardEngine.createDashboardEngine,
+  usersGroups,
 };
 
 

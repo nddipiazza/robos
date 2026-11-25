@@ -561,6 +561,70 @@ const SKILL_VOICE_DEFINITIONS = [
     action: 'shopping-lists',
     hasWildcard: true,
   },
+  {
+    id: 'robos-users',
+    title: 'Manage RobOS Users & Rich Profiles',
+    category: 'People & Groups',
+    description: 'List RobOS users, switch active user, query user emails/birthdays/roles/hobbies/music/RPG characters, add or update users, and sync to RobOS Services',
+    matchers: [
+      'who are the robos users',
+      'list robos users',
+      'show all robos users',
+      'how many robos users',
+      'list family members',
+      'list household members',
+      'who am i',
+      'who is the active robos user',
+      'what robos user am i',
+      'switch robos user to',
+      'set active user to',
+      'switch profile to',
+      'tell me about',
+      'family birthdays',
+      'upcoming birthdays',
+      'add robos user',
+      'create robos user',
+      'remove robos user',
+      'delete robos user',
+      'sync robos users',
+      'sync robos users and groups',
+    ],
+    action: 'robos-users',
+    hasWildcard: true,
+  },
+  {
+    id: 'robos-groups',
+    title: 'Manage RobOS Groups & Memberships',
+    category: 'People & Groups',
+    description: 'List RobOS groups (Family, Household, Dipiazza Kids, Game Night, etc.), inspect members and emails, create/delete groups, add/remove members, and sync to RobOS Services',
+    matchers: [
+      'list robos groups',
+      'show robos groups',
+      'what robos groups do we have',
+      'how many robos groups',
+      'list all groups',
+      'who is in the * group',
+      'who is in the family group',
+      'who is in the household group',
+      'who is in the dipiazza kids group',
+      'who is in the game night group',
+      'list members of',
+      'show members of',
+      'what are the emails for the * group',
+      'emails for the * group',
+      'what groups is * in',
+      'which robos groups does * belong to',
+      'create a robos group called',
+      'create robos group',
+      'delete robos group',
+      'remove robos group',
+      'add * to the * group',
+      'remove * from the * group',
+      'sync robos groups',
+    ],
+    action: 'robos-groups',
+    hasWildcard: true,
+  },
 ];
 
 /**
@@ -673,6 +737,15 @@ function generateAppMatchers(appId, label) {
     phrases.add('open shopping list');
     phrases.add('launch shopping lists');
     phrases.add('household shopping lists');
+  } else if (appId === 'people-directory') {
+    phrases.add('open robos users');
+    phrases.add('open people directory');
+    phrases.add('open user profiles');
+    phrases.add('launch robos users');
+  } else if (appId === 'group-manager') {
+    phrases.add('open robos groups');
+    phrases.add('open group manager');
+    phrases.add('launch group manager');
   }
 
   return Array.from(phrases);

@@ -190,6 +190,8 @@ plugins/
 | **`fix-media-metadata`** | `/fix-media-metadata` | Inspect, extract, enrich, and write media metadata and cover art across all known formats using open-source tools (`music-metadata`, `ffmpeg`/`ffprobe`, MusicBrainz CC0, Cover Art Archive, LRCLIB) |
 | **`shopping-lists`** | `/shopping-lists` | Manage Household Shopping Lists (Grocery, Target, Costco) via CLI, natural-language text commands, Smart Multi-Store paste syntax (`@grocery`, `@target`, `@costco`), printable checklists, and two-way Google Docs / Google Drive sync (`node packages/shopping-lists/bin/shopping-lists.js`) |
 | **`install-daw-instruments`** | `/install-daw-instruments` | Download and manage open-source drum kits (`gm-rock-kit`, `virtuosity-cc0`, `tr-808-kit`, `sfzinstruments/*`) and Linux LV2/VST studio plugins for RobOS DAW Studio into `~/.local/share/robos/daw-studio/instruments/` without committing audio samples to Git (`node packages/daw-studio/bin/daw-instruments.js`) |
+| **`robos-users`** | `/robos-users` | Manage RobOS Users (`~/.config/robos/people/`), active user identity (`whoami` / `switch`), rich user profile & fact queries (email, birthday, role, hobbies, music rules, RPG/BG3 characters, gamer tag), Voice Assistant commands, and RobOS Services sync (`./packages/robos-cli/robos-users`) |
+| **`robos-groups`** | `/robos-groups` | Manage RobOS Groups (`~/.config/robos/groups/`), household/family/kids/team memberships, group email rosters, atomic two-way user-group sync, Voice Assistant commands, and RobOS Services sync (`./packages/robos-cli/robos-groups`) |
 
 ---
 

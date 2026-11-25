@@ -56,7 +56,9 @@
     "movie-watchlist",
     "send-email-thunderbird",
     "shopping-lists",
-    "install-daw-instruments"
+    "install-daw-instruments",
+    "robos-users",
+    "robos-groups"
   ],
   "commands": [
     "view-task-plan",
@@ -106,7 +108,9 @@
     "movie-watchlist",
     "send-email-thunderbird",
     "shopping-lists",
-    "install-daw-instruments"
+    "install-daw-instruments",
+    "robos-users",
+    "robos-groups"
   ],
   "compatibility": {
     "claude": ">=1.0.0",

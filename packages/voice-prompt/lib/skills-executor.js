@@ -39,6 +39,8 @@ class SkillsExecutor {
       { id: 'media-next-episode', label: 'Continue Watching a Show', intent: 'Play the next episode of a show in RobOS Movie Player, resuming the one in progress', patterns: ['continue watching [show]', 'play the next episode of [show]'] },
       { id: 'shopping-lists', label: 'Manage Household Shopping Lists (Grocery, Target, Costco)', intent: 'Add, check off, remove, adjust quantity, sync with Google Docs/Drive, or read items on Grocery, Target, and Costco shopping lists', patterns: ['add [items] to grocery/target/costco list', 'check off [item] on shopping list', 'remove [item] from target list', 'what is on my costco list', 'clear checked on grocery list'] },
       { id: 'google-calendar', label: 'Manage Google Calendar, Named Family Calendars & Access Google Doc', intent: 'Create/list Google Calendar events on Named Calendars (Family, Primary), list named calendars, or sync the 1-button Calendar Request Google Doc', patterns: ['add [event] to family calendar', 'schedule [event] on [date] at [time]', 'what google calendars do I have', 'sync calendar google doc'] },
+      { id: 'robos-users', label: 'Manage RobOS Users & Profiles', intent: 'List RobOS users, check/switch active user, ask about user emails/birthdays/roles/hobbies/music/BG3 characters, add/update/remove users, and sync to RobOS Services', patterns: ['who are the robos users', 'who am I', 'switch robos user to [name]', 'tell me about [user]', 'what is [user]\'s email', 'what music does [user] like', 'sync robos users and groups to [host]'] },
+      { id: 'robos-groups', label: 'Manage RobOS Groups & Memberships', intent: 'List RobOS groups, inspect group members and emails, check what groups a user is in, create/delete groups, and add/remove group members', patterns: ['what robos groups do we have', 'who is in the [group] group', 'what are the emails for [group]', 'add [user] to the [group] group', 'remove [user] from [group]', 'create a robos group called [name]'] },
       { id: 'greeting', label: 'Casual Greeting', intent: 'Respond with a friendly greeting', patterns: ['commander', 'hi', 'hey'] },
       { id: 'ai-agent', label: 'AI Coding Agent Fallback', intent: 'General reasoning with active workspace context', patterns: ['*'] }
     ];
@@ -278,6 +280,25 @@ class SkillsExecutor {
           data: { error: errMsg },
         };
       }
+    }
+
+    // 1.65 RobOS Users & RobOS Groups Skills
+    try {
+      const usersGroups = require('../../robos-lib/users-groups');
+      const ugOpts = { homeDir: this.homeDir, configDir: this.configDir };
+      if (usersGroups.isUsersOrGroupsVoiceCommand(query, ugOpts)) {
+        const ugRes = await usersGroups.executeVoiceCommand(query, { ...ugOpts, context });
+        return {
+          ok: ugRes.ok,
+          skill: ugRes.skill || 'robos-users',
+          actionDone: ugRes.spoken || ugRes.response,
+          response: ugRes.response || ugRes.spoken,
+          ...(ugRes.error ? { error: ugRes.error } : {}),
+          data: ugRes.data || null,
+        };
+      }
+    } catch (err) {
+      console.warn('[skills-executor] RobOS Users/Groups skill error:', err.message);
     }
 
     // 1.7 Instant Clock / Date / Readiness Skills (0ms local response)
@@ -617,6 +638,15 @@ class SkillsExecutor {
       'shopping lists': { id: 'shopping-lists', label: 'RobOS Shopping Lists' },
       'shopping list': { id: 'shopping-lists', label: 'RobOS Shopping Lists' },
       'household': { id: 'household', label: 'RobOS Household' },
+      'people directory': { id: 'people-directory', label: 'RobOS People & User Profiles' },
+      'people-directory': { id: 'people-directory', label: 'RobOS People & User Profiles' },
+      'user profiles': { id: 'people-directory', label: 'RobOS People & User Profiles' },
+      'users': { id: 'people-directory', label: 'RobOS People & User Profiles' },
+      'people manager': { id: 'people-manager', label: 'RobOS People Manager' },
+      'group manager': { id: 'group-manager', label: 'RobOS Group Manager' },
+      'group-manager': { id: 'group-manager', label: 'RobOS Group Manager' },
+      'groups': { id: 'group-manager', label: 'RobOS Group Manager' },
+      'google calendar': { id: 'google-calendar', label: 'RobOS Google Calendar' },
     };
 
     let resolved = null;

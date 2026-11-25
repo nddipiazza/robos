@@ -1,0 +1,223 @@
+#!/usr/bin/env node
+'use strict';
+
+/**
+ * robos-users — CLI & Voice-command helper for RobOS Users (`~/.config/robos/people/`)
+ *
+ * Usage:
+ *   robos-users list [--group <group>] [--query <text>] [--json]
+ *   robos-users whoami [--json]
+ *   robos-users switch "<user>" [--json]
+ *   robos-users show "<user>" [--full] [--json]
+ *   robos-users ask "<user>" [<topic>] [--json]
+ *   robos-users birthdays [--json]
+ *   robos-users add "<display name>" [--email <addr>] [--nickname <nick>] [--role <role>] [--groups <g1,g2>] [--gamer-tag <tag>] [--json]
+ *   robos-users update "<user>" [--email <addr>] [--nickname <nick>] [--role <role>] [--birthday <date>] [--gamer-tag <tag>] [--hobby <hobby>] [--bio <text>] [--json]
+ *   robos-users remove "<user>" [--json]
+ *   robos-users party-profile "<user>" [--json]
+ *   robos-users kgraph [--json]
+ *   robos-users sync [--host <ip-or-host>] [--user <ssh-user>] [--port <22>] [--json]
+ *   robos-users say "<natural-language command>" [--json]
+ *
+ * Natural-language examples (`say` or direct phrase):
+ *   robos-users say "who are the robos users"
+ *   robos-users say "tell me about Diana"
+ *   robos-users say "what is Bella's email"
+ *   robos-users say "what is Diana's BG3 character"
+ *   robos-users say "what music does Diana hate"
+ *   robos-users say "switch robos user to Diana"
+ *   robos-users say "sync robos users and groups to 192.168.1.25"
+ */
+
+const fs = require('node:fs');
+const path = require('node:path');
+
+function resolveModule(relFromPackages) {
+  const candidates = [
+    process.env.ROBOS_LIB_PATH && path.resolve(process.env.ROBOS_LIB_PATH, '..', relFromPackages),
+    path.resolve(__dirname, '..', relFromPackages),
+    path.join('/usr/local/share/robos', relFromPackages),
+  ].filter(Boolean);
+  for (const p of candidates) {
+    if (fs.existsSync(p) || fs.existsSync(`${p}.js`)) return require(p);
+  }
+  return require(path.resolve(__dirname, '..', relFromPackages));
+}
+
+const ug = resolveModule('robos-lib/users-groups');
+const peopleStore = resolveModule('robos-lib/people-store');
+
+function parseArgs(argv) {
+  const out = { _: [], json: false, full: false, overwrite: false };
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i];
+    if (a === '--json') out.json = true;
+    else if (a === '--full') out.full = true;
+    else if (a === '--overwrite') out.overwrite = true;
+    else if (a === '-h' || a === '--help') out.help = true;
+    else if (a.startsWith('--')) out[a.slice(2)] = argv[++i];
+    else out._.push(a);
+  }
+  return out;
+}
+
+function usage() {
+  return fs.readFileSync(__filename, 'utf8')
+    .split('\n')
+    .filter((l) => l.startsWith(' *'))
+    .map((l) => l.slice(3))
+    .join('\n');
+}
+
+async function main() {
+  const args = parseArgs(process.argv.slice(2));
+  if (args.help || !args._.length) {
+    process.stdout.write(`${usage()}\n`);
+    process.exit(0);
+  }
+
+  const [cmd, ...rest] = args._;
+  const joined = rest.join(' ').trim();
+  const opts = args['config-dir'] ? { configDir: args['config-dir'] } : {};
+
+  let res;
+  switch (cmd) {
+    case 'list':
+    case 'ls': {
+      const list = ug.listUsers({ ...opts, group: args.group, query: args.query || joined });
+      res = {
+        ok: true,
+        count: list.length,
+        users: args.full ? list : list.map(ug.summarizeUser),
+        spoken: list.length
+          ? `RobOS Users (${list.length}):\n${list.map((u) => `  • ${u.avatar || '👤'} ${u.displayName}${u.nickname && u.nickname !== u.firstName ? ` ("${u.nickname}")` : ''} <${u.email || 'no-email'}> — ${u.relationshipRole || u.title || 'User'} [${(u.groups || []).join(', ')}]`).join('\n')}`
+          : 'No RobOS users found.',
+      };
+      break;
+    }
+    case 'whoami':
+    case 'active':
+      res = ug.getActiveUser(opts);
+      break;
+    case 'switch':
+    case 'set-active':
+      res = ug.setActiveUser(joined || args.user, opts);
+      break;
+    case 'show':
+    case 'get':
+    case 'profile': {
+      const u = ug.resolveUser(joined || args.user, { ...opts, includePhotoDataUrl: false });
+      if (!u) {
+        res = { ok: false, error: `RobOS user "${joined || args.user}" not found.` };
+      } else {
+        res = {
+          ok: true,
+          user: args.full ? u : ug.summarizeUser(u),
+          profile: u,
+          spoken: [
+            `${u.avatar || '👤'} ${u.displayName} (${u.uid})`,
+            u.relationshipRole || u.title ? `  Role:       ${[u.title, u.relationshipRole].filter(Boolean).join(' · ')}` : '',
+            u.email ? `  Email:      ${u.email}` : '',
+            u.nickname ? `  Nickname:   ${u.nickname}` : '',
+            u.gameProfile?.gamerTag ? `  Gamer Tag:  ${u.gameProfile.gamerTag}` : '',
+            u.groups?.length ? `  Groups:     ${u.groups.join(', ')}` : '',
+            u.bio ? `  Bio:        ${u.bio}` : '',
+          ].filter(Boolean).join('\n'),
+        };
+      }
+      break;
+    }
+    case 'ask':
+    case 'fact':
+      res = ug.answerUserQuestion(rest[0] || args.user, rest.slice(1).join(' ') || args.topic || 'summary', opts);
+      break;
+    case 'birthdays':
+      res = ug.listBirthdays(opts);
+      break;
+    case 'add':
+    case 'create':
+      res = ug.createUser({
+        displayName: joined || args.name,
+        uid: args.uid,
+        email: args.email,
+        phone: args.phone,
+        nickname: args.nickname,
+        username: args.username,
+        pronouns: args.pronouns,
+        birthday: args.birthday,
+        age: args.age,
+        role: args.role || args.title,
+        department: args.department,
+        bio: args.bio,
+        groups: args.groups,
+        gamerTag: args['gamer-tag'] || args.gamerTag,
+        avatar: args.avatar,
+        color: args.color,
+        overwrite: args.overwrite,
+      }, opts);
+      break;
+    case 'update':
+    case 'set':
+      res = ug.updateUser(joined || args.user, {
+        ...(args.name ? { displayName: args.name } : {}),
+        ...(args.email !== undefined ? { email: args.email } : {}),
+        ...(args.phone !== undefined ? { phone: args.phone } : {}),
+        ...(args.nickname !== undefined ? { nickname: args.nickname } : {}),
+        ...(args.birthday !== undefined ? { birthday: args.birthday } : {}),
+        ...(args.age !== undefined ? { age: args.age } : {}),
+        ...(args.role !== undefined ? { role: args.role } : {}),
+        ...(args.title !== undefined ? { title: args.title } : {}),
+        ...(args.bio !== undefined ? { bio: args.bio } : {}),
+        ...(args.groups !== undefined ? { groups: args.groups } : {}),
+        ...(args['gamer-tag'] !== undefined ? { gamerTag: args['gamer-tag'] } : {}),
+        ...(args.hobby !== undefined ? { addHobby: args.hobby } : {}),
+      }, opts);
+      break;
+    case 'remove':
+    case 'delete':
+      res = ug.deleteUser(joined || args.user, opts);
+      break;
+    case 'party-profile': {
+      const u = ug.resolveUser(joined || args.user, { ...opts, includePhotoDataUrl: false });
+      if (!u) {
+        res = { ok: false, error: `RobOS user "${joined || args.user}" not found.` };
+      } else {
+        const guest = peopleStore.buildPartyGuestProfile(u, opts);
+        res = { ok: true, partyProfile: guest, spoken: `${guest.avatar} ${guest.name} (${guest.gamerTag}) — ${guest.profileSummary}` };
+      }
+      break;
+    }
+    case 'kgraph':
+      res = ug.syncUsersGroupsKGraph(opts);
+      res.spoken = `Synced ${res.nodeCount} Users & Groups Knowledge Graph nodes to ${res.kgraphFile}.`;
+      break;
+    case 'sync':
+      if (args.host || joined) {
+        res = await ug.syncUsersAndGroupsToHost({ host: args.host || joined, user: args.user, port: args.port }, opts);
+      } else {
+        ug.rebuildSearchIndexes(opts);
+        ug.syncUsersGroupsKGraph(opts);
+        const local = ug.syncLocalRobosServicesData(opts);
+        res = { ...local, spoken: `Synced ${local.userCount} RobOS users and ${local.groupCount} RobOS groups into local RobOS Services (${local.dataFile}).` };
+      }
+      break;
+    case 'say':
+    default: {
+      const phrase = cmd === 'say' ? joined : [cmd, ...rest].join(' ').trim();
+      res = await ug.executeVoiceCommand(phrase, opts);
+      break;
+    }
+  }
+
+  if (args.json) {
+    process.stdout.write(`${JSON.stringify(res, null, 2)}\n`);
+  } else {
+    process.stdout.write(`${(res && (res.spoken || res.response || res.error)) || JSON.stringify(res)}\n`);
+  }
+  process.exit(res && res.ok === false ? 1 : 0);
+}
+
+main().catch((err) => {
+  console.error(err.message);
+  process.exit(1);
+});

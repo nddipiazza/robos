@@ -1,0 +1,198 @@
+#!/usr/bin/env node
+'use strict';
+
+/**
+ * robos-groups — CLI & Voice-command helper for RobOS Groups (`~/.config/robos/groups/`)
+ *
+ * Usage:
+ *   robos-groups list [--explicit-only] [--json]
+ *   robos-groups show "<group>" [--json]
+ *   robos-groups members "<group>" [--json]
+ *   robos-groups emails "<group>" [--json]
+ *   robos-groups create "<group name>" [--id <slug>] [--description <desc>] [--members <u1,u2>] [--json]
+ *   robos-groups update "<group>" [--name <name>] [--description <desc>] [--add-context <ctx>] [--add-workspace <path>] [--json]
+ *   robos-groups delete "<group>" [--json]
+ *   robos-groups add-member "<user>" "<group>" [--json]
+ *   robos-groups remove-member "<user>" "<group>" [--json]
+ *   robos-groups user-groups "<user>" [--json]
+ *   robos-groups sync [--host <ip-or-host>] [--user <ssh-user>] [--port <22>] [--json]
+ *   robos-groups say "<natural-language command>" [--json]
+ *
+ * Natural-language examples (`say` or direct phrase):
+ *   robos-groups say "what robos groups do we have"
+ *   robos-groups say "who is in the Family group"
+ *   robos-groups say "who is in the Dipiazza Kids group"
+ *   robos-groups say "what are the emails for the Family group"
+ *   robos-groups say "add Viv to the Dipiazza Kids group"
+ *   robos-groups say "create a robos group called Band Night with Nick and Diana"
+ *   robos-groups say "sync robos groups to 192.168.1.25"
+ */
+
+const fs = require('node:fs');
+const path = require('node:path');
+
+function resolveModule(relFromPackages) {
+  const candidates = [
+    process.env.ROBOS_LIB_PATH && path.resolve(process.env.ROBOS_LIB_PATH, '..', relFromPackages),
+    path.resolve(__dirname, '..', relFromPackages),
+    path.join('/usr/local/share/robos', relFromPackages),
+  ].filter(Boolean);
+  for (const p of candidates) {
+    if (fs.existsSync(p) || fs.existsSync(`${p}.js`)) return require(p);
+  }
+  return require(path.resolve(__dirname, '..', relFromPackages));
+}
+
+const ug = resolveModule('robos-lib/users-groups');
+
+function parseArgs(argv) {
+  const out = { _: [], json: false, explicitOnly: false };
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i];
+    if (a === '--json') out.json = true;
+    else if (a === '--explicit-only') out.explicitOnly = true;
+    else if (a === '-h' || a === '--help') out.help = true;
+    else if (a.startsWith('--')) out[a.slice(2)] = argv[++i];
+    else out._.push(a);
+  }
+  return out;
+}
+
+function usage() {
+  return fs.readFileSync(__filename, 'utf8')
+    .split('\n')
+    .filter((l) => l.startsWith(' *'))
+    .map((l) => l.slice(3))
+    .join('\n');
+}
+
+async function main() {
+  const args = parseArgs(process.argv.slice(2));
+  if (args.help || !args._.length) {
+    process.stdout.write(`${usage()}\n`);
+    process.exit(0);
+  }
+
+  const [cmd, ...rest] = args._;
+  const joined = rest.join(' ').trim();
+  const opts = args['config-dir'] ? { configDir: args['config-dir'] } : {};
+
+  let res;
+  switch (cmd) {
+    case 'list':
+    case 'ls': {
+      const groups = ug.listGroups({ ...opts, includeDerived: !args.explicitOnly });
+      res = {
+        ok: true,
+        count: groups.length,
+        groups,
+        spoken: groups.length
+          ? `RobOS Groups (${groups.length}):\n${groups.map((g) => `  • ${g.name} [${g.id}] (${g.members.length} member${g.members.length === 1 ? '' : 's'})${g.description ? ` — ${g.description}` : ''}`).join('\n')}`
+          : 'No RobOS groups found.',
+      };
+      break;
+    }
+    case 'show':
+    case 'get':
+    case 'members': {
+      const g = ug.resolveGroup(joined || args.group, opts);
+      if (!g) {
+        res = { ok: false, error: `RobOS group "${joined || args.group}" not found.` };
+      } else {
+        res = {
+          ok: true,
+          group: g,
+          spoken: [
+            `${g.name} [${g.id}] (${g.members.length} members)`,
+            g.description ? `  Description: ${g.description}` : '',
+            ...g.memberProfiles.map((m) => `  • ${m.avatar || '👤'} ${m.displayName} <${m.email || m.uid}>`),
+          ].filter(Boolean).join('\n'),
+        };
+      }
+      break;
+    }
+    case 'emails': {
+      const g = ug.resolveGroup(joined || args.group, opts);
+      if (!g) {
+        res = { ok: false, error: `RobOS group "${joined || args.group}" not found.` };
+      } else {
+        const emails = g.memberProfiles.filter((m) => m.email);
+        res = {
+          ok: true,
+          group: g,
+          emails,
+          spoken: emails.length
+            ? `${g.name} emails (${emails.length}):\n${emails.map((m) => `  • ${m.displayName} <${m.email}>`).join('\n')}`
+            : `No email addresses recorded for ${g.name}.`,
+        };
+      }
+      break;
+    }
+    case 'create':
+    case 'add':
+      res = ug.createGroup({
+        id: args.id,
+        name: joined || args.name,
+        description: args.description || '',
+        members: args.members || '',
+        contexts: args.contexts ? String(args.contexts).split(',').map((s) => s.trim()).filter(Boolean) : [],
+        workspaces: args.workspaces ? String(args.workspaces).split(',').map((s) => s.trim()).filter(Boolean) : [],
+      }, opts);
+      break;
+    case 'update':
+      res = ug.updateGroup(joined || args.group, {
+        ...(args.name !== undefined ? { name: args.name } : {}),
+        ...(args.description !== undefined ? { description: args.description } : {}),
+        ...(args['add-context'] ? { addContext: args['add-context'] } : {}),
+        ...(args['add-workspace'] ? { addWorkspace: args['add-workspace'] } : {}),
+      }, opts);
+      break;
+    case 'delete':
+    case 'remove':
+      res = ug.deleteGroup(joined || args.group, opts);
+      break;
+    case 'add-member': {
+      const userArg = args.user || rest[0] || '';
+      const groupArg = args.group || rest.slice(1).join(' ') || '';
+      res = ug.addMemberToGroup(userArg, groupArg, opts);
+      break;
+    }
+    case 'remove-member': {
+      const userArg = args.user || rest[0] || '';
+      const groupArg = args.group || rest.slice(1).join(' ') || '';
+      res = ug.removeMemberFromGroup(userArg, groupArg, opts);
+      break;
+    }
+    case 'user-groups':
+      res = ug.answerUserQuestion(joined || args.user, 'groups', opts);
+      break;
+    case 'sync':
+      if (args.host || joined) {
+        res = await ug.syncUsersAndGroupsToHost({ host: args.host || joined, user: args.user, port: args.port }, opts);
+      } else {
+        ug.rebuildSearchIndexes(opts);
+        ug.syncUsersGroupsKGraph(opts);
+        const local = ug.syncLocalRobosServicesData(opts);
+        res = { ...local, spoken: `Synced ${local.groupCount} RobOS groups and ${local.userCount} RobOS users into local RobOS Services (${local.dataFile}).` };
+      }
+      break;
+    case 'say':
+    default: {
+      const phrase = cmd === 'say' ? joined : [cmd, ...rest].join(' ').trim();
+      res = await ug.executeVoiceCommand(phrase, opts);
+      break;
+    }
+  }
+
+  if (args.json) {
+    process.stdout.write(`${JSON.stringify(res, null, 2)}\n`);
+  } else {
+    process.stdout.write(`${(res && (res.spoken || res.response || res.error)) || JSON.stringify(res)}\n`);
+  }
+  process.exit(res && res.ok === false ? 1 : 0);
+}
+
+main().catch((err) => {
+  console.error(err.message);
+  process.exit(1);
+});
