@@ -2950,6 +2950,7 @@ describe('DAW Editing Engine: Multi-Select, Track/Take Gain, Split/Trim, Copy/Pa
     const { execFileSync } = require('child_process');
     const {
       extractMjpegFramesFromStream,
+      captureVideoSourceSnapshot,
       buildVideoTrack,
       probeVideoFileInfo,
       LiveCameraMonitor,
@@ -2960,6 +2961,14 @@ describe('DAW Editing Engine: Multi-Select, Track/Take Gain, Split/Trim, Copy/Pa
     let mjpegServer = null;
     const activeClients = new Set();
     try {
+      // 0. Regression guard: V4L2 path in `captureVideoSourceSnapshot` must never hit TDZ (`userPromise`)
+      await assert.rejects(
+        () => captureVideoSourceSnapshot({ sourceType: 'v4l2', devicePath: '/dev/nonexistent-v4l2-test' }),
+        (err) => {
+          assert.ok(!/userPromise|before initialization/i.test(err.message), `Unexpected TDZ error: ${err.message}`);
+          return true;
+        }
+      );
       // 1. Unit test chunk-boundary MJPEG SOI/EOI parser
       const fakeStream = new PassThrough();
       const parsedFrames = [];

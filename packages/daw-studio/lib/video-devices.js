@@ -924,7 +924,8 @@ async function abortInFlightV4l2Snapshots(targetDevicePath = '') {
 
 function grabSingleFrameWithFfmpeg(inputArgsList, timeoutMs = 5500, { isV4l2 = false, devicePath = '' } = {}) {
   if (isV4l2 && devicePath && activeV4l2SnapshotJobs.has(devicePath)) {
-    return activeV4l2SnapshotJobs.get(devicePath).userPromise;
+    const existing = activeV4l2SnapshotJobs.get(devicePath);
+    if (existing?.userPromise) return existing.userPromise;
   }
 
   // UVC USB cameras (e.g. OBSBOT Tiny 2 Lite) often emit 1-2 dark/black sensor-warmup frames
@@ -944,9 +945,11 @@ function grabSingleFrameWithFfmpeg(inputArgsList, timeoutMs = 5500, { isV4l2 = f
 
   let doneResolve = null;
   const donePromise = new Promise(r => { doneResolve = r; });
+  const jobEntry = { proc: null, donePromise, userPromise: null };
 
   const userPromise = new Promise((resolve, reject) => {
     let proc = null;
+    let killTimer = null;
     let stderrTail = '';
     const frames = [];
     let settled = false;
@@ -954,7 +957,7 @@ function grabSingleFrameWithFfmpeg(inputArgsList, timeoutMs = 5500, { isV4l2 = f
     const finish = (err, bestBuf) => {
       if (settled) return;
       settled = true;
-      clearTimeout(killTimer);
+      if (killTimer) clearTimeout(killTimer);
       if (devicePath) activeV4l2SnapshotJobs.delete(devicePath);
       if (doneResolve) doneResolve();
       if (err || !bestBuf || bestBuf.length < 64) {
@@ -967,16 +970,13 @@ function grabSingleFrameWithFfmpeg(inputArgsList, timeoutMs = 5500, { isV4l2 = f
 
     try {
       proc = spawn('ffmpeg', args, { stdio: ['ignore', 'pipe', 'pipe'] });
+      jobEntry.proc = proc;
     } catch (err) {
       finish(err, null);
       return;
     }
 
-    if (isV4l2 && devicePath) {
-      activeV4l2SnapshotJobs.set(devicePath, { proc, donePromise, userPromise });
-    }
-
-    const killTimer = setTimeout(() => {
+    killTimer = setTimeout(() => {
       try { proc.kill('SIGKILL'); } catch {}
       if (frames.length > 0) {
         finish(null, frames[frames.length - 1]);
@@ -1006,6 +1006,10 @@ function grabSingleFrameWithFfmpeg(inputArgsList, timeoutMs = 5500, { isV4l2 = f
     });
   });
 
+  jobEntry.userPromise = userPromise;
+  if (isV4l2 && devicePath && jobEntry.proc) {
+    activeV4l2SnapshotJobs.set(devicePath, jobEntry);
+  }
   return userPromise;
 }
 
