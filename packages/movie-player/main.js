@@ -1,6 +1,6 @@
 'use strict';
 
-const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, clipboard, dialog, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
@@ -1011,6 +1011,18 @@ ipcMain.handle('audio:cancel-scan', async () => {
   return { canceled };
 });
 
+async function indexLocalFiles(files) {
+  const quickTracks = [];
+  for (const f of files) {
+    try {
+      const track = await mediaLibrary.parseTrack(f);
+      quickTracks.push(track);
+    } catch {}
+  }
+  mediaLibrary.mergeTracks(quickTracks);
+  return quickTracks;
+}
+
 ipcMain.handle('audio:import-paths', async (_evt, targetPaths) => {
   if (!Array.isArray(targetPaths) || !targetPaths.length) return { canceled: true, tracks: [] };
   
@@ -1026,14 +1038,7 @@ ipcMain.handle('audio:import-paths', async (_evt, targetPaths) => {
     } catch {}
   }
 
-  const quickTracks = [];
-  for (const f of files) {
-    try {
-      const track = await mediaLibrary.parseTrack(f);
-      quickTracks.push(track);
-    } catch {}
-  }
-  mediaLibrary.mergeTracks(quickTracks);
+  const quickTracks = await indexLocalFiles(files);
 
   if (dirs.length > 0) {
     mediaLibrary.scanFoldersInBackground(dirs, scanUpdates());
@@ -1047,6 +1052,20 @@ ipcMain.handle('audio:import-paths', async (_evt, targetPaths) => {
   };
 });
 
+const mediaRecorder = requireShared('robos-lib/media-recorder');
+mediaRecorder?.registerMediaRecorder({
+  app, ipcMain, clipboard, shell, getWindow: () => mainWindow,
+  kind: 'video',
+  directory: path.join(mediaLibrary.configDir, 'movie-player', 'recordings'),
+  async index(file) {
+    const [track] = await indexLocalFiles([file]);
+    if (!track) throw new Error('The recording could not be indexed.');
+    sendToWindow('audio:library-scan-batch', { library: mediaLibrary.getLibrary() });
+    enrichRecordedMovie(track.id);
+    return track;
+  },
+});
+
 // ── Managed library folders (local + cloud) ────────────────────────────────
 
 // Only attach the (potentially huge) library when the call changed tracks.
@@ -1056,10 +1075,32 @@ function folderState({ withLibrary = false } = {}) {
   return state;
 }
 
+let activeMetadataSync;
+
+function syncPublicMetadata(options) {
+  const run = publicMetadata.syncAll(options);
+  if (!activeMetadataSync) {
+    activeMetadataSync = run;
+    const clear = () => { activeMetadataSync = null; };
+    run.then(clear, clear);
+  }
+  return run;
+}
+
+async function enrichRecordedMovie(trackId) {
+  while (activeMetadataSync) await activeMetadataSync.catch(() => {});
+  try {
+    const result = await syncPublicMetadata({ trackIds: [trackId] });
+    if (result.updatedTracks) sendToWindow('audio:library-scan-batch', { library: mediaLibrary.getLibrary() });
+  } catch (err) {
+    console.warn('[MoviePlayer] Recording metadata lookup failed:', err.message);
+  }
+}
+
 function maybeAutoFetchPublicMetadata() {
   const needsSync = mediaLibrary.tracks.some(t => !t.artId || !t.overview);
   if (!needsSync || publicMetadata._running) return;
-  publicMetadata.syncAll({
+  syncPublicMetadata({
     force: false,
     onProgress: (p) => sendToWindow('audio:metadata-fetch-progress', p),
   }).then(() => {
@@ -1345,7 +1386,7 @@ ipcMain.handle('audio:ai-playlist-generate', async (_evt, { request, count, dj, 
 
 ipcMain.handle('audio:fetch-public-metadata', async (_evt, { trackIds = null, force = false } = {}) => {
   try {
-    const res = await publicMetadata.syncAll({
+    const res = await syncPublicMetadata({
       trackIds,
       force: !!force,
       onProgress: (p) => sendToWindow('audio:metadata-fetch-progress', p),

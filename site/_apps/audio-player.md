@@ -61,6 +61,12 @@ flowchart TD
 
 ## Features
 
+### Record to Library
+
+Choose **Record to Library**, paste a media link, and select **Save audio**. Audio Player extracts the audio as an MP3, reads available source tags and artwork, and adds the track to **Recently Added**. If the album tag is missing, a matching MusicBrainz recording can supply it. Files are saved under `~/.config/robos/audio-player/recordings/`.
+
+For the first recording, install yt-dlp and FFmpeg so both commands are available on your system PATH. The dialog opens the relevant installation instructions if a tool is missing. [yt-dlp installation](https://github.com/yt-dlp/yt-dlp/wiki/Installation) · [FFmpeg downloads](https://ffmpeg.org/download.html)
+
 ### Media Library Browser
 - **Browse by category**: Albums, Artists, Songs, Genres, Decades and Composers, each with its own sort options and an A–Z jump rail for large lists.
 - **Smart collections**: Loved, Recently Added, Recently Played and Most Played, driven by per-track play counts and ♥ marks stored in `~/.config/robos/audio-track-stats.json`. A play counts once a track has been heard for 30 seconds (or half of a short track).

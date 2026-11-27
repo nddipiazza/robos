@@ -22699,7 +22699,29 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
         onDragOver: (e) => e.preventDefault(),
         onDrop: handleDrop
       },
-      /* @__PURE__ */ import_react25.default.createElement("header", { className: "app-header" }, /* @__PURE__ */ import_react25.default.createElement("div", { className: "header-brand" }, /* @__PURE__ */ import_react25.default.createElement("svg", { className: "brand-icon", xmlns: "http://www.w3.org/2000/svg", width: "28", height: "28", viewBox: "0 0 24 24", fill: "none", stroke: "#e8a33d", "stroke-width": "1.5", "stroke-linecap": "round", "stroke-linejoin": "round" }, /* @__PURE__ */ import_react25.default.createElement("path", { d: "M3 18v-6a9 9 0 0 1 18 0v6" }), /* @__PURE__ */ import_react25.default.createElement("path", { d: "M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z" }), /* @__PURE__ */ import_react25.default.createElement("polygon", { points: "10 10 15 12 10 14 10 10", fill: "#e8a33d" })), /* @__PURE__ */ import_react25.default.createElement("div", null, /* @__PURE__ */ import_react25.default.createElement("h1", null, "RobOS Audio Player"), /* @__PURE__ */ import_react25.default.createElement("span", { className: "subtitle" }, "Local library, cloud storage and Google Cast"))), /* @__PURE__ */ import_react25.default.createElement("div", { className: "header-actions" }, activeRobosUser && activeRobosUser.name && /* @__PURE__ */ import_react25.default.createElement(
+      /* @__PURE__ */ import_react25.default.createElement("header", { className: "app-header" }, /* @__PURE__ */ import_react25.default.createElement("div", { className: "header-brand" }, /* @__PURE__ */ import_react25.default.createElement("svg", { className: "brand-icon", xmlns: "http://www.w3.org/2000/svg", width: "28", height: "28", viewBox: "0 0 24 24", fill: "none", stroke: "#e8a33d", "stroke-width": "1.5", "stroke-linecap": "round", "stroke-linejoin": "round" }, /* @__PURE__ */ import_react25.default.createElement("path", { d: "M3 18v-6a9 9 0 0 1 18 0v6" }), /* @__PURE__ */ import_react25.default.createElement("path", { d: "M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z" }), /* @__PURE__ */ import_react25.default.createElement("polygon", { points: "10 10 15 12 10 14 10 10", fill: "#e8a33d" })), /* @__PURE__ */ import_react25.default.createElement("div", null, /* @__PURE__ */ import_react25.default.createElement("h1", null, "RobOS Audio Player"), /* @__PURE__ */ import_react25.default.createElement("span", { className: "subtitle" }, "Local library, cloud storage and Google Cast"))), /* @__PURE__ */ import_react25.default.createElement("div", { className: "header-actions" }, /* @__PURE__ */ import_react25.default.createElement(
+        "button",
+        {
+          id: "btn-record-to-library",
+          className: "btn-accent",
+          onClick: () => {
+            if (!window.robosRecordToLibrary) {
+              showStatus("Record to Library needs the current RobOS shared components.");
+              return;
+            }
+            window.robosRecordToLibrary.open({
+              kind: "audio",
+              player: window.robosAudio,
+              onSaved: (track) => {
+                setActiveTab("library");
+                showStatus(`Saved \u201C${track.title}\u201D to your library.`);
+              }
+            });
+          }
+        },
+        /* @__PURE__ */ import_react25.default.createElement("span", { className: "record-to-library-dot", "aria-hidden": "true" }),
+        /* @__PURE__ */ import_react25.default.createElement("span", null, "Record to Library")
+      ), activeRobosUser && activeRobosUser.name && /* @__PURE__ */ import_react25.default.createElement(
         "span",
         {
           id: "active-robos-user-badge",

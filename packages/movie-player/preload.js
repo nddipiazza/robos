@@ -22,6 +22,15 @@ contextBridge.exposeInMainWorld('robosAudio', {
   openFileDialog: () => ipcRenderer.invoke('audio:open-file-dialog'),
   ensureFileAccessible: (filePath) => ipcRenderer.invoke('audio:ensure-file-accessible', filePath),
   getLibrary: () => ipcRenderer.invoke('audio:get-library'),
+  pasteRecordingLink: () => ipcRenderer.invoke('media-record:paste'),
+  startRecording: (options) => ipcRenderer.invoke('media-record:start', options),
+  cancelRecording: () => ipcRenderer.invoke('media-record:cancel'),
+  openRecordingSetup: (tool) => ipcRenderer.invoke('media-record:setup', tool),
+  onRecordingProgress: (callback) => {
+    const handler = (_event, progress) => callback(progress);
+    ipcRenderer.on('media-record:progress', handler);
+    return () => ipcRenderer.removeListener('media-record:progress', handler);
+  },
   selectLibraryFolder: () => ipcRenderer.invoke('audio:select-library-folder'),
   scanFolders: (folders) => ipcRenderer.invoke('audio:scan-folders', folders),
   cancelLibraryScan: () => ipcRenderer.invoke('audio:cancel-scan'),

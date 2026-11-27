@@ -25104,7 +25104,29 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
         onDragOver: (e) => e.preventDefault(),
         onDrop: handleDrop
       },
-      /* @__PURE__ */ import_react27.default.createElement("header", { className: "app-header" }, /* @__PURE__ */ import_react27.default.createElement("div", { className: "header-brand" }, /* @__PURE__ */ import_react27.default.createElement("svg", { className: "brand-icon", xmlns: "http://www.w3.org/2000/svg", width: "28", height: "28", viewBox: "0 0 24 24", fill: "none", stroke: "#e8a33d", strokeWidth: "1.5", strokeLinecap: "round", strokeLinejoin: "round" }, /* @__PURE__ */ import_react27.default.createElement("rect", { x: "2", y: "3", width: "20", height: "18", rx: "2.5" }), /* @__PURE__ */ import_react27.default.createElement("line", { x1: "7", y1: "3", x2: "7", y2: "21" }), /* @__PURE__ */ import_react27.default.createElement("line", { x1: "17", y1: "3", x2: "17", y2: "21" }), /* @__PURE__ */ import_react27.default.createElement("line", { x1: "2", y1: "12", x2: "22", y2: "12" }), /* @__PURE__ */ import_react27.default.createElement("polygon", { points: "10 9 15 12 10 15 10 9", fill: "#e8a33d" })), /* @__PURE__ */ import_react27.default.createElement("div", null, /* @__PURE__ */ import_react27.default.createElement("h1", null, "RobOS Movie Player"), /* @__PURE__ */ import_react27.default.createElement("span", { className: "subtitle" }, "Local cinema library, SFTP/Cloud storage and RobOS Smart TV Cast"))), /* @__PURE__ */ import_react27.default.createElement("div", { className: "header-actions" }, activeRobosUser && activeRobosUser.name && /* @__PURE__ */ import_react27.default.createElement(
+      /* @__PURE__ */ import_react27.default.createElement("header", { className: "app-header" }, /* @__PURE__ */ import_react27.default.createElement("div", { className: "header-brand" }, /* @__PURE__ */ import_react27.default.createElement("svg", { className: "brand-icon", xmlns: "http://www.w3.org/2000/svg", width: "28", height: "28", viewBox: "0 0 24 24", fill: "none", stroke: "#e8a33d", strokeWidth: "1.5", strokeLinecap: "round", strokeLinejoin: "round" }, /* @__PURE__ */ import_react27.default.createElement("rect", { x: "2", y: "3", width: "20", height: "18", rx: "2.5" }), /* @__PURE__ */ import_react27.default.createElement("line", { x1: "7", y1: "3", x2: "7", y2: "21" }), /* @__PURE__ */ import_react27.default.createElement("line", { x1: "17", y1: "3", x2: "17", y2: "21" }), /* @__PURE__ */ import_react27.default.createElement("line", { x1: "2", y1: "12", x2: "22", y2: "12" }), /* @__PURE__ */ import_react27.default.createElement("polygon", { points: "10 9 15 12 10 15 10 9", fill: "#e8a33d" })), /* @__PURE__ */ import_react27.default.createElement("div", null, /* @__PURE__ */ import_react27.default.createElement("h1", null, "RobOS Movie Player"), /* @__PURE__ */ import_react27.default.createElement("span", { className: "subtitle" }, "Local cinema library, SFTP/Cloud storage and RobOS Smart TV Cast"))), /* @__PURE__ */ import_react27.default.createElement("div", { className: "header-actions" }, /* @__PURE__ */ import_react27.default.createElement(
+        "button",
+        {
+          id: "btn-record-to-library",
+          className: "btn-accent",
+          onClick: () => {
+            if (!window.robosRecordToLibrary) {
+              showStatus("Record to Library needs the current RobOS shared components.");
+              return;
+            }
+            window.robosRecordToLibrary.open({
+              kind: "video",
+              player: window.robosAudio,
+              onSaved: (track) => {
+                setActiveTab("library");
+                showStatus(`Saved \u201C${track.title}\u201D to your library.`);
+              }
+            });
+          }
+        },
+        /* @__PURE__ */ import_react27.default.createElement("span", { className: "record-to-library-dot", "aria-hidden": "true" }),
+        /* @__PURE__ */ import_react27.default.createElement("span", null, "Record to Library")
+      ), activeRobosUser && activeRobosUser.name && /* @__PURE__ */ import_react27.default.createElement(
         "span",
         {
           id: "active-robos-user-badge",

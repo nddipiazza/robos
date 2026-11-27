@@ -1,6 +1,6 @@
 'use strict';
 
-const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, clipboard, dialog, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
@@ -680,6 +680,18 @@ ipcMain.handle('audio:cancel-scan', async () => {
   return { canceled };
 });
 
+async function indexLocalFiles(files) {
+  const quickTracks = [];
+  for (const f of files) {
+    try {
+      const track = await mediaLibrary.parseTrack(f);
+      quickTracks.push(track);
+    } catch {}
+  }
+  mediaLibrary.mergeTracks(quickTracks);
+  return quickTracks;
+}
+
 ipcMain.handle('audio:import-paths', async (_evt, targetPaths) => {
   if (!Array.isArray(targetPaths) || !targetPaths.length) return { canceled: true, tracks: [] };
   
@@ -695,14 +707,7 @@ ipcMain.handle('audio:import-paths', async (_evt, targetPaths) => {
     } catch {}
   }
 
-  const quickTracks = [];
-  for (const f of files) {
-    try {
-      const track = await mediaLibrary.parseTrack(f);
-      quickTracks.push(track);
-    } catch {}
-  }
-  mediaLibrary.mergeTracks(quickTracks);
+  const quickTracks = await indexLocalFiles(files);
 
   if (dirs.length > 0) {
     mediaLibrary.scanFoldersInBackground(dirs, scanUpdates());
@@ -714,6 +719,42 @@ ipcMain.handle('audio:import-paths', async (_evt, targetPaths) => {
     dirs,
     library: mediaLibrary.getLibrary()
   };
+});
+
+async function enrichRecordedAudio(track) {
+  // The source tags take precedence. Only use MusicBrainz when both identifying
+  // tags are available and the matched recording has the same title and artist.
+  if (!track.artist || track.artist === 'Unknown Artist' || track.album !== 'Unknown Album') return;
+  try {
+    const metadata = await aiMetadata.lookupMusicBrainz(track);
+    const normalize = (value) => String(value || '').normalize('NFKC').trim().toLowerCase();
+    if (!metadata?.album || normalize(metadata.title) !== normalize(track.title)
+      || normalize(metadata.artist) !== normalize(track.artist)
+      || !metadata.duration || !track.duration || Math.abs(metadata.duration - track.duration) > 5) return;
+    if (mediaLibrary.tracks.find((item) => item.id === track.id) !== track) return;
+    mediaLibrary.mergeTracks([{
+      ...track, album: metadata.album, albumArtist: track.albumArtist || metadata.albumArtist,
+      year: track.year || metadata.year, genre: track.genre || metadata.genre,
+      trackNumber: track.trackNumber || metadata.trackNumber,
+    }]);
+    sendToWindow('audio:library-scan-batch', { library: mediaLibrary.getLibrary() });
+  } catch (err) {
+    console.warn('[AudioPlayer] Recording metadata lookup failed:', err.message);
+  }
+}
+
+const mediaRecorder = requireShared('robos-lib/media-recorder');
+mediaRecorder?.registerMediaRecorder({
+  app, ipcMain, clipboard, shell, getWindow: () => mainWindow,
+  kind: 'audio',
+  directory: path.join(mediaLibrary.configDir, 'audio-player', 'recordings'),
+  async index(file) {
+    const [track] = await indexLocalFiles([file]);
+    if (!track) throw new Error('The recording could not be indexed.');
+    sendToWindow('audio:library-scan-batch', { library: mediaLibrary.getLibrary() });
+    enrichRecordedAudio(track);
+    return track;
+  },
 });
 
 // ── Managed library folders (local + cloud) ────────────────────────────────

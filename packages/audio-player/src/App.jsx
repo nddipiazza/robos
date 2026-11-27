@@ -1715,6 +1715,27 @@ export default function App() {
 
         {/* Global Action Buttons in Header */}
         <div className="header-actions">
+          <button
+            id="btn-record-to-library"
+            className="btn-accent"
+            onClick={() => {
+              if (!window.robosRecordToLibrary) {
+                showStatus('Record to Library needs the current RobOS shared components.');
+                return;
+              }
+              window.robosRecordToLibrary.open({
+                kind: 'audio',
+                player: window.robosAudio,
+                onSaved: (track) => {
+                  setActiveTab('library');
+                  showStatus(`Saved “${track.title}” to your library.`);
+                },
+              });
+            }}
+          >
+            <span className="record-to-library-dot" aria-hidden="true" />
+            <span>Record to Library</span>
+          </button>
           {activeRobosUser && activeRobosUser.name && (
             <span
               id="active-robos-user-badge"

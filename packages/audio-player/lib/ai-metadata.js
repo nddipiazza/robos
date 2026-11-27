@@ -530,6 +530,7 @@ async function lookupMusicBrainz({ title, artist, album, duration } = {}, fetchJ
     return {
       source: 'musicbrainz',
       recordingMbid: bestRec.id || null,
+    duration: bestRec.length ? bestRec.length / 1000 : null,
       releaseMbid: officialRelease ? officialRelease.id : null,
       title: bestRec.title || null,
       artist: artistCredit || null,
