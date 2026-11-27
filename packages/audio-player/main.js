@@ -1,6 +1,6 @@
 'use strict';
 
-const { app, BrowserWindow, ipcMain, clipboard, dialog, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, clipboard, dialog, shell, desktopCapturer, screen, session } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
@@ -745,7 +745,7 @@ async function enrichRecordedAudio(track) {
 
 const mediaRecorder = requireShared('robos-lib/media-recorder');
 mediaRecorder?.registerMediaRecorder({
-  app, ipcMain, clipboard, shell, getWindow: () => mainWindow,
+  app, ipcMain, clipboard, shell, desktopCapturer, screen, session, getWindow: () => mainWindow,
   kind: 'audio',
   directory: path.join(mediaLibrary.configDir, 'audio-player', 'recordings'),
   async index(file) {

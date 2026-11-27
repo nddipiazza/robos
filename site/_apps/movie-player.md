@@ -79,9 +79,11 @@ flowchart TD
 - **Scene Release Filename Cleaner (`cleanMovieFilename`)**: Automatically strips scene tags (`2160p`, `1080p`, `720p`, `4K`, `UHD`, `HDR10`, `BluRay`, `WEB-DL`, `WEBRip`, `x264`, `x265`, `HEVC`, `AV1`, `AAC`, `DTS`, release groups) while extracting the 4-digit release year, `SxxExx` season/episode numbers, resolution badges (`4K`, `1080p`, `720p`), and video codecs.
 - **Content-Addressed Poster Cache**: Embedded cover art, folder posters (`poster.jpg`, `cover.jpg`, `fanart.jpg`, `folder.jpg`), and extracted video frames are hashed (`sha1`) into `~/.cache/robos/movie-player/art/` so 100,000 movies never hold image buffers in RAM.
 
-Choose **Record to Library**, paste a video link, and select **Save video**. **Include audio** is on by default. Clear it to save a silent MP4. Movie Player indexes the recording under **Recently Added** and looks for matching movie or TV metadata and artwork. Files are saved under `~/.config/robos/movie-player/recordings/`.
+Open **Record to Library** and choose **Desktop**. Move the player to the screen you want to capture, then choose **Start recording**. On Windows, **Include system audio** is on by default. Clear it to record a silent video. Choose **Stop & save** to add the MP4 to **Recently Added**. Live capture uses FFmpeg and ffprobe.
 
-For the first recording, install yt-dlp and FFmpeg, including ffprobe, and make the commands available on your system PATH. The dialog opens the relevant installation instructions if a tool is missing. [yt-dlp installation](https://github.com/yt-dlp/yt-dlp/wiki/Installation) · [FFmpeg downloads](https://ffmpeg.org/download.html)
+To save from a URL, switch to **Media link**, paste the link, and select **Save video**. **Include audio** is on by default. Movie Player looks for matching movie or TV metadata and artwork for linked videos. Files are saved under `~/.config/robos/movie-player/recordings/`.
+
+For media links, install yt-dlp and FFmpeg, including ffprobe, and make the commands available on your system PATH. The dialog opens the relevant installation instructions if a tool is missing. [yt-dlp installation](https://github.com/yt-dlp/yt-dlp/wiki/Installation) · [FFmpeg downloads](https://ffmpeg.org/download.html)
 
 ### 4. AI Watchlists & Virtual Cinema Host (Optional AI)
 - **✦ AI Watchlist (`src/AiPlaylist.jsx` / `lib/ai-playlist.js`)**: Describe a movie marathon, director retrospective, era, or mood (e.g., *"4K sci-fi double feature for a rainy night"* or *"short animated films under 20 minutes"*). Your configured RobOS agent picks and orders films from your indexed library, falling back to a deterministic local scorer when offline.

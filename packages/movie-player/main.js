@@ -1,6 +1,6 @@
 'use strict';
 
-const { app, BrowserWindow, ipcMain, clipboard, dialog, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, clipboard, dialog, shell, desktopCapturer, screen, session } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
@@ -1054,14 +1054,14 @@ ipcMain.handle('audio:import-paths', async (_evt, targetPaths) => {
 
 const mediaRecorder = requireShared('robos-lib/media-recorder');
 mediaRecorder?.registerMediaRecorder({
-  app, ipcMain, clipboard, shell, getWindow: () => mainWindow,
+  app, ipcMain, clipboard, shell, desktopCapturer, screen, session, getWindow: () => mainWindow,
   kind: 'video',
   directory: path.join(mediaLibrary.configDir, 'movie-player', 'recordings'),
-  async index(file) {
+  async index(file, { source }) {
     const [track] = await indexLocalFiles([file]);
     if (!track) throw new Error('The recording could not be indexed.');
     sendToWindow('audio:library-scan-batch', { library: mediaLibrary.getLibrary() });
-    enrichRecordedMovie(track.id);
+    if (source === 'link') enrichRecordedMovie(track.id);
     return track;
   },
 });

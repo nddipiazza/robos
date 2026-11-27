@@ -25,6 +25,11 @@ contextBridge.exposeInMainWorld('robosAudio', {
   pasteRecordingLink: () => ipcRenderer.invoke('media-record:paste'),
   startRecording: (options) => ipcRenderer.invoke('media-record:start', options),
   cancelRecording: () => ipcRenderer.invoke('media-record:cancel'),
+  canCaptureSystemAudio: process.platform === 'win32',
+  startDesktopRecording: (options) => ipcRenderer.invoke('media-record:capture-start', options),
+  appendDesktopRecording: (chunk) => ipcRenderer.invoke('media-record:capture-append', chunk),
+  finishDesktopRecording: () => ipcRenderer.invoke('media-record:capture-finish'),
+  discardDesktopRecording: () => ipcRenderer.invoke('media-record:capture-discard'),
   openRecordingSetup: (tool) => ipcRenderer.invoke('media-record:setup', tool),
   onRecordingProgress: (callback) => {
     const handler = (_event, progress) => callback(progress);

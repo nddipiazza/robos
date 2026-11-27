@@ -113,3 +113,56 @@ test('Record to Library saves playable, indexed files and cleans up canceled rec
   assert.equal((await fs.readdir(movie.directory)).length, 2);
   assert.ok(!(await fs.readdir(path.dirname(movie.directory))).some(name => name.startsWith('.recording-')));
 });
+
+const liveTools = ['ffmpeg', 'ffprobe'];
+const missingLiveTool = liveTools.find(tool => spawnSync(tool, ['-version'], { windowsHide: true, stdio: 'ignore' }).status !== 0);
+
+test('live recording writes chunks to disk and keeps only the selected streams in the indexed file', {
+  skip: missingLiveTool && `Install ${missingLiveTool} to run the live recording integration check`,
+  timeout: 30000,
+}, async (t) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'robos-live-record-'));
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  const fixture = path.join(root, 'capture.webm');
+  execFileSync('ffmpeg', ['-v', 'error', '-f', 'lavfi', '-i', 'color=s=160x90:d=1',
+    '-f', 'lavfi', '-i', 'sine=duration=1', '-c:v', 'libvpx', '-c:a', 'libopus', '-shortest', fixture],
+  { windowsHide: true });
+  const data = await fs.readFile(fixture);
+  const expected = [
+    { kind: 'audio', ext: '.mp3', streams: ['audio'] },
+    { kind: 'video', ext: '.mp4', streams: ['video', 'audio'] },
+    { kind: 'video', includeAudio: false, ext: '.mp4', streams: ['video'] },
+  ];
+  const directory = path.join(root, 'recordings');
+  let indexed = 0;
+  for (const { kind, includeAudio, ext, streams } of expected) {
+    const recorder = createMediaRecorder({
+      kind, directory,
+      async index(filePath, metadata) {
+        assert.equal(metadata.source, 'desktop');
+        indexed++;
+        return { filePath };
+      },
+    });
+    assert.deepEqual(await recorder.startCapture({ includeAudio }), { ok: true });
+    await recorder.appendCapture(data.subarray(0, 1200));
+    await recorder.appendCapture(data.subarray(1200));
+    const result = await recorder.finishCapture();
+    assert.equal(result.ok, true, result.error);
+    const saved = result.track.filePath;
+    assert.equal(path.extname(saved), ext);
+    const media = JSON.parse(execFileSync('ffprobe', ['-v', 'error', '-show_streams', '-of', 'json', saved], {
+      encoding: 'utf8', windowsHide: true,
+    }));
+    assert.deepEqual(media.streams.map(stream => stream.codec_type), streams);
+
+    assert.deepEqual(await recorder.startCapture(), { ok: true });
+    const pending = recorder.pending;
+    await recorder.appendCapture(data.subarray(0, 1200));
+    assert.equal(recorder.cancel(), true);
+    assert.deepEqual(await pending, { canceled: true });
+  }
+  assert.equal(indexed, expected.length);
+  assert.equal((await fs.readdir(directory)).length, expected.length);
+  assert.ok(!(await fs.readdir(root)).some(name => name.startsWith('.recording-')));
+});

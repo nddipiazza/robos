@@ -63,9 +63,11 @@ flowchart TD
 
 ### Record to Library
 
-Choose **Record to Library**, paste a media link, and select **Save audio**. Audio Player extracts the audio as an MP3, reads available source tags and artwork, and adds the track to **Recently Added**. If the album tag is missing, a matching MusicBrainz recording can supply it. Files are saved under `~/.config/robos/audio-player/recordings/`.
+On Windows, open **Record to Library**, select **PC audio**, and choose **Start recording** to capture your current audio output. Choose **Stop & save** to add the MP3 to your library. Live capture uses FFmpeg.
 
-For the first recording, install yt-dlp and FFmpeg so both commands are available on your system PATH. The dialog opens the relevant installation instructions if a tool is missing. [yt-dlp installation](https://github.com/yt-dlp/yt-dlp/wiki/Installation) · [FFmpeg downloads](https://ffmpeg.org/download.html)
+To save from a URL, switch to **Media link**, paste the link, and select **Save audio**. Audio Player extracts the audio as an MP3, reads available source tags and artwork, and adds the track to **Recently Added**. If the album tag is missing, a matching MusicBrainz recording can supply it. Files are saved under `~/.config/robos/audio-player/recordings/`.
+
+For media links, install yt-dlp and FFmpeg so both commands are available on your system PATH. The dialog opens the relevant installation instructions if a tool is missing. [yt-dlp installation](https://github.com/yt-dlp/yt-dlp/wiki/Installation) · [FFmpeg downloads](https://ffmpeg.org/download.html)
 
 ### Media Library Browser
 - **Browse by category**: Albums, Artists, Songs, Genres, Decades and Composers, each with its own sort options and an A–Z jump rail for large lists.

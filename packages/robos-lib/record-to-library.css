@@ -66,10 +66,6 @@
   gap: 8px;
 }
 
-.record-to-library-dialog [hidden] {
-  display: none;
-}
-
 .record-to-library-dialog progress {
   width: 100%;
 }
@@ -93,4 +89,41 @@
   justify-content: flex-end;
   gap: 8px;
   margin-top: 6px;
+}
+
+.record-to-library-modes {
+  display: flex;
+  gap: 8px;
+}
+
+.record-to-library-modes button[aria-pressed="true"] {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.record-to-library-dialog .record-to-library-source {
+  display: grid;
+  gap: 10px;
+}
+
+.record-to-library-source p {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.record-to-library-dialog .record-to-library-live {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #ff9c94;
+}
+
+.record-to-library-live time {
+  margin-inline-start: auto;
+  color: var(--text-main);
+  font-variant-numeric: tabular-nums;
+}
+
+.record-to-library-dialog [hidden] {
+  display: none;
 }
