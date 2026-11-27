@@ -323,6 +323,9 @@ function registerVideoSegments({ app, ipcMain, getWindow, mediaLibrary }) {
     rememberOpened(tracks) {
       for (const track of tracks) if (localVideo(track)) opened.set(track.id, track);
     },
+    forgetOpened(trackIds) {
+      for (const id of trackIds) opened.delete(id);
+    },
   };
 }
 

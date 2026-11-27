@@ -180,6 +180,10 @@ export function collectionMenuItems(tracks, ctx, { label } = {}) {
     actions.fixMetadata ? { label: '✦ AI Fix Metadata…', icon: 'sparkle', onClick: () => actions.fixMetadata(tracks) } : null,
     { label: allLoved ? 'Remove from Watchlist' : 'Add to My Watchlist', icon: allLoved ? 'heartFill' : 'heart', onClick: () => actions.setLoved(tracks, !allLoved) },
     actions.hasSpeakers ? { label: 'Cast to Smart TV', icon: 'cast', onClick: () => actions.castTracks(tracks) } : null,
+    ...(tracks.length === 1 && actions.canDeleteVideo?.(tracks[0]) ? [
+      { separator: true },
+      { label: 'Delete video…', icon: 'trash', danger: true, onClick: () => actions.deleteVideo(tracks[0]) },
+    ] : []),
   ];
 }
 
@@ -231,6 +235,10 @@ export function trackMenuItems(tracks, ctx, { allTracks = null, index = 0, extra
     }
     if (single.filePath && !single.cloud) {
       items.push({ label: 'Show in file manager', icon: 'external', onClick: () => actions.showInFolder(single) });
+    }
+    if (actions.canDeleteVideo?.(single)) {
+      items.push({ separator: true });
+      items.push({ label: 'Delete video…', icon: 'trash', danger: true, onClick: () => actions.deleteVideo(single) });
     }
   }
   return items;

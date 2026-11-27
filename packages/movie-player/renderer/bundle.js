@@ -19305,7 +19305,11 @@
       actions.fetchMetadata ? { label: "Fetch Poster & Metadata (Public API)", icon: "locate", onClick: () => actions.fetchMetadata(tracks, { force: true }) } : null,
       actions.fixMetadata ? { label: "\u2726 AI Fix Metadata\u2026", icon: "sparkle", onClick: () => actions.fixMetadata(tracks) } : null,
       { label: allLoved ? "Remove from Watchlist" : "Add to My Watchlist", icon: allLoved ? "heartFill" : "heart", onClick: () => actions.setLoved(tracks, !allLoved) },
-      actions.hasSpeakers ? { label: "Cast to Smart TV", icon: "cast", onClick: () => actions.castTracks(tracks) } : null
+      actions.hasSpeakers ? { label: "Cast to Smart TV", icon: "cast", onClick: () => actions.castTracks(tracks) } : null,
+      ...tracks.length === 1 && actions.canDeleteVideo?.(tracks[0]) ? [
+        { separator: true },
+        { label: "Delete video\u2026", icon: "trash", danger: true, onClick: () => actions.deleteVideo(tracks[0]) }
+      ] : []
     ];
   }
   function trackMenuItems(tracks, ctx, { allTracks = null, index = 0, extra = [] } = {}) {
@@ -19356,6 +19360,10 @@
       }
       if (single.filePath && !single.cloud) {
         items.push({ label: "Show in file manager", icon: "external", onClick: () => actions.showInFolder(single) });
+      }
+      if (actions.canDeleteVideo?.(single)) {
+        items.push({ separator: true });
+        items.push({ label: "Delete video\u2026", icon: "trash", danger: true, onClick: () => actions.deleteVideo(single) });
       }
     }
     return items;
@@ -23171,6 +23179,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
   var MAX_SAVED_QUEUE = 5e3;
   var VIDEO_EXT_RE = /\.(mp4|mkv|webm|mov|m4v|avi|ogv|ts|m2ts|mpg|mpeg|flv|wmv|3gp)(\?|$)/i;
   var isVideoTrack = (t) => !!(t && (t.mediaType === "movie" || t.mediaType === "tv" || VIDEO_EXT_RE.test(t.filePath || "") || VIDEO_EXT_RE.test(t.src || "") || t.genre === "Movies"));
+  var canDeleteVideo = (t) => !!(t?.filePath && VIDEO_EXT_RE.test(t.filePath) && !t.cloud && !t.peerStream && !t.mediaService);
   function loadJson(key) {
     try {
       return JSON.parse(localStorage.getItem(key));
@@ -23903,7 +23912,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
       setPlaylist(next);
       setCurrentTrackIndex(Math.max(0, next.indexOf(current)));
     };
-    const handleRemoveFromQueue = (indices) => {
+    const handleRemoveFromQueue = (indices, { sourceDeleted = false } = {}) => {
       const set = new Set(indices);
       if (!set.size) return;
       const next = playlist.filter((_, i) => !set.has(i));
@@ -23913,13 +23922,17 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
         const removedBefore = indices.filter((i) => i < currentTrackIndex).length;
         idx = Math.min(currentTrackIndex - removedBefore, next.length - 1);
       }
+      if (sourceDeleted && set.has(currentTrackIndex)) {
+        videoRef.current?.pause();
+        setIsPlaying(false);
+      }
       if (!next.length) {
         playerRef.current?.audio?.current?.pause();
         setIsPlaying(false);
       }
       setPlaylist(next);
       setCurrentTrackIndex(Math.max(0, idx));
-      showStatus(set.size === 1 ? "Removed track from queue" : `Removed ${set.size} tracks from queue`);
+      if (!sourceDeleted) showStatus(set.size === 1 ? "Removed track from queue" : `Removed ${set.size} tracks from queue`);
     };
     const handleInsertIntoQueue = (tracks, at) => {
       const items = tracks.map((t) => ({ ...t }));
@@ -24798,6 +24811,18 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
     const openVideoSegments = (track) => {
       if (isVideoTrack(track)) setSegmentTrack(track);
     };
+    const deleteVideo = async (track) => {
+      try {
+        const result = await window.robosAudio.deleteVideo(track.id);
+        if (result.canceled) return;
+        if (!result.ok) throw new Error(result.error);
+        latestRef.current.removeDeletedVideoFromQueue(result.trackIds);
+        setSegmentDraft((previous) => result.trackIds.includes(previous?.trackId) ? null : previous);
+        showStatus(`Video moved to the ${result.trash}.`);
+      } catch (err) {
+        showStatus(`Could not delete video. ${err.message}`);
+      }
+    };
     const showRecentlyAdded = (track) => {
       const destination = { section: "recent", recordingId: track.id };
       if (track.mediaType === "tv") navigateShows(destination);
@@ -24807,7 +24832,8 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
       const track = currentTrack;
       if (!isVideoTrack(track)) return;
       const duration = knownVideoDurationSec || videoRef.current?.duration;
-      const canTrim = !!track.filePath && !track.cloud && !track.mediaService && !track.peerStream && Number.isFinite(duration);
+      const canEdit = canDeleteVideo(track);
+      const canTrim = canEdit && Number.isFinite(duration);
       const point = Math.max(0, Math.min(duration || 0, position));
       const trimDisabled = !canTrim || point < 0.25 || duration - point < 0.25;
       const draft = segmentDraft?.trackId === track.id ? segmentDraft : null;
@@ -24838,11 +24864,13 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
         { header: `Video \xB7 ${formatSegmentTime(position)}` },
         {
           label: "Edit video",
-          disabled: !canTrim,
-          title: canTrim ? void 0 : "Open a local video to edit it.",
+          disabled: !canEdit,
+          title: canEdit ? void 0 : "Open a local video to edit it.",
           submenu: [
             { label: "Trim video up to this point", disabled: trimDisabled, onClick: () => setVideoTrim({ track, point, duration, edge: "start" }) },
-            { label: "Trim video from this point", disabled: trimDisabled, onClick: () => setVideoTrim({ track, point, duration, edge: "end" }) }
+            { label: "Trim video from this point", disabled: trimDisabled, onClick: () => setVideoTrim({ track, point, duration, edge: "end" }) },
+            { separator: true },
+            { label: "Delete video\u2026", icon: "trash", danger: true, onClick: () => deleteVideo(track) }
           ]
         },
         { separator: true },
@@ -24936,6 +24964,8 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
         showInfo: setInfoTrack,
         openVideoSegments,
         canMarkVideo: isVideoTrack,
+        canDeleteVideo,
+        deleteVideo,
         showInFolder,
         goToAlbumOf,
         goToArtist,
@@ -24947,6 +24977,14 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
       prev: handlePlayPrev,
       toggle: () => handleTogglePlayPause(),
       playTracks,
+      removeDeletedVideoFromQueue(ids) {
+        const deleted = new Set(ids);
+        const indices = [];
+        playlist.forEach((track, index) => {
+          if (deleted.has(track.id)) indices.push(index);
+        });
+        handleRemoveFromQueue(indices, { sourceDeleted: true });
+      },
       djSpeaking: !!dj.speaking,
       aiAgent,
       skipDj: dj.skip,

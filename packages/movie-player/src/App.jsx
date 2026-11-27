@@ -26,6 +26,7 @@ const PLAYER_PREFS_KEY = 'robos-movie-player.player-prefs.v1';
 const MAX_SAVED_QUEUE = 5000;
 const VIDEO_EXT_RE = /\.(mp4|mkv|webm|mov|m4v|avi|ogv|ts|m2ts|mpg|mpeg|flv|wmv|3gp)(\?|$)/i;
 const isVideoTrack = (t) => !!(t && (t.mediaType === 'movie' || t.mediaType === 'tv' || VIDEO_EXT_RE.test(t.filePath || '') || VIDEO_EXT_RE.test(t.src || '') || t.genre === 'Movies'));
+const canDeleteVideo = (t) => !!(t?.filePath && VIDEO_EXT_RE.test(t.filePath) && !t.cloud && !t.peerStream && !t.mediaService);
 
 function loadJson(key) {
   try { return JSON.parse(localStorage.getItem(key)); } catch { return null; }
@@ -814,7 +815,7 @@ export default function App() {
     setCurrentTrackIndex(Math.max(0, next.indexOf(current)));
   };
 
-  const handleRemoveFromQueue = (indices) => {
+  const handleRemoveFromQueue = (indices, { sourceDeleted = false } = {}) => {
     const set = new Set(indices);
     if (!set.size) return;
     const next = playlist.filter((_, i) => !set.has(i));
@@ -824,13 +825,17 @@ export default function App() {
       const removedBefore = indices.filter(i => i < currentTrackIndex).length;
       idx = Math.min(currentTrackIndex - removedBefore, next.length - 1);
     }
+    if (sourceDeleted && set.has(currentTrackIndex)) {
+      videoRef.current?.pause();
+      setIsPlaying(false);
+    }
     if (!next.length) {
       playerRef.current?.audio?.current?.pause();
       setIsPlaying(false);
     }
     setPlaylist(next);
     setCurrentTrackIndex(Math.max(0, idx));
-    showStatus(set.size === 1 ? 'Removed track from queue' : `Removed ${set.size} tracks from queue`);
+    if (!sourceDeleted) showStatus(set.size === 1 ? 'Removed track from queue' : `Removed ${set.size} tracks from queue`);
   };
 
   const handleInsertIntoQueue = (tracks, at) => {
@@ -1803,6 +1808,19 @@ export default function App() {
     if (isVideoTrack(track)) setSegmentTrack(track);
   };
 
+  const deleteVideo = async (track) => {
+    try {
+      const result = await window.robosAudio.deleteVideo(track.id);
+      if (result.canceled) return;
+      if (!result.ok) throw new Error(result.error);
+      latestRef.current.removeDeletedVideoFromQueue(result.trackIds);
+      setSegmentDraft(previous => result.trackIds.includes(previous?.trackId) ? null : previous);
+      showStatus(`Video moved to the ${result.trash}.`);
+    } catch (err) {
+      showStatus(`Could not delete video. ${err.message}`);
+    }
+  };
+
   const showRecentlyAdded = (track) => {
     const destination = { section: 'recent', recordingId: track.id };
     if (track.mediaType === 'tv') navigateShows(destination);
@@ -1813,7 +1831,8 @@ export default function App() {
     const track = currentTrack;
     if (!isVideoTrack(track)) return;
     const duration = knownVideoDurationSec || videoRef.current?.duration;
-    const canTrim = !!track.filePath && !track.cloud && !track.mediaService && !track.peerStream && Number.isFinite(duration);
+    const canEdit = canDeleteVideo(track);
+    const canTrim = canEdit && Number.isFinite(duration);
     const point = Math.max(0, Math.min(duration || 0, position));
     const trimDisabled = !canTrim || point < 0.25 || duration - point < 0.25;
     const draft = segmentDraft?.trackId === track.id ? segmentDraft : null;
@@ -1837,10 +1856,12 @@ export default function App() {
     });
     openMenu(event, [
       { header: `Video · ${formatSegmentTime(position)}` },
-      { label: 'Edit video', disabled: !canTrim, title: canTrim ? undefined : 'Open a local video to edit it.',
+      { label: 'Edit video', disabled: !canEdit, title: canEdit ? undefined : 'Open a local video to edit it.',
         submenu: [
           { label: 'Trim video up to this point', disabled: trimDisabled, onClick: () => setVideoTrim({ track, point, duration, edge: 'start' }) },
           { label: 'Trim video from this point', disabled: trimDisabled, onClick: () => setVideoTrim({ track, point, duration, edge: 'end' }) },
+          { separator: true },
+          { label: 'Delete video…', icon: 'trash', danger: true, onClick: () => deleteVideo(track) },
         ] },
       { separator: true },
       ...marks,
@@ -1937,6 +1958,8 @@ export default function App() {
       showInfo: setInfoTrack,
       openVideoSegments,
       canMarkVideo: isVideoTrack,
+      canDeleteVideo,
+      deleteVideo,
       showInFolder,
       goToAlbumOf,
       goToArtist,
@@ -1949,6 +1972,12 @@ export default function App() {
     prev: handlePlayPrev,
     toggle: () => handleTogglePlayPause(),
     playTracks,
+    removeDeletedVideoFromQueue(ids) {
+      const deleted = new Set(ids);
+      const indices = [];
+      playlist.forEach((track, index) => { if (deleted.has(track.id)) indices.push(index); });
+      handleRemoveFromQueue(indices, { sourceDeleted: true });
+    },
     djSpeaking: !!dj.speaking,
     aiAgent,
     skipDj: dj.skip,

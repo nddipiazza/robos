@@ -19,6 +19,7 @@ const { PublicMetadataService } = require('./lib/public-metadata');
 const { createControlServer } = require('./lib/control-server');
 const { registerVideoSegments } = require('./lib/video-segments');
 const { registerVideoTrim } = require('./lib/video-trim');
+const { registerVideoDelete } = require('./lib/video-delete');
 
 // Shared RobOS modules: the repo checkout in development, the installed copy on the VM.
 function requireShared(...relPaths) {
@@ -92,6 +93,17 @@ app.on('second-instance', () => {
 const castService = new CastService();
 const mediaLibrary = new MediaLibrary();
 const videoSegments = registerVideoSegments({ app, ipcMain, getWindow: () => mainWindow, mediaLibrary });
+registerVideoDelete({
+  ipcMain, dialog, shell, getWindow: () => mainWindow,
+  findTrack: videoSegments.findTrack, isLocalVideo: videoSegments.isLocalVideo,
+  removeFromLibrary(track) {
+    const trackIds = mediaLibrary.removeVideoSource(track, videoSegments.isLocalVideo);
+    videoSegments.forgetOpened(trackIds);
+    sendToWindow('audio:library-scan-batch', { library: mediaLibrary.getLibrary() });
+    sendToWindow('audio:playlists-updated', mediaLibrary.getPlaylists());
+    return trackIds;
+  },
+});
 registerVideoTrim({
   app, ipcMain, getWindow: () => mainWindow,
   findTrack: videoSegments.findTrack, isLocalVideo: videoSegments.isLocalVideo,

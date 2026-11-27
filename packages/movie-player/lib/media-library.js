@@ -17,6 +17,11 @@ const { readCloudTags, mergeTags } = require('./cloud-tags');
 const ART_MEMORY_LIMIT = 200;
 const ART_EXTENSIONS = ['jpg', 'png', 'webp', 'svg'];
 
+function videoPathKey(filePath) {
+  const normalized = path.normalize(filePath);
+  return process.platform === 'win32' ? normalized.toLowerCase() : normalized;
+}
+
 class MediaLibrary {
   // `tracks` is reassigned by LibraryFolders and older callers; every reassignment
   // invalidates the filePath → position index used for O(batch) merges.
@@ -49,6 +54,7 @@ class MediaLibrary {
     this.stats = {}; // trackId -> { plays, lastPlayed, loved, lovedAt }
     this.artAliases = new Map(); // legacy path-based artId -> content-based artId
     this._saveTimer = null;
+    this._removedVideoPaths = new Set();
 
     this._loadCache();
     this._loadPlaylists();
@@ -161,6 +167,14 @@ class MediaLibrary {
     const now = new Date().toISOString();
     for (const track of incoming) {
       if (!track) continue;
+      if (this._removedVideoPaths.size && track.filePath && !track.cloud && !track.peerStream && !track.mediaService) {
+        const key = videoPathKey(track.filePath);
+        if (this._removedVideoPaths.has(key)) {
+          // A scan may still deliver a batch it parsed before the source was moved.
+          if (!fs.existsSync(track.filePath)) continue;
+          this._removedVideoPaths.delete(key);
+        }
+      }
       const at = track.filePath ? index.get(track.filePath) : undefined;
       if (at !== undefined) {
         track.addedAt = list[at].addedAt || track.addedAt || now;
@@ -175,6 +189,33 @@ class MediaLibrary {
     if (deferSave) this._saveCacheSoon();
     else this._saveCache();
     return this.tracks;
+  }
+
+  removeVideoSource(source, isLocalVideo) {
+    const sourceKey = videoPathKey(source.filePath);
+    this._removedVideoPaths.add(sourceKey);
+    const ids = new Set([source.id]);
+    const keep = (track) => {
+      if (!isLocalVideo(track) || videoPathKey(track.filePath) !== sourceKey) return true;
+      ids.add(track.id);
+      return false;
+    };
+    const remaining = this.tracks.filter(keep);
+    if (remaining.length !== this.tracks.length) {
+      this.tracks = remaining;
+      this._saveCache();
+    }
+    let changedPlaylists = false;
+    for (const list of this.playlists) {
+      if (!Array.isArray(list.tracks)) continue;
+      const tracks = list.tracks.filter(keep);
+      if (tracks.length === list.tracks.length) continue;
+      list.tracks = tracks;
+      list.updatedAt = new Date().toISOString();
+      changedPlaylists = true;
+    }
+    if (changedPlaylists) this._savePlaylists();
+    return Array.from(ids);
   }
 
   // ── Play statistics & loved tracks ─────────────────────────────────────────

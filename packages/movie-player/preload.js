@@ -23,6 +23,7 @@ contextBridge.exposeInMainWorld('robosAudio', {
   ensureFileAccessible: (filePath) => ipcRenderer.invoke('audio:ensure-file-accessible', filePath),
   getLibrary: () => ipcRenderer.invoke('audio:get-library'),
   trimVideo: (input) => ipcRenderer.invoke('movie:trim-video', input),
+  deleteVideo: (trackId) => ipcRenderer.invoke('movie:delete-video', trackId),
   cancelVideoTrim: () => ipcRenderer.invoke('movie:trim-cancel'),
   onVideoTrimProgress: (callback) => {
     const handler = (_event, progress) => callback(progress);
