@@ -3092,6 +3092,7 @@ describe('DAW Editing Engine: Multi-Select, Track/Take Gain, Split/Trim, Copy/Pa
       assert.ok(!appSrc.includes('embedded-video-live-img'), 'Must not reference nonexistent #embedded-video-live-img');
       assert.ok(appSrc.includes('ingestLiveRecordingVideoThumbFromDataUrl'));
       assert.ok(appSrc.includes('getAudibleOutputLatencySec'));
+      assert.ok(!/\baudioCtx\b/.test(appSrc), 'Must use studioAudioCtx (never undeclared audioCtx) in renderer/app.js');
       assert.ok(appSrc.includes('videoEl.playbackRate'));
       assert.ok(appSrc.includes('onVideoLiveFrame'));
       assert.ok(vidWinSrc.includes('onLiveFrame'));

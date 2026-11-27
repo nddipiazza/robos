@@ -2378,7 +2378,7 @@ function syncVideoOutputMonitor({ forcePush = false } = {}) {
 
   // Compute exact audible timeline position exiting speakers/headphones right now for sub-frame video sync!
   const transportRolling = Boolean(isPlaying || isRecording);
-  const activeSyncCtx = isRecording ? (liveRecSession?.overdubMonitor?.ctx || audioCtx) : audioCtx;
+  const activeSyncCtx = isRecording ? (liveRecSession?.overdubMonitor?.ctx || studioAudioCtx) : studioAudioCtx;
   const audiblePlayheadSec = isPlaying
     ? Math.max(playStartOffsetSec, playheadSec - getAudibleOutputLatencySec(activeSyncCtx))
     : playheadSec;
