@@ -32,7 +32,9 @@ function parseLrc(text) {
 }
 
 function cacheFile(track) {
-  const key = crypto.createHash('sha1').update([track.artist, track.title, track.album].join('|').toLowerCase()).digest('hex');
+  const key = crypto.createHash('sha1')
+    .update(['v2', track.artist, track.title, track.album, Math.round(track.duration || 0)].join('|').toLowerCase())
+    .digest('hex');
   return path.join(CACHE_DIR, key + '.json');
 }
 
@@ -60,58 +62,73 @@ async function fetchJson(url) {
 
 // Strip placeholder tags so the query matches what LRCLIB stores. Cloud tracks
 // often carry the artist only in the folder-derived album ("Artist - Album (2016)").
-// `titles` holds the title as tagged plus, when it has a filename-style track
-// number ("12 Song", "01 - Song"), a stripped variant to try second.
+// Try the title as tagged, then remove filename track numbers and lyric-video labels.
 function normalizeQuery(track) {
   const clean = v => (v && !PLACEHOLDER.test(String(v).trim()) ? String(v).trim() : '');
   let artist = clean(track.artist);
   let album = clean(track.album);
   const title = String(track.title || '').trim();
   const stripped = title.replace(/^\d{1,3}(\s*[-.]\s*|\s+)(?=\S)/, '').trim();
-  const titles = stripped && stripped !== title ? [title, stripped] : [title];
   if (!artist && album) {
     const m = album.match(/^(.+?)\s+-\s+(.+?)(?:\s*[([]\d{4}[)\]])?$/);
     if (m) { artist = m[1]; album = m[2]; }
   }
+  const lyricLabel = /\s+(?:with lyrics|(?:official )?lyric video|\[(?:lyrics|with lyrics|(?:official )?lyric video)\]|\((?:lyrics|with lyrics|(?:official )?lyric video)\))$/i;
+  const undecorated = stripped.replace(lyricLabel, '').trim();
+  let cleaned = undecorated;
+  if (artist && undecorated.toLowerCase().startsWith(artist.toLowerCase())) {
+    const suffix = undecorated.slice(artist.length);
+    if (/^\s*[-–—:]\s*\S/.test(suffix) || (undecorated !== stripped && /^\s+\S/.test(suffix))) {
+      cleaned = suffix.replace(/^\s*[-–—:]?\s*/, '');
+    }
+  }
+  const titles = [...new Set([title, stripped, cleaned].filter(Boolean))];
   const duration = track.duration > 0 && track.duration <= MAX_DURATION ? Math.round(track.duration) : 0;
   return { artist, album, titles, duration };
 }
 
 async function fromLrclib(track) {
   const { titles, ...rest } = normalizeQuery(track);
-  let hit = null;
+  let plainHit = null;
   for (const title of titles) {
-    hit = await queryLrclib({ ...rest, title });
-    if (hit && (hit.syncedLyrics || hit.plainLyrics)) break;
+    const hit = await queryLrclib({ ...rest, title });
+    if (!hit) continue;
+    const canSync = rest.duration ? matchesDuration(hit, rest.duration) : titles.length === 1;
+    if (canSync && hit.syncedLyrics) return hit;
+    if (!plainHit && hit.plainLyrics) plainHit = { plainLyrics: hit.plainLyrics };
   }
-  return hit;
+  return plainHit;
 }
+
+const matchesDuration = (result, duration) => Number.isFinite(result.duration) && Math.abs(result.duration - duration) <= 5;
+const matchesTag = (actual, expected) => typeof actual === 'string' && actual.trim().toLowerCase() === expected.trim().toLowerCase();
 
 async function queryLrclib({ artist, album, title, duration }) {
   let hit = null;
-  // /get needs an artist; without one go straight to search.
-  if (artist) {
-    const q = new URLSearchParams({ artist_name: artist, track_name: title });
-    if (album) q.set('album_name', album);
-    if (duration) q.set('duration', String(duration));
+  // /get expects the complete recording metadata. Other tracks use search.
+  if (artist && album && duration) {
+    const q = new URLSearchParams({ artist_name: artist, track_name: title, album_name: album, duration: String(duration) });
     hit = await fetchJson(`${LRCLIB}/get?${q}`);
+    if (hit?.syncedLyrics && matchesDuration(hit, duration)) return hit;
   }
-  if (!hit || !hit.syncedLyrics) {
-    const q = new URLSearchParams({ track_name: title });
-    if (artist) q.set('artist_name', artist);
-    let results;
-    try {
-      results = await fetchJson(`${LRCLIB}/search?${q}`);
-    } catch (err) {
-      // Keep a plain-lyrics /get hit rather than failing the whole lookup.
-      if (hit) return hit;
-      throw err;
-    }
-    const usable = (results || []).filter(r => r.syncedLyrics || r.plainLyrics);
-    const close = usable.filter(r => !duration || Math.abs(r.duration - duration) <= 5);
-    hit = close.find(r => r.syncedLyrics) || (hit && hit.plainLyrics ? hit : close[0]) || hit;
+  const q = new URLSearchParams({ track_name: title });
+  if (artist) q.set('artist_name', artist);
+  let results;
+  try {
+    results = await fetchJson(`${LRCLIB}/search?${q}`);
+  } catch (err) {
+    if (hit) return hit;
+    throw err;
   }
-  return hit;
+  const exact = (Array.isArray(results) ? results : []).filter(r =>
+    matchesTag(r.trackName || r.name, title) && (!artist || matchesTag(r.artistName, artist)));
+  const close = exact.filter(r => !duration || matchesDuration(r, duration));
+  return close.find(r => r.syncedLyrics && matchesTag(r.albumName, album))
+    || close.find(r => r.syncedLyrics)
+    || (hit?.plainLyrics ? hit : null)
+    || exact.find(r => r.plainLyrics && matchesTag(r.albumName, album))
+    || exact.find(r => r.plainLyrics)
+    || null;
 }
 
 async function getLyrics(track) {
@@ -123,7 +140,7 @@ async function getLyrics(track) {
       if (res.ok) {
         const text = await res.text();
         const lines = parseLrc(text);
-        if (lines.length) return { found: true, source: 'file', synced: lines };
+        if (lines.length) return { found: true, source: 'media-server', synced: lines };
       }
     } catch {}
   }

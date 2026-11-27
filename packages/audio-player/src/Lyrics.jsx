@@ -6,7 +6,7 @@ import { useLayoutPref } from './resizable.jsx';
 // speaker while casting) and `onSeek(t)` jumps there. Both switches stick: lyrics
 // on/off, and "Follow" (keep the current line in view). Scrolling the lyrics by
 // hand turns Follow off; the Follow button turns it back on.
-export default function Lyrics({ track, getTime, onSeek }) {
+export default function Lyrics({ track, duration, getTime, onSeek }) {
   const [enabled, setEnabled] = useLayoutPref('lyricsEnabled', true);
   const [follow, setFollow] = useLayoutPref('lyricsFollow', true);
   const [data, setData] = useState(null); // null = loading
@@ -20,11 +20,11 @@ export default function Lyrics({ track, getTime, onSeek }) {
     setActive(-1);
     if (!enabled) return undefined;
     if (!track || !window.robosAudio?.getLyrics) { setData({ found: false }); return undefined; }
-    window.robosAudio.getLyrics({ title: track.title, artist: track.artist, album: track.album, duration: track.duration, filePath: track.filePath })
+    window.robosAudio.getLyrics({ id: track.id, title: track.title, artist: track.artist, album: track.album, duration, filePath: track.filePath })
       .then(r => { if (!cancelled) setData(r); })
       .catch(() => { if (!cancelled) setData({ found: false }); });
     return () => { cancelled = true; };
-  }, [enabled, track?.id, track?.filePath, track?.title, track?.artist]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [enabled, track?.id, track?.filePath, track?.title, track?.artist, track?.album, track?.mediaService?.lyricsUrl, duration]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const synced = (enabled && data?.synced) || [];
 
@@ -76,7 +76,10 @@ export default function Lyrics({ track, getTime, onSeek }) {
       <div className="lyrics-head">
         <span><Icon name="mic" size={14} /> Lyrics</span>
         <span className="lyrics-tools">
-          {enabled && synced.length > 0 && <span className="lyrics-src">Synced{data.source === 'lrclib' ? ' via LRCLIB' : ' from .lrc file'}</span>}
+          {enabled && synced.length > 0 && <span className="lyrics-src">{
+            { lrclib: 'Synced via LRCLIB', 'media-server': 'Synced from RobOS Media Server', file: 'Synced from .lrc file' }[data.source]
+          }</span>}
+          {enabled && !synced.length && data?.plain && <span className="lyrics-src">Plain lyrics</span>}
           {enabled && synced.length > 0 && (
             <button
               id="btn-lyrics-follow"

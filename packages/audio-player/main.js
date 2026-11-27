@@ -886,7 +886,11 @@ ipcMain.handle('audio:folders-remove', async (_evt, { id, removeTracks }) => {
   return folderState({ withLibrary: !!removeTracks });
 });
 
-ipcMain.handle('audio:get-lyrics', async (_evt, track) => lyrics.getLyrics(track));
+ipcMain.handle('audio:get-lyrics', async (_evt, track) => {
+  if (!track) return { found: false };
+  const libraryTrack = track.id && mediaLibrary.tracks.find(entry => entry.id === track.id);
+  return lyrics.getLyrics({ ...track, mediaService: libraryTrack?.mediaService });
+});
 
 // ── AI playlists & Virtual DJ (RobOS agent + RobOS voice) ──────────────────
 

@@ -18283,7 +18283,7 @@
   }
 
   // src/Lyrics.jsx
-  function Lyrics({ track, getTime, onSeek }) {
+  function Lyrics({ track, duration, getTime, onSeek }) {
     const [enabled, setEnabled] = useLayoutPref("lyricsEnabled", true);
     const [follow, setFollow] = useLayoutPref("lyricsFollow", true);
     const [data, setData] = (0, import_react11.useState)(null);
@@ -18299,7 +18299,7 @@
         setData({ found: false });
         return void 0;
       }
-      window.robosAudio.getLyrics({ title: track.title, artist: track.artist, album: track.album, duration: track.duration, filePath: track.filePath }).then((r) => {
+      window.robosAudio.getLyrics({ id: track.id, title: track.title, artist: track.artist, album: track.album, duration, filePath: track.filePath }).then((r) => {
         if (!cancelled) setData(r);
       }).catch(() => {
         if (!cancelled) setData({ found: false });
@@ -18307,7 +18307,7 @@
       return () => {
         cancelled = true;
       };
-    }, [enabled, track?.id, track?.filePath, track?.title, track?.artist]);
+    }, [enabled, track?.id, track?.filePath, track?.title, track?.artist, track?.album, track?.mediaService?.lyricsUrl, duration]);
     const synced = enabled && data?.synced || [];
     (0, import_react11.useEffect)(() => {
       if (!synced.length) return void 0;
@@ -18357,7 +18357,7 @@
       ));
     } else if (data.plain) body = /* @__PURE__ */ import_react11.default.createElement("pre", { className: "lyrics-plain" }, data.plain);
     else body = /* @__PURE__ */ import_react11.default.createElement("div", { className: "lyrics-empty" }, data.error || "No synced lyrics found for this track.");
-    return /* @__PURE__ */ import_react11.default.createElement("div", { className: `lyrics-panel ${enabled ? "" : "off"}` }, /* @__PURE__ */ import_react11.default.createElement("div", { className: "lyrics-head" }, /* @__PURE__ */ import_react11.default.createElement("span", null, /* @__PURE__ */ import_react11.default.createElement(Icon2, { name: "mic", size: 14 }), " Lyrics"), /* @__PURE__ */ import_react11.default.createElement("span", { className: "lyrics-tools" }, enabled && synced.length > 0 && /* @__PURE__ */ import_react11.default.createElement("span", { className: "lyrics-src" }, "Synced", data.source === "lrclib" ? " via LRCLIB" : " from .lrc file"), enabled && synced.length > 0 && /* @__PURE__ */ import_react11.default.createElement(
+    return /* @__PURE__ */ import_react11.default.createElement("div", { className: `lyrics-panel ${enabled ? "" : "off"}` }, /* @__PURE__ */ import_react11.default.createElement("div", { className: "lyrics-head" }, /* @__PURE__ */ import_react11.default.createElement("span", null, /* @__PURE__ */ import_react11.default.createElement(Icon2, { name: "mic", size: 14 }), " Lyrics"), /* @__PURE__ */ import_react11.default.createElement("span", { className: "lyrics-tools" }, enabled && synced.length > 0 && /* @__PURE__ */ import_react11.default.createElement("span", { className: "lyrics-src" }, { lrclib: "Synced via LRCLIB", "media-server": "Synced from RobOS Media Server", file: "Synced from .lrc file" }[data.source]), enabled && !synced.length && data?.plain && /* @__PURE__ */ import_react11.default.createElement("span", { className: "lyrics-src" }, "Plain lyrics"), enabled && synced.length > 0 && /* @__PURE__ */ import_react11.default.createElement(
       "button",
       {
         id: "btn-lyrics-follow",
@@ -21172,6 +21172,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
     const [activeTab, setActiveTab] = (0, import_react25.useState)("player");
     const [playlist, setPlaylist] = (0, import_react25.useState)(initial.queue);
     const [currentTrackIndex, setCurrentTrackIndex] = (0, import_react25.useState)(initial.index);
+    const [decodedDuration, setDecodedDuration] = (0, import_react25.useState)(null);
     const [folders, setFolders] = (0, import_react25.useState)([]);
     const [syncingFolder, setSyncingFolder] = (0, import_react25.useState)(null);
     const [outputTarget, setOutputTarget] = (0, import_react25.useState)("local");
@@ -22897,7 +22898,11 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
         {
           ref: playerRef,
           src: outputTarget === "local" ? resolveSrc(currentTrack) : void 0,
-          onLoadedMetaData: () => {
+          onLoadedMetaData: (event) => {
+            const { currentSrc, duration } = event.currentTarget;
+            if (currentSrc && Number.isFinite(duration) && duration > 0) {
+              setDecodedDuration({ src: currentSrc, seconds: Math.round(duration) });
+            }
             const at = pendingLocalSeekRef.current;
             const a = playerRef.current?.audio?.current;
             if (at != null && a) {
@@ -22939,7 +22944,8 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
       )), /* @__PURE__ */ import_react25.default.createElement(
         Lyrics,
         {
-          track: currentTrack,
+          track: libraryById.get(currentTrack?.id) || currentTrack,
+          duration: decodedDuration?.src === resolveSrc(currentTrack) ? decodedDuration.seconds : currentTrack?.duration,
           getTime: () => outputTarget !== "local" ? castClock.now() : playerRef.current?.audio?.current?.currentTime ?? null,
           onSeek: (t) => {
             if (outputTarget !== "local") handleCastSeek(t);

@@ -55,6 +55,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('player'); // 'player' | 'playlists' | 'library' | 'cloud' | 'ambient' | 'speakers'
   const [playlist, setPlaylist] = useState(initial.queue);
   const [currentTrackIndex, setCurrentTrackIndex] = useState(initial.index);
+  const [decodedDuration, setDecodedDuration] = useState(null);
   const [folders, setFolders] = useState([]);
   const [syncingFolder, setSyncingFolder] = useState(null);
   const [outputTarget, setOutputTarget] = useState('local'); // 'local' | speaker IP | 'all'
@@ -1999,7 +2000,11 @@ export default function App() {
                 <AudioPlayer
                   ref={playerRef}
                   src={outputTarget === 'local' ? resolveSrc(currentTrack) : undefined}
-                  onLoadedMetaData={() => {
+                  onLoadedMetaData={event => {
+                    const { currentSrc, duration } = event.currentTarget;
+                    if (currentSrc && Number.isFinite(duration) && duration > 0) {
+                      setDecodedDuration({ src: currentSrc, seconds: Math.round(duration) });
+                    }
                     // Back from a speaker: continue where the speaker was.
                     const at = pendingLocalSeekRef.current;
                     const a = playerRef.current?.audio?.current;
@@ -2039,7 +2044,8 @@ export default function App() {
               </div>
 
               <Lyrics
-                track={currentTrack}
+                track={libraryById.get(currentTrack?.id) || currentTrack}
+                duration={decodedDuration?.src === resolveSrc(currentTrack) ? decodedDuration.seconds : currentTrack?.duration}
                 getTime={() => (outputTarget !== 'local' ? castClock.now() : playerRef.current?.audio?.current?.currentTime ?? null)}
                 onSeek={(t) => {
                   if (outputTarget !== 'local') handleCastSeek(t);
