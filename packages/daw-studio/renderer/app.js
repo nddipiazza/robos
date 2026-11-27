@@ -215,6 +215,8 @@ let videoPopoutOpen = false;
 let videoLiveCamEnabled = false;
 let videoLiveSnapshotDataUrl = '';
 let videoLiveSnapshotTimer = null;
+let activeLiveMonitorSig = '';
+const liveVideoFrameByTrack = new Map(); // trackId -> latest data:image/jpeg;base64,...
 let loadedEmbeddedVideoSrc = '';
 let isSeekingEmbeddedVideo = false;
 let pendingEmbeddedSeekSec = null;
@@ -2104,27 +2106,71 @@ function drawVideoFilmstripIntoClip(ctx, {
   }
 }
 
-function captureLiveRecordingVideoThumbIfDue(recElapsedSec) {
-  if (!liveRecSession || !isRecording) return;
+function pushLiveThumbCanvasToSession(trackId, thumbCanvas, relSec) {
+  if (!liveRecSession) return;
+  if (!liveRecSession.videoThumbs) liveRecSession.videoThumbs = [];
+  if (!liveRecSession.videoThumbsByTrack) liveRecSession.videoThumbsByTrack = new Map();
+  const safeRel = Math.max(0, Number(relSec) || 0);
+  if (liveRecSession.videoThumbs.length < 90) {
+    liveRecSession.videoThumbs.push({ relSec: safeRel, canvas: thumbCanvas });
+  }
+  if (trackId) {
+    let arr = liveRecSession.videoThumbsByTrack.get(trackId);
+    if (!arr) {
+      arr = [];
+      liveRecSession.videoThumbsByTrack.set(trackId, arr);
+    }
+    if (arr.length < 90) {
+      arr.push({ relSec: safeRel, canvas: thumbCanvas });
+    }
+  }
+}
+
+function ingestLiveRecordingVideoThumbFromDataUrl(trackId, dataUrl) {
+  if (!liveRecSession || !isRecording || !dataUrl) return;
+  if (!liveRecSession.lastThumbMsByTrack) liveRecSession.lastThumbMsByTrack = new Map();
   const nowMs = performance.now();
-  if (liveRecSession.lastVideoThumbAtMs && nowMs - liveRecSession.lastVideoThumbAtMs < 1400) return;
-  const liveImg = document.getElementById('embedded-video-live-img');
+  const key = trackId || '__default__';
+  const prevMs = liveRecSession.lastThumbMsByTrack.get(key) || 0;
+  // Capture the very first frame immediately (0ms delay), then sample every 950ms along the timeline!
+  if (prevMs > 0 && (nowMs - prevMs) < 950) return;
+  liveRecSession.lastThumbMsByTrack.set(key, nowMs);
+
+  const relSec = Math.max(0, playheadSec - (Number(liveRecSession.startSec) || 0));
+  const img = new Image();
+  img.onload = () => {
+    if (!liveRecSession || !isRecording) return;
+    try {
+      const thumbCanvas = document.createElement('canvas');
+      thumbCanvas.width = 160;
+      thumbCanvas.height = 90;
+      const tctx = thumbCanvas.getContext('2d');
+      tctx.drawImage(img, 0, 0, 160, 90);
+      pushLiveThumbCanvasToSession(trackId, thumbCanvas, relSec);
+    } catch {}
+  };
+  img.src = dataUrl;
+}
+
+function captureLiveRecordingVideoThumbIfDue(recElapsedSec, trackId = '') {
+  if (!liveRecSession || !isRecording) return;
+  // If FFmpeg dual-output live frames are already populating this track's filmstrip, no DOM fallback needed!
+  const existing = trackId ? liveRecSession.videoThumbsByTrack?.get(trackId) : null;
+  if (existing && existing.length > 0) return;
+
+  const nowMs = performance.now();
+  if (liveRecSession.lastVideoThumbAtMs && nowMs - liveRecSession.lastVideoThumbAtMs < 1100) return;
+  const liveImg = document.getElementById('embedded-live-img');
   if (!liveImg || !liveImg.complete || !liveImg.naturalWidth || !liveImg.naturalHeight) return;
 
   liveRecSession.lastVideoThumbAtMs = nowMs;
-  if (!liveRecSession.videoThumbs) liveRecSession.videoThumbs = [];
-  if (liveRecSession.videoThumbs.length >= 60) return;
-
   try {
     const thumbCanvas = document.createElement('canvas');
     thumbCanvas.width = 160;
     thumbCanvas.height = 90;
     const tctx = thumbCanvas.getContext('2d');
     tctx.drawImage(liveImg, 0, 0, 160, 90);
-    liveRecSession.videoThumbs.push({
-      relSec: Math.max(0, Number(recElapsedSec) || 0),
-      canvas: thumbCanvas,
-    });
+    pushLiveThumbCanvasToSession(trackId, thumbCanvas, recElapsedSec);
   } catch {
     // Cross-origin MJPEG canvas taint fallback: safe no-op until recording stops and FFmpeg sprite loads
   }
@@ -2174,10 +2220,17 @@ function getLiveStreamDirectMjpegUrl(track) {
   return '';
 }
 
-function stopLiveCamSnapshotPolling() {
+function stopLiveCamSnapshotPolling({ stopBackendMonitor = true } = {}) {
   if (videoLiveSnapshotTimer) {
     clearInterval(videoLiveSnapshotTimer);
     videoLiveSnapshotTimer = null;
+  }
+  if (stopBackendMonitor && activeLiveMonitorSig && !isRecording) {
+    activeLiveMonitorSig = '';
+    window.robos?.stopVideoLiveMonitor?.().catch(() => {});
+  } else if (isRecording) {
+    // During recording, `VideoTrackRecorder` owns the single dual-output FFmpeg stream
+    activeLiveMonitorSig = '';
   }
 }
 
@@ -2187,23 +2240,60 @@ function ensureLiveCamSnapshotPolling(track) {
     stopLiveCamSnapshotPolling();
     return;
   }
+  // During recording, `VideoTrackRecorder`'s dual-output MJPEG pipe streams live 15 fps frames automatically!
+  if (isRecording && track.armed) {
+    if (videoLiveSnapshotTimer) {
+      clearInterval(videoLiveSnapshotTimer);
+      videoLiveSnapshotTimer = null;
+    }
+    activeLiveMonitorSig = '';
+    const cachedTrackFrame = liveVideoFrameByTrack.get(track.id);
+    if (cachedTrackFrame && videoLiveSnapshotDataUrl !== cachedTrackFrame) {
+      videoLiveSnapshotDataUrl = cachedTrackFrame;
+    }
+    return;
+  }
+
+  // Idle Live Cam monitoring: use persistent 15 fps `LiveCameraMonitor` when available (no 2.5s V4L2 cold re-opens!)
+  if (typeof window.robos?.startVideoLiveMonitor === 'function') {
+    const sig = `${track.id}|${vcfg.devicePath || ''}|${vcfg.streamUrl || ''}|${vcfg.qualityPreset || ''}`;
+    if (activeLiveMonitorSig !== sig) {
+      activeLiveMonitorSig = sig;
+      const cachedTrackFrame = liveVideoFrameByTrack.get(track.id);
+      if (cachedTrackFrame) videoLiveSnapshotDataUrl = cachedTrackFrame;
+      window.robos.startVideoLiveMonitor({ trackId: track.id, videoConfig: vcfg }).then((res) => {
+        if (res?.latestDataUrl) {
+          videoLiveSnapshotDataUrl = res.latestDataUrl;
+          syncVideoOutputMonitor({ forcePush: true });
+        }
+      }).catch(() => {});
+    }
+    return;
+  }
+
+  // Fallback snapshot polling if running without `startVideoLiveMonitor`
   if (videoLiveSnapshotTimer) return;
+  let pulling = false;
   const pullOnce = async () => {
+    if (pulling) return;
     const activeTrk = ensureSelectedVideoOutputTrack();
     if (!activeTrk?.videoConfig || (!videoLiveCamEnabled && !isRecording) || (!videoDockOpen && !videoPopoutOpen)) {
       stopLiveCamSnapshotPolling();
       return;
     }
+    pulling = true;
     try {
       const res = await window.robos?.captureVideoSnapshot?.({ videoConfig: activeTrk.videoConfig });
       if (res?.ok && res.dataUrl) {
         videoLiveSnapshotDataUrl = res.dataUrl;
         syncVideoOutputMonitor({ forcePush: true });
       }
-    } catch {}
+    } catch {} finally {
+      pulling = false;
+    }
   };
   pullOnce();
-  videoLiveSnapshotTimer = setInterval(pullOnce, 450);
+  videoLiveSnapshotTimer = setInterval(pullOnce, 700);
 }
 
 function safeSeekEmbeddedVideo(videoEl, targetSec) {
@@ -2255,7 +2345,12 @@ function syncVideoOutputMonitor({ forcePush = false } = {}) {
     videoSourceTrack = (currentProject?.tracks || []).find(t => isTrackVideoCapable(t) && !t.muted) || null;
   }
 
-  const activeClipRaw = (!isRecording && videoSourceTrack) ? findActiveVideoClipAtSec(videoSourceTrack, playheadSec) : null;
+  // When Live Cam is explicitly toggled ON while stopped (not playing back), prioritize the live camera
+  // over a paused timeline video clip so you can frame your drum shot even when parked inside Part 1!
+  const preferLiveWhileStopped = Boolean(!isPlaying && !isRecording && videoLiveCamEnabled && videoSourceTrack?.videoConfig);
+  const activeClipRaw = (!isRecording && !preferLiveWhileStopped && videoSourceTrack)
+    ? findActiveVideoClipAtSec(videoSourceTrack, playheadSec)
+    : null;
   const activeClipVideoFile = resolveClipVideoFilePath(activeClipRaw);
   const activeClipPayload = (activeClipRaw && activeClipVideoFile)
     ? {
@@ -2400,6 +2495,12 @@ function syncVideoOutputMonitor({ forcePush = false } = {}) {
 async function toggleVideoOutputMonitor(forceTrackId = '') {
   if (forceTrackId) {
     selectedVideoOutputTrackId = forceTrackId;
+    const trk = (currentProject?.tracks || []).find(t => t.id === forceTrackId);
+    // If clicking VIEW on a live camera track that has no recorded clip under the playhead yet,
+    // automatically light up Live Cam so the preview isn't a blank standby slate!
+    if (trk?.videoConfig && !findActiveVideoClipAtSec(trk, playheadSec)) {
+      videoLiveCamEnabled = true;
+    }
     if (!videoDockOpen && !videoPopoutOpen) {
       videoDockOpen = true;
     }
@@ -3435,6 +3536,10 @@ async function toggleRecording({ keepCursorAtStop = false } = {}) {
       tracks: trackStatesMap,
     };
     isRecording = true;
+    const armedVidTracks = armed.filter(t => t.trackKind === 'video');
+    if (armedVidTracks.length > 0 && !armedVidTracks.some(t => t.id === selectedVideoOutputTrackId)) {
+      selectedVideoOutputTrackId = armedVidTracks[0].id;
+    }
     document.getElementById('btn-transport-record')?.classList.add('recording');
     document.getElementById('header-rec-dot')?.classList.add('recording');
     document.getElementById('transport-substate').textContent = overdubMonitor.backingTrackCount > 0
@@ -5018,14 +5123,14 @@ function drawAllTimelineCanvases() {
       ctx.fillRect(startX, regionTop, clipW, 2.5);
 
       if (track.trackKind === 'video') {
-        captureLiveRecordingVideoThumbIfDue(recElapsedSec);
+        captureLiveRecordingVideoThumbIfDue(recElapsedSec, track.id);
         const bodyTop = regionTop + 17;
         const bodyH = Math.max(24, regionH - 17);
         const thumbTop = bodyTop + 5.5;
         const thumbH = Math.max(16, bodyH - 11);
         const cellW = Math.max(48, Math.round(thumbH * (16 / 9)));
         drawCinemaSprocketRails(ctx, startX, clipW, bodyTop, bodyH, w, false, 'rgba(248, 113, 113, 0.55)');
-        const liveThumbs = liveRecSession?.videoThumbs || [];
+        const liveThumbs = liveRecSession?.videoThumbsByTrack?.get(track.id) || liveRecSession?.videoThumbs || [];
         if (liveThumbs.length > 0 && recElapsedSec > 0.05) {
           const visLeft = Math.max(0, startX);
           const visRight = Math.min(w, startX + clipW);
@@ -12503,6 +12608,42 @@ async function init() {
         selectedVideoOutputTrackId = payload.trackId;
         renderStudio();
         syncVideoOutputMonitor({ forcePush: true });
+      }
+    });
+  }
+  if (typeof window.robos?.onVideoLiveFrame === 'function') {
+    window.robos.onVideoLiveFrame((frame) => {
+      if (!frame?.dataUrl) return;
+      if (frame.trackId) {
+        liveVideoFrameByTrack.set(frame.trackId, frame.dataUrl);
+      }
+      // Feed live timeline filmstrip thumbnails for armed video tracks while recording!
+      if (isRecording && liveRecSession) {
+        ingestLiveRecordingVideoThumbFromDataUrl(frame.trackId || '', frame.dataUrl);
+      }
+      const activeTrk = ensureSelectedVideoOutputTrack();
+      if (!activeTrk || (frame.trackId && activeTrk.id !== frame.trackId)) {
+        return;
+      }
+      videoLiveSnapshotDataUrl = frame.dataUrl;
+      // Fast 0ms in-place DOM update for Embedded Video Output Dock (`videoOutputWindow` receives `daw:video-live-frame` directly!)
+      if (videoDockOpen && !videoPopoutOpen) {
+        const videoEl = document.getElementById('embedded-video-el');
+        const liveImgEl = document.getElementById('embedded-live-img');
+        const slateEl = document.getElementById('embedded-video-slate');
+        const modePill = document.getElementById('vmon-mode-pill');
+        const showingOfflinePlayback = Boolean(!isRecording && isPlaying && findActiveVideoClipAtSec(activeTrk, playheadSec));
+        if (liveImgEl && !showingOfflinePlayback && (videoLiveCamEnabled || (isRecording && activeTrk.armed))) {
+          if (videoEl && !videoEl.paused) videoEl.pause();
+          videoEl?.classList.add('hidden');
+          slateEl?.classList.add('hidden');
+          liveImgEl.classList.remove('hidden');
+          liveImgEl.setAttribute('src', frame.dataUrl);
+          if (modePill) {
+            modePill.textContent = isRecording ? 'REC CAM' : 'LIVE CAM';
+            modePill.className = 'vmon-mode-pill live';
+          }
+        }
       }
     });
   }

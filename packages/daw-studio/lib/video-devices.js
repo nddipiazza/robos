@@ -12,7 +12,7 @@ const http = require('http');
 const https = require('https');
 const dgram = require('dgram');
 const crypto = require('crypto');
-const { spawn, execFile, execFileSync } = require('child_process');
+const { spawn, spawnSync, execFile, execFileSync } = require('child_process');
 
 const DEFAULT_VIDEO_QUALITY = 'hd-1080p';
 
@@ -755,11 +755,13 @@ function negotiateV4l2CaptureFormat(devPath, targetWidth = 1920, targetHeight = 
 
   let rawOut = '';
   try {
-    execFileSync('ffmpeg', ['-hide_banner', '-f', 'v4l2', '-list_formats', 'all', '-i', devPath], {
+    // Note: FFmpeg 7+ exits with code 0 on `-list_formats all` while printing formats to stderr!
+    const r = spawnSync('ffmpeg', ['-hide_banner', '-f', 'v4l2', '-list_formats', 'all', '-i', devPath], {
       encoding: 'utf8',
-      timeout: 1500,
+      timeout: 3000,
       stdio: ['ignore', 'pipe', 'pipe'],
     });
+    rawOut = `${r?.stderr || ''}\n${r?.stdout || ''}`;
   } catch (err) {
     rawOut = String(err?.stderr || err?.stdout || '');
   }
@@ -780,7 +782,7 @@ function negotiateV4l2CaptureFormat(devPath, targetWidth = 1920, targetHeight = 
   const mjpegLine = lines.find(l => /\bmjpeg\b/i.test(l));
   if (mjpegLine) {
     const size = pickBestSize(mjpegLine);
-    const res = { inputFormat: 'mjpeg', videoSize: size || '1280x720' };
+    const res = { inputFormat: 'mjpeg', videoSize: size || '1920x1080' };
     v4l2FormatCache.set(cacheKey, res);
     return res;
   }
@@ -793,9 +795,8 @@ function negotiateV4l2CaptureFormat(devPath, targetWidth = 1920, targetHeight = 
     return res;
   }
 
-  const fallback = { inputFormat: '', videoSize: '' };
-  v4l2FormatCache.set(cacheKey, fallback);
-  return fallback;
+  // Do NOT poison `v4l2FormatCache` if the device was momentarily busy (`EBUSY`)
+  return { inputFormat: '', videoSize: '' };
 }
 
 function buildFfmpegVideoInputArgs(videoConfig = {}) {
@@ -821,7 +822,7 @@ function buildFfmpegVideoInputArgs(videoConfig = {}) {
   if (/^rtsps?:/i.test(authedUrl)) {
     return ['-rtsp_transport', videoConfig.rtspTransport || 'tcp', '-use_wallclock_as_timestamps', '1', '-i', authedUrl];
   }
-  return ['-use_wallclock_as_timestamps', '1', '-f', 'mpjpeg', '-i', authedUrl];
+  return ['-probesize', '65536', '-analyzeduration', '250000', '-use_wallclock_as_timestamps', '1', '-f', 'mpjpeg', '-i', authedUrl];
 }
 
 function fetchHttpBytes(targetUrl, { username = '', password = '', timeoutMs = 3500 } = {}) {
@@ -869,27 +870,143 @@ function fetchHttpBytes(targetUrl, { username = '', password = '', timeoutMs = 3
   });
 }
 
-function grabSingleFrameWithFfmpeg(inputArgsList, timeoutMs = 5000) {
-  return new Promise((resolve, reject) => {
-    const args = [
-      '-hide_banner', '-loglevel', 'error', '-nostdin',
-      ...inputArgsList,
-      '-frames:v', '1',
-      '-vf', "scale='min(1280,iw)':-2",
-      '-q:v', '3',
-      '-f', 'image2pipe',
-      '-vcodec', 'mjpeg',
-      'pipe:1',
-    ];
-    execFile('ffmpeg', args, { encoding: 'buffer', timeout: timeoutMs, maxBuffer: 8 * 1024 * 1024 }, (err, stdout, stderr) => {
-      if (err || !stdout || stdout.length < 64) {
-        const msg = String(stderr || err?.message || 'Could not capture preview frame').trim().split('\n').pop();
-        reject(new Error(msg));
-        return;
+const JPEG_SOI = Buffer.from([0xff, 0xd8]);
+const JPEG_EOI = Buffer.from([0xff, 0xd9]);
+
+/**
+ * Parse back-to-back MJPEG (`image2pipe`) frames from a Node readable stream (`proc.stdout`).
+ */
+function extractMjpegFramesFromStream(readable, onJpegBuffer) {
+  if (!readable || typeof onJpegBuffer !== 'function') return;
+  let accum = Buffer.alloc(0);
+  let frameIndex = 0;
+
+  readable.on('data', (chunk) => {
+    if (!chunk || !chunk.length) return;
+    accum = accum.length ? Buffer.concat([accum, chunk]) : chunk;
+    if (accum.length > 4 * 1024 * 1024) {
+      accum = accum.subarray(accum.length - 1024 * 1024);
+    }
+    while (true) {
+      const soi = accum.indexOf(JPEG_SOI);
+      if (soi < 0) {
+        accum = Buffer.alloc(0);
+        break;
       }
-      resolve(stdout);
+      const eoi = accum.indexOf(JPEG_EOI, soi + 2);
+      if (eoi < 0) {
+        if (soi > 0) accum = accum.subarray(soi);
+        break;
+      }
+      const jpg = Buffer.from(accum.subarray(soi, eoi + 2));
+      accum = accum.subarray(eoi + 2);
+      frameIndex++;
+      onJpegBuffer(jpg, frameIndex);
+    }
+  });
+}
+
+// Track any in-flight V4L2 one-shot snapshot processes so concurrent requests deduplicate
+// and `daw:record-start` can cleanly abort & await them before opening `/dev/videoX`!
+const activeV4l2SnapshotJobs = new Map(); // devPath -> { proc, promise, abortResolve }
+
+async function abortInFlightV4l2Snapshots(targetDevicePath = '') {
+  const entries = [...activeV4l2SnapshotJobs.entries()];
+  const waits = [];
+  for (const [devPath, job] of entries) {
+    if (targetDevicePath && devPath !== targetDevicePath) continue;
+    try { job.proc?.kill('SIGINT'); } catch {}
+    try { job.proc?.kill('SIGKILL'); } catch {}
+    if (job.donePromise) waits.push(job.donePromise.catch(() => {}));
+  }
+  if (waits.length) await Promise.all(waits);
+}
+
+function grabSingleFrameWithFfmpeg(inputArgsList, timeoutMs = 5500, { isV4l2 = false, devicePath = '' } = {}) {
+  if (isV4l2 && devicePath && activeV4l2SnapshotJobs.has(devicePath)) {
+    return activeV4l2SnapshotJobs.get(devicePath).userPromise;
+  }
+
+  // UVC USB cameras (e.g. OBSBOT Tiny 2 Lite) often emit 1-2 dark/black sensor-warmup frames
+  // (`~6 KB`) in the first 60ms of `VIDIOC_STREAMON` before auto-exposure settles (`25-35 KB`).
+  // Capturing up to 5 frames on V4L2 (+100ms at 30fps) guarantees a bright, lit preview frame!
+  const frameCount = isV4l2 ? '5' : '1';
+  const args = [
+    '-hide_banner', '-loglevel', 'error', '-nostdin',
+    ...inputArgsList,
+    '-frames:v', frameCount,
+    '-vf', "scale='min(1280,iw)':-2",
+    '-q:v', '4',
+    '-f', 'image2pipe',
+    '-vcodec', 'mjpeg',
+    'pipe:1',
+  ];
+
+  let doneResolve = null;
+  const donePromise = new Promise(r => { doneResolve = r; });
+
+  const userPromise = new Promise((resolve, reject) => {
+    let proc = null;
+    let stderrTail = '';
+    const frames = [];
+    let settled = false;
+
+    const finish = (err, bestBuf) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(killTimer);
+      if (devicePath) activeV4l2SnapshotJobs.delete(devicePath);
+      if (doneResolve) doneResolve();
+      if (err || !bestBuf || bestBuf.length < 64) {
+        const msg = String(stderrTail || err?.message || 'Could not capture preview frame').trim().split('\n').pop();
+        reject(new Error(msg || 'Could not capture preview frame'));
+      } else {
+        resolve(bestBuf);
+      }
+    };
+
+    try {
+      proc = spawn('ffmpeg', args, { stdio: ['ignore', 'pipe', 'pipe'] });
+    } catch (err) {
+      finish(err, null);
+      return;
+    }
+
+    if (isV4l2 && devicePath) {
+      activeV4l2SnapshotJobs.set(devicePath, { proc, donePromise, userPromise });
+    }
+
+    const killTimer = setTimeout(() => {
+      try { proc.kill('SIGKILL'); } catch {}
+      if (frames.length > 0) {
+        finish(null, frames[frames.length - 1]);
+      } else {
+        finish(new Error('Camera preview timed out'), null);
+      }
+    }, timeoutMs);
+
+    extractMjpegFramesFromStream(proc.stdout, (jpg) => {
+      frames.push(jpg);
+    });
+    proc.stderr?.on('data', (chunk) => {
+      stderrTail = (stderrTail + chunk.toString('utf8')).slice(-600);
+    });
+    proc.on('error', (err) => finish(err, frames[frames.length - 1] || null));
+    proc.on('close', () => {
+      // Pick the latest well-exposed JPEG frame (preferring frames > 8KB over tiny black warmup frames)
+      let chosen = null;
+      for (let i = frames.length - 1; i >= 0; i--) {
+        if (frames[i].length >= 8000) {
+          chosen = frames[i];
+          break;
+        }
+      }
+      if (!chosen && frames.length > 0) chosen = frames[frames.length - 1];
+      finish(chosen ? null : new Error(stderrTail || 'No video frame decoded'), chosen);
     });
   });
+
+  return userPromise;
 }
 
 /**
@@ -923,7 +1040,11 @@ async function captureVideoSourceSnapshot(videoConfig = {}) {
     } catch {}
   }
 
-  const jpg = await grabSingleFrameWithFfmpeg(buildFfmpegVideoInputArgs(videoConfig), 5000);
+  const isV4l2 = Boolean(videoConfig.sourceType === 'v4l2' || videoConfig.devicePath);
+  const jpg = await grabSingleFrameWithFfmpeg(buildFfmpegVideoInputArgs(videoConfig), 5500, {
+    isV4l2,
+    devicePath: videoConfig.devicePath || '',
+  });
   return { ok: true, dataUrl: `data:image/jpeg;base64,${jpg.toString('base64')}` };
 }
 
@@ -1275,8 +1396,140 @@ function synthesizeTestPatternMp4(destMp4, durationSec = 2.5, withAudio = false,
   });
 }
 
+function videoConfigsMatchSource(a = {}, b = {}) {
+  if (!a || !b) return false;
+  if (a.devicePath && b.devicePath) return String(a.devicePath) === String(b.devicePath);
+  if (a.streamUrl && b.streamUrl) return String(a.streamUrl) === String(b.streamUrl);
+  return false;
+}
+
 /**
- * Synchronized Multi-Camera HD Video Recorder (`ffmpeg` -> Fragmented H.264 `.mp4` -> Faststart `.mp4`)
+ * Persistent Live Camera Preview Streamer (`ffmpeg` -> 15 fps MJPEG `image2pipe`)
+ *
+ * Keeps V4L2 USB webcams (e.g. OBSBOT Tiny 2 Lite) and RTSP cameras open in a single
+ * continuous stream during idle Live Cam monitoring instead of cold-opening `/dev/videoX`
+ * repeatedly, and cleanly releases the V4L2 device BEFORE `VideoTrackRecorder.start()` runs!
+ */
+class LiveCameraMonitor {
+  constructor() {
+    this.session = null;
+  }
+
+  isRunning() {
+    return Boolean(this.session?.proc);
+  }
+
+  getLatestFrame(videoConfig = null) {
+    if (!this.session?.latestDataUrl) return '';
+    if (videoConfig && !videoConfigsMatchSource(this.session.videoConfig, videoConfig)) return '';
+    return this.session.latestDataUrl;
+  }
+
+  async start(videoConfig = {}, { trackId = '', onLiveFrame = null } = {}) {
+    if (!videoConfig || (!videoConfig.devicePath && !videoConfig.streamUrl)) {
+      await this.stop();
+      return { ok: false, error: 'No video source configured' };
+    }
+
+    const sourceSig = `${trackId}|${videoConfig.devicePath || ''}|${videoConfig.streamUrl || ''}|${videoConfig.qualityPreset || ''}`;
+    if (this.session && this.session.sourceSig === sourceSig && this.session.proc) {
+      this.session.onLiveFrame = onLiveFrame;
+      return {
+        ok: true,
+        reused: true,
+        latestDataUrl: this.session.latestDataUrl || '',
+      };
+    }
+
+    await this.stop();
+    if (videoConfig.devicePath) {
+      await abortInFlightV4l2Snapshots(videoConfig.devicePath);
+    }
+
+    const inArgs = buildFfmpegVideoInputArgs(videoConfig);
+    const isV4l2 = Boolean(videoConfig.sourceType === 'v4l2' || videoConfig.devicePath);
+    const ffArgs = [
+      '-hide_banner',
+      '-loglevel', 'error',
+      ...inArgs,
+      '-map', '0:v:0',
+      '-an',
+      '-vf', 'fps=15,scale=640:-2',
+      '-c:v', 'mjpeg',
+      '-q:v', '6',
+      '-f', 'image2pipe',
+      'pipe:1',
+    ];
+
+    const session = {
+      sourceSig,
+      trackId,
+      videoConfig: { ...videoConfig },
+      proc: null,
+      latestDataUrl: '',
+      latestFrameAtMs: 0,
+      lastEmitAtMs: 0,
+      onLiveFrame,
+      exitPromise: Promise.resolve(),
+    };
+
+    try {
+      const proc = spawn('ffmpeg', ffArgs, { stdio: ['pipe', 'pipe', 'pipe'] });
+      session.proc = proc;
+      extractMjpegFramesFromStream(proc.stdout, (jpg, frameIdx) => {
+        // Skip tiny cold-open dark warmup frames (< 7.5 KB) in first 3 frames on UVC cameras
+        if (isV4l2 && frameIdx <= 3 && jpg.length < 7500) return;
+        const now = Date.now();
+        const dataUrl = `data:image/jpeg;base64,${jpg.toString('base64')}`;
+        session.latestDataUrl = dataUrl;
+        session.latestFrameAtMs = now;
+        if (typeof session.onLiveFrame === 'function' && (now - session.lastEmitAtMs >= 58 || frameIdx <= 2)) {
+          session.lastEmitAtMs = now;
+          session.onLiveFrame({
+            trackId: session.trackId,
+            devicePath: videoConfig.devicePath || '',
+            streamUrl: videoConfig.streamUrl || '',
+            dataUrl,
+            timestampMs: now,
+            fromRecorder: false,
+          });
+        }
+      });
+      session.exitPromise = new Promise((resolve) => {
+        proc.on('error', () => resolve());
+        proc.on('close', () => {
+          if (this.session === session) this.session = null;
+          resolve();
+        });
+      });
+      this.session = session;
+      return { ok: true, reused: false };
+    } catch (err) {
+      return { ok: false, error: err.message };
+    }
+  }
+
+  async stop() {
+    const cur = this.session;
+    if (!cur) return { ok: true };
+    this.session = null;
+    if (cur.proc) {
+      const proc = cur.proc;
+      cur.proc = null;
+      try { proc.stdin?.write('q\n'); } catch {}
+      try { proc.kill('SIGINT'); } catch {}
+      const killTimer = setTimeout(() => {
+        try { proc.kill('SIGKILL'); } catch {}
+      }, 900);
+      await cur.exitPromise;
+      clearTimeout(killTimer);
+    }
+    return { ok: true };
+  }
+}
+
+/**
+ * Synchronized Multi-Camera HD Video Recorder (`ffmpeg` -> Fragmented H.264 `.mp4` + 15 fps Live MJPEG Pipe -> Faststart `.mp4`)
  */
 class VideoTrackRecorder {
   constructor() {
@@ -1287,7 +1540,18 @@ class VideoTrackRecorder {
     return Boolean(this.active);
   }
 
-  start(project, { startSec = 0, injectTestSignal = false } = {}) {
+  getLiveFrameForConfig(videoConfig = null) {
+    if (!this.active || !Array.isArray(this.active.entries)) return '';
+    for (const entry of this.active.entries) {
+      if (!entry.latestPreviewDataUrl) continue;
+      if (!videoConfig || videoConfigsMatchSource(entry.videoConfig, videoConfig)) {
+        return entry.latestPreviewDataUrl;
+      }
+    }
+    return '';
+  }
+
+  start(project, { startSec = 0, injectTestSignal = false, onLiveFrame = null } = {}) {
     if (this.active) throw new Error('Video recording is already in progress');
     const armedVideoTracks = (project.tracks || []).filter(t => t.armed && t.trackKind === 'video');
     if (!armedVideoTracks.length) {
@@ -1309,6 +1573,7 @@ class VideoTrackRecorder {
       const vcfg = track.videoConfig || {};
       const spec = getVideoQualitySpec(vcfg.qualityPreset || DEFAULT_VIDEO_QUALITY);
       const audioMode = vcfg.audioMode || 'none';
+      const isV4l2 = Boolean(vcfg.sourceType === 'v4l2' || vcfg.devicePath);
 
       const entry = {
         trackId: track.id,
@@ -1323,6 +1588,9 @@ class VideoTrackRecorder {
         videoConfig: vcfg,
         proc: null,
         firstPacketWallMs: null,
+        latestPreviewDataUrl: '',
+        latestPreviewAtMs: 0,
+        lastLiveEmitAtMs: 0,
         exitPromise: Promise.resolve(),
         stderrTail: '',
       };
@@ -1360,6 +1628,11 @@ class VideoTrackRecorder {
         const inArgs = buildFfmpegVideoInputArgs(vcfg);
         const wantStreamAudio = audioMode === 'stream';
         const vfScale = `scale='min(${spec.width},iw)':'min(${spec.height},ih)':force_original_aspect_ratio=decrease,scale=trunc(iw/2)*2:trunc(ih/2)*2`;
+        // Dual-Output Pipeline:
+        //   Output #1 -> Full HD H.264 fragmented `.part.mp4` on disk
+        //   Output #2 -> 15 fps `640x360` MJPEG live monitor frames on `pipe:1` (`stdout`)
+        // Opening `/dev/videoX` ONLY ONCE eliminates Linux V4L2 `Device or resource busy` lockups
+        // and keeps OBSBOT / USB webcams streaming smoothly on-screen throughout the recording!
         const ffArgs = [
           '-hide_banner',
           '-loglevel', 'warning',
@@ -1378,11 +1651,39 @@ class VideoTrackRecorder {
           '-f', 'mp4',
           '-y',
           partFile,
+          '-map', '0:v:0',
+          '-an',
+          '-vf', 'fps=15,scale=640:-2',
+          '-c:v', 'mjpeg',
+          '-q:v', '6',
+          '-f', 'image2pipe',
+          'pipe:1',
         ];
 
         try {
-          const proc = spawn('ffmpeg', ffArgs, { stdio: ['pipe', 'ignore', 'pipe'] });
+          const proc = spawn('ffmpeg', ffArgs, { stdio: ['pipe', 'pipe', 'pipe'] });
           entry.proc = proc;
+          extractMjpegFramesFromStream(proc.stdout, (jpg, frameIdx) => {
+            const now = Date.now();
+            if (entry.firstPacketWallMs === null) {
+              entry.firstPacketWallMs = now;
+            }
+            if (isV4l2 && frameIdx <= 3 && jpg.length < 7500) return;
+            const dataUrl = `data:image/jpeg;base64,${jpg.toString('base64')}`;
+            entry.latestPreviewDataUrl = dataUrl;
+            entry.latestPreviewAtMs = now;
+            if (typeof onLiveFrame === 'function' && (now - entry.lastLiveEmitAtMs >= 58 || frameIdx <= 2)) {
+              entry.lastLiveEmitAtMs = now;
+              onLiveFrame({
+                trackId: entry.trackId,
+                devicePath: vcfg.devicePath || '',
+                streamUrl: vcfg.streamUrl || '',
+                dataUrl,
+                timestampMs: now,
+                fromRecorder: true,
+              });
+            }
+          });
           proc.stderr?.on('data', chunk => {
             entry.stderrTail = (entry.stderrTail + chunk.toString('utf8')).slice(-600);
           });
@@ -1616,10 +1917,13 @@ module.exports = {
   listLocalV4l2VideoDevices,
   discoverOnvifLanCameras,
   discoverAllVideoSources,
+  extractMjpegFramesFromStream,
+  abortInFlightV4l2Snapshots,
   captureVideoSourceSnapshot,
   buildVideoTrack,
   probeVideoFileInfo,
   generateVideoFilmstripSprite,
   synthesizeTestPatternMp4,
+  LiveCameraMonitor,
   VideoTrackRecorder,
 };

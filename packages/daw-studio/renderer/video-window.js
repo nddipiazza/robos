@@ -367,6 +367,26 @@
   });
 
   window.robosVideoOut?.onSyncState((payload) => applySync(payload));
+  window.robosVideoOut?.onLiveFrame?.((frame) => {
+    if (!frame?.dataUrl) return;
+    // Only apply live frames belonging to the selected video track (or when no track filter is set)
+    if (state.selectedVideoTrackId && frame.trackId && frame.trackId !== state.selectedVideoTrackId) {
+      return;
+    }
+    // If an offline recorded clip is actively playing in `<video>`, keep playing that clip;
+    // otherwise (during Recording OR Live Cam monitoring) push the live MJPEG frame immediately!
+    if (state.activeClip && state.activeClip.videoFile && !state.isRecording) {
+      return;
+    }
+    state.liveSnapshotDataUrl = frame.dataUrl;
+    if (!videoEl.paused) videoEl.pause();
+    videoEl.classList.add('hidden');
+    slateEl.classList.add('hidden');
+    liveImgEl.classList.remove('hidden');
+    liveImgEl.setAttribute('src', frame.dataUrl);
+    modePillEl.textContent = state.isRecording ? 'RECORDING CAM' : 'LIVE CAM';
+    modePillEl.className = 'vw-mode-pill live';
+  });
   window.robosVideoOut?.requestInitialState().then((initPayload) => {
     if (initPayload) applySync(initPayload);
   }).catch(() => {});

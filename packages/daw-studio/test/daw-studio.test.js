@@ -2943,4 +2943,143 @@ describe('DAW Editing Engine: Multi-Select, Track/Take Gain, Split/Trim, Copy/Pa
       fs.rmSync(tmpDir, { recursive: true, force: true });
     }
   });
+
+  it('streams continuous 15 fps live preview frames via LiveCameraMonitor & dual-output VideoTrackRecorder without V4L2 freeze or blank timeline preview', async () => {
+    const http = require('http');
+    const { PassThrough } = require('stream');
+    const { execFileSync } = require('child_process');
+    const {
+      extractMjpegFramesFromStream,
+      buildVideoTrack,
+      probeVideoFileInfo,
+      LiveCameraMonitor,
+      VideoTrackRecorder,
+    } = require('../lib/video-devices');
+
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'robos-daw-live-vid-'));
+    let mjpegServer = null;
+    const activeClients = new Set();
+    try {
+      // 1. Unit test chunk-boundary MJPEG SOI/EOI parser
+      const fakeStream = new PassThrough();
+      const parsedFrames = [];
+      extractMjpegFramesFromStream(fakeStream, (jpg, idx) => parsedFrames.push({ jpg, idx }));
+      const f1 = Buffer.from([0xff, 0xd8, 0x11, 0x22, 0x33, 0xff, 0xd9]);
+      const f2 = Buffer.from([0xff, 0xd8, 0x44, 0x55, 0x66, 0x77, 0xff, 0xd9]);
+      fakeStream.write(Buffer.concat([Buffer.from([0x00, 0x01]), f1.subarray(0, 4)]));
+      fakeStream.write(Buffer.concat([f1.subarray(4), f2.subarray(0, 3)]));
+      fakeStream.write(f2.subarray(3));
+      assert.strictEqual(parsedFrames.length, 2);
+      assert.strictEqual(parsedFrames[0].jpg.length, f1.length);
+      assert.strictEqual(parsedFrames[1].jpg.length, f2.length);
+
+      // 2. Spin up an in-process 20 fps multipart MJPEG camera server using 2 distinct test JPEG frames
+      const jpgA = execFileSync('ffmpeg', [
+        '-hide_banner', '-loglevel', 'error',
+        '-f', 'lavfi', '-i', 'testsrc=size=640x360:rate=1:duration=1',
+        '-frames:v', '1', '-f', 'image2pipe', '-vcodec', 'mjpeg', 'pipe:1',
+      ]);
+      const jpgB = execFileSync('ffmpeg', [
+        '-hide_banner', '-loglevel', 'error',
+        '-f', 'lavfi', '-i', 'testsrc=size=640x360:rate=1:duration=2',
+        '-ss', '1', '-frames:v', '1', '-f', 'image2pipe', '-vcodec', 'mjpeg', 'pipe:1',
+      ]);
+
+      mjpegServer = http.createServer((req, res) => {
+        res.writeHead(200, {
+          'Content-Type': 'multipart/x-mixed-replace; boundary=robosframe',
+          'Cache-Control': 'no-cache',
+          Connection: 'close',
+        });
+        let tick = 0;
+        const pushFrame = () => {
+          const frame = (tick++ % 2 === 0) ? jpgA : jpgB;
+          try {
+            res.write(`--robosframe\r\nContent-Type: image/jpeg\r\nContent-Length: ${frame.length}\r\n\r\n`);
+            res.write(frame);
+            res.write('\r\n');
+          } catch {}
+        };
+        pushFrame();
+        const timer = setInterval(pushFrame, 50);
+        activeClients.add({ res, timer });
+        req.on('close', () => {
+          clearInterval(timer);
+        });
+      });
+
+      await new Promise(resolve => mjpegServer.listen(0, '127.0.0.1', resolve));
+      const port = mjpegServer.address().port;
+      const vcfg = {
+        id: `test-cam:${port}`,
+        sourceType: 'ip-camera',
+        protocol: 'mjpeg',
+        label: 'OBSBOT Sim Camera',
+        shortName: 'OBSBOT Sim',
+        streamUrl: `http://127.0.0.1:${port}/video`,
+        qualityPreset: 'hd-720p',
+        fps: 20,
+      };
+
+      // 3. Verify `LiveCameraMonitor` streams live frames and cleanly stops before recording
+      const liveMon = new LiveCameraMonitor();
+      const monFrames = [];
+      await liveMon.start(vcfg, {
+        trackId: 'trk-vid-live',
+        onLiveFrame: (f) => monFrames.push(f),
+      });
+      const monDeadline = Date.now() + 2500;
+      while (monFrames.length < 3 && Date.now() < monDeadline) {
+        await new Promise(r => setTimeout(r, 60));
+      }
+      assert.ok(monFrames.length >= 2, `Expected >= 2 LiveCameraMonitor frames, got ${monFrames.length}`);
+      assert.ok(liveMon.getLatestFrame(vcfg).startsWith('data:image/jpeg;base64,'));
+      await liveMon.stop();
+      assert.strictEqual(liveMon.isRunning(), false);
+
+      // 4. Verify `VideoTrackRecorder` dual-output emits live MJPEG frames WHILE recording `.mp4`!
+      const vidTrack = buildVideoTrack({ name: 'OBSBOT Tiny 2 Lite', videoConfig: vcfg, armed: true });
+      const proj = { projectDir: tmpDir, sampleRate: 48000, tracks: [vidTrack] };
+      const rec = new VideoTrackRecorder();
+      const recFrames = [];
+      rec.start(proj, {
+        startSec: 0,
+        injectTestSignal: false,
+        onLiveFrame: (f) => recFrames.push(f),
+      });
+
+      const recDeadline = Date.now() + 2800;
+      while (recFrames.length < 4 && Date.now() < recDeadline) {
+        await new Promise(r => setTimeout(r, 60));
+      }
+      assert.ok(recFrames.length >= 3, `Expected continuous live frames during recording, got ${recFrames.length}`);
+      assert.strictEqual(recFrames[0].trackId, vidTrack.id);
+      assert.strictEqual(recFrames[0].fromRecorder, true);
+      assert.ok(rec.getLiveFrameForConfig(vcfg).startsWith('data:image/jpeg;base64,'));
+
+      const stopRes = await rec.stop({ injectTestSignal: false });
+      assert.strictEqual(stopRes.ok, true);
+      assert.strictEqual(stopRes.recordedVideoClips.length, 1);
+      const mp4Info = await probeVideoFileInfo(stopRes.recordedVideoClips[0].clip.videoFile);
+      assert.strictEqual(mp4Info.hasVideo, true);
+
+      // 5. Verify renderer & pop-out window live frame wiring and absence of old `#embedded-video-live-img` typo
+      const pkgRoot = path.join(__dirname, '..');
+      const appSrc = fs.readFileSync(path.join(pkgRoot, 'renderer', 'app.js'), 'utf8');
+      const vidWinSrc = fs.readFileSync(path.join(pkgRoot, 'renderer', 'video-window.js'), 'utf8');
+      assert.ok(!appSrc.includes('embedded-video-live-img'), 'Must not reference nonexistent #embedded-video-live-img');
+      assert.ok(appSrc.includes('ingestLiveRecordingVideoThumbFromDataUrl'));
+      assert.ok(appSrc.includes('onVideoLiveFrame'));
+      assert.ok(vidWinSrc.includes('onLiveFrame'));
+    } finally {
+      for (const c of activeClients) {
+        clearInterval(c.timer);
+        try { c.res.destroy(); } catch {}
+      }
+      if (mjpegServer) {
+        await new Promise(resolve => mjpegServer.close(() => resolve()));
+      }
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+    }
+  });
 });

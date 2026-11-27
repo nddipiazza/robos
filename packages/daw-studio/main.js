@@ -81,9 +81,11 @@ const {
   probeRobosIpCameraStatus,
   controlRobosIpCamera,
   discoverAllVideoSources,
+  abortInFlightV4l2Snapshots,
   captureVideoSourceSnapshot,
   buildVideoTrack,
   generateVideoFilmstripSprite,
+  LiveCameraMonitor,
   VideoTrackRecorder,
 } = require('./lib/video-devices');
 
@@ -159,9 +161,23 @@ function readProcCardsSignature() {
 const tapDetector = new MultiChannelTapDetector();
 const recorder = new MultiTrackRecorder();
 const videoRecorder = new VideoTrackRecorder();
+const liveCameraMonitor = new LiveCameraMonitor();
 const soundcheckRecorder = new SoundcheckSessionRecorder();
 const humanTapRecorder = new HumanTapCaptureRecorder();
 let lastSoundcheckSession = null;
+
+function broadcastLiveVideoFrame(frame) {
+  if (!frame?.dataUrl) return;
+  sendToRenderer('daw:video-live-frame', frame);
+  if (latestVideoSyncPayload && (!latestVideoSyncPayload.selectedVideoTrackId || latestVideoSyncPayload.selectedVideoTrackId === frame.trackId)) {
+    latestVideoSyncPayload.liveSnapshotDataUrl = frame.dataUrl;
+  }
+  if (videoOutputWindow && !videoOutputWindow.isDestroyed()) {
+    try {
+      videoOutputWindow.webContents.send('daw:video-live-frame', frame);
+    } catch {}
+  }
+}
 
 function computeSignature(snap) {
   if (!snap || !snap.ok) return 'err';
@@ -282,6 +298,7 @@ function createWindow() {
     if (videoRecorder.isRecording()) {
       videoRecorder.cancel().catch(() => {});
     }
+    liveCameraMonitor.stop().catch(() => {});
     if (soundcheckRecorder.isRecording()) {
       soundcheckRecorder.cancel().catch(() => {});
     }
@@ -840,6 +857,12 @@ ipcMain.handle('daw:record-start', async (_e, payload) => {
     }
     const startSec = Number(payload?.startSec || 0);
     const injectTestSignal = Boolean(payload?.injectTestSignal);
+    const hasArmedVideo = (proj.tracks || []).some(t => t.armed && t.trackKind === 'video');
+    if (hasArmedVideo && !injectTestSignal) {
+      // Release any idle V4L2 Live Cam monitor or in-flight snapshot BEFORE opening `/dev/videoX` for recording!
+      await liveCameraMonitor.stop();
+      await abortInFlightV4l2Snapshots();
+    }
     const started = recorder.start(proj, {
       startSec,
       injectTestSignal,
@@ -848,6 +871,7 @@ ipcMain.handle('daw:record-start', async (_e, payload) => {
     const vidStarted = videoRecorder.start(proj, {
       startSec,
       injectTestSignal,
+      onLiveFrame: (frame) => broadcastLiveVideoFrame(frame),
     });
     if (!injectTestSignal) {
       await recorder.waitCaptureReady(280);
@@ -1794,7 +1818,50 @@ ipcMain.handle('daw:robos-cam-control', async (_e, payload) => {
 
 ipcMain.handle('daw:video-snapshot', async (_e, payload) => {
   try {
-    return await captureVideoSourceSnapshot(payload?.videoConfig || payload || {});
+    const vcfg = payload?.videoConfig || payload || {};
+    const liveRecFrame = videoRecorder.getLiveFrameForConfig(vcfg);
+    if (liveRecFrame) {
+      return { ok: true, dataUrl: liveRecFrame, fromLiveStream: true };
+    }
+    const liveMonFrame = liveCameraMonitor.getLatestFrame(vcfg);
+    if (liveMonFrame) {
+      return { ok: true, dataUrl: liveMonFrame, fromLiveStream: true };
+    }
+    // If `videoRecorder` is actively recording this V4L2 device and warming up its first frame,
+    // wait briefly for its dual-output MJPEG pipe instead of spawning a second `ffmpeg` (`EBUSY`)!
+    if (videoRecorder.isRecording() && vcfg.devicePath) {
+      const deadline = Date.now() + 1400;
+      while (Date.now() < deadline && videoRecorder.isRecording()) {
+        await new Promise(r => setTimeout(r, 70));
+        const f = videoRecorder.getLiveFrameForConfig(vcfg);
+        if (f) return { ok: true, dataUrl: f, fromLiveStream: true };
+      }
+    }
+    return await captureVideoSourceSnapshot(vcfg);
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('daw:video-live-monitor-start', async (_e, payload) => {
+  try {
+    if (videoRecorder.isRecording()) {
+      return { ok: true, delegatedToRecorder: true };
+    }
+    const vcfg = payload?.videoConfig || {};
+    const trackId = String(payload?.trackId || '');
+    return await liveCameraMonitor.start(vcfg, {
+      trackId,
+      onLiveFrame: (frame) => broadcastLiveVideoFrame(frame),
+    });
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('daw:video-live-monitor-stop', async () => {
+  try {
+    return await liveCameraMonitor.stop();
   } catch (err) {
     return { ok: false, error: err.message };
   }
