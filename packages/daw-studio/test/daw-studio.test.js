@@ -3046,16 +3046,20 @@ describe('DAW Editing Engine: Multi-Select, Track/Take Gain, Split/Trim, Copy/Pa
       await liveMon.stop();
       assert.strictEqual(liveMon.isRunning(), false);
 
-      // 4. Verify `VideoTrackRecorder` dual-output emits live MJPEG frames WHILE recording `.mp4`!
+      // 4. Verify `VideoTrackRecorder` `waitCaptureReady()` + exact `earsStartWallMs` & `stopTimelineSec` sync lock!
       const vidTrack = buildVideoTrack({ name: 'OBSBOT Tiny 2 Lite', videoConfig: vcfg, armed: true });
       const proj = { projectDir: tmpDir, sampleRate: 48000, tracks: [vidTrack] };
       const rec = new VideoTrackRecorder();
       const recFrames = [];
       rec.start(proj, {
-        startSec: 0,
+        startSec: 24.0,
         injectTestSignal: false,
         onLiveFrame: (f) => recFrames.push(f),
       });
+
+      const readyOk = await rec.waitCaptureReady(2600);
+      assert.strictEqual(readyOk, true, 'waitCaptureReady should resolve once camera begins streaming');
+      const simulatedEarsStartWallMs = Date.now() + 55; // Backing audio hits headphones AFTER camera is ready
 
       const recDeadline = Date.now() + 2800;
       while (recFrames.length < 4 && Date.now() < recDeadline) {
@@ -3065,21 +3069,33 @@ describe('DAW Editing Engine: Multi-Select, Track/Take Gain, Split/Trim, Copy/Pa
       assert.strictEqual(recFrames[0].trackId, vidTrack.id);
       assert.strictEqual(recFrames[0].fromRecorder, true);
       assert.ok(rec.getLiveFrameForConfig(vcfg).startsWith('data:image/jpeg;base64,'));
+      await new Promise(r => setTimeout(r, 950));
 
-      const stopRes = await rec.stop({ injectTestSignal: false });
+      const stopRes = await rec.stop({
+        injectTestSignal: false,
+        earsStartWallMs: simulatedEarsStartWallMs,
+        stopTimelineSec: 24.75,
+      });
       assert.strictEqual(stopRes.ok, true);
       assert.strictEqual(stopRes.recordedVideoClips.length, 1);
-      const mp4Info = await probeVideoFileInfo(stopRes.recordedVideoClips[0].clip.videoFile);
+      const vClip = stopRes.recordedVideoClips[0].clip;
+      assert.strictEqual(vClip.startSec, 24.0, 'Video clip startSec must lock to exact punchStartSec (24.0s)');
+      assert.ok(vClip.offsetSec > 0.04, `Expected pre-roll offsetSec > 0.04s, got ${vClip.offsetSec}`);
+      assert.strictEqual(vClip.durationSec, 0.75, 'Video clip durationSec must lock to exact stopTimelineSec (24.75 - 24.0 = 0.75s)');
+      const mp4Info = await probeVideoFileInfo(vClip.videoFile);
       assert.strictEqual(mp4Info.hasVideo, true);
 
-      // 5. Verify renderer & pop-out window live frame wiring and absence of old `#embedded-video-live-img` typo
+      // 5. Verify renderer & pop-out window live frame + audible output latency + PLL video sync wiring
       const pkgRoot = path.join(__dirname, '..');
       const appSrc = fs.readFileSync(path.join(pkgRoot, 'renderer', 'app.js'), 'utf8');
       const vidWinSrc = fs.readFileSync(path.join(pkgRoot, 'renderer', 'video-window.js'), 'utf8');
       assert.ok(!appSrc.includes('embedded-video-live-img'), 'Must not reference nonexistent #embedded-video-live-img');
       assert.ok(appSrc.includes('ingestLiveRecordingVideoThumbFromDataUrl'));
+      assert.ok(appSrc.includes('getAudibleOutputLatencySec'));
+      assert.ok(appSrc.includes('videoEl.playbackRate'));
       assert.ok(appSrc.includes('onVideoLiveFrame'));
       assert.ok(vidWinSrc.includes('onLiveFrame'));
+      assert.ok(vidWinSrc.includes('videoEl.playbackRate'));
     } finally {
       for (const c of activeClients) {
         clearInterval(c.timer);

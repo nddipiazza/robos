@@ -101,25 +101,55 @@ function scheduleClipFadeEnvelope(gainParam, clipGainLin, tStart, playDur, {
 }
 
 /**
- * Compute exact wall-clock millisecond timestamp when `playStartCtxTime` physically exits the
- * audio interface headphones, guarding against Linux Chromium/PulseAudio cork-epoch drift where
- * `getOutputTimestamp().contextTime` freezes while corked and lags `ctx.currentTime` by minutes.
+ * Estimate downstream PipeWire graph + ALSA hardware DAC buffer latency (seconds) not included in
+ * Chromium's `AudioManagerPulse` socket clock (`~1.8x` active PipeWire graph quantum).
  */
-function computeReliableEarsStartWallMs(ctx, playStartCtxTime) {
+function getDownstreamPipewireAlsaLatSec() {
+  const quantumMs = Number(currentSnapshot?.clock?.latencyMs) || 21.33;
+  return DE.clamp(0.006, 0.085, (quantumMs * 1.8) / 1000);
+}
+
+/**
+ * Total audible output latency (seconds) between `AudioContext.currentTime` and physical sound
+ * exiting the speakers/headphones, used to lock `<video>` playback to audible audio!
+ */
+function getAudibleOutputLatencySec(ctx) {
+  const downstreamSec = getDownstreamPipewireAlsaLatSec();
+  if (!ctx) return 0.020 + downstreamSec;
   const nowPerf = performance.now();
   const nowCtx = ctx.currentTime;
   const ts = typeof ctx.getOutputTimestamp === 'function' ? ctx.getOutputTimestamp() : null;
   if (ts && ts.contextTime > 0 && ts.performanceTime > 0) {
-    const impliedDacLatSec = (nowCtx - ts.contextTime) - (nowPerf - ts.performanceTime) / 1000;
-    if (impliedDacLatSec >= 0.001 && impliedDacLatSec <= 0.350) {
+    const impliedPulseLatSec = (nowCtx - ts.contextTime) - (nowPerf - ts.performanceTime) / 1000;
+    if (impliedPulseLatSec >= 0.001 && impliedPulseLatSec <= 0.350) {
+      return impliedPulseLatSec + downstreamSec;
+    }
+  }
+  const webAudioBufSec = (Number(ctx.baseLatency) || 0.0107) + (Number(ctx.outputLatency) || 0.012);
+  return webAudioBufSec + downstreamSec;
+}
+
+/**
+ * Compute exact wall-clock millisecond timestamp when `playStartCtxTime` physically exits the
+ * audio interface headphones/speakers, accounting for both Chromium's Pulse stream buffer and
+ * downstream PipeWire quantum + ALSA hardware ring buffer.
+ */
+function computeReliableEarsStartWallMs(ctx, playStartCtxTime) {
+  const nowPerf = performance.now();
+  const nowCtx = ctx.currentTime;
+  const downstreamMs = getDownstreamPipewireAlsaLatSec() * 1000;
+  const ts = typeof ctx.getOutputTimestamp === 'function' ? ctx.getOutputTimestamp() : null;
+  if (ts && ts.contextTime > 0 && ts.performanceTime > 0) {
+    const impliedPulseLatSec = (nowCtx - ts.contextTime) - (nowPerf - ts.performanceTime) / 1000;
+    if (impliedPulseLatSec >= 0.001 && impliedPulseLatSec <= 0.350) {
       return {
-        earsStartWallMs: (performance.timeOrigin + ts.performanceTime) + (playStartCtxTime - ts.contextTime) * 1000,
+        earsStartWallMs: (performance.timeOrigin + ts.performanceTime) + (playStartCtxTime - ts.contextTime) * 1000 + downstreamMs,
         lockedByHwTs: true,
       };
     }
   }
-  const dacOutLatSec = ((Number(ctx.baseLatency) || 0) + (Number(ctx.outputLatency) || 0))
-    || ((Number(currentSnapshot?.clock?.latencyMs) || 42) / 1000);
+  const webAudioBufSec = (Number(ctx.baseLatency) || 0.0107) + (Number(ctx.outputLatency) || 0.012);
+  const dacOutLatSec = webAudioBufSec + (downstreamMs / 1000);
   return {
     earsStartWallMs: (performance.timeOrigin + nowPerf) + (playStartCtxTime - nowCtx + dacOutLatSec) * 1000,
     lockedByHwTs: false,
@@ -594,6 +624,7 @@ function startRecordingRafLoop() {
     }
 
     drawAllTimelineCanvases();
+    syncVideoOutputMonitor();
     liveRecRafId = requestAnimationFrame(step);
   };
   liveRecRafId = requestAnimationFrame(step);
@@ -2345,11 +2376,20 @@ function syncVideoOutputMonitor({ forcePush = false } = {}) {
     videoSourceTrack = (currentProject?.tracks || []).find(t => isTrackVideoCapable(t) && !t.muted) || null;
   }
 
+  // Compute exact audible timeline position exiting speakers/headphones right now for sub-frame video sync!
+  const transportRolling = Boolean(isPlaying || isRecording);
+  const activeSyncCtx = isRecording ? (liveRecSession?.overdubMonitor?.ctx || audioCtx) : audioCtx;
+  const audiblePlayheadSec = isPlaying
+    ? Math.max(playStartOffsetSec, playheadSec - getAudibleOutputLatencySec(activeSyncCtx))
+    : playheadSec;
+
   // When Live Cam is explicitly toggled ON while stopped (not playing back), prioritize the live camera
   // over a paused timeline video clip so you can frame your drum shot even when parked inside Part 1!
+  // Also allow watching an UNARMED reference video track (e.g. guitar tabs/backing video) in sync while recording!
   const preferLiveWhileStopped = Boolean(!isPlaying && !isRecording && videoLiveCamEnabled && videoSourceTrack?.videoConfig);
-  const activeClipRaw = (!isRecording && !preferLiveWhileStopped && videoSourceTrack)
-    ? findActiveVideoClipAtSec(videoSourceTrack, playheadSec)
+  const isArmedRecordingCam = Boolean(isRecording && videoSourceTrack?.armed);
+  const activeClipRaw = (!isArmedRecordingCam && !preferLiveWhileStopped && videoSourceTrack)
+    ? findActiveVideoClipAtSec(videoSourceTrack, audiblePlayheadSec)
     : null;
   const activeClipVideoFile = resolveClipVideoFilePath(activeClipRaw);
   const activeClipPayload = (activeClipRaw && activeClipVideoFile)
@@ -2357,7 +2397,7 @@ function syncVideoOutputMonitor({ forcePush = false } = {}) {
       id: activeClipRaw.id,
       videoFile: activeClipVideoFile,
       startSec: Number(activeClipRaw.startSec) || 0,
-      offsetSec: Number(activeClipRaw.offsetSec) || 0,
+      offsetSec: Number(activeClipRaw.videoOffsetSec ?? activeClipRaw.offsetSec) || 0,
       durationSec: Number(activeClipRaw.durationSec) || 0,
     }
     : null;
@@ -2408,17 +2448,28 @@ function syncVideoOutputMonitor({ forcePush = false } = {}) {
       slateEl.classList.add('hidden');
       videoEl.classList.remove('hidden');
 
-      const targetVidSec = activeClipPayload.offsetSec + Math.max(0, playheadSec - activeClipPayload.startSec);
-      if (isPlaying) {
+      const targetVidSec = activeClipPayload.offsetSec + Math.max(0, audiblePlayheadSec - activeClipPayload.startSec);
+      if (transportRolling) {
         if (modePill) { modePill.textContent = activeLyricsPayload ? 'VIDEO + KARAOKE' : 'PLAYING'; modePill.className = 'vmon-mode-pill playing'; }
-        if (Math.abs((videoEl.currentTime || 0) - targetVidSec) > 0.085) {
+        const driftSec = targetVidSec - (videoEl.currentTime || 0);
+        if (videoEl.paused) {
+          if (Math.abs(driftSec) > 0.012) safeSeekEmbeddedVideo(videoEl, targetVidSec);
+          videoEl.playbackRate = 1.0;
+          videoEl.play().catch(() => {});
+        } else if (Math.abs(driftSec) > 0.110) {
+          videoEl.playbackRate = 1.0;
           safeSeekEmbeddedVideo(videoEl, targetVidSec);
+        } else if (Math.abs(driftSec) > 0.008) {
+          // Smooth PLL rate lock (`0.94..1.06x`): pulls `<video>` within <8ms of audible audio with zero seek stutter!
+          videoEl.playbackRate = DE.clamp(0.94, 1.06, 1.0 + driftSec * 0.55);
+        } else if (videoEl.playbackRate !== 1.0) {
+          videoEl.playbackRate = 1.0;
         }
-        if (videoEl.paused) videoEl.play().catch(() => {});
       } else {
         if (modePill) { modePill.textContent = activeLyricsPayload ? 'SCRUB · KARAOKE' : 'SCRUB'; modePill.className = 'vmon-mode-pill'; }
         if (!videoEl.paused) videoEl.pause();
-        if (Math.abs((videoEl.currentTime || 0) - targetVidSec) > 0.02) {
+        if (videoEl.playbackRate !== 1.0) videoEl.playbackRate = 1.0;
+        if (Math.abs((videoEl.currentTime || 0) - targetVidSec) > 0.015) {
           safeSeekEmbeddedVideo(videoEl, targetVidSec);
         }
       }
@@ -2473,13 +2524,13 @@ function syncVideoOutputMonitor({ forcePush = false } = {}) {
   if (videoPopoutOpen && typeof window.robos?.syncVideoOutputWindow === 'function') {
     const nowMs = Date.now();
     const clipKey = `${selectedVideoOutputTrackId}:${activeClipPayload?.id || 'none'}:${activeLyricsPayload?.id || 'nolyr'}:${activeLyricsPayload?.timelineShiftSec || 0}:${isPlaying ? '1' : '0'}:${isRecording ? '1' : '0'}`;
-    if (forcePush || clipKey !== lastPopoutClipKey || !isPlaying || (nowMs - lastPopoutSyncAtMs) >= 240) {
+    if (forcePush || clipKey !== lastPopoutClipKey || !transportRolling || (nowMs - lastPopoutSyncAtMs) >= 180) {
       lastPopoutClipKey = clipKey;
       lastPopoutSyncAtMs = nowMs;
       window.robos.syncVideoOutputWindow({
-        isPlaying,
+        isPlaying: transportRolling,
         isRecording,
-        playheadSec,
+        playheadSec: audiblePlayheadSec,
         syncWallMs: nowMs,
         selectedVideoTrackId: selectedVideoOutputTrackId,
         videoTracks: vTracks.map(t => ({ id: t.id, name: isTrackLyrics(t) ? `[KARAOKE] ${t.name}` : t.name })),
@@ -3458,6 +3509,7 @@ async function toggleRecording({ keepCursorAtStop = false } = {}) {
           injectTestSignal,
           earsStartWallMs,
           punchStartSec: punchInStartSec,
+          stopTimelineSec: stopEdgeSec,
         });
       } finally {
         isStoppingRecording = false;
@@ -3564,6 +3616,12 @@ async function toggleRecording({ keepCursorAtStop = false } = {}) {
     const overdubMonitor = studioCtx
       ? startOverdubMonitorPlayback(studioCtx, punchStartSec, overdubEntries)
       : { active: false, earsStartWallMs: null, backingTrackCount: 0 };
+    // Always provide a shared wall-clock anchor (`sessionZeroWallMs`) even when recording solo without a backing track,
+    // so multi-track audio mics AND camera video lock to the exact same `punchStartSec` millisecond!
+    const startedPerfNow = performance.now();
+    const sharedEarsWallMs = Number.isFinite(overdubMonitor.earsStartWallMs)
+      ? overdubMonitor.earsStartWallMs
+      : (performance.timeOrigin + startedPerfNow);
 
     const trackStatesMap = new Map();
     for (const tr of (res.tracks || [])) {
@@ -3583,9 +3641,9 @@ async function toggleRecording({ keepCursorAtStop = false } = {}) {
 
     liveRecSession = {
       startSec: punchStartSec,
-      startedPerfMs: performance.now(),
+      startedPerfMs: startedPerfNow,
       firstSampleMicWallMs: Number.isFinite(res.firstSampleMicWallMs) ? res.firstSampleMicWallMs : null,
-      earsStartWallMs: overdubMonitor.earsStartWallMs,
+      earsStartWallMs: sharedEarsWallMs,
       overdubMonitor,
       ipcElapsedSec: 0,
       sliceDurationSec: Number(res.sliceDurationSec) || 0.02,
@@ -7733,7 +7791,7 @@ function buildClientVideoExportSegments(track, renderStartSec = 0, renderEndSec 
     const c = rawClips[i];
     const vf = resolveClipVideoFilePath(c);
     const cStart = Math.max(0, Number(c.startSec) || 0);
-    const cOff = Math.max(0, Number(c.offsetSec) || 0);
+    const cOff = Math.max(0, Number(c.videoOffsetSec ?? c.offsetSec) || 0);
     const cDur = Math.max(0.05, Number(c.durationSec) || 0);
     const cEnd = cStart + cDur;
     if (cEnd <= rStart + 0.01 || cStart >= rEnd - 0.01) continue;
@@ -7832,7 +7890,7 @@ function getExportVideoTakeChoices() {
         totalTakesOnTrack: vidClips.length,
         videoFile: vPath,
         startSec,
-        offsetSec: Math.max(0, Number(c.offsetSec) || 0),
+        offsetSec: Math.max(0, Number(c.videoOffsetSec ?? c.offsetSec) || 0),
         durationSec: durSec,
         endSec: Number((startSec + durSec).toFixed(4)),
         label: vidClips.length > 1

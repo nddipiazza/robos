@@ -167,6 +167,7 @@ function startDiscreteCaptureSession(
     minFlushIntervalMs = 22,
     sliceDurationSec = 0.02,
     pwLatency = '10ms',
+    quantumMs = 0,
   } = {}
 ) {
   const startedAtMs = Date.now();
@@ -213,9 +214,11 @@ function startDiscreteCaptureSession(
   let pendingFlushTimer = null;
 
   // Sub-millisecond hardware sync: wall-clock timestamp when Sample #0 left PipeWire / hit the mic
-  // Includes pw-cat stream quantum (~10ms) + 256-sample ALSA USB DMA period (~5.33ms) + USB/ADC (~2.7ms)
+  // Accounts for active PipeWire graph quantum (e.g. 21.33ms at 1024/48kHz or 10ms) + ALSA DMA/ADC (~8ms)
   const reqLatMatch = String(pwLatency || '10ms').match(/([\d.]+)\s*ms/i);
-  const adcCaptureLatencyMs = (reqLatMatch ? Number(reqLatMatch[1]) : 10) + 8.0;
+  const reqLatMs = reqLatMatch ? Number(reqLatMatch[1]) : 10;
+  const effectiveQuantumMs = Math.max(reqLatMs, Number(quantumMs) || 0);
+  const adcCaptureLatencyMs = effectiveQuantumMs + 8.0;
   let firstSampleEmittedAtMs = null;
   let resolveFirstSample = null;
   const firstSamplePromise = new Promise((resolve) => {

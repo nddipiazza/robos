@@ -264,17 +264,25 @@
       if (state.isPlaying) {
         modePillEl.textContent = state.activeLyricsClip ? 'VIDEO + KARAOKE' : 'PLAYING';
         modePillEl.className = 'vw-mode-pill playing';
-        if (Math.abs((videoEl.currentTime || 0) - targetSec) > 0.09) {
-          safeSeekVideo(targetSec);
-        }
+        const driftSec = targetSec - (videoEl.currentTime || 0);
         if (videoEl.paused) {
+          if (Math.abs(driftSec) > 0.012) safeSeekVideo(targetSec);
+          videoEl.playbackRate = 1.0;
           videoEl.play().catch(() => {});
+        } else if (Math.abs(driftSec) > 0.110) {
+          videoEl.playbackRate = 1.0;
+          safeSeekVideo(targetSec);
+        } else if (Math.abs(driftSec) > 0.008) {
+          videoEl.playbackRate = Math.max(0.94, Math.min(1.06, 1.0 + driftSec * 0.55));
+        } else if (videoEl.playbackRate !== 1.0) {
+          videoEl.playbackRate = 1.0;
         }
       } else {
         modePillEl.textContent = state.activeLyricsClip ? 'SCRUB · KARAOKE' : 'SCRUB';
         modePillEl.className = 'vw-mode-pill';
         if (!videoEl.paused) videoEl.pause();
-        if (Math.abs((videoEl.currentTime || 0) - targetSec) > 0.02) {
+        if (videoEl.playbackRate !== 1.0) videoEl.playbackRate = 1.0;
+        if (Math.abs((videoEl.currentTime || 0) - targetSec) > 0.015) {
           safeSeekVideo(targetSec);
         }
       }
@@ -332,8 +340,14 @@
         const clipDur = Number(state.activeClip.durationSec) || 0;
         if (into >= 0 && (clipDur <= 0 || into <= clipDur + 0.05)) {
           const target = (Number(state.activeClip.offsetSec) || 0) + into;
-          if (Math.abs((videoEl.currentTime || 0) - target) > 0.11) {
+          const drift = target - (videoEl.currentTime || 0);
+          if (Math.abs(drift) > 0.110) {
+            videoEl.playbackRate = 1.0;
             safeSeekVideo(target);
+          } else if (Math.abs(drift) > 0.008) {
+            videoEl.playbackRate = Math.max(0.94, Math.min(1.06, 1.0 + drift * 0.55));
+          } else if (videoEl.playbackRate !== 1.0) {
+            videoEl.playbackRate = 1.0;
           }
         }
       }

@@ -392,7 +392,7 @@ function buildNonOverlappingVideoSegments(clips = []) {
     if (!vf) continue;
     const start = Math.max(0, Number(c.startSec) || 0);
     const dur = Math.max(0.04, Number(c.durationSec) || 0);
-    const off = Math.max(0, Number(c.offsetSec) || 0);
+    const off = Math.max(0, Number(c.videoOffsetSec ?? c.offsetSec) || 0);
     valid.push({
       clipId: c.id || `clip-${i}`,
       name: c.name || path.basename(vf),

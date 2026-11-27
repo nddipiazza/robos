@@ -569,7 +569,7 @@ class MultiTrackRecorder {
     return this.active?.capture?.getFirstSampleMicWallMs?.() ?? null;
   }
 
-  start(project, { startSec = 0, injectTestSignal = false, onMeter } = {}) {
+  start(project, { startSec = 0, injectTestSignal = false, quantumMs = 0, onMeter } = {}) {
     if (this.active) throw new Error('Recording is already in progress');
     const allArmed = (project.tracks || []).filter(t => t.armed);
     const armedVideoTracks = allArmed.filter(t => t.trackKind === 'video');
@@ -650,6 +650,7 @@ class MultiTrackRecorder {
       minFlushIntervalMs: 22,
       sliceDurationSec: 0.02,
       pwLatency: '10ms',
+      quantumMs: Number(quantumMs) || 0,
       onMeter: ({ elapsedSec, sliceDurationSec = 0.02, tracks }) => {
         if (!onMeter) return;
         const targetSliceCount = Math.floor(elapsedSec / sliceDurationSec);
@@ -754,7 +755,7 @@ class MultiTrackRecorder {
     };
   }
 
-  async stop({ injectTestSignal = false, earsStartWallMs = null } = {}) {
+  async stop({ injectTestSignal = false, earsStartWallMs = null, stopTimelineSec = null } = {}) {
     if (!this.active) return { ok: false, error: 'Not currently recording' };
     const session = this.active;
     this.active = null;
@@ -809,7 +810,14 @@ class MultiTrackRecorder {
         })
         : [];
 
-      const fullDur = waveInfo.durationSec || Number(wallDurationSec.toFixed(3));
+      const fullDur = waveInfo.durationSec || Number(wallDurationSec.toFixed(4));
+      let playDur = fullDur;
+      if (!usedSynthetic && Number.isFinite(stopTimelineSec) && stopTimelineSec > alignedClipStartSec + 0.12) {
+        const exactTakeSpan = Number((stopTimelineSec - alignedClipStartSec).toFixed(4));
+        if (exactTakeSpan > 0.08 && exactTakeSpan < playDur) {
+          playDur = exactTakeSpan;
+        }
+      }
       const clip = {
         id: entry.clipId,
         name: `${entry.trackName} Take`,
@@ -818,7 +826,7 @@ class MultiTrackRecorder {
         fileExists: true,
         startSec: alignedClipStartSec,
         offsetSec: 0,
-        durationSec: fullDur,
+        durationSec: playDur,
         sourceDurationSec: fullDur,
         gainDb: autoGainDb,
         autoGainStaged: true,

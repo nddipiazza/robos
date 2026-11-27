@@ -1556,6 +1556,29 @@ class VideoTrackRecorder {
     return '';
   }
 
+  /**
+   * Wait until all armed video tracks have begun capturing Frame #0 (up to `timeoutMs`),
+   * ensuring the camera sensor is already streaming BEFORE backing audio playback begins!
+   */
+  waitCaptureReady(timeoutMs = 2400) {
+    if (!this.active || !Array.isArray(this.active.entries) || !this.active.entries.length) {
+      return Promise.resolve(true);
+    }
+    if (this.active.injectTestSignal || !this.active.entries.some(e => Boolean(e.proc))) {
+      return Promise.resolve(true);
+    }
+    const allReady = Promise.all(
+      this.active.entries.map(e => e.readyPromise || Promise.resolve())
+    );
+    return Promise.race([
+      allReady.then(() => true),
+      new Promise((resolve) => {
+        const t = setTimeout(() => resolve(false), Math.max(120, Number(timeoutMs) || 2400));
+        if (t.unref) t.unref();
+      }),
+    ]);
+  }
+
   start(project, { startSec = 0, injectTestSignal = false, onLiveFrame = null } = {}) {
     if (this.active) throw new Error('Video recording is already in progress');
     const armedVideoTracks = (project.tracks || []).filter(t => t.armed && t.trackKind === 'video');
@@ -1580,6 +1603,14 @@ class VideoTrackRecorder {
       const audioMode = vcfg.audioMode || 'none';
       const isV4l2 = Boolean(vcfg.sourceType === 'v4l2' || vcfg.devicePath);
 
+      let readyResolve = null;
+      const readyPromise = new Promise(r => { readyResolve = r; });
+      // Physical camera capture + MJPEG pipe latency between real-world light hitting the CMOS sensor
+      // for MP4 `PTS = 0.000s` and `proc.stdout` emitting decoded/scaled JPEG #1:
+      //   - USB V4L2 UVC (e.g. OBSBOT Tiny 2 Lite): ~56ms CMOS mid-exposure + ISP + USB isoc + ~36ms FFmpeg MJPEG pipe = 92ms
+      //   - Network IP / RTSP camera: ~95ms camera encode + Wi-Fi + ~36ms FFmpeg MJPEG pipe = 131ms
+      const camPipelineLatencyMs = isV4l2 ? 92 : 131;
+
       const entry = {
         trackId: track.id,
         trackName: track.name,
@@ -1593,6 +1624,10 @@ class VideoTrackRecorder {
         videoConfig: vcfg,
         proc: null,
         firstPacketWallMs: null,
+        camWorld0WallMs: null,
+        readyPromise,
+        readyResolve,
+        camPipelineLatencyMs,
         latestPreviewDataUrl: '',
         latestPreviewAtMs: 0,
         lastLiveEmitAtMs: 0,
@@ -1672,8 +1707,14 @@ class VideoTrackRecorder {
             const now = Date.now();
             if (entry.firstPacketWallMs === null) {
               entry.firstPacketWallMs = now;
+              entry.camWorld0WallMs = now - entry.camPipelineLatencyMs;
             }
             if (isV4l2 && frameIdx <= 3 && jpg.length < 7500) return;
+            if (entry.readyResolve) {
+              const fn = entry.readyResolve;
+              entry.readyResolve = null;
+              fn();
+            }
             const dataUrl = `data:image/jpeg;base64,${jpg.toString('base64')}`;
             entry.latestPreviewDataUrl = dataUrl;
             entry.latestPreviewAtMs = now;
@@ -1692,23 +1733,24 @@ class VideoTrackRecorder {
           proc.stderr?.on('data', chunk => {
             entry.stderrTail = (entry.stderrTail + chunk.toString('utf8')).slice(-600);
           });
-          const pollTimer = setInterval(() => {
-            if (entry.firstPacketWallMs !== null) {
-              clearInterval(pollTimer);
-              return;
-            }
-            try {
-              if (fs.existsSync(partFile) && fs.statSync(partFile).size > 512) {
-                entry.firstPacketWallMs = Date.now();
-                clearInterval(pollTimer);
-              }
-            } catch {}
-          }, 25);
           entry.exitPromise = new Promise(resolve => {
-            proc.on('error', () => { clearInterval(pollTimer); resolve(); });
-            proc.on('close', () => { clearInterval(pollTimer); resolve(); });
+            const settleExit = () => {
+              if (entry.readyResolve) {
+                const fn = entry.readyResolve;
+                entry.readyResolve = null;
+                fn();
+              }
+              resolve();
+            };
+            proc.on('error', settleExit);
+            proc.on('close', settleExit);
           });
         } catch {
+          if (entry.readyResolve) {
+            const fn = entry.readyResolve;
+            entry.readyResolve = null;
+            fn();
+          }
           entry.proc = null;
         }
       }
@@ -1781,6 +1823,7 @@ class VideoTrackRecorder {
   async stop({
     injectTestSignal = false,
     earsStartWallMs = null,
+    stopTimelineSec = null,
     audioRecordedClips = [],
     importMediaFileToWavFn = null,
     computeWaveformPeaksFn = null,
@@ -1813,19 +1856,28 @@ class VideoTrackRecorder {
       }
 
       const probe = await probeVideoFileInfo(entry.videoFile);
-      const vidDur = Number((probe.durationSec || wallDurationSec).toFixed(3));
+      const vidDur = Number((probe.durationSec || wallDurationSec).toFixed(4));
 
       let alignedStartSec = session.startSec;
       let alignedOffsetSec = 0;
-      const camStartMs = entry.firstPacketWallMs || session.startedAtMs;
-      if (hasRealCapture && Number.isFinite(earsStartWallMs) && Number.isFinite(camStartMs)) {
-        const deltaSec = (earsStartWallMs - camStartMs) / 1000;
-        if (Math.abs(deltaSec) < 3.0 && Math.abs(deltaSec) >= 0.015) {
-          if (deltaSec > 0 && deltaSec < vidDur - 0.1) {
-            alignedOffsetSec = Number(deltaSec.toFixed(3));
+      const camWorld0Ms = entry.camWorld0WallMs ?? entry.firstPacketWallMs ?? session.startedAtMs;
+      if (hasRealCapture && Number.isFinite(earsStartWallMs) && Number.isFinite(camWorld0Ms)) {
+        const deltaSec = (earsStartWallMs - camWorld0Ms) / 1000;
+        if (Math.abs(deltaSec) < 4.5 && Math.abs(deltaSec) >= 0.002) {
+          if (deltaSec > 0 && deltaSec < vidDur - 0.08) {
+            alignedOffsetSec = Number(deltaSec.toFixed(4));
           } else if (deltaSec < 0) {
-            alignedStartSec = Number((session.startSec + Math.abs(deltaSec)).toFixed(3));
+            alignedStartSec = Number((session.startSec + Math.abs(deltaSec)).toFixed(4));
           }
+        }
+      }
+
+      let playDur = Math.max(0.08, Number((vidDur - alignedOffsetSec).toFixed(4)));
+      // Lock clip end time to the exact timeline stop cursor (`stopTimelineSec`) when stopped by user
+      if (hasRealCapture && Number.isFinite(stopTimelineSec) && stopTimelineSec > alignedStartSec + 0.12) {
+        const exactTakeSpan = Number((stopTimelineSec - alignedStartSec).toFixed(4));
+        if (exactTakeSpan > 0.08 && exactTakeSpan < playDur) {
+          playDur = exactTakeSpan;
         }
       }
 
@@ -1840,6 +1892,7 @@ class VideoTrackRecorder {
         pairedAudioRec.clip.videoWidth = probe.width || entry.qualitySpec?.width || 1280;
         pairedAudioRec.clip.videoHeight = probe.height || entry.qualitySpec?.height || 720;
         pairedAudioRec.clip.qualityPreset = entry.qualitySpec?.id || DEFAULT_VIDEO_QUALITY;
+        pairedAudioRec.clip.videoOffsetSec = alignedOffsetSec;
         recordedVideoClips.push({ trackId: entry.trackId, clip: pairedAudioRec.clip });
         continue;
       }
@@ -1865,7 +1918,6 @@ class VideoTrackRecorder {
         } catch {}
       }
 
-      const playDur = Math.max(0.1, Number((vidDur - alignedOffsetSec).toFixed(3)));
       const clip = {
         id: entry.clipId,
         name: `${entry.trackName} Video Take`,

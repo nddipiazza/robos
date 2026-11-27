@@ -863,9 +863,11 @@ ipcMain.handle('daw:record-start', async (_e, payload) => {
       await liveCameraMonitor.stop();
       await abortInFlightV4l2Snapshots();
     }
+    const quantumMs = Number(audioDevices?.getAudioDevicesSnapshot?.()?.clock?.latencyMs) || 0;
     const started = recorder.start(proj, {
       startSec,
       injectTestSignal,
+      quantumMs,
       onMeter: (m) => sendToRenderer('daw:record-progress', m),
     });
     const vidStarted = videoRecorder.start(proj, {
@@ -874,7 +876,12 @@ ipcMain.handle('daw:record-start', async (_e, payload) => {
       onLiveFrame: (frame) => broadcastLiveVideoFrame(frame),
     });
     if (!injectTestSignal) {
-      await recorder.waitCaptureReady(280);
+      // Wait for BOTH PipeWire audio mics AND camera video sensor to begin streaming Frame 0 / Sample 0
+      // BEFORE returning to the renderer so backing audio + video + recording lock to the exact millisecond!
+      await Promise.all([
+        recorder.waitCaptureReady(500),
+        hasArmedVideo ? videoRecorder.waitCaptureReady(2400) : Promise.resolve(true),
+      ]);
     }
     return {
       ...started,
@@ -893,14 +900,20 @@ ipcMain.handle('daw:record-stop', async (_e, payload) => {
     const earsStartWallMs = rawEars !== null && rawEars !== undefined && Number.isFinite(Number(rawEars))
       ? Number(rawEars)
       : null;
+    const rawStopSec = payload?.stopTimelineSec;
+    const stopTimelineSec = rawStopSec !== null && rawStopSec !== undefined && Number.isFinite(Number(rawStopSec))
+      ? Number(rawStopSec)
+      : null;
     const injectTestSignal = Boolean(payload?.injectTestSignal);
     const res = await recorder.stop({
       injectTestSignal,
       earsStartWallMs,
+      stopTimelineSec,
     });
     const vidRes = await videoRecorder.stop({
       injectTestSignal,
       earsStartWallMs,
+      stopTimelineSec,
       audioRecordedClips: res.recordedClips || [],
       importMediaFileToWavFn: importMediaFileToWav,
       computeWaveformPeaksFn: computeWaveformPeaks,

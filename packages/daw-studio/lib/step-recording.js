@@ -457,7 +457,9 @@ function reconcileStepRecordingPass(project, {
 
     const origVStart = Number(newVid.startSec) || 0;
     const origVDur = Number(newVid.durationSec) || 0;
-    const safeVidTrim = Math.min(Math.max(0, origVDur - 0.25), trimmedVideoLeadSec);
+    const targetVStart = Number(punchStartSec) + trimmedVideoLeadSec;
+    const desiredVidTrim = Math.max(0, targetVStart - origVStart);
+    const safeVidTrim = Math.min(Math.max(0, origVDur - 0.25), desiredVidTrim);
 
     if (safeVidTrim > 0.02) {
       newVid.startSec = Number((origVStart + safeVidTrim).toFixed(4));
@@ -529,7 +531,7 @@ function buildTrackVideoExportSegments(videoTrack, {
     const c = rawClips[i];
     const vf = resolveClipVideoPath(c);
     const cStart = Math.max(0, Number(c.startSec) || 0);
-    const cOff = Math.max(0, Number(c.offsetSec) || 0);
+    const cOff = Math.max(0, Number(c.videoOffsetSec ?? c.offsetSec) || 0);
     const cDur = Math.max(0.05, Number(c.durationSec) || 0);
     const cEnd = cStart + cDur;
     if (cEnd <= rStart + 0.01 || cStart >= rEnd - 0.01) continue;
