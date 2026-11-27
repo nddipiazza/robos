@@ -8,6 +8,18 @@ import {
   albumKeyOf,
 } from '../lib/library-index.js';
 import { sameTrack } from './library-ui.jsx';
+import { useColumns } from './resizable.jsx';
+
+const HISTORY_COLUMNS = [
+  { key: 'play', label: 'Play', width: '36px', fixed: true },
+  { key: 'type', label: 'Type', width: '64px', min: 56 },
+  { key: 'show', label: 'Show / Movie', width: 'minmax(0, 1.6fr)', min: 96, sortKey: 'title' },
+  { key: 'episode', label: 'Episode / Details', width: 'minmax(0, 1.5fr)', min: 88 },
+  { key: 'state', label: 'Current State', width: 'minmax(0, 1.3fr)', min: 84, sortKey: 'status' },
+  { key: 'plays', label: 'Views', width: '62px', min: 52, sortKey: 'plays' },
+  { key: 'when', label: 'Last Watched', width: '146px', min: 96, sortKey: 'lastPlayed' },
+  { key: 'actions', label: 'Actions', width: '110px', fixed: true },
+];
 
 function normalizePortableKey(track) {
   if (!track) return null;
@@ -67,6 +79,7 @@ export default function WatchHistoryTab({
   const [isDragOver, setIsDragOver] = useState(false);
   const [importReport, setImportReport] = useState(null);
   const [visibleLimit, setVisibleLimit] = useState(300);
+  const { template, handleFor } = useColumns('watch-history', HISTORY_COLUMNS);
 
   useEffect(() => {
     setVisibleLimit(300);
@@ -385,28 +398,29 @@ export default function WatchHistoryTab({
             }
           }}
         >
-          <table className="wh-skinny-table" aria-label="Watch History Table">
-            <thead>
-              <tr>
-                <th className="wh-col-play" aria-label="Play" />
-                <th className="wh-col-type">Type</th>
-                <th className="wh-col-show wh-sortable" onClick={() => toggleSort('title')}>
-                  Show / Movie{sortArrow('title')}
-                </th>
-                <th className="wh-col-episode">Episode / Details</th>
-                <th className="wh-col-state wh-sortable" onClick={() => toggleSort('status')}>
-                  Current State{sortArrow('status')}
-                </th>
-                <th className="wh-col-plays wh-sortable" onClick={() => toggleSort('plays')}>
-                  Views{sortArrow('plays')}
-                </th>
-                <th className="wh-col-when wh-sortable" onClick={() => toggleSort('lastPlayed')}>
-                  Last Watched{sortArrow('lastPlayed')}
-                </th>
-                <th className="wh-col-actions">Actions</th>
+          <table className="wh-skinny-table" role="table" aria-label="Watch History Table" style={{ '--wh-grid': template }}>
+            <thead role="rowgroup">
+              <tr role="row">
+                {HISTORY_COLUMNS.map(({ key, label, sortKey }) => (
+                  <th
+                    key={key}
+                    role="columnheader"
+                    scope="col"
+                    className={`wh-col-${key}`}
+                    aria-label={key === 'play' ? label : undefined}
+                    aria-sort={sortKey && sort.key === sortKey ? (sort.dir === 'asc' ? 'ascending' : 'descending') : undefined}
+                  >
+                    {sortKey ? (
+                      <button type="button" className="wh-sortable wh-column-label" onClick={() => toggleSort(sortKey)}>
+                        {label}{sortArrow(sortKey)}
+                      </button>
+                    ) : key !== 'play' && <span className="wh-column-label">{label}</span>}
+                    {handleFor(key)}
+                  </th>
+                ))}
               </tr>
             </thead>
-            <tbody>
+            <tbody role="rowgroup">
               {renderedRows.map((r) => {
                 const isCurrent = Boolean(r.track && sameTrack(currentTrack, r.track));
                 const canPlay = Boolean(r.track && onPlayTrack);
@@ -415,6 +429,7 @@ export default function WatchHistoryTab({
                 return (
                   <tr
                     key={r.rowKey}
+                    role="row"
                     className={`wh-row ${isCurrent ? 'current' : ''} ${r.completed ? 'is-watched' : ''} ${r.inProgress ? 'is-progress' : ''}`}
                     onDoubleClick={() => { if (canPlay) onPlayTrack(r.track); }}
                   >

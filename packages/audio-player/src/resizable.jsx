@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useLayoutEffect, useRef, useState } from 'react';
 
 // Resizable panes and table columns. Sizes are remembered per viewer in
 // localStorage; double-clicking a divider or a column border restores the default.
@@ -24,11 +24,26 @@ export function useLayoutPref(key, fallback) {
     return stored === undefined ? fallback : stored;
   });
   const first = useRef(true);
-  useEffect(() => {
+  const pending = useRef(null);
+  useLayoutEffect(() => {
     if (first.current) { first.current = false; return undefined; }
-    const timer = setTimeout(() => writeStore(key, value), 250);
+    const save = () => {
+      if (pending.current !== save) return;
+      writeStore(key, value);
+      pending.current = null;
+    };
+    pending.current = save;
+    const timer = setTimeout(save, 250);
     return () => clearTimeout(timer);
   }, [key, value]);
+  useLayoutEffect(() => {
+    const flush = () => pending.current?.();
+    window.addEventListener('pagehide', flush);
+    return () => {
+      window.removeEventListener('pagehide', flush);
+      flush();
+    };
+  }, []);
   return [value, setValue];
 }
 
@@ -101,64 +116,57 @@ export function Splitter({ id, size, onChange, min, max, defaultSize, side = 'le
 }
 
 /**
- * Column widths for a grid table. `spec` lists the columns in order:
- *   { key, width: CSS default, min?: px, fixed?: true (not resizable), fill?: true }
- * One `fill` column takes whatever is left. Returns { template, handleFor(key) };
- * put handleFor(col) inside each header cell (it marks the border to its right).
+ * Keep table columns in proportion as their pane resizes. Dragging a divider
+ * transfers space between the two columns directly beside it.
  */
 export function useColumns(storeKey, spec) {
   const [widths, setWidths] = useLayoutPref(`cols:${storeKey}`, {});
-  const template = spec.map(c => (!c.fill && !c.fixed && widths[c.key] != null ? `${widths[c.key]}px` : c.width)).join(' ');
+  const template = spec.map(column => {
+    if (column.fixed) return column.width;
+    const weight = widths.weights?.[column.key];
+    if (weight > 0) return `minmax(0, ${weight}fr)`;
+    // Read layouts saved before widths were stored in proportion.
+    return !column.fill && widths[column.key] != null ? `${widths[column.key]}px` : column.width;
+  }).join(' ');
 
-  const handleFor = useCallback((key) => {
-    const i = spec.findIndex(c => c.key === key);
-    const a = spec[i];
-    const b = spec[i + 1];
-    if (!a || !b || a.fixed || b.fixed) return null;
+  const handleFor = useCallback(key => {
+    const index = spec.findIndex(column => column.key === key);
+    const left = spec[index];
+    const right = spec[index + 1];
+    if (!left || !right || left.fixed || right.fixed) return null;
     return (
       <ColumnBorder
         key="col-border"
-        label={`Resize the ${a.label || a.key} column`}
-        onDragStart={(cell) => {
-          // Measure every column once, so that only the fill column flexes.
-          const row = cell.parentElement;
-          const cells = Array.from(row.children);
-          const measured = {};
-          spec.forEach((c, n) => { if (cells[n]) measured[c.key] = cells[n].getBoundingClientRect().width; });
-          const frozen = {};
-          spec.forEach(c => { if (!c.fill && !c.fixed) frozen[c.key] = Math.round(measured[c.key]); });
-          setWidths(frozen);
-          const minA = a.min || 40;
-          const minB = b.min || 40;
-          const fillSpare = Math.max(0, (measured[(spec.find(c => c.fill) || {}).key] || 0) - 80);
-          return (dx) => {
-            // A column's right border sizes that column and the fill column (Title)
-            // gives or takes the difference, like a file manager. Title's own
-            // border trades width with the column to its right.
-            const lo = a.fill ? -fillSpare : minA - measured[a.key];
-            const hi = a.fill ? measured[b.key] - minB : fillSpare;
-            const d = Math.round(clamp(dx, Math.min(lo, 0), Math.max(hi, 0)));
-            setWidths(() => {
-              const next = { ...frozen };
-              if (a.fill) next[b.key] = Math.max(minB, Math.round(measured[b.key] - d));
-              else next[a.key] = Math.max(minA, Math.round(measured[a.key] + d));
-              return next;
+        label={`Resize the ${left.label || left.key} column`}
+        measure={cell => {
+          const cells = cell.parentElement.children;
+          const measured = Object.fromEntries(spec.map((column, index) =>
+            [column.key, Math.max(1, cells[index].getBoundingClientRect().width)]));
+          const low = Math.min(0, (left.min ?? 40) - measured[left.key]);
+          const high = Math.max(0, measured[right.key] - (right.min ?? 40));
+          return distance => {
+            const delta = clamp(distance, low, high);
+            setWidths({
+              weights: { ...measured, [left.key]: measured[left.key] + delta, [right.key]: measured[right.key] - delta },
             });
           };
         }}
         onReset={() => setWidths({})}
       />
     );
-  }, [spec, setWidths]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [spec, setWidths]);
 
-  return { template, handleFor, widths };
+  return { template, handleFor };
 }
 
-function ColumnBorder({ label, onDragStart, onReset }) {
-  const onPointerDown = (e) => {
-    const cell = e.currentTarget.parentElement;
-    const move = onDragStart(cell);
-    startDrag(e, move);
+function ColumnBorder({ label, measure, onReset }) {
+  const onKeyDown = event => {
+    const step = event.shiftKey ? 64 : 16;
+    const distance = { ArrowLeft: -step, ArrowRight: step, Home: -Infinity, End: Infinity }[event.key];
+    if (distance === undefined) return;
+    event.preventDefault();
+    event.stopPropagation();
+    measure(event.currentTarget.parentElement)(distance);
   };
   return (
     <span
@@ -166,10 +174,12 @@ function ColumnBorder({ label, onDragStart, onReset }) {
       role="separator"
       aria-orientation="vertical"
       aria-label={label}
+      tabIndex={0}
       title="Drag to resize · double-click to reset columns"
-      onPointerDown={onPointerDown}
-      onClick={(e) => e.stopPropagation()}
-      onDoubleClick={(e) => { e.stopPropagation(); onReset(); }}
+      onPointerDown={event => startDrag(event, measure(event.currentTarget.parentElement))}
+      onKeyDown={onKeyDown}
+      onClick={event => event.stopPropagation()}
+      onDoubleClick={event => { event.stopPropagation(); onReset(); }}
     />
   );
 }

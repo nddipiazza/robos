@@ -209,11 +209,11 @@ export default function Library({
         className="overlay"
         style={{ left: navWidth - 5 }}
         label="Library sidebar width"
-        width={navWidth}
+        size={navWidth}
         onChange={setNavWidth}
         min={140}
         max={420}
-        defaultWidth={isShowsMode ? 218 : NAV_WIDTH}
+        defaultSize={isShowsMode ? 218 : NAV_WIDTH}
       />
       <nav className="lib-nav" aria-label={isShowsMode ? 'TV Shows navigation' : 'Movies navigation'}>
         <div className="lib-nav-group">
@@ -608,6 +608,19 @@ function MoviesOnlySection({ index, go, prefs, setPref }) {
  *   3. Episode Guide (with `S01E01` codes, episode titles, air dates, ratings, plot synopses, and resume bars)
  */
 function TvNavigatorSection({ index, go, prefs, setPref, stats }) {
+  const [seriesWidth, setSeriesWidth] = useLayoutPref('tvSeriesWidth', 270);
+  const [splitWidth, setSplitWidth] = useState(0);
+  const splitRef = useRef(null);
+  const hasShows = Boolean(index.tvShows?.length);
+  useEffect(() => {
+    if (!hasShows || !splitRef.current) return undefined;
+    const observer = new ResizeObserver(([entry]) => setSplitWidth(Math.round(entry.contentRect.width)));
+    observer.observe(splitRef.current);
+    return () => observer.disconnect();
+  }, [hasShows]);
+  const stacked = splitWidth > 0 && splitWidth < 520;
+  const maxSeriesWidth = Math.max(170, Math.min(480, (splitWidth || 800) - 295));
+  const visibleSeriesWidth = Math.min(seriesWidth, maxSeriesWidth);
   const shows = useMemo(() => sortAlbums(index.tvShows || [], prefs.tvSort || 'title', stats), [index, prefs.tvSort, stats]);
   const [seriesFilter, setSeriesFilter] = useState('all'); // 'all' | 'continue' | 'watched' | network
   const [seriesQuery, setSeriesQuery] = useState('');
@@ -719,7 +732,11 @@ function TvNavigatorSection({ index, go, prefs, setPref, stats }) {
         </button>
       </div>
 
-      <div className="tv-navigator-split">
+      <div
+        ref={splitRef}
+        className={`tv-navigator-split${stacked ? ' stacked' : ''}`}
+        style={{ '--series-width': `${visibleSeriesWidth}px` }}
+      >
         {/* Left Column: Series List (Show Picker) */}
         <aside className="tv-navigator-series-list" aria-label="TV Series List">
           <div className="tv-navigator-series-header">
@@ -786,6 +803,17 @@ function TvNavigatorSection({ index, go, prefs, setPref, stats }) {
         </aside>
 
         {/* Right Column: Active Show Banner + Season Tabs + Episode Guide */}
+        {!stacked && (
+          <Splitter
+            id="tv-series-splitter"
+            label="TV series list width"
+            size={visibleSeriesWidth}
+            onChange={setSeriesWidth}
+            min={170}
+            max={maxSeriesWidth}
+            defaultSize={270}
+          />
+        )}
         <section className="tv-navigator-show-stage">
           {activeShow ? (
             <>

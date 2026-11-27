@@ -167,13 +167,17 @@ export default function TrackList({
         const sortable = onSort && h.sort;
         const active = sort && sort.key === h.sort;
         const border = handleFor(col);
-        return sortable ? (
-          <button key={col} className={`tl-cell tl-${col} tl-sort ${active ? 'active' : ''} ${border ? 'col-resizable' : ''}`} onClick={() => onSort(h.sort)}>
-            {col === 'love' ? <Icon name="heart" size={12} /> : h.label}
-            {active ? (sort.dir === 'asc' ? ' ↑' : ' ↓') : ''}
+        return (
+          <span key={col} className={`tl-cell tl-${col} ${border ? 'col-resizable' : ''}`}>
+            {sortable ? (
+              <button type="button" className={`tl-sort ${active ? 'active' : ''}`} onClick={() => onSort(h.sort)}>
+                {col === 'love' ? <Icon name="heart" size={12} /> : h.label}
+                {active ? (sort.dir === 'asc' ? ' ↑' : ' ↓') : ''}
+              </button>
+            ) : h.label}
             {border}
-          </button>
-        ) : <span key={col} className={`tl-cell tl-${col} ${border ? 'col-resizable' : ''}`}>{h.label}{border}</span>;
+          </span>
+        );
       })}
     </div>
   );

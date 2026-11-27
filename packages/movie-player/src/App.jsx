@@ -71,6 +71,8 @@ export default function App() {
   const [shuffleMode, setShuffleMode] = useState(!!playerPrefs.shuffle);
   const [dockCollapsed, setDockCollapsed] = useState(!!playerPrefs.dockCollapsed);
   const [playlistSidebarWidth, setPlaylistSidebarWidth] = useLayoutPref('playlistSidebarWidth', PLAYLIST_SIDEBAR_WIDTH);
+  const [cinemaHeight, setCinemaHeight] = useLayoutPref('cinemaHeight', null);
+  const [measuredCinemaHeight, setMeasuredCinemaHeight] = useState(360);
   const playlistColumns = useColumns('playlist', PLAYLIST_COLUMNS);
   const [libNav, setLibNav] = useState(() => {
     const saved = playerPrefs.librarySection;
@@ -987,6 +989,18 @@ export default function App() {
     outputTarget === 'local' &&
     isVideoTrack(currentTrack)
   );
+  const showCinemaResize = activeTab === 'player' && outputTarget === 'local' && isVideoTrack(currentTrack);
+
+  useLayoutEffect(() => {
+    const video = videoRef.current;
+    if (!showCinemaResize || !video || cinemaHeight != null) return undefined;
+    const observer = new ResizeObserver(([entry]) => {
+      const height = Math.round(entry.contentRect.height);
+      if (height > 0) setMeasuredCinemaHeight(height);
+    });
+    observer.observe(video);
+    return () => observer.disconnect();
+  }, [showCinemaResize, cinemaHeight]);
 
   useLayoutEffect(() => {
     if (!embeddedPipActive) {
@@ -2608,6 +2622,7 @@ export default function App() {
                       id="cinema-video-element"
                       ref={videoRef}
                       className={`cinema-video-el fit-${videoFit}`}
+                      style={!embeddedPipActive && cinemaHeight != null ? { '--cinema-video-height': `${cinemaHeight}px` } : undefined}
                       src={activeVideoSrc}
                       poster={artUrlFor(artBase.local, currentTrack?.artId) || undefined}
                       controls={!isTranscodeActive && !embeddedPipActive}
@@ -2871,6 +2886,19 @@ export default function App() {
                         {currentTrack?.title} — Local desktop video decoding is paused while casting so your Smart TV gets 100% of stream bandwidth with zero stutter.
                       </div>
                     </div>
+                  )}
+                  {showCinemaResize && (
+                    <Splitter
+                      id="cinema-height-splitter"
+                      className="height-grip"
+                      label="Cinema video height"
+                      orientation="horizontal"
+                      size={cinemaHeight ?? measuredCinemaHeight}
+                      onChange={setCinemaHeight}
+                      min={160}
+                      max={720}
+                      defaultSize={null}
+                    />
                   )}
                   {!embeddedPipActive && (
                   <div className="cinema-stage-toolbar">
@@ -3177,11 +3205,11 @@ export default function App() {
               <Splitter
                 id="playlists-splitter"
                 label="Playlist list width"
-                width={playlistSidebarWidth}
+                size={playlistSidebarWidth}
                 onChange={setPlaylistSidebarWidth}
                 min={180}
                 max={() => Math.max(220, Math.min(560, window.innerWidth - 700))}
-                defaultWidth={PLAYLIST_SIDEBAR_WIDTH}
+                defaultSize={PLAYLIST_SIDEBAR_WIDTH}
               />
 
               {/* Right Detail Pane: Playlist View */}
@@ -3394,6 +3422,7 @@ export default function App() {
               </div>
             )}
             <Library
+              key={activeTab}
               mode={activeTab === 'shows' ? 'shows' : 'movies'}
               tracks={library.tracks}
               folders={folders}

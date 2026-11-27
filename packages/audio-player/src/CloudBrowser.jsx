@@ -1,5 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Icon } from './Icon.jsx';
+import { useColumns } from './resizable.jsx';
+
+const BROWSER_COLUMNS = [
+  { key: 'select', width: '32px', fixed: true },
+  { key: 'name', label: 'File name', width: 'minmax(0, 1fr)', min: 140 },
+  { key: 'size', width: '90px', min: 84 },
+];
 
 const formatSize = (b) => (b == null ? '' : b > 1048576 ? `${(b / 1048576).toFixed(1)} MB` : `${Math.max(1, Math.round(b / 1024))} KB`);
 
@@ -21,6 +28,7 @@ const providerBadge = (driverType) => {
 };
 
 export default function CloudBrowser({ onLibrary, onFolders, showStatus, folders = [], onEnabled, onRescan, busyId }) {
+  const { template, handleFor } = useColumns('cloud-listing', BROWSER_COLUMNS);
   const [connections, setConnections] = useState(null);
   const [connId, setConnId] = useState('');
   const [listing, setListing] = useState(null); // { path, entries }
@@ -276,7 +284,12 @@ export default function CloudBrowser({ onLibrary, onFolders, showStatus, folders
               </React.Fragment>
             ))}
           </div>
-          <div className="cloud-rows">
+          <div className="cloud-rows" style={{ '--cloud-grid': template }}>
+            <div className="cloud-row cloud-column-header">
+              <span />
+              <span className="col-resizable">Name{handleFor('name')}</span>
+              <span className="cloud-size">Size</span>
+            </div>
             {parentPath && (
               <div className="cloud-row" onClick={() => browse(connId, parentPath)}>
                 <span className="cloud-check"></span>

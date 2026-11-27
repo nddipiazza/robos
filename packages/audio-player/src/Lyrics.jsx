@@ -140,7 +140,7 @@ export default function Lyrics({ track, duration, getTime, onSeek }) {
           </div>
           <Splitter
             id="lyrics-height-splitter"
-            className="lyrics-resize"
+            className="height-grip"
             label="Lyrics height"
             orientation="horizontal"
             size={height}

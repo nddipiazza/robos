@@ -1913,10 +1913,11 @@ body {
 .crumb-sep { color: var(--text-muted); }
 
 .cloud-rows { border-top: 1px solid var(--border-color); }
+.cloud-row.cloud-column-header { color: var(--text-muted); font-size: 0.72rem; font-weight: 600; cursor: default; }
 
 .cloud-row {
   display: grid;
-  grid-template-columns: 32px 1fr 90px;
+  grid-template-columns: var(--cloud-grid, 32px minmax(0, 1fr) 90px);
   align-items: center;
   height: 40px;
   padding: 0 8px;
@@ -2209,6 +2210,7 @@ body {
 }
 .tl-sort { background: none; border: none; color: inherit; font: inherit; text-transform: inherit; letter-spacing: inherit; text-align: left; cursor: pointer; padding: 0; white-space: nowrap; }
 .tl-sort:hover, .tl-sort.active { color: var(--accent); }
+.tl-head .tl-sort { display: block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
 .tl-body:focus { outline: none; }
 .tl-body .tl-row:hover { background: var(--bg-secondary); }
 .tl-body .tl-row.selected { background: rgba(232, 163, 61, 0.14); }
@@ -2275,8 +2277,11 @@ body {
 .np-cols { height: 24px; font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); }
 .np-cols button { background: none; border: none; color: inherit; font: inherit; text-transform: inherit; letter-spacing: inherit; text-align: left; cursor: pointer; padding: 0; }
 .np-cols button:hover { color: var(--accent); }
+.np-cols .col-resizable button { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .np-cols .np-col-dur { text-align: right; }
 .np-list { flex: 1; overflow-y: auto; position: relative; outline: none; background: var(--bg-primary); }
+.np-cols, .np-list { scrollbar-gutter: stable; }
+.np-cols { overflow-y: hidden; }
 .np-list.dragging { box-shadow: inset 0 0 0 1px rgba(232, 163, 61, 0.4); }
 .np-spacer { position: relative; }
 .np-row {
@@ -2436,15 +2441,15 @@ body {
 .splitter.edge-right { right: -5px; }
 body.is-resizing, body.is-resizing * { cursor: col-resize !important; user-select: none !important; }
 body.is-resizing-height, body.is-resizing-height * { cursor: row-resize !important; user-select: none !important; }
-.splitter.lyrics-resize {
+.splitter.height-grip {
   width: 100%; height: 14px; cursor: row-resize;
   border-top: 1px solid var(--border-color);
 }
-.splitter.lyrics-resize::after {
+.splitter.height-grip::after {
   top: 50%; bottom: auto; width: 36px; height: 3px; border-radius: 2px;
   background: var(--text-muted); opacity: 0.75; transform: translate(-50%, -50%);
 }
-.splitter.lyrics-resize:hover::after, .splitter.lyrics-resize:focus-visible::after {
+.splitter.height-grip:hover::after, .splitter.height-grip:focus-visible::after {
   background: var(--accent); opacity: 1;
 }
 
@@ -2456,7 +2461,7 @@ body.is-resizing-height, body.is-resizing-height * { cursor: row-resize !importa
   content: ''; position: absolute; top: 25%; bottom: 25%; left: 4px; width: 2px; border-radius: 1px;
   background: var(--border-color); transition: background 0.12s;
 }
-.col-border:hover::after, body.is-resizing .col-border:active::after { background: var(--accent); top: 0; bottom: 0; }
+.col-border:hover::after, .col-border:focus-visible::after, body.is-resizing .col-border:active::after { background: var(--accent); top: 0; bottom: 0; }
 .playlists-layout > .splitter { width: 16px; }
 
 /* Deck seek bar while casting: follows the speaker (src/castClock.jsx). */

@@ -238,11 +238,11 @@ export default function NowPlayingPanel({
         className="overlay edge-left"
         label="Now Playing width"
         side="right"
-        width={Math.min(dockWidth, dockMaxWidth())}
+        size={Math.min(dockWidth, dockMaxWidth())}
         onChange={setDockWidth}
         min={240}
         max={dockMaxWidth}
-        defaultWidth={DOCK_WIDTH}
+        defaultSize={DOCK_WIDTH}
       />
       <div className="np-head">
         <div className="np-head-title">
@@ -301,8 +301,14 @@ export default function NowPlayingPanel({
 
       <div className="np-cols">
         <span className="np-col-state" />
-        <button className="np-col-title col-resizable" onClick={() => sortBy('title')} title="Sort by title">Title{sortMark('title')}{handleFor('title')}</button>
-        <button className="np-col-artist col-resizable" onClick={() => sortBy('artist')} title="Sort by release format">Format{sortMark('artist')}{handleFor('artist')}</button>
+        <span className="np-col-title col-resizable">
+          <button type="button" onClick={() => sortBy('title')} title="Sort by title">Title{sortMark('title')}</button>
+          {handleFor('title')}
+        </span>
+        <span className="np-col-artist col-resizable">
+          <button type="button" onClick={() => sortBy('artist')} title="Sort by release format">Format{sortMark('artist')}</button>
+          {handleFor('artist')}
+        </span>
         <button className="np-col-dur" onClick={() => sortBy('duration')} title="Sort by runtime">Runtime{sortMark('duration')}</button>
       </div>
 

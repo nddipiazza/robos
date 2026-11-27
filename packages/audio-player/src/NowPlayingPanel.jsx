@@ -291,8 +291,14 @@ export default function NowPlayingPanel({
 
       <div className="np-cols">
         <span className="np-col-state" />
-        <button className="np-col-title col-resizable" onClick={() => sortBy('title')} title="Sort by title">Title{sortMark('title')}{handleFor('title')}</button>
-        <button className="np-col-artist col-resizable" onClick={() => sortBy('artist')} title="Sort by artist">Artist{sortMark('artist')}{handleFor('artist')}</button>
+        <span className="np-col-title col-resizable">
+          <button type="button" onClick={() => sortBy('title')} title="Sort by title">Title{sortMark('title')}</button>
+          {handleFor('title')}
+        </span>
+        <span className="np-col-artist col-resizable">
+          <button type="button" onClick={() => sortBy('artist')} title="Sort by artist">Artist{sortMark('artist')}</button>
+          {handleFor('artist')}
+        </span>
         <button className="np-col-dur" onClick={() => sortBy('duration')} title="Sort by duration">Time{sortMark('duration')}</button>
       </div>
 

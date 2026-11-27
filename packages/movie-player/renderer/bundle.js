@@ -477,7 +477,7 @@
       exports.useTransition = function() {
         return ReactSharedInternals.H.useTransition();
       };
-      exports.version = "19.3.0";
+      exports.version = "19.3.1";
     }
   });
 
@@ -931,7 +931,7 @@
       exports.useFormStatus = function() {
         return ReactSharedInternals.H.useHostTransitionStatus();
       };
-      exports.version = "19.3.0";
+      exports.version = "19.3.1";
     }
   });
 
@@ -14407,12 +14407,12 @@
         }
       };
       var isomorphicReactPackageVersion$jscomp$inline_2043 = React23.version;
-      if ("19.3.0" !== isomorphicReactPackageVersion$jscomp$inline_2043)
+      if ("19.3.1" !== isomorphicReactPackageVersion$jscomp$inline_2043)
         throw Error(
           formatProdErrorMessage(
             527,
             isomorphicReactPackageVersion$jscomp$inline_2043,
-            "19.3.0"
+            "19.3.1"
           )
         );
       ReactDOMSharedInternals.findDOMNode = function(componentOrElement) {
@@ -14430,10 +14430,10 @@
       };
       var internals$jscomp$inline_2586 = {
         bundleType: 0,
-        version: "19.3.0",
+        version: "19.3.1",
         rendererPackageName: "react-dom",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.3.0"
+        reconcilerVersion: "19.3.1"
       };
       if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
         hook$jscomp$inline_2587 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -14501,7 +14501,7 @@
         listenToAllSupportedEvents(container2);
         return new ReactDOMHydrationRoot(initialChildren);
       };
-      exports.version = "19.3.0";
+      exports.version = "19.3.1";
     }
   });
 
@@ -18324,10 +18324,194 @@
   }
 
   // src/CloudBrowser.jsx
-  var import_react10 = __toESM(require_react());
+  var import_react11 = __toESM(require_react());
+
+  // src/resizable.jsx
+  var import_react9 = __toESM(require_react());
+  var STORE_KEY = "robos-audio-layout";
+  function readStore() {
+    try {
+      return JSON.parse(localStorage.getItem(STORE_KEY) || "{}") || {};
+    } catch {
+      return {};
+    }
+  }
+  function writeStore(key, value) {
+    try {
+      const all = readStore();
+      if (value == null) delete all[key];
+      else all[key] = value;
+      localStorage.setItem(STORE_KEY, JSON.stringify(all));
+    } catch {
+    }
+  }
+  function useLayoutPref(key, fallback) {
+    const [value, setValue] = (0, import_react9.useState)(() => {
+      const stored = readStore()[key];
+      return stored === void 0 ? fallback : stored;
+    });
+    const first = (0, import_react9.useRef)(true);
+    const pending = (0, import_react9.useRef)(null);
+    (0, import_react9.useLayoutEffect)(() => {
+      if (first.current) {
+        first.current = false;
+        return void 0;
+      }
+      const save = () => {
+        if (pending.current !== save) return;
+        writeStore(key, value);
+        pending.current = null;
+      };
+      pending.current = save;
+      const timer = setTimeout(save, 250);
+      return () => clearTimeout(timer);
+    }, [key, value]);
+    (0, import_react9.useLayoutEffect)(() => {
+      const flush = () => pending.current?.();
+      window.addEventListener("pagehide", flush);
+      return () => {
+        window.removeEventListener("pagehide", flush);
+        flush();
+      };
+    }, []);
+    return [value, setValue];
+  }
+  var clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+  function startDrag(e, onMove, axis = "clientX") {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const el = e.currentTarget;
+    const start = e[axis];
+    const resizeClass = axis === "clientY" ? "is-resizing-height" : "is-resizing";
+    try {
+      el.setPointerCapture(e.pointerId);
+    } catch {
+    }
+    document.body.classList.add(resizeClass);
+    const move = (ev) => onMove(ev[axis] - start);
+    const up = () => {
+      el.removeEventListener("pointermove", move);
+      el.removeEventListener("pointerup", up);
+      el.removeEventListener("pointercancel", up);
+      el.removeEventListener("lostpointercapture", up);
+      document.body.classList.remove(resizeClass);
+    };
+    el.addEventListener("pointermove", move);
+    el.addEventListener("pointerup", up);
+    el.addEventListener("pointercancel", up);
+    el.addEventListener("lostpointercapture", up);
+  }
+  function Splitter({ id, size, onChange, min, max, defaultSize, side = "left", orientation = "vertical", label, className = "", style }) {
+    const hi = typeof max === "function" ? max() : max;
+    const horizontal = orientation === "horizontal";
+    const sign = side === "right" || side === "bottom" ? -1 : 1;
+    const onPointerDown = (e) => {
+      const limit = typeof max === "function" ? max() : max;
+      startDrag(e, (distance) => onChange(clamp(Math.round(size + sign * distance), min, limit)), horizontal ? "clientY" : "clientX");
+    };
+    const onKeyDown = (e) => {
+      const step = e.shiftKey ? 64 : 16;
+      const [less, more] = horizontal ? ["ArrowUp", "ArrowDown"] : ["ArrowLeft", "ArrowRight"];
+      if (e.key === less || e.key === more) {
+        e.preventDefault();
+        const dir = e.key === more ? 1 : -1;
+        onChange(clamp(size + sign * dir * step, min, hi));
+      } else if (e.key === "Home") {
+        e.preventDefault();
+        onChange(min);
+      } else if (e.key === "End") {
+        e.preventDefault();
+        onChange(hi);
+      }
+    };
+    return /* @__PURE__ */ import_react9.default.createElement(
+      "div",
+      {
+        id,
+        className: `splitter ${className}`,
+        style,
+        role: "separator",
+        "aria-orientation": orientation,
+        "aria-label": label,
+        "aria-valuenow": Math.round(size),
+        "aria-valuemin": min,
+        "aria-valuemax": Math.round(hi),
+        tabIndex: 0,
+        title: `${label}: drag to resize, double-click to reset`,
+        onPointerDown,
+        onDoubleClick: () => onChange(defaultSize),
+        onKeyDown
+      }
+    );
+  }
+  function useColumns(storeKey, spec) {
+    const [widths, setWidths] = useLayoutPref(`cols:${storeKey}`, {});
+    const template = spec.map((column) => {
+      if (column.fixed) return column.width;
+      const weight = widths.weights?.[column.key];
+      if (weight > 0) return `minmax(0, ${weight}fr)`;
+      return !column.fill && widths[column.key] != null ? `${widths[column.key]}px` : column.width;
+    }).join(" ");
+    const handleFor = (0, import_react9.useCallback)((key) => {
+      const index = spec.findIndex((column) => column.key === key);
+      const left = spec[index];
+      const right = spec[index + 1];
+      if (!left || !right || left.fixed || right.fixed) return null;
+      return /* @__PURE__ */ import_react9.default.createElement(
+        ColumnBorder,
+        {
+          key: "col-border",
+          label: `Resize the ${left.label || left.key} column`,
+          measure: (cell) => {
+            const cells = cell.parentElement.children;
+            const measured = Object.fromEntries(spec.map((column, index2) => [column.key, Math.max(1, cells[index2].getBoundingClientRect().width)]));
+            const low = Math.min(0, (left.min ?? 40) - measured[left.key]);
+            const high = Math.max(0, measured[right.key] - (right.min ?? 40));
+            return (distance) => {
+              const delta = clamp(distance, low, high);
+              setWidths({
+                weights: { ...measured, [left.key]: measured[left.key] + delta, [right.key]: measured[right.key] - delta }
+              });
+            };
+          },
+          onReset: () => setWidths({})
+        }
+      );
+    }, [spec, setWidths]);
+    return { template, handleFor };
+  }
+  function ColumnBorder({ label, measure, onReset }) {
+    const onKeyDown = (event) => {
+      const step = event.shiftKey ? 64 : 16;
+      const distance = { ArrowLeft: -step, ArrowRight: step, Home: -Infinity, End: Infinity }[event.key];
+      if (distance === void 0) return;
+      event.preventDefault();
+      event.stopPropagation();
+      measure(event.currentTarget.parentElement)(distance);
+    };
+    return /* @__PURE__ */ import_react9.default.createElement(
+      "span",
+      {
+        className: "col-border",
+        role: "separator",
+        "aria-orientation": "vertical",
+        "aria-label": label,
+        tabIndex: 0,
+        title: "Drag to resize \xB7 double-click to reset columns",
+        onPointerDown: (event) => startDrag(event, measure(event.currentTarget.parentElement)),
+        onKeyDown,
+        onClick: (event) => event.stopPropagation(),
+        onDoubleClick: (event) => {
+          event.stopPropagation();
+          onReset();
+        }
+      }
+    );
+  }
 
   // src/FolderPanel.jsx
-  var import_react9 = __toESM(require_react());
+  var import_react10 = __toESM(require_react());
   var when = (iso) => {
     if (!iso) return "Not indexed yet";
     const d = new Date(iso);
@@ -18359,13 +18543,13 @@
     return parts.join(" \xB7 ");
   }
   function FolderPanel({ folders, activeId, onSelect, onAddLocal, onAddCloud, onAddPeer, onOpenMediaService, onRescan, onRename, onRemove, onEnabled, busyId }) {
-    const [confirmId, setConfirmId] = (0, import_react9.useState)(null);
-    const [alsoTracks, setAlsoTracks] = (0, import_react9.useState)(true);
-    const [editId, setEditId] = (0, import_react9.useState)(null);
-    const [editValue, setEditValue] = (0, import_react9.useState)("");
-    const [showPeerForm, setShowPeerForm] = (0, import_react9.useState)(false);
-    const [peerEndpoint, setPeerEndpoint] = (0, import_react9.useState)("http://127.0.0.1:19225");
-    const [peerLabel, setPeerLabel] = (0, import_react9.useState)("");
+    const [confirmId, setConfirmId] = (0, import_react10.useState)(null);
+    const [alsoTracks, setAlsoTracks] = (0, import_react10.useState)(true);
+    const [editId, setEditId] = (0, import_react10.useState)(null);
+    const [editValue, setEditValue] = (0, import_react10.useState)("");
+    const [showPeerForm, setShowPeerForm] = (0, import_react10.useState)(false);
+    const [peerEndpoint, setPeerEndpoint] = (0, import_react10.useState)("http://127.0.0.1:19225");
+    const [peerLabel, setPeerLabel] = (0, import_react10.useState)("");
     const commitRename = (id) => {
       if (editValue.trim()) onRename(id, editValue);
       setEditId(null);
@@ -18389,7 +18573,7 @@
       await onAddPeer(peerEndpoint.trim(), peerLabel.trim() || void 0);
       setShowPeerForm(false);
     };
-    return /* @__PURE__ */ import_react9.default.createElement("aside", { className: "folder-panel" }, /* @__PURE__ */ import_react9.default.createElement("div", { className: "folder-panel-head" }, /* @__PURE__ */ import_react9.default.createElement("span", null, "Library Folders (", folders.length, ")"), /* @__PURE__ */ import_react9.default.createElement("div", { className: "folder-head-actions" }, onOpenMediaService && /* @__PURE__ */ import_react9.default.createElement(
+    return /* @__PURE__ */ import_react10.default.createElement("aside", { className: "folder-panel" }, /* @__PURE__ */ import_react10.default.createElement("div", { className: "folder-panel-head" }, /* @__PURE__ */ import_react10.default.createElement("span", null, "Library Folders (", folders.length, ")"), /* @__PURE__ */ import_react10.default.createElement("div", { className: "folder-head-actions" }, onOpenMediaService && /* @__PURE__ */ import_react10.default.createElement(
       "button",
       {
         className: "row-btn",
@@ -18398,7 +18582,7 @@
         onClick: onOpenMediaService
       },
       "+ Media Service"
-    ), /* @__PURE__ */ import_react9.default.createElement("button", { className: "row-btn", title: "Add a folder from this computer", onClick: onAddLocal }, "+ Local"), /* @__PURE__ */ import_react9.default.createElement("button", { className: "row-btn", title: "Browse Cloud Storage folders", onClick: onAddCloud }, "+ Cloud"), onAddPeer && /* @__PURE__ */ import_react9.default.createElement(
+    ), /* @__PURE__ */ import_react10.default.createElement("button", { className: "row-btn", title: "Add a folder from this computer", onClick: onAddLocal }, "+ Local"), /* @__PURE__ */ import_react10.default.createElement("button", { className: "row-btn", title: "Browse Cloud Storage folders", onClick: onAddCloud }, "+ Cloud"), onAddPeer && /* @__PURE__ */ import_react10.default.createElement(
       "button",
       {
         className: "row-btn",
@@ -18407,7 +18591,7 @@
         onClick: openPeerForm
       },
       "+ P2P Peer"
-    ), /* @__PURE__ */ import_react9.default.createElement("button", { className: "row-btn", title: "Refresh folders marked Keep synced", onClick: () => onRescan(null), disabled: !folders.length || !!busyId }, "Refresh all"))), showPeerForm && /* @__PURE__ */ import_react9.default.createElement("form", { className: "folder-confirm", onSubmit: submitPeerForm, style: { margin: "8px", padding: "10px", border: "1px solid rgba(0,188,212,0.4)", borderRadius: "8px" } }, /* @__PURE__ */ import_react9.default.createElement("div", { style: { fontSize: "12px", fontWeight: 600, color: "#00bcd4", marginBottom: "6px" } }, "Link RobOS Private Network Peer Stream (:19215)"), /* @__PURE__ */ import_react9.default.createElement(
+    ), /* @__PURE__ */ import_react10.default.createElement("button", { className: "row-btn", title: "Refresh folders marked Keep synced", onClick: () => onRescan(null), disabled: !folders.length || !!busyId }, "Refresh all"))), showPeerForm && /* @__PURE__ */ import_react10.default.createElement("form", { className: "folder-confirm", onSubmit: submitPeerForm, style: { margin: "8px", padding: "10px", border: "1px solid rgba(0,188,212,0.4)", borderRadius: "8px" } }, /* @__PURE__ */ import_react10.default.createElement("div", { style: { fontSize: "12px", fontWeight: 600, color: "#00bcd4", marginBottom: "6px" } }, "Link RobOS Private Network Peer Stream (:19215)"), /* @__PURE__ */ import_react10.default.createElement(
       "input",
       {
         className: "folder-edit",
@@ -18416,7 +18600,7 @@
         value: peerEndpoint,
         onChange: (e) => setPeerEndpoint(e.target.value)
       }
-    ), /* @__PURE__ */ import_react9.default.createElement(
+    ), /* @__PURE__ */ import_react10.default.createElement(
       "input",
       {
         className: "folder-edit",
@@ -18425,7 +18609,7 @@
         value: peerLabel,
         onChange: (e) => setPeerLabel(e.target.value)
       }
-    ), /* @__PURE__ */ import_react9.default.createElement("div", { className: "folder-confirm-actions" }, /* @__PURE__ */ import_react9.default.createElement("button", { type: "button", className: "btn-secondary", onClick: () => setShowPeerForm(false) }, "Cancel"), /* @__PURE__ */ import_react9.default.createElement("button", { type: "submit", className: "btn-accent" }, "Connect & Sync Peer"))), /* @__PURE__ */ import_react9.default.createElement("div", { className: `folder-row ${activeId === null ? "active" : ""}`, onClick: () => onSelect(null) }, /* @__PURE__ */ import_react9.default.createElement(Icon2, { name: "library", size: 15 }), /* @__PURE__ */ import_react9.default.createElement("div", { className: "folder-text" }, /* @__PURE__ */ import_react9.default.createElement("span", { className: "folder-name" }, "All Movies & Shows"), /* @__PURE__ */ import_react9.default.createElement("span", { className: "folder-sub" }, "Combined view across all library folders"))), folders.length === 0 && /* @__PURE__ */ import_react9.default.createElement("p", { className: "folder-empty" }, "No folders linked yet. Add a local folder, link a P2P Peer via RobOS Private Networks, or link Cloud Storage."), folders.map((f) => /* @__PURE__ */ import_react9.default.createElement("div", { key: f.id, className: `folder-item ${activeId === f.id ? "active" : ""} ${f.available ? "" : "unavailable"}` }, /* @__PURE__ */ import_react9.default.createElement("div", { className: "folder-row", onClick: () => onSelect(f.id) }, /* @__PURE__ */ import_react9.default.createElement(Icon2, { name: f.kind === "cloud" || f.kind === "peer" || f.kind === "media-service" ? "cloud" : "folder", size: 15 }), /* @__PURE__ */ import_react9.default.createElement("div", { className: "folder-text" }, editId === f.id ? /* @__PURE__ */ import_react9.default.createElement(
+    ), /* @__PURE__ */ import_react10.default.createElement("div", { className: "folder-confirm-actions" }, /* @__PURE__ */ import_react10.default.createElement("button", { type: "button", className: "btn-secondary", onClick: () => setShowPeerForm(false) }, "Cancel"), /* @__PURE__ */ import_react10.default.createElement("button", { type: "submit", className: "btn-accent" }, "Connect & Sync Peer"))), /* @__PURE__ */ import_react10.default.createElement("div", { className: `folder-row ${activeId === null ? "active" : ""}`, onClick: () => onSelect(null) }, /* @__PURE__ */ import_react10.default.createElement(Icon2, { name: "library", size: 15 }), /* @__PURE__ */ import_react10.default.createElement("div", { className: "folder-text" }, /* @__PURE__ */ import_react10.default.createElement("span", { className: "folder-name" }, "All Movies & Shows"), /* @__PURE__ */ import_react10.default.createElement("span", { className: "folder-sub" }, "Combined view across all library folders"))), folders.length === 0 && /* @__PURE__ */ import_react10.default.createElement("p", { className: "folder-empty" }, "No folders linked yet. Add a local folder, link a P2P Peer via RobOS Private Networks, or link Cloud Storage."), folders.map((f) => /* @__PURE__ */ import_react10.default.createElement("div", { key: f.id, className: `folder-item ${activeId === f.id ? "active" : ""} ${f.available ? "" : "unavailable"}` }, /* @__PURE__ */ import_react10.default.createElement("div", { className: "folder-row", onClick: () => onSelect(f.id) }, /* @__PURE__ */ import_react10.default.createElement(Icon2, { name: f.kind === "cloud" || f.kind === "peer" || f.kind === "media-service" ? "cloud" : "folder", size: 15 }), /* @__PURE__ */ import_react10.default.createElement("div", { className: "folder-text" }, editId === f.id ? /* @__PURE__ */ import_react10.default.createElement(
       "input",
       {
         className: "folder-edit",
@@ -18439,10 +18623,10 @@
           if (e.key === "Escape") setEditId(null);
         }
       }
-    ) : /* @__PURE__ */ import_react9.default.createElement("span", { className: "folder-name", onDoubleClick: () => {
+    ) : /* @__PURE__ */ import_react10.default.createElement("span", { className: "folder-name", onDoubleClick: () => {
       setEditId(f.id);
       setEditValue(f.label);
-    }, title: "Double-click to rename" }, f.label), /* @__PURE__ */ import_react9.default.createElement("span", { className: "folder-sub", title: f.kind === "cloud" || f.kind === "peer" || f.kind === "media-service" ? `${providerLabel(f.protocol)} \xB7 ${f.connectionName || ""} (${f.path})` : f.path }, f.kind === "media-service" ? `RobOS Media Service (MCP) \xB7 ${f.endpoint || f.path}` : f.kind === "peer" ? `RobOS P2P mTLS 1.3 \xB7 ${f.endpoint || f.path}` : f.kind === "cloud" ? f.connectionMissing ? "Connection removed from Data Sources" : `${providerLabel(f.protocol)} \xB7 ${f.connectionName}` : f.available ? f.path : `${f.path} (not found)`), /* @__PURE__ */ import_react9.default.createElement("span", { className: "folder-sub" }, /* @__PURE__ */ import_react9.default.createElement("strong", null, formatFolderMediaSummary(f)), " \xB7 ", when(f.lastSynced)), Array.isArray(f.shows) && f.shows.length > 0 && /* @__PURE__ */ import_react9.default.createElement("div", { className: "folder-shows-breakdown" }, f.shows.slice(0, 4).map((s) => /* @__PURE__ */ import_react9.default.createElement("span", { key: s.showName, className: "folder-show-pill" }, "\u{1F4FA} ", /* @__PURE__ */ import_react9.default.createElement("strong", null, s.showName), ": ", s.seasons.length === 1 ? `Season ${s.seasons[0].seasonNumber} (${s.seasons[0].episodeCount} ep${s.seasons[0].episodeCount === 1 ? "" : "s"})` : `${s.seasons.length} Seasons (${s.seasons.reduce((n, sn) => n + sn.episodeCount, 0)} eps)`)), f.shows.length > 4 && /* @__PURE__ */ import_react9.default.createElement("span", { className: "folder-show-pill" }, "+", f.shows.length - 4, " more TV series")))), /* @__PURE__ */ import_react9.default.createElement("div", { className: "folder-actions" }, /* @__PURE__ */ import_react9.default.createElement("label", { className: "folder-sub", title: "Keep this folder synced and check for updates at startup" }, /* @__PURE__ */ import_react9.default.createElement(
+    }, title: "Double-click to rename" }, f.label), /* @__PURE__ */ import_react10.default.createElement("span", { className: "folder-sub", title: f.kind === "cloud" || f.kind === "peer" || f.kind === "media-service" ? `${providerLabel(f.protocol)} \xB7 ${f.connectionName || ""} (${f.path})` : f.path }, f.kind === "media-service" ? `RobOS Media Service (MCP) \xB7 ${f.endpoint || f.path}` : f.kind === "peer" ? `RobOS P2P mTLS 1.3 \xB7 ${f.endpoint || f.path}` : f.kind === "cloud" ? f.connectionMissing ? "Connection removed from Data Sources" : `${providerLabel(f.protocol)} \xB7 ${f.connectionName}` : f.available ? f.path : `${f.path} (not found)`), /* @__PURE__ */ import_react10.default.createElement("span", { className: "folder-sub" }, /* @__PURE__ */ import_react10.default.createElement("strong", null, formatFolderMediaSummary(f)), " \xB7 ", when(f.lastSynced)), Array.isArray(f.shows) && f.shows.length > 0 && /* @__PURE__ */ import_react10.default.createElement("div", { className: "folder-shows-breakdown" }, f.shows.slice(0, 4).map((s) => /* @__PURE__ */ import_react10.default.createElement("span", { key: s.showName, className: "folder-show-pill" }, "\u{1F4FA} ", /* @__PURE__ */ import_react10.default.createElement("strong", null, s.showName), ": ", s.seasons.length === 1 ? `Season ${s.seasons[0].seasonNumber} (${s.seasons[0].episodeCount} ep${s.seasons[0].episodeCount === 1 ? "" : "s"})` : `${s.seasons.length} Seasons (${s.seasons.reduce((n, sn) => n + sn.episodeCount, 0)} eps)`)), f.shows.length > 4 && /* @__PURE__ */ import_react10.default.createElement("span", { className: "folder-show-pill" }, "+", f.shows.length - 4, " more TV series")))), /* @__PURE__ */ import_react10.default.createElement("div", { className: "folder-actions" }, /* @__PURE__ */ import_react10.default.createElement("label", { className: "folder-sub", title: "Keep this folder synced and check for updates at startup" }, /* @__PURE__ */ import_react10.default.createElement(
       "input",
       {
         type: "checkbox",
@@ -18451,7 +18635,7 @@
         disabled: !!busyId,
         onChange: (e) => onEnabled(f.id, e.target.checked)
       }
-    ), " Keep synced"), /* @__PURE__ */ import_react9.default.createElement(
+    ), " Keep synced"), /* @__PURE__ */ import_react10.default.createElement(
       "button",
       {
         className: "row-btn",
@@ -18460,16 +18644,21 @@
         disabled: !!busyId || f.connectionMissing || f.syncEnabled === false
       },
       busyId === f.id ? "Syncing..." : "Refresh"
-    ), /* @__PURE__ */ import_react9.default.createElement("button", { className: "row-btn row-btn-stop", onClick: () => {
+    ), /* @__PURE__ */ import_react10.default.createElement("button", { className: "row-btn row-btn-stop", onClick: () => {
       setConfirmId(confirmId === f.id ? null : f.id);
       setAlsoTracks(true);
-    } }, "Remove")), f.syncError && /* @__PURE__ */ import_react9.default.createElement("p", { className: "cloud-error", role: "status" }, "Could not check for updates: ", f.syncError, ". Existing tracks are available; refresh to retry."), confirmId === f.id && /* @__PURE__ */ import_react9.default.createElement("div", { className: "folder-confirm" }, /* @__PURE__ */ import_react9.default.createElement("label", null, /* @__PURE__ */ import_react9.default.createElement("input", { type: "checkbox", checked: alsoTracks, onChange: (e) => setAlsoTracks(e.target.checked) }), "Also remove its ", f.trackCount, " video", f.trackCount === 1 ? "" : "s", " (", formatFolderMediaSummary(f), ") from the library", f.kind === "cloud" ? " and delete the downloaded copies" : ""), /* @__PURE__ */ import_react9.default.createElement("div", { className: "folder-confirm-actions" }, /* @__PURE__ */ import_react9.default.createElement("button", { className: "btn-secondary", onClick: () => setConfirmId(null) }, "Cancel"), /* @__PURE__ */ import_react9.default.createElement("button", { className: "btn-accent", onClick: () => {
+    } }, "Remove")), f.syncError && /* @__PURE__ */ import_react10.default.createElement("p", { className: "cloud-error", role: "status" }, "Could not check for updates: ", f.syncError, ". Existing tracks are available; refresh to retry."), confirmId === f.id && /* @__PURE__ */ import_react10.default.createElement("div", { className: "folder-confirm" }, /* @__PURE__ */ import_react10.default.createElement("label", null, /* @__PURE__ */ import_react10.default.createElement("input", { type: "checkbox", checked: alsoTracks, onChange: (e) => setAlsoTracks(e.target.checked) }), "Also remove its ", f.trackCount, " video", f.trackCount === 1 ? "" : "s", " (", formatFolderMediaSummary(f), ") from the library", f.kind === "cloud" ? " and delete the downloaded copies" : ""), /* @__PURE__ */ import_react10.default.createElement("div", { className: "folder-confirm-actions" }, /* @__PURE__ */ import_react10.default.createElement("button", { className: "btn-secondary", onClick: () => setConfirmId(null) }, "Cancel"), /* @__PURE__ */ import_react10.default.createElement("button", { className: "btn-accent", onClick: () => {
       setConfirmId(null);
       onRemove(f.id, alsoTracks);
     } }, "Remove folder"))))));
   }
 
   // src/CloudBrowser.jsx
+  var BROWSER_COLUMNS = [
+    { key: "select", width: "32px", fixed: true },
+    { key: "name", label: "File name", width: "minmax(0, 1fr)", min: 140 },
+    { key: "size", width: "90px", min: 84 }
+  ];
   var formatSize = (b) => b == null ? "" : b > 1048576 ? `${(b / 1048576).toFixed(1)} MB` : `${Math.max(1, Math.round(b / 1024))} KB`;
   var CACHE_LIMIT_OPTIONS = [
     { label: "250 MB", bytes: 250 * 1024 * 1024 },
@@ -18487,16 +18676,17 @@
     return { label: (driverType || "Cloud").toUpperCase(), color: "#e8a33d", bg: "rgba(232, 163, 61, 0.12)" };
   };
   function CloudBrowser({ onLibrary, onFolders, showStatus, folders = [], onEnabled, onRescan, busyId }) {
-    const [connections, setConnections] = (0, import_react10.useState)(null);
-    const [connId, setConnId] = (0, import_react10.useState)("");
-    const [listing, setListing] = (0, import_react10.useState)(null);
-    const [loading, setLoading] = (0, import_react10.useState)(false);
-    const [error, setError] = (0, import_react10.useState)("");
-    const [selected, setSelected] = (0, import_react10.useState)(/* @__PURE__ */ new Set());
-    const [progress, setProgress] = (0, import_react10.useState)(null);
-    const [cacheStats, setCacheStats] = (0, import_react10.useState)(null);
-    const importing = (0, import_react10.useRef)(false);
-    const dirCacheRef = (0, import_react10.useRef)(/* @__PURE__ */ new Map());
+    const { template, handleFor } = useColumns("cloud-listing", BROWSER_COLUMNS);
+    const [connections, setConnections] = (0, import_react11.useState)(null);
+    const [connId, setConnId] = (0, import_react11.useState)("");
+    const [listing, setListing] = (0, import_react11.useState)(null);
+    const [loading, setLoading] = (0, import_react11.useState)(false);
+    const [error, setError] = (0, import_react11.useState)("");
+    const [selected, setSelected] = (0, import_react11.useState)(/* @__PURE__ */ new Set());
+    const [progress, setProgress] = (0, import_react11.useState)(null);
+    const [cacheStats, setCacheStats] = (0, import_react11.useState)(null);
+    const importing = (0, import_react11.useRef)(false);
+    const dirCacheRef = (0, import_react11.useRef)(/* @__PURE__ */ new Map());
     const loadCacheStats = async () => {
       try {
         if (window.robosAudio?.cloudCacheStats) {
@@ -18549,11 +18739,11 @@
       }
       loadCacheStats();
     };
-    (0, import_react10.useEffect)(() => {
+    (0, import_react11.useEffect)(() => {
       loadConnections(false);
       return window.robosAudio.onCloudProgress((p) => setProgress(p.phase === "done" ? null : p));
     }, []);
-    (0, import_react10.useEffect)(() => {
+    (0, import_react11.useEffect)(() => {
       setProgress(null);
     }, [folders]);
     const toggle = (p) => setSelected((prev) => {
@@ -18627,7 +18817,7 @@
     const other = (connections || []).filter((c) => !c.browsable);
     const activeConn = usable.find((c) => c.id === connId) || usable[0] || null;
     const currentPath = listing ? listing.path : "/";
-    return /* @__PURE__ */ import_react10.default.createElement("div", { className: "cloud-browser" }, /* @__PURE__ */ import_react10.default.createElement(
+    return /* @__PURE__ */ import_react11.default.createElement("div", { className: "cloud-browser" }, /* @__PURE__ */ import_react11.default.createElement(
       "select",
       {
         id: "cloud-conn-select",
@@ -18636,20 +18826,20 @@
         onChange: (e) => setConnId(e.target.value),
         disabled: !usable.length
       },
-      !usable.length && /* @__PURE__ */ import_react10.default.createElement("option", { value: "" }, "No Cloud Storage connections"),
-      usable.map((c) => /* @__PURE__ */ import_react10.default.createElement("option", { key: c.id, value: c.id }, c.name, " (", c.driverType.toUpperCase(), ")"))
-    ), /* @__PURE__ */ import_react10.default.createElement("section", { className: "cloud-sync-panel", "aria-label": "Cloud folder sync settings" }, /* @__PURE__ */ import_react10.default.createElement("header", { className: "cloud-sync-heading" }, /* @__PURE__ */ import_react10.default.createElement("div", null, /* @__PURE__ */ import_react10.default.createElement("h3", null, /* @__PURE__ */ import_react10.default.createElement(Icon2, { name: "cloud", size: 20 }), " Your cloud & SFTP movies"), /* @__PURE__ */ import_react10.default.createElement("p", null, "Choose the folders to keep synced. Checked folders are saved and checked for updates every time Movie Player starts.")), /* @__PURE__ */ import_react10.default.createElement("button", { className: "btn-secondary", onClick: () => loadConnections(true) }, "Reload Data Sources")), /* @__PURE__ */ import_react10.default.createElement("p", { className: "cloud-sync-summary" }, folders.filter((f) => f.kind === "cloud" && f.syncEnabled !== false).length, " cloud folders selected \xB7 Movies stream on demand when played"), usable.map((c) => {
+      !usable.length && /* @__PURE__ */ import_react11.default.createElement("option", { value: "" }, "No Cloud Storage connections"),
+      usable.map((c) => /* @__PURE__ */ import_react11.default.createElement("option", { key: c.id, value: c.id }, c.name, " (", c.driverType.toUpperCase(), ")"))
+    ), /* @__PURE__ */ import_react11.default.createElement("section", { className: "cloud-sync-panel", "aria-label": "Cloud folder sync settings" }, /* @__PURE__ */ import_react11.default.createElement("header", { className: "cloud-sync-heading" }, /* @__PURE__ */ import_react11.default.createElement("div", null, /* @__PURE__ */ import_react11.default.createElement("h3", null, /* @__PURE__ */ import_react11.default.createElement(Icon2, { name: "cloud", size: 20 }), " Your cloud & SFTP movies"), /* @__PURE__ */ import_react11.default.createElement("p", null, "Choose the folders to keep synced. Checked folders are saved and checked for updates every time Movie Player starts.")), /* @__PURE__ */ import_react11.default.createElement("button", { className: "btn-secondary", onClick: () => loadConnections(true) }, "Reload Data Sources")), /* @__PURE__ */ import_react11.default.createElement("p", { className: "cloud-sync-summary" }, folders.filter((f) => f.kind === "cloud" && f.syncEnabled !== false).length, " cloud folders selected \xB7 Movies stream on demand when played"), usable.map((c) => {
       const badge = providerBadge(c.driverType);
       const linked = c.folders || [];
       const rows = [
         ...linked.map((lf) => ({ ...lf, saved: folders.find((f) => f.cloudKey === lf.cloudKey) })),
         ...folders.filter((f) => f.kind === "cloud" && f.connectionId === c.id && !linked.some((lf) => lf.cloudKey === f.cloudKey)).map((f) => ({ label: f.label, remotePath: f.path, cloudKey: f.cloudKey, saved: f }))
       ];
-      return /* @__PURE__ */ import_react10.default.createElement("div", { className: "cloud-sync-source", key: c.id }, /* @__PURE__ */ import_react10.default.createElement("div", { className: "cloud-sync-source-head" }, /* @__PURE__ */ import_react10.default.createElement("span", { style: { color: badge.color } }, badge.label), /* @__PURE__ */ import_react10.default.createElement("strong", null, c.name), c.user && /* @__PURE__ */ import_react10.default.createElement("span", null, c.user), /* @__PURE__ */ import_react10.default.createElement("button", { className: "row-btn", onClick: () => browse(c.id, c.startPath || "/") }, "Browse folders")), rows.map((lf) => {
+      return /* @__PURE__ */ import_react11.default.createElement("div", { className: "cloud-sync-source", key: c.id }, /* @__PURE__ */ import_react11.default.createElement("div", { className: "cloud-sync-source-head" }, /* @__PURE__ */ import_react11.default.createElement("span", { style: { color: badge.color } }, badge.label), /* @__PURE__ */ import_react11.default.createElement("strong", null, c.name), c.user && /* @__PURE__ */ import_react11.default.createElement("span", null, c.user), /* @__PURE__ */ import_react11.default.createElement("button", { className: "row-btn", onClick: () => browse(c.id, c.startPath || "/") }, "Browse folders")), rows.map((lf) => {
         const f = lf.saved;
         const checked = !!f && f.syncEnabled !== false;
         const busy = !!progress || !!busyId;
-        return /* @__PURE__ */ import_react10.default.createElement("div", { className: "cloud-sync-folder", key: lf.cloudKey || lf.remotePath }, /* @__PURE__ */ import_react10.default.createElement("label", { className: "cloud-sync-choice" }, /* @__PURE__ */ import_react10.default.createElement(
+        return /* @__PURE__ */ import_react11.default.createElement("div", { className: "cloud-sync-folder", key: lf.cloudKey || lf.remotePath }, /* @__PURE__ */ import_react11.default.createElement("label", { className: "cloud-sync-choice" }, /* @__PURE__ */ import_react11.default.createElement(
           "input",
           {
             type: "checkbox",
@@ -18658,7 +18848,7 @@
             disabled: busy,
             onChange: (e) => f ? onEnabled(f.id, e.target.checked) : addFolder(lf.remotePath, c.id)
           }
-        ), /* @__PURE__ */ import_react10.default.createElement("span", null, /* @__PURE__ */ import_react10.default.createElement("strong", null, lf.label), /* @__PURE__ */ import_react10.default.createElement("small", null, checked ? "Kept in sync \xB7 checks at startup" : "Sync paused", " \xB7 ", lf.remotePath), f && /* @__PURE__ */ import_react10.default.createElement("small", null, formatFolderMediaSummary(f), " \xB7 ", f.lastSynced ? "Last synced " + new Date(f.lastSynced).toLocaleString() : "Not synced yet"), f && Array.isArray(f.shows) && f.shows.length > 0 && /* @__PURE__ */ import_react10.default.createElement("small", { style: { color: "#e8a33d" } }, "\u{1F4FA} ", f.shows.slice(0, 4).map((s) => `${s.showName} (${s.seasons.length}S \xB7 ${s.seasons.reduce((n, sn) => n + sn.episodeCount, 0)}E)`).join(" \xB7 "), f.shows.length > 4 ? ` \xB7 +${f.shows.length - 4} more TV series` : ""), f?.syncError && /* @__PURE__ */ import_react10.default.createElement("small", { className: "cloud-error" }, f.syncError, " \xB7 Refresh to retry"))), /* @__PURE__ */ import_react10.default.createElement(
+        ), /* @__PURE__ */ import_react11.default.createElement("span", null, /* @__PURE__ */ import_react11.default.createElement("strong", null, lf.label), /* @__PURE__ */ import_react11.default.createElement("small", null, checked ? "Kept in sync \xB7 checks at startup" : "Sync paused", " \xB7 ", lf.remotePath), f && /* @__PURE__ */ import_react11.default.createElement("small", null, formatFolderMediaSummary(f), " \xB7 ", f.lastSynced ? "Last synced " + new Date(f.lastSynced).toLocaleString() : "Not synced yet"), f && Array.isArray(f.shows) && f.shows.length > 0 && /* @__PURE__ */ import_react11.default.createElement("small", { style: { color: "#e8a33d" } }, "\u{1F4FA} ", f.shows.slice(0, 4).map((s) => `${s.showName} (${s.seasons.length}S \xB7 ${s.seasons.reduce((n, sn) => n + sn.episodeCount, 0)}E)`).join(" \xB7 "), f.shows.length > 4 ? ` \xB7 +${f.shows.length - 4} more TV series` : ""), f?.syncError && /* @__PURE__ */ import_react11.default.createElement("small", { className: "cloud-error" }, f.syncError, " \xB7 Refresh to retry"))), /* @__PURE__ */ import_react11.default.createElement(
           "button",
           {
             className: "btn-secondary",
@@ -18667,9 +18857,9 @@
             "aria-label": "Refresh " + lf.label
           },
           busyId === f?.id ? "Syncing\u2026" : "Refresh"
-        ), /* @__PURE__ */ import_react10.default.createElement("button", { className: "row-btn", onClick: () => browse(c.id, lf.remotePath) }, "Browse"));
-      }), !rows.length && /* @__PURE__ */ import_react10.default.createElement("p", { className: "cloud-sync-hint" }, "Browse this source and choose a folder to keep synced."));
-    })), cacheStats && /* @__PURE__ */ import_react10.default.createElement("div", { className: "cloud-cache-bar", style: {
+        ), /* @__PURE__ */ import_react11.default.createElement("button", { className: "row-btn", onClick: () => browse(c.id, lf.remotePath) }, "Browse"));
+      }), !rows.length && /* @__PURE__ */ import_react11.default.createElement("p", { className: "cloud-sync-hint" }, "Browse this source and choose a folder to keep synced."));
+    })), cacheStats && /* @__PURE__ */ import_react11.default.createElement("div", { className: "cloud-cache-bar", style: {
       display: "flex",
       alignItems: "center",
       justifyContent: "space-between",
@@ -18681,7 +18871,7 @@
       borderRadius: "6px",
       fontSize: "12px",
       color: "#94a3b8"
-    } }, /* @__PURE__ */ import_react10.default.createElement("div", null, /* @__PURE__ */ import_react10.default.createElement("strong", { style: { color: "#e2e8f0" } }, "On-Demand Stream & LRU Cache:"), " ", /* @__PURE__ */ import_react10.default.createElement("span", null, formatSize(cacheStats.usedBytes || 0), " used of ", formatSize(cacheStats.maxCacheBytes), " (", cacheStats.fileCount || 0, " cached song", cacheStats.fileCount === 1 ? "" : "s", ")"), /* @__PURE__ */ import_react10.default.createElement("span", { style: { marginLeft: "8px", opacity: 0.8 } }, "\xB7 Songs stream on play and evict oldest files automatically")), /* @__PURE__ */ import_react10.default.createElement("div", { style: { display: "flex", alignItems: "center", gap: "8px" } }, /* @__PURE__ */ import_react10.default.createElement("label", { htmlFor: "cloud-cache-limit", style: { fontSize: "11px" } }, "Max Cache:"), /* @__PURE__ */ import_react10.default.createElement(
+    } }, /* @__PURE__ */ import_react11.default.createElement("div", null, /* @__PURE__ */ import_react11.default.createElement("strong", { style: { color: "#e2e8f0" } }, "On-Demand Stream & LRU Cache:"), " ", /* @__PURE__ */ import_react11.default.createElement("span", null, formatSize(cacheStats.usedBytes || 0), " used of ", formatSize(cacheStats.maxCacheBytes), " (", cacheStats.fileCount || 0, " cached song", cacheStats.fileCount === 1 ? "" : "s", ")"), /* @__PURE__ */ import_react11.default.createElement("span", { style: { marginLeft: "8px", opacity: 0.8 } }, "\xB7 Songs stream on play and evict oldest files automatically")), /* @__PURE__ */ import_react11.default.createElement("div", { style: { display: "flex", alignItems: "center", gap: "8px" } }, /* @__PURE__ */ import_react11.default.createElement("label", { htmlFor: "cloud-cache-limit", style: { fontSize: "11px" } }, "Max Cache:"), /* @__PURE__ */ import_react11.default.createElement(
       "select",
       {
         id: "cloud-cache-limit",
@@ -18689,15 +18879,15 @@
         onChange: handleMaxCacheChange,
         style: { padding: "3px 6px", fontSize: "11px", background: "#0d1117", color: "#e2e8f0", border: "1px solid #30363d", borderRadius: "4px" }
       },
-      CACHE_LIMIT_OPTIONS.map((opt) => /* @__PURE__ */ import_react10.default.createElement("option", { key: opt.bytes, value: opt.bytes }, opt.label))
-    ), /* @__PURE__ */ import_react10.default.createElement("button", { className: "btn-secondary", style: { padding: "3px 8px", fontSize: "11px" }, onClick: handleClearCache, disabled: !cacheStats.fileCount }, "Clear Cache"))), connections && !connections.length && /* @__PURE__ */ import_react10.default.createElement("div", { className: "empty-state" }, /* @__PURE__ */ import_react10.default.createElement("p", null, "No cloud storage is linked yet."), /* @__PURE__ */ import_react10.default.createElement("p", { className: "hint" }, "Open RobOS Data Sources, add a Google Drive, Microsoft OneDrive, S3, Dropbox, SFTP, or FTP connection under Cloud & Object Storage, and it will appear here.")), other.length > 0 && /* @__PURE__ */ import_react10.default.createElement("p", { className: "cloud-note" }, other.map((c) => c.name).join(", "), ": browsing ", other.length === 1 ? "this" : "these", " storage type", other.length === 1 ? " is" : "s are", " not supported yet."), progress && /* @__PURE__ */ import_react10.default.createElement("div", { className: "cloud-progress" }, progress.phase === "scanning" && "Indexing remote cloud metadata (no bulk download)...", progress.phase === "downloading" && `Streaming ${progress.done + 1} of ${progress.total}: ${progress.name}`, progress.phase === "done" && "Finishing up..."), listing && /* @__PURE__ */ import_react10.default.createElement("div", { className: "cloud-listing" }, /* @__PURE__ */ import_react10.default.createElement("div", { className: "cloud-sync-heading" }, /* @__PURE__ */ import_react10.default.createElement("button", { className: "btn-accent", disabled: !selected.size || !!progress, onClick: () => doImport([...selected]) }, "Add selected movies"), /* @__PURE__ */ import_react10.default.createElement("button", { className: "btn-secondary", disabled: !!progress || !!busyId, onClick: () => addFolder(listing.path, connId) }, "Keep this folder synced")), /* @__PURE__ */ import_react10.default.createElement("div", { className: "cloud-path" }, /* @__PURE__ */ import_react10.default.createElement("button", { className: "crumb", onClick: () => browse(connId, "/") }, activeConn && Array.isArray(activeConn.folders) && activeConn.folders.length === 1 ? activeConn.folders[0].label : "Linked Folders"), crumbs.map((c, i) => /* @__PURE__ */ import_react10.default.createElement(import_react10.default.Fragment, { key: i }, /* @__PURE__ */ import_react10.default.createElement("span", { className: "crumb-sep" }, "/"), /* @__PURE__ */ import_react10.default.createElement("button", { className: "crumb", onClick: () => browse(connId, "/" + crumbs.slice(0, i + 1).join("/")) }, c)))), /* @__PURE__ */ import_react10.default.createElement("div", { className: "cloud-rows" }, parentPath && /* @__PURE__ */ import_react10.default.createElement("div", { className: "cloud-row", onClick: () => browse(connId, parentPath) }, /* @__PURE__ */ import_react10.default.createElement("span", { className: "cloud-check" }), /* @__PURE__ */ import_react10.default.createElement("span", { className: "cloud-name" }, /* @__PURE__ */ import_react10.default.createElement(Icon2, { name: "up", size: 14 }), " Parent folder"), /* @__PURE__ */ import_react10.default.createElement("span", { className: "cloud-size" })), listing.entries.length === 0 && /* @__PURE__ */ import_react10.default.createElement("div", { className: "cloud-empty" }, "No folders or audio files here."), listing.entries.map((e) => /* @__PURE__ */ import_react10.default.createElement(
+      CACHE_LIMIT_OPTIONS.map((opt) => /* @__PURE__ */ import_react11.default.createElement("option", { key: opt.bytes, value: opt.bytes }, opt.label))
+    ), /* @__PURE__ */ import_react11.default.createElement("button", { className: "btn-secondary", style: { padding: "3px 8px", fontSize: "11px" }, onClick: handleClearCache, disabled: !cacheStats.fileCount }, "Clear Cache"))), connections && !connections.length && /* @__PURE__ */ import_react11.default.createElement("div", { className: "empty-state" }, /* @__PURE__ */ import_react11.default.createElement("p", null, "No cloud storage is linked yet."), /* @__PURE__ */ import_react11.default.createElement("p", { className: "hint" }, "Open RobOS Data Sources, add a Google Drive, Microsoft OneDrive, S3, Dropbox, SFTP, or FTP connection under Cloud & Object Storage, and it will appear here.")), other.length > 0 && /* @__PURE__ */ import_react11.default.createElement("p", { className: "cloud-note" }, other.map((c) => c.name).join(", "), ": browsing ", other.length === 1 ? "this" : "these", " storage type", other.length === 1 ? " is" : "s are", " not supported yet."), progress && /* @__PURE__ */ import_react11.default.createElement("div", { className: "cloud-progress" }, progress.phase === "scanning" && "Indexing remote cloud metadata (no bulk download)...", progress.phase === "downloading" && `Streaming ${progress.done + 1} of ${progress.total}: ${progress.name}`, progress.phase === "done" && "Finishing up..."), listing && /* @__PURE__ */ import_react11.default.createElement("div", { className: "cloud-listing" }, /* @__PURE__ */ import_react11.default.createElement("div", { className: "cloud-sync-heading" }, /* @__PURE__ */ import_react11.default.createElement("button", { className: "btn-accent", disabled: !selected.size || !!progress, onClick: () => doImport([...selected]) }, "Add selected movies"), /* @__PURE__ */ import_react11.default.createElement("button", { className: "btn-secondary", disabled: !!progress || !!busyId, onClick: () => addFolder(listing.path, connId) }, "Keep this folder synced")), /* @__PURE__ */ import_react11.default.createElement("div", { className: "cloud-path" }, /* @__PURE__ */ import_react11.default.createElement("button", { className: "crumb", onClick: () => browse(connId, "/") }, activeConn && Array.isArray(activeConn.folders) && activeConn.folders.length === 1 ? activeConn.folders[0].label : "Linked Folders"), crumbs.map((c, i) => /* @__PURE__ */ import_react11.default.createElement(import_react11.default.Fragment, { key: i }, /* @__PURE__ */ import_react11.default.createElement("span", { className: "crumb-sep" }, "/"), /* @__PURE__ */ import_react11.default.createElement("button", { className: "crumb", onClick: () => browse(connId, "/" + crumbs.slice(0, i + 1).join("/")) }, c)))), /* @__PURE__ */ import_react11.default.createElement("div", { className: "cloud-rows", style: { "--cloud-grid": template } }, /* @__PURE__ */ import_react11.default.createElement("div", { className: "cloud-row cloud-column-header" }, /* @__PURE__ */ import_react11.default.createElement("span", null), /* @__PURE__ */ import_react11.default.createElement("span", { className: "col-resizable" }, "Name", handleFor("name")), /* @__PURE__ */ import_react11.default.createElement("span", { className: "cloud-size" }, "Size")), parentPath && /* @__PURE__ */ import_react11.default.createElement("div", { className: "cloud-row", onClick: () => browse(connId, parentPath) }, /* @__PURE__ */ import_react11.default.createElement("span", { className: "cloud-check" }), /* @__PURE__ */ import_react11.default.createElement("span", { className: "cloud-name" }, /* @__PURE__ */ import_react11.default.createElement(Icon2, { name: "up", size: 14 }), " Parent folder"), /* @__PURE__ */ import_react11.default.createElement("span", { className: "cloud-size" })), listing.entries.length === 0 && /* @__PURE__ */ import_react11.default.createElement("div", { className: "cloud-empty" }, "No folders or audio files here."), listing.entries.map((e) => /* @__PURE__ */ import_react11.default.createElement(
       "div",
       {
         key: e.path,
         className: `cloud-row ${selected.has(e.path) ? "selected" : ""}`,
         onClick: () => e.type === "dir" ? browse(connId, e.path) : toggle(e.path)
       },
-      /* @__PURE__ */ import_react10.default.createElement("span", { className: "cloud-check", onClick: (ev) => ev.stopPropagation() }, /* @__PURE__ */ import_react10.default.createElement(
+      /* @__PURE__ */ import_react11.default.createElement("span", { className: "cloud-check", onClick: (ev) => ev.stopPropagation() }, /* @__PURE__ */ import_react11.default.createElement(
         "input",
         {
           type: "checkbox",
@@ -18714,8 +18904,8 @@
           "aria-label": e.type === "dir" ? `Keep ${e.name} synced` : `Select ${e.name}`
         }
       )),
-      /* @__PURE__ */ import_react10.default.createElement("span", { className: "cloud-name" }, /* @__PURE__ */ import_react10.default.createElement(Icon2, { name: e.type === "dir" ? "folder" : "note", size: 15 }), " ", e.name),
-      /* @__PURE__ */ import_react10.default.createElement("span", { className: "cloud-size" }, e.type === "dir" ? /* @__PURE__ */ import_react10.default.createElement(
+      /* @__PURE__ */ import_react11.default.createElement("span", { className: "cloud-name" }, /* @__PURE__ */ import_react11.default.createElement(Icon2, { name: e.type === "dir" ? "folder" : "note", size: 15 }), " ", e.name),
+      /* @__PURE__ */ import_react11.default.createElement("span", { className: "cloud-size" }, e.type === "dir" ? /* @__PURE__ */ import_react11.default.createElement(
         "button",
         {
           className: "row-btn",
@@ -18729,191 +18919,27 @@
         },
         "+ Library"
       ) : formatSize(e.size))
-    )))), loading && /* @__PURE__ */ import_react10.default.createElement("div", { className: "cloud-progress" }, "Loading..."), error && /* @__PURE__ */ import_react10.default.createElement("div", { className: "cloud-error" }, error));
+    )))), loading && /* @__PURE__ */ import_react11.default.createElement("div", { className: "cloud-progress" }, "Loading..."), error && /* @__PURE__ */ import_react11.default.createElement("div", { className: "cloud-error" }, error));
   }
 
   // src/Lyrics.jsx
   var import_react12 = __toESM(require_react());
-
-  // src/resizable.jsx
-  var import_react11 = __toESM(require_react());
-  var STORE_KEY = "robos-audio-layout";
-  function readStore() {
-    try {
-      return JSON.parse(localStorage.getItem(STORE_KEY) || "{}") || {};
-    } catch {
-      return {};
-    }
-  }
-  function writeStore(key, value) {
-    try {
-      const all = readStore();
-      if (value == null) delete all[key];
-      else all[key] = value;
-      localStorage.setItem(STORE_KEY, JSON.stringify(all));
-    } catch {
-    }
-  }
-  function useLayoutPref(key, fallback) {
-    const [value, setValue] = (0, import_react11.useState)(() => {
-      const stored = readStore()[key];
-      return stored === void 0 ? fallback : stored;
-    });
-    const first = (0, import_react11.useRef)(true);
-    (0, import_react11.useEffect)(() => {
-      if (first.current) {
-        first.current = false;
-        return void 0;
-      }
-      const timer = setTimeout(() => writeStore(key, value), 250);
-      return () => clearTimeout(timer);
-    }, [key, value]);
-    return [value, setValue];
-  }
-  var clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
-  function startDrag(e, onMove, onEnd) {
-    if (e.button !== 0) return;
-    e.preventDefault();
-    e.stopPropagation();
-    const el = e.currentTarget;
-    const startX = e.clientX;
-    try {
-      el.setPointerCapture(e.pointerId);
-    } catch {
-    }
-    document.body.classList.add("is-resizing");
-    const move = (ev) => onMove(ev.clientX - startX);
-    const up = () => {
-      el.removeEventListener("pointermove", move);
-      el.removeEventListener("pointerup", up);
-      el.removeEventListener("pointercancel", up);
-      document.body.classList.remove("is-resizing");
-      if (onEnd) onEnd();
-    };
-    el.addEventListener("pointermove", move);
-    el.addEventListener("pointerup", up);
-    el.addEventListener("pointercancel", up);
-  }
-  function Splitter({ id, width, onChange, min, max, defaultWidth, side = "left", label, className = "", style }) {
-    const hi = typeof max === "function" ? max() : max;
-    const sign = side === "left" ? 1 : -1;
-    const onPointerDown = (e) => {
-      const start = width;
-      const limit = typeof max === "function" ? max() : max;
-      startDrag(e, (dx) => onChange(clamp(Math.round(start + sign * dx), min, limit)));
-    };
-    const onKeyDown = (e) => {
-      const step = e.shiftKey ? 64 : 16;
-      if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
-        e.preventDefault();
-        const dir = e.key === "ArrowRight" ? 1 : -1;
-        onChange(clamp(width + sign * dir * step, min, hi));
-      } else if (e.key === "Home") {
-        e.preventDefault();
-        onChange(min);
-      } else if (e.key === "End") {
-        e.preventDefault();
-        onChange(hi);
-      }
-    };
-    return /* @__PURE__ */ import_react11.default.createElement(
-      "div",
-      {
-        id,
-        className: `splitter ${className}`,
-        style,
-        role: "separator",
-        "aria-orientation": "vertical",
-        "aria-label": label,
-        "aria-valuenow": Math.round(width),
-        "aria-valuemin": min,
-        "aria-valuemax": Math.round(hi),
-        tabIndex: 0,
-        title: `${label}: drag to resize, double-click to reset`,
-        onPointerDown,
-        onDoubleClick: () => onChange(defaultWidth),
-        onKeyDown
-      }
-    );
-  }
-  function useColumns(storeKey, spec) {
-    const [widths, setWidths] = useLayoutPref(`cols:${storeKey}`, {});
-    const template = spec.map((c) => !c.fill && !c.fixed && widths[c.key] != null ? `${widths[c.key]}px` : c.width).join(" ");
-    const handleFor = (0, import_react11.useCallback)((key) => {
-      const i = spec.findIndex((c) => c.key === key);
-      const a = spec[i];
-      const b = spec[i + 1];
-      if (!a || !b || a.fixed || b.fixed) return null;
-      return /* @__PURE__ */ import_react11.default.createElement(
-        ColumnBorder,
-        {
-          key: "col-border",
-          label: `Resize the ${a.label || a.key} column`,
-          onDragStart: (cell) => {
-            const row = cell.parentElement;
-            const cells = Array.from(row.children);
-            const measured = {};
-            spec.forEach((c, n) => {
-              if (cells[n]) measured[c.key] = cells[n].getBoundingClientRect().width;
-            });
-            const frozen = {};
-            spec.forEach((c) => {
-              if (!c.fill && !c.fixed) frozen[c.key] = Math.round(measured[c.key]);
-            });
-            setWidths(frozen);
-            const minA = a.min || 40;
-            const minB = b.min || 40;
-            const fillSpare = Math.max(0, (measured[(spec.find((c) => c.fill) || {}).key] || 0) - 80);
-            return (dx) => {
-              const lo = a.fill ? -fillSpare : minA - measured[a.key];
-              const hi = a.fill ? measured[b.key] - minB : fillSpare;
-              const d = Math.round(clamp(dx, Math.min(lo, 0), Math.max(hi, 0)));
-              setWidths(() => {
-                const next = { ...frozen };
-                if (a.fill) next[b.key] = Math.max(minB, Math.round(measured[b.key] - d));
-                else next[a.key] = Math.max(minA, Math.round(measured[a.key] + d));
-                return next;
-              });
-            };
-          },
-          onReset: () => setWidths({})
-        }
-      );
-    }, [spec, setWidths]);
-    return { template, handleFor, widths };
-  }
-  function ColumnBorder({ label, onDragStart, onReset }) {
-    const onPointerDown = (e) => {
-      const cell = e.currentTarget.parentElement;
-      const move = onDragStart(cell);
-      startDrag(e, move);
-    };
-    return /* @__PURE__ */ import_react11.default.createElement(
-      "span",
-      {
-        className: "col-border",
-        role: "separator",
-        "aria-orientation": "vertical",
-        "aria-label": label,
-        title: "Drag to resize \xB7 double-click to reset columns",
-        onPointerDown,
-        onClick: (e) => e.stopPropagation(),
-        onDoubleClick: (e) => {
-          e.stopPropagation();
-          onReset();
-        }
-      }
-    );
-  }
-
-  // src/Lyrics.jsx
+  var DEFAULT_HEIGHT = 240;
+  var MIN_HEIGHT = 120;
+  var MAX_HEIGHT = 720;
+  var NO_LINES = [];
   function Lyrics({ track, getTime, onSeek }) {
     const [enabled, setEnabled] = useLayoutPref("lyricsEnabled", true);
     const [follow, setFollow] = useLayoutPref("lyricsFollow", true);
+    const [height, setHeight] = useLayoutPref("lyricsHeight", DEFAULT_HEIGHT);
     const [data, setData] = (0, import_react12.useState)(null);
     const [active, setActive] = (0, import_react12.useState)(-1);
     const boxRef = (0, import_react12.useRef)(null);
-    const lineRefs = (0, import_react12.useRef)([]);
+    const followedLineRef = (0, import_react12.useRef)(null);
+    const timeRef = (0, import_react12.useRef)(getTime);
+    (0, import_react12.useLayoutEffect)(() => {
+      timeRef.current = getTime;
+    }, [getTime]);
     (0, import_react12.useEffect)(() => {
       let cancelled = false;
       setData(null);
@@ -18931,13 +18957,13 @@
       return () => {
         cancelled = true;
       };
-    }, [enabled, track?.id, track?.filePath, track?.title, track?.artist]);
-    const synced = enabled && data?.synced || [];
+    }, [enabled, track?.id, track?.filePath, track?.title, track?.artist, track?.album, track?.duration]);
+    const synced = enabled && data?.synced || NO_LINES;
     (0, import_react12.useEffect)(() => {
       if (!synced.length) return void 0;
       const tick = () => {
-        const time = getTime();
-        if (time == null) return;
+        const time = timeRef.current();
+        if (!Number.isFinite(time)) return;
         const t = time + 0.15;
         let lo = 0, hi = synced.length - 1, idx = -1;
         while (lo <= hi) {
@@ -18952,47 +18978,50 @@
       const timer = setInterval(tick, 120);
       tick();
       return () => clearInterval(timer);
-    }, [data, enabled]);
-    const scrollToActive = (smooth = true) => {
-      const el = lineRefs.current[active];
+    }, [synced]);
+    (0, import_react12.useLayoutEffect)(() => {
       const box = boxRef.current;
-      if (el && box) box.scrollTo({ top: el.offsetTop - box.clientHeight / 2 + el.clientHeight / 2, behavior: smooth ? "smooth" : "auto" });
-    };
-    (0, import_react12.useEffect)(() => {
-      if (follow) scrollToActive();
-    }, [active, follow]);
+      const line = followedLineRef.current;
+      if (!follow || !box || !line) return void 0;
+      const centerLine = () => {
+        if (!box.clientHeight) return;
+        const lineBounds = line.getBoundingClientRect();
+        const viewportTop = box.getBoundingClientRect().top + box.clientTop;
+        box.scrollTop += lineBounds.top + lineBounds.height / 2 - viewportTop - box.clientHeight / 2;
+      };
+      centerLine();
+      const observer = new ResizeObserver(centerLine);
+      observer.observe(box);
+      observer.observe(line);
+      return () => observer.disconnect();
+    }, [active, follow, synced]);
     const stopFollowing = () => {
       if (follow && synced.length) setFollow(false);
     };
     let body;
     if (data === null) body = /* @__PURE__ */ import_react12.default.createElement("div", { className: "lyrics-empty" }, "Looking up subtitles & dialogue...");
     else if (synced.length) {
-      body = synced.map((l, i) => /* @__PURE__ */ import_react12.default.createElement(
+      body = /* @__PURE__ */ import_react12.default.createElement("div", { className: "lyrics-timed" }, synced.map((line, index) => /* @__PURE__ */ import_react12.default.createElement(
         "div",
         {
-          key: i,
-          ref: (el) => {
-            lineRefs.current[i] = el;
-          },
-          className: `lyric-line ${i === active ? "active" : i < active ? "past" : ""}`,
-          onClick: () => onSeek(l.t)
+          key: index,
+          ref: index === Math.max(active, 0) ? followedLineRef : null,
+          className: `lyric-line ${index === active ? "active" : index < active ? "past" : ""}`,
+          "aria-current": index === active ? "true" : void 0,
+          onClick: () => onSeek(line.t)
         },
-        l.text || " "
-      ));
+        line.text || " "
+      )));
     } else if (data.plain) body = /* @__PURE__ */ import_react12.default.createElement("pre", { className: "lyrics-plain" }, data.plain);
     else body = /* @__PURE__ */ import_react12.default.createElement("div", { className: "lyrics-empty" }, data.error || "No synced subtitles (.srt / .vtt) found for this title.");
-    return /* @__PURE__ */ import_react12.default.createElement("div", { className: `lyrics-panel ${enabled ? "" : "off"}` }, /* @__PURE__ */ import_react12.default.createElement("div", { className: "lyrics-head" }, /* @__PURE__ */ import_react12.default.createElement("span", null, /* @__PURE__ */ import_react12.default.createElement(Icon2, { name: "mic", size: 14 }), " Subtitles & Dialogue"), /* @__PURE__ */ import_react12.default.createElement("span", { className: "lyrics-tools" }, enabled && synced.length > 0 && /* @__PURE__ */ import_react12.default.createElement("span", { className: "lyrics-src" }, "Synced", data.source === "lrclib" ? " via OpenSubtitles / LRCLIB" : " from .srt / .vtt file"), enabled && synced.length > 0 && /* @__PURE__ */ import_react12.default.createElement(
+    return /* @__PURE__ */ import_react12.default.createElement("div", { className: `lyrics-panel ${enabled ? "" : "off"}`, style: { "--lyrics-height": `${height}px` } }, /* @__PURE__ */ import_react12.default.createElement("div", { className: "lyrics-head" }, /* @__PURE__ */ import_react12.default.createElement("span", null, /* @__PURE__ */ import_react12.default.createElement(Icon2, { name: "mic", size: 14 }), " Subtitles & Dialogue"), /* @__PURE__ */ import_react12.default.createElement("span", { className: "lyrics-tools" }, enabled && synced.length > 0 && /* @__PURE__ */ import_react12.default.createElement("span", { className: "lyrics-src" }, data.source === "lrclib" ? "Synced via OpenSubtitles / LRCLIB" : "Synced from .srt / .vtt file"), enabled && !synced.length && data?.plain && /* @__PURE__ */ import_react12.default.createElement("span", { className: "lyrics-src" }, "Plain transcript"), enabled && synced.length > 0 && /* @__PURE__ */ import_react12.default.createElement(
       "button",
       {
         id: "btn-lyrics-follow",
         className: `btn-chip lyrics-btn ${follow ? "on" : ""}`,
         "aria-pressed": follow,
-        title: follow ? "Following playback: the current subtitle line stays in view" : "Follow playback: keep the current subtitle line in view",
-        onClick: () => {
-          const next = !follow;
-          setFollow(next);
-          if (next) scrollToActive();
-        }
+        title: "Center the current subtitle during playback",
+        onClick: () => setFollow((value) => !value)
       },
       /* @__PURE__ */ import_react12.default.createElement(Icon2, { name: "locate", size: 12 }),
       " Follow"
@@ -19006,7 +19035,7 @@
         onClick: () => setEnabled(!enabled)
       },
       enabled ? "On" : "Off"
-    ))), enabled && /* @__PURE__ */ import_react12.default.createElement(
+    ))), enabled && /* @__PURE__ */ import_react12.default.createElement(import_react12.default.Fragment, null, /* @__PURE__ */ import_react12.default.createElement(
       "div",
       {
         className: "lyrics-scroll",
@@ -19022,7 +19051,20 @@
         }
       },
       body
-    ));
+    ), /* @__PURE__ */ import_react12.default.createElement(
+      Splitter,
+      {
+        id: "lyrics-height-splitter",
+        className: "height-grip",
+        label: "Subtitles and dialogue height",
+        orientation: "horizontal",
+        size: height,
+        onChange: setHeight,
+        min: MIN_HEIGHT,
+        max: MAX_HEIGHT,
+        defaultSize: DEFAULT_HEIGHT
+      }
+    )));
   }
 
   // src/Library.jsx
@@ -19515,7 +19557,7 @@
       const sortable = onSort && h.sort;
       const active = sort && sort.key === h.sort;
       const border = handleFor(col);
-      return sortable ? /* @__PURE__ */ import_react15.default.createElement("button", { key: col, className: `tl-cell tl-${col} tl-sort ${active ? "active" : ""} ${border ? "col-resizable" : ""}`, onClick: () => onSort(h.sort) }, col === "love" ? /* @__PURE__ */ import_react15.default.createElement(Icon2, { name: "heart", size: 12 }) : h.label, active ? sort.dir === "asc" ? " \u2191" : " \u2193" : "", border) : /* @__PURE__ */ import_react15.default.createElement("span", { key: col, className: `tl-cell tl-${col} ${border ? "col-resizable" : ""}` }, h.label, border);
+      return /* @__PURE__ */ import_react15.default.createElement("span", { key: col, className: `tl-cell tl-${col} ${border ? "col-resizable" : ""}` }, sortable ? /* @__PURE__ */ import_react15.default.createElement("button", { type: "button", className: `tl-sort ${active ? "active" : ""}`, onClick: () => onSort(h.sort) }, col === "love" ? /* @__PURE__ */ import_react15.default.createElement(Icon2, { name: "heart", size: 12 }) : h.label, active ? sort.dir === "asc" ? " \u2191" : " \u2193" : "") : h.label, border);
     }));
     const firstRow = view ? Math.max(0, Math.floor((view.top - OVERSCAN_PX2) / ROW_HEIGHT)) : 0;
     const lastRow = view ? Math.min(rowCount, Math.ceil((view.bottom + OVERSCAN_PX2) / ROW_HEIGHT)) : Math.min(rowCount, 40);
@@ -19800,11 +19842,11 @@
         className: "overlay",
         style: { left: navWidth - 5 },
         label: "Library sidebar width",
-        width: navWidth,
+        size: navWidth,
         onChange: setNavWidth,
         min: 140,
         max: 420,
-        defaultWidth: isShowsMode ? 218 : NAV_WIDTH
+        defaultSize: isShowsMode ? 218 : NAV_WIDTH
       }
     ), /* @__PURE__ */ import_react16.default.createElement("nav", { className: "lib-nav", "aria-label": isShowsMode ? "TV Shows navigation" : "Movies navigation" }, /* @__PURE__ */ import_react16.default.createElement("div", { className: "lib-nav-group" }, /* @__PURE__ */ import_react16.default.createElement("span", { className: "lib-nav-heading" }, isShowsMode ? "Browse TV Shows" : "Browse Movies"), activeSections.map((s) => /* @__PURE__ */ import_react16.default.createElement(NavItem, { key: s.id, item: s, count: counts[s.id], active: !detail && !searching && section === s.id, onClick: () => go({ section: s.id }) }))), /* @__PURE__ */ import_react16.default.createElement("div", { className: "lib-nav-group" }, /* @__PURE__ */ import_react16.default.createElement("span", { className: "lib-nav-heading" }, isShowsMode ? "Show Progress & Lists" : "Movie Watchlist & Activity"), LIBRARY_COLLECTIONS.map((s) => /* @__PURE__ */ import_react16.default.createElement(
       NavItem,
@@ -20027,6 +20069,19 @@
     return /* @__PURE__ */ import_react16.default.createElement(AlbumsSection, { index, go, prefs, setPref });
   }
   function TvNavigatorSection({ index, go, prefs, setPref, stats }) {
+    const [seriesWidth, setSeriesWidth] = useLayoutPref("tvSeriesWidth", 270);
+    const [splitWidth, setSplitWidth] = (0, import_react16.useState)(0);
+    const splitRef = (0, import_react16.useRef)(null);
+    const hasShows = Boolean(index.tvShows?.length);
+    (0, import_react16.useEffect)(() => {
+      if (!hasShows || !splitRef.current) return void 0;
+      const observer = new ResizeObserver(([entry]) => setSplitWidth(Math.round(entry.contentRect.width)));
+      observer.observe(splitRef.current);
+      return () => observer.disconnect();
+    }, [hasShows]);
+    const stacked = splitWidth > 0 && splitWidth < 520;
+    const maxSeriesWidth = Math.max(170, Math.min(480, (splitWidth || 800) - 295));
+    const visibleSeriesWidth = Math.min(seriesWidth, maxSeriesWidth);
     const shows = (0, import_react16.useMemo)(() => (0, import_library_index3.sortAlbums)(index.tvShows || [], prefs.tvSort || "title", stats), [index, prefs.tvSort, stats]);
     const [seriesFilter, setSeriesFilter] = (0, import_react16.useState)("all");
     const [seriesQuery, setSeriesQuery] = (0, import_react16.useState)("");
@@ -20125,63 +20180,84 @@
       },
       /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "grid", size: 13 }),
       " Poster Grid View"
-    )), /* @__PURE__ */ import_react16.default.createElement("div", { className: "tv-navigator-split" }, /* @__PURE__ */ import_react16.default.createElement("aside", { className: "tv-navigator-series-list", "aria-label": "TV Series List" }, /* @__PURE__ */ import_react16.default.createElement("div", { className: "tv-navigator-series-header" }, /* @__PURE__ */ import_react16.default.createElement(
-      "input",
+    )), /* @__PURE__ */ import_react16.default.createElement(
+      "div",
       {
-        type: "search",
-        className: "tv-series-filter-input",
-        placeholder: "Filter shows by title, network, cast\u2026",
-        value: seriesQuery,
-        onChange: (e) => setSeriesQuery(e.target.value)
-      }
-    ), /* @__PURE__ */ import_react16.default.createElement(
-      SortSelect,
-      {
-        id: "tv-nav-sort",
-        value: prefs.tvSort || "title",
-        onChange: (v) => setPref("tvSort", v),
-        options: [["title", "A\u2013Z"], ["recentWatched", "Recently Watched"], ["year", "Newest"], ["addedAt", "Added"]]
-      }
-    )), /* @__PURE__ */ import_react16.default.createElement("div", { className: "tv-navigator-series-items" }, filteredShows.map((show) => {
-      const ws = (0, import_library_index3.getShowWatchState)(show, stats);
-      const isSelected = activeShow && activeShow.key === show.key;
-      const epCode = ws.resumeTrack?.episodeCode || (ws.resumeTrack?.seasonNumber != null ? `S${String(ws.resumeTrack.seasonNumber).padStart(2, "0")}E${String(ws.resumeTrack.episodeNumber || 1).padStart(2, "0")}` : null);
-      return /* @__PURE__ */ import_react16.default.createElement(
-        "div",
+        ref: splitRef,
+        className: `tv-navigator-split${stacked ? " stacked" : ""}`,
+        style: { "--series-width": `${visibleSeriesWidth}px` }
+      },
+      /* @__PURE__ */ import_react16.default.createElement("aside", { className: "tv-navigator-series-list", "aria-label": "TV Series List" }, /* @__PURE__ */ import_react16.default.createElement("div", { className: "tv-navigator-series-header" }, /* @__PURE__ */ import_react16.default.createElement(
+        "input",
         {
-          key: show.key,
-          className: `tv-series-rail-card ${isSelected ? "active" : ""}`,
-          onClick: () => setPref("selectedShowKey", show.key)
-        },
-        /* @__PURE__ */ import_react16.default.createElement("div", { className: "tv-series-rail-poster" }, /* @__PURE__ */ import_react16.default.createElement(Cover, { artId: show.artId, name: show.title })),
-        /* @__PURE__ */ import_react16.default.createElement("div", { className: "tv-series-rail-body" }, /* @__PURE__ */ import_react16.default.createElement("div", { className: "tv-series-rail-title-row" }, /* @__PURE__ */ import_react16.default.createElement("span", { className: "tv-series-rail-title" }, show.title), show.rating && /* @__PURE__ */ import_react16.default.createElement("span", { className: "tv-series-rail-rating" }, "\u2605 ", show.rating)), /* @__PURE__ */ import_react16.default.createElement("div", { className: "tv-series-rail-meta" }, /* @__PURE__ */ import_react16.default.createElement("span", null, (0, import_library_index3.plural)(show.seasonCount || 1, "Season"), " \xB7 ", ws.completedCount > 0 ? `${ws.completedCount}/${ws.totalEpisodes} Watched` : (0, import_library_index3.plural)(show.episodeCount || show.tracks.length, "Ep")), show.network && /* @__PURE__ */ import_react16.default.createElement("span", { className: "tv-series-rail-net" }, show.network)), ws.completed ? /* @__PURE__ */ import_react16.default.createElement("span", { className: "tv-series-rail-status watched" }, "\u2713 Watched (", ws.totalEpisodes, "/", ws.totalEpisodes, ")") : ws.hasActivity ? /* @__PURE__ */ import_react16.default.createElement("span", { className: "tv-series-rail-status resume" }, "\u25B6 ", ws.resumePositionSec >= 1 ? `Resume ${epCode} \xB7 ${(0, import_library_index3.formatDuration)(ws.resumePositionSec)}` : `Next: ${epCode} (${ws.completedCount}/${ws.totalEpisodes})`) : null, ws.hasActivity && /* @__PURE__ */ import_react16.default.createElement("div", { className: "tv-series-rail-progress" }, /* @__PURE__ */ import_react16.default.createElement(
+          type: "search",
+          className: "tv-series-filter-input",
+          placeholder: "Filter shows by title, network, cast\u2026",
+          value: seriesQuery,
+          onChange: (e) => setSeriesQuery(e.target.value)
+        }
+      ), /* @__PURE__ */ import_react16.default.createElement(
+        SortSelect,
+        {
+          id: "tv-nav-sort",
+          value: prefs.tvSort || "title",
+          onChange: (v) => setPref("tvSort", v),
+          options: [["title", "A\u2013Z"], ["recentWatched", "Recently Watched"], ["year", "Newest"], ["addedAt", "Added"]]
+        }
+      )), /* @__PURE__ */ import_react16.default.createElement("div", { className: "tv-navigator-series-items" }, filteredShows.map((show) => {
+        const ws = (0, import_library_index3.getShowWatchState)(show, stats);
+        const isSelected = activeShow && activeShow.key === show.key;
+        const epCode = ws.resumeTrack?.episodeCode || (ws.resumeTrack?.seasonNumber != null ? `S${String(ws.resumeTrack.seasonNumber).padStart(2, "0")}E${String(ws.resumeTrack.episodeNumber || 1).padStart(2, "0")}` : null);
+        return /* @__PURE__ */ import_react16.default.createElement(
           "div",
           {
-            className: `tv-series-rail-progress-fill ${ws.completed ? "completed" : ""}`,
-            style: { width: `${ws.completed ? 100 : Math.max(4, ws.progressPct)}%` }
-          }
-        )))
-      );
-    }))), /* @__PURE__ */ import_react16.default.createElement("section", { className: "tv-navigator-show-stage" }, activeShow ? /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(
-      DetailHeader,
-      {
-        album: activeShow,
-        compact: true,
-        cover: /* @__PURE__ */ import_react16.default.createElement(Cover, { artId: activeShow.artId, name: activeShow.title }),
-        eyebrow: "TV Series",
-        title: activeShow.title,
-        subtitle: activeShow.network ? /* @__PURE__ */ import_react16.default.createElement("span", null, activeShow.network, activeShow.year ? ` \xB7 Premiered ${activeShow.year}` : "") : null,
-        meta: [
-          activeShow.year,
-          activeShow.genre,
-          (0, import_library_index3.plural)(activeShow.seasonCount || 1, "Season"),
-          (0, import_library_index3.plural)(activeShow.episodeCount || activeShow.tracks.length, "Episode"),
-          (0, import_library_index3.formatLongDuration)(activeShow.duration)
-        ],
-        tracks: activeShow.tracks,
-        menuLabel: activeShow.title
-      }
-    ), /* @__PURE__ */ import_react16.default.createElement(TvShowSeasonsBreakdown, { key: activeShow.key, album: activeShow })) : /* @__PURE__ */ import_react16.default.createElement("div", { className: "empty-inline" }, "Select a TV show on the left to browse its seasons and episodes."))));
+            key: show.key,
+            className: `tv-series-rail-card ${isSelected ? "active" : ""}`,
+            onClick: () => setPref("selectedShowKey", show.key)
+          },
+          /* @__PURE__ */ import_react16.default.createElement("div", { className: "tv-series-rail-poster" }, /* @__PURE__ */ import_react16.default.createElement(Cover, { artId: show.artId, name: show.title })),
+          /* @__PURE__ */ import_react16.default.createElement("div", { className: "tv-series-rail-body" }, /* @__PURE__ */ import_react16.default.createElement("div", { className: "tv-series-rail-title-row" }, /* @__PURE__ */ import_react16.default.createElement("span", { className: "tv-series-rail-title" }, show.title), show.rating && /* @__PURE__ */ import_react16.default.createElement("span", { className: "tv-series-rail-rating" }, "\u2605 ", show.rating)), /* @__PURE__ */ import_react16.default.createElement("div", { className: "tv-series-rail-meta" }, /* @__PURE__ */ import_react16.default.createElement("span", null, (0, import_library_index3.plural)(show.seasonCount || 1, "Season"), " \xB7 ", ws.completedCount > 0 ? `${ws.completedCount}/${ws.totalEpisodes} Watched` : (0, import_library_index3.plural)(show.episodeCount || show.tracks.length, "Ep")), show.network && /* @__PURE__ */ import_react16.default.createElement("span", { className: "tv-series-rail-net" }, show.network)), ws.completed ? /* @__PURE__ */ import_react16.default.createElement("span", { className: "tv-series-rail-status watched" }, "\u2713 Watched (", ws.totalEpisodes, "/", ws.totalEpisodes, ")") : ws.hasActivity ? /* @__PURE__ */ import_react16.default.createElement("span", { className: "tv-series-rail-status resume" }, "\u25B6 ", ws.resumePositionSec >= 1 ? `Resume ${epCode} \xB7 ${(0, import_library_index3.formatDuration)(ws.resumePositionSec)}` : `Next: ${epCode} (${ws.completedCount}/${ws.totalEpisodes})`) : null, ws.hasActivity && /* @__PURE__ */ import_react16.default.createElement("div", { className: "tv-series-rail-progress" }, /* @__PURE__ */ import_react16.default.createElement(
+            "div",
+            {
+              className: `tv-series-rail-progress-fill ${ws.completed ? "completed" : ""}`,
+              style: { width: `${ws.completed ? 100 : Math.max(4, ws.progressPct)}%` }
+            }
+          )))
+        );
+      }))),
+      !stacked && /* @__PURE__ */ import_react16.default.createElement(
+        Splitter,
+        {
+          id: "tv-series-splitter",
+          label: "TV series list width",
+          size: visibleSeriesWidth,
+          onChange: setSeriesWidth,
+          min: 170,
+          max: maxSeriesWidth,
+          defaultSize: 270
+        }
+      ),
+      /* @__PURE__ */ import_react16.default.createElement("section", { className: "tv-navigator-show-stage" }, activeShow ? /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(
+        DetailHeader,
+        {
+          album: activeShow,
+          compact: true,
+          cover: /* @__PURE__ */ import_react16.default.createElement(Cover, { artId: activeShow.artId, name: activeShow.title }),
+          eyebrow: "TV Series",
+          title: activeShow.title,
+          subtitle: activeShow.network ? /* @__PURE__ */ import_react16.default.createElement("span", null, activeShow.network, activeShow.year ? ` \xB7 Premiered ${activeShow.year}` : "") : null,
+          meta: [
+            activeShow.year,
+            activeShow.genre,
+            (0, import_library_index3.plural)(activeShow.seasonCount || 1, "Season"),
+            (0, import_library_index3.plural)(activeShow.episodeCount || activeShow.tracks.length, "Episode"),
+            (0, import_library_index3.formatLongDuration)(activeShow.duration)
+          ],
+          tracks: activeShow.tracks,
+          menuLabel: activeShow.title
+        }
+      ), /* @__PURE__ */ import_react16.default.createElement(TvShowSeasonsBreakdown, { key: activeShow.key, album: activeShow })) : /* @__PURE__ */ import_react16.default.createElement("div", { className: "empty-inline" }, "Select a TV show on the left to browse its seasons and episodes."))
+    ));
   }
   function TvShowsSection({ index, go, prefs, setPref, stats }) {
     const sortKey = prefs.albumSort || "title";
@@ -20861,6 +20937,16 @@
   // src/WatchHistoryTab.jsx
   var import_react17 = __toESM(require_react());
   var import_library_index4 = __toESM(require_library_index());
+  var HISTORY_COLUMNS = [
+    { key: "play", label: "Play", width: "36px", fixed: true },
+    { key: "type", label: "Type", width: "64px", min: 56 },
+    { key: "show", label: "Show / Movie", width: "minmax(0, 1.6fr)", min: 96, sortKey: "title" },
+    { key: "episode", label: "Episode / Details", width: "minmax(0, 1.5fr)", min: 88 },
+    { key: "state", label: "Current State", width: "minmax(0, 1.3fr)", min: 84, sortKey: "status" },
+    { key: "plays", label: "Views", width: "62px", min: 52, sortKey: "plays" },
+    { key: "when", label: "Last Watched", width: "146px", min: 96, sortKey: "lastPlayed" },
+    { key: "actions", label: "Actions", width: "110px", fixed: true }
+  ];
   function normalizePortableKey(track) {
     if (!track) return null;
     const clean = (v) => String(v || "").normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/&/g, " and ").replace(/[^a-z0-9]+/g, " ").trim();
@@ -20909,6 +20995,7 @@
     const [isDragOver, setIsDragOver] = (0, import_react17.useState)(false);
     const [importReport, setImportReport] = (0, import_react17.useState)(null);
     const [visibleLimit, setVisibleLimit] = (0, import_react17.useState)(300);
+    const { template, handleFor } = useColumns("watch-history", HISTORY_COLUMNS);
     (0, import_react17.useEffect)(() => {
       setVisibleLimit(300);
     }, [filter, query, sort.key, sort.dir]);
@@ -21170,7 +21257,19 @@
             }
           }
         },
-        /* @__PURE__ */ import_react17.default.createElement("table", { className: "wh-skinny-table", "aria-label": "Watch History Table" }, /* @__PURE__ */ import_react17.default.createElement("thead", null, /* @__PURE__ */ import_react17.default.createElement("tr", null, /* @__PURE__ */ import_react17.default.createElement("th", { className: "wh-col-play", "aria-label": "Play" }), /* @__PURE__ */ import_react17.default.createElement("th", { className: "wh-col-type" }, "Type"), /* @__PURE__ */ import_react17.default.createElement("th", { className: "wh-col-show wh-sortable", onClick: () => toggleSort2("title") }, "Show / Movie", sortArrow("title")), /* @__PURE__ */ import_react17.default.createElement("th", { className: "wh-col-episode" }, "Episode / Details"), /* @__PURE__ */ import_react17.default.createElement("th", { className: "wh-col-state wh-sortable", onClick: () => toggleSort2("status") }, "Current State", sortArrow("status")), /* @__PURE__ */ import_react17.default.createElement("th", { className: "wh-col-plays wh-sortable", onClick: () => toggleSort2("plays") }, "Views", sortArrow("plays")), /* @__PURE__ */ import_react17.default.createElement("th", { className: "wh-col-when wh-sortable", onClick: () => toggleSort2("lastPlayed") }, "Last Watched", sortArrow("lastPlayed")), /* @__PURE__ */ import_react17.default.createElement("th", { className: "wh-col-actions" }, "Actions"))), /* @__PURE__ */ import_react17.default.createElement("tbody", null, renderedRows.map((r) => {
+        /* @__PURE__ */ import_react17.default.createElement("table", { className: "wh-skinny-table", role: "table", "aria-label": "Watch History Table", style: { "--wh-grid": template } }, /* @__PURE__ */ import_react17.default.createElement("thead", { role: "rowgroup" }, /* @__PURE__ */ import_react17.default.createElement("tr", { role: "row" }, HISTORY_COLUMNS.map(({ key, label, sortKey }) => /* @__PURE__ */ import_react17.default.createElement(
+          "th",
+          {
+            key,
+            role: "columnheader",
+            scope: "col",
+            className: `wh-col-${key}`,
+            "aria-label": key === "play" ? label : void 0,
+            "aria-sort": sortKey && sort.key === sortKey ? sort.dir === "asc" ? "ascending" : "descending" : void 0
+          },
+          sortKey ? /* @__PURE__ */ import_react17.default.createElement("button", { type: "button", className: "wh-sortable wh-column-label", onClick: () => toggleSort2(sortKey) }, label, sortArrow(sortKey)) : key !== "play" && /* @__PURE__ */ import_react17.default.createElement("span", { className: "wh-column-label" }, label),
+          handleFor(key)
+        )))), /* @__PURE__ */ import_react17.default.createElement("tbody", { role: "rowgroup" }, renderedRows.map((r) => {
           const isCurrent = Boolean(r.track && sameTrack(currentTrack, r.track));
           const canPlay = Boolean(r.track && onPlayTrack);
           const posLabel = (0, import_library_index4.formatDuration)(r.positionSec);
@@ -21179,6 +21278,7 @@
             "tr",
             {
               key: r.rowKey,
+              role: "row",
               className: `wh-row ${isCurrent ? "current" : ""} ${r.completed ? "is-watched" : ""} ${r.inProgress ? "is-progress" : ""}`,
               onDoubleClick: () => {
                 if (canPlay) onPlayTrack(r.track);
@@ -21486,11 +21586,11 @@
         className: "overlay edge-left",
         label: "Now Playing width",
         side: "right",
-        width: Math.min(dockWidth, dockMaxWidth()),
+        size: Math.min(dockWidth, dockMaxWidth()),
         onChange: setDockWidth,
         min: 240,
         max: dockMaxWidth,
-        defaultWidth: DOCK_WIDTH
+        defaultSize: DOCK_WIDTH
       }
     ), /* @__PURE__ */ import_react18.default.createElement("div", { className: "np-head" }, /* @__PURE__ */ import_react18.default.createElement("div", { className: "np-head-title" }, /* @__PURE__ */ import_react18.default.createElement(Icon2, { name: "list", size: 15 }), /* @__PURE__ */ import_react18.default.createElement("span", null, "Watch Queue"), /* @__PURE__ */ import_react18.default.createElement("span", { className: "np-count" }, queue.length.toLocaleString())), /* @__PURE__ */ import_react18.default.createElement("button", { id: "btn-collapse-queue-panel", className: "btn-icon-only small", title: "Hide panel", onClick: onToggleCollapsed }, /* @__PURE__ */ import_react18.default.createElement(Icon2, { name: "chevron", size: 14 }))), current && /* @__PURE__ */ import_react18.default.createElement(
       "div",
@@ -21513,7 +21613,7 @@
           if (e.key === "Escape") setFilter("");
         }
       }
-    )), /* @__PURE__ */ import_react18.default.createElement("div", { className: "np-cols" }, /* @__PURE__ */ import_react18.default.createElement("span", { className: "np-col-state" }), /* @__PURE__ */ import_react18.default.createElement("button", { className: "np-col-title col-resizable", onClick: () => sortBy("title"), title: "Sort by title" }, "Title", sortMark("title"), handleFor("title")), /* @__PURE__ */ import_react18.default.createElement("button", { className: "np-col-artist col-resizable", onClick: () => sortBy("artist"), title: "Sort by release format" }, "Format", sortMark("artist"), handleFor("artist")), /* @__PURE__ */ import_react18.default.createElement("button", { className: "np-col-dur", onClick: () => sortBy("duration"), title: "Sort by runtime" }, "Runtime", sortMark("duration"))), /* @__PURE__ */ import_react18.default.createElement(
+    )), /* @__PURE__ */ import_react18.default.createElement("div", { className: "np-cols" }, /* @__PURE__ */ import_react18.default.createElement("span", { className: "np-col-state" }), /* @__PURE__ */ import_react18.default.createElement("span", { className: "np-col-title col-resizable" }, /* @__PURE__ */ import_react18.default.createElement("button", { type: "button", onClick: () => sortBy("title"), title: "Sort by title" }, "Title", sortMark("title")), handleFor("title")), /* @__PURE__ */ import_react18.default.createElement("span", { className: "np-col-artist col-resizable" }, /* @__PURE__ */ import_react18.default.createElement("button", { type: "button", onClick: () => sortBy("artist"), title: "Sort by release format" }, "Format", sortMark("artist")), handleFor("artist")), /* @__PURE__ */ import_react18.default.createElement("button", { className: "np-col-dur", onClick: () => sortBy("duration"), title: "Sort by runtime" }, "Runtime", sortMark("duration"))), /* @__PURE__ */ import_react18.default.createElement(
       "div",
       {
         id: "queue-list",
@@ -23045,6 +23145,8 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
     const [shuffleMode, setShuffleMode] = (0, import_react27.useState)(!!playerPrefs.shuffle);
     const [dockCollapsed, setDockCollapsed] = (0, import_react27.useState)(!!playerPrefs.dockCollapsed);
     const [playlistSidebarWidth, setPlaylistSidebarWidth] = useLayoutPref("playlistSidebarWidth", PLAYLIST_SIDEBAR_WIDTH);
+    const [cinemaHeight, setCinemaHeight] = useLayoutPref("cinemaHeight", null);
+    const [measuredCinemaHeight, setMeasuredCinemaHeight] = (0, import_react27.useState)(360);
     const playlistColumns = useColumns("playlist", PLAYLIST_COLUMNS);
     const [libNav, setLibNav] = (0, import_react27.useState)(() => {
       const saved = playerPrefs.librarySection;
@@ -23882,6 +23984,17 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
     const embeddedPipActive = Boolean(
       activeTab !== "player" && isPlaying && outputTarget === "local" && isVideoTrack(currentTrack)
     );
+    const showCinemaResize = activeTab === "player" && outputTarget === "local" && isVideoTrack(currentTrack);
+    (0, import_react27.useLayoutEffect)(() => {
+      const video = videoRef.current;
+      if (!showCinemaResize || !video || cinemaHeight != null) return void 0;
+      const observer = new ResizeObserver(([entry]) => {
+        const height = Math.round(entry.contentRect.height);
+        if (height > 0) setMeasuredCinemaHeight(height);
+      });
+      observer.observe(video);
+      return () => observer.disconnect();
+    }, [showCinemaResize, cinemaHeight]);
     (0, import_react27.useLayoutEffect)(() => {
       if (!embeddedPipActive) {
         setPipRect(null);
@@ -25366,6 +25479,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
               id: "cinema-video-element",
               ref: videoRef,
               className: `cinema-video-el fit-${videoFit}`,
+              style: !embeddedPipActive && cinemaHeight != null ? { "--cinema-video-height": `${cinemaHeight}px` } : void 0,
               src: activeVideoSrc,
               poster: artUrlFor(artBase.local, currentTrack?.artId) || void 0,
               controls: !isTranscodeActive && !embeddedPipActive,
@@ -25634,6 +25748,20 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
             /* @__PURE__ */ import_react27.default.createElement("div", { style: { fontSize: "16px", fontWeight: 700, color: "#f8fafc" } }, "\u{1F4FA} Playing on ", getSpeakerName(outputTarget)),
             /* @__PURE__ */ import_react27.default.createElement("div", { style: { fontSize: "13px", color: "#94a3b8", maxWidth: "520px" } }, currentTrack?.title, " \u2014 Local desktop video decoding is paused while casting so your Smart TV gets 100% of stream bandwidth with zero stutter.")
           ),
+          showCinemaResize && /* @__PURE__ */ import_react27.default.createElement(
+            Splitter,
+            {
+              id: "cinema-height-splitter",
+              className: "height-grip",
+              label: "Cinema video height",
+              orientation: "horizontal",
+              size: cinemaHeight ?? measuredCinemaHeight,
+              onChange: setCinemaHeight,
+              min: 160,
+              max: 720,
+              defaultSize: null
+            }
+          ),
           !embeddedPipActive && /* @__PURE__ */ import_react27.default.createElement("div", { className: "cinema-stage-toolbar" }, /* @__PURE__ */ import_react27.default.createElement("span", { className: "cinema-stage-badge" }, "\u{1F3AC} ", currentTrack?.title || "Cinema Stage", " ", currentTrack?.year ? `(${currentTrack.year})` : ""), /* @__PURE__ */ import_react27.default.createElement("div", { className: "cinema-stage-actions" }, /* @__PURE__ */ import_react27.default.createElement(
             "button",
             {
@@ -25875,11 +26003,11 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
         {
           id: "playlists-splitter",
           label: "Playlist list width",
-          width: playlistSidebarWidth,
+          size: playlistSidebarWidth,
           onChange: setPlaylistSidebarWidth,
           min: 180,
           max: () => Math.max(220, Math.min(560, window.innerWidth - 700)),
-          defaultWidth: PLAYLIST_SIDEBAR_WIDTH
+          defaultSize: PLAYLIST_SIDEBAR_WIDTH
         }
       ), /* @__PURE__ */ import_react27.default.createElement("div", { className: "playlist-detail-pane" }, selectedPlaylist ? /* @__PURE__ */ import_react27.default.createElement(import_react27.default.Fragment, null, /* @__PURE__ */ import_react27.default.createElement("div", { className: "playlist-detail-header" }, /* @__PURE__ */ import_react27.default.createElement("div", { className: "playlist-detail-meta" }, /* @__PURE__ */ import_react27.default.createElement("div", { className: "playlist-cover-icon" }, /* @__PURE__ */ import_react27.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "36", height: "36", viewBox: "0 0 24 24", fill: "none", stroke: "#e8a33d", "stroke-width": "1.5" }, /* @__PURE__ */ import_react27.default.createElement("path", { d: "M9 18V5l12-2v13" }), /* @__PURE__ */ import_react27.default.createElement("circle", { cx: "6", cy: "18", r: "3" }), /* @__PURE__ */ import_react27.default.createElement("circle", { cx: "18", cy: "16", r: "3" }))), /* @__PURE__ */ import_react27.default.createElement("div", { className: "playlist-text-meta" }, /* @__PURE__ */ import_react27.default.createElement("h2", null, selectedPlaylist.name), /* @__PURE__ */ import_react27.default.createElement("p", { className: "playlist-description" }, selectedPlaylist.description || "No description provided."), /* @__PURE__ */ import_react27.default.createElement("div", { className: "playlist-stats" }, /* @__PURE__ */ import_react27.default.createElement("span", { className: "badge" }, selectedPlaylist.tracks?.length || 0, " Tracks"), /* @__PURE__ */ import_react27.default.createElement("span", { className: "badge" }, "Duration: ", formatTotalDuration(selectedPlaylist.tracks)), selectedPlaylist.ai && /* @__PURE__ */ import_react27.default.createElement("span", { className: "badge", title: selectedPlaylist.ai.request }, "\u2726 AI playlist"), selectedPlaylist.dj && /* @__PURE__ */ import_react27.default.createElement("span", { className: "badge", title: selectedPlaylist.dj.persona }, "\u{1F399} Virtual DJ"), /* @__PURE__ */ import_react27.default.createElement("span", { className: "badge" }, "Updated: ", new Date(selectedPlaylist.updatedAt || selectedPlaylist.createdAt || Date.now()).toLocaleDateString())))), /* @__PURE__ */ import_react27.default.createElement("div", { className: "playlist-actions-bar" }, /* @__PURE__ */ import_react27.default.createElement(
         "button",
@@ -25997,6 +26125,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
       ), /* @__PURE__ */ import_react27.default.createElement("span", null, "Currently casting to ", /* @__PURE__ */ import_react27.default.createElement("strong", null, getSpeakerName(activeCastSession.ip)))), /* @__PURE__ */ import_react27.default.createElement("div", { className: "cast-bar-controls" }, /* @__PURE__ */ import_react27.default.createElement("button", { className: "btn-chip", onClick: handleToggleCastPause }, activeCastSession.isPaused ? "Resume" : "Pause"), /* @__PURE__ */ import_react27.default.createElement("button", { className: "btn-chip btn-stop-cast", onClick: () => handleStopCast(activeCastSession.ip) }, "Stop Cast"))), /* @__PURE__ */ import_react27.default.createElement(
         Library,
         {
+          key: activeTab,
           mode: activeTab === "shows" ? "shows" : "movies",
           tracks: library.tracks,
           folders,

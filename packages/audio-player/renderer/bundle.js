@@ -17851,7 +17851,198 @@
   }
 
   // src/CloudBrowser.jsx
+  var import_react10 = __toESM(require_react());
+
+  // src/resizable.jsx
   var import_react9 = __toESM(require_react());
+  var STORE_KEY = "robos-audio-layout";
+  function readStore() {
+    try {
+      return JSON.parse(localStorage.getItem(STORE_KEY) || "{}") || {};
+    } catch {
+      return {};
+    }
+  }
+  function writeStore(key, value) {
+    try {
+      const all = readStore();
+      if (value == null) delete all[key];
+      else all[key] = value;
+      localStorage.setItem(STORE_KEY, JSON.stringify(all));
+    } catch {
+    }
+  }
+  function useLayoutPref(key, fallback) {
+    const [value, setValue] = (0, import_react9.useState)(() => {
+      const stored = readStore()[key];
+      return stored === void 0 ? fallback : stored;
+    });
+    const first = (0, import_react9.useRef)(true);
+    const pending = (0, import_react9.useRef)(null);
+    (0, import_react9.useLayoutEffect)(() => {
+      if (first.current) {
+        first.current = false;
+        return void 0;
+      }
+      const save = () => {
+        if (pending.current !== save) return;
+        writeStore(key, value);
+        pending.current = null;
+      };
+      pending.current = save;
+      const timer = setTimeout(save, 250);
+      return () => clearTimeout(timer);
+    }, [key, value]);
+    (0, import_react9.useLayoutEffect)(() => {
+      const flush = () => pending.current?.();
+      window.addEventListener("pagehide", flush);
+      return () => {
+        window.removeEventListener("pagehide", flush);
+        flush();
+      };
+    }, []);
+    return [value, setValue];
+  }
+  var clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+  function startDrag(e, onMove, axis = "clientX") {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const el = e.currentTarget;
+    const start = e[axis];
+    const resizeClass = axis === "clientY" ? "is-resizing-height" : "is-resizing";
+    try {
+      el.setPointerCapture(e.pointerId);
+    } catch {
+    }
+    document.body.classList.add(resizeClass);
+    const move = (ev) => onMove(ev[axis] - start);
+    const up = () => {
+      el.removeEventListener("pointermove", move);
+      el.removeEventListener("pointerup", up);
+      el.removeEventListener("pointercancel", up);
+      el.removeEventListener("lostpointercapture", up);
+      document.body.classList.remove(resizeClass);
+    };
+    el.addEventListener("pointermove", move);
+    el.addEventListener("pointerup", up);
+    el.addEventListener("pointercancel", up);
+    el.addEventListener("lostpointercapture", up);
+  }
+  function Splitter({ id, size, onChange, min, max, defaultSize, side = "left", orientation = "vertical", label, className = "", style }) {
+    const hi = typeof max === "function" ? max() : max;
+    const horizontal = orientation === "horizontal";
+    const sign = side === "right" || side === "bottom" ? -1 : 1;
+    const onPointerDown = (e) => {
+      const limit = typeof max === "function" ? max() : max;
+      startDrag(e, (distance) => onChange(clamp(Math.round(size + sign * distance), min, limit)), horizontal ? "clientY" : "clientX");
+    };
+    const onKeyDown = (e) => {
+      const step = e.shiftKey ? 64 : 16;
+      const [less, more] = horizontal ? ["ArrowUp", "ArrowDown"] : ["ArrowLeft", "ArrowRight"];
+      if (e.key === less || e.key === more) {
+        e.preventDefault();
+        const dir = e.key === more ? 1 : -1;
+        onChange(clamp(size + sign * dir * step, min, hi));
+      } else if (e.key === "Home") {
+        e.preventDefault();
+        onChange(min);
+      } else if (e.key === "End") {
+        e.preventDefault();
+        onChange(hi);
+      }
+    };
+    return /* @__PURE__ */ import_react9.default.createElement(
+      "div",
+      {
+        id,
+        className: `splitter ${className}`,
+        style,
+        role: "separator",
+        "aria-orientation": orientation,
+        "aria-label": label,
+        "aria-valuenow": Math.round(size),
+        "aria-valuemin": min,
+        "aria-valuemax": Math.round(hi),
+        tabIndex: 0,
+        title: `${label}: drag to resize, double-click to reset`,
+        onPointerDown,
+        onDoubleClick: () => onChange(defaultSize),
+        onKeyDown
+      }
+    );
+  }
+  function useColumns(storeKey, spec) {
+    const [widths, setWidths] = useLayoutPref(`cols:${storeKey}`, {});
+    const template = spec.map((column) => {
+      if (column.fixed) return column.width;
+      const weight = widths.weights?.[column.key];
+      if (weight > 0) return `minmax(0, ${weight}fr)`;
+      return !column.fill && widths[column.key] != null ? `${widths[column.key]}px` : column.width;
+    }).join(" ");
+    const handleFor = (0, import_react9.useCallback)((key) => {
+      const index = spec.findIndex((column) => column.key === key);
+      const left = spec[index];
+      const right = spec[index + 1];
+      if (!left || !right || left.fixed || right.fixed) return null;
+      return /* @__PURE__ */ import_react9.default.createElement(
+        ColumnBorder,
+        {
+          key: "col-border",
+          label: `Resize the ${left.label || left.key} column`,
+          measure: (cell) => {
+            const cells = cell.parentElement.children;
+            const measured = Object.fromEntries(spec.map((column, index2) => [column.key, Math.max(1, cells[index2].getBoundingClientRect().width)]));
+            const low = Math.min(0, (left.min ?? 40) - measured[left.key]);
+            const high = Math.max(0, measured[right.key] - (right.min ?? 40));
+            return (distance) => {
+              const delta = clamp(distance, low, high);
+              setWidths({
+                weights: { ...measured, [left.key]: measured[left.key] + delta, [right.key]: measured[right.key] - delta }
+              });
+            };
+          },
+          onReset: () => setWidths({})
+        }
+      );
+    }, [spec, setWidths]);
+    return { template, handleFor };
+  }
+  function ColumnBorder({ label, measure, onReset }) {
+    const onKeyDown = (event) => {
+      const step = event.shiftKey ? 64 : 16;
+      const distance = { ArrowLeft: -step, ArrowRight: step, Home: -Infinity, End: Infinity }[event.key];
+      if (distance === void 0) return;
+      event.preventDefault();
+      event.stopPropagation();
+      measure(event.currentTarget.parentElement)(distance);
+    };
+    return /* @__PURE__ */ import_react9.default.createElement(
+      "span",
+      {
+        className: "col-border",
+        role: "separator",
+        "aria-orientation": "vertical",
+        "aria-label": label,
+        tabIndex: 0,
+        title: "Drag to resize \xB7 double-click to reset columns",
+        onPointerDown: (event) => startDrag(event, measure(event.currentTarget.parentElement)),
+        onKeyDown,
+        onClick: (event) => event.stopPropagation(),
+        onDoubleClick: (event) => {
+          event.stopPropagation();
+          onReset();
+        }
+      }
+    );
+  }
+
+  // src/CloudBrowser.jsx
+  var BROWSER_COLUMNS = [
+    { key: "select", width: "32px", fixed: true },
+    { key: "name", label: "File name", width: "minmax(0, 1fr)", min: 140 },
+    { key: "size", width: "90px", min: 84 }
+  ];
   var formatSize = (b) => b == null ? "" : b > 1048576 ? `${(b / 1048576).toFixed(1)} MB` : `${Math.max(1, Math.round(b / 1024))} KB`;
   var CACHE_LIMIT_OPTIONS = [
     { label: "250 MB", bytes: 250 * 1024 * 1024 },
@@ -17869,16 +18060,17 @@
     return { label: (driverType || "Cloud").toUpperCase(), color: "#e8a33d", bg: "rgba(232, 163, 61, 0.12)" };
   };
   function CloudBrowser({ onLibrary, onFolders, showStatus, folders = [], onEnabled, onRescan, busyId }) {
-    const [connections, setConnections] = (0, import_react9.useState)(null);
-    const [connId, setConnId] = (0, import_react9.useState)("");
-    const [listing, setListing] = (0, import_react9.useState)(null);
-    const [loading, setLoading] = (0, import_react9.useState)(false);
-    const [error, setError] = (0, import_react9.useState)("");
-    const [selected, setSelected] = (0, import_react9.useState)(/* @__PURE__ */ new Set());
-    const [progress, setProgress] = (0, import_react9.useState)(null);
-    const [cacheStats, setCacheStats] = (0, import_react9.useState)(null);
-    const importing = (0, import_react9.useRef)(false);
-    const dirCacheRef = (0, import_react9.useRef)(/* @__PURE__ */ new Map());
+    const { template, handleFor } = useColumns("cloud-listing", BROWSER_COLUMNS);
+    const [connections, setConnections] = (0, import_react10.useState)(null);
+    const [connId, setConnId] = (0, import_react10.useState)("");
+    const [listing, setListing] = (0, import_react10.useState)(null);
+    const [loading, setLoading] = (0, import_react10.useState)(false);
+    const [error, setError] = (0, import_react10.useState)("");
+    const [selected, setSelected] = (0, import_react10.useState)(/* @__PURE__ */ new Set());
+    const [progress, setProgress] = (0, import_react10.useState)(null);
+    const [cacheStats, setCacheStats] = (0, import_react10.useState)(null);
+    const importing = (0, import_react10.useRef)(false);
+    const dirCacheRef = (0, import_react10.useRef)(/* @__PURE__ */ new Map());
     const loadCacheStats = async () => {
       try {
         if (window.robosAudio?.cloudCacheStats) {
@@ -17931,11 +18123,11 @@
       }
       loadCacheStats();
     };
-    (0, import_react9.useEffect)(() => {
+    (0, import_react10.useEffect)(() => {
       loadConnections(false);
       return window.robosAudio.onCloudProgress((p) => setProgress(p.phase === "done" ? null : p));
     }, []);
-    (0, import_react9.useEffect)(() => {
+    (0, import_react10.useEffect)(() => {
       setProgress(null);
     }, [folders]);
     const toggle = (p) => setSelected((prev) => {
@@ -18003,7 +18195,7 @@
     const other = (connections || []).filter((c) => !c.browsable);
     const activeConn = usable.find((c) => c.id === connId) || usable[0] || null;
     const currentPath = listing ? listing.path : "/";
-    return /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-browser" }, /* @__PURE__ */ import_react9.default.createElement(
+    return /* @__PURE__ */ import_react10.default.createElement("div", { className: "cloud-browser" }, /* @__PURE__ */ import_react10.default.createElement(
       "select",
       {
         id: "cloud-conn-select",
@@ -18012,20 +18204,20 @@
         onChange: (e) => setConnId(e.target.value),
         disabled: !usable.length
       },
-      !usable.length && /* @__PURE__ */ import_react9.default.createElement("option", { value: "" }, "No Cloud Storage connections"),
-      usable.map((c) => /* @__PURE__ */ import_react9.default.createElement("option", { key: c.id, value: c.id }, c.name, " (", c.driverType.toUpperCase(), ")"))
-    ), /* @__PURE__ */ import_react9.default.createElement("section", { className: "cloud-sync-panel", "aria-label": "Cloud folder sync settings" }, /* @__PURE__ */ import_react9.default.createElement("header", { className: "cloud-sync-heading" }, /* @__PURE__ */ import_react9.default.createElement("div", null, /* @__PURE__ */ import_react9.default.createElement("h3", null, /* @__PURE__ */ import_react9.default.createElement(Icon2, { name: "cloud", size: 20 }), " Your cloud music"), /* @__PURE__ */ import_react9.default.createElement("p", null, "Choose the folders to keep synced. Checked folders are saved and checked for updates every time Audio Player starts.")), /* @__PURE__ */ import_react9.default.createElement("button", { className: "btn-secondary", onClick: () => loadConnections(true) }, "Reload Data Sources")), /* @__PURE__ */ import_react9.default.createElement("p", { className: "cloud-sync-summary" }, folders.filter((f) => f.kind === "cloud" && f.syncEnabled !== false).length, " cloud folders selected \xB7 Audio streams when played"), usable.map((c) => {
+      !usable.length && /* @__PURE__ */ import_react10.default.createElement("option", { value: "" }, "No Cloud Storage connections"),
+      usable.map((c) => /* @__PURE__ */ import_react10.default.createElement("option", { key: c.id, value: c.id }, c.name, " (", c.driverType.toUpperCase(), ")"))
+    ), /* @__PURE__ */ import_react10.default.createElement("section", { className: "cloud-sync-panel", "aria-label": "Cloud folder sync settings" }, /* @__PURE__ */ import_react10.default.createElement("header", { className: "cloud-sync-heading" }, /* @__PURE__ */ import_react10.default.createElement("div", null, /* @__PURE__ */ import_react10.default.createElement("h3", null, /* @__PURE__ */ import_react10.default.createElement(Icon2, { name: "cloud", size: 20 }), " Your cloud music"), /* @__PURE__ */ import_react10.default.createElement("p", null, "Choose the folders to keep synced. Checked folders are saved and checked for updates every time Audio Player starts.")), /* @__PURE__ */ import_react10.default.createElement("button", { className: "btn-secondary", onClick: () => loadConnections(true) }, "Reload Data Sources")), /* @__PURE__ */ import_react10.default.createElement("p", { className: "cloud-sync-summary" }, folders.filter((f) => f.kind === "cloud" && f.syncEnabled !== false).length, " cloud folders selected \xB7 Audio streams when played"), usable.map((c) => {
       const badge = providerBadge(c.driverType);
       const linked = c.folders || [];
       const rows = [
         ...linked.map((lf) => ({ ...lf, saved: folders.find((f) => f.cloudKey === lf.cloudKey) })),
         ...folders.filter((f) => f.kind === "cloud" && f.connectionId === c.id && !linked.some((lf) => lf.cloudKey === f.cloudKey)).map((f) => ({ label: f.label, remotePath: f.path, cloudKey: f.cloudKey, saved: f }))
       ];
-      return /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-sync-source", key: c.id }, /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-sync-source-head" }, /* @__PURE__ */ import_react9.default.createElement("span", { style: { color: badge.color } }, badge.label), /* @__PURE__ */ import_react9.default.createElement("strong", null, c.name), c.user && /* @__PURE__ */ import_react9.default.createElement("span", null, c.user), /* @__PURE__ */ import_react9.default.createElement("button", { className: "row-btn", onClick: () => browse(c.id, c.startPath || "/") }, "Browse folders")), rows.map((lf) => {
+      return /* @__PURE__ */ import_react10.default.createElement("div", { className: "cloud-sync-source", key: c.id }, /* @__PURE__ */ import_react10.default.createElement("div", { className: "cloud-sync-source-head" }, /* @__PURE__ */ import_react10.default.createElement("span", { style: { color: badge.color } }, badge.label), /* @__PURE__ */ import_react10.default.createElement("strong", null, c.name), c.user && /* @__PURE__ */ import_react10.default.createElement("span", null, c.user), /* @__PURE__ */ import_react10.default.createElement("button", { className: "row-btn", onClick: () => browse(c.id, c.startPath || "/") }, "Browse folders")), rows.map((lf) => {
         const f = lf.saved;
         const checked = !!f && f.syncEnabled !== false;
         const busy = !!progress || !!busyId;
-        return /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-sync-folder", key: lf.cloudKey || lf.remotePath }, /* @__PURE__ */ import_react9.default.createElement("label", { className: "cloud-sync-choice" }, /* @__PURE__ */ import_react9.default.createElement(
+        return /* @__PURE__ */ import_react10.default.createElement("div", { className: "cloud-sync-folder", key: lf.cloudKey || lf.remotePath }, /* @__PURE__ */ import_react10.default.createElement("label", { className: "cloud-sync-choice" }, /* @__PURE__ */ import_react10.default.createElement(
           "input",
           {
             type: "checkbox",
@@ -18034,7 +18226,7 @@
             disabled: busy,
             onChange: (e) => f ? onEnabled(f.id, e.target.checked) : addFolder(lf.remotePath, c.id)
           }
-        ), /* @__PURE__ */ import_react9.default.createElement("span", null, /* @__PURE__ */ import_react9.default.createElement("strong", null, lf.label), /* @__PURE__ */ import_react9.default.createElement("small", null, checked ? "Kept in sync \xB7 checks at startup" : "Sync paused", " \xB7 ", lf.remotePath), f && /* @__PURE__ */ import_react9.default.createElement("small", null, f.trackCount, " tracks \xB7 ", f.lastSynced ? "Last synced " + new Date(f.lastSynced).toLocaleString() : "Not synced yet"), f?.syncError && /* @__PURE__ */ import_react9.default.createElement("small", { className: "cloud-error" }, f.syncError, " \xB7 Refresh to retry"))), /* @__PURE__ */ import_react9.default.createElement(
+        ), /* @__PURE__ */ import_react10.default.createElement("span", null, /* @__PURE__ */ import_react10.default.createElement("strong", null, lf.label), /* @__PURE__ */ import_react10.default.createElement("small", null, checked ? "Kept in sync \xB7 checks at startup" : "Sync paused", " \xB7 ", lf.remotePath), f && /* @__PURE__ */ import_react10.default.createElement("small", null, f.trackCount, " tracks \xB7 ", f.lastSynced ? "Last synced " + new Date(f.lastSynced).toLocaleString() : "Not synced yet"), f?.syncError && /* @__PURE__ */ import_react10.default.createElement("small", { className: "cloud-error" }, f.syncError, " \xB7 Refresh to retry"))), /* @__PURE__ */ import_react10.default.createElement(
           "button",
           {
             className: "btn-secondary",
@@ -18043,9 +18235,9 @@
             "aria-label": "Refresh " + lf.label
           },
           busyId === f?.id ? "Syncing\u2026" : "Refresh"
-        ), /* @__PURE__ */ import_react9.default.createElement("button", { className: "row-btn", onClick: () => browse(c.id, lf.remotePath) }, "Browse"));
-      }), !rows.length && /* @__PURE__ */ import_react9.default.createElement("p", { className: "cloud-sync-hint" }, "Browse this source and choose a folder to keep synced."));
-    })), cacheStats && /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-cache-bar", style: {
+        ), /* @__PURE__ */ import_react10.default.createElement("button", { className: "row-btn", onClick: () => browse(c.id, lf.remotePath) }, "Browse"));
+      }), !rows.length && /* @__PURE__ */ import_react10.default.createElement("p", { className: "cloud-sync-hint" }, "Browse this source and choose a folder to keep synced."));
+    })), cacheStats && /* @__PURE__ */ import_react10.default.createElement("div", { className: "cloud-cache-bar", style: {
       display: "flex",
       alignItems: "center",
       justifyContent: "space-between",
@@ -18057,7 +18249,7 @@
       borderRadius: "6px",
       fontSize: "12px",
       color: "#94a3b8"
-    } }, /* @__PURE__ */ import_react9.default.createElement("div", null, /* @__PURE__ */ import_react9.default.createElement("strong", { style: { color: "#e2e8f0" } }, "On-Demand Stream & LRU Cache:"), " ", /* @__PURE__ */ import_react9.default.createElement("span", null, formatSize(cacheStats.usedBytes || 0), " used of ", formatSize(cacheStats.maxCacheBytes), " (", cacheStats.fileCount || 0, " cached song", cacheStats.fileCount === 1 ? "" : "s", ")"), /* @__PURE__ */ import_react9.default.createElement("span", { style: { marginLeft: "8px", opacity: 0.8 } }, "\xB7 Songs stream on play and evict oldest files automatically")), /* @__PURE__ */ import_react9.default.createElement("div", { style: { display: "flex", alignItems: "center", gap: "8px" } }, /* @__PURE__ */ import_react9.default.createElement("label", { htmlFor: "cloud-cache-limit", style: { fontSize: "11px" } }, "Max Cache:"), /* @__PURE__ */ import_react9.default.createElement(
+    } }, /* @__PURE__ */ import_react10.default.createElement("div", null, /* @__PURE__ */ import_react10.default.createElement("strong", { style: { color: "#e2e8f0" } }, "On-Demand Stream & LRU Cache:"), " ", /* @__PURE__ */ import_react10.default.createElement("span", null, formatSize(cacheStats.usedBytes || 0), " used of ", formatSize(cacheStats.maxCacheBytes), " (", cacheStats.fileCount || 0, " cached song", cacheStats.fileCount === 1 ? "" : "s", ")"), /* @__PURE__ */ import_react10.default.createElement("span", { style: { marginLeft: "8px", opacity: 0.8 } }, "\xB7 Songs stream on play and evict oldest files automatically")), /* @__PURE__ */ import_react10.default.createElement("div", { style: { display: "flex", alignItems: "center", gap: "8px" } }, /* @__PURE__ */ import_react10.default.createElement("label", { htmlFor: "cloud-cache-limit", style: { fontSize: "11px" } }, "Max Cache:"), /* @__PURE__ */ import_react10.default.createElement(
       "select",
       {
         id: "cloud-cache-limit",
@@ -18065,15 +18257,15 @@
         onChange: handleMaxCacheChange,
         style: { padding: "3px 6px", fontSize: "11px", background: "#0d1117", color: "#e2e8f0", border: "1px solid #30363d", borderRadius: "4px" }
       },
-      CACHE_LIMIT_OPTIONS.map((opt) => /* @__PURE__ */ import_react9.default.createElement("option", { key: opt.bytes, value: opt.bytes }, opt.label))
-    ), /* @__PURE__ */ import_react9.default.createElement("button", { className: "btn-secondary", style: { padding: "3px 8px", fontSize: "11px" }, onClick: handleClearCache, disabled: !cacheStats.fileCount }, "Clear Cache"))), connections && !connections.length && /* @__PURE__ */ import_react9.default.createElement("div", { className: "empty-state" }, /* @__PURE__ */ import_react9.default.createElement("p", null, "No cloud storage is linked yet."), /* @__PURE__ */ import_react9.default.createElement("p", { className: "hint" }, "Open RobOS Data Sources, add a Google Drive, Microsoft OneDrive, S3, Dropbox, SFTP, or FTP connection under Cloud & Object Storage, and it will appear here.")), other.length > 0 && /* @__PURE__ */ import_react9.default.createElement("p", { className: "cloud-note" }, other.map((c) => c.name).join(", "), ": browsing ", other.length === 1 ? "this" : "these", " storage type", other.length === 1 ? " is" : "s are", " not supported yet."), progress && /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-progress" }, progress.phase === "scanning" && "Indexing remote cloud metadata (no bulk download)...", progress.phase === "downloading" && `Streaming ${progress.done + 1} of ${progress.total}: ${progress.name}`, progress.phase === "done" && "Finishing up..."), listing && /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-listing" }, /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-sync-heading" }, /* @__PURE__ */ import_react9.default.createElement("button", { className: "btn-accent", disabled: !selected.size || !!progress, onClick: () => doImport([...selected]) }, "Add selected songs"), /* @__PURE__ */ import_react9.default.createElement("button", { className: "btn-secondary", disabled: !!progress || !!busyId, onClick: () => addFolder(listing.path, connId) }, "Keep this folder synced")), /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-path" }, /* @__PURE__ */ import_react9.default.createElement("button", { className: "crumb", onClick: () => browse(connId, "/") }, activeConn && Array.isArray(activeConn.folders) && activeConn.folders.length === 1 ? activeConn.folders[0].label : "Linked Folders"), crumbs.map((c, i) => /* @__PURE__ */ import_react9.default.createElement(import_react9.default.Fragment, { key: i }, /* @__PURE__ */ import_react9.default.createElement("span", { className: "crumb-sep" }, "/"), /* @__PURE__ */ import_react9.default.createElement("button", { className: "crumb", onClick: () => browse(connId, "/" + crumbs.slice(0, i + 1).join("/")) }, c)))), /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-rows" }, parentPath && /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-row", onClick: () => browse(connId, parentPath) }, /* @__PURE__ */ import_react9.default.createElement("span", { className: "cloud-check" }), /* @__PURE__ */ import_react9.default.createElement("span", { className: "cloud-name" }, /* @__PURE__ */ import_react9.default.createElement(Icon2, { name: "up", size: 14 }), " Parent folder"), /* @__PURE__ */ import_react9.default.createElement("span", { className: "cloud-size" })), listing.entries.length === 0 && /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-empty" }, "No folders or audio files here."), listing.entries.map((e) => /* @__PURE__ */ import_react9.default.createElement(
+      CACHE_LIMIT_OPTIONS.map((opt) => /* @__PURE__ */ import_react10.default.createElement("option", { key: opt.bytes, value: opt.bytes }, opt.label))
+    ), /* @__PURE__ */ import_react10.default.createElement("button", { className: "btn-secondary", style: { padding: "3px 8px", fontSize: "11px" }, onClick: handleClearCache, disabled: !cacheStats.fileCount }, "Clear Cache"))), connections && !connections.length && /* @__PURE__ */ import_react10.default.createElement("div", { className: "empty-state" }, /* @__PURE__ */ import_react10.default.createElement("p", null, "No cloud storage is linked yet."), /* @__PURE__ */ import_react10.default.createElement("p", { className: "hint" }, "Open RobOS Data Sources, add a Google Drive, Microsoft OneDrive, S3, Dropbox, SFTP, or FTP connection under Cloud & Object Storage, and it will appear here.")), other.length > 0 && /* @__PURE__ */ import_react10.default.createElement("p", { className: "cloud-note" }, other.map((c) => c.name).join(", "), ": browsing ", other.length === 1 ? "this" : "these", " storage type", other.length === 1 ? " is" : "s are", " not supported yet."), progress && /* @__PURE__ */ import_react10.default.createElement("div", { className: "cloud-progress" }, progress.phase === "scanning" && "Indexing remote cloud metadata (no bulk download)...", progress.phase === "downloading" && `Streaming ${progress.done + 1} of ${progress.total}: ${progress.name}`, progress.phase === "done" && "Finishing up..."), listing && /* @__PURE__ */ import_react10.default.createElement("div", { className: "cloud-listing" }, /* @__PURE__ */ import_react10.default.createElement("div", { className: "cloud-sync-heading" }, /* @__PURE__ */ import_react10.default.createElement("button", { className: "btn-accent", disabled: !selected.size || !!progress, onClick: () => doImport([...selected]) }, "Add selected songs"), /* @__PURE__ */ import_react10.default.createElement("button", { className: "btn-secondary", disabled: !!progress || !!busyId, onClick: () => addFolder(listing.path, connId) }, "Keep this folder synced")), /* @__PURE__ */ import_react10.default.createElement("div", { className: "cloud-path" }, /* @__PURE__ */ import_react10.default.createElement("button", { className: "crumb", onClick: () => browse(connId, "/") }, activeConn && Array.isArray(activeConn.folders) && activeConn.folders.length === 1 ? activeConn.folders[0].label : "Linked Folders"), crumbs.map((c, i) => /* @__PURE__ */ import_react10.default.createElement(import_react10.default.Fragment, { key: i }, /* @__PURE__ */ import_react10.default.createElement("span", { className: "crumb-sep" }, "/"), /* @__PURE__ */ import_react10.default.createElement("button", { className: "crumb", onClick: () => browse(connId, "/" + crumbs.slice(0, i + 1).join("/")) }, c)))), /* @__PURE__ */ import_react10.default.createElement("div", { className: "cloud-rows", style: { "--cloud-grid": template } }, /* @__PURE__ */ import_react10.default.createElement("div", { className: "cloud-row cloud-column-header" }, /* @__PURE__ */ import_react10.default.createElement("span", null), /* @__PURE__ */ import_react10.default.createElement("span", { className: "col-resizable" }, "Name", handleFor("name")), /* @__PURE__ */ import_react10.default.createElement("span", { className: "cloud-size" }, "Size")), parentPath && /* @__PURE__ */ import_react10.default.createElement("div", { className: "cloud-row", onClick: () => browse(connId, parentPath) }, /* @__PURE__ */ import_react10.default.createElement("span", { className: "cloud-check" }), /* @__PURE__ */ import_react10.default.createElement("span", { className: "cloud-name" }, /* @__PURE__ */ import_react10.default.createElement(Icon2, { name: "up", size: 14 }), " Parent folder"), /* @__PURE__ */ import_react10.default.createElement("span", { className: "cloud-size" })), listing.entries.length === 0 && /* @__PURE__ */ import_react10.default.createElement("div", { className: "cloud-empty" }, "No folders or audio files here."), listing.entries.map((e) => /* @__PURE__ */ import_react10.default.createElement(
       "div",
       {
         key: e.path,
         className: `cloud-row ${selected.has(e.path) ? "selected" : ""}`,
         onClick: () => e.type === "dir" ? browse(connId, e.path) : toggle(e.path)
       },
-      /* @__PURE__ */ import_react9.default.createElement("span", { className: "cloud-check", onClick: (ev) => ev.stopPropagation() }, /* @__PURE__ */ import_react9.default.createElement(
+      /* @__PURE__ */ import_react10.default.createElement("span", { className: "cloud-check", onClick: (ev) => ev.stopPropagation() }, /* @__PURE__ */ import_react10.default.createElement(
         "input",
         {
           type: "checkbox",
@@ -18090,8 +18282,8 @@
           "aria-label": e.type === "dir" ? `Keep ${e.name} synced` : `Select ${e.name}`
         }
       )),
-      /* @__PURE__ */ import_react9.default.createElement("span", { className: "cloud-name" }, /* @__PURE__ */ import_react9.default.createElement(Icon2, { name: e.type === "dir" ? "folder" : "note", size: 15 }), " ", e.name),
-      /* @__PURE__ */ import_react9.default.createElement("span", { className: "cloud-size" }, e.type === "dir" ? /* @__PURE__ */ import_react9.default.createElement(
+      /* @__PURE__ */ import_react10.default.createElement("span", { className: "cloud-name" }, /* @__PURE__ */ import_react10.default.createElement(Icon2, { name: e.type === "dir" ? "folder" : "note", size: 15 }), " ", e.name),
+      /* @__PURE__ */ import_react10.default.createElement("span", { className: "cloud-size" }, e.type === "dir" ? /* @__PURE__ */ import_react10.default.createElement(
         "button",
         {
           className: "row-btn",
@@ -18105,187 +18297,11 @@
         },
         "+ Library"
       ) : formatSize(e.size))
-    )))), loading && /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-progress" }, "Loading..."), error && /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-error" }, error));
+    )))), loading && /* @__PURE__ */ import_react10.default.createElement("div", { className: "cloud-progress" }, "Loading..."), error && /* @__PURE__ */ import_react10.default.createElement("div", { className: "cloud-error" }, error));
   }
 
   // src/Lyrics.jsx
   var import_react11 = __toESM(require_react());
-
-  // src/resizable.jsx
-  var import_react10 = __toESM(require_react());
-  var STORE_KEY = "robos-audio-layout";
-  function readStore() {
-    try {
-      return JSON.parse(localStorage.getItem(STORE_KEY) || "{}") || {};
-    } catch {
-      return {};
-    }
-  }
-  function writeStore(key, value) {
-    try {
-      const all = readStore();
-      if (value == null) delete all[key];
-      else all[key] = value;
-      localStorage.setItem(STORE_KEY, JSON.stringify(all));
-    } catch {
-    }
-  }
-  function useLayoutPref(key, fallback) {
-    const [value, setValue] = (0, import_react10.useState)(() => {
-      const stored = readStore()[key];
-      return stored === void 0 ? fallback : stored;
-    });
-    const first = (0, import_react10.useRef)(true);
-    (0, import_react10.useEffect)(() => {
-      if (first.current) {
-        first.current = false;
-        return void 0;
-      }
-      const timer = setTimeout(() => writeStore(key, value), 250);
-      return () => clearTimeout(timer);
-    }, [key, value]);
-    return [value, setValue];
-  }
-  var clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
-  function startDrag(e, onMove, axis = "clientX") {
-    if (e.button !== 0) return;
-    e.preventDefault();
-    e.stopPropagation();
-    const el = e.currentTarget;
-    const start = e[axis];
-    const resizeClass = axis === "clientY" ? "is-resizing-height" : "is-resizing";
-    try {
-      el.setPointerCapture(e.pointerId);
-    } catch {
-    }
-    document.body.classList.add(resizeClass);
-    const move = (ev) => onMove(ev[axis] - start);
-    const up = () => {
-      el.removeEventListener("pointermove", move);
-      el.removeEventListener("pointerup", up);
-      el.removeEventListener("pointercancel", up);
-      el.removeEventListener("lostpointercapture", up);
-      document.body.classList.remove(resizeClass);
-    };
-    el.addEventListener("pointermove", move);
-    el.addEventListener("pointerup", up);
-    el.addEventListener("pointercancel", up);
-    el.addEventListener("lostpointercapture", up);
-  }
-  function Splitter({ id, size, onChange, min, max, defaultSize, side = "left", orientation = "vertical", label, className = "", style }) {
-    const hi = typeof max === "function" ? max() : max;
-    const horizontal = orientation === "horizontal";
-    const sign = side === "right" || side === "bottom" ? -1 : 1;
-    const onPointerDown = (e) => {
-      const limit = typeof max === "function" ? max() : max;
-      startDrag(e, (distance) => onChange(clamp(Math.round(size + sign * distance), min, limit)), horizontal ? "clientY" : "clientX");
-    };
-    const onKeyDown = (e) => {
-      const step = e.shiftKey ? 64 : 16;
-      const [less, more] = horizontal ? ["ArrowUp", "ArrowDown"] : ["ArrowLeft", "ArrowRight"];
-      if (e.key === less || e.key === more) {
-        e.preventDefault();
-        const dir = e.key === more ? 1 : -1;
-        onChange(clamp(size + sign * dir * step, min, hi));
-      } else if (e.key === "Home") {
-        e.preventDefault();
-        onChange(min);
-      } else if (e.key === "End") {
-        e.preventDefault();
-        onChange(hi);
-      }
-    };
-    return /* @__PURE__ */ import_react10.default.createElement(
-      "div",
-      {
-        id,
-        className: `splitter ${className}`,
-        style,
-        role: "separator",
-        "aria-orientation": orientation,
-        "aria-label": label,
-        "aria-valuenow": Math.round(size),
-        "aria-valuemin": min,
-        "aria-valuemax": Math.round(hi),
-        tabIndex: 0,
-        title: `${label}: drag to resize, double-click to reset`,
-        onPointerDown,
-        onDoubleClick: () => onChange(defaultSize),
-        onKeyDown
-      }
-    );
-  }
-  function useColumns(storeKey, spec) {
-    const [widths, setWidths] = useLayoutPref(`cols:${storeKey}`, {});
-    const template = spec.map((c) => !c.fill && !c.fixed && widths[c.key] != null ? `${widths[c.key]}px` : c.width).join(" ");
-    const handleFor = (0, import_react10.useCallback)((key) => {
-      const i = spec.findIndex((c) => c.key === key);
-      const a = spec[i];
-      const b = spec[i + 1];
-      if (!a || !b || a.fixed || b.fixed) return null;
-      return /* @__PURE__ */ import_react10.default.createElement(
-        ColumnBorder,
-        {
-          key: "col-border",
-          label: `Resize the ${a.label || a.key} column`,
-          onDragStart: (cell) => {
-            const row = cell.parentElement;
-            const cells = Array.from(row.children);
-            const measured = {};
-            spec.forEach((c, n) => {
-              if (cells[n]) measured[c.key] = cells[n].getBoundingClientRect().width;
-            });
-            const frozen = {};
-            spec.forEach((c) => {
-              if (!c.fill && !c.fixed) frozen[c.key] = Math.round(measured[c.key]);
-            });
-            setWidths(frozen);
-            const minA = a.min || 40;
-            const minB = b.min || 40;
-            const fillSpare = Math.max(0, (measured[(spec.find((c) => c.fill) || {}).key] || 0) - 80);
-            return (dx) => {
-              const lo = a.fill ? -fillSpare : minA - measured[a.key];
-              const hi = a.fill ? measured[b.key] - minB : fillSpare;
-              const d = Math.round(clamp(dx, Math.min(lo, 0), Math.max(hi, 0)));
-              setWidths(() => {
-                const next = { ...frozen };
-                if (a.fill) next[b.key] = Math.max(minB, Math.round(measured[b.key] - d));
-                else next[a.key] = Math.max(minA, Math.round(measured[a.key] + d));
-                return next;
-              });
-            };
-          },
-          onReset: () => setWidths({})
-        }
-      );
-    }, [spec, setWidths]);
-    return { template, handleFor, widths };
-  }
-  function ColumnBorder({ label, onDragStart, onReset }) {
-    const onPointerDown = (e) => {
-      const cell = e.currentTarget.parentElement;
-      const move = onDragStart(cell);
-      startDrag(e, move);
-    };
-    return /* @__PURE__ */ import_react10.default.createElement(
-      "span",
-      {
-        className: "col-border",
-        role: "separator",
-        "aria-orientation": "vertical",
-        "aria-label": label,
-        title: "Drag to resize \xB7 double-click to reset columns",
-        onPointerDown,
-        onClick: (e) => e.stopPropagation(),
-        onDoubleClick: (e) => {
-          e.stopPropagation();
-          onReset();
-        }
-      }
-    );
-  }
-
-  // src/Lyrics.jsx
   var DEFAULT_HEIGHT = 240;
   var MIN_HEIGHT = 120;
   var MAX_HEIGHT = 720;
@@ -18413,7 +18429,7 @@
       Splitter,
       {
         id: "lyrics-height-splitter",
-        className: "lyrics-resize",
+        className: "height-grip",
         label: "Lyrics height",
         orientation: "horizontal",
         size: height,
@@ -18967,7 +18983,7 @@
       const sortable = onSort && h.sort;
       const active = sort && sort.key === h.sort;
       const border = handleFor(col);
-      return sortable ? /* @__PURE__ */ import_react15.default.createElement("button", { key: col, className: `tl-cell tl-${col} tl-sort ${active ? "active" : ""} ${border ? "col-resizable" : ""}`, onClick: () => onSort(h.sort) }, col === "love" ? /* @__PURE__ */ import_react15.default.createElement(Icon2, { name: "heart", size: 12 }) : h.label, active ? sort.dir === "asc" ? " \u2191" : " \u2193" : "", border) : /* @__PURE__ */ import_react15.default.createElement("span", { key: col, className: `tl-cell tl-${col} ${border ? "col-resizable" : ""}` }, h.label, border);
+      return /* @__PURE__ */ import_react15.default.createElement("span", { key: col, className: `tl-cell tl-${col} ${border ? "col-resizable" : ""}` }, sortable ? /* @__PURE__ */ import_react15.default.createElement("button", { type: "button", className: `tl-sort ${active ? "active" : ""}`, onClick: () => onSort(h.sort) }, col === "love" ? /* @__PURE__ */ import_react15.default.createElement(Icon2, { name: "heart", size: 12 }) : h.label, active ? sort.dir === "asc" ? " \u2191" : " \u2193" : "") : h.label, border);
     }));
     const firstRow = view ? Math.max(0, Math.floor((view.top - OVERSCAN_PX2) / ROW_HEIGHT)) : 0;
     const lastRow = view ? Math.min(rowCount, Math.ceil((view.bottom + OVERSCAN_PX2) / ROW_HEIGHT)) : Math.min(rowCount, 40);
@@ -19860,7 +19876,7 @@
           if (e.key === "Escape") setFilter("");
         }
       }
-    )), /* @__PURE__ */ import_react17.default.createElement("div", { className: "np-cols" }, /* @__PURE__ */ import_react17.default.createElement("span", { className: "np-col-state" }), /* @__PURE__ */ import_react17.default.createElement("button", { className: "np-col-title col-resizable", onClick: () => sortBy("title"), title: "Sort by title" }, "Title", sortMark("title"), handleFor("title")), /* @__PURE__ */ import_react17.default.createElement("button", { className: "np-col-artist col-resizable", onClick: () => sortBy("artist"), title: "Sort by artist" }, "Artist", sortMark("artist"), handleFor("artist")), /* @__PURE__ */ import_react17.default.createElement("button", { className: "np-col-dur", onClick: () => sortBy("duration"), title: "Sort by duration" }, "Time", sortMark("duration"))), /* @__PURE__ */ import_react17.default.createElement(
+    )), /* @__PURE__ */ import_react17.default.createElement("div", { className: "np-cols" }, /* @__PURE__ */ import_react17.default.createElement("span", { className: "np-col-state" }), /* @__PURE__ */ import_react17.default.createElement("span", { className: "np-col-title col-resizable" }, /* @__PURE__ */ import_react17.default.createElement("button", { type: "button", onClick: () => sortBy("title"), title: "Sort by title" }, "Title", sortMark("title")), handleFor("title")), /* @__PURE__ */ import_react17.default.createElement("span", { className: "np-col-artist col-resizable" }, /* @__PURE__ */ import_react17.default.createElement("button", { type: "button", onClick: () => sortBy("artist"), title: "Sort by artist" }, "Artist", sortMark("artist")), handleFor("artist")), /* @__PURE__ */ import_react17.default.createElement("button", { className: "np-col-dur", onClick: () => sortBy("duration"), title: "Sort by duration" }, "Time", sortMark("duration"))), /* @__PURE__ */ import_react17.default.createElement(
       "div",
       {
         id: "queue-list",
