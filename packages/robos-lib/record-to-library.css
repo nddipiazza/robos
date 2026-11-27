@@ -178,6 +178,48 @@
   pointer-events: none;
 }
 
+.recording-label {
+  min-width: 0;
+  margin: 0;
+  padding: 10px 12px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+}
+
+.recording-label legend {
+  padding-inline: 4px;
+  color: var(--text-muted);
+}
+
+.recording-label-grid,
+.recording-label-tv {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.recording-label-field {
+  display: grid;
+  gap: 4px;
+}
+
+.recording-label-field :is(input, select) {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding: 7px 9px;
+  color: var(--text-main);
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font: inherit;
+}
+
+.recording-label-wide,
+.recording-label-tv {
+  grid-column: 1 / -1;
+}
+
 .record-to-library-dialog [hidden] {
   display: none;
 }

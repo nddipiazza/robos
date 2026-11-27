@@ -466,15 +466,20 @@ async function httpGetJson(url, opts = {}) {
 /**
  * Query MusicBrainz WS/2 API (CC0 Public Domain) for canonical track & release info.
  */
-async function lookupMusicBrainz({ title, artist, album, duration } = {}, fetchJson = httpGetJson) {
-  const cleanT = cleanMediaTitle(title);
+async function lookupMusicBrainz({ title, artist, album, duration, exactMatch = false } = {}, fetchJson = httpGetJson) {
+  const cleanT = exactMatch ? String(title || '').trim() : cleanMediaTitle(title);
+  const normalize = (value) => String(value || '').normalize('NFKC').trim().toLowerCase();
+  const artistName = !isMissingValue(artist, ['Unknown Artist', 'Cloud Stream', 'Various']) ? artist : '';
+  const albumName = !isMissingValue(album, ['Unknown Album', 'Imported Playlist']) ? album : '';
+  const artistCreditFor = (recording) => Array.isArray(recording['artist-credit'])
+    ? recording['artist-credit'].map(c => (c.name || c.artist?.name || '') + (c.joinphrase || '')).join('').trim() : null;
   if (!cleanT) return null;
 
   const qParts = [`recording:"${cleanT.replace(/"/g, '')}"`];
-  if (artist && !isMissingValue(artist, ['Unknown Artist', 'Cloud Stream', 'Various'])) {
+  if (artistName) {
     qParts.push(`artist:"${String(artist).replace(/"/g, '')}"`);
   }
-  if (album && !isMissingValue(album, ['Unknown Album', 'Imported Playlist'])) {
+  if (albumName) {
     qParts.push(`release:"${String(album).replace(/"/g, '')}"`);
   }
 
@@ -483,7 +488,16 @@ async function lookupMusicBrainz({ title, artist, album, duration } = {}, fetchJ
 
   try {
     const data = await fetchJson(url, { timeoutMs: 4500 });
-    const recordings = Array.isArray(data && data.recordings) ? data.recordings : [];
+    let recordings = Array.isArray(data && data.recordings) ? data.recordings : [];
+    if (exactMatch) {
+      recordings = recordings.filter(rec => {
+        if (normalize(rec.title) !== normalize(cleanT)) return false;
+        if (artistName && normalize(artistCreditFor(rec)) !== normalize(artistName)) return false;
+        if (albumName && !rec.releases?.some(release => normalize(release.title) === normalize(albumName))) return false;
+        return artistName || albumName || (duration > 0 && rec.length && Math.abs(rec.length / 1000 - duration) <= 5);
+      });
+      if (!artistName && new Set(recordings.map(rec => normalize(artistCreditFor(rec)))).size > 1) return null;
+    }
     if (!recordings.length) return null;
 
     // Pick best recording (prefer close duration and official album release)
@@ -502,12 +516,11 @@ async function lookupMusicBrainz({ title, artist, album, duration } = {}, fetchJ
       }
     }
 
-    const artistCredit = Array.isArray(bestRec['artist-credit'])
-      ? bestRec['artist-credit'].map(c => (c.name || (c.artist && c.artist.name) || '') + (c.joinphrase || '')).join('').trim()
-      : null;
+    const artistCredit = artistCreditFor(bestRec);
 
     const releases = Array.isArray(bestRec.releases) ? bestRec.releases : [];
-    const officialRelease = releases.find(r => r.status === 'Official' && r.date) || releases[0] || null;
+    const labeledRelease = exactMatch && albumName ? releases.find(r => normalize(r.title) === normalize(albumName)) : null;
+    const officialRelease = labeledRelease || releases.find(r => r.status === 'Official' && r.date) || releases[0] || null;
 
     let trackNumber = null;
     let trackTotal = null;
@@ -530,7 +543,7 @@ async function lookupMusicBrainz({ title, artist, album, duration } = {}, fetchJ
     return {
       source: 'musicbrainz',
       recordingMbid: bestRec.id || null,
-    duration: bestRec.length ? bestRec.length / 1000 : null,
+      duration: bestRec.length ? bestRec.length / 1000 : null,
       releaseMbid: officialRelease ? officialRelease.id : null,
       title: bestRec.title || null,
       artist: artistCredit || null,

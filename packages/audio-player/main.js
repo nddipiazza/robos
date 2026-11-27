@@ -9,6 +9,7 @@ const { spawn } = require('child_process');
 const { pathToFileURL } = require('url');
 const { CastService, audioMimeType, sniffAudioType } = require('./lib/cast-service');
 const { MediaLibrary } = require('./lib/media-library');
+const { generateArtId } = require('./lib/track-metadata');
 const cloud = require('./lib/cloud-storage');
 const { createTagQueue } = require('./lib/cloud-tags');
 const lyrics = require('./lib/lyrics');
@@ -721,19 +722,27 @@ ipcMain.handle('audio:import-paths', async (_evt, targetPaths) => {
   };
 });
 
-async function enrichRecordedAudio(track) {
-  // The source tags take precedence. Only use MusicBrainz when both identifying
-  // tags are available and the matched recording has the same title and artist.
-  if (!track.artist || track.artist === 'Unknown Artist' || track.album !== 'Unknown Album') return;
+async function enrichRecordedAudio(track, label) {
+  const unknownArtist = !track.artist || track.artist === 'Unknown Artist';
+  const unknownAlbum = track.album === 'Unknown Album';
+  if (!label && (unknownArtist || !unknownAlbum)) return;
   try {
-    const metadata = await aiMetadata.lookupMusicBrainz(track);
+    const request = label ? { ...label, duration: track.duration, exactMatch: true } : track;
+    const metadata = await aiMetadata.lookupMusicBrainz(request);
+    if (!metadata) return;
     const normalize = (value) => String(value || '').normalize('NFKC').trim().toLowerCase();
-    if (!metadata?.album || normalize(metadata.title) !== normalize(track.title)
+    if (!label && (!metadata.album || normalize(metadata.title) !== normalize(track.title)
       || normalize(metadata.artist) !== normalize(track.artist)
-      || !metadata.duration || !track.duration || Math.abs(metadata.duration - track.duration) > 5) return;
+      || !metadata.duration || !track.duration || Math.abs(metadata.duration - track.duration) > 5)) return;
+    const cover = label && !track.artId ? await aiMetadata.fetchCoverArtArchive(metadata.releaseMbid) : null;
     if (mediaLibrary.tracks.find((item) => item.id === track.id) !== track) return;
+    const artId = cover ? generateArtId(cover.buffer) : track.artId;
+    if (cover) mediaLibrary.storeArt(artId, cover.buffer, cover.format);
     mediaLibrary.mergeTracks([{
-      ...track, album: metadata.album, albumArtist: track.albumArtist || metadata.albumArtist,
+      ...track, artId,
+      artist: unknownArtist ? metadata.artist || track.artist : track.artist,
+      album: unknownAlbum ? metadata.album || track.album : track.album,
+      albumArtist: track.albumArtist || metadata.albumArtist,
       year: track.year || metadata.year, genre: track.genre || metadata.genre,
       trackNumber: track.trackNumber || metadata.trackNumber,
     }]);
@@ -748,11 +757,11 @@ mediaRecorder?.registerMediaRecorder({
   app, ipcMain, clipboard, shell, desktopCapturer, screen, session, getWindow: () => mainWindow,
   kind: 'audio',
   directory: path.join(mediaLibrary.configDir, 'audio-player', 'recordings'),
-  async index(file) {
+  async index(file, { label }) {
     const [track] = await indexLocalFiles([file]);
     if (!track) throw new Error('The recording could not be indexed.');
     sendToWindow('audio:library-scan-batch', { library: mediaLibrary.getLibrary() });
-    enrichRecordedAudio(track);
+    enrichRecordedAudio(track, label);
     return track;
   },
 });

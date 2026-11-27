@@ -176,6 +176,40 @@ window.robosRecordToLibrary = (() => {
     const dialog = document.createElement('dialog');
     dialog.className = 'record-to-library-dialog';
     dialog.setAttribute('aria-labelledby', 'record-to-library-title');
+    const videoLabel = `
+      <label class="recording-label-field">Type
+        <select name="videoKind">
+          <option value="movie">Movie</option>
+          <option value="tv">TV show</option>
+        </select>
+      </label>
+      <label class="recording-label-field"><span data-recording-title-label>Movie title</span>
+        <input type="text" name="recordingTitle" maxlength="200" spellcheck="false">
+      </label>
+      <label class="recording-label-field" data-movie-label>Release year
+        <input type="number" name="releaseYear" min="1870" max="2200" inputmode="numeric">
+      </label>
+      <div class="recording-label-tv" data-tv-label hidden>
+        <label class="recording-label-field">Season
+          <input type="number" name="season" disabled min="0" max="99" inputmode="numeric">
+        </label>
+        <label class="recording-label-field">Episode
+          <input type="number" name="episode" disabled min="1" max="999" inputmode="numeric">
+        </label>
+      </div>
+      <label class="recording-label-field recording-label-wide" data-tv-label hidden>Episode title
+        <input type="text" name="episodeTitle" disabled maxlength="200" spellcheck="false">
+      </label>`;
+    const audioLabel = `
+      <label class="recording-label-field recording-label-wide">Song title
+        <input type="text" name="recordingTitle" maxlength="200" spellcheck="false">
+      </label>
+      <label class="recording-label-field">Artist
+        <input type="text" name="recordingArtist" maxlength="200" spellcheck="false">
+      </label>
+      <label class="recording-label-field">Album
+        <input type="text" name="recordingAlbum" maxlength="200" spellcheck="false">
+      </label>`;
     dialog.innerHTML = `
       <form>
         <h2 id="record-to-library-title">Record to Library</h2>
@@ -218,6 +252,10 @@ window.robosRecordToLibrary = (() => {
             <input name="includeAudio" type="checkbox" checked> Include audio
           </label>
         </div>
+        <fieldset class="recording-label">
+          <legend>Label recording (optional)</legend>
+          <div class="recording-label-grid">${video ? videoLabel : audioLabel}</div>
+        </fieldset>
         <div class="record-to-library-live" hidden>
           <span class="record-to-library-dot" aria-hidden="true"></span> Recording
           <time aria-hidden="true">0:00</time>
@@ -243,12 +281,33 @@ window.robosRecordToLibrary = (() => {
     const modes = [...form.querySelectorAll('[data-mode]')];
     const livePanel = form.querySelector('[data-panel="live"]');
     const linkPanel = form.querySelector('[data-panel="link"]');
+    const labelFields = form.querySelector('.recording-label');
     let mode = video || systemAudio ? 'live' : 'link';
     let phase = 'idle';
     let missingTool;
     let recording;
     const regionPicker = hasRegionPicker ? createRegionPicker(form, player, updateControls) : null;
     captureArea.parentElement.hidden = !regionPicker;
+
+    const { recordingTitle, videoKind, releaseYear, season, episode, episodeTitle, recordingArtist, recordingAlbum } = form.elements;
+    if (video) {
+      videoKind.addEventListener('change', () => {
+        const tv = videoKind.value === 'tv';
+        labelFields.querySelector('[data-recording-title-label]').textContent = tv ? 'Show name' : 'Movie title';
+        labelFields.querySelector('[data-movie-label]').hidden = tv;
+        for (const field of labelFields.querySelectorAll('[data-tv-label]')) field.hidden = !tv;
+        recordingTitle.required = tv;
+        releaseYear.disabled = tv;
+        season.disabled = episode.disabled = episodeTitle.disabled = !tv;
+      });
+    }
+
+    function recordingLabel() {
+      const title = recordingTitle.value;
+      if (!video) return { title, artist: recordingArtist.value, album: recordingAlbum.value };
+      if (videoKind.value === 'tv') return { type: 'tv', title, season: season.value, episode: episode.value, episodeTitle: episodeTitle.value };
+      return { type: 'movie', title, year: releaseYear.value };
+    }
 
     function updateControls() {
       const idle = phase === 'idle';
@@ -274,6 +333,7 @@ window.robosRecordToLibrary = (() => {
       cancel.disabled = phase === 'starting' || phase === 'stopping';
       cancel.textContent = capturing ? 'Discard' : (phase === 'link' ? 'Cancel recording' : 'Close');
       indicator.hidden = !capturing;
+      labelFields.hidden = labelFields.disabled = !idle;
       progress.hidden = !working;
       progress.removeAttribute('value');
     }
@@ -299,7 +359,7 @@ window.robosRecordToLibrary = (() => {
     async function recordLink() {
       setPhase('link');
       status.textContent = 'Finding media…';
-      try { showResult(await player.startRecording({ url: url.value, includeAudio: includeAudio.checked })); }
+      try { showResult(await player.startRecording({ url: url.value, includeAudio: includeAudio.checked, label: recordingLabel() })); }
       catch (err) { showResult({ error: err.message }); }
     }
 
@@ -338,7 +398,7 @@ window.robosRecordToLibrary = (() => {
       let display;
       let crop;
       try {
-        const ready = await player.startDesktopRecording({ includeAudio: withAudio, sourceId });
+        const ready = await player.startDesktopRecording({ includeAudio: withAudio, sourceId, label: recordingLabel() });
         if (!ready.ok) { showResult(ready); return; }
         display = await navigator.mediaDevices.getDisplayMedia({
           video: { displaySurface: 'monitor', frameRate: { ideal: 30, max: 30 } },

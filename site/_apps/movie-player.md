@@ -81,6 +81,8 @@ flowchart TD
 
 Open **Record to Library** and choose **Desktop**. Move the player to the screen you want to capture. **Capture area** defaults to **Full screen**. To capture part of it, choose **Region**, then drag a rectangle on the screen preview. Choose **Start recording** when you’re ready. On Windows, **Include system audio** is on by default. Clear it to record a silent video. Choose **Stop & save** to add the MP4 to your library and open **Recently Added**. Live capture uses FFmpeg and ffprobe.
 
+Use **Label recording** to enter a movie title and optional release year, or a show name and optional episode details. Movie Player writes those labels into the MP4 and uses them for the metadata lookup after saving. A recording labeled with a show name alone appears under that show’s **Specials & Extras**.
+
 To save from a URL, switch to **Media link**, paste the link, and select **Save video**. **Include audio** is on by default. Movie Player looks for matching movie or TV metadata and artwork for linked videos. Files are saved under `~/.config/robos/movie-player/recordings/`.
 
 For media links, install yt-dlp and FFmpeg, including ffprobe, and make the commands available on your system PATH. The dialog opens the relevant installation instructions if a tool is missing. [yt-dlp installation](https://github.com/yt-dlp/yt-dlp/wiki/Installation) · [FFmpeg downloads](https://ffmpeg.org/download.html)

@@ -73,7 +73,71 @@ function runTool(command, args, { cwd, signal, onLine } = {}) {
   });
 }
 
-async function getVideoFile(input, directory, includeAudio, signal, { title, requireAudio } = {}) {
+function normalizeLabel(kind, input = {}) {
+  const readText = (value) => typeof value === 'string' ? Array.from(value.replace(/[\x00-\x1f\x7f]/g, ' ').trim()).slice(0, 200).join('') : '';
+  const readNumber = (value, minimum, maximum, name) => {
+    if (value == null || value === '') return null;
+    const number = Number(value);
+    if (!Number.isInteger(number) || number < minimum || number > maximum) {
+      throw new Error(`${name} must be between ${minimum} and ${maximum}.`);
+    }
+    return number;
+  };
+  const title = readText(input?.title);
+  if (kind === 'audio') {
+    const artist = readText(input?.artist);
+    const album = readText(input?.album);
+    if (!title && (artist || album)) throw new Error('Enter a song title to use the artist or album.');
+    return title ? { title, artist, album } : null;
+  }
+
+  if (input?.type === 'tv') {
+    if (!title) throw new Error('Enter the TV show name.');
+    const season = readNumber(input.season, 0, 99, 'Season');
+    const episode = readNumber(input.episode, 1, 999, 'Episode');
+    if ((season === null) !== (episode === null)) throw new Error('Enter both season and episode, or leave both blank.');
+    return { type: 'tv', title, season, episode, episodeTitle: readText(input.episodeTitle) };
+  }
+  const year = readNumber(input?.year, 1870, 2200, 'Release year');
+  if (!title && year !== null) throw new Error('Enter a movie title to use the release year.');
+  return title ? { type: 'movie', title, year } : null;
+}
+
+function metadataArgs(tags) {
+  return Object.entries(tags).flatMap(([key, value]) => ['-metadata', `${key}=${value ?? ''}`]);
+}
+
+function audioTags(label) {
+  return {
+    title: label.title,
+    ...(label.artist ? { artist: label.artist } : {}),
+    ...(label.album ? { album: label.album } : {}),
+  };
+}
+
+function videoTags(label) {
+  if (label.type === 'tv') {
+    return {
+      title: label.episodeTitle || label.title, album: label.title, show: label.title, date: '',
+      media_type: 10, season_number: label.season, episode_sort: label.episode, episode_id: '',
+    };
+  }
+  return {
+    title: label.title, album: label.year ? `${label.title} (${label.year})` : label.title,
+    date: label.year, media_type: 9, show: '', season_number: '', episode_sort: '', episode_id: '',
+  };
+}
+
+function labeledFileTitle(label) {
+  if (label?.type === 'tv') {
+    const code = label.season === null ? null
+      : `S${String(label.season).padStart(2, '0')}E${String(label.episode).padStart(2, '0')}`;
+    return [label.title, code, label.episodeTitle].filter(Boolean).join(' - ');
+  }
+  return label?.title;
+}
+
+async function getVideoFile(input, directory, includeAudio, signal, { tags = {}, requireAudio } = {}) {
   const raw = await runTool('ffprobe', ['-v', 'error', '-show_streams', '-of', 'json', input], { signal });
   const { streams } = JSON.parse(raw);
   const video = streams.find(stream => stream.codec_type === 'video' && !stream.disposition?.attached_pic);
@@ -85,14 +149,13 @@ async function getVideoFile(input, directory, includeAudio, signal, { title, req
   if (video.codec_name === 'h264' && ['yuv420p', 'yuvj420p'].includes(video.pix_fmt)) args.push('-c:v', 'copy');
   else args.push('-c:v', 'libx264', '-preset', 'veryfast', '-pix_fmt', 'yuv420p', '-vf', 'pad=ceil(iw/2)*2:ceil(ih/2)*2');
   if (audio) args.push('-map', `0:${audio.index}`, '-c:a', audio.codec_name === 'aac' ? 'copy' : 'aac');
-  args.push('-map_metadata', '0');
-  if (title) args.push('-metadata', `title=${title}`);
+  args.push('-map_metadata', '0', ...metadataArgs(tags));
   args.push('-movflags', '+faststart', output);
   await runTool('ffmpeg', args, { signal });
   return output;
 }
 
-async function downloadMedia(kind, url, includeAudio, temporary, signal, onProgress) {
+async function downloadMedia(kind, url, includeAudio, label, temporary, signal, onProgress) {
   const args = [
     '--ignore-config', '--no-plugin-dirs', '--no-playlist', '--playlist-items', '1',
     '--no-simulate', '--no-colors', '--newline', '--progress',
@@ -138,8 +201,16 @@ async function downloadMedia(kind, url, includeAudio, temporary, signal, onProgr
   if (!stats.isFile() || !stats.size) throw new Error('The recording returned an empty file.');
   if (kind === 'audio' && path.extname(input) !== '.mp3') throw new Error('This link did not return an audio track.');
   onProgress({ message: 'Preparing recording…' });
-  const output = kind === 'video' ? await getVideoFile(input, temporary, includeAudio, signal) : input;
-  return { output, title: item.title };
+  const title = labeledFileTitle(label) || item.title;
+  if (kind === 'video') {
+    const output = await getVideoFile(input, temporary, includeAudio, signal, { tags: label ? videoTags(label) : {} });
+    return { output, title };
+  }
+  if (!label) return { output: input, title };
+  const output = path.join(temporary, 'labeled.mp3');
+  await runTool('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-nostdin', '-i', input, '-map', '0',
+    '-c', 'copy', '-map_metadata', '0', ...metadataArgs(audioTags(label)), output], { signal });
+  return { output, title };
 }
 
 async function prepareTools(kind, signal) {
@@ -157,14 +228,14 @@ function captureTitle(kind) {
 function createMediaRecorder({ kind, directory, index }) {
   let active = null;
 
-  function startJob(produce, onProgress) {
+  function startJob(produce, onProgress, label) {
     const job = { controller: new AbortController(), saving: false };
     active = job;
-    job.done = record(job, produce, onProgress).finally(() => { active = null; });
+    job.done = record(job, produce, onProgress, label).finally(() => { active = null; });
     return job;
   }
 
-  async function record(job, produce, onProgress) {
+  async function record(job, produce, onProgress, label) {
     const { signal } = job.controller;
     let temporary;
     let destination;
@@ -183,7 +254,7 @@ function createMediaRecorder({ kind, directory, index }) {
       onProgress({ message: 'Indexing in your library…', saving: true });
       const file = path.join(destination, recordingName(title) + path.extname(output));
       await fs.rename(output, file);
-      const track = await index(file, { source });
+      const track = await index(file, label ? { source, label } : { source });
       indexed = true;
       return { ok: true, track };
     } catch (err) {
@@ -203,16 +274,23 @@ function createMediaRecorder({ kind, directory, index }) {
     start(options, onProgress = () => {}) {
       if (active) return Promise.resolve(busyResult());
       let url;
-      try { url = mediaUrl(options?.url); } catch (err) { return Promise.resolve({ ok: false, error: err.message }); }
+      let label;
+      try {
+        url = mediaUrl(options?.url);
+        label = normalizeLabel(kind, options?.label);
+      } catch (err) { return Promise.resolve({ ok: false, error: err.message }); }
       onProgress({ message: 'Finding media…' });
       return startJob((_job, temporary, signal) =>
-        downloadMedia(kind, url, options?.includeAudio !== false, temporary, signal, onProgress), onProgress).done;
+        downloadMedia(kind, url, options?.includeAudio !== false, label, temporary, signal, onProgress), onProgress, label).done;
     },
 
     async startCapture(options, onProgress = () => {}) {
       if (active) return busyResult();
+      let label;
+      try { label = normalizeLabel(kind, options?.label); }
+      catch (err) { return { ok: false, error: err.message }; }
       const includeAudio = kind === 'audio' || options?.includeAudio !== false;
-      const title = captureTitle(kind);
+      const title = labeledFileTitle(label) || captureTitle(kind);
       let opened;
       const ready = new Promise(resolve => { opened = resolve; });
       const job = startJob(async (job, temporary, signal) => {
@@ -258,14 +336,15 @@ function createMediaRecorder({ kind, directory, index }) {
         if (!bytes) throw new Error('No media was captured. Record for a little longer and try again.');
         onProgress({ message: 'Preparing recording…', saving: true });
         if (kind === 'video') {
-          const output = await getVideoFile(input, temporary, includeAudio, signal, { title, requireAudio: includeAudio });
+          const tags = label ? videoTags(label) : { title };
+          const output = await getVideoFile(input, temporary, includeAudio, signal, { tags, requireAudio: includeAudio });
           return { output, title, source: 'desktop' };
         }
         const output = path.join(temporary, 'capture.mp3');
         await runTool('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-nostdin', '-i', input, '-map', '0:a:0',
-          '-codec:a', 'libmp3lame', '-q:a', '2', '-metadata', `title=${title}`, output], { signal });
+          '-codec:a', 'libmp3lame', '-q:a', '2', ...metadataArgs(label ? audioTags(label) : { title }), output], { signal });
         return { output, title, source: 'desktop' };
-      }, onProgress);
+      }, onProgress, label);
       return Promise.race([ready, job.done]);
     },
 
@@ -360,12 +439,13 @@ function registerMediaRecorder({ app, ipcMain, clipboard, shell, desktopCapturer
     if (sourceId && (options.kind !== 'video' || regionPreview?.frame !== senderFrame || regionPreview.sourceId !== sourceId)) {
       return { ok: false, error: 'Refresh the screen preview and select the region again.' };
     }
+    const start = recorder.startCapture({ includeAudio, label: input?.label }, progressFor(sender));
+    const pending = recorder.pending;
+    if (!pending) return start;
     const previousThrottling = sender.backgroundThrottling;
     if (sourceId) sender.backgroundThrottling = false;
     const cancel = () => recorder.cancel();
     sender.once('destroyed', cancel);
-    const start = recorder.startCapture({ includeAudio }, progressFor(sender));
-    const pending = recorder.pending;
     pending.then(() => {
       if (displayRequest?.frame === senderFrame) displayRequest = null;
       if (sourceId && !sender.isDestroyed()) sender.backgroundThrottling = previousThrottling;

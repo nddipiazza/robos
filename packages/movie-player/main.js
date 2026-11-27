@@ -1060,11 +1060,11 @@ mediaRecorder?.registerMediaRecorder({
   app, ipcMain, clipboard, shell, desktopCapturer, screen, session, getWindow: () => mainWindow,
   kind: 'video',
   directory: path.join(mediaLibrary.configDir, 'movie-player', 'recordings'),
-  async index(file, { source }) {
+  async index(file, { source, label }) {
     const [track] = await indexLocalFiles([file]);
     if (!track) throw new Error('The recording could not be indexed.');
     sendToWindow('audio:library-scan-batch', { library: mediaLibrary.getLibrary() });
-    if (source === 'link') enrichRecordedMovie(track.id);
+    if (source === 'link' || label) enrichRecordedMovie(track.id);
     videoSegments.detect(track);
     return track;
   },

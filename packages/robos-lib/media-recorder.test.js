@@ -19,6 +19,15 @@ test('Record to Library rejects invalid and non-web URLs before invoking tools',
   }
 });
 
+test('incomplete manual labels are rejected before reserving a recording', async () => {
+  const audio = createMediaRecorder({ kind: 'audio' });
+  const movie = createMediaRecorder({ kind: 'video' });
+  assert.match((await audio.startCapture({ label: { artist: 'Artist only' } })).error, /song title/);
+  assert.match((await movie.startCapture({ label: { type: 'tv', title: 'The Show', season: 1 } })).error, /both season and episode/);
+  assert.equal(audio.pending, undefined);
+  assert.equal(movie.pending, undefined);
+});
+
 const requiredTools = ['yt-dlp', 'ffmpeg', 'ffprobe'];
 const missingTool = requiredTools.find(tool => spawnSync(tool, [tool === 'yt-dlp' ? '--version' : '-version'], {
   windowsHide: true, stdio: 'ignore',
@@ -89,6 +98,13 @@ test('Record to Library saves playable, indexed files and cleans up canceled rec
   assert.ok(song.track.duration > 0);
   assert.deepEqual(probe(song.track.filePath), ['audio']);
   assert.equal(audio.reload().tracks[0].id, song.track.id);
+  const taggedSong = await audio.recorder.start({ url: url + '/Library%20Fixture.mp4', label: {
+    title: 'All Night = Live', artist: 'Artist Named by Listener', album: 'The Album',
+  } });
+  assert.equal(taggedSong.ok, true, taggedSong.error);
+  assert.equal(taggedSong.track.title, 'All Night = Live');
+  assert.equal(taggedSong.track.artist, 'Artist Named by Listener');
+  assert.equal(taggedSong.track.album, 'The Album');
 
   const movie = makeRecorder('movie', 'video');
   const withAudio = await movie.recorder.start({ url: url + '/watch' });
@@ -117,7 +133,7 @@ test('Record to Library saves playable, indexed files and cleans up canceled rec
 const liveTools = ['ffmpeg', 'ffprobe'];
 const missingLiveTool = liveTools.find(tool => spawnSync(tool, ['-version'], { windowsHide: true, stdio: 'ignore' }).status !== 0);
 
-test('live recording writes chunks to disk and keeps only the selected streams in the indexed file', {
+test('live recordings embed manual labels, preserve them on reload, and keep the selected streams', {
   skip: missingLiveTool && `Install ${missingLiveTool} to run the live recording integration check`,
   timeout: 30000,
 }, async (t) => {
@@ -129,28 +145,49 @@ test('live recording writes chunks to disk and keeps only the selected streams i
   { windowsHide: true });
   const data = await fs.readFile(fixture);
   const expected = [
-    { kind: 'audio', ext: '.mp3', streams: ['audio'] },
-    { kind: 'video', ext: '.mp4', streams: ['video', 'audio'] },
-    { kind: 'video', includeAudio: false, ext: '.mp4', streams: ['video'] },
+    { kind: 'audio', ext: '.mp3', streams: ['audio'], label: { title: 'Live Recording', artist: 'The Artist', album: 'Live' },
+      tags: { title: 'Live Recording', artist: 'The Artist', album: 'Live' } },
+    { kind: 'video', ext: '.mp4', streams: ['video', 'audio'], label: { title: 'Fictional Show', type: 'tv', season: 2, episode: 3, episodeTitle: 'Opening Night' },
+      tags: { mediaType: 'tv', showName: 'Fictional Show', seasonNumber: 2, episodeNumber: 3, title: 'Fictional Show · S02E03 · Opening Night' } },
+    { kind: 'video', includeAudio: false, ext: '.mp4', streams: ['video'], label: { title: 'Project S01E02', type: 'movie', year: 2020 },
+      tags: { mediaType: 'movie', title: 'Project S01E02', year: 2020 } },
+    { kind: 'video', includeAudio: false, ext: '.mp4', streams: ['video'], label: { title: 'Fictional Show', type: 'tv' },
+      tags: { mediaType: 'tv', showName: 'Fictional Show', seasonNumber: 0, episodeNumber: 0, episodeCode: 'Unnumbered' } },
   ];
   const directory = path.join(root, 'recordings');
   let indexed = 0;
-  for (const { kind, includeAudio, ext, streams } of expected) {
+  for (const { kind, includeAudio, ext, streams, label, tags } of expected) {
+    const player = kind === 'video' ? 'movie' : 'audio';
+    const { MediaLibrary } = require(`../${player}-player/lib/media-library`);
+    const configDir = path.join(root, `config-${indexed}`);
+    const library = new MediaLibrary({ configDir });
     const recorder = createMediaRecorder({
       kind, directory,
       async index(filePath, metadata) {
         assert.equal(metadata.source, 'desktop');
+        assert.equal(metadata.label.title, label.title);
         indexed++;
-        return { filePath };
+        const track = await library.parseTrack(filePath);
+        library.mergeTracks([track]);
+        return track;
       },
     });
-    assert.deepEqual(await recorder.startCapture({ includeAudio }), { ok: true });
+    assert.deepEqual(await recorder.startCapture({ includeAudio, label }), { ok: true });
     await recorder.appendCapture(data.subarray(0, 1200));
     await recorder.appendCapture(data.subarray(1200));
     const result = await recorder.finishCapture();
     assert.equal(result.ok, true, result.error);
     const saved = result.track.filePath;
     assert.equal(path.extname(saved), ext);
+    assert.ok(path.basename(saved).startsWith(label.title));
+    const reloaded = new MediaLibrary({ configDir }).getLibrary().tracks[0];
+    for (const [key, value] of Object.entries(tags)) {
+      assert.equal(result.track[key], value, key);
+      assert.equal(reloaded[key], value, key);
+    }
+    if (kind === 'video' && label.type === 'movie') {
+      assert.equal(require('../movie-player/lib/library-index').inferTvShowEpisode(reloaded), null);
+    }
     const media = JSON.parse(execFileSync('ffprobe', ['-v', 'error', '-show_streams', '-of', 'json', saved], {
       encoding: 'utf8', windowsHide: true,
     }));

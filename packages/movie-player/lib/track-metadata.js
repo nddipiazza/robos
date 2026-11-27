@@ -102,7 +102,23 @@ function trackFromMetadata(filePath, metadata, parser, coverCache = null) {
   const parentDir = path.basename(path.dirname(filePath));
   const grandParentDir = path.basename(path.dirname(path.dirname(filePath)));
   const isVideo = VIDEO_EXTENSIONS.has(path.extname(filePath).toLowerCase());
-  const tvInfo = isVideo ? parseVideoMediaInfo(common.title || path.parse(filePath).name, parentDir, grandParentDir, filePath) : null;
+  const showName = isVideo && typeof common.tvShow === 'string' ? common.tvShow.trim() : '';
+  const embeddedVideoType = showName ? 'tv' : (isVideo && common.stik === 9 ? 'movie' : null);
+  let tvInfo = null;
+  if (showName) {
+    const numbered = Number.isInteger(common.tvSeason) && Number.isInteger(common.tvEpisode) && common.tvEpisode > 0;
+    const seasonNumber = numbered ? common.tvSeason : 0;
+    const episodeNumber = numbered ? common.tvEpisode : 0;
+    const episodeCode = numbered
+      ? `S${String(seasonNumber).padStart(2, '0')}E${String(episodeNumber).padStart(2, '0')}` : 'Unnumbered';
+    const episodeTitle = common.title && common.title !== showName ? common.title : null;
+    tvInfo = {
+      isTvShow: true, showName, seasonNumber, episodeNumber, episodeCode, episodeTitle,
+      displayTitle: [showName, numbered ? episodeCode : null, episodeTitle].filter(Boolean).join(' · '),
+    };
+  } else if (isVideo && !embeddedVideoType) {
+    tvInfo = parseVideoMediaInfo(common.title || path.parse(filePath).name, parentDir, grandParentDir, filePath);
+  }
 
   const cleaned = cleanMovieTitle(common.title || path.parse(filePath).name);
   const folderCleaned = cleanMovieTitle(parentDir);
@@ -133,6 +149,7 @@ function trackFromMetadata(filePath, metadata, parser, coverCache = null) {
     discNumber: (tvInfo && tvInfo.isTvShow && tvInfo.seasonNumber) ? tvInfo.seasonNumber : (common.disk?.no || null),
     discTotal: common.disk?.of || null,
     mediaType: isVideo ? ((tvInfo && tvInfo.isTvShow) ? 'tv' : 'movie') : 'audio',
+    ...(embeddedVideoType ? { embeddedVideoType, embeddedEpisodeTitle: !!tvInfo?.episodeTitle } : {}),
     showName: (tvInfo && tvInfo.isTvShow) ? tvInfo.showName : null,
     seasonNumber: (tvInfo && tvInfo.isTvShow) ? tvInfo.seasonNumber : null,
     episodeNumber: (tvInfo && tvInfo.isTvShow) ? tvInfo.episodeNumber : null,
@@ -518,7 +535,7 @@ function parseVideoMediaInfo(rawName, parentDir = '', grandParentDir = '', fullP
  * Returns true if any property on `track` was updated.
  */
 function upgradeTrackVideoGrouping(track) {
-  if (!track) return false;
+  if (!track || track.embeddedVideoType) return false;
   if (track.mediaService) {
     let changed = false;
     const set = (k, v) => { if (v !== undefined && track[k] !== v) { track[k] = v; changed = true; } };

@@ -122,7 +122,7 @@ const tvEpisodeCache = new WeakMap();
  * or from scene patterns in title/album/filePath) and returns its Show/Season/Episode metadata.
  */
 function inferTvShowEpisode(track) {
-  if (!track) return null;
+  if (!track || track.embeddedVideoType === 'movie') return null;
   if (tvEpisodeCache.has(track)) return tvEpisodeCache.get(track);
 
   if (track.mediaType === 'tv' && track.showName) {

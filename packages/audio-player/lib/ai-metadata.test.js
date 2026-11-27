@@ -224,3 +224,20 @@ test('previewAiMetadataFixes and applyAiMetadataFixes enrich tags, generate open
   assert.equal(onDisk.trackNumber, 1);
   assert.equal(onDisk.hasAttachedPic, true);
 });
+
+test('MusicBrainz recording label matches the named release and declines ambiguous title-only matches', async () => {
+  const { lookupMusicBrainz } = require('./ai-metadata');
+  const candidate = (artist, id) => ({
+    id, title: 'The Same Song', length: 181000, score: 100, 'artist-credit': [{ name: artist }],
+    releases: [{ id: 'default', title: 'Other Release', status: 'Official', date: '2003' },
+      { id: 'labeled', title: 'Named Release', status: 'Official', date: '2006' }],
+  });
+  const fetchJson = async () => ({ recordings: [candidate('Other Artist', 'one'), candidate('Matched Artist', 'two')] });
+  const metadata = await lookupMusicBrainz({
+    title: 'The Same Song', artist: 'Matched Artist', album: 'Named Release', duration: 43, exactMatch: true,
+  }, fetchJson);
+  assert.equal(metadata.recordingMbid, 'two');
+  assert.equal(metadata.releaseMbid, 'labeled');
+  assert.equal(metadata.album, 'Named Release');
+  assert.equal(await lookupMusicBrainz({ title: 'The Same Song', duration: 180, exactMatch: true }, fetchJson), null);
+});

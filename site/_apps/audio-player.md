@@ -65,6 +65,8 @@ flowchart TD
 
 On Windows, open **Record to Library**, select **PC audio**, and choose **Start recording** to capture your current audio output. Choose **Stop & save** to add the MP3 to your library. Live capture uses FFmpeg.
 
+Use **Label recording** before you start to enter a song title and, optionally, the artist and album. Audio Player embeds those labels in the MP3 and uses them to look for a MusicBrainz match.
+
 To save from a URL, switch to **Media link**, paste the link, and select **Save audio**. Audio Player extracts the audio as an MP3, reads available source tags and artwork, and adds the track to **Recently Added**. If the album tag is missing, a matching MusicBrainz recording can supply it. Files are saved under `~/.config/robos/audio-player/recordings/`.
 
 For media links, install yt-dlp and FFmpeg so both commands are available on your system PATH. The dialog opens the relevant installation instructions if a tool is missing. [yt-dlp installation](https://github.com/yt-dlp/yt-dlp/wiki/Installation) · [FFmpeg downloads](https://ffmpeg.org/download.html)

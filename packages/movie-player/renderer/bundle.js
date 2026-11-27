@@ -14639,7 +14639,7 @@
       }
       var tvEpisodeCache = /* @__PURE__ */ new WeakMap();
       function inferTvShowEpisode3(track) {
-        if (!track) return null;
+        if (!track || track.embeddedVideoType === "movie") return null;
         if (tvEpisodeCache.has(track)) return tvEpisodeCache.get(track);
         if (track.mediaType === "tv" && track.showName) {
           const seasonNumber = track.seasonNumber != null ? Number(track.seasonNumber) : track.discNumber != null ? Number(track.discNumber) : 1;
