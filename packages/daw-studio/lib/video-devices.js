@@ -1435,8 +1435,9 @@ class LiveCameraMonitor {
       return { ok: false, error: 'No video source configured' };
     }
 
-    const sourceSig = `${trackId}|${videoConfig.devicePath || ''}|${videoConfig.streamUrl || ''}|${videoConfig.qualityPreset || ''}`;
+    const sourceSig = `${videoConfig.devicePath || ''}|${videoConfig.streamUrl || ''}|${videoConfig.qualityPreset || ''}`;
     if (this.session && this.session.sourceSig === sourceSig && this.session.proc) {
+      this.session.trackId = trackId;
       this.session.onLiveFrame = onLiveFrame;
       return {
         ok: true,

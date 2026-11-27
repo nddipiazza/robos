@@ -2660,7 +2660,14 @@ function populateVideoModalSourcesDropdown() {
   if (!srcSel) return;
 
   const robosCams = discoveredVideoSources.filter(s => s.isRobosAndroidCam || s.sourceType === 'robos-ip-camera');
-  const v4l2Cams = discoveredVideoSources.filter(s => s.sourceType === 'v4l2' || Boolean(s.devicePath));
+  // Prioritize external USB cameras (OBSBOT, Elgato, Logitech, etc.) ahead of built-in laptop Integrated Camera
+  const v4l2Cams = discoveredVideoSources
+    .filter(s => s.sourceType === 'v4l2' || Boolean(s.devicePath))
+    .sort((a, b) => {
+      const aBuiltIn = /\b(integrated|internal|front)\b/i.test(`${a.shortName || ''} ${a.label || ''}`) ? 1 : 0;
+      const bBuiltIn = /\b(integrated|internal|front)\b/i.test(`${b.shortName || ''} ${b.label || ''}`) ? 1 : 0;
+      return aBuiltIn - bBuiltIn;
+    });
   const otherIpCams = discoveredVideoSources.filter(s => !s.isRobosAndroidCam && s.sourceType !== 'robos-ip-camera' && s.sourceType !== 'v4l2' && !s.devicePath);
 
   if (activeVideoModalType === 'robos-ip-camera') {
@@ -2781,6 +2788,46 @@ async function refreshAddVideoModalPreview() {
     if (statusEl) statusEl.textContent = 'Enter a RobOS IP Camera IP/Host or select a camera first.';
     return;
   }
+
+  // 1. Direct unauthenticated HTTP MJPEG stream (e.g. RobOS IP Camera): stream live 30 fps directly in `<img>`!
+  const directHttpMjpeg = vcfg.streamUrl && /^https?:/i.test(vcfg.streamUrl) && !vcfg.username && !/^rtsps?:/i.test(vcfg.streamUrl)
+    ? ((vcfg.isRobosAndroidCam || vcfg.sourceType === 'robos-ip-camera') && !/[?&](timestamp|osd|clean)=/i.test(vcfg.streamUrl)
+      ? `${vcfg.streamUrl}${vcfg.streamUrl.includes('?') ? '&' : '?'}timestamp=0`
+      : vcfg.streamUrl)
+    : '';
+  if (directHttpMjpeg && imgEl) {
+    window.robos?.stopVideoLiveMonitor?.().catch(() => {});
+    imgEl.src = directHttpMjpeg;
+    imgEl.classList.remove('hidden');
+    phEl?.classList.add('hidden');
+    if (statusEl) statusEl.textContent = `LIVE HD stream connected: ${vcfg.label}`;
+    return;
+  }
+
+  // 2. USB V4L2 Webcam (e.g. OBSBOT Tiny 2 Lite), RTSP, or Authenticated IP Camera:
+  //    Stream continuous 15 fps live MJPEG via `startVideoLiveMonitor` (`__modal_preview__`)!
+  if (typeof window.robos?.startVideoLiveMonitor === 'function') {
+    if (statusEl) statusEl.textContent = `Starting live HD video stream from ${vcfg.shortName || vcfg.label}...`;
+    if (phEl && imgEl?.classList.contains('hidden')) {
+      phEl.textContent = `Starting live HD video stream from ${vcfg.shortName || vcfg.label}...`;
+    }
+    activeLiveMonitorSig = `__modal_preview__|${vcfg.devicePath || ''}|${vcfg.streamUrl || ''}|${vcfg.qualityPreset || ''}`;
+    const startRes = await window.robos.startVideoLiveMonitor({
+      trackId: '__modal_preview__',
+      videoConfig: vcfg,
+    });
+    if (startRes?.ok) {
+      if (startRes.latestDataUrl && imgEl) {
+        imgEl.src = startRes.latestDataUrl;
+        imgEl.classList.remove('hidden');
+        phEl?.classList.add('hidden');
+        if (statusEl) statusEl.textContent = `LIVE HD stream connected: ${vcfg.label}`;
+      }
+      return;
+    }
+  }
+
+  // 3. Fallback single-frame snapshot if `startVideoLiveMonitor` is unavailable
   if (statusEl) statusEl.textContent = `Grabbing HD preview frame from ${vcfg.shortName || vcfg.label}...`;
   const res = await window.robos?.captureVideoSnapshot?.({ videoConfig: vcfg });
   if (res?.ok && res.dataUrl && imgEl) {
@@ -2792,7 +2839,7 @@ async function refreshAddVideoModalPreview() {
     imgEl?.classList.add('hidden');
     if (phEl) {
       phEl.classList.remove('hidden');
-      phEl.textContent = res?.error || 'Could not grab preview frame — verify camera is streaming.';
+      phEl.textContent = res?.error || 'Could not start camera preview — verify camera is connected.';
     }
     if (statusEl) statusEl.textContent = res?.error || 'Camera preview unavailable.';
   }
@@ -2853,8 +2900,17 @@ async function openAddVideoModal({ scanLan = true, includeSubnetSweep = false, p
   }
 }
 
-function closeAddVideoModal() {
+function closeAddVideoModal({ preserveStreamForAddedTrack = false } = {}) {
   document.getElementById('add-video-modal')?.classList.add('hidden');
+  const imgEl = document.getElementById('vid-modal-preview-img');
+  if (imgEl && /^https?:/i.test(imgEl.getAttribute('src') || '')) {
+    imgEl.removeAttribute('src');
+  }
+  activeLiveMonitorSig = '';
+  if (!preserveStreamForAddedTrack) {
+    // Either switch `LiveCameraMonitor` back to the session's active Video Output track, or stop it cleanly!
+    syncVideoOutputMonitor({ forcePush: true });
+  }
 }
 
 async function confirmAddVideoTrackFromModal() {
@@ -2894,7 +2950,7 @@ async function confirmAddVideoTrackFromModal() {
   videoLiveCamEnabled = true;
   if (!videoPopoutOpen) videoDockOpen = true;
 
-  closeAddVideoModal();
+  closeAddVideoModal({ preserveStreamForAddedTrack: true });
   markDirty(true);
   switchView('studio-stage');
   renderStudio();
@@ -12498,8 +12554,8 @@ async function init() {
   document.getElementById('btn-open-add-video-modal')?.addEventListener('click', () => openAddVideoModal({ scanLan: true }));
   document.getElementById('btn-quick-add-video')?.addEventListener('click', () => openAddVideoModal({ scanLan: true }));
   document.getElementById('btn-empty-add-video')?.addEventListener('click', () => openAddVideoModal({ scanLan: true, preferredType: 'robos-ip-camera' }));
-  document.getElementById('btn-vid-modal-close')?.addEventListener('click', closeAddVideoModal);
-  document.getElementById('btn-vid-modal-cancel')?.addEventListener('click', closeAddVideoModal);
+  document.getElementById('btn-vid-modal-close')?.addEventListener('click', () => closeAddVideoModal());
+  document.getElementById('btn-vid-modal-cancel')?.addEventListener('click', () => closeAddVideoModal());
   document.getElementById('btn-vid-scan-lan')?.addEventListener('click', () => openAddVideoModal({ scanLan: true, includeSubnetSweep: true }));
   document.getElementById('btn-vid-refresh-preview')?.addEventListener('click', () => refreshAddVideoModalPreview());
   document.getElementById('btn-vid-confirm-add')?.addEventListener('click', () => confirmAddVideoTrackFromModal());
@@ -12614,6 +12670,24 @@ async function init() {
   if (typeof window.robos?.onVideoLiveFrame === 'function') {
     window.robos.onVideoLiveFrame((frame) => {
       if (!frame?.dataUrl) return;
+      // 1. Live 15 fps camera preview inside `"Add Video Input Track"` modal!
+      const addVidModal = document.getElementById('add-video-modal');
+      if (addVidModal && !addVidModal.classList.contains('hidden') && (!frame.trackId || frame.trackId === '__modal_preview__')) {
+        const modalImg = document.getElementById('vid-modal-preview-img');
+        const modalPh = document.getElementById('vid-modal-preview-placeholder');
+        const modalStatus = document.getElementById('vid-modal-status');
+        if (modalImg) {
+          modalImg.setAttribute('src', frame.dataUrl);
+          modalImg.classList.remove('hidden');
+          modalPh?.classList.add('hidden');
+        }
+        if (modalStatus && /^Starting live HD/i.test(modalStatus.textContent || '')) {
+          const vcfg = buildSelectedModalVideoConfig();
+          modalStatus.textContent = `LIVE HD stream connected: ${vcfg.label || 'Camera'}`;
+        }
+        return;
+      }
+
       if (frame.trackId) {
         liveVideoFrameByTrack.set(frame.trackId, frame.dataUrl);
       }
