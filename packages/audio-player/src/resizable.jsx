@@ -34,46 +34,49 @@ export function useLayoutPref(key, fallback) {
 
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 
-// Drags with pointer capture; `onMove(dx)` gets the distance from the start.
-function startDrag(e, onMove, onEnd) {
+// Drags with pointer capture; onMove gets the distance from the start.
+function startDrag(e, onMove, axis = 'clientX') {
   if (e.button !== 0) return;
   e.preventDefault();
   e.stopPropagation();
   const el = e.currentTarget;
-  const startX = e.clientX;
+  const start = e[axis];
+  const resizeClass = axis === 'clientY' ? 'is-resizing-height' : 'is-resizing';
   try { el.setPointerCapture(e.pointerId); } catch {}
-  document.body.classList.add('is-resizing');
-  const move = (ev) => onMove(ev.clientX - startX);
+  document.body.classList.add(resizeClass);
+  const move = (ev) => onMove(ev[axis] - start);
   const up = () => {
     el.removeEventListener('pointermove', move);
     el.removeEventListener('pointerup', up);
     el.removeEventListener('pointercancel', up);
-    document.body.classList.remove('is-resizing');
-    if (onEnd) onEnd();
+    el.removeEventListener('lostpointercapture', up);
+    document.body.classList.remove(resizeClass);
   };
   el.addEventListener('pointermove', move);
   el.addEventListener('pointerup', up);
   el.addEventListener('pointercancel', up);
+  el.addEventListener('lostpointercapture', up);
 }
 
 /**
- * Vertical divider that resizes the pane beside it. `side` is where that pane
- * sits: 'left' (dragging right grows it) or 'right' (dragging left grows it).
+ * Divider that resizes the neighboring pane. A horizontal divider resizes
+ * height. A vertical divider resizes width.
  */
-export function Splitter({ id, width, onChange, min, max, defaultWidth, side = 'left', label, className = '', style }) {
+export function Splitter({ id, size, onChange, min, max, defaultSize, side = 'left', orientation = 'vertical', label, className = '', style }) {
   const hi = typeof max === 'function' ? max() : max;
-  const sign = side === 'left' ? 1 : -1;
+  const horizontal = orientation === 'horizontal';
+  const sign = side === 'right' || side === 'bottom' ? -1 : 1;
   const onPointerDown = (e) => {
-    const start = width;
     const limit = typeof max === 'function' ? max() : max;
-    startDrag(e, dx => onChange(clamp(Math.round(start + sign * dx), min, limit)));
+    startDrag(e, distance => onChange(clamp(Math.round(size + sign * distance), min, limit)), horizontal ? 'clientY' : 'clientX');
   };
   const onKeyDown = (e) => {
     const step = e.shiftKey ? 64 : 16;
-    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+    const [less, more] = horizontal ? ['ArrowUp', 'ArrowDown'] : ['ArrowLeft', 'ArrowRight'];
+    if (e.key === less || e.key === more) {
       e.preventDefault();
-      const dir = e.key === 'ArrowRight' ? 1 : -1;
-      onChange(clamp(width + sign * dir * step, min, hi));
+      const dir = e.key === more ? 1 : -1;
+      onChange(clamp(size + sign * dir * step, min, hi));
     } else if (e.key === 'Home') { e.preventDefault(); onChange(min); }
     else if (e.key === 'End') { e.preventDefault(); onChange(hi); }
   };
@@ -83,15 +86,15 @@ export function Splitter({ id, width, onChange, min, max, defaultWidth, side = '
       className={`splitter ${className}`}
       style={style}
       role="separator"
-      aria-orientation="vertical"
+      aria-orientation={orientation}
       aria-label={label}
-      aria-valuenow={Math.round(width)}
+      aria-valuenow={Math.round(size)}
       aria-valuemin={min}
       aria-valuemax={Math.round(hi)}
       tabIndex={0}
       title={`${label}: drag to resize, double-click to reset`}
       onPointerDown={onPointerDown}
-      onDoubleClick={() => onChange(defaultWidth)}
+      onDoubleClick={() => onChange(defaultSize)}
       onKeyDown={onKeyDown}
     />
   );

@@ -749,6 +749,9 @@ export default function App() {
   const currentTrack = playlist[currentTrackIndex] || playlist[0] || null;
 
   const libraryById = useMemo(() => new Map(library.tracks.map(t => [t.id, t])), [library.tracks]);
+  const lyricsTime = useCallback(() => outputTarget !== 'local'
+    ? castClock.now()
+    : playerRef.current?.audio?.current?.currentTime ?? null, [outputTarget]);
 
   // Cloud stream URLs embed the stream server's port, which changes every launch,
   // so always prefer the library's fresh URL for cloud tracks.
@@ -2046,7 +2049,7 @@ export default function App() {
               <Lyrics
                 track={libraryById.get(currentTrack?.id) || currentTrack}
                 duration={decodedDuration?.src === resolveSrc(currentTrack) ? decodedDuration.seconds : currentTrack?.duration}
-                getTime={() => (outputTarget !== 'local' ? castClock.now() : playerRef.current?.audio?.current?.currentTime ?? null)}
+                getTime={lyricsTime}
                 onSeek={(t) => {
                   if (outputTarget !== 'local') handleCastSeek(t);
                   else if (playerRef.current?.audio?.current) playerRef.current.audio.current.currentTime = t;
@@ -2133,11 +2136,11 @@ export default function App() {
               <Splitter
                 id="playlists-splitter"
                 label="Playlist list width"
-                width={playlistSidebarWidth}
+                size={playlistSidebarWidth}
                 onChange={setPlaylistSidebarWidth}
                 min={180}
                 max={() => Math.max(220, Math.min(560, window.innerWidth - 700))}
-                defaultWidth={PLAYLIST_SIDEBAR_WIDTH}
+                defaultSize={PLAYLIST_SIDEBAR_WIDTH}
               />
 
               {/* Right Detail Pane: Playlist View */}

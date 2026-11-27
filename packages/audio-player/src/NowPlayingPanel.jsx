@@ -236,11 +236,11 @@ export default function NowPlayingPanel({
         className="overlay edge-left"
         label="Now Playing width"
         side="right"
-        width={Math.min(dockWidth, dockMaxWidth())}
+        size={Math.min(dockWidth, dockMaxWidth())}
         onChange={setDockWidth}
         min={240}
         max={dockMaxWidth}
-        defaultWidth={DOCK_WIDTH}
+        defaultSize={DOCK_WIDTH}
       />
       <div className="np-head">
         <div className="np-head-title">

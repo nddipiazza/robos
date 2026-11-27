@@ -156,11 +156,11 @@ export default function Library({
         className="overlay"
         style={{ left: navWidth - 5 }}
         label="Library sidebar width"
-        width={navWidth}
+        size={navWidth}
         onChange={setNavWidth}
         min={140}
         max={420}
-        defaultWidth={NAV_WIDTH}
+        defaultSize={NAV_WIDTH}
       />
       <nav className="lib-nav" aria-label="Library categories">
         <div className="lib-nav-group">

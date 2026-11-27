@@ -18147,43 +18147,46 @@
     return [value, setValue];
   }
   var clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
-  function startDrag(e, onMove, onEnd) {
+  function startDrag(e, onMove, axis = "clientX") {
     if (e.button !== 0) return;
     e.preventDefault();
     e.stopPropagation();
     const el = e.currentTarget;
-    const startX = e.clientX;
+    const start = e[axis];
+    const resizeClass = axis === "clientY" ? "is-resizing-height" : "is-resizing";
     try {
       el.setPointerCapture(e.pointerId);
     } catch {
     }
-    document.body.classList.add("is-resizing");
-    const move = (ev) => onMove(ev.clientX - startX);
+    document.body.classList.add(resizeClass);
+    const move = (ev) => onMove(ev[axis] - start);
     const up = () => {
       el.removeEventListener("pointermove", move);
       el.removeEventListener("pointerup", up);
       el.removeEventListener("pointercancel", up);
-      document.body.classList.remove("is-resizing");
-      if (onEnd) onEnd();
+      el.removeEventListener("lostpointercapture", up);
+      document.body.classList.remove(resizeClass);
     };
     el.addEventListener("pointermove", move);
     el.addEventListener("pointerup", up);
     el.addEventListener("pointercancel", up);
+    el.addEventListener("lostpointercapture", up);
   }
-  function Splitter({ id, width, onChange, min, max, defaultWidth, side = "left", label, className = "", style }) {
+  function Splitter({ id, size, onChange, min, max, defaultSize, side = "left", orientation = "vertical", label, className = "", style }) {
     const hi = typeof max === "function" ? max() : max;
-    const sign = side === "left" ? 1 : -1;
+    const horizontal = orientation === "horizontal";
+    const sign = side === "right" || side === "bottom" ? -1 : 1;
     const onPointerDown = (e) => {
-      const start = width;
       const limit = typeof max === "function" ? max() : max;
-      startDrag(e, (dx) => onChange(clamp(Math.round(start + sign * dx), min, limit)));
+      startDrag(e, (distance) => onChange(clamp(Math.round(size + sign * distance), min, limit)), horizontal ? "clientY" : "clientX");
     };
     const onKeyDown = (e) => {
       const step = e.shiftKey ? 64 : 16;
-      if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+      const [less, more] = horizontal ? ["ArrowUp", "ArrowDown"] : ["ArrowLeft", "ArrowRight"];
+      if (e.key === less || e.key === more) {
         e.preventDefault();
-        const dir = e.key === "ArrowRight" ? 1 : -1;
-        onChange(clamp(width + sign * dir * step, min, hi));
+        const dir = e.key === more ? 1 : -1;
+        onChange(clamp(size + sign * dir * step, min, hi));
       } else if (e.key === "Home") {
         e.preventDefault();
         onChange(min);
@@ -18199,15 +18202,15 @@
         className: `splitter ${className}`,
         style,
         role: "separator",
-        "aria-orientation": "vertical",
+        "aria-orientation": orientation,
         "aria-label": label,
-        "aria-valuenow": Math.round(width),
+        "aria-valuenow": Math.round(size),
         "aria-valuemin": min,
         "aria-valuemax": Math.round(hi),
         tabIndex: 0,
         title: `${label}: drag to resize, double-click to reset`,
         onPointerDown,
-        onDoubleClick: () => onChange(defaultWidth),
+        onDoubleClick: () => onChange(defaultSize),
         onKeyDown
       }
     );
@@ -18283,13 +18286,18 @@
   }
 
   // src/Lyrics.jsx
+  var DEFAULT_HEIGHT = 240;
+  var MIN_HEIGHT = 120;
+  var MAX_HEIGHT = 720;
+  var NO_LINES = [];
   function Lyrics({ track, duration, getTime, onSeek }) {
     const [enabled, setEnabled] = useLayoutPref("lyricsEnabled", true);
     const [follow, setFollow] = useLayoutPref("lyricsFollow", true);
+    const [height, setHeight] = useLayoutPref("lyricsHeight", DEFAULT_HEIGHT);
     const [data, setData] = (0, import_react11.useState)(null);
     const [active, setActive] = (0, import_react11.useState)(-1);
     const boxRef = (0, import_react11.useRef)(null);
-    const lineRefs = (0, import_react11.useRef)([]);
+    const followedLineRef = (0, import_react11.useRef)(null);
     (0, import_react11.useEffect)(() => {
       let cancelled = false;
       setData(null);
@@ -18308,12 +18316,12 @@
         cancelled = true;
       };
     }, [enabled, track?.id, track?.filePath, track?.title, track?.artist, track?.album, track?.mediaService?.lyricsUrl, duration]);
-    const synced = enabled && data?.synced || [];
+    const synced = enabled && data?.synced || NO_LINES;
     (0, import_react11.useEffect)(() => {
       if (!synced.length) return void 0;
       const tick = () => {
         const time = getTime();
-        if (time == null) return;
+        if (!Number.isFinite(time)) return;
         const t = time + 0.15;
         let lo = 0, hi = synced.length - 1, idx = -1;
         while (lo <= hi) {
@@ -18328,47 +18336,50 @@
       const timer = setInterval(tick, 120);
       tick();
       return () => clearInterval(timer);
-    }, [data, enabled]);
-    const scrollToActive = (smooth = true) => {
-      const el = lineRefs.current[active];
+    }, [synced, getTime]);
+    (0, import_react11.useLayoutEffect)(() => {
       const box = boxRef.current;
-      if (el && box) box.scrollTo({ top: el.offsetTop - box.clientHeight / 2 + el.clientHeight / 2, behavior: smooth ? "smooth" : "auto" });
-    };
-    (0, import_react11.useEffect)(() => {
-      if (follow) scrollToActive();
-    }, [active, follow]);
+      const line = followedLineRef.current;
+      if (!follow || !box || !line) return void 0;
+      const centerLine = () => {
+        if (!box.clientHeight) return;
+        const lineBounds = line.getBoundingClientRect();
+        const viewportTop = box.getBoundingClientRect().top + box.clientTop;
+        box.scrollTop += lineBounds.top + lineBounds.height / 2 - viewportTop - box.clientHeight / 2;
+      };
+      centerLine();
+      const observer = new ResizeObserver(centerLine);
+      observer.observe(box);
+      observer.observe(line);
+      return () => observer.disconnect();
+    }, [active, follow, synced]);
     const stopFollowing = () => {
       if (follow && synced.length) setFollow(false);
     };
     let body;
     if (data === null) body = /* @__PURE__ */ import_react11.default.createElement("div", { className: "lyrics-empty" }, "Looking up lyrics...");
     else if (synced.length) {
-      body = synced.map((l, i) => /* @__PURE__ */ import_react11.default.createElement(
+      body = /* @__PURE__ */ import_react11.default.createElement("div", { className: "lyrics-timed" }, synced.map((line, index) => /* @__PURE__ */ import_react11.default.createElement(
         "div",
         {
-          key: i,
-          ref: (el) => {
-            lineRefs.current[i] = el;
-          },
-          className: `lyric-line ${i === active ? "active" : i < active ? "past" : ""}`,
-          onClick: () => onSeek(l.t)
+          key: index,
+          ref: index === Math.max(active, 0) ? followedLineRef : null,
+          className: `lyric-line ${index === active ? "active" : index < active ? "past" : ""}`,
+          "aria-current": index === active ? "true" : void 0,
+          onClick: () => onSeek(line.t)
         },
-        l.text || " "
-      ));
+        line.text || " "
+      )));
     } else if (data.plain) body = /* @__PURE__ */ import_react11.default.createElement("pre", { className: "lyrics-plain" }, data.plain);
     else body = /* @__PURE__ */ import_react11.default.createElement("div", { className: "lyrics-empty" }, data.error || "No synced lyrics found for this track.");
-    return /* @__PURE__ */ import_react11.default.createElement("div", { className: `lyrics-panel ${enabled ? "" : "off"}` }, /* @__PURE__ */ import_react11.default.createElement("div", { className: "lyrics-head" }, /* @__PURE__ */ import_react11.default.createElement("span", null, /* @__PURE__ */ import_react11.default.createElement(Icon2, { name: "mic", size: 14 }), " Lyrics"), /* @__PURE__ */ import_react11.default.createElement("span", { className: "lyrics-tools" }, enabled && synced.length > 0 && /* @__PURE__ */ import_react11.default.createElement("span", { className: "lyrics-src" }, { lrclib: "Synced via LRCLIB", "media-server": "Synced from RobOS Media Server", file: "Synced from .lrc file" }[data.source]), enabled && !synced.length && data?.plain && /* @__PURE__ */ import_react11.default.createElement("span", { className: "lyrics-src" }, "Plain lyrics"), enabled && synced.length > 0 && /* @__PURE__ */ import_react11.default.createElement(
+    return /* @__PURE__ */ import_react11.default.createElement("div", { className: `lyrics-panel ${enabled ? "" : "off"}`, style: { "--lyrics-height": `${height}px` } }, /* @__PURE__ */ import_react11.default.createElement("div", { className: "lyrics-head" }, /* @__PURE__ */ import_react11.default.createElement("span", null, /* @__PURE__ */ import_react11.default.createElement(Icon2, { name: "mic", size: 14 }), " Lyrics"), /* @__PURE__ */ import_react11.default.createElement("span", { className: "lyrics-tools" }, enabled && synced.length > 0 && /* @__PURE__ */ import_react11.default.createElement("span", { className: "lyrics-src" }, { lrclib: "Synced via LRCLIB", "media-server": "Synced from RobOS Media Server", file: "Synced from .lrc file" }[data.source]), enabled && !synced.length && data?.plain && /* @__PURE__ */ import_react11.default.createElement("span", { className: "lyrics-src" }, "Plain lyrics"), enabled && synced.length > 0 && /* @__PURE__ */ import_react11.default.createElement(
       "button",
       {
         id: "btn-lyrics-follow",
         className: `btn-chip lyrics-btn ${follow ? "on" : ""}`,
         "aria-pressed": follow,
-        title: follow ? "Following the song: the current line stays in view" : "Follow the song: keep the current line in view",
-        onClick: () => {
-          const next = !follow;
-          setFollow(next);
-          if (next) scrollToActive();
-        }
+        title: "Center the current lyric as the song plays",
+        onClick: () => setFollow((value) => !value)
       },
       /* @__PURE__ */ import_react11.default.createElement(Icon2, { name: "locate", size: 12 }),
       " Follow"
@@ -18382,7 +18393,7 @@
         onClick: () => setEnabled(!enabled)
       },
       enabled ? "On" : "Off"
-    ))), enabled && /* @__PURE__ */ import_react11.default.createElement(
+    ))), enabled && /* @__PURE__ */ import_react11.default.createElement(import_react11.default.Fragment, null, /* @__PURE__ */ import_react11.default.createElement(
       "div",
       {
         className: "lyrics-scroll",
@@ -18398,7 +18409,20 @@
         }
       },
       body
-    ));
+    ), /* @__PURE__ */ import_react11.default.createElement(
+      Splitter,
+      {
+        id: "lyrics-height-splitter",
+        className: "lyrics-resize",
+        label: "Lyrics height",
+        orientation: "horizontal",
+        size: height,
+        onChange: setHeight,
+        min: MIN_HEIGHT,
+        max: MAX_HEIGHT,
+        defaultSize: DEFAULT_HEIGHT
+      }
+    )));
   }
 
   // src/Library.jsx
@@ -19189,11 +19213,11 @@
         className: "overlay",
         style: { left: navWidth - 5 },
         label: "Library sidebar width",
-        width: navWidth,
+        size: navWidth,
         onChange: setNavWidth,
         min: 140,
         max: 420,
-        defaultWidth: NAV_WIDTH
+        defaultSize: NAV_WIDTH
       }
     ), /* @__PURE__ */ import_react16.default.createElement("nav", { className: "lib-nav", "aria-label": "Library categories" }, /* @__PURE__ */ import_react16.default.createElement("div", { className: "lib-nav-group" }, /* @__PURE__ */ import_react16.default.createElement("span", { className: "lib-nav-heading" }, "Library"), LIBRARY_SECTIONS.map((s) => /* @__PURE__ */ import_react16.default.createElement(NavItem, { key: s.id, item: s, count: counts[s.id], active: !detail && !searching && section === s.id, onClick: () => go({ section: s.id }) }))), /* @__PURE__ */ import_react16.default.createElement("div", { className: "lib-nav-group" }, /* @__PURE__ */ import_react16.default.createElement("span", { className: "lib-nav-heading" }, "Collections"), LIBRARY_COLLECTIONS.map((s) => /* @__PURE__ */ import_react16.default.createElement(NavItem, { key: s.id, item: s, count: s.id === "loved" ? lovedCount : null, active: !detail && !searching && section === s.id, onClick: () => go({ section: s.id }) }))), /* @__PURE__ */ import_react16.default.createElement("div", { className: "lib-nav-group" }, /* @__PURE__ */ import_react16.default.createElement("span", { className: "lib-nav-heading" }, "Sources"), /* @__PURE__ */ import_react16.default.createElement(NavItem, { item: { id: "folders", label: "Folders", icon: "folder" }, count: folders.length, active: !detail && !searching && section === "folders", onClick: () => go({ section: "folders" }) })), /* @__PURE__ */ import_react16.default.createElement("div", { className: "lib-nav-footer" }, /* @__PURE__ */ import_react16.default.createElement("span", null, (0, import_library_index2.plural)(index.tracks.length, "song")), /* @__PURE__ */ import_react16.default.createElement("span", null, (0, import_library_index2.plural)(index.albums.length, "album"), " \xB7 ", (0, import_library_index2.formatLongDuration)(index.totalDuration)), onAiPlaylist && /* @__PURE__ */ import_react16.default.createElement(
       "button",
@@ -19818,11 +19842,11 @@
         className: "overlay edge-left",
         label: "Now Playing width",
         side: "right",
-        width: Math.min(dockWidth, dockMaxWidth()),
+        size: Math.min(dockWidth, dockMaxWidth()),
         onChange: setDockWidth,
         min: 240,
         max: dockMaxWidth,
-        defaultWidth: DOCK_WIDTH
+        defaultSize: DOCK_WIDTH
       }
     ), /* @__PURE__ */ import_react17.default.createElement("div", { className: "np-head" }, /* @__PURE__ */ import_react17.default.createElement("div", { className: "np-head-title" }, /* @__PURE__ */ import_react17.default.createElement(Icon2, { name: "list", size: 15 }), /* @__PURE__ */ import_react17.default.createElement("span", null, "Now Playing"), /* @__PURE__ */ import_react17.default.createElement("span", { className: "np-count" }, queue.length.toLocaleString())), /* @__PURE__ */ import_react17.default.createElement("button", { id: "btn-collapse-queue-panel", className: "btn-icon-only small", title: "Hide panel", onClick: onToggleCollapsed }, /* @__PURE__ */ import_react17.default.createElement(Icon2, { name: "chevron", size: 14 }))), current && /* @__PURE__ */ import_react17.default.createElement("div", { className: "np-current", onDoubleClick: () => locateCurrent(true), title: "Double-click to locate in the list" }, /* @__PURE__ */ import_react17.default.createElement(Cover, { artId: current.artId, name: current.album || current.title, size: 44 }), /* @__PURE__ */ import_react17.default.createElement("div", { className: "np-current-text" }, /* @__PURE__ */ import_react17.default.createElement("span", { className: "np-current-title" }, current.title), /* @__PURE__ */ import_react17.default.createElement("span", { className: "np-current-sub" }, /* @__PURE__ */ import_react17.default.createElement("a", { className: "link", onClick: () => actions.goToArtist(current.artist) }, current.artist || "Unknown Artist"), current.album ? /* @__PURE__ */ import_react17.default.createElement(import_react17.default.Fragment, null, " \xB7 ", /* @__PURE__ */ import_react17.default.createElement("a", { className: "link", onClick: () => actions.goToAlbumOf(current) }, current.album)) : null))), dj && dj.speaking && /* @__PURE__ */ import_react17.default.createElement("div", { className: "np-dj-banner", role: "status" }, /* @__PURE__ */ import_react17.default.createElement(Icon2, { name: "mic", size: 15 }), /* @__PURE__ */ import_react17.default.createElement("div", { className: "np-dj-text" }, /* @__PURE__ */ import_react17.default.createElement("span", { className: "np-dj-label" }, dj.speaking.warming ? "DJ is warming up\u2026" : dj.speaking.preview ? "DJ preview" : "DJ on the mic"), /* @__PURE__ */ import_react17.default.createElement("span", { className: "np-dj-line" }, dj.speaking.text)), /* @__PURE__ */ import_react17.default.createElement("button", { id: "btn-dj-skip", className: "btn-chip", onClick: dj.onSkip, title: dj.speaking.preview ? "Stop the preview" : "Skip the DJ and play the next song" }, dj.speaking.preview ? "Stop" : "Skip")), /* @__PURE__ */ import_react17.default.createElement("div", { className: "np-filter search-box" }, /* @__PURE__ */ import_react17.default.createElement(Icon2, { name: "search", size: 13 }), /* @__PURE__ */ import_react17.default.createElement(
       "input",
@@ -21808,6 +21832,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
     };
     const currentTrack = playlist[currentTrackIndex] || playlist[0] || null;
     const libraryById = (0, import_react25.useMemo)(() => new Map(library.tracks.map((t) => [t.id, t])), [library.tracks]);
+    const lyricsTime = (0, import_react25.useCallback)(() => outputTarget !== "local" ? castClock.now() : playerRef.current?.audio?.current?.currentTime ?? null, [outputTarget]);
     const resolveSrc = (t) => {
       if (!t) return "";
       if (t.cloud || t.mediaService) {
@@ -22946,7 +22971,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
         {
           track: libraryById.get(currentTrack?.id) || currentTrack,
           duration: decodedDuration?.src === resolveSrc(currentTrack) ? decodedDuration.seconds : currentTrack?.duration,
-          getTime: () => outputTarget !== "local" ? castClock.now() : playerRef.current?.audio?.current?.currentTime ?? null,
+          getTime: lyricsTime,
           onSeek: (t) => {
             if (outputTarget !== "local") handleCastSeek(t);
             else if (playerRef.current?.audio?.current) playerRef.current.audio.current.currentTime = t;
@@ -23004,11 +23029,11 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
         {
           id: "playlists-splitter",
           label: "Playlist list width",
-          width: playlistSidebarWidth,
+          size: playlistSidebarWidth,
           onChange: setPlaylistSidebarWidth,
           min: 180,
           max: () => Math.max(220, Math.min(560, window.innerWidth - 700)),
-          defaultWidth: PLAYLIST_SIDEBAR_WIDTH
+          defaultSize: PLAYLIST_SIDEBAR_WIDTH
         }
       ), /* @__PURE__ */ import_react25.default.createElement("div", { className: "playlist-detail-pane" }, selectedPlaylist ? /* @__PURE__ */ import_react25.default.createElement(import_react25.default.Fragment, null, /* @__PURE__ */ import_react25.default.createElement("div", { className: "playlist-detail-header" }, /* @__PURE__ */ import_react25.default.createElement("div", { className: "playlist-detail-meta" }, /* @__PURE__ */ import_react25.default.createElement("div", { className: "playlist-cover-icon" }, /* @__PURE__ */ import_react25.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "36", height: "36", viewBox: "0 0 24 24", fill: "none", stroke: "#e8a33d", "stroke-width": "1.5" }, /* @__PURE__ */ import_react25.default.createElement("path", { d: "M9 18V5l12-2v13" }), /* @__PURE__ */ import_react25.default.createElement("circle", { cx: "6", cy: "18", r: "3" }), /* @__PURE__ */ import_react25.default.createElement("circle", { cx: "18", cy: "16", r: "3" }))), /* @__PURE__ */ import_react25.default.createElement("div", { className: "playlist-text-meta" }, /* @__PURE__ */ import_react25.default.createElement("h2", null, selectedPlaylist.name), /* @__PURE__ */ import_react25.default.createElement("p", { className: "playlist-description" }, selectedPlaylist.description || "No description provided."), /* @__PURE__ */ import_react25.default.createElement("div", { className: "playlist-stats" }, /* @__PURE__ */ import_react25.default.createElement("span", { className: "badge" }, selectedPlaylist.tracks?.length || 0, " Tracks"), /* @__PURE__ */ import_react25.default.createElement("span", { className: "badge" }, "Duration: ", formatTotalDuration(selectedPlaylist.tracks)), selectedPlaylist.ai && /* @__PURE__ */ import_react25.default.createElement("span", { className: "badge", title: selectedPlaylist.ai.request }, "\u2726 AI playlist"), selectedPlaylist.dj && /* @__PURE__ */ import_react25.default.createElement("span", { className: "badge", title: selectedPlaylist.dj.persona }, "\u{1F399} Virtual DJ"), /* @__PURE__ */ import_react25.default.createElement("span", { className: "badge" }, "Updated: ", new Date(selectedPlaylist.updatedAt || selectedPlaylist.createdAt || Date.now()).toLocaleDateString())))), /* @__PURE__ */ import_react25.default.createElement("div", { className: "playlist-actions-bar" }, /* @__PURE__ */ import_react25.default.createElement(
         "button",
