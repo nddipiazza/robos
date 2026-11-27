@@ -85,6 +85,10 @@ To save from a URL, switch to **Media link**, paste the link, and select **Save 
 
 For media links, install yt-dlp and FFmpeg, including ffprobe, and make the commands available on your system PATH. The dialog opens the relevant installation instructions if a tool is missing. [yt-dlp installation](https://github.com/yt-dlp/yt-dlp/wiki/Installation) · [FFmpeg downloads](https://ffmpeg.org/download.html)
 
+**Video segments** opens from the playback controls and the right-click menu for a library video. New recordings are analyzed in the background. To analyze a local video already in the library, choose **Detect intros and commercials**. Movie Player suggests ranges from labeled chapters, repeated openings across episodes of the same show, and likely commercial-break transitions. Confirm or dismiss each suggestion as you review it.
+
+To mark a range manually, right-click the video at the playhead or right-click a position on the seek bar. Choose **Mark intro start here** or **Mark commercial start here**, then mark the matching end. Use **Video segments** to review the saved ranges and jump to either end.
+
 ### 4. AI Watchlists & Virtual Cinema Host (Optional AI)
 - **✦ AI Watchlist (`src/AiPlaylist.jsx` / `lib/ai-playlist.js`)**: Describe a movie marathon, director retrospective, era, or mood (e.g., *"4K sci-fi double feature for a rainy night"* or *"short animated films under 20 minutes"*). Your configured RobOS agent picks and orders films from your indexed library, falling back to a deterministic local scorer when offline.
 - **Virtual Cinema Host (`src/useVirtualDj.js`)**: The movie counterpart to the Audio Player's Virtual DJ. When enabled, the agent writes short 1–2 sentence cinema introductions a few movies ahead in the screening queue (in personas like *Classic Theater Host*, *Film Festival Curator*, or *Late-Night Drive-In*), spoken aloud between films with **RobOS Voice** (or cast to your Smart TV).

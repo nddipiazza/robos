@@ -157,6 +157,7 @@ export function collectionMenuItems(tracks, ctx, { label } = {}) {
     actions.setWatched ? { label: allWatched ? 'Mark as Unwatched' : 'Mark as Watched', icon: 'check', onClick: () => actions.setWatched(tracks, !allWatched) } : null,
     (actions.setWatched && anyProgress && !allWatched) ? { label: 'Reset watch progress', icon: 'history', onClick: () => actions.setWatched(tracks, false) } : null,
     { label: 'Add to Watchlist…', icon: 'list', onClick: () => actions.addToPlaylist(tracks) },
+    tracks.length === 1 && actions.canMarkVideo?.(tracks[0]) ? { label: 'Video segments…', icon: 'list', onClick: () => actions.openVideoSegments(tracks[0]) } : null,
     actions.fetchMetadata ? { label: 'Fetch Poster & Metadata (Public API)', icon: 'locate', onClick: () => actions.fetchMetadata(tracks, { force: true }) } : null,
     actions.fixMetadata ? { label: '✦ AI Fix Metadata…', icon: 'sparkle', onClick: () => actions.fixMetadata(tracks) } : null,
     { label: allLoved ? 'Remove from Watchlist' : 'Add to My Watchlist', icon: allLoved ? 'heartFill' : 'heart', onClick: () => actions.setLoved(tracks, !allLoved) },
@@ -207,6 +208,9 @@ export function trackMenuItems(tracks, ctx, { allTracks = null, index = 0, extra
     items.push({ label: 'View Movie / Show Details', icon: 'disc', onClick: () => actions.goToAlbumOf(single) });
     items.push({ label: 'View Release Format', icon: 'artist', onClick: () => actions.goToArtist(single.artist) });
     items.push({ label: 'Media & Stream Info', icon: 'info', onClick: () => actions.showInfo(single) });
+    if (actions.canMarkVideo?.(single)) {
+      items.push({ label: 'Video segments…', icon: 'list', onClick: () => actions.openVideoSegments(single) });
+    }
     if (single.filePath && !single.cloud) {
       items.push({ label: 'Show in file manager', icon: 'external', onClick: () => actions.showInFolder(single) });
     }

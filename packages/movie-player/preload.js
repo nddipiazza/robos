@@ -22,6 +22,15 @@ contextBridge.exposeInMainWorld('robosAudio', {
   openFileDialog: () => ipcRenderer.invoke('audio:open-file-dialog'),
   ensureFileAccessible: (filePath) => ipcRenderer.invoke('audio:ensure-file-accessible', filePath),
   getLibrary: () => ipcRenderer.invoke('audio:get-library'),
+  getVideoSegments: (trackId) => ipcRenderer.invoke('movie:segments-get', trackId),
+  detectVideoSegments: (trackId) => ipcRenderer.invoke('movie:segments-detect', trackId),
+  addVideoSegment: (trackId, input) => ipcRenderer.invoke('movie:segments-add', trackId, input),
+  reviewVideoSegment: (trackId, input) => ipcRenderer.invoke('movie:segments-review', trackId, input),
+  onVideoSegmentsUpdated: (callback) => {
+    const handler = (_event, status) => callback(status);
+    ipcRenderer.on('movie:segments-updated', handler);
+    return () => ipcRenderer.removeListener('movie:segments-updated', handler);
+  },
   pasteRecordingLink: () => ipcRenderer.invoke('media-record:paste'),
   startRecording: (options) => ipcRenderer.invoke('media-record:start', options),
   cancelRecording: () => ipcRenderer.invoke('media-record:cancel'),

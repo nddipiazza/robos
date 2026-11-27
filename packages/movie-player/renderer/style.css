@@ -4376,3 +4376,81 @@ body.is-resizing, body.is-resizing * { cursor: col-resize !important; user-selec
 }
 
 
+
+.video-segments-button {
+  margin: 6px 10px 0;
+}
+
+.video-segments-dialog {
+  width: min(640px, calc(100vw - 32px));
+  max-height: calc(100vh - 32px);
+  box-sizing: border-box;
+  margin: auto;
+  padding: 22px;
+  color: var(--text-main);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  color-scheme: dark;
+}
+
+.video-segments-dialog::backdrop {
+  background: rgb(0 0 0 / 65%);
+}
+
+.video-segments-dialog h2 {
+  margin: 0 0 5px;
+}
+
+.video-segments-dialog p {
+  margin: 8px 0 12px;
+  color: var(--text-muted);
+}
+
+.video-segments-dialog .video-segments-error {
+  color: #ffaaa3;
+}
+
+.video-segments-title {
+  overflow-wrap: anywhere;
+}
+
+.video-segments-toolbar,
+.video-segment-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.video-segments-list {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0;
+  padding: 0;
+  list-style: none;
+}
+
+.video-segment {
+  padding: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+}
+
+.video-segment-label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.video-segment-label small {
+  color: var(--text-muted);
+}
+
+.video-segments-dialog footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+}

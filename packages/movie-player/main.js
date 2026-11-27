@@ -17,6 +17,7 @@ const aiPlaylist = require('./lib/ai-playlist');
 const aiMetadata = require('./lib/ai-metadata');
 const { PublicMetadataService } = require('./lib/public-metadata');
 const { createControlServer } = require('./lib/control-server');
+const { registerVideoSegments } = require('./lib/video-segments');
 
 // Shared RobOS modules: the repo checkout in development, the installed copy on the VM.
 function requireShared(...relPaths) {
@@ -89,6 +90,7 @@ app.on('second-instance', () => {
 });
 const castService = new CastService();
 const mediaLibrary = new MediaLibrary();
+const videoSegments = registerVideoSegments({ app, ipcMain, getWindow: () => mainWindow, mediaLibrary });
 castService.mediaLibrary = mediaLibrary;
 castService.cloudStorage = cloud;
 const libraryFolders = new LibraryFolders({ mediaLibrary, cloud, castService });
@@ -957,6 +959,7 @@ ipcMain.handle('audio:open-file-dialog', async () => {
     };
   });
 
+  videoSegments.rememberOpened(tracks);
   return { canceled: false, tracks };
 });
 
@@ -1062,6 +1065,7 @@ mediaRecorder?.registerMediaRecorder({
     if (!track) throw new Error('The recording could not be indexed.');
     sendToWindow('audio:library-scan-batch', { library: mediaLibrary.getLibrary() });
     if (source === 'link') enrichRecordedMovie(track.id);
+    videoSegments.detect(track);
     return track;
   },
 });

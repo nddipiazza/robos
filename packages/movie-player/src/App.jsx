@@ -17,6 +17,7 @@ import { useVirtualDj } from './useVirtualDj.js';
 import { useSpeakerTakeover } from './useSpeakerTakeover.js';
 import { LibraryContext, ContextMenu, LoveButton, Cover, artUrlFor } from './library-ui.jsx';
 import { albumKeyOf, fold, splitGenres, sortTracks, getTrackWatchState } from '../lib/library-index.js';
+import VideoSegmentsPanel, { formatSegmentTime } from './VideoSegments.jsx';
 
 const DEFAULT_QUEUE = [];
 const QUEUE_KEY = 'robos-movie-player.queue.v1';
@@ -80,6 +81,8 @@ export default function App() {
   const [showsNav, setShowsNav] = useState(() => [{ section: 'tv_navigator' }]);
   const [menu, setMenu] = useState(null);
   const [infoTrack, setInfoTrack] = useState(null);
+  const [segmentTrack, setSegmentTrack] = useState(null);
+  const [segmentDraft, setSegmentDraft] = useState(null);
   const [isScanning, setIsScanning] = useState(false);
   const [isScanningLibrary, setIsScanningLibrary] = useState(false);
   const [libraryScanStatus, setLibraryScanStatus] = useState(null);
@@ -1794,6 +1797,49 @@ export default function App() {
   }, []);
   const closeMenu = useCallback(() => setMenu(null), []);
 
+  const openVideoSegments = (track) => {
+    if (isVideoTrack(track)) setSegmentTrack(track);
+  };
+
+  const openVideoSegmentMenu = (event, position = transcodeOffsetSec + (videoRef.current?.currentTime || 0)) => {
+    const track = currentTrack;
+    if (!isVideoTrack(track)) return;
+    const draft = segmentDraft?.trackId === track.id ? segmentDraft : null;
+    const marks = ['intro', 'commercial'].map(type => {
+      if (draft?.type !== type) {
+        return { label: `Mark ${type} start here`, icon: 'clock', onClick: () => {
+          setSegmentDraft({ trackId: track.id, type, start: position });
+          showStatus(`Marked ${type} start. Seek to the end and right-click again.`);
+        } };
+      }
+      return { label: `Mark ${type} end here`, icon: 'check', disabled: position - draft.start < 0.25,
+        onClick: async () => {
+          try {
+            const result = await window.robosAudio.addVideoSegment(track.id, { type, start: draft.start, end: position });
+            if (!result.ok) throw new Error(result.error);
+            setSegmentDraft(previous => previous === draft ? null : previous);
+            showStatus(type === 'intro' ? 'Intro saved.' : 'Commercial break saved.');
+          } catch (err) { showStatus(err.message); }
+        },
+      };
+    });
+    openMenu(event, [
+      { header: `Video segments · ${formatSegmentTime(position)}` },
+      ...marks,
+      draft ? { label: 'Cancel segment start', onClick: () => setSegmentDraft(null) } : null,
+      { separator: true },
+      { label: 'Video segments…', icon: 'list', onClick: () => openVideoSegments(track) },
+    ]);
+  };
+
+  const jumpToVideoSegment = (track, position) => {
+    setSegmentTrack(null);
+    setActiveTab('player');
+    if (track.id === currentTrack?.id && outputTarget === 'local') seekVideoTo(position);
+    else playTracks([track], 0, { startAt: position });
+  };
+
+
   const handleAiMetadataApplied = async (res) => {
     if (res && res.library) {
       setLibrary(res.library);
@@ -1871,6 +1917,8 @@ export default function App() {
       setWatched: setWatchedTracks,
       saveProgress: saveTrackProgress,
       showInfo: setInfoTrack,
+      openVideoSegments,
+      canMarkVideo: isVideoTrack,
       showInFolder,
       goToAlbumOf,
       goToArtist,
@@ -2598,6 +2646,7 @@ export default function App() {
               {isVideoTrack(currentTrack) && (
                 <div
                   className={`cinema-stage-box ${embeddedPipActive ? 'is-embedded-pip' : ''}`}
+                  onContextMenu={outputTarget === 'local' ? openVideoSegmentMenu : undefined}
                   style={embeddedPipActive
                     ? (pipRect
                       ? { top: `${pipRect.top}px`, left: `${pipRect.left}px`, width: `${pipRect.width}px`, height: `${pipRect.height}px` }
@@ -2821,6 +2870,7 @@ export default function App() {
                             offsetSec={transcodeOffsetSec}
                             isTranscode={true}
                             onSeekOverride={seekVideoTo}
+                            onSegmentMenu={openVideoSegmentMenu}
                           />
                         </div>
                         <button
@@ -3008,6 +3058,11 @@ export default function App() {
 
               {/* React H5 Audio Player Component */}
               <div className="react-h5-wrapper">
+                {isVideoTrack(currentTrack) && (
+                  <button type="button" className="btn-secondary video-segments-button" onClick={() => openVideoSegments(currentTrack)}>
+                    Video segments
+                  </button>
+                )}
                 <AudioPlayer
                   ref={playerRef}
                   src={outputTarget === 'local' && !isVideoTrack(currentTrack) ? resolveSrc(currentTrack) : undefined}
@@ -3028,6 +3083,7 @@ export default function App() {
                           offsetSec={transcodeOffsetSec}
                           isTranscode={isTranscodeActive}
                           onSeekOverride={seekVideoTo}
+                          onSegmentMenu={openVideoSegmentMenu}
                         />]
                       : undefined}
                   customControlsSection={(outputTarget !== 'local' || isVideoTrack(currentTrack))
@@ -3905,6 +3961,10 @@ export default function App() {
         onConnect={handleAddMediaService}
         appKind="movie"
       />
+      {segmentTrack && (
+        <VideoSegmentsPanel key={segmentTrack.id} track={segmentTrack} onClose={() => setSegmentTrack(null)}
+          onJump={(position) => jumpToVideoSegment(segmentTrack, position)} />
+      )}
       <ContextMenu menu={menu} onClose={closeMenu} />
       {infoTrack && <TrackInfo track={infoTrack} onClose={() => setInfoTrack(null)} />}
 
@@ -3931,7 +3991,7 @@ function CastControls({ onPrev, onToggle, onNext }) {
 
 // Seek bar for the mini player. Subscribes to the audio/video element itself so the
 // rest of the app doesn't re-render on every timeupdate.
-function MiniProgress({ getAudio, trackId, knownDuration = 0, offsetSec = 0, isTranscode = false, onSeekOverride = null }) {
+function MiniProgress({ getAudio, trackId, knownDuration = 0, offsetSec = 0, isTranscode = false, onSeekOverride = null, onSegmentMenu }) {
   const [time, setTime] = useState({ current: offsetSec || 0, duration: knownDuration || 0 });
   const [dragging, setDragging] = useState(null);
   const dragRef = useRef(null);
@@ -4026,6 +4086,11 @@ function MiniProgress({ getAudio, trackId, knownDuration = 0, offsetSec = 0, isT
         value={Math.min(val, maxVal)}
         style={{ '--pct': `${pct}%` }}
         aria-label="Seek"
+        onContextMenu={onSegmentMenu ? (event) => {
+          const { left, width } = event.currentTarget.getBoundingClientRect();
+          const ratio = Math.max(0, Math.min(1, (event.clientX - left) / width));
+          onSegmentMenu(event, effectiveDuration && event.clientX > 0 ? ratio * effectiveDuration : time.current);
+        } : undefined}
         onChange={(e) => {
           const next = Number(e.target.value);
           dragRef.current = next;

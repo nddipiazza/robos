@@ -782,7 +782,7 @@
   var require_react_dom_production = __commonJS({
     "node_modules/react-dom/cjs/react-dom.production.js"(exports) {
       "use strict";
-      var React23 = require_react();
+      var React24 = require_react();
       function formatProdErrorMessage(code) {
         var url = "https://react.dev/errors/" + code;
         if (1 < arguments.length) {
@@ -824,7 +824,7 @@
           implementation
         };
       }
-      var ReactSharedInternals = React23.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
+      var ReactSharedInternals = React24.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
       function getCrossOriginStringAs(as, input) {
         if ("font" === as) return "";
         if ("string" === typeof input)
@@ -966,7 +966,7 @@
     "node_modules/react-dom/cjs/react-dom-client.production.js"(exports) {
       "use strict";
       var Scheduler = require_scheduler();
-      var React23 = require_react();
+      var React24 = require_react();
       var ReactDOM = require_react_dom();
       function formatProdErrorMessage(code) {
         var url = "https://react.dev/errors/" + code;
@@ -1257,7 +1257,7 @@
         return null;
       }
       var isArrayImpl = Array.isArray;
-      var ReactSharedInternals = React23.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
+      var ReactSharedInternals = React24.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
       var ReactDOMSharedInternals = ReactDOM.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
       var sharedNotPendingObject = {
         pending: false,
@@ -14406,7 +14406,7 @@
           0 === i && attemptExplicitHydrationTarget(target);
         }
       };
-      var isomorphicReactPackageVersion$jscomp$inline_2043 = React23.version;
+      var isomorphicReactPackageVersion$jscomp$inline_2043 = React24.version;
       if ("19.3.0" !== isomorphicReactPackageVersion$jscomp$inline_2043)
         throw Error(
           formatProdErrorMessage(
@@ -15211,7 +15211,7 @@
         } else if (completed) {
           progressPct = 100;
         }
-        const resumeLabel = inProgress ? positionSec >= 1 ? `Resume at ${formatDuration8(positionSec)}${progressPct > 0 ? ` (${progressPct}%)` : ""}` : "Started" : completed ? "Watched" : null;
+        const resumeLabel = inProgress ? positionSec >= 1 ? `Resume at ${formatDuration9(positionSec)}${progressPct > 0 ? ` (${progressPct}%)` : ""}` : "Started" : completed ? "Watched" : null;
         return {
           positionSec: inProgress ? positionSec : 0,
           durationSec,
@@ -15307,8 +15307,8 @@
         let actionLabel = `Watch ${epCode}`;
         let statusBadge = null;
         if (isMidEpisode) {
-          actionLabel = resumePositionSec >= 1 ? `Resume ${epCode} (${formatDuration8(resumePositionSec)})` : `Resume ${epCode}`;
-          statusBadge = resumePositionSec >= 1 ? `\u25B6 ${epCode} \xB7 ${formatDuration8(resumePositionSec)}` : `\u25B6 ${epCode} \xB7 In Progress`;
+          actionLabel = resumePositionSec >= 1 ? `Resume ${epCode} (${formatDuration9(resumePositionSec)})` : `Resume ${epCode}`;
+          statusBadge = resumePositionSec >= 1 ? `\u25B6 ${epCode} \xB7 ${formatDuration9(resumePositionSec)}` : `\u25B6 ${epCode} \xB7 In Progress`;
         } else if (isNextUp) {
           actionLabel = `Continue: ${epCode}`;
           statusBadge = `Next: ${epCode} \xB7 ${watchedCount}/${episodes.length} watched`;
@@ -15346,7 +15346,7 @@
       function inProgressTracks2(tracks, stats = {}) {
         return tracks.filter((t) => !stats[t.id]?.dismissedFromWatchlist && getTrackWatchState7(t, stats).inProgress).sort((a, b) => String((stats[b.id] || {}).lastPlayed || "").localeCompare(String((stats[a.id] || {}).lastPlayed || "")));
       }
-      function formatDuration8(sec) {
+      function formatDuration9(sec) {
         if (!sec || isNaN(sec)) return "--:--";
         const total = Math.round(sec);
         const h = Math.floor(total / 3600);
@@ -15395,7 +15395,7 @@
         getTrackWatchState: getTrackWatchState7,
         getShowWatchState: getShowWatchState2,
         inProgressTracks: inProgressTracks2,
-        formatDuration: formatDuration8,
+        formatDuration: formatDuration9,
         formatLongDuration: formatLongDuration4,
         plural: plural4
       };
@@ -15403,11 +15403,11 @@
   });
 
   // src/index.jsx
-  var import_react28 = __toESM(require_react());
+  var import_react29 = __toESM(require_react());
   var import_client = __toESM(require_client());
 
   // src/App.jsx
-  var import_react27 = __toESM(require_react());
+  var import_react28 = __toESM(require_react());
 
   // node_modules/react-h5-audio-player/es/index.js
   var import_react6 = __toESM(require_react());
@@ -19286,6 +19286,7 @@
       actions.setWatched ? { label: allWatched ? "Mark as Unwatched" : "Mark as Watched", icon: "check", onClick: () => actions.setWatched(tracks, !allWatched) } : null,
       actions.setWatched && anyProgress && !allWatched ? { label: "Reset watch progress", icon: "history", onClick: () => actions.setWatched(tracks, false) } : null,
       { label: "Add to Watchlist\u2026", icon: "list", onClick: () => actions.addToPlaylist(tracks) },
+      tracks.length === 1 && actions.canMarkVideo?.(tracks[0]) ? { label: "Video segments\u2026", icon: "list", onClick: () => actions.openVideoSegments(tracks[0]) } : null,
       actions.fetchMetadata ? { label: "Fetch Poster & Metadata (Public API)", icon: "locate", onClick: () => actions.fetchMetadata(tracks, { force: true }) } : null,
       actions.fixMetadata ? { label: "\u2726 AI Fix Metadata\u2026", icon: "sparkle", onClick: () => actions.fixMetadata(tracks) } : null,
       { label: allLoved ? "Remove from Watchlist" : "Add to My Watchlist", icon: allLoved ? "heartFill" : "heart", onClick: () => actions.setLoved(tracks, !allLoved) },
@@ -19335,6 +19336,9 @@
       items.push({ label: "View Movie / Show Details", icon: "disc", onClick: () => actions.goToAlbumOf(single) });
       items.push({ label: "View Release Format", icon: "artist", onClick: () => actions.goToArtist(single.artist) });
       items.push({ label: "Media & Stream Info", icon: "info", onClick: () => actions.showInfo(single) });
+      if (actions.canMarkVideo?.(single)) {
+        items.push({ label: "Video segments\u2026", icon: "list", onClick: () => actions.openVideoSegments(single) });
+      }
       if (single.filePath && !single.cloud) {
         items.push({ label: "Show in file manager", icon: "external", onClick: () => actions.showInFolder(single) });
       }
@@ -22996,7 +23000,81 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
   }
 
   // src/App.jsx
+  var import_library_index10 = __toESM(require_library_index());
+
+  // src/VideoSegments.jsx
+  var import_react27 = __toESM(require_react());
   var import_library_index9 = __toESM(require_library_index());
+  var evidenceLabels = { chapter: "Chapter label", "repeated opening": "Repeated opening", "break cues": "Break transitions" };
+  function formatSegmentTime(seconds) {
+    const tenths = Math.round(seconds * 10);
+    const time = (0, import_library_index9.formatDuration)(Math.floor(tenths / 10));
+    const decimal = tenths % 10;
+    return (time === "--:--" ? "0:00" : time) + (decimal ? "." + decimal : "");
+  }
+  function VideoSegmentsPanel({ track, onClose, onJump }) {
+    const [result, setResult] = (0, import_react27.useState)(null);
+    const [error, setError] = (0, import_react27.useState)("");
+    const dialog = (0, import_react27.useRef)(null);
+    const api = window.robosAudio;
+    (0, import_react27.useEffect)(() => {
+      dialog.current.showModal();
+      let mounted = true;
+      const apply = (value) => {
+        if (!mounted) return;
+        if (value.ok === false) setError(value.error);
+        else setResult(value);
+      };
+      const unsubscribe = api.onVideoSegmentsUpdated((value) => {
+        if (value.trackId === track.id) apply(value);
+      });
+      api.getVideoSegments(track.id).then(apply).catch((error2) => apply({ ok: false, error: error2.message }));
+      return () => {
+        mounted = false;
+        unsubscribe();
+      };
+    }, [api, track.id]);
+    async function request(action) {
+      setError("");
+      try {
+        const response = await action();
+        if (!response.ok) setError(response.error);
+        else setResult(response);
+      } catch (err) {
+        setError(err.message);
+      }
+    }
+    const segments = result?.segments || [];
+    return /* @__PURE__ */ import_react27.default.createElement(
+      "dialog",
+      {
+        ref: dialog,
+        className: "video-segments-dialog",
+        "aria-labelledby": "video-segments-heading",
+        onCancel: (event) => {
+          event.preventDefault();
+          onClose();
+        }
+      },
+      /* @__PURE__ */ import_react27.default.createElement("header", null, /* @__PURE__ */ import_react27.default.createElement("h2", { id: "video-segments-heading" }, "Video segments"), /* @__PURE__ */ import_react27.default.createElement("p", { className: "video-segments-title" }, track.title)),
+      /* @__PURE__ */ import_react27.default.createElement("p", null, "Right-click the video or seek bar to mark the start and end of an intro or commercial."),
+      /* @__PURE__ */ import_react27.default.createElement("div", { className: "video-segments-toolbar" }, /* @__PURE__ */ import_react27.default.createElement(
+        "button",
+        {
+          className: "btn-secondary",
+          disabled: !result?.canDetect || result.scanning,
+          onClick: () => request(() => api.detectVideoSegments(track.id))
+        },
+        "Detect intros and commercials"
+      ), result?.scanning && /* @__PURE__ */ import_react27.default.createElement("span", { role: "status" }, "Analyzing video\u2026")),
+      (error || result?.error) && /* @__PURE__ */ import_react27.default.createElement("p", { className: "video-segments-error", role: "alert" }, error || result.error),
+      !result?.scanning && !segments.length && !error && !result?.error && /* @__PURE__ */ import_react27.default.createElement("p", { role: "status" }, result?.scannedAt ? "No intros or commercials found." : "No segments marked yet."),
+      !!segments.length && /* @__PURE__ */ import_react27.default.createElement("ul", { className: "video-segments-list" }, segments.map((segment) => /* @__PURE__ */ import_react27.default.createElement("li", { key: segment.id, className: "video-segment", "data-segment-status": segment.status }, /* @__PURE__ */ import_react27.default.createElement("div", { className: "video-segment-label" }, /* @__PURE__ */ import_react27.default.createElement("strong", null, segment.type === "intro" ? "Intro" : "Commercial break"), /* @__PURE__ */ import_react27.default.createElement("span", null, formatSegmentTime(segment.start), " \u2013 ", formatSegmentTime(segment.end)), segment.status === "suggested" && /* @__PURE__ */ import_react27.default.createElement("small", null, "Suggested \xB7 ", evidenceLabels[segment.source])), /* @__PURE__ */ import_react27.default.createElement("div", { className: "video-segment-actions" }, /* @__PURE__ */ import_react27.default.createElement("button", { className: "btn-secondary", onClick: () => onJump(segment.start) }, "Go to start"), /* @__PURE__ */ import_react27.default.createElement("button", { className: "btn-secondary", onClick: () => onJump(segment.end) }, "Skip to end"), segment.status === "suggested" ? /* @__PURE__ */ import_react27.default.createElement(import_react27.default.Fragment, null, /* @__PURE__ */ import_react27.default.createElement("button", { className: "btn-accent", onClick: () => request(() => api.reviewVideoSegment(track.id, { id: segment.id, status: "confirmed" })) }, "Confirm"), /* @__PURE__ */ import_react27.default.createElement("button", { className: "btn-secondary", onClick: () => request(() => api.reviewVideoSegment(track.id, { id: segment.id, status: "dismissed" })) }, "Dismiss")) : /* @__PURE__ */ import_react27.default.createElement("button", { className: "btn-secondary", onClick: () => request(() => api.reviewVideoSegment(track.id, { id: segment.id, status: "dismissed" })) }, "Remove"))))),
+      /* @__PURE__ */ import_react27.default.createElement("footer", null, /* @__PURE__ */ import_react27.default.createElement("button", { className: "btn-secondary", onClick: onClose, autoFocus: true }, "Close"))
+    );
+  }
+
+  // src/App.jsx
   var DEFAULT_QUEUE = [];
   var QUEUE_KEY = "robos-movie-player.queue.v1";
   var PLAYER_PREFS_KEY = "robos-movie-player.player-prefs.v1";
@@ -23031,70 +23109,72 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
     { key: "actions", width: "120px", fixed: true }
   ];
   function App() {
-    const [initial] = (0, import_react27.useState)(restoredQueue);
-    const [playerPrefs] = (0, import_react27.useState)(() => loadJson(PLAYER_PREFS_KEY) || {});
-    const [activeTab, setActiveTab] = (0, import_react27.useState)("player");
-    const [playlist, setPlaylist] = (0, import_react27.useState)(initial.queue);
-    const [currentTrackIndex, setCurrentTrackIndex] = (0, import_react27.useState)(initial.index);
-    const [folders, setFolders] = (0, import_react27.useState)([]);
-    const [syncingFolder, setSyncingFolder] = (0, import_react27.useState)(null);
-    const [outputTarget, setOutputTarget] = (0, import_react27.useState)("local");
-    const [speakers, setSpeakers] = (0, import_react27.useState)([]);
-    const [library, setLibrary] = (0, import_react27.useState)({ tracks: [], artists: [], albums: [] });
-    const [stats, setStats] = (0, import_react27.useState)({});
-    const [portableEntries, setPortableEntries] = (0, import_react27.useState)({});
-    const [artBase, setArtBase] = (0, import_react27.useState)({ local: null, cast: null });
-    const [repeatMode, setRepeatMode] = (0, import_react27.useState)(playerPrefs.repeat || "all");
-    const [shuffleMode, setShuffleMode] = (0, import_react27.useState)(!!playerPrefs.shuffle);
-    const [dockCollapsed, setDockCollapsed] = (0, import_react27.useState)(!!playerPrefs.dockCollapsed);
+    const [initial] = (0, import_react28.useState)(restoredQueue);
+    const [playerPrefs] = (0, import_react28.useState)(() => loadJson(PLAYER_PREFS_KEY) || {});
+    const [activeTab, setActiveTab] = (0, import_react28.useState)("player");
+    const [playlist, setPlaylist] = (0, import_react28.useState)(initial.queue);
+    const [currentTrackIndex, setCurrentTrackIndex] = (0, import_react28.useState)(initial.index);
+    const [folders, setFolders] = (0, import_react28.useState)([]);
+    const [syncingFolder, setSyncingFolder] = (0, import_react28.useState)(null);
+    const [outputTarget, setOutputTarget] = (0, import_react28.useState)("local");
+    const [speakers, setSpeakers] = (0, import_react28.useState)([]);
+    const [library, setLibrary] = (0, import_react28.useState)({ tracks: [], artists: [], albums: [] });
+    const [stats, setStats] = (0, import_react28.useState)({});
+    const [portableEntries, setPortableEntries] = (0, import_react28.useState)({});
+    const [artBase, setArtBase] = (0, import_react28.useState)({ local: null, cast: null });
+    const [repeatMode, setRepeatMode] = (0, import_react28.useState)(playerPrefs.repeat || "all");
+    const [shuffleMode, setShuffleMode] = (0, import_react28.useState)(!!playerPrefs.shuffle);
+    const [dockCollapsed, setDockCollapsed] = (0, import_react28.useState)(!!playerPrefs.dockCollapsed);
     const [playlistSidebarWidth, setPlaylistSidebarWidth] = useLayoutPref("playlistSidebarWidth", PLAYLIST_SIDEBAR_WIDTH);
     const playlistColumns = useColumns("playlist", PLAYLIST_COLUMNS);
-    const [libNav, setLibNav] = (0, import_react27.useState)(() => {
+    const [libNav, setLibNav] = (0, import_react28.useState)(() => {
       const saved = playerPrefs.librarySection;
       const initialSection = !saved || saved === "songs" || saved.startsWith("tv_") ? "albums" : saved;
       return [{ section: initialSection }];
     });
-    const [showsNav, setShowsNav] = (0, import_react27.useState)(() => [{ section: "tv_navigator" }]);
-    const [menu, setMenu] = (0, import_react27.useState)(null);
-    const [infoTrack, setInfoTrack] = (0, import_react27.useState)(null);
-    const [isScanning, setIsScanning] = (0, import_react27.useState)(false);
-    const [isScanningLibrary, setIsScanningLibrary] = (0, import_react27.useState)(false);
-    const [libraryScanStatus, setLibraryScanStatus] = (0, import_react27.useState)(null);
-    const [isFetchingMetadata, setIsFetchingMetadata] = (0, import_react27.useState)(false);
-    const [metadataFetchStatus, setMetadataFetchStatus] = (0, import_react27.useState)(null);
-    const [activeCastSession, setActiveCastSession] = (0, import_react27.useState)(null);
-    const [statusMsg, setStatusMsg] = (0, import_react27.useState)("");
-    const [activeAmbient, setActiveAmbient] = (0, import_react27.useState)(null);
-    const [isPlaying, setIsPlaying] = (0, import_react27.useState)(false);
-    const [playlists, setPlaylists] = (0, import_react27.useState)([]);
-    const [selectedPlaylistId, setSelectedPlaylistId] = (0, import_react27.useState)(null);
-    const [showCreatePlaylistModal, setShowCreatePlaylistModal] = (0, import_react27.useState)(false);
-    const [newPlaylistName, setNewPlaylistName] = (0, import_react27.useState)("");
-    const [newPlaylistDesc, setNewPlaylistDesc] = (0, import_react27.useState)("");
-    const [showSaveQueueModal, setShowSaveQueueModal] = (0, import_react27.useState)(false);
-    const [saveQueueName, setSaveQueueName] = (0, import_react27.useState)("");
-    const [saveQueueDesc, setSaveQueueDesc] = (0, import_react27.useState)("");
-    const [tracksForPlaylist, setTracksForPlaylist] = (0, import_react27.useState)(null);
-    const [showAiPlaylist, setShowAiPlaylist] = (0, import_react27.useState)(false);
-    const [showDjSettings, setShowDjSettings] = (0, import_react27.useState)(false);
-    const [tracksForAiFix, setTracksForAiFix] = (0, import_react27.useState)(null);
-    const [aiAgent, setAiAgent] = (0, import_react27.useState)(playerPrefs.aiAgent || null);
-    const [quickPlaylistName, setQuickPlaylistName] = (0, import_react27.useState)("");
-    const playerRef = (0, import_react27.useRef)(null);
-    const videoRef = (0, import_react27.useRef)(null);
-    const pipSlotRef = (0, import_react27.useRef)(null);
-    const [pipRect, setPipRect] = (0, import_react27.useState)(null);
-    const [videoFit, setVideoFit] = (0, import_react27.useState)("contain");
+    const [showsNav, setShowsNav] = (0, import_react28.useState)(() => [{ section: "tv_navigator" }]);
+    const [menu, setMenu] = (0, import_react28.useState)(null);
+    const [infoTrack, setInfoTrack] = (0, import_react28.useState)(null);
+    const [segmentTrack, setSegmentTrack] = (0, import_react28.useState)(null);
+    const [segmentDraft, setSegmentDraft] = (0, import_react28.useState)(null);
+    const [isScanning, setIsScanning] = (0, import_react28.useState)(false);
+    const [isScanningLibrary, setIsScanningLibrary] = (0, import_react28.useState)(false);
+    const [libraryScanStatus, setLibraryScanStatus] = (0, import_react28.useState)(null);
+    const [isFetchingMetadata, setIsFetchingMetadata] = (0, import_react28.useState)(false);
+    const [metadataFetchStatus, setMetadataFetchStatus] = (0, import_react28.useState)(null);
+    const [activeCastSession, setActiveCastSession] = (0, import_react28.useState)(null);
+    const [statusMsg, setStatusMsg] = (0, import_react28.useState)("");
+    const [activeAmbient, setActiveAmbient] = (0, import_react28.useState)(null);
+    const [isPlaying, setIsPlaying] = (0, import_react28.useState)(false);
+    const [playlists, setPlaylists] = (0, import_react28.useState)([]);
+    const [selectedPlaylistId, setSelectedPlaylistId] = (0, import_react28.useState)(null);
+    const [showCreatePlaylistModal, setShowCreatePlaylistModal] = (0, import_react28.useState)(false);
+    const [newPlaylistName, setNewPlaylistName] = (0, import_react28.useState)("");
+    const [newPlaylistDesc, setNewPlaylistDesc] = (0, import_react28.useState)("");
+    const [showSaveQueueModal, setShowSaveQueueModal] = (0, import_react28.useState)(false);
+    const [saveQueueName, setSaveQueueName] = (0, import_react28.useState)("");
+    const [saveQueueDesc, setSaveQueueDesc] = (0, import_react28.useState)("");
+    const [tracksForPlaylist, setTracksForPlaylist] = (0, import_react28.useState)(null);
+    const [showAiPlaylist, setShowAiPlaylist] = (0, import_react28.useState)(false);
+    const [showDjSettings, setShowDjSettings] = (0, import_react28.useState)(false);
+    const [tracksForAiFix, setTracksForAiFix] = (0, import_react28.useState)(null);
+    const [aiAgent, setAiAgent] = (0, import_react28.useState)(playerPrefs.aiAgent || null);
+    const [quickPlaylistName, setQuickPlaylistName] = (0, import_react28.useState)("");
+    const playerRef = (0, import_react28.useRef)(null);
+    const videoRef = (0, import_react28.useRef)(null);
+    const pipSlotRef = (0, import_react28.useRef)(null);
+    const [pipRect, setPipRect] = (0, import_react28.useState)(null);
+    const [videoFit, setVideoFit] = (0, import_react28.useState)("contain");
     const getMediaEl = () => isVideoTrack(latestRef.current.currentTrack) && videoRef.current ? videoRef.current : playerRef.current?.audio?.current;
-    const audioCtxRef = (0, import_react27.useRef)(null);
-    const ambientNodeRef = (0, import_react27.useRef)(null);
-    const toastTimerRef = (0, import_react27.useRef)(null);
-    const searchInputRef = (0, import_react27.useRef)(null);
-    const playedRef = (0, import_react27.useRef)({ key: null, counted: false });
-    const shuffleHistoryRef = (0, import_react27.useRef)([]);
-    const latestRef = (0, import_react27.useRef)({});
-    const [activeRobosUser, setActiveRobosUser] = (0, import_react27.useState)(null);
-    const formatDuration8 = (sec) => {
+    const audioCtxRef = (0, import_react28.useRef)(null);
+    const ambientNodeRef = (0, import_react28.useRef)(null);
+    const toastTimerRef = (0, import_react28.useRef)(null);
+    const searchInputRef = (0, import_react28.useRef)(null);
+    const playedRef = (0, import_react28.useRef)({ key: null, counted: false });
+    const shuffleHistoryRef = (0, import_react28.useRef)([]);
+    const latestRef = (0, import_react28.useRef)({});
+    const [activeRobosUser, setActiveRobosUser] = (0, import_react28.useState)(null);
+    const formatDuration9 = (sec) => {
       if (!sec || isNaN(sec)) return "--:--";
       const totalSec = Math.round(sec);
       const m = Math.floor(totalSec / 60);
@@ -23118,7 +23198,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
       const found = speakers.find((s) => s.ip === ip);
       return found ? found.name : `Smart TV (${ip})`;
     };
-    (0, import_react27.useEffect)(() => {
+    (0, import_react28.useEffect)(() => {
       refreshSpeakers(false);
       loadLibrary();
       loadStats();
@@ -23447,8 +23527,8 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
         showStatus("P2P peer error: " + err.message);
       }
     };
-    const [showMediaServiceModal, setShowMediaServiceModal] = (0, import_react27.useState)(false);
-    const [showVoiceCommandsModal, setShowVoiceCommandsModal] = (0, import_react27.useState)(false);
+    const [showMediaServiceModal, setShowMediaServiceModal] = (0, import_react28.useState)(false);
+    const [showVoiceCommandsModal, setShowVoiceCommandsModal] = (0, import_react28.useState)(false);
     const handleAddMediaService = async (endpoint, label) => {
       showStatus("Connecting to RobOS Media Service and syncing Movies & TV Shows...");
       const res = await window.robosAudio.addMediaService(endpoint, label);
@@ -23575,7 +23655,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
       playerRef.current?.audio?.current?.pause();
       if (videoRef.current) videoRef.current.pause();
       setIsPlaying(true);
-      showStatus(resumeSec >= 5 ? `Resuming "${first.title}" at ${formatDuration8(resumeSec)} on ${getSpeakerName(target)}!` : `Casting ${label ? `"${label}"` : `${list.length} movie(s)`} to ${getSpeakerName(target)}!`);
+      showStatus(resumeSec >= 5 ? `Resuming "${first.title}" at ${formatDuration9(resumeSec)} on ${getSpeakerName(target)}!` : `Casting ${label ? `"${label}"` : `${list.length} movie(s)`} to ${getSpeakerName(target)}!`);
     };
     const handleCastPlaylist = (pl) => castTracks(pl?.tracks, pl?.name || "Playlist");
     const handleCreatePlaylist = async () => {
@@ -23759,7 +23839,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
     };
     const handleSortQueue = (key, dir) => {
       const current = playlist[currentTrackIndex];
-      const next = (0, import_library_index9.sortTracks)(playlist, key, dir, stats);
+      const next = (0, import_library_index10.sortTracks)(playlist, key, dir, stats);
       setPlaylist(next);
       setCurrentTrackIndex(Math.max(0, next.indexOf(current)));
     };
@@ -23783,7 +23863,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
       showStatus("Cleared other tracks from queue");
     };
     const currentTrack = playlist[currentTrackIndex] || playlist[0] || null;
-    (0, import_react27.useEffect)(() => {
+    (0, import_react28.useEffect)(() => {
       if (outputTarget !== "local" || !currentTrack || isVideoTrack(currentTrack)) {
         const a = playerRef.current?.audio?.current;
         if (a) {
@@ -23798,7 +23878,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
         }
       }
     }, [currentTrack, outputTarget]);
-    const libraryById = (0, import_react27.useMemo)(() => new Map(library.tracks.map((t) => [t.id, t])), [library.tracks]);
+    const libraryById = (0, import_react28.useMemo)(() => new Map(library.tracks.map((t) => [t.id, t])), [library.tracks]);
     const resolveSrc = (t) => {
       if (!t) return "";
       if (t.cloud || t.peerStream || t.mediaService) {
@@ -23807,8 +23887,8 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
       }
       return t.src || (t.filePath ? fileUrl2(t.filePath) : "");
     };
-    const [playbackProbe, setPlaybackProbe] = (0, import_react27.useState)(null);
-    (0, import_react27.useEffect)(() => {
+    const [playbackProbe, setPlaybackProbe] = (0, import_react28.useState)(null);
+    (0, import_react28.useEffect)(() => {
       let cancelled = false;
       const ms = currentTrack?.mediaService;
       if (!currentTrack || !isVideoTrack(currentTrack) || !ms?.endpoint || !ms?.remoteItemId) {
@@ -23885,7 +23965,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
     const embeddedPipActive = Boolean(
       activeTab !== "player" && isPlaying && outputTarget === "local" && isVideoTrack(currentTrack)
     );
-    (0, import_react27.useLayoutEffect)(() => {
+    (0, import_react28.useLayoutEffect)(() => {
       if (!embeddedPipActive) {
         setPipRect(null);
         return void 0;
@@ -23921,7 +24001,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
         window.removeEventListener("resize", measure);
       };
     }, [embeddedPipActive, dockCollapsed, activeTab, currentTrack?.id]);
-    const seekVideoTo = (0, import_react27.useCallback)((rawTarget) => {
+    const seekVideoTo = (0, import_react28.useCallback)((rawTarget) => {
       const v = videoRef.current;
       const maxDur = knownVideoDurationSec || (v && isFinite(v.duration) && v.duration > 0 ? v.duration : 0);
       const target = Math.max(0, maxDur > 0 ? Math.min(Number(rawTarget) || 0, Math.max(0, maxDur - 0.5)) : Number(rawTarget) || 0);
@@ -24000,10 +24080,10 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
         showStatus("Error toggling pause: " + err.message);
       }
     };
-    const pendingLocalSeekRef = (0, import_react27.useRef)(null);
-    const songLoadsRef = (0, import_react27.useRef)(/* @__PURE__ */ new Set());
-    const internalVideoSyncTimeoutRef = (0, import_react27.useRef)(null);
-    const lastProgrammaticVideoSeekRef = (0, import_react27.useRef)({ time: 0, target: 0 });
+    const pendingLocalSeekRef = (0, import_react28.useRef)(null);
+    const songLoadsRef = (0, import_react28.useRef)(/* @__PURE__ */ new Set());
+    const internalVideoSyncTimeoutRef = (0, import_react28.useRef)(null);
+    const lastProgrammaticVideoSeekRef = (0, import_react28.useRef)({ time: 0, target: 0 });
     const syncVideoElementTime = (targetSec) => {
       const v = videoRef.current;
       if (!v || !isFinite(targetSec)) return;
@@ -24169,7 +24249,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
       beginPlayback(first, sameSrc, { startAt });
       const resumeSec = resolveResumeSecForTrack(first, startAt);
       if (resumeSec >= 1) {
-        showStatus(`Resuming "${first.title}" at ${formatDuration8(resumeSec)}...`);
+        showStatus(`Resuming "${first.title}" at ${formatDuration9(resumeSec)}...`);
       } else {
         showStatus(list.length === 1 ? `Playing "${first.title}" by ${first.artist || "Unknown"}` : `${shuffle ? "Shuffling" : "Playing"} ${list.length} tracks \u2014 starting with "${first.title}"`);
       }
@@ -24215,7 +24295,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
       beginPlayback(trackToPlay, sameSrc, { startAt });
       const resumeSec = resolveResumeSecForTrack(trackToPlay, startAt);
       if (resumeSec >= 1) {
-        showStatus(`Resuming "${trackToPlay.title}" at ${formatDuration8(resumeSec)}...`);
+        showStatus(`Resuming "${trackToPlay.title}" at ${formatDuration9(resumeSec)}...`);
       } else {
         showStatus(`Playing "${trackToPlay.title}" by ${trackToPlay.artist || "Unknown"}`);
       }
@@ -24299,19 +24379,19 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
       const idx = pickNextIndex(false);
       if (idx != null) goToIndex(idx);
     };
-    const plannedNextIndex = (0, import_react27.useMemo)(
+    const plannedNextIndex = (0, import_react28.useMemo)(
       () => shuffleMode ? pickNextIndex(true) : null,
       [shuffleMode, currentTrackIndex, playlist, repeatMode]
       // eslint-disable-line react-hooks/exhaustive-deps
     );
-    const upcomingTracks = (0, import_react27.useMemo)(() => {
+    const upcomingTracks = (0, import_react28.useMemo)(() => {
       if (shuffleMode) return plannedNextIndex != null ? [playlist[plannedNextIndex]] : [];
       const next = playlist.slice(currentTrackIndex + 1, currentTrackIndex + 4);
       if (next.length < 3 && repeatMode === "all") next.push(...playlist.slice(0, 3 - next.length));
       return next;
     }, [shuffleMode, plannedNextIndex, playlist, currentTrackIndex, repeatMode]);
     const nextCloudPath = upcomingTracks[0] && upcomingTracks[0].cloud && !upcomingTracks[0].cloud.cached ? upcomingTracks[0].filePath : null;
-    (0, import_react27.useEffect)(() => {
+    (0, import_react28.useEffect)(() => {
       if (!nextCloudPath || !isPlaying || !window.robosAudio?.prefetchTrack) return void 0;
       const timer = setTimeout(() => {
         window.robosAudio.prefetchTrack(nextCloudPath).catch(() => {
@@ -24333,7 +24413,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
         return window.robosAudio.castFile(target, filePath, meta);
       }
     });
-    const getControlPlayer = (0, import_react27.useCallback)(() => latestRef.current.controlPlayer(), []);
+    const getControlPlayer = (0, import_react28.useCallback)(() => latestRef.current.controlPlayer(), []);
     const speakerTakeover = useSpeakerTakeover({ getPlayer: getControlPlayer, showStatus });
     const handleTrackEnded = () => {
       if (repeatMode === "one") {
@@ -24446,15 +24526,15 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
     };
     const libraryNav = libNav[libNav.length - 1];
     const currentShowsNav = showsNav[showsNav.length - 1];
-    const movieCount = (0, import_react27.useMemo)(() => {
+    const movieCount = (0, import_react28.useMemo)(() => {
       const set = /* @__PURE__ */ new Set();
       for (const t of library.tracks || []) {
-        if (t && t.mediaType !== "tv") set.add((0, import_library_index9.albumKeyOf)(t));
+        if (t && t.mediaType !== "tv") set.add((0, import_library_index10.albumKeyOf)(t));
       }
       return set.size;
     }, [library.tracks]);
-    const tvEpisodeCount = (0, import_react27.useMemo)(() => (library.tracks || []).filter((t) => t && t.mediaType === "tv").length, [library.tracks]);
-    const tvShowCount = (0, import_react27.useMemo)(() => {
+    const tvEpisodeCount = (0, import_react28.useMemo)(() => (library.tracks || []).filter((t) => t && t.mediaType === "tv").length, [library.tracks]);
+    const tvShowCount = (0, import_react28.useMemo)(() => {
       const set = /* @__PURE__ */ new Set();
       for (const t of library.tracks || []) {
         if (t && t.mediaType === "tv") set.add(String(t.showName || t.album || "").trim().toLowerCase());
@@ -24481,14 +24561,14 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
     const showsBack = () => setShowsNav((prev) => prev.length > 1 ? prev.slice(0, -1) : prev);
     const goToAlbumOf = (track) => {
       if (track && track.mediaType === "tv") {
-        navigateShows({ section: "tv_shows", detail: { type: "album", key: (0, import_library_index9.albumKeyOf)(track) } });
+        navigateShows({ section: "tv_shows", detail: { type: "album", key: (0, import_library_index10.albumKeyOf)(track) } });
       } else {
-        navigateLibrary({ section: "albums", detail: { type: "album", key: (0, import_library_index9.albumKeyOf)(track) } });
+        navigateLibrary({ section: "albums", detail: { type: "album", key: (0, import_library_index10.albumKeyOf)(track) } });
       }
     };
-    const goToArtist = (name) => navigateLibrary({ section: "artists", detail: { type: "artist", key: (0, import_library_index9.fold)(name || "Unknown Artist") } });
+    const goToArtist = (name) => navigateLibrary({ section: "artists", detail: { type: "artist", key: (0, import_library_index10.fold)(name || "Unknown Artist") } });
     const goToGenre = (genre) => {
-      const view = { section: "genres", detail: { type: "genre", key: (0, import_library_index9.fold)((0, import_library_index9.splitGenres)(genre)[0] || genre) } };
+      const view = { section: "genres", detail: { type: "genre", key: (0, import_library_index10.fold)((0, import_library_index10.splitGenres)(genre)[0] || genre) } };
       if (activeTab === "shows") navigateShows(view);
       else navigateLibrary(view);
     };
@@ -24516,7 +24596,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
       }).catch(() => {
       });
     };
-    const lastProgressSaveRef = (0, import_react27.useRef)({ trackId: null, time: 0 });
+    const lastProgressSaveRef = (0, import_react28.useRef)({ trackId: null, time: 0 });
     const saveTrackProgress = (track, positionSec, durationSec, completed = false, { force = false, started = false } = {}) => {
       if (!track?.id || !window.robosAudio?.saveProgress) return;
       const now = Date.now();
@@ -24581,11 +24661,11 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
       }
       showStatus(`Removed "${row.showTitle}${row.epCode ? ` ${row.epCode}` : ""}" from Watch History`);
     };
-    const watchHistoryCount = (0, import_react27.useMemo)(() => {
+    const watchHistoryCount = (0, import_react28.useMemo)(() => {
       let n = 0;
       for (const t of library.tracks || []) {
         if (!t?.id) continue;
-        const ws = (0, import_library_index9.getTrackWatchState)(t, stats);
+        const ws = (0, import_library_index10.getTrackWatchState)(t, stats);
         if (ws.completed || ws.inProgress || ws.plays > 0 || ws.lastPlayed) n++;
       }
       return n;
@@ -24618,12 +24698,56 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
       const res = await window.robosAudio.showInFolder(track.filePath).catch(() => null);
       if (!res || !res.ok) showStatus("That file is not reachable right now.");
     };
-    const openMenu = (0, import_react27.useCallback)((e, items) => {
+    const openMenu = (0, import_react28.useCallback)((e, items) => {
       e.preventDefault?.();
       e.stopPropagation?.();
       setMenu({ x: e.clientX, y: e.clientY, items });
     }, []);
-    const closeMenu = (0, import_react27.useCallback)(() => setMenu(null), []);
+    const closeMenu = (0, import_react28.useCallback)(() => setMenu(null), []);
+    const openVideoSegments = (track) => {
+      if (isVideoTrack(track)) setSegmentTrack(track);
+    };
+    const openVideoSegmentMenu = (event, position = transcodeOffsetSec + (videoRef.current?.currentTime || 0)) => {
+      const track = currentTrack;
+      if (!isVideoTrack(track)) return;
+      const draft = segmentDraft?.trackId === track.id ? segmentDraft : null;
+      const marks = ["intro", "commercial"].map((type) => {
+        if (draft?.type !== type) {
+          return { label: `Mark ${type} start here`, icon: "clock", onClick: () => {
+            setSegmentDraft({ trackId: track.id, type, start: position });
+            showStatus(`Marked ${type} start. Seek to the end and right-click again.`);
+          } };
+        }
+        return {
+          label: `Mark ${type} end here`,
+          icon: "check",
+          disabled: position - draft.start < 0.25,
+          onClick: async () => {
+            try {
+              const result = await window.robosAudio.addVideoSegment(track.id, { type, start: draft.start, end: position });
+              if (!result.ok) throw new Error(result.error);
+              setSegmentDraft((previous) => previous === draft ? null : previous);
+              showStatus(type === "intro" ? "Intro saved." : "Commercial break saved.");
+            } catch (err) {
+              showStatus(err.message);
+            }
+          }
+        };
+      });
+      openMenu(event, [
+        { header: `Video segments \xB7 ${formatSegmentTime(position)}` },
+        ...marks,
+        draft ? { label: "Cancel segment start", onClick: () => setSegmentDraft(null) } : null,
+        { separator: true },
+        { label: "Video segments\u2026", icon: "list", onClick: () => openVideoSegments(track) }
+      ]);
+    };
+    const jumpToVideoSegment = (track, position) => {
+      setSegmentTrack(null);
+      setActiveTab("player");
+      if (track.id === currentTrack?.id && outputTarget === "local") seekVideoTo(position);
+      else playTracks([track], 0, { startAt: position });
+    };
     const handleAiMetadataApplied = async (res) => {
       if (res && res.library) {
         setLibrary(res.library);
@@ -24700,6 +24824,8 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
         setWatched: setWatchedTracks,
         saveProgress: saveTrackProgress,
         showInfo: setInfoTrack,
+        openVideoSegments,
+        canMarkVideo: isVideoTrack,
         showInFolder,
         goToAlbumOf,
         goToArtist,
@@ -24978,7 +25104,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
     latestRef.current.currentTrack = currentTrack;
     latestRef.current.currentIndex = currentTrackIndex;
     latestRef.current.recordPlay = recordPlay;
-    (0, import_react27.useEffect)(() => {
+    (0, import_react28.useEffect)(() => {
       const audio = playerRef.current?.audio?.current;
       if (!audio) return void 0;
       const onTime = () => {
@@ -25003,7 +25129,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
         audio.removeEventListener("ended", onEnded);
       };
     }, []);
-    (0, import_react27.useEffect)(() => {
+    (0, import_react28.useEffect)(() => {
       if (!("mediaSession" in navigator)) return;
       const isPaused = () => {
         const audio = playerRef.current?.audio?.current;
@@ -25026,7 +25152,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
         }
       }
     }, []);
-    (0, import_react27.useEffect)(() => {
+    (0, import_react28.useEffect)(() => {
       if (!("mediaSession" in navigator) || !currentTrack || typeof MediaMetadata === "undefined") return;
       const art = artUrlFor(artBase.local, currentTrack.artId);
       try {
@@ -25040,7 +25166,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
       }
     }, [currentTrack?.id, currentTrack?.title, currentTrack?.artId, artBase.local]);
     latestRef.current.flushProgressSync = () => flushCurrentTrackProgress({ sync: true });
-    (0, import_react27.useEffect)(() => {
+    (0, import_react28.useEffect)(() => {
       const onUnload = () => latestRef.current.flushProgressSync?.();
       window.addEventListener("beforeunload", onUnload);
       window.addEventListener("pagehide", onUnload);
@@ -25049,7 +25175,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
         window.removeEventListener("pagehide", onUnload);
       };
     }, []);
-    (0, import_react27.useEffect)(() => {
+    (0, import_react28.useEffect)(() => {
       const onKey = (e) => {
         const tag = (e.target.tagName || "").toLowerCase();
         const typing = tag === "input" || tag === "textarea" || tag === "select" || e.target.isContentEditable;
@@ -25076,7 +25202,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
       window.addEventListener("keydown", onKey);
       return () => window.removeEventListener("keydown", onKey);
     }, []);
-    (0, import_react27.useEffect)(() => {
+    (0, import_react28.useEffect)(() => {
       const timer = setTimeout(() => {
         try {
           const start = Math.max(0, Math.min(currentTrackIndex - 500, playlist.length - MAX_SAVED_QUEUE));
@@ -25087,7 +25213,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
       }, 400);
       return () => clearTimeout(timer);
     }, [playlist, currentTrackIndex]);
-    (0, import_react27.useEffect)(() => {
+    (0, import_react28.useEffect)(() => {
       try {
         localStorage.setItem(PLAYER_PREFS_KEY, JSON.stringify({
           repeat: repeatMode,
@@ -25100,14 +25226,14 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
       } catch {
       }
     }, [repeatMode, shuffleMode, dockCollapsed, libraryNav.section, dj.settings, aiAgent]);
-    return /* @__PURE__ */ import_react27.default.createElement(LibraryContext.Provider, { value: libraryCtx }, /* @__PURE__ */ import_react27.default.createElement(
+    return /* @__PURE__ */ import_react28.default.createElement(LibraryContext.Provider, { value: libraryCtx }, /* @__PURE__ */ import_react28.default.createElement(
       "div",
       {
         className: "react-audio-app",
         onDragOver: (e) => e.preventDefault(),
         onDrop: handleDrop
       },
-      /* @__PURE__ */ import_react27.default.createElement("header", { className: "app-header" }, /* @__PURE__ */ import_react27.default.createElement("div", { className: "header-brand" }, /* @__PURE__ */ import_react27.default.createElement("svg", { className: "brand-icon", xmlns: "http://www.w3.org/2000/svg", width: "28", height: "28", viewBox: "0 0 24 24", fill: "none", stroke: "#e8a33d", strokeWidth: "1.5", strokeLinecap: "round", strokeLinejoin: "round" }, /* @__PURE__ */ import_react27.default.createElement("rect", { x: "2", y: "3", width: "20", height: "18", rx: "2.5" }), /* @__PURE__ */ import_react27.default.createElement("line", { x1: "7", y1: "3", x2: "7", y2: "21" }), /* @__PURE__ */ import_react27.default.createElement("line", { x1: "17", y1: "3", x2: "17", y2: "21" }), /* @__PURE__ */ import_react27.default.createElement("line", { x1: "2", y1: "12", x2: "22", y2: "12" }), /* @__PURE__ */ import_react27.default.createElement("polygon", { points: "10 9 15 12 10 15 10 9", fill: "#e8a33d" })), /* @__PURE__ */ import_react27.default.createElement("div", null, /* @__PURE__ */ import_react27.default.createElement("h1", null, "RobOS Movie Player"), /* @__PURE__ */ import_react27.default.createElement("span", { className: "subtitle" }, "Local cinema library, SFTP/Cloud storage and RobOS Smart TV Cast"))), /* @__PURE__ */ import_react27.default.createElement("div", { className: "header-actions" }, /* @__PURE__ */ import_react27.default.createElement(
+      /* @__PURE__ */ import_react28.default.createElement("header", { className: "app-header" }, /* @__PURE__ */ import_react28.default.createElement("div", { className: "header-brand" }, /* @__PURE__ */ import_react28.default.createElement("svg", { className: "brand-icon", xmlns: "http://www.w3.org/2000/svg", width: "28", height: "28", viewBox: "0 0 24 24", fill: "none", stroke: "#e8a33d", strokeWidth: "1.5", strokeLinecap: "round", strokeLinejoin: "round" }, /* @__PURE__ */ import_react28.default.createElement("rect", { x: "2", y: "3", width: "20", height: "18", rx: "2.5" }), /* @__PURE__ */ import_react28.default.createElement("line", { x1: "7", y1: "3", x2: "7", y2: "21" }), /* @__PURE__ */ import_react28.default.createElement("line", { x1: "17", y1: "3", x2: "17", y2: "21" }), /* @__PURE__ */ import_react28.default.createElement("line", { x1: "2", y1: "12", x2: "22", y2: "12" }), /* @__PURE__ */ import_react28.default.createElement("polygon", { points: "10 9 15 12 10 15 10 9", fill: "#e8a33d" })), /* @__PURE__ */ import_react28.default.createElement("div", null, /* @__PURE__ */ import_react28.default.createElement("h1", null, "RobOS Movie Player"), /* @__PURE__ */ import_react28.default.createElement("span", { className: "subtitle" }, "Local cinema library, SFTP/Cloud storage and RobOS Smart TV Cast"))), /* @__PURE__ */ import_react28.default.createElement("div", { className: "header-actions" }, /* @__PURE__ */ import_react28.default.createElement(
         "button",
         {
           id: "btn-record-to-library",
@@ -25129,9 +25255,9 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
             });
           }
         },
-        /* @__PURE__ */ import_react27.default.createElement("span", { className: "record-to-library-dot", "aria-hidden": "true" }),
-        /* @__PURE__ */ import_react27.default.createElement("span", null, "Record to Library")
-      ), activeRobosUser && activeRobosUser.name && /* @__PURE__ */ import_react27.default.createElement(
+        /* @__PURE__ */ import_react28.default.createElement("span", { className: "record-to-library-dot", "aria-hidden": "true" }),
+        /* @__PURE__ */ import_react28.default.createElement("span", null, "Record to Library")
+      ), activeRobosUser && activeRobosUser.name && /* @__PURE__ */ import_react28.default.createElement(
         "span",
         {
           id: "active-robos-user-badge",
@@ -25151,7 +25277,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
           title: activeRobosUser.identified ? `Identified by RobOS Voice ID (${Math.round((activeRobosUser.confidence || 0) * 100)}% voiceprint confidence)` : `Active RobOS User context (${activeRobosUser.source || "voice"})`
         },
         `\u{1F464} RobOS User: ${activeRobosUser.name}${activeRobosUser.identified && activeRobosUser.confidence ? ` (${Math.round(activeRobosUser.confidence * 100)}%)` : ""}`
-      ), /* @__PURE__ */ import_react27.default.createElement(
+      ), /* @__PURE__ */ import_react28.default.createElement(
         "button",
         {
           id: "btn-header-media-service",
@@ -25159,9 +25285,9 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
           onClick: () => setShowMediaServiceModal(true),
           title: "Connect to a RobOS Media Server (Movies, TV Shows, MCP)"
         },
-        /* @__PURE__ */ import_react27.default.createElement(Icon2, { name: "cloud", size: 15 }),
-        /* @__PURE__ */ import_react27.default.createElement("span", null, "RobOS Media Service")
-      ), /* @__PURE__ */ import_react27.default.createElement(
+        /* @__PURE__ */ import_react28.default.createElement(Icon2, { name: "cloud", size: 15 }),
+        /* @__PURE__ */ import_react28.default.createElement("span", null, "RobOS Media Service")
+      ), /* @__PURE__ */ import_react28.default.createElement(
         "button",
         {
           id: "btn-header-add-folder",
@@ -25169,9 +25295,9 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
           onClick: handleSelectFolder,
           title: "Open built-in system file manager to add movie folder"
         },
-        /* @__PURE__ */ import_react27.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2", "stroke-linecap": "round", "stroke-linejoin": "round" }, /* @__PURE__ */ import_react27.default.createElement("path", { d: "M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z" }), /* @__PURE__ */ import_react27.default.createElement("line", { x1: "12", y1: "10", x2: "12", y2: "16" }), /* @__PURE__ */ import_react27.default.createElement("line", { x1: "9", y1: "13", x2: "15", y2: "13" })),
-        /* @__PURE__ */ import_react27.default.createElement("span", null, "Add Folder")
-      ), /* @__PURE__ */ import_react27.default.createElement(
+        /* @__PURE__ */ import_react28.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2", "stroke-linecap": "round", "stroke-linejoin": "round" }, /* @__PURE__ */ import_react28.default.createElement("path", { d: "M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z" }), /* @__PURE__ */ import_react28.default.createElement("line", { x1: "12", y1: "10", x2: "12", y2: "16" }), /* @__PURE__ */ import_react28.default.createElement("line", { x1: "9", y1: "13", x2: "15", y2: "13" })),
+        /* @__PURE__ */ import_react28.default.createElement("span", null, "Add Folder")
+      ), /* @__PURE__ */ import_react28.default.createElement(
         "button",
         {
           id: "btn-header-add-files",
@@ -25179,9 +25305,9 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
           onClick: handleAddFiles,
           title: "Open file picker to select individual movie files"
         },
-        /* @__PURE__ */ import_react27.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2", "stroke-linecap": "round", "stroke-linejoin": "round" }, /* @__PURE__ */ import_react27.default.createElement("path", { d: "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" }), /* @__PURE__ */ import_react27.default.createElement("polyline", { points: "14 2 14 8 20 8" }), /* @__PURE__ */ import_react27.default.createElement("line", { x1: "12", y1: "18", x2: "12", y2: "12" }), /* @__PURE__ */ import_react27.default.createElement("line", { x1: "9", y1: "15", x2: "15", y2: "15" })),
-        /* @__PURE__ */ import_react27.default.createElement("span", null, "Add Files")
-      )), /* @__PURE__ */ import_react27.default.createElement("div", { className: "output-selector-wrapper" }, /* @__PURE__ */ import_react27.default.createElement("label", null, "Display Output:"), /* @__PURE__ */ import_react27.default.createElement("div", { className: "select-group" }, /* @__PURE__ */ import_react27.default.createElement(
+        /* @__PURE__ */ import_react28.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2", "stroke-linecap": "round", "stroke-linejoin": "round" }, /* @__PURE__ */ import_react28.default.createElement("path", { d: "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" }), /* @__PURE__ */ import_react28.default.createElement("polyline", { points: "14 2 14 8 20 8" }), /* @__PURE__ */ import_react28.default.createElement("line", { x1: "12", y1: "18", x2: "12", y2: "12" }), /* @__PURE__ */ import_react28.default.createElement("line", { x1: "9", y1: "15", x2: "15", y2: "15" })),
+        /* @__PURE__ */ import_react28.default.createElement("span", null, "Add Files")
+      )), /* @__PURE__ */ import_react28.default.createElement("div", { className: "output-selector-wrapper" }, /* @__PURE__ */ import_react28.default.createElement("label", null, "Display Output:"), /* @__PURE__ */ import_react28.default.createElement("div", { className: "select-group" }, /* @__PURE__ */ import_react28.default.createElement(
         "select",
         {
           id: "output-select",
@@ -25211,10 +25337,10 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
             showStatus(`Switched display output to: ${e.target.options[e.target.selectedIndex].text}`);
           }
         },
-        /* @__PURE__ */ import_react27.default.createElement("option", { value: "local" }, "Desktop (Local Cinema)"),
-        speakers.map((s) => /* @__PURE__ */ import_react27.default.createElement("option", { key: s.ip, value: s.ip }, s.isDefault ? "\u2605 " : "", s.name, " (", s.ip, ")", s.isDefault ? " [Default]" : "")),
-        speakers.length > 0 && /* @__PURE__ */ import_react27.default.createElement("option", { value: "all" }, "Broadcast to All Smart TVs")
-      ), /* @__PURE__ */ import_react27.default.createElement(
+        /* @__PURE__ */ import_react28.default.createElement("option", { value: "local" }, "Desktop (Local Cinema)"),
+        speakers.map((s) => /* @__PURE__ */ import_react28.default.createElement("option", { key: s.ip, value: s.ip }, s.isDefault ? "\u2605 " : "", s.name, " (", s.ip, ")", s.isDefault ? " [Default]" : "")),
+        speakers.length > 0 && /* @__PURE__ */ import_react28.default.createElement("option", { value: "all" }, "Broadcast to All Smart TVs")
+      ), /* @__PURE__ */ import_react28.default.createElement(
         "button",
         {
           id: "btn-scan-speakers",
@@ -25222,9 +25348,9 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
           onClick: () => refreshSpeakers(true),
           title: "Scan LAN & RobOS Smart TV Studio for Smart TVs"
         },
-        /* @__PURE__ */ import_react27.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2", "stroke-linecap": "round", "stroke-linejoin": "round" }, /* @__PURE__ */ import_react27.default.createElement("path", { d: "M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" }), /* @__PURE__ */ import_react27.default.createElement("path", { d: "M3 3v5h5" }), /* @__PURE__ */ import_react27.default.createElement("path", { d: "M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" }), /* @__PURE__ */ import_react27.default.createElement("path", { d: "M16 21h5v-5" })),
-        /* @__PURE__ */ import_react27.default.createElement("span", null, "Scan Smart TVs")
-      ), /* @__PURE__ */ import_react27.default.createElement(
+        /* @__PURE__ */ import_react28.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2", "stroke-linecap": "round", "stroke-linejoin": "round" }, /* @__PURE__ */ import_react28.default.createElement("path", { d: "M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" }), /* @__PURE__ */ import_react28.default.createElement("path", { d: "M3 3v5h5" }), /* @__PURE__ */ import_react28.default.createElement("path", { d: "M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" }), /* @__PURE__ */ import_react28.default.createElement("path", { d: "M16 21h5v-5" })),
+        /* @__PURE__ */ import_react28.default.createElement("span", null, "Scan Smart TVs")
+      ), /* @__PURE__ */ import_react28.default.createElement(
         "button",
         {
           id: "btn-voice-commands",
@@ -25232,37 +25358,37 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
           onClick: () => setShowVoiceCommandsModal(true),
           title: "View & test RobOS Voice Assistant commands for Movie Player & Named Smart TVs"
         },
-        /* @__PURE__ */ import_react27.default.createElement(Icon2, { name: "mic", size: 15 }),
-        /* @__PURE__ */ import_react27.default.createElement("span", null, "Voice Commands")
+        /* @__PURE__ */ import_react28.default.createElement(Icon2, { name: "mic", size: 15 }),
+        /* @__PURE__ */ import_react28.default.createElement("span", null, "Voice Commands")
       )))),
-      /* @__PURE__ */ import_react27.default.createElement("nav", { className: "nav-tabs" }, /* @__PURE__ */ import_react27.default.createElement(
+      /* @__PURE__ */ import_react28.default.createElement("nav", { className: "nav-tabs" }, /* @__PURE__ */ import_react28.default.createElement(
         "button",
         {
           id: "tab-btn-player",
           className: `tab-btn ${activeTab === "player" ? "active" : ""}`,
           onClick: () => setActiveTab("player")
         },
-        /* @__PURE__ */ import_react27.default.createElement(Icon2, { name: "tv" }),
-        /* @__PURE__ */ import_react27.default.createElement("span", null, "Cinema Stage")
-      ), /* @__PURE__ */ import_react27.default.createElement(
+        /* @__PURE__ */ import_react28.default.createElement(Icon2, { name: "tv" }),
+        /* @__PURE__ */ import_react28.default.createElement("span", null, "Cinema Stage")
+      ), /* @__PURE__ */ import_react28.default.createElement(
         "button",
         {
           id: "tab-btn-library",
           className: `tab-btn ${activeTab === "library" ? "active" : ""}`,
           onClick: () => setActiveTab("library")
         },
-        /* @__PURE__ */ import_react27.default.createElement(Icon2, { name: "disc" }),
-        /* @__PURE__ */ import_react27.default.createElement("span", null, "Movies (", movieCount, ")")
-      ), /* @__PURE__ */ import_react27.default.createElement(
+        /* @__PURE__ */ import_react28.default.createElement(Icon2, { name: "disc" }),
+        /* @__PURE__ */ import_react28.default.createElement("span", null, "Movies (", movieCount, ")")
+      ), /* @__PURE__ */ import_react28.default.createElement(
         "button",
         {
           id: "tab-btn-shows",
           className: `tab-btn ${activeTab === "shows" ? "active" : ""}`,
           onClick: () => setActiveTab("shows")
         },
-        /* @__PURE__ */ import_react27.default.createElement(Icon2, { name: "tv" }),
-        /* @__PURE__ */ import_react27.default.createElement("span", null, "TV Shows (", tvShowCount, tvEpisodeCount ? ` \xB7 ${tvEpisodeCount} Eps` : "", ")")
-      ), /* @__PURE__ */ import_react27.default.createElement(
+        /* @__PURE__ */ import_react28.default.createElement(Icon2, { name: "tv" }),
+        /* @__PURE__ */ import_react28.default.createElement("span", null, "TV Shows (", tvShowCount, tvEpisodeCount ? ` \xB7 ${tvEpisodeCount} Eps` : "", ")")
+      ), /* @__PURE__ */ import_react28.default.createElement(
         "button",
         {
           id: "tab-btn-history",
@@ -25272,45 +25398,45 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
             setActiveTab("history");
           }
         },
-        /* @__PURE__ */ import_react27.default.createElement(Icon2, { name: "history" }),
-        /* @__PURE__ */ import_react27.default.createElement("span", null, "Watch History", watchHistoryCount > 0 ? ` (${watchHistoryCount})` : "")
-      ), /* @__PURE__ */ import_react27.default.createElement(
+        /* @__PURE__ */ import_react28.default.createElement(Icon2, { name: "history" }),
+        /* @__PURE__ */ import_react28.default.createElement("span", null, "Watch History", watchHistoryCount > 0 ? ` (${watchHistoryCount})` : "")
+      ), /* @__PURE__ */ import_react28.default.createElement(
         "button",
         {
           id: "tab-btn-playlists",
           className: `tab-btn ${activeTab === "playlists" ? "active" : ""}`,
           onClick: () => setActiveTab("playlists")
         },
-        /* @__PURE__ */ import_react27.default.createElement(Icon2, { name: "list" }),
-        /* @__PURE__ */ import_react27.default.createElement("span", null, "Watchlists (", playlists.length, ")")
-      ), /* @__PURE__ */ import_react27.default.createElement(
+        /* @__PURE__ */ import_react28.default.createElement(Icon2, { name: "list" }),
+        /* @__PURE__ */ import_react28.default.createElement("span", null, "Watchlists (", playlists.length, ")")
+      ), /* @__PURE__ */ import_react28.default.createElement(
         "button",
         {
           id: "tab-btn-cloud",
           className: `tab-btn ${activeTab === "cloud" ? "active" : ""}`,
           onClick: () => setActiveTab("cloud")
         },
-        /* @__PURE__ */ import_react27.default.createElement(Icon2, { name: "cloud" }),
-        /* @__PURE__ */ import_react27.default.createElement("span", null, "Cloud Storage")
-      ), /* @__PURE__ */ import_react27.default.createElement(
+        /* @__PURE__ */ import_react28.default.createElement(Icon2, { name: "cloud" }),
+        /* @__PURE__ */ import_react28.default.createElement("span", null, "Cloud Storage")
+      ), /* @__PURE__ */ import_react28.default.createElement(
         "button",
         {
           id: "tab-btn-ambient",
           className: `tab-btn ${activeTab === "ambient" ? "active" : ""}`,
           onClick: () => setActiveTab("ambient")
         },
-        /* @__PURE__ */ import_react27.default.createElement(Icon2, { name: "wave" }),
-        /* @__PURE__ */ import_react27.default.createElement("span", null, "Theater Ambience")
-      ), /* @__PURE__ */ import_react27.default.createElement(
+        /* @__PURE__ */ import_react28.default.createElement(Icon2, { name: "wave" }),
+        /* @__PURE__ */ import_react28.default.createElement("span", null, "Theater Ambience")
+      ), /* @__PURE__ */ import_react28.default.createElement(
         "button",
         {
           id: "tab-btn-speakers",
           className: `tab-btn ${activeTab === "speakers" ? "active" : ""}`,
           onClick: () => setActiveTab("speakers")
         },
-        /* @__PURE__ */ import_react27.default.createElement(Icon2, { name: "tv" }),
-        /* @__PURE__ */ import_react27.default.createElement("span", null, "Smart TVs (", speakers.length, ")")
-      ), /* @__PURE__ */ import_react27.default.createElement("span", { className: "nav-spacer" }), /* @__PURE__ */ import_react27.default.createElement(
+        /* @__PURE__ */ import_react28.default.createElement(Icon2, { name: "tv" }),
+        /* @__PURE__ */ import_react28.default.createElement("span", null, "Smart TVs (", speakers.length, ")")
+      ), /* @__PURE__ */ import_react28.default.createElement("span", { className: "nav-spacer" }), /* @__PURE__ */ import_react28.default.createElement(
         "button",
         {
           id: "btn-toggle-queue-panel",
@@ -25318,10 +25444,10 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
           onClick: () => setDockCollapsed((c) => !c),
           title: "Show or hide the Watch Queue"
         },
-        /* @__PURE__ */ import_react27.default.createElement(Icon2, { name: "panel" }),
-        /* @__PURE__ */ import_react27.default.createElement("span", null, "Watch Queue")
+        /* @__PURE__ */ import_react28.default.createElement(Icon2, { name: "panel" }),
+        /* @__PURE__ */ import_react28.default.createElement("span", null, "Watch Queue")
       )),
-      /* @__PURE__ */ import_react27.default.createElement("div", { className: "app-body" }, /* @__PURE__ */ import_react27.default.createElement("main", { className: `tab-content ${activeTab === "library" || activeTab === "shows" || activeTab === "history" ? "library-active" : ""}` }, isScanningLibrary && /* @__PURE__ */ import_react27.default.createElement("div", { className: "scan-progress-banner" }, /* @__PURE__ */ import_react27.default.createElement("div", { className: "scan-progress-info" }, /* @__PURE__ */ import_react27.default.createElement("div", { className: "scan-spinner" }), /* @__PURE__ */ import_react27.default.createElement("div", { className: "scan-text" }, /* @__PURE__ */ import_react27.default.createElement("strong", null, "Background Library Scanning Active"), /* @__PURE__ */ import_react27.default.createElement("span", { className: "scan-details" }, libraryScanStatus?.total > 0 ? `${libraryScanStatus.current || 0} / ${libraryScanStatus.total} files (${Math.round((libraryScanStatus.current || 0) / libraryScanStatus.total * 100)}%)` : "Discovering audio files in folder(s)...", libraryScanStatus?.file ? ` \u2014 ${libraryScanStatus.file.split("/").slice(-2).join("/")}` : ""))), /* @__PURE__ */ import_react27.default.createElement("div", { className: "scan-bar-container" }, /* @__PURE__ */ import_react27.default.createElement(
+      /* @__PURE__ */ import_react28.default.createElement("div", { className: "app-body" }, /* @__PURE__ */ import_react28.default.createElement("main", { className: `tab-content ${activeTab === "library" || activeTab === "shows" || activeTab === "history" ? "library-active" : ""}` }, isScanningLibrary && /* @__PURE__ */ import_react28.default.createElement("div", { className: "scan-progress-banner" }, /* @__PURE__ */ import_react28.default.createElement("div", { className: "scan-progress-info" }, /* @__PURE__ */ import_react28.default.createElement("div", { className: "scan-spinner" }), /* @__PURE__ */ import_react28.default.createElement("div", { className: "scan-text" }, /* @__PURE__ */ import_react28.default.createElement("strong", null, "Background Library Scanning Active"), /* @__PURE__ */ import_react28.default.createElement("span", { className: "scan-details" }, libraryScanStatus?.total > 0 ? `${libraryScanStatus.current || 0} / ${libraryScanStatus.total} files (${Math.round((libraryScanStatus.current || 0) / libraryScanStatus.total * 100)}%)` : "Discovering audio files in folder(s)...", libraryScanStatus?.file ? ` \u2014 ${libraryScanStatus.file.split("/").slice(-2).join("/")}` : ""))), /* @__PURE__ */ import_react28.default.createElement("div", { className: "scan-bar-container" }, /* @__PURE__ */ import_react28.default.createElement(
         "div",
         {
           className: "scan-bar-fill",
@@ -25329,7 +25455,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
             width: `${libraryScanStatus?.total > 0 ? Math.min(100, Math.round((libraryScanStatus.current || 0) / libraryScanStatus.total * 100)) : 100}%`
           }
         }
-      )), /* @__PURE__ */ import_react27.default.createElement("button", { className: "btn-cancel-scan", onClick: handleCancelScan }, "Cancel Scan")), isFetchingMetadata && /* @__PURE__ */ import_react27.default.createElement("div", { className: "scan-progress-banner metadata-fetch-banner" }, /* @__PURE__ */ import_react27.default.createElement("div", { className: "scan-progress-info" }, /* @__PURE__ */ import_react27.default.createElement("div", { className: "scan-spinner" }), /* @__PURE__ */ import_react27.default.createElement("div", { className: "scan-text" }, /* @__PURE__ */ import_react27.default.createElement("strong", null, "Fetching Posters & Descriptions (IMDb \xB7 TVmaze \xB7 Wikipedia)"), /* @__PURE__ */ import_react27.default.createElement("span", { className: "scan-details" }, metadataFetchStatus?.total > 0 ? `${metadataFetchStatus.current || 0} / ${metadataFetchStatus.total} titles (${Math.round((metadataFetchStatus.current || 0) / metadataFetchStatus.total * 100)}%)` : "Indexing movies & TV shows...", metadataFetchStatus?.message ? ` \u2014 ${metadataFetchStatus.message}` : ""))), /* @__PURE__ */ import_react27.default.createElement("div", { className: "scan-bar-container" }, /* @__PURE__ */ import_react27.default.createElement(
+      )), /* @__PURE__ */ import_react28.default.createElement("button", { className: "btn-cancel-scan", onClick: handleCancelScan }, "Cancel Scan")), isFetchingMetadata && /* @__PURE__ */ import_react28.default.createElement("div", { className: "scan-progress-banner metadata-fetch-banner" }, /* @__PURE__ */ import_react28.default.createElement("div", { className: "scan-progress-info" }, /* @__PURE__ */ import_react28.default.createElement("div", { className: "scan-spinner" }), /* @__PURE__ */ import_react28.default.createElement("div", { className: "scan-text" }, /* @__PURE__ */ import_react28.default.createElement("strong", null, "Fetching Posters & Descriptions (IMDb \xB7 TVmaze \xB7 Wikipedia)"), /* @__PURE__ */ import_react28.default.createElement("span", { className: "scan-details" }, metadataFetchStatus?.total > 0 ? `${metadataFetchStatus.current || 0} / ${metadataFetchStatus.total} titles (${Math.round((metadataFetchStatus.current || 0) / metadataFetchStatus.total * 100)}%)` : "Indexing movies & TV shows...", metadataFetchStatus?.message ? ` \u2014 ${metadataFetchStatus.message}` : ""))), /* @__PURE__ */ import_react28.default.createElement("div", { className: "scan-bar-container" }, /* @__PURE__ */ import_react28.default.createElement(
         "div",
         {
           className: "scan-bar-fill",
@@ -25337,35 +25463,36 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
             width: `${metadataFetchStatus?.total > 0 ? Math.min(100, Math.round((metadataFetchStatus.current || 0) / metadataFetchStatus.total * 100)) : 100}%`
           }
         }
-      )), /* @__PURE__ */ import_react27.default.createElement("button", { className: "btn-cancel-scan", onClick: handleCancelPublicMetadata }, "Cancel")), /* @__PURE__ */ import_react27.default.createElement(
+      )), /* @__PURE__ */ import_react28.default.createElement("button", { className: "btn-cancel-scan", onClick: handleCancelPublicMetadata }, "Cancel")), /* @__PURE__ */ import_react28.default.createElement(
         "div",
         {
           className: `player-deck-container ${embeddedPipActive ? "pip-host-only" : ""}`,
           style: { display: activeTab === "player" || embeddedPipActive ? "block" : "none" }
         },
-        /* @__PURE__ */ import_react27.default.createElement("div", { className: "deck-card" }, (outputTarget !== "local" || activeCastSession) && /* @__PURE__ */ import_react27.default.createElement("div", { className: "active-cast-bar" }, /* @__PURE__ */ import_react27.default.createElement("div", { className: "cast-bar-indicator" }, /* @__PURE__ */ import_react27.default.createElement(
+        /* @__PURE__ */ import_react28.default.createElement("div", { className: "deck-card" }, (outputTarget !== "local" || activeCastSession) && /* @__PURE__ */ import_react28.default.createElement("div", { className: "active-cast-bar" }, /* @__PURE__ */ import_react28.default.createElement("div", { className: "cast-bar-indicator" }, /* @__PURE__ */ import_react28.default.createElement(
           "span",
           {
             className: "cast-pulse-dot",
             style: { background: activeCastSession?.isPaused ? "#eab308" : "#22c55e" }
           }
-        ), /* @__PURE__ */ import_react27.default.createElement("span", null, activeCastSession ? `Casting "${activeCastSession.title || currentTrack?.title || "Movie"}" to ${getSpeakerName(activeCastSession.ip)}${activeCastSession.isPaused ? " (Paused)" : " (Live)"}` : `Output routed to ${getSpeakerName(outputTarget)} (Local desktop muted)`)), /* @__PURE__ */ import_react27.default.createElement("div", { className: "cast-bar-controls" }, activeCastSession && /* @__PURE__ */ import_react27.default.createElement("button", { className: "btn-chip", onClick: handleToggleCastPause }, activeCastSession.isPaused ? "Resume cast" : "Pause cast"), /* @__PURE__ */ import_react27.default.createElement(
+        ), /* @__PURE__ */ import_react28.default.createElement("span", null, activeCastSession ? `Casting "${activeCastSession.title || currentTrack?.title || "Movie"}" to ${getSpeakerName(activeCastSession.ip)}${activeCastSession.isPaused ? " (Paused)" : " (Live)"}` : `Output routed to ${getSpeakerName(outputTarget)} (Local desktop muted)`)), /* @__PURE__ */ import_react28.default.createElement("div", { className: "cast-bar-controls" }, activeCastSession && /* @__PURE__ */ import_react28.default.createElement("button", { className: "btn-chip", onClick: handleToggleCastPause }, activeCastSession.isPaused ? "Resume cast" : "Pause cast"), /* @__PURE__ */ import_react28.default.createElement(
           "button",
           {
             className: "btn-chip btn-stop-cast",
             onClick: () => handleStopCast(activeCastSession?.ip || (outputTarget !== "local" ? outputTarget : speakers[0]?.ip))
           },
           "Stop Cast"
-        ), outputTarget !== "local" && /* @__PURE__ */ import_react27.default.createElement("button", { className: "btn-chip", onClick: () => {
+        ), outputTarget !== "local" && /* @__PURE__ */ import_react28.default.createElement("button", { className: "btn-chip", onClick: () => {
           setOutputTarget("local");
           handleStopCast();
-        } }, "Switch to Local Desktop"))), isVideoTrack(currentTrack) && /* @__PURE__ */ import_react27.default.createElement(
+        } }, "Switch to Local Desktop"))), isVideoTrack(currentTrack) && /* @__PURE__ */ import_react28.default.createElement(
           "div",
           {
             className: `cinema-stage-box ${embeddedPipActive ? "is-embedded-pip" : ""}`,
+            onContextMenu: outputTarget === "local" ? openVideoSegmentMenu : void 0,
             style: embeddedPipActive ? pipRect ? { top: `${pipRect.top}px`, left: `${pipRect.left}px`, width: `${pipRect.width}px`, height: `${pipRect.height}px` } : { opacity: 0, pointerEvents: "none" } : void 0
           },
-          outputTarget === "local" ? /* @__PURE__ */ import_react27.default.createElement(import_react27.default.Fragment, null, /* @__PURE__ */ import_react27.default.createElement(
+          outputTarget === "local" ? /* @__PURE__ */ import_react28.default.createElement(import_react28.default.Fragment, null, /* @__PURE__ */ import_react28.default.createElement(
             "video",
             {
               id: "cinema-video-element",
@@ -25497,16 +25624,16 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
                 }
               }
             },
-            activeProbe?.hasSubtitles && activeProbe?.subtitlesUrl && /* @__PURE__ */ import_react27.default.createElement("track", { kind: "subtitles", src: activeProbe.subtitlesUrl, srcLang: "en", label: "English" })
-          ), embeddedPipActive && /* @__PURE__ */ import_react27.default.createElement(
+            activeProbe?.hasSubtitles && activeProbe?.subtitlesUrl && /* @__PURE__ */ import_react28.default.createElement("track", { kind: "subtitles", src: activeProbe.subtitlesUrl, srcLang: "en", label: "English" })
+          ), embeddedPipActive && /* @__PURE__ */ import_react28.default.createElement(
             "div",
             {
               className: "embedded-pip-overlay",
               onClick: () => setActiveTab("player"),
               title: "Click to return to Cinema Stage"
             },
-            /* @__PURE__ */ import_react27.default.createElement("span", { className: "embedded-pip-badge" }, "\u25CF LIVE PiP"),
-            /* @__PURE__ */ import_react27.default.createElement("div", { className: "embedded-pip-actions", onClick: (e) => e.stopPropagation() }, /* @__PURE__ */ import_react27.default.createElement(
+            /* @__PURE__ */ import_react28.default.createElement("span", { className: "embedded-pip-badge" }, "\u25CF LIVE PiP"),
+            /* @__PURE__ */ import_react28.default.createElement("div", { className: "embedded-pip-actions", onClick: (e) => e.stopPropagation() }, /* @__PURE__ */ import_react28.default.createElement(
               "button",
               {
                 type: "button",
@@ -25515,7 +25642,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
                 onClick: handleTogglePlayPause
               },
               "\u23F8"
-            ), /* @__PURE__ */ import_react27.default.createElement(
+            ), /* @__PURE__ */ import_react28.default.createElement(
               "button",
               {
                 type: "button",
@@ -25525,7 +25652,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
               },
               "\u2922 Stage"
             ))
-          ), isTranscodeActive && !embeddedPipActive && /* @__PURE__ */ import_react27.default.createElement(
+          ), isTranscodeActive && !embeddedPipActive && /* @__PURE__ */ import_react28.default.createElement(
             "div",
             {
               className: "cinema-transcode-controls",
@@ -25538,7 +25665,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
                 borderTop: "1px solid rgba(232, 163, 61, 0.22)"
               }
             },
-            /* @__PURE__ */ import_react27.default.createElement(
+            /* @__PURE__ */ import_react28.default.createElement(
               "button",
               {
                 type: "button",
@@ -25559,7 +25686,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
               },
               isPlaying ? "\u23F8" : "\u25B6"
             ),
-            /* @__PURE__ */ import_react27.default.createElement(
+            /* @__PURE__ */ import_react28.default.createElement(
               "button",
               {
                 type: "button",
@@ -25569,7 +25696,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
               },
               "-15s"
             ),
-            /* @__PURE__ */ import_react27.default.createElement(
+            /* @__PURE__ */ import_react28.default.createElement(
               "button",
               {
                 type: "button",
@@ -25579,7 +25706,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
               },
               "+15s"
             ),
-            /* @__PURE__ */ import_react27.default.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ import_react27.default.createElement(
+            /* @__PURE__ */ import_react28.default.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ import_react28.default.createElement(
               MiniProgress,
               {
                 trackId: `${currentTrack?.id || ""}:${transcodeOffsetSec}`,
@@ -25587,10 +25714,11 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
                 knownDuration: knownVideoDurationSec,
                 offsetSec: transcodeOffsetSec,
                 isTranscode: true,
-                onSeekOverride: seekVideoTo
+                onSeekOverride: seekVideoTo,
+                onSegmentMenu: openVideoSegmentMenu
               }
             )),
-            /* @__PURE__ */ import_react27.default.createElement(
+            /* @__PURE__ */ import_react28.default.createElement(
               "button",
               {
                 type: "button",
@@ -25606,7 +25734,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
               },
               "\u26F6"
             )
-          )) : /* @__PURE__ */ import_react27.default.createElement(
+          )) : /* @__PURE__ */ import_react28.default.createElement(
             "div",
             {
               id: "cinema-cast-stage",
@@ -25623,7 +25751,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
                 minHeight: "260px"
               }
             },
-            artUrlFor(artBase.local, currentTrack?.artId) && /* @__PURE__ */ import_react27.default.createElement(
+            artUrlFor(artBase.local, currentTrack?.artId) && /* @__PURE__ */ import_react28.default.createElement(
               "img",
               {
                 src: artUrlFor(artBase.local, currentTrack?.artId),
@@ -25636,10 +25764,10 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
                 }
               }
             ),
-            /* @__PURE__ */ import_react27.default.createElement("div", { style: { fontSize: "16px", fontWeight: 700, color: "#f8fafc" } }, "\u{1F4FA} Playing on ", getSpeakerName(outputTarget)),
-            /* @__PURE__ */ import_react27.default.createElement("div", { style: { fontSize: "13px", color: "#94a3b8", maxWidth: "520px" } }, currentTrack?.title, " \u2014 Local desktop video decoding is paused while casting so your Smart TV gets 100% of stream bandwidth with zero stutter.")
+            /* @__PURE__ */ import_react28.default.createElement("div", { style: { fontSize: "16px", fontWeight: 700, color: "#f8fafc" } }, "\u{1F4FA} Playing on ", getSpeakerName(outputTarget)),
+            /* @__PURE__ */ import_react28.default.createElement("div", { style: { fontSize: "13px", color: "#94a3b8", maxWidth: "520px" } }, currentTrack?.title, " \u2014 Local desktop video decoding is paused while casting so your Smart TV gets 100% of stream bandwidth with zero stutter.")
           ),
-          !embeddedPipActive && /* @__PURE__ */ import_react27.default.createElement("div", { className: "cinema-stage-toolbar" }, /* @__PURE__ */ import_react27.default.createElement("span", { className: "cinema-stage-badge" }, "\u{1F3AC} ", currentTrack?.title || "Cinema Stage", " ", currentTrack?.year ? `(${currentTrack.year})` : ""), /* @__PURE__ */ import_react27.default.createElement("div", { className: "cinema-stage-actions" }, /* @__PURE__ */ import_react27.default.createElement(
+          !embeddedPipActive && /* @__PURE__ */ import_react28.default.createElement("div", { className: "cinema-stage-toolbar" }, /* @__PURE__ */ import_react28.default.createElement("span", { className: "cinema-stage-badge" }, "\u{1F3AC} ", currentTrack?.title || "Cinema Stage", " ", currentTrack?.year ? `(${currentTrack.year})` : ""), /* @__PURE__ */ import_react28.default.createElement("div", { className: "cinema-stage-actions" }, /* @__PURE__ */ import_react28.default.createElement(
             "button",
             {
               type: "button",
@@ -25649,7 +25777,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
             },
             "Fit: ",
             videoFit === "contain" ? "Letterbox" : "Fill"
-          ), /* @__PURE__ */ import_react27.default.createElement(
+          ), /* @__PURE__ */ import_react28.default.createElement(
             "button",
             {
               type: "button",
@@ -25665,7 +25793,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
               title: "Toggle Picture-in-Picture"
             },
             "PiP"
-          ), speakers.length > 0 && /* @__PURE__ */ import_react27.default.createElement(import_react27.default.Fragment, null, /* @__PURE__ */ import_react27.default.createElement(
+          ), speakers.length > 0 && /* @__PURE__ */ import_react28.default.createElement(import_react28.default.Fragment, null, /* @__PURE__ */ import_react28.default.createElement(
             "button",
             {
               type: "button",
@@ -25689,7 +25817,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
             },
             "\u{1F4FA} Cast to ",
             outputTarget !== "local" ? getSpeakerName(outputTarget) : speakers[0].name
-          ), /* @__PURE__ */ import_react27.default.createElement(
+          ), /* @__PURE__ */ import_react28.default.createElement(
             "button",
             {
               type: "button",
@@ -25707,7 +25835,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
               title: "Open the interactive 10-foot Movie Library on your Smart TV so you can browse and play movies with your physical TV remote"
             },
             "\u{1F3AE} TV Library (Remote UI)"
-          ), /* @__PURE__ */ import_react27.default.createElement(
+          ), /* @__PURE__ */ import_react28.default.createElement(
             "button",
             {
               type: "button",
@@ -25720,7 +25848,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
               title: `Stop movie playback on ${getSpeakerName(activeCastSession?.ip || (outputTarget !== "local" ? outputTarget : speakers[0].ip))}`
             },
             "\u23F9 Stop TV"
-          )), /* @__PURE__ */ import_react27.default.createElement(
+          )), /* @__PURE__ */ import_react28.default.createElement(
             "button",
             {
               type: "button",
@@ -25734,7 +25862,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
             },
             "Fullscreen"
           )))
-        ), /* @__PURE__ */ import_react27.default.createElement("div", { className: "track-hero" }, /* @__PURE__ */ import_react27.default.createElement("div", { className: "album-art-box" }, /* @__PURE__ */ import_react27.default.createElement(Cover, { artId: currentTrack?.artId, name: currentTrack?.album || currentTrack?.title, icon: currentTrack?.artId ? null : "disc" })), /* @__PURE__ */ import_react27.default.createElement("div", { className: "track-details" }, /* @__PURE__ */ import_react27.default.createElement("h2", { id: "track-title" }, currentTrack?.title || "No Track Selected", currentTrack && /* @__PURE__ */ import_react27.default.createElement(LoveButton, { track: currentTrack, size: 16 })), /* @__PURE__ */ import_react27.default.createElement("p", { id: "track-artist" }, /* @__PURE__ */ import_react27.default.createElement("a", { className: "link", onClick: () => currentTrack && goToArtist(currentTrack.artist) }, currentTrack?.artist || "Unknown Artist"), " ", "\u2022", " ", /* @__PURE__ */ import_react27.default.createElement("a", { className: "link", onClick: () => currentTrack && goToAlbumOf(currentTrack) }, currentTrack?.album || "RobOS Library")), /* @__PURE__ */ import_react27.default.createElement("div", { className: "track-meta-pills" }, /* @__PURE__ */ import_react27.default.createElement("span", { className: "badge" }, "Output: ", getSpeakerName(outputTarget)), activeCastSession && /* @__PURE__ */ import_react27.default.createElement("span", { className: "badge", style: { color: "#22c55e", borderColor: "#22c55e" } }, activeCastSession.isPaused ? "Cast Paused" : "Casting Active"), currentTrack?.genre && /* @__PURE__ */ import_react27.default.createElement("span", { className: "badge link", onClick: () => goToGenre(currentTrack.genre) }, currentTrack.genre), currentTrack?.year && /* @__PURE__ */ import_react27.default.createElement("span", { className: "badge" }, currentTrack.year))), /* @__PURE__ */ import_react27.default.createElement("div", { className: "hero-quick-actions" }, /* @__PURE__ */ import_react27.default.createElement("button", { className: "btn-secondary", onClick: handleSelectFolder, title: "Add folder via file manager" }, "Add Folder"), /* @__PURE__ */ import_react27.default.createElement("button", { className: "btn-secondary", onClick: handleAddFiles, title: "Add files" }, "Add Files"))), /* @__PURE__ */ import_react27.default.createElement("div", { className: "react-h5-wrapper" }, /* @__PURE__ */ import_react27.default.createElement(
+        ), /* @__PURE__ */ import_react28.default.createElement("div", { className: "track-hero" }, /* @__PURE__ */ import_react28.default.createElement("div", { className: "album-art-box" }, /* @__PURE__ */ import_react28.default.createElement(Cover, { artId: currentTrack?.artId, name: currentTrack?.album || currentTrack?.title, icon: currentTrack?.artId ? null : "disc" })), /* @__PURE__ */ import_react28.default.createElement("div", { className: "track-details" }, /* @__PURE__ */ import_react28.default.createElement("h2", { id: "track-title" }, currentTrack?.title || "No Track Selected", currentTrack && /* @__PURE__ */ import_react28.default.createElement(LoveButton, { track: currentTrack, size: 16 })), /* @__PURE__ */ import_react28.default.createElement("p", { id: "track-artist" }, /* @__PURE__ */ import_react28.default.createElement("a", { className: "link", onClick: () => currentTrack && goToArtist(currentTrack.artist) }, currentTrack?.artist || "Unknown Artist"), " ", "\u2022", " ", /* @__PURE__ */ import_react28.default.createElement("a", { className: "link", onClick: () => currentTrack && goToAlbumOf(currentTrack) }, currentTrack?.album || "RobOS Library")), /* @__PURE__ */ import_react28.default.createElement("div", { className: "track-meta-pills" }, /* @__PURE__ */ import_react28.default.createElement("span", { className: "badge" }, "Output: ", getSpeakerName(outputTarget)), activeCastSession && /* @__PURE__ */ import_react28.default.createElement("span", { className: "badge", style: { color: "#22c55e", borderColor: "#22c55e" } }, activeCastSession.isPaused ? "Cast Paused" : "Casting Active"), currentTrack?.genre && /* @__PURE__ */ import_react28.default.createElement("span", { className: "badge link", onClick: () => goToGenre(currentTrack.genre) }, currentTrack.genre), currentTrack?.year && /* @__PURE__ */ import_react28.default.createElement("span", { className: "badge" }, currentTrack.year))), /* @__PURE__ */ import_react28.default.createElement("div", { className: "hero-quick-actions" }, /* @__PURE__ */ import_react28.default.createElement("button", { className: "btn-secondary", onClick: handleSelectFolder, title: "Add folder via file manager" }, "Add Folder"), /* @__PURE__ */ import_react28.default.createElement("button", { className: "btn-secondary", onClick: handleAddFiles, title: "Add files" }, "Add Files"))), /* @__PURE__ */ import_react28.default.createElement("div", { className: "react-h5-wrapper" }, isVideoTrack(currentTrack) && /* @__PURE__ */ import_react28.default.createElement("button", { type: "button", className: "btn-secondary video-segments-button", onClick: () => openVideoSegments(currentTrack) }, "Video segments"), /* @__PURE__ */ import_react28.default.createElement(
           es_default,
           {
             ref: playerRef,
@@ -25747,7 +25875,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
                 a.currentTime = at;
               }
             },
-            customProgressBarSection: outputTarget !== "local" ? [/* @__PURE__ */ import_react27.default.createElement(CastProgress, { key: "cast-progress", className: "mini-progress rhap-cast-progress", id: "cast-progress", onSeek: handleCastSeek })] : isVideoTrack(currentTrack) ? [/* @__PURE__ */ import_react27.default.createElement(
+            customProgressBarSection: outputTarget !== "local" ? [/* @__PURE__ */ import_react28.default.createElement(CastProgress, { key: "cast-progress", className: "mini-progress rhap-cast-progress", id: "cast-progress", onSeek: handleCastSeek })] : isVideoTrack(currentTrack) ? [/* @__PURE__ */ import_react28.default.createElement(
               MiniProgress,
               {
                 key: "video-progress",
@@ -25756,12 +25884,13 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
                 knownDuration: knownVideoDurationSec,
                 offsetSec: transcodeOffsetSec,
                 isTranscode: isTranscodeActive,
-                onSeekOverride: seekVideoTo
+                onSeekOverride: seekVideoTo,
+                onSegmentMenu: openVideoSegmentMenu
               }
             )] : void 0,
             customControlsSection: outputTarget !== "local" || isVideoTrack(currentTrack) ? [
               RHAP_UI.ADDITIONAL_CONTROLS,
-              /* @__PURE__ */ import_react27.default.createElement("div", { key: "video-cast-controls", className: "rhap_main-controls" }, /* @__PURE__ */ import_react27.default.createElement("button", { type: "button", className: "rhap_button-clear rhap_main-controls-button rhap_skip-button", "aria-label": "Previous", onClick: handlePlayPrev }, /* @__PURE__ */ import_react27.default.createElement(Icon2, { name: "prev", size: 24 })), /* @__PURE__ */ import_react27.default.createElement(
+              /* @__PURE__ */ import_react28.default.createElement("div", { key: "video-cast-controls", className: "rhap_main-controls" }, /* @__PURE__ */ import_react28.default.createElement("button", { type: "button", className: "rhap_button-clear rhap_main-controls-button rhap_skip-button", "aria-label": "Previous", onClick: handlePlayPrev }, /* @__PURE__ */ import_react28.default.createElement(Icon2, { name: "prev", size: 24 })), /* @__PURE__ */ import_react28.default.createElement(
                 "button",
                 {
                   type: "button",
@@ -25783,9 +25912,9 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
                     }
                   }
                 },
-                /* @__PURE__ */ import_react27.default.createElement(Icon2, { name: isPlaying ? "pause" : "play", size: 34 })
-              ), /* @__PURE__ */ import_react27.default.createElement("button", { type: "button", className: "rhap_button-clear rhap_main-controls-button rhap_skip-button", "aria-label": "Next", onClick: handlePlayNext }, /* @__PURE__ */ import_react27.default.createElement(Icon2, { name: "next", size: 24 }))),
-              /* @__PURE__ */ import_react27.default.createElement("div", { key: "cast-spacer", className: "rhap_volume-controls" })
+                /* @__PURE__ */ import_react28.default.createElement(Icon2, { name: isPlaying ? "pause" : "play", size: 34 })
+              ), /* @__PURE__ */ import_react28.default.createElement("button", { type: "button", className: "rhap_button-clear rhap_main-controls-button rhap_skip-button", "aria-label": "Next", onClick: handlePlayNext }, /* @__PURE__ */ import_react28.default.createElement(Icon2, { name: "next", size: 24 }))),
+              /* @__PURE__ */ import_react28.default.createElement("div", { key: "cast-spacer", className: "rhap_volume-controls" })
             ] : void 0,
             showSkipControls: true,
             showJumpControls: false,
@@ -25805,18 +25934,18 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
             },
             className: "robos-rhap-theme",
             customIcons: {
-              play: /* @__PURE__ */ import_react27.default.createElement(Icon2, { name: "play", size: 34 }),
-              pause: /* @__PURE__ */ import_react27.default.createElement(Icon2, { name: "pause", size: 34 }),
-              previous: /* @__PURE__ */ import_react27.default.createElement(Icon2, { name: "prev", size: 24 }),
-              next: /* @__PURE__ */ import_react27.default.createElement(Icon2, { name: "next", size: 24 }),
-              volume: /* @__PURE__ */ import_react27.default.createElement(Icon2, { name: "volume", size: 20 }),
-              volumeMute: /* @__PURE__ */ import_react27.default.createElement(Icon2, { name: "volumeMute", size: 20 })
+              play: /* @__PURE__ */ import_react28.default.createElement(Icon2, { name: "play", size: 34 }),
+              pause: /* @__PURE__ */ import_react28.default.createElement(Icon2, { name: "pause", size: 34 }),
+              previous: /* @__PURE__ */ import_react28.default.createElement(Icon2, { name: "prev", size: 24 }),
+              next: /* @__PURE__ */ import_react28.default.createElement(Icon2, { name: "next", size: 24 }),
+              volume: /* @__PURE__ */ import_react28.default.createElement(Icon2, { name: "volume", size: 20 }),
+              volumeMute: /* @__PURE__ */ import_react28.default.createElement(Icon2, { name: "volumeMute", size: 20 })
             },
             layout: "stacked",
             customAdditionalControls: [],
             muted: outputTarget !== "local"
           }
-        )), /* @__PURE__ */ import_react27.default.createElement(
+        )), /* @__PURE__ */ import_react28.default.createElement(
           Lyrics,
           {
             track: currentTrack,
@@ -25828,7 +25957,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
             }
           }
         ))
-      ), activeTab === "playlists" && /* @__PURE__ */ import_react27.default.createElement("div", { className: "playlists-view-container" }, /* @__PURE__ */ import_react27.default.createElement("div", { className: "playlists-header" }, /* @__PURE__ */ import_react27.default.createElement("div", { className: "playlists-title-group" }, /* @__PURE__ */ import_react27.default.createElement("h3", null, "Custom Watchlists (", playlists.length, ")"), /* @__PURE__ */ import_react27.default.createElement("p", { className: "subtitle" }, "Curate custom movie & show watchlists, import/export M3U queues, and cast directly to Smart TVs")), /* @__PURE__ */ import_react27.default.createElement("div", { className: "playlists-header-actions" }, /* @__PURE__ */ import_react27.default.createElement(
+      ), activeTab === "playlists" && /* @__PURE__ */ import_react28.default.createElement("div", { className: "playlists-view-container" }, /* @__PURE__ */ import_react28.default.createElement("div", { className: "playlists-header" }, /* @__PURE__ */ import_react28.default.createElement("div", { className: "playlists-title-group" }, /* @__PURE__ */ import_react28.default.createElement("h3", null, "Custom Watchlists (", playlists.length, ")"), /* @__PURE__ */ import_react28.default.createElement("p", { className: "subtitle" }, "Curate custom movie & show watchlists, import/export M3U queues, and cast directly to Smart TVs")), /* @__PURE__ */ import_react28.default.createElement("div", { className: "playlists-header-actions" }, /* @__PURE__ */ import_react28.default.createElement(
         "button",
         {
           id: "btn-create-playlist",
@@ -25836,7 +25965,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
           onClick: () => setShowCreatePlaylistModal(true)
         },
         "New Watchlist"
-      ), /* @__PURE__ */ import_react27.default.createElement(
+      ), /* @__PURE__ */ import_react28.default.createElement(
         "button",
         {
           id: "btn-ai-playlist",
@@ -25845,7 +25974,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
           title: "Describe a watchlist or marathon and let your RobOS agent build it"
         },
         "\u2726 AI Watchlist"
-      ), /* @__PURE__ */ import_react27.default.createElement(
+      ), /* @__PURE__ */ import_react28.default.createElement(
         "button",
         {
           id: "btn-import-m3u",
@@ -25854,16 +25983,16 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
           title: "Import external .m3u or .m3u8 playlist file"
         },
         "Import M3U"
-      ))), /* @__PURE__ */ import_react27.default.createElement("div", { className: "playlists-layout" }, /* @__PURE__ */ import_react27.default.createElement("div", { className: "playlists-sidebar", style: { width: playlistSidebarWidth } }, playlists.length === 0 ? /* @__PURE__ */ import_react27.default.createElement("div", { className: "empty-playlists-sidebar" }, /* @__PURE__ */ import_react27.default.createElement("p", null, "No playlists created yet."), /* @__PURE__ */ import_react27.default.createElement("button", { className: "btn-accent", onClick: () => setShowCreatePlaylistModal(true), style: { marginTop: "8px" } }, "Create Playlist")) : playlists.map((pl) => /* @__PURE__ */ import_react27.default.createElement(
+      ))), /* @__PURE__ */ import_react28.default.createElement("div", { className: "playlists-layout" }, /* @__PURE__ */ import_react28.default.createElement("div", { className: "playlists-sidebar", style: { width: playlistSidebarWidth } }, playlists.length === 0 ? /* @__PURE__ */ import_react28.default.createElement("div", { className: "empty-playlists-sidebar" }, /* @__PURE__ */ import_react28.default.createElement("p", null, "No playlists created yet."), /* @__PURE__ */ import_react28.default.createElement("button", { className: "btn-accent", onClick: () => setShowCreatePlaylistModal(true), style: { marginTop: "8px" } }, "Create Playlist")) : playlists.map((pl) => /* @__PURE__ */ import_react28.default.createElement(
         "div",
         {
           key: pl.id,
           className: `playlist-sidebar-card ${selectedPlaylistId === pl.id ? "active" : ""}`,
           onClick: () => setSelectedPlaylistId(pl.id)
         },
-        /* @__PURE__ */ import_react27.default.createElement("div", { className: "playlist-sidebar-icon" }, /* @__PURE__ */ import_react27.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "22", height: "22", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "1.5" }, /* @__PURE__ */ import_react27.default.createElement("path", { d: "M9 18V5l12-2v13" }), /* @__PURE__ */ import_react27.default.createElement("circle", { cx: "6", cy: "18", r: "3" }), /* @__PURE__ */ import_react27.default.createElement("circle", { cx: "18", cy: "16", r: "3" }))),
-        /* @__PURE__ */ import_react27.default.createElement("div", { className: "playlist-sidebar-info" }, /* @__PURE__ */ import_react27.default.createElement("span", { className: "playlist-sidebar-name" }, pl.name), /* @__PURE__ */ import_react27.default.createElement("span", { className: "playlist-sidebar-meta" }, pl.tracks?.length || 0, " track", (pl.tracks?.length || 0) === 1 ? "" : "s")),
-        /* @__PURE__ */ import_react27.default.createElement(
+        /* @__PURE__ */ import_react28.default.createElement("div", { className: "playlist-sidebar-icon" }, /* @__PURE__ */ import_react28.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "22", height: "22", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "1.5" }, /* @__PURE__ */ import_react28.default.createElement("path", { d: "M9 18V5l12-2v13" }), /* @__PURE__ */ import_react28.default.createElement("circle", { cx: "6", cy: "18", r: "3" }), /* @__PURE__ */ import_react28.default.createElement("circle", { cx: "18", cy: "16", r: "3" }))),
+        /* @__PURE__ */ import_react28.default.createElement("div", { className: "playlist-sidebar-info" }, /* @__PURE__ */ import_react28.default.createElement("span", { className: "playlist-sidebar-name" }, pl.name), /* @__PURE__ */ import_react28.default.createElement("span", { className: "playlist-sidebar-meta" }, pl.tracks?.length || 0, " track", (pl.tracks?.length || 0) === 1 ? "" : "s")),
+        /* @__PURE__ */ import_react28.default.createElement(
           "button",
           {
             className: "btn-playlist-quick-play",
@@ -25873,9 +26002,9 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
               handlePlayPlaylist(pl, true);
             }
           },
-          /* @__PURE__ */ import_react27.default.createElement(Icon2, { name: "play", size: 14 })
+          /* @__PURE__ */ import_react28.default.createElement(Icon2, { name: "play", size: 14 })
         )
-      ))), /* @__PURE__ */ import_react27.default.createElement(
+      ))), /* @__PURE__ */ import_react28.default.createElement(
         Splitter,
         {
           id: "playlists-splitter",
@@ -25886,7 +26015,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
           max: () => Math.max(220, Math.min(560, window.innerWidth - 700)),
           defaultWidth: PLAYLIST_SIDEBAR_WIDTH
         }
-      ), /* @__PURE__ */ import_react27.default.createElement("div", { className: "playlist-detail-pane" }, selectedPlaylist ? /* @__PURE__ */ import_react27.default.createElement(import_react27.default.Fragment, null, /* @__PURE__ */ import_react27.default.createElement("div", { className: "playlist-detail-header" }, /* @__PURE__ */ import_react27.default.createElement("div", { className: "playlist-detail-meta" }, /* @__PURE__ */ import_react27.default.createElement("div", { className: "playlist-cover-icon" }, /* @__PURE__ */ import_react27.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "36", height: "36", viewBox: "0 0 24 24", fill: "none", stroke: "#e8a33d", "stroke-width": "1.5" }, /* @__PURE__ */ import_react27.default.createElement("path", { d: "M9 18V5l12-2v13" }), /* @__PURE__ */ import_react27.default.createElement("circle", { cx: "6", cy: "18", r: "3" }), /* @__PURE__ */ import_react27.default.createElement("circle", { cx: "18", cy: "16", r: "3" }))), /* @__PURE__ */ import_react27.default.createElement("div", { className: "playlist-text-meta" }, /* @__PURE__ */ import_react27.default.createElement("h2", null, selectedPlaylist.name), /* @__PURE__ */ import_react27.default.createElement("p", { className: "playlist-description" }, selectedPlaylist.description || "No description provided."), /* @__PURE__ */ import_react27.default.createElement("div", { className: "playlist-stats" }, /* @__PURE__ */ import_react27.default.createElement("span", { className: "badge" }, selectedPlaylist.tracks?.length || 0, " Tracks"), /* @__PURE__ */ import_react27.default.createElement("span", { className: "badge" }, "Duration: ", formatTotalDuration(selectedPlaylist.tracks)), selectedPlaylist.ai && /* @__PURE__ */ import_react27.default.createElement("span", { className: "badge", title: selectedPlaylist.ai.request }, "\u2726 AI playlist"), selectedPlaylist.dj && /* @__PURE__ */ import_react27.default.createElement("span", { className: "badge", title: selectedPlaylist.dj.persona }, "\u{1F399} Virtual DJ"), /* @__PURE__ */ import_react27.default.createElement("span", { className: "badge" }, "Updated: ", new Date(selectedPlaylist.updatedAt || selectedPlaylist.createdAt || Date.now()).toLocaleDateString())))), /* @__PURE__ */ import_react27.default.createElement("div", { className: "playlist-actions-bar" }, /* @__PURE__ */ import_react27.default.createElement(
+      ), /* @__PURE__ */ import_react28.default.createElement("div", { className: "playlist-detail-pane" }, selectedPlaylist ? /* @__PURE__ */ import_react28.default.createElement(import_react28.default.Fragment, null, /* @__PURE__ */ import_react28.default.createElement("div", { className: "playlist-detail-header" }, /* @__PURE__ */ import_react28.default.createElement("div", { className: "playlist-detail-meta" }, /* @__PURE__ */ import_react28.default.createElement("div", { className: "playlist-cover-icon" }, /* @__PURE__ */ import_react28.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "36", height: "36", viewBox: "0 0 24 24", fill: "none", stroke: "#e8a33d", "stroke-width": "1.5" }, /* @__PURE__ */ import_react28.default.createElement("path", { d: "M9 18V5l12-2v13" }), /* @__PURE__ */ import_react28.default.createElement("circle", { cx: "6", cy: "18", r: "3" }), /* @__PURE__ */ import_react28.default.createElement("circle", { cx: "18", cy: "16", r: "3" }))), /* @__PURE__ */ import_react28.default.createElement("div", { className: "playlist-text-meta" }, /* @__PURE__ */ import_react28.default.createElement("h2", null, selectedPlaylist.name), /* @__PURE__ */ import_react28.default.createElement("p", { className: "playlist-description" }, selectedPlaylist.description || "No description provided."), /* @__PURE__ */ import_react28.default.createElement("div", { className: "playlist-stats" }, /* @__PURE__ */ import_react28.default.createElement("span", { className: "badge" }, selectedPlaylist.tracks?.length || 0, " Tracks"), /* @__PURE__ */ import_react28.default.createElement("span", { className: "badge" }, "Duration: ", formatTotalDuration(selectedPlaylist.tracks)), selectedPlaylist.ai && /* @__PURE__ */ import_react28.default.createElement("span", { className: "badge", title: selectedPlaylist.ai.request }, "\u2726 AI playlist"), selectedPlaylist.dj && /* @__PURE__ */ import_react28.default.createElement("span", { className: "badge", title: selectedPlaylist.dj.persona }, "\u{1F399} Virtual DJ"), /* @__PURE__ */ import_react28.default.createElement("span", { className: "badge" }, "Updated: ", new Date(selectedPlaylist.updatedAt || selectedPlaylist.createdAt || Date.now()).toLocaleDateString())))), /* @__PURE__ */ import_react28.default.createElement("div", { className: "playlist-actions-bar" }, /* @__PURE__ */ import_react28.default.createElement(
         "button",
         {
           id: "btn-play-all-playlist",
@@ -25896,7 +26025,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
           title: "Play all tracks in order (replaces queue)"
         },
         "Play All"
-      ), /* @__PURE__ */ import_react27.default.createElement(
+      ), /* @__PURE__ */ import_react28.default.createElement(
         "button",
         {
           id: "btn-append-playlist",
@@ -25906,7 +26035,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
           title: "Append all tracks to current queue"
         },
         "Append to Queue"
-      ), speakers.length > 0 && /* @__PURE__ */ import_react27.default.createElement(
+      ), speakers.length > 0 && /* @__PURE__ */ import_react28.default.createElement(
         "button",
         {
           id: "btn-cast-playlist",
@@ -25916,7 +26045,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
           title: `Cast playlist to ${getSpeakerName(outputTarget !== "local" ? outputTarget : speakers[0].ip)}`
         },
         "Cast to Smart TV"
-      ), /* @__PURE__ */ import_react27.default.createElement(
+      ), /* @__PURE__ */ import_react28.default.createElement(
         "button",
         {
           id: "btn-export-m3u",
@@ -25925,7 +26054,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
           title: "Export playlist to .m3u file"
         },
         "Export M3U"
-      ), /* @__PURE__ */ import_react27.default.createElement(
+      ), /* @__PURE__ */ import_react28.default.createElement(
         "button",
         {
           id: "btn-delete-playlist",
@@ -25934,7 +26063,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
           title: "Delete playlist"
         },
         "Delete"
-      ))), /* @__PURE__ */ import_react27.default.createElement("div", { className: "playlist-tracks-container" }, !selectedPlaylist.tracks || selectedPlaylist.tracks.length === 0 ? /* @__PURE__ */ import_react27.default.createElement("div", { className: "empty-playlist-tracks" }, /* @__PURE__ */ import_react27.default.createElement("p", null, "This playlist has no tracks yet."), /* @__PURE__ */ import_react27.default.createElement("span", { className: "hint" }, "Choose tracks from your Media Library below or import local files."), /* @__PURE__ */ import_react27.default.createElement(
+      ))), /* @__PURE__ */ import_react28.default.createElement("div", { className: "playlist-tracks-container" }, !selectedPlaylist.tracks || selectedPlaylist.tracks.length === 0 ? /* @__PURE__ */ import_react28.default.createElement("div", { className: "empty-playlist-tracks" }, /* @__PURE__ */ import_react28.default.createElement("p", null, "This playlist has no tracks yet."), /* @__PURE__ */ import_react28.default.createElement("span", { className: "hint" }, "Choose tracks from your Media Library below or import local files."), /* @__PURE__ */ import_react28.default.createElement(
         "button",
         {
           className: "btn-accent",
@@ -25942,15 +26071,15 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
           style: { marginTop: "12px" }
         },
         "Add Audio Files from Disk"
-      )) : /* @__PURE__ */ import_react27.default.createElement("div", { className: "playlist-tracks-table", style: { "--pl-grid": playlistColumns.template } }, /* @__PURE__ */ import_react27.default.createElement("div", { className: "playlist-table-header" }, /* @__PURE__ */ import_react27.default.createElement("span", { className: "col-num" }, "#"), /* @__PURE__ */ import_react27.default.createElement("span", { className: "col-title col-resizable" }, "Title", playlistColumns.handleFor("title")), /* @__PURE__ */ import_react27.default.createElement("span", { className: "col-artist col-resizable" }, "Release Format", playlistColumns.handleFor("artist")), /* @__PURE__ */ import_react27.default.createElement("span", { className: "col-album col-resizable" }, "Release / Series", playlistColumns.handleFor("album")), /* @__PURE__ */ import_react27.default.createElement("span", { className: "col-duration" }, "Runtime"), /* @__PURE__ */ import_react27.default.createElement("span", { className: "col-actions" }, "Actions")), /* @__PURE__ */ import_react27.default.createElement("div", { className: "playlist-table-body" }, selectedPlaylist.tracks.map((track, tIdx) => /* @__PURE__ */ import_react27.default.createElement("div", { key: track.id || tIdx, className: "playlist-table-row" }, /* @__PURE__ */ import_react27.default.createElement("span", { className: "col-num" }, tIdx + 1), /* @__PURE__ */ import_react27.default.createElement("span", { className: "col-title", title: track.title }, track.title), /* @__PURE__ */ import_react27.default.createElement("span", { className: "col-artist", title: track.artist }, track.artist), /* @__PURE__ */ import_react27.default.createElement("span", { className: "col-album", title: track.album }, track.album), /* @__PURE__ */ import_react27.default.createElement("span", { className: "col-duration" }, formatDuration8(track.duration)), /* @__PURE__ */ import_react27.default.createElement("span", { className: "col-actions" }, /* @__PURE__ */ import_react27.default.createElement(
+      )) : /* @__PURE__ */ import_react28.default.createElement("div", { className: "playlist-tracks-table", style: { "--pl-grid": playlistColumns.template } }, /* @__PURE__ */ import_react28.default.createElement("div", { className: "playlist-table-header" }, /* @__PURE__ */ import_react28.default.createElement("span", { className: "col-num" }, "#"), /* @__PURE__ */ import_react28.default.createElement("span", { className: "col-title col-resizable" }, "Title", playlistColumns.handleFor("title")), /* @__PURE__ */ import_react28.default.createElement("span", { className: "col-artist col-resizable" }, "Release Format", playlistColumns.handleFor("artist")), /* @__PURE__ */ import_react28.default.createElement("span", { className: "col-album col-resizable" }, "Release / Series", playlistColumns.handleFor("album")), /* @__PURE__ */ import_react28.default.createElement("span", { className: "col-duration" }, "Runtime"), /* @__PURE__ */ import_react28.default.createElement("span", { className: "col-actions" }, "Actions")), /* @__PURE__ */ import_react28.default.createElement("div", { className: "playlist-table-body" }, selectedPlaylist.tracks.map((track, tIdx) => /* @__PURE__ */ import_react28.default.createElement("div", { key: track.id || tIdx, className: "playlist-table-row" }, /* @__PURE__ */ import_react28.default.createElement("span", { className: "col-num" }, tIdx + 1), /* @__PURE__ */ import_react28.default.createElement("span", { className: "col-title", title: track.title }, track.title), /* @__PURE__ */ import_react28.default.createElement("span", { className: "col-artist", title: track.artist }, track.artist), /* @__PURE__ */ import_react28.default.createElement("span", { className: "col-album", title: track.album }, track.album), /* @__PURE__ */ import_react28.default.createElement("span", { className: "col-duration" }, formatDuration9(track.duration)), /* @__PURE__ */ import_react28.default.createElement("span", { className: "col-actions" }, /* @__PURE__ */ import_react28.default.createElement(
         "button",
         {
           className: "btn-row-action",
           title: "Play track",
           onClick: () => playTrack(track)
         },
-        /* @__PURE__ */ import_react27.default.createElement(Icon2, { name: "play", size: 14 })
-      ), /* @__PURE__ */ import_react27.default.createElement(
+        /* @__PURE__ */ import_react28.default.createElement(Icon2, { name: "play", size: 14 })
+      ), /* @__PURE__ */ import_react28.default.createElement(
         "button",
         {
           className: "btn-row-action",
@@ -25958,8 +26087,8 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
           disabled: tIdx === 0,
           onClick: () => handleMoveTrackInPlaylist(selectedPlaylist.id, tIdx, tIdx - 1)
         },
-        /* @__PURE__ */ import_react27.default.createElement(Icon2, { name: "up", size: 14 })
-      ), /* @__PURE__ */ import_react27.default.createElement(
+        /* @__PURE__ */ import_react28.default.createElement(Icon2, { name: "up", size: 14 })
+      ), /* @__PURE__ */ import_react28.default.createElement(
         "button",
         {
           className: "btn-row-action",
@@ -25967,16 +26096,16 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
           disabled: tIdx === selectedPlaylist.tracks.length - 1,
           onClick: () => handleMoveTrackInPlaylist(selectedPlaylist.id, tIdx, tIdx + 1)
         },
-        /* @__PURE__ */ import_react27.default.createElement(Icon2, { name: "down", size: 14 })
-      ), /* @__PURE__ */ import_react27.default.createElement(
+        /* @__PURE__ */ import_react28.default.createElement(Icon2, { name: "down", size: 14 })
+      ), /* @__PURE__ */ import_react28.default.createElement(
         "button",
         {
           className: "btn-row-action btn-danger",
           title: "Remove from playlist",
           onClick: () => handleRemoveTrackFromPlaylist(selectedPlaylist.id, tIdx)
         },
-        /* @__PURE__ */ import_react27.default.createElement(Icon2, { name: "x", size: 14 })
-      )))))), library.tracks.length > 0 && /* @__PURE__ */ import_react27.default.createElement("div", { className: "quick-add-from-library" }, /* @__PURE__ */ import_react27.default.createElement("h4", null, "Add Tracks from Media Library"), /* @__PURE__ */ import_react27.default.createElement("div", { className: "quick-add-controls" }, /* @__PURE__ */ import_react27.default.createElement(
+        /* @__PURE__ */ import_react28.default.createElement(Icon2, { name: "x", size: 14 })
+      )))))), library.tracks.length > 0 && /* @__PURE__ */ import_react28.default.createElement("div", { className: "quick-add-from-library" }, /* @__PURE__ */ import_react28.default.createElement("h4", null, "Add Tracks from Media Library"), /* @__PURE__ */ import_react28.default.createElement("div", { className: "quick-add-controls" }, /* @__PURE__ */ import_react28.default.createElement(
         "select",
         {
           id: "select-track-to-add",
@@ -25991,15 +26120,15 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
             }
           }
         },
-        /* @__PURE__ */ import_react27.default.createElement("option", { value: "", disabled: true }, 'Select track to add to "', selectedPlaylist.name, '"...'),
-        library.tracks.map((t, idx) => /* @__PURE__ */ import_react27.default.createElement("option", { key: t.id || idx, value: t.id || t.filePath }, t.title, " \u2014 ", t.artist, " (", formatDuration8(t.duration), ")"))
-      ), /* @__PURE__ */ import_react27.default.createElement("button", { className: "btn-secondary", onClick: handleAddFilesToSelectedPlaylist }, "Add Audio Files"))))) : /* @__PURE__ */ import_react27.default.createElement("div", { className: "empty-state" }, /* @__PURE__ */ import_react27.default.createElement("p", null, "Select a playlist from the left or create a new one."), /* @__PURE__ */ import_react27.default.createElement("button", { className: "btn-accent", onClick: () => setShowCreatePlaylistModal(true), style: { marginTop: "12px" } }, "Create Playlist"))))), (activeTab === "library" || activeTab === "shows") && /* @__PURE__ */ import_react27.default.createElement("div", { className: "library-tab" }, activeCastSession && /* @__PURE__ */ import_react27.default.createElement("div", { className: "active-cast-bar" }, /* @__PURE__ */ import_react27.default.createElement("div", { className: "cast-bar-indicator" }, /* @__PURE__ */ import_react27.default.createElement(
+        /* @__PURE__ */ import_react28.default.createElement("option", { value: "", disabled: true }, 'Select track to add to "', selectedPlaylist.name, '"...'),
+        library.tracks.map((t, idx) => /* @__PURE__ */ import_react28.default.createElement("option", { key: t.id || idx, value: t.id || t.filePath }, t.title, " \u2014 ", t.artist, " (", formatDuration9(t.duration), ")"))
+      ), /* @__PURE__ */ import_react28.default.createElement("button", { className: "btn-secondary", onClick: handleAddFilesToSelectedPlaylist }, "Add Audio Files"))))) : /* @__PURE__ */ import_react28.default.createElement("div", { className: "empty-state" }, /* @__PURE__ */ import_react28.default.createElement("p", null, "Select a playlist from the left or create a new one."), /* @__PURE__ */ import_react28.default.createElement("button", { className: "btn-accent", onClick: () => setShowCreatePlaylistModal(true), style: { marginTop: "12px" } }, "Create Playlist"))))), (activeTab === "library" || activeTab === "shows") && /* @__PURE__ */ import_react28.default.createElement("div", { className: "library-tab" }, activeCastSession && /* @__PURE__ */ import_react28.default.createElement("div", { className: "active-cast-bar" }, /* @__PURE__ */ import_react28.default.createElement("div", { className: "cast-bar-indicator" }, /* @__PURE__ */ import_react28.default.createElement(
         "span",
         {
           className: "cast-pulse-dot",
           style: { background: activeCastSession.isPaused ? "#eab308" : "#22c55e" }
         }
-      ), /* @__PURE__ */ import_react27.default.createElement("span", null, "Currently casting to ", /* @__PURE__ */ import_react27.default.createElement("strong", null, getSpeakerName(activeCastSession.ip)))), /* @__PURE__ */ import_react27.default.createElement("div", { className: "cast-bar-controls" }, /* @__PURE__ */ import_react27.default.createElement("button", { className: "btn-chip", onClick: handleToggleCastPause }, activeCastSession.isPaused ? "Resume" : "Pause"), /* @__PURE__ */ import_react27.default.createElement("button", { className: "btn-chip btn-stop-cast", onClick: () => handleStopCast(activeCastSession.ip) }, "Stop Cast"))), /* @__PURE__ */ import_react27.default.createElement(
+      ), /* @__PURE__ */ import_react28.default.createElement("span", null, "Currently casting to ", /* @__PURE__ */ import_react28.default.createElement("strong", null, getSpeakerName(activeCastSession.ip)))), /* @__PURE__ */ import_react28.default.createElement("div", { className: "cast-bar-controls" }, /* @__PURE__ */ import_react28.default.createElement("button", { className: "btn-chip", onClick: handleToggleCastPause }, activeCastSession.isPaused ? "Resume" : "Pause"), /* @__PURE__ */ import_react28.default.createElement("button", { className: "btn-chip btn-stop-cast", onClick: () => handleStopCast(activeCastSession.ip) }, "Stop Cast"))), /* @__PURE__ */ import_react28.default.createElement(
         Library,
         {
           mode: activeTab === "shows" ? "shows" : "movies",
@@ -26034,7 +26163,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
             busyId: syncingFolder === "all" ? "__all__" : syncingFolder
           }
         }
-      )), activeTab === "history" && /* @__PURE__ */ import_react27.default.createElement(
+      )), activeTab === "history" && /* @__PURE__ */ import_react28.default.createElement(
         WatchHistoryTab,
         {
           tracks: library.tracks,
@@ -26064,7 +26193,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
           },
           onImportHistory: handleImportWatchHistory
         }
-      ), activeTab === "cloud" && /* @__PURE__ */ import_react27.default.createElement(
+      ), activeTab === "cloud" && /* @__PURE__ */ import_react28.default.createElement(
         CloudBrowser,
         {
           folders,
@@ -26077,27 +26206,27 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
             if (lib) setLibrary(lib);
           }
         }
-      ), activeTab === "ambient" && /* @__PURE__ */ import_react27.default.createElement("div", { className: "ambient-container" }, /* @__PURE__ */ import_react27.default.createElement("h3", null, "Procedural Focus Soundscapes"), /* @__PURE__ */ import_react27.default.createElement("p", { className: "subtitle" }, "Synthesized in real-time with Web Audio API nodes (zero external files)"), /* @__PURE__ */ import_react27.default.createElement("div", { className: "ambient-grid" }, [
+      ), activeTab === "ambient" && /* @__PURE__ */ import_react28.default.createElement("div", { className: "ambient-container" }, /* @__PURE__ */ import_react28.default.createElement("h3", null, "Procedural Focus Soundscapes"), /* @__PURE__ */ import_react28.default.createElement("p", { className: "subtitle" }, "Synthesized in real-time with Web Audio API nodes (zero external files)"), /* @__PURE__ */ import_react28.default.createElement("div", { className: "ambient-grid" }, [
         { id: "rain", icon: "rain", name: "Coding Rain", desc: "Resonant filtered pink noise mimicking rainfall" },
         { id: "synth", icon: "synth", name: "Cyber Synth", desc: "Dual detuned sawtooth oscillators with analog low-pass filter" },
         { id: "pink", icon: "noise", name: "Pink Noise", desc: "Voss-McCartney noise buffer for deep technical focus" }
-      ].map((s) => /* @__PURE__ */ import_react27.default.createElement("div", { key: s.id, className: `ambient-card-item ${activeAmbient === s.id ? "active" : ""}`, onClick: () => playAmbient(s.id) }, /* @__PURE__ */ import_react27.default.createElement("span", { className: "card-emoji" }, /* @__PURE__ */ import_react27.default.createElement(Icon2, { name: s.icon, size: 28 })), /* @__PURE__ */ import_react27.default.createElement("h4", null, s.name), /* @__PURE__ */ import_react27.default.createElement("p", null, s.desc), /* @__PURE__ */ import_react27.default.createElement("button", { className: "btn-accent" }, activeAmbient === s.id ? "Stop" : "Start"))))), activeTab === "speakers" && /* @__PURE__ */ import_react27.default.createElement("div", { className: "speakers-container" }, /* @__PURE__ */ import_react27.default.createElement("div", { className: "speakers-header" }, /* @__PURE__ */ import_react27.default.createElement("div", null, /* @__PURE__ */ import_react27.default.createElement("h3", null, "Paired RobOS Smart TVs (", speakers.length, ")"), /* @__PURE__ */ import_react27.default.createElement("p", { className: "subtitle", style: { marginTop: "4px" } }, "Cast movies directly to RobOS Smart TVs (Roku OS, Google TV / Cast, LG webOS, Samsung Tizen) over zero-cloud LAN")), /* @__PURE__ */ import_react27.default.createElement("div", { style: { display: "flex", gap: "8px" } }, /* @__PURE__ */ import_react27.default.createElement("button", { className: "btn-chip btn-stop-cast", onClick: () => handleStopCast() }, "Stop All Smart TVs"), /* @__PURE__ */ import_react27.default.createElement("button", { className: "btn-secondary", onClick: () => refreshSpeakers(true) }, "Scan Smart TVs"))), /* @__PURE__ */ import_react27.default.createElement("div", { className: "speakers-grid" }, speakers.map((s) => {
+      ].map((s) => /* @__PURE__ */ import_react28.default.createElement("div", { key: s.id, className: `ambient-card-item ${activeAmbient === s.id ? "active" : ""}`, onClick: () => playAmbient(s.id) }, /* @__PURE__ */ import_react28.default.createElement("span", { className: "card-emoji" }, /* @__PURE__ */ import_react28.default.createElement(Icon2, { name: s.icon, size: 28 })), /* @__PURE__ */ import_react28.default.createElement("h4", null, s.name), /* @__PURE__ */ import_react28.default.createElement("p", null, s.desc), /* @__PURE__ */ import_react28.default.createElement("button", { className: "btn-accent" }, activeAmbient === s.id ? "Stop" : "Start"))))), activeTab === "speakers" && /* @__PURE__ */ import_react28.default.createElement("div", { className: "speakers-container" }, /* @__PURE__ */ import_react28.default.createElement("div", { className: "speakers-header" }, /* @__PURE__ */ import_react28.default.createElement("div", null, /* @__PURE__ */ import_react28.default.createElement("h3", null, "Paired RobOS Smart TVs (", speakers.length, ")"), /* @__PURE__ */ import_react28.default.createElement("p", { className: "subtitle", style: { marginTop: "4px" } }, "Cast movies directly to RobOS Smart TVs (Roku OS, Google TV / Cast, LG webOS, Samsung Tizen) over zero-cloud LAN")), /* @__PURE__ */ import_react28.default.createElement("div", { style: { display: "flex", gap: "8px" } }, /* @__PURE__ */ import_react28.default.createElement("button", { className: "btn-chip btn-stop-cast", onClick: () => handleStopCast() }, "Stop All Smart TVs"), /* @__PURE__ */ import_react28.default.createElement("button", { className: "btn-secondary", onClick: () => refreshSpeakers(true) }, "Scan Smart TVs"))), /* @__PURE__ */ import_react28.default.createElement("div", { className: "speakers-grid" }, speakers.map((s) => {
         const isSelected = outputTarget === s.ip || outputTarget === "all";
         const isCastingHere = activeCastSession && (activeCastSession.ip === s.ip || activeCastSession.ip === "all");
-        return /* @__PURE__ */ import_react27.default.createElement(
+        return /* @__PURE__ */ import_react28.default.createElement(
           "div",
           {
             key: s.ip,
             className: "speaker-card",
             style: isSelected ? { borderColor: "#e8a33d", boxShadow: "0 0 0 1px rgba(232,163,61,0.35)" } : void 0
           },
-          /* @__PURE__ */ import_react27.default.createElement("div", { className: "speaker-badge" }, isCastingHere ? "CASTING LIVE" : s.isDefault ? "\u2605 DEFAULT TV" : s.online !== false ? "ONLINE \xB7 READY" : "PAIRED"),
-          /* @__PURE__ */ import_react27.default.createElement("h4", { style: { paddingRight: "108px" } }, s.isDefault ? "\u2605 " : "", s.name),
-          s.platformName && /* @__PURE__ */ import_react27.default.createElement("p", { className: "speaker-model", style: { color: "#e8a33d", fontWeight: 600 } }, "Platform: ", s.platformName),
-          /* @__PURE__ */ import_react27.default.createElement("p", { className: "speaker-ip" }, "LAN IP: ", /* @__PURE__ */ import_react27.default.createElement("code", null, s.ip)),
-          /* @__PURE__ */ import_react27.default.createElement("p", { className: "speaker-model" }, "Model: ", s.model),
-          s.sideloadStatus && /* @__PURE__ */ import_react27.default.createElement("p", { className: "speaker-model", style: { fontSize: "12px", opacity: 0.8 } }, "RobOS TV Studio: ", /* @__PURE__ */ import_react27.default.createElement("code", null, s.sideloadStatus)),
-          /* @__PURE__ */ import_react27.default.createElement("div", { className: "speaker-actions" }, /* @__PURE__ */ import_react27.default.createElement(
+          /* @__PURE__ */ import_react28.default.createElement("div", { className: "speaker-badge" }, isCastingHere ? "CASTING LIVE" : s.isDefault ? "\u2605 DEFAULT TV" : s.online !== false ? "ONLINE \xB7 READY" : "PAIRED"),
+          /* @__PURE__ */ import_react28.default.createElement("h4", { style: { paddingRight: "108px" } }, s.isDefault ? "\u2605 " : "", s.name),
+          s.platformName && /* @__PURE__ */ import_react28.default.createElement("p", { className: "speaker-model", style: { color: "#e8a33d", fontWeight: 600 } }, "Platform: ", s.platformName),
+          /* @__PURE__ */ import_react28.default.createElement("p", { className: "speaker-ip" }, "LAN IP: ", /* @__PURE__ */ import_react28.default.createElement("code", null, s.ip)),
+          /* @__PURE__ */ import_react28.default.createElement("p", { className: "speaker-model" }, "Model: ", s.model),
+          s.sideloadStatus && /* @__PURE__ */ import_react28.default.createElement("p", { className: "speaker-model", style: { fontSize: "12px", opacity: 0.8 } }, "RobOS TV Studio: ", /* @__PURE__ */ import_react28.default.createElement("code", null, s.sideloadStatus)),
+          /* @__PURE__ */ import_react28.default.createElement("div", { className: "speaker-actions" }, /* @__PURE__ */ import_react28.default.createElement(
             "button",
             {
               className: "btn-accent",
@@ -26117,7 +26246,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
               }
             },
             currentTrack ? `Display "${currentTrack.title.slice(0, 22)}${currentTrack.title.length > 22 ? "\u2026" : ""}" on TV` : "Display on TV"
-          ), /* @__PURE__ */ import_react27.default.createElement(
+          ), /* @__PURE__ */ import_react28.default.createElement(
             "button",
             {
               className: "btn-secondary",
@@ -26138,7 +26267,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
               title: "Open the interactive 10-foot Movie Library on this Smart TV to browse and play movies using your physical TV remote"
             },
             "\u{1F3AE} Open TV Library (Remote UI)"
-          ), /* @__PURE__ */ import_react27.default.createElement(
+          ), /* @__PURE__ */ import_react28.default.createElement(
             "button",
             {
               className: "btn-secondary",
@@ -26156,11 +26285,11 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
               title: s.isDefault ? "Click to clear Default Smart TV" : "Set as your Default Smart TV for voice and Movie Player playback"
             },
             s.isDefault ? "\u2605 Default TV" : "\u2606 Set Default TV"
-          ), /* @__PURE__ */ import_react27.default.createElement("button", { className: "btn-chip btn-stop-cast", onClick: async () => {
+          ), /* @__PURE__ */ import_react28.default.createElement("button", { className: "btn-chip btn-stop-cast", onClick: async () => {
             if (window.robosAudio?.closeTvLibrary) await window.robosAudio.closeTvLibrary(s.ip).catch(() => {
             });
             handleStopCast(s.ip);
-          } }, "Stop TV"), /* @__PURE__ */ import_react27.default.createElement("button", { className: "btn-secondary", onClick: async () => {
+          } }, "Stop TV"), /* @__PURE__ */ import_react28.default.createElement("button", { className: "btn-secondary", onClick: async () => {
             showStatus(`Sending test signal to ${s.name} (${s.ip})...`);
             try {
               await window.robosAudio.playTestChime(s.ip);
@@ -26170,7 +26299,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
             }
           } }, "Test TV Signal"))
         );
-      })))), /* @__PURE__ */ import_react27.default.createElement(
+      })))), /* @__PURE__ */ import_react28.default.createElement(
         NowPlayingPanel,
         {
           queue: playlist,
@@ -26203,7 +26332,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
           pipSlotRef: !dockCollapsed ? pipSlotRef : null
         }
       )),
-      activeTab !== "player" && currentTrack && /* @__PURE__ */ import_react27.default.createElement("footer", { className: `mini-player-bar ${embeddedPipActive && dockCollapsed ? "has-embedded-pip" : ""}` }, /* @__PURE__ */ import_react27.default.createElement("div", { className: "mini-player-info", onClick: () => setActiveTab("player") }, /* @__PURE__ */ import_react27.default.createElement("div", { className: `mini-art ${embeddedPipActive ? dockCollapsed ? "is-pip-slot" : "is-pip-docked" : ""}` }, embeddedPipActive ? dockCollapsed ? /* @__PURE__ */ import_react27.default.createElement("div", { id: "embedded-pip-slot", ref: pipSlotRef, className: "mini-bar-pip-slot" }) : /* @__PURE__ */ import_react27.default.createElement("div", { className: "mini-pip-indicator", title: "Video playing in embedded PiP \u2014 click for Cinema Stage" }, /* @__PURE__ */ import_react27.default.createElement("span", null, "\u25CF PiP")) : /* @__PURE__ */ import_react27.default.createElement(Cover, { artId: currentTrack.artId, name: currentTrack.album || currentTrack.title, size: 38 })), /* @__PURE__ */ import_react27.default.createElement("div", { className: "mini-text" }, /* @__PURE__ */ import_react27.default.createElement("span", { className: "mini-title" }, currentTrack.title), /* @__PURE__ */ import_react27.default.createElement("span", { className: "mini-artist" }, currentTrack.artist || "Unknown", " \u2022 ", currentTrack.album || ""))), /* @__PURE__ */ import_react27.default.createElement(LoveButton, { track: currentTrack, size: 15 }), /* @__PURE__ */ import_react27.default.createElement("div", { className: "mini-player-center" }, /* @__PURE__ */ import_react27.default.createElement("div", { className: "mini-player-controls" }, /* @__PURE__ */ import_react27.default.createElement("button", { className: `mini-ctrl-btn mini-mode ${shuffleMode ? "on" : ""}`, title: shuffleMode ? "Random: on" : "Random: off", onClick: toggleShuffleMode }, /* @__PURE__ */ import_react27.default.createElement(Icon2, { name: "shuffle", size: 15 })), /* @__PURE__ */ import_react27.default.createElement("button", { className: "mini-ctrl-btn", title: "Previous (Ctrl+\u2190)", onClick: handlePlayPrev }, /* @__PURE__ */ import_react27.default.createElement(Icon2, { name: "prev", size: 18 })), /* @__PURE__ */ import_react27.default.createElement("button", { className: "mini-ctrl-btn mini-btn-play", title: isPlaying ? "Pause (Space)" : "Play (Space)", onClick: handleTogglePlayPause }, /* @__PURE__ */ import_react27.default.createElement(Icon2, { name: isPlaying ? "pause" : "play", size: 18 })), /* @__PURE__ */ import_react27.default.createElement("button", { className: "mini-ctrl-btn", title: "Next (Ctrl+\u2192)", onClick: handlePlayNext }, /* @__PURE__ */ import_react27.default.createElement(Icon2, { name: "next", size: 18 })), /* @__PURE__ */ import_react27.default.createElement("button", { className: `mini-ctrl-btn mini-mode ${repeatMode !== "off" ? "on" : ""}`, title: `Repeat: ${repeatMode}`, onClick: cycleRepeat }, /* @__PURE__ */ import_react27.default.createElement(Icon2, { name: repeatMode === "one" ? "repeatOne" : "repeat", size: 15 }))), outputTarget !== "local" ? /* @__PURE__ */ import_react27.default.createElement(CastProgress, { onSeek: handleCastSeek }) : /* @__PURE__ */ import_react27.default.createElement(
+      activeTab !== "player" && currentTrack && /* @__PURE__ */ import_react28.default.createElement("footer", { className: `mini-player-bar ${embeddedPipActive && dockCollapsed ? "has-embedded-pip" : ""}` }, /* @__PURE__ */ import_react28.default.createElement("div", { className: "mini-player-info", onClick: () => setActiveTab("player") }, /* @__PURE__ */ import_react28.default.createElement("div", { className: `mini-art ${embeddedPipActive ? dockCollapsed ? "is-pip-slot" : "is-pip-docked" : ""}` }, embeddedPipActive ? dockCollapsed ? /* @__PURE__ */ import_react28.default.createElement("div", { id: "embedded-pip-slot", ref: pipSlotRef, className: "mini-bar-pip-slot" }) : /* @__PURE__ */ import_react28.default.createElement("div", { className: "mini-pip-indicator", title: "Video playing in embedded PiP \u2014 click for Cinema Stage" }, /* @__PURE__ */ import_react28.default.createElement("span", null, "\u25CF PiP")) : /* @__PURE__ */ import_react28.default.createElement(Cover, { artId: currentTrack.artId, name: currentTrack.album || currentTrack.title, size: 38 })), /* @__PURE__ */ import_react28.default.createElement("div", { className: "mini-text" }, /* @__PURE__ */ import_react28.default.createElement("span", { className: "mini-title" }, currentTrack.title), /* @__PURE__ */ import_react28.default.createElement("span", { className: "mini-artist" }, currentTrack.artist || "Unknown", " \u2022 ", currentTrack.album || ""))), /* @__PURE__ */ import_react28.default.createElement(LoveButton, { track: currentTrack, size: 15 }), /* @__PURE__ */ import_react28.default.createElement("div", { className: "mini-player-center" }, /* @__PURE__ */ import_react28.default.createElement("div", { className: "mini-player-controls" }, /* @__PURE__ */ import_react28.default.createElement("button", { className: `mini-ctrl-btn mini-mode ${shuffleMode ? "on" : ""}`, title: shuffleMode ? "Random: on" : "Random: off", onClick: toggleShuffleMode }, /* @__PURE__ */ import_react28.default.createElement(Icon2, { name: "shuffle", size: 15 })), /* @__PURE__ */ import_react28.default.createElement("button", { className: "mini-ctrl-btn", title: "Previous (Ctrl+\u2190)", onClick: handlePlayPrev }, /* @__PURE__ */ import_react28.default.createElement(Icon2, { name: "prev", size: 18 })), /* @__PURE__ */ import_react28.default.createElement("button", { className: "mini-ctrl-btn mini-btn-play", title: isPlaying ? "Pause (Space)" : "Play (Space)", onClick: handleTogglePlayPause }, /* @__PURE__ */ import_react28.default.createElement(Icon2, { name: isPlaying ? "pause" : "play", size: 18 })), /* @__PURE__ */ import_react28.default.createElement("button", { className: "mini-ctrl-btn", title: "Next (Ctrl+\u2192)", onClick: handlePlayNext }, /* @__PURE__ */ import_react28.default.createElement(Icon2, { name: "next", size: 18 })), /* @__PURE__ */ import_react28.default.createElement("button", { className: `mini-ctrl-btn mini-mode ${repeatMode !== "off" ? "on" : ""}`, title: `Repeat: ${repeatMode}`, onClick: cycleRepeat }, /* @__PURE__ */ import_react28.default.createElement(Icon2, { name: repeatMode === "one" ? "repeatOne" : "repeat", size: 15 }))), outputTarget !== "local" ? /* @__PURE__ */ import_react28.default.createElement(CastProgress, { onSeek: handleCastSeek }) : /* @__PURE__ */ import_react28.default.createElement(
         MiniProgress,
         {
           trackId: `${currentTrack?.id || currentTrack?.filePath || ""}:${transcodeOffsetSec}`,
@@ -26213,8 +26342,8 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
           isTranscode: isTranscodeActive,
           onSeekOverride: isTranscodeActive ? seekVideoTo : null
         }
-      )), /* @__PURE__ */ import_react27.default.createElement("div", { className: "mini-player-right" }, /* @__PURE__ */ import_react27.default.createElement("span", { className: "badge mini-badge" }, "Output: ", getSpeakerName(outputTarget)), /* @__PURE__ */ import_react27.default.createElement("button", { id: "btn-mini-now-playing", className: "btn-chip", onClick: () => setActiveTab("player") }, "Now Playing"))),
-      showAiPlaylist && /* @__PURE__ */ import_react27.default.createElement(
+      )), /* @__PURE__ */ import_react28.default.createElement("div", { className: "mini-player-right" }, /* @__PURE__ */ import_react28.default.createElement("span", { className: "badge mini-badge" }, "Output: ", getSpeakerName(outputTarget)), /* @__PURE__ */ import_react28.default.createElement("button", { id: "btn-mini-now-playing", className: "btn-chip", onClick: () => setActiveTab("player") }, "Now Playing"))),
+      showAiPlaylist && /* @__PURE__ */ import_react28.default.createElement(
         AiPlaylistModal,
         {
           initialDj: dj.settings,
@@ -26225,7 +26354,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
           onSave: handleAiPlaylistSave
         }
       ),
-      showVoiceCommandsModal && /* @__PURE__ */ import_react27.default.createElement(
+      showVoiceCommandsModal && /* @__PURE__ */ import_react28.default.createElement(
         VoiceCommandsModal,
         {
           speakers,
@@ -26238,7 +26367,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
           onClose: () => setShowVoiceCommandsModal(false)
         }
       ),
-      showDjSettings && /* @__PURE__ */ import_react27.default.createElement(
+      showDjSettings && /* @__PURE__ */ import_react28.default.createElement(
         DjSettingsModal,
         {
           value: dj.settings,
@@ -26252,7 +26381,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
           }
         }
       ),
-      tracksForAiFix !== null && /* @__PURE__ */ import_react27.default.createElement(
+      tracksForAiFix !== null && /* @__PURE__ */ import_react28.default.createElement(
         AiFixMetadataModal,
         {
           tracks: library.tracks,
@@ -26263,7 +26392,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
           onClose: () => setTracksForAiFix(null)
         }
       ),
-      showCreatePlaylistModal && /* @__PURE__ */ import_react27.default.createElement("div", { className: "modal-overlay", onClick: () => setShowCreatePlaylistModal(false) }, /* @__PURE__ */ import_react27.default.createElement("div", { className: "modal-card", onClick: (e) => e.stopPropagation() }, /* @__PURE__ */ import_react27.default.createElement("h3", null, "Create New Playlist"), /* @__PURE__ */ import_react27.default.createElement("div", { className: "modal-input-group" }, /* @__PURE__ */ import_react27.default.createElement("label", null, "Playlist Name"), /* @__PURE__ */ import_react27.default.createElement(
+      showCreatePlaylistModal && /* @__PURE__ */ import_react28.default.createElement("div", { className: "modal-overlay", onClick: () => setShowCreatePlaylistModal(false) }, /* @__PURE__ */ import_react28.default.createElement("div", { className: "modal-card", onClick: (e) => e.stopPropagation() }, /* @__PURE__ */ import_react28.default.createElement("h3", null, "Create New Playlist"), /* @__PURE__ */ import_react28.default.createElement("div", { className: "modal-input-group" }, /* @__PURE__ */ import_react28.default.createElement("label", null, "Playlist Name"), /* @__PURE__ */ import_react28.default.createElement(
         "input",
         {
           id: "input-playlist-name",
@@ -26276,7 +26405,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
             if (e.key === "Enter") handleCreatePlaylist();
           }
         }
-      )), /* @__PURE__ */ import_react27.default.createElement("div", { className: "modal-input-group" }, /* @__PURE__ */ import_react27.default.createElement("label", null, "Description (Optional)"), /* @__PURE__ */ import_react27.default.createElement(
+      )), /* @__PURE__ */ import_react28.default.createElement("div", { className: "modal-input-group" }, /* @__PURE__ */ import_react28.default.createElement("label", null, "Description (Optional)"), /* @__PURE__ */ import_react28.default.createElement(
         "textarea",
         {
           id: "input-playlist-desc",
@@ -26285,8 +26414,8 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
           value: newPlaylistDesc,
           onChange: (e) => setNewPlaylistDesc(e.target.value)
         }
-      )), /* @__PURE__ */ import_react27.default.createElement("div", { className: "modal-actions" }, /* @__PURE__ */ import_react27.default.createElement("button", { className: "btn-secondary", onClick: () => setShowCreatePlaylistModal(false) }, "Cancel"), /* @__PURE__ */ import_react27.default.createElement("button", { id: "btn-modal-create-playlist", className: "btn-accent", onClick: handleCreatePlaylist }, "Create Playlist")))),
-      showSaveQueueModal && /* @__PURE__ */ import_react27.default.createElement("div", { className: "modal-overlay", onClick: () => setShowSaveQueueModal(false) }, /* @__PURE__ */ import_react27.default.createElement("div", { className: "modal-card", onClick: (e) => e.stopPropagation() }, /* @__PURE__ */ import_react27.default.createElement("h3", null, "Save Queue as Playlist"), /* @__PURE__ */ import_react27.default.createElement("p", { className: "subtitle", style: { fontSize: "0.8rem", color: "var(--text-muted)" } }, "Save all ", playlist.length, " track(s) from your current playback queue into a permanent playlist."), /* @__PURE__ */ import_react27.default.createElement("div", { className: "modal-input-group" }, /* @__PURE__ */ import_react27.default.createElement("label", null, "Playlist Name"), /* @__PURE__ */ import_react27.default.createElement(
+      )), /* @__PURE__ */ import_react28.default.createElement("div", { className: "modal-actions" }, /* @__PURE__ */ import_react28.default.createElement("button", { className: "btn-secondary", onClick: () => setShowCreatePlaylistModal(false) }, "Cancel"), /* @__PURE__ */ import_react28.default.createElement("button", { id: "btn-modal-create-playlist", className: "btn-accent", onClick: handleCreatePlaylist }, "Create Playlist")))),
+      showSaveQueueModal && /* @__PURE__ */ import_react28.default.createElement("div", { className: "modal-overlay", onClick: () => setShowSaveQueueModal(false) }, /* @__PURE__ */ import_react28.default.createElement("div", { className: "modal-card", onClick: (e) => e.stopPropagation() }, /* @__PURE__ */ import_react28.default.createElement("h3", null, "Save Queue as Playlist"), /* @__PURE__ */ import_react28.default.createElement("p", { className: "subtitle", style: { fontSize: "0.8rem", color: "var(--text-muted)" } }, "Save all ", playlist.length, " track(s) from your current playback queue into a permanent playlist."), /* @__PURE__ */ import_react28.default.createElement("div", { className: "modal-input-group" }, /* @__PURE__ */ import_react28.default.createElement("label", null, "Playlist Name"), /* @__PURE__ */ import_react28.default.createElement(
         "input",
         {
           id: "input-save-queue-name",
@@ -26299,7 +26428,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
             if (e.key === "Enter") handleSaveQueueAsPlaylist();
           }
         }
-      )), /* @__PURE__ */ import_react27.default.createElement("div", { className: "modal-input-group" }, /* @__PURE__ */ import_react27.default.createElement("label", null, "Description (Optional)"), /* @__PURE__ */ import_react27.default.createElement(
+      )), /* @__PURE__ */ import_react28.default.createElement("div", { className: "modal-input-group" }, /* @__PURE__ */ import_react28.default.createElement("label", null, "Description (Optional)"), /* @__PURE__ */ import_react28.default.createElement(
         "textarea",
         {
           id: "input-save-queue-desc",
@@ -26308,17 +26437,17 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
           value: saveQueueDesc,
           onChange: (e) => setSaveQueueDesc(e.target.value)
         }
-      )), /* @__PURE__ */ import_react27.default.createElement("div", { className: "modal-actions" }, /* @__PURE__ */ import_react27.default.createElement("button", { className: "btn-secondary", onClick: () => setShowSaveQueueModal(false) }, "Cancel"), /* @__PURE__ */ import_react27.default.createElement("button", { id: "btn-modal-save-queue", className: "btn-accent", onClick: handleSaveQueueAsPlaylist }, "Save Playlist")))),
-      tracksForPlaylist && tracksForPlaylist.length > 0 && /* @__PURE__ */ import_react27.default.createElement("div", { className: "modal-overlay", onClick: () => setTracksForPlaylist(null) }, /* @__PURE__ */ import_react27.default.createElement("div", { className: "modal-card", onClick: (e) => e.stopPropagation() }, /* @__PURE__ */ import_react27.default.createElement("h3", null, "Add to Playlist"), /* @__PURE__ */ import_react27.default.createElement("div", { className: "modal-selected-track-info" }, tracksForPlaylist.length === 1 ? /* @__PURE__ */ import_react27.default.createElement(import_react27.default.Fragment, null, /* @__PURE__ */ import_react27.default.createElement("strong", null, tracksForPlaylist[0].title), /* @__PURE__ */ import_react27.default.createElement("span", { style: { fontSize: "0.75rem", color: "var(--text-muted)" } }, tracksForPlaylist[0].artist, " \u2022 ", tracksForPlaylist[0].album)) : /* @__PURE__ */ import_react27.default.createElement(import_react27.default.Fragment, null, /* @__PURE__ */ import_react27.default.createElement("strong", null, tracksForPlaylist.length, " tracks"), /* @__PURE__ */ import_react27.default.createElement("span", { style: { fontSize: "0.75rem", color: "var(--text-muted)" } }, formatTotalDuration(tracksForPlaylist)))), /* @__PURE__ */ import_react27.default.createElement("div", { className: "modal-input-group" }, /* @__PURE__ */ import_react27.default.createElement("label", null, "Choose Destination Playlist"), playlists.length === 0 ? /* @__PURE__ */ import_react27.default.createElement("p", { style: { fontSize: "0.8rem", color: "var(--text-muted)" } }, "No playlists exist yet.") : /* @__PURE__ */ import_react27.default.createElement("div", { className: "modal-playlist-select-list" }, playlists.map((pl) => /* @__PURE__ */ import_react27.default.createElement(
+      )), /* @__PURE__ */ import_react28.default.createElement("div", { className: "modal-actions" }, /* @__PURE__ */ import_react28.default.createElement("button", { className: "btn-secondary", onClick: () => setShowSaveQueueModal(false) }, "Cancel"), /* @__PURE__ */ import_react28.default.createElement("button", { id: "btn-modal-save-queue", className: "btn-accent", onClick: handleSaveQueueAsPlaylist }, "Save Playlist")))),
+      tracksForPlaylist && tracksForPlaylist.length > 0 && /* @__PURE__ */ import_react28.default.createElement("div", { className: "modal-overlay", onClick: () => setTracksForPlaylist(null) }, /* @__PURE__ */ import_react28.default.createElement("div", { className: "modal-card", onClick: (e) => e.stopPropagation() }, /* @__PURE__ */ import_react28.default.createElement("h3", null, "Add to Playlist"), /* @__PURE__ */ import_react28.default.createElement("div", { className: "modal-selected-track-info" }, tracksForPlaylist.length === 1 ? /* @__PURE__ */ import_react28.default.createElement(import_react28.default.Fragment, null, /* @__PURE__ */ import_react28.default.createElement("strong", null, tracksForPlaylist[0].title), /* @__PURE__ */ import_react28.default.createElement("span", { style: { fontSize: "0.75rem", color: "var(--text-muted)" } }, tracksForPlaylist[0].artist, " \u2022 ", tracksForPlaylist[0].album)) : /* @__PURE__ */ import_react28.default.createElement(import_react28.default.Fragment, null, /* @__PURE__ */ import_react28.default.createElement("strong", null, tracksForPlaylist.length, " tracks"), /* @__PURE__ */ import_react28.default.createElement("span", { style: { fontSize: "0.75rem", color: "var(--text-muted)" } }, formatTotalDuration(tracksForPlaylist)))), /* @__PURE__ */ import_react28.default.createElement("div", { className: "modal-input-group" }, /* @__PURE__ */ import_react28.default.createElement("label", null, "Choose Destination Playlist"), playlists.length === 0 ? /* @__PURE__ */ import_react28.default.createElement("p", { style: { fontSize: "0.8rem", color: "var(--text-muted)" } }, "No playlists exist yet.") : /* @__PURE__ */ import_react28.default.createElement("div", { className: "modal-playlist-select-list" }, playlists.map((pl) => /* @__PURE__ */ import_react28.default.createElement(
         "div",
         {
           key: pl.id,
           className: "modal-playlist-select-item",
           onClick: () => handleAddTracksToPlaylist(pl.id, tracksForPlaylist)
         },
-        /* @__PURE__ */ import_react27.default.createElement("div", null, /* @__PURE__ */ import_react27.default.createElement("strong", null, pl.name), /* @__PURE__ */ import_react27.default.createElement("span", { style: { display: "block", fontSize: "0.72rem", color: "var(--text-muted)" } }, pl.tracks?.length || 0, " track(s)")),
-        /* @__PURE__ */ import_react27.default.createElement("span", { className: "btn-chip" }, "Add")
-      )))), /* @__PURE__ */ import_react27.default.createElement("div", { className: "modal-input-group" }, /* @__PURE__ */ import_react27.default.createElement("label", null, "\u2026or create a new playlist with ", tracksForPlaylist.length === 1 ? "this track" : "these tracks"), /* @__PURE__ */ import_react27.default.createElement("div", { className: "modal-inline-create" }, /* @__PURE__ */ import_react27.default.createElement(
+        /* @__PURE__ */ import_react28.default.createElement("div", null, /* @__PURE__ */ import_react28.default.createElement("strong", null, pl.name), /* @__PURE__ */ import_react28.default.createElement("span", { style: { display: "block", fontSize: "0.72rem", color: "var(--text-muted)" } }, pl.tracks?.length || 0, " track(s)")),
+        /* @__PURE__ */ import_react28.default.createElement("span", { className: "btn-chip" }, "Add")
+      )))), /* @__PURE__ */ import_react28.default.createElement("div", { className: "modal-input-group" }, /* @__PURE__ */ import_react28.default.createElement("label", null, "\u2026or create a new playlist with ", tracksForPlaylist.length === 1 ? "this track" : "these tracks"), /* @__PURE__ */ import_react28.default.createElement("div", { className: "modal-inline-create" }, /* @__PURE__ */ import_react28.default.createElement(
         "input",
         {
           id: "input-quick-playlist-name",
@@ -26330,8 +26459,8 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
             if (e.key === "Enter") handleCreatePlaylistFromTracks();
           }
         }
-      ), /* @__PURE__ */ import_react27.default.createElement("button", { className: "btn-accent", onClick: handleCreatePlaylistFromTracks }, "Create"))), /* @__PURE__ */ import_react27.default.createElement("div", { className: "modal-actions" }, /* @__PURE__ */ import_react27.default.createElement("button", { className: "btn-secondary", onClick: () => setTracksForPlaylist(null) }, "Cancel")))),
-      /* @__PURE__ */ import_react27.default.createElement(
+      ), /* @__PURE__ */ import_react28.default.createElement("button", { className: "btn-accent", onClick: handleCreatePlaylistFromTracks }, "Create"))), /* @__PURE__ */ import_react28.default.createElement("div", { className: "modal-actions" }, /* @__PURE__ */ import_react28.default.createElement("button", { className: "btn-secondary", onClick: () => setTracksForPlaylist(null) }, "Cancel")))),
+      /* @__PURE__ */ import_react28.default.createElement(
         MediaServiceModal,
         {
           open: showMediaServiceModal,
@@ -26340,16 +26469,25 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
           appKind: "movie"
         }
       ),
-      /* @__PURE__ */ import_react27.default.createElement(ContextMenu, { menu, onClose: closeMenu }),
-      infoTrack && /* @__PURE__ */ import_react27.default.createElement(TrackInfo, { track: infoTrack, onClose: () => setInfoTrack(null) }),
-      statusMsg && /* @__PURE__ */ import_react27.default.createElement("div", { className: "toast" }, statusMsg)
+      segmentTrack && /* @__PURE__ */ import_react28.default.createElement(
+        VideoSegmentsPanel,
+        {
+          key: segmentTrack.id,
+          track: segmentTrack,
+          onClose: () => setSegmentTrack(null),
+          onJump: (position) => jumpToVideoSegment(segmentTrack, position)
+        }
+      ),
+      /* @__PURE__ */ import_react28.default.createElement(ContextMenu, { menu, onClose: closeMenu }),
+      infoTrack && /* @__PURE__ */ import_react28.default.createElement(TrackInfo, { track: infoTrack, onClose: () => setInfoTrack(null) }),
+      statusMsg && /* @__PURE__ */ import_react28.default.createElement("div", { className: "toast" }, statusMsg)
     ));
   }
-  function MiniProgress({ getAudio, trackId, knownDuration = 0, offsetSec = 0, isTranscode = false, onSeekOverride = null }) {
-    const [time, setTime] = (0, import_react27.useState)({ current: offsetSec || 0, duration: knownDuration || 0 });
-    const [dragging, setDragging] = (0, import_react27.useState)(null);
-    const dragRef = (0, import_react27.useRef)(null);
-    (0, import_react27.useEffect)(() => {
+  function MiniProgress({ getAudio, trackId, knownDuration = 0, offsetSec = 0, isTranscode = false, onSeekOverride = null, onSegmentMenu }) {
+    const [time, setTime] = (0, import_react28.useState)({ current: offsetSec || 0, duration: knownDuration || 0 });
+    const [dragging, setDragging] = (0, import_react28.useState)(null);
+    const dragRef = (0, import_react28.useRef)(null);
+    (0, import_react28.useEffect)(() => {
       let attached = null;
       let pollTimer = null;
       const update = () => {
@@ -26428,7 +26566,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
     const val = dragging != null ? dragging : time.current;
     const maxVal = effectiveDuration > 0 ? effectiveDuration : Math.max(val, 1);
     const pct = maxVal ? Math.min(val, maxVal) / maxVal * 100 : 0;
-    return /* @__PURE__ */ import_react27.default.createElement("div", { className: "mini-progress" }, /* @__PURE__ */ import_react27.default.createElement("span", null, fmt2(val)), /* @__PURE__ */ import_react27.default.createElement(
+    return /* @__PURE__ */ import_react28.default.createElement("div", { className: "mini-progress" }, /* @__PURE__ */ import_react28.default.createElement("span", null, fmt2(val)), /* @__PURE__ */ import_react28.default.createElement(
       "input",
       {
         type: "range",
@@ -26438,6 +26576,11 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
         value: Math.min(val, maxVal),
         style: { "--pct": `${pct}%` },
         "aria-label": "Seek",
+        onContextMenu: onSegmentMenu ? (event) => {
+          const { left, width } = event.currentTarget.getBoundingClientRect();
+          const ratio = Math.max(0, Math.min(1, (event.clientX - left) / width));
+          onSegmentMenu(event, effectiveDuration && event.clientX > 0 ? ratio * effectiveDuration : time.current);
+        } : void 0,
         onChange: (e) => {
           const next = Number(e.target.value);
           dragRef.current = next;
@@ -26452,14 +26595,14 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
         onTouchEnd: finishDrag,
         onKeyUp: finishDrag
       }
-    ), /* @__PURE__ */ import_react27.default.createElement("span", null, fmt2(effectiveDuration)));
+    ), /* @__PURE__ */ import_react28.default.createElement("span", null, fmt2(effectiveDuration)));
   }
 
   // src/index.jsx
   var container = document.getElementById("root");
   if (container) {
     const root = (0, import_client.createRoot)(container);
-    root.render(/* @__PURE__ */ import_react28.default.createElement(App, null));
+    root.render(/* @__PURE__ */ import_react29.default.createElement(App, null));
   }
 })();
 /*! Bundled license information:
