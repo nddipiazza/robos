@@ -839,6 +839,7 @@ class MultiTrackRecorder {
 
     return {
       ok: true,
+      startSec: session.startSec,
       project: session.project,
       recordedClips,
     };

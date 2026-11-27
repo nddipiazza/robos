@@ -189,6 +189,32 @@ function runFfmpeg(args) {
   });
 }
 
+function probeVideoDimensions(filePath) {
+  return new Promise((resolve) => {
+    execFile('ffprobe', [
+      '-v', 'error',
+      '-select_streams', 'v:0',
+      '-show_entries', 'stream=width,height,r_frame_rate',
+      '-of', 'json',
+      filePath,
+    ], { timeout: 6000 }, (err, stdout) => {
+      if (!err && stdout) {
+        try {
+          const parsed = JSON.parse(stdout);
+          const s = parsed.streams?.[0];
+          const w = Number(s?.width) || 0;
+          const h = Number(s?.height) || 0;
+          if (w >= 64 && h >= 64) {
+            resolve({ width: w - (w % 2), height: h - (h % 2) });
+            return;
+          }
+        } catch {}
+      }
+      resolve({ width: 1920, height: 1080 });
+    });
+  });
+}
+
 /**
  * Transcode a rendered stereo WAV staging buffer into `outPath` in any supported format.
  */
@@ -207,26 +233,127 @@ async function transcodeMixdownBuffer(wavBuffer, {
   const finalOutPath = ensureFormatExtension(outPath, spec.ext);
   fs.mkdirSync(path.dirname(finalOutPath), { recursive: true });
 
-  // MP4 Video + Stereo Audio Mixdown Muxer (combines recorded camera .mp4 + full stereo DAW mixdown)
+  // MP4 Video + Stereo Audio Mixdown Muxer (combines single OR multi-part step-recorded camera .mp4 clips + stereo DAW mixdown)
   if (spec.id === 'mp4') {
-    const vidPath = videoMuxSpec?.videoFile ? String(videoMuxSpec.videoFile) : '';
-    if (!vidPath || !fs.existsSync(vidPath)) {
+    const rawSegs = Array.isArray(videoMuxSpec?.segments)
+      ? videoMuxSpec.segments.filter(s => s?.videoFile && fs.existsSync(String(s.videoFile)))
+      : [];
+    const singleVidPath = videoMuxSpec?.videoFile ? String(videoMuxSpec.videoFile) : '';
+    if (!rawSegs.length && (!singleVidPath || !fs.existsSync(singleVidPath))) {
       throw new Error('Select a video track with a recorded or imported .mp4 clip to export MP4 video.');
     }
+
     const sr = [44100, 48000].includes(Number(sampleRate)) ? Number(sampleRate) : 48000;
     const q = quality || spec.defaultQuality;
-    const renderStartSec = Math.max(0, Number(videoMuxSpec.renderStartSec) || 0);
-    const renderEndSec = Math.max(renderStartSec + 0.05, Number(videoMuxSpec.renderEndSec) || (renderStartSec + 10));
-    const clipStartSec = Math.max(0, Number(videoMuxSpec.clipStartSec) || 0);
-    const clipOffsetSec = Math.max(0, Number(videoMuxSpec.clipOffsetSec) || 0);
+    const renderStartSec = Math.max(0, Number(videoMuxSpec?.renderStartSec) || 0);
+    const renderEndSec = Math.max(renderStartSec + 0.05, Number(videoMuxSpec?.renderEndSec) || (renderStartSec + 10));
     const sliceDurSec = Math.max(0.05, renderEndSec - renderStartSec);
-    const vidSeekSec = clipOffsetSec + Math.max(0, renderStartSec - clipStartSec);
-    const leadPadSec = Math.max(0, clipStartSec - renderStartSec);
     const metaArgs = title ? ['-metadata', `title=${String(title).slice(0, 180)}`] : [];
 
     const tmpWav = path.join(os.tmpdir(), `robos-daw-vidmux-${crypto.randomBytes(5).toString('hex')}.wav`);
     try {
       fs.writeFileSync(tmpWav, wavBuffer);
+
+      // Multi-Segment Step-Recorded Video Stitch + Alpha Cross-Dissolve Pipeline (2+ segments)
+      if (rawSegs.length >= 2) {
+        const firstDims = await probeVideoDimensions(String(rawSegs[0].videoFile));
+        const isPortrait = firstDims.height > firstDims.width;
+        const maxLong = q === '720p_hd' ? 1280 : 1920;
+        const maxShort = q === '720p_hd' ? 720 : 1080;
+        const capW = isPortrait ? maxShort : maxLong;
+        const capH = isPortrait ? maxLong : maxShort;
+        const scaleFactor = Math.min(1, capW / firstDims.width, capH / firstDims.height);
+        const outW = Math.max(64, Math.round((firstDims.width * scaleFactor) / 2) * 2);
+        const outH = Math.max(64, Math.round((firstDims.height * scaleFactor) / 2) * 2);
+
+        const crf = q === '720p_hd' ? '20' : '18';
+        const aBr = q === '720p_hd' ? '256k' : '320k';
+        const inputArgs = [
+          '-f', 'lavfi',
+          '-i', `color=c=black:s=${outW}x${outH}:r=30:d=${sliceDurSec.toFixed(4)}`,
+        ];
+        const filterChains = ['[0:v]format=yuv420p[vbase0]'];
+
+        for (let i = 0; i < rawSegs.length; i++) {
+          const seg = rawSegs[i];
+          const sOff = Math.max(0, Number(seg.sourceOffsetSec) || 0);
+          const sDur = Math.max(0.05, Number(seg.durationSec) || 0.1);
+          const relStart = Math.max(0, (Number(seg.timelineStartSec) || 0) - renderStartSec);
+          const xfadeSec = Math.max(0, Number(seg.effectiveXfadeSec) || 0);
+          const inIdx = i + 1;
+
+          if (sOff > 0.004) inputArgs.push('-ss', sOff.toFixed(4));
+          inputArgs.push('-t', sDur.toFixed(4), '-i', String(seg.videoFile));
+
+          const normOps = [
+            `scale=${outW}:${outH}:force_original_aspect_ratio=decrease`,
+            `pad=${outW}:${outH}:(ow-iw)/2:(oh-ih)/2:black`,
+            'fps=30',
+            'setsar=1',
+          ];
+          if (xfadeSec >= 0.03 && i > 0) {
+            normOps.push('format=yuva420p');
+            normOps.push(`fade=t=in:st=0:d=${xfadeSec.toFixed(4)}:alpha=1`);
+          } else {
+            normOps.push('format=yuv420p');
+          }
+          normOps.push(`setpts=PTS-STARTPTS+${relStart.toFixed(4)}/TB`);
+
+          filterChains.push(`[${inIdx}:v]${normOps.join(',')}[vseg${i}]`);
+          filterChains.push(`[vbase${i}][vseg${i}]overlay=0:0:eof_action=pass:shortest=0[vbase${i + 1}]`);
+        }
+
+        const audioInIdx = rawSegs.length + 1;
+        inputArgs.push('-i', tmpWav);
+        filterChains.push(`[vbase${rawSegs.length}]format=yuv420p[vout]`);
+
+        const multiArgs = [
+          '-y',
+          '-v', 'error',
+          ...inputArgs,
+          '-filter_complex', filterChains.join(';'),
+          '-map', '[vout]',
+          '-map', `${audioInIdx}:a:0`,
+          '-t', sliceDurSec.toFixed(4),
+          '-c:v', 'libx264',
+          '-preset', 'veryfast',
+          '-crf', crf,
+          '-pix_fmt', 'yuv420p',
+          '-c:a', 'aac',
+          '-b:a', aBr,
+          '-ar', String(sr),
+          '-movflags', '+faststart',
+          ...metaArgs,
+          finalOutPath,
+        ];
+        await runFfmpeg(multiArgs);
+
+        const stat = fs.statSync(finalOutPath);
+        return {
+          ok: true,
+          filePath: finalOutPath,
+          bytes: stat.size,
+          format: 'mp4',
+          ext: 'mp4',
+          quality: q,
+          stitchedSegments: rawSegs.length,
+        };
+      }
+
+      // Single-Clip Fast / Re-encode Path
+      const activeSeg = rawSegs[0] || null;
+      const vidPath = activeSeg ? String(activeSeg.videoFile) : singleVidPath;
+      const clipStartSec = activeSeg
+        ? Math.max(0, Number(activeSeg.timelineStartSec) || 0)
+        : Math.max(0, Number(videoMuxSpec.clipStartSec) || 0);
+      const clipOffsetSec = activeSeg
+        ? Math.max(0, Number(activeSeg.sourceOffsetSec) || 0)
+        : Math.max(0, Number(videoMuxSpec.clipOffsetSec) || 0);
+      const vidSeekSec = activeSeg
+        ? clipOffsetSec
+        : (clipOffsetSec + Math.max(0, renderStartSec - clipStartSec));
+      const leadPadSec = Math.max(0, clipStartSec - renderStartSec);
+
       if (q === 'stream_copy' && leadPadSec <= 0.04) {
         const fastArgs = [
           '-y',
@@ -289,6 +416,7 @@ async function transcodeMixdownBuffer(wavBuffer, {
         format: 'mp4',
         ext: 'mp4',
         quality: q,
+        stitchedSegments: 1,
       };
     } finally {
       try { fs.unlinkSync(tmpWav); } catch {}

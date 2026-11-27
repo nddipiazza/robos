@@ -73,6 +73,9 @@ const {
   transcodeMixdownBuffer,
 } = require('./lib/mixdown-exporter');
 const {
+  reconcileStepRecordingPass,
+} = require('./lib/step-recording');
+const {
   DEFAULT_VIDEO_QUALITY,
   VIDEO_QUALITY_PRESETS,
   probeRobosIpCameraStatus,
@@ -827,6 +830,9 @@ ipcMain.handle('daw:soundcheck-apply', async (_e, payload) => {
 ipcMain.handle('daw:record-start', async (_e, payload) => {
   try {
     tapDetector.stop();
+    if (payload?.project && Array.isArray(payload.project.tracks)) {
+      currentProject = payload.project;
+    }
     const proj = ensureCurrentProject();
     if (payload?.projectMeta) {
       if (payload.projectMeta.name) proj.name = payload.projectMeta.name;
@@ -875,12 +881,23 @@ ipcMain.handle('daw:record-stop', async (_e, payload) => {
       importMediaFileToWavFn: importMediaFileToWav,
       computeWaveformPeaksFn: computeWaveformPeaks,
     });
-    if (res.ok && res.project) {
-      currentProject = res.project;
+    const recordedVideoClips = vidRes.recordedVideoClips || [];
+    const activeProj = res.project || currentProject;
+    let stepBlend = { blended: false };
+    if (res.ok && activeProj && !injectTestSignal) {
+      stepBlend = reconcileStepRecordingPass(activeProj, {
+        punchStartSec: Number(payload?.punchStartSec ?? res.startSec ?? 0),
+        recordedClips: res.recordedClips || [],
+        recordedVideoClips,
+      });
+    }
+    if (res.ok && activeProj) {
+      currentProject = activeProj;
     }
     return {
       ...res,
-      recordedVideoClips: vidRes.recordedVideoClips || [],
+      recordedVideoClips,
+      stepBlend,
     };
   } catch (err) {
     return { ok: false, error: err.message };

@@ -50,6 +50,57 @@ let liveHeadphoneBoostDb = Number(localStorage.getItem('robos.daw.headphoneBoost
 let activeLiveMasterBoostGains = new Set();
 
 /**
+ * Schedule a click-free Linear or Equal-Power (`sin/cos` S-curve) fade-in / fade-out envelope on a WebAudio GainNode.
+ * Equal-Power (`fadeShape === 'equal-power'` or any crossfade >= 18ms) maintains constant 0.0 dB acoustic power
+ * across step-recorded punch splices with zero -3 dB midpoint volume dip!
+ */
+function scheduleClipFadeEnvelope(gainParam, clipGainLin, tStart, playDur, {
+  fadeInSec = 0,
+  fadeOutSec = 0,
+  fadeShape = '',
+  applyFadeIn = true,
+  applyFadeOut = true,
+} = {}) {
+  const safeGain = Math.max(0.0001, Number(clipGainLin) || 1.0);
+  const fIn = applyFadeIn ? Math.min(Math.max(0, Number(fadeInSec) || 0), playDur * 0.49) : 0;
+  const fOut = applyFadeOut ? Math.min(Math.max(0, Number(fadeOutSec) || 0), playDur * 0.49) : 0;
+  const tEnd = tStart + playDur;
+  const useEqualPower = fadeShape === 'equal-power' || fIn >= 0.018 || fOut >= 0.018;
+
+  if (fIn > 0.002) {
+    if (useEqualPower && typeof gainParam.setValueCurveAtTime === 'function') {
+      const curveIn = new Float32Array(48);
+      for (let i = 0; i < 48; i++) {
+        curveIn[i] = Math.max(0.0001, safeGain * Math.sin(0.5 * Math.PI * (i / 47)));
+      }
+      gainParam.setValueCurveAtTime(curveIn, tStart, fIn);
+      gainParam.setValueAtTime(safeGain, tStart + fIn + 0.0002);
+    } else {
+      gainParam.setValueAtTime(0.0001, tStart);
+      gainParam.linearRampToValueAtTime(safeGain, tStart + fIn);
+    }
+  } else {
+    gainParam.setValueAtTime(safeGain, tStart);
+  }
+
+  if (fOut > 0.002 && playDur > fIn + fOut + 0.002) {
+    const outStart = Math.max(tStart + fIn + 0.001, tEnd - fOut);
+    const outDur = Math.max(0.002, tEnd - outStart);
+    if (useEqualPower && typeof gainParam.setValueCurveAtTime === 'function') {
+      const curveOut = new Float32Array(48);
+      for (let i = 0; i < 48; i++) {
+        curveOut[i] = Math.max(0.0001, safeGain * Math.cos(0.5 * Math.PI * (i / 47)));
+      }
+      gainParam.setValueAtTime(safeGain, Math.max(tStart + fIn + 0.0004, outStart - 0.0004));
+      gainParam.setValueCurveAtTime(curveOut, outStart, outDur);
+    } else {
+      gainParam.setValueAtTime(safeGain, outStart);
+      gainParam.linearRampToValueAtTime(0.0001, tEnd);
+    }
+  }
+}
+
+/**
  * Compute exact wall-clock millisecond timestamp when `playStartCtxTime` physically exits the
  * audio interface headphones, guarding against Linux Chromium/PulseAudio cork-epoch drift where
  * `getOutputTimestamp().contextTime` freezes while corked and lags `ctx.currentTime` by minutes.
@@ -1484,17 +1535,13 @@ function buildAndSchedulePlaybackPass(ctx, playableTracks, startFrom, startWallT
         if (clipStart >= startFrom) {
           const t0 = startWallTime + (clipStart - startFrom);
           const playDur = Math.min(clipDur, Math.max(0.01, buf.duration - clipOff));
-          const tEnd = t0 + playDur;
-          if (fadeIn > 0.002) {
-            clipGainNode.gain.setValueAtTime(0.0001, t0);
-            clipGainNode.gain.linearRampToValueAtTime(clipGainLin, t0 + Math.min(fadeIn, playDur));
-          } else {
-            clipGainNode.gain.setValueAtTime(clipGainLin, t0);
-          }
-          if (fadeOut > 0.002 && playDur > fadeOut) {
-            clipGainNode.gain.setValueAtTime(clipGainLin, Math.max(t0 + Math.min(fadeIn, playDur), tEnd - fadeOut));
-            clipGainNode.gain.linearRampToValueAtTime(0.0001, tEnd);
-          }
+          scheduleClipFadeEnvelope(clipGainNode.gain, clipGainLin, t0, playDur, {
+            fadeInSec: fadeIn,
+            fadeOutSec: fadeOut,
+            fadeShape: clip.fadeShape || '',
+            applyFadeIn: true,
+            applyFadeOut: true,
+          });
           src.connect(clipGainNode).connect(inputGain);
           src.start(t0, clipOff, playDur);
         } else {
@@ -1502,13 +1549,13 @@ function buildAndSchedulePlaybackPass(ctx, playableTracks, startFrom, startWallT
           const srcOffset = clipOff + intoClip;
           const playDur = Math.min(clipEnd - startFrom, Math.max(0.01, buf.duration - srcOffset));
           if (playDur > 0.01 && srcOffset < buf.duration) {
-            const tEnd = startWallTime + playDur;
-            clipGainNode.gain.setValueAtTime(clipGainLin, startWallTime);
-            if (fadeOut > 0.002) {
-              const fadeStartWall = Math.max(startWallTime, tEnd - fadeOut);
-              clipGainNode.gain.setValueAtTime(clipGainLin, fadeStartWall);
-              clipGainNode.gain.linearRampToValueAtTime(0.0001, tEnd);
-            }
+            scheduleClipFadeEnvelope(clipGainNode.gain, clipGainLin, startWallTime, playDur, {
+              fadeInSec: fadeIn,
+              fadeOutSec: fadeOut,
+              fadeShape: clip.fadeShape || '',
+              applyFadeIn: false,
+              applyFadeOut: true,
+            });
             src.connect(clipGainNode).connect(inputGain);
             src.start(startWallTime, srcOffset, playDur);
           }
@@ -2988,23 +3035,23 @@ function stopOverdubMonitorPlayback() {
 
 async function prepareOverdubBackingEntries(startFrom) {
   const tracks = currentProject?.tracks || [];
+  // Include BOTH backing stems AND previously recorded takes on armed tracks ("Step / Pre-Roll Punch" cueing!)
+  // so clicking back into Section 1 and pressing Record plays your own recorded drums in your headphones!
   const candidateTracks = tracks.filter(t => {
-    if (t.muted) return false;
-    const isBackingTrack = !t.armed || !t.inputNodeName;
-    return isBackingTrack || (t.clips || []).some(c => Boolean(c.sourceFile || c.mediaKind));
+    if (t.muted || t.trackKind === 'lyrics') return false;
+    return (t.clips || []).some(c => !c.muted && Boolean(c.wavFile));
   });
   const anyBackingSolo = candidateTracks.some(t => t.soloed);
   const entries = [];
 
   for (const track of candidateTracks) {
     if (anyBackingSolo && !track.soloed) continue;
-    const isBackingTrack = !track.armed || !track.inputNodeName;
+    const isArmedCueTrack = Boolean(track.armed && track.inputNodeName);
     const clipsToPlay = (track.clips || []).filter((c) => {
       if (c.muted || !c.wavFile) return false;
       const cStart = Number(c.startSec) || 0;
       const cDur = Math.max(0.04, Number(c.durationSec) || 0);
-      if (cStart + cDur <= startFrom + 0.005) return false;
-      return isBackingTrack || Boolean(c.sourceFile || c.mediaKind);
+      return (cStart + cDur) > startFrom + 0.005;
     });
     if (!clipsToPlay.length) continue;
 
@@ -3019,7 +3066,7 @@ async function prepareOverdubBackingEntries(startFrom) {
         }
       }
     }
-    entries.push({ track, clips: clipsToPlay });
+    entries.push({ track, clips: clipsToPlay, isArmedCueTrack });
   }
   return entries;
 }
@@ -3028,13 +3075,23 @@ function startOverdubMonitorPlayback(ctx, startFrom, overdubEntries, { preserveS
   stopOverdubMonitorPlayback();
   const useMetronome = Boolean(currentProject?.metronome);
   if (!overdubEntries.length && !useMetronome) {
-    return { active: false, earsStartWallMs: preserveSyncClock ? (liveRecSession?.earsStartWallMs ?? null) : null, backingTrackCount: 0 };
+    return {
+      active: false,
+      earsStartWallMs: preserveSyncClock ? (liveRecSession?.earsStartWallMs ?? null) : null,
+      backingTrackCount: 0,
+      armedPreRollBusGain: null,
+    };
   }
 
   const schedLeadSec = 0.020;
   const playStartCtxTime = ctx.currentTime + schedLeadSec;
   const masterBus = createMasterDrumBus(ctx);
-  activeOverdubMonitorNodes.push(masterBus);
+  // Dedicated sub-bus for pre-roll playback of armed tracks (Pro Tape-Style Auto-Input Monitor:
+  // plays 100% of your previous drum recording during pre-roll, then smoothly cross-ducks when you start playing!)
+  const armedPreRollBusGain = ctx.createGain();
+  armedPreRollBusGain.gain.value = 1.0;
+  armedPreRollBusGain.connect(masterBus);
+  activeOverdubMonitorNodes.push(masterBus, armedPreRollBusGain);
 
   // Silent clock-anchor oscillator keeps PipeWire output stream running continuously for exact getOutputTimestamp()
   const silentAnchorOsc = ctx.createOscillator();
@@ -3044,8 +3101,9 @@ function startOverdubMonitorPlayback(ctx, startFrom, overdubEntries, { preserveS
   silentAnchorOsc.start(playStartCtxTime);
   activeOverdubMonitorNodes.push(silentAnchorOsc, silentAnchorGain);
 
-  for (const { track, clips } of overdubEntries) {
-    const { inputGain, trackMixBus, srActive, blend, liveHandle } = buildTrackWebAudioChain(ctx, track, masterBus);
+  for (const { track, clips, isArmedCueTrack } of overdubEntries) {
+    const destBus = isArmedCueTrack ? armedPreRollBusGain : masterBus;
+    const { inputGain, trackMixBus, srActive, blend, liveHandle } = buildTrackWebAudioChain(ctx, track, destBus);
     activeOverdubMonitorNodes.push(inputGain, trackMixBus);
     if (liveHandle) liveOverdubTrackHandles.set(track.id, liveHandle);
 
@@ -3067,17 +3125,13 @@ function startOverdubMonitorPlayback(ctx, startFrom, overdubEntries, { preserveS
         if (clipStart >= startFrom) {
           const t0 = playStartCtxTime + (clipStart - startFrom);
           const playDur = Math.min(clipDur, Math.max(0.01, buf.duration - clipOff));
-          const tEnd = t0 + playDur;
-          if (fadeIn > 0.002) {
-            clipGainNode.gain.setValueAtTime(0.0001, t0);
-            clipGainNode.gain.linearRampToValueAtTime(clipGainLin, t0 + Math.min(fadeIn, playDur));
-          } else {
-            clipGainNode.gain.setValueAtTime(clipGainLin, t0);
-          }
-          if (fadeOut > 0.002 && playDur > fadeOut) {
-            clipGainNode.gain.setValueAtTime(clipGainLin, Math.max(t0 + Math.min(fadeIn, playDur), tEnd - fadeOut));
-            clipGainNode.gain.linearRampToValueAtTime(0.0001, tEnd);
-          }
+          scheduleClipFadeEnvelope(clipGainNode.gain, clipGainLin, t0, playDur, {
+            fadeInSec: fadeIn,
+            fadeOutSec: fadeOut,
+            fadeShape: clip.fadeShape || '',
+            applyFadeIn: true,
+            applyFadeOut: true,
+          });
           src.connect(clipGainNode).connect(inputGain);
           src.start(t0, clipOff, playDur);
         } else {
@@ -3085,13 +3139,13 @@ function startOverdubMonitorPlayback(ctx, startFrom, overdubEntries, { preserveS
           const srcOffset = clipOff + intoClip;
           const playDur = Math.min(clipEnd - startFrom, Math.max(0.01, buf.duration - srcOffset));
           if (playDur > 0.01 && srcOffset < buf.duration) {
-            const tEnd = playStartCtxTime + playDur;
-            clipGainNode.gain.setValueAtTime(clipGainLin, playStartCtxTime);
-            if (fadeOut > 0.002) {
-              const fadeStartWall = Math.max(playStartCtxTime, tEnd - fadeOut);
-              clipGainNode.gain.setValueAtTime(clipGainLin, fadeStartWall);
-              clipGainNode.gain.linearRampToValueAtTime(0.0001, tEnd);
-            }
+            scheduleClipFadeEnvelope(clipGainNode.gain, clipGainLin, playStartCtxTime, playDur, {
+              fadeInSec: fadeIn,
+              fadeOutSec: fadeOut,
+              fadeShape: clip.fadeShape || '',
+              applyFadeIn: false,
+              applyFadeOut: true,
+            });
             src.connect(clipGainNode).connect(inputGain);
             src.start(playStartCtxTime, srcOffset, playDur);
           }
@@ -3154,6 +3208,7 @@ function startOverdubMonitorPlayback(ctx, startFrom, overdubEntries, { preserveS
     earsStartWallMs,
     lockedByHwTs,
     backingTrackCount: overdubEntries.length,
+    armedPreRollBusGain,
   };
 }
 
@@ -3242,7 +3297,11 @@ async function toggleRecording({ keepCursorAtStop = false } = {}) {
     const finalizeStopPromise = (async () => {
       let res = null;
       try {
-        res = await window.robos.recordStop({ injectTestSignal, earsStartWallMs });
+        res = await window.robos.recordStop({
+          injectTestSignal,
+          earsStartWallMs,
+          punchStartSec: punchInStartSec,
+        });
       } finally {
         isStoppingRecording = false;
         liveRecSession = null;
@@ -3270,8 +3329,20 @@ async function toggleRecording({ keepCursorAtStop = false } = {}) {
         renderStudio();
         syncVideoOutputMonitor({ forcePush: true });
         const totalHits = (res.recordedClips || []).reduce((n, x) => n + (x.clip?.transients?.length || 0), 0);
-        const vidSuffix = vidRecorded.length ? ` + ${vidRecorded.length} video track(s) (click "Export MP4" in Video Out to save video + audio)` : '';
-        showStatus(`Recorded ${res.recordedClips.length} armed mic track(s)${vidSuffix}${totalHits ? ` — ${totalHits} drum transient(s) detected` : ''}.`);
+        const vidSuffix = vidRecorded.length ? ` + ${vidRecorded.length} video track(s)` : '';
+        if (res.stepBlend?.blended) {
+          const blendNote = res.stepBlend.preservedRingOutCount > 0
+            ? 'cymbal ring-out preserved'
+            : 'equal-power crossfaded';
+          const trimNote = res.stepBlend.trimmedPreRollSec >= 0.05
+            ? `trimmed ${res.stepBlend.trimmedPreRollSec.toFixed(2)}s pre-roll · `
+            : '';
+          showStatus(
+            `Step-Punch Blended @ ${formatTimecode(res.stepBlend.audioSpliceSec)} (${trimNote}${blendNote}${vidRecorded.length ? ' + camera cut aligned' : ''}) — ready to play or export!`
+          );
+        } else {
+          showStatus(`Recorded ${res.recordedClips.length} armed mic track(s)${vidSuffix}${totalHits ? ` — ${totalHits} drum transient(s) detected` : ''}.`);
+        }
       } else {
         drawAllTimelineCanvases();
         showStatus(`Recording stop error: ${res?.error || 'Unknown error'}`, true);
@@ -3320,6 +3391,7 @@ async function toggleRecording({ keepCursorAtStop = false } = {}) {
     const res = await window.robos.recordStart({
       startSec: punchTargetSec,
       injectTestSignal,
+      project: currentProject,
       projectMeta: {
         name: document.getElementById('project-name-input')?.value,
         bpm,
@@ -7485,12 +7557,104 @@ function getExportPlayableTracks({ excludeClick = false } = {}) {
   });
 }
 
+function buildClientVideoExportSegments(track, renderStartSec = 0, renderEndSec = null, defaultCrossfadeSec = 0.18) {
+  const rawClips = (track?.clips || []).filter(c => !c.muted && Boolean(resolveClipVideoFilePath(c)));
+  if (!rawClips.length) return [];
+
+  const rStart = Math.max(0, Number(renderStartSec) || 0);
+  const maxClipEnd = rawClips.reduce((mx, c) => Math.max(mx, (Number(c.startSec) || 0) + (Number(c.durationSec) || 0)), 0);
+  const rEnd = renderEndSec !== null && renderEndSec !== undefined
+    ? Math.max(rStart + 0.05, Number(renderEndSec))
+    : Math.max(rStart + 0.05, maxClipEnd);
+
+  const ordered = [];
+  for (let i = 0; i < rawClips.length; i++) {
+    const c = rawClips[i];
+    const vf = resolveClipVideoFilePath(c);
+    const cStart = Math.max(0, Number(c.startSec) || 0);
+    const cOff = Math.max(0, Number(c.offsetSec) || 0);
+    const cDur = Math.max(0.05, Number(c.durationSec) || 0);
+    const cEnd = cStart + cDur;
+    if (cEnd <= rStart + 0.01 || cStart >= rEnd - 0.01) continue;
+
+    const segStart = Math.max(rStart, cStart);
+    const segEnd = Math.min(rEnd, cEnd);
+    const into = segStart - cStart;
+    ordered.push({
+      clipId: c.id || `vclip-${i}`,
+      videoFile: vf,
+      timelineStartSec: Number(segStart.toFixed(4)),
+      timelineEndSec: Number(segEnd.toFixed(4)),
+      sourceOffsetSec: Number((cOff + into).toFixed(4)),
+      durationSec: Number((segEnd - segStart).toFixed(4)),
+      crossfadeInSec: Number((Number(c.videoCrossfadeSec) || defaultCrossfadeSec).toFixed(4)),
+      priority: i,
+    });
+  }
+
+  ordered.sort((a, b) => (a.timelineStartSec - b.timelineStartSec) || (a.priority - b.priority));
+
+  const cleaned = [];
+  for (const seg of ordered) {
+    while (cleaned.length > 0) {
+      const prev = cleaned[cleaned.length - 1];
+      if (seg.timelineStartSec <= prev.timelineStartSec + 0.02 && seg.priority > prev.priority) {
+        cleaned.pop();
+        continue;
+      }
+      if (prev.timelineEndSec > seg.timelineStartSec) {
+        const maxXfade = Math.min(
+          seg.crossfadeInSec || defaultCrossfadeSec,
+          Math.max(0, (prev.timelineEndSec - prev.timelineStartSec) * 0.40),
+          Math.max(0, seg.durationSec * 0.40)
+        );
+        const clampedPrevEnd = Math.min(prev.timelineEndSec, seg.timelineStartSec + maxXfade);
+        prev.timelineEndSec = Number(clampedPrevEnd.toFixed(4));
+        prev.durationSec = Number(Math.max(0.05, prev.timelineEndSec - prev.timelineStartSec).toFixed(4));
+        seg.effectiveXfadeSec = Number(Math.max(0, prev.timelineEndSec - seg.timelineStartSec).toFixed(4));
+      } else {
+        seg.effectiveXfadeSec = 0;
+      }
+      break;
+    }
+    if (cleaned.length === 0) seg.effectiveXfadeSec = 0;
+    cleaned.push(seg);
+  }
+  return cleaned;
+}
+
 function getExportVideoTakeChoices() {
   const choices = [];
   for (const t of (currentProject?.tracks || [])) {
     const vidClips = (t.clips || []).filter(c => !c.muted && Boolean(resolveClipVideoFilePath(c)));
     if (!vidClips.length) continue;
-    // Order newest take first on each track, prioritizing dedicated camera tracks (`trackKind === 'video'`) first!
+
+    // When 2+ step-recorded / multi-section video clips exist on the track, put the Full Stitched Performance FIRST!
+    if (vidClips.length >= 2) {
+      const stitchedSegs = buildClientVideoExportSegments(t, 0, null);
+      if (stitchedSegs.length >= 2) {
+        const minStart = stitchedSegs[0].timelineStartSec;
+        const maxEnd = stitchedSegs[stitchedSegs.length - 1].timelineEndSec;
+        choices.push({
+          key: `${t.id}::__stitched__`,
+          trackId: t.id,
+          trackName: t.name,
+          isCameraTrack: t.trackKind === 'video',
+          isStitchedTrack: true,
+          clipId: '__stitched__',
+          takeNumber: vidClips.length,
+          totalTakesOnTrack: vidClips.length,
+          videoFile: stitchedSegs[0].videoFile,
+          startSec: minStart,
+          offsetSec: 0,
+          durationSec: Number(Math.max(0.05, maxEnd - minStart).toFixed(4)),
+          endSec: Number(maxEnd.toFixed(4)),
+          label: `${t.name} — Full Stitched Track (${stitchedSegs.length} Blended Parts) [${formatTimecode(minStart)} -> ${formatTimecode(maxEnd)}]`,
+        });
+      }
+    }
+
+    // Also include individual takes (newest first) in case user wants a single take
     for (let i = vidClips.length - 1; i >= 0; i--) {
       const c = vidClips[i];
       const vPath = resolveClipVideoFilePath(c);
@@ -7501,6 +7665,7 @@ function getExportVideoTakeChoices() {
         trackId: t.id,
         trackName: t.name,
         isCameraTrack: t.trackKind === 'video',
+        isStitchedTrack: false,
         clipId: c.id,
         takeNumber: i + 1,
         totalTakesOnTrack: vidClips.length,
@@ -7515,7 +7680,7 @@ function getExportVideoTakeChoices() {
       });
     }
   }
-  choices.sort((a, b) => Number(b.isCameraTrack) - Number(a.isCameraTrack));
+  choices.sort((a, b) => (Number(b.isCameraTrack) - Number(a.isCameraTrack)) || (Number(b.isStitchedTrack || 0) - Number(a.isStitchedTrack || 0)));
   return choices;
 }
 
@@ -7847,7 +8012,6 @@ async function renderAndExportMixdown({
 
           if (playDur > 0.008 && srcOffset < buf.duration) {
             const ctxStart = Math.max(0, segStart - renderStartSec);
-            const ctxEnd = ctxStart + playDur;
             const src = offlineCtx.createBufferSource();
             src.buffer = buf;
             const clipGainNode = offlineCtx.createGain();
@@ -7855,16 +8019,13 @@ async function renderAndExportMixdown({
             const fadeIn = Math.max(0, Number(clip.fadeInSec) || 0);
             const fadeOut = Math.max(0, Number(clip.fadeOutSec) || 0);
 
-            if (intoClip < 0.002 && fadeIn > 0.002) {
-              clipGainNode.gain.setValueAtTime(0.0001, ctxStart);
-              clipGainNode.gain.linearRampToValueAtTime(clipGainLin, ctxStart + Math.min(fadeIn, playDur));
-            } else {
-              clipGainNode.gain.setValueAtTime(clipGainLin, ctxStart);
-            }
-            if ((clipEnd - segEnd) < 0.002 && fadeOut > 0.002 && playDur > fadeOut) {
-              clipGainNode.gain.setValueAtTime(clipGainLin, Math.max(ctxStart, ctxEnd - fadeOut));
-              clipGainNode.gain.linearRampToValueAtTime(0.0001, ctxEnd);
-            }
+            scheduleClipFadeEnvelope(clipGainNode.gain, clipGainLin, ctxStart, playDur, {
+              fadeInSec: fadeIn,
+              fadeOutSec: fadeOut,
+              fadeShape: clip.fadeShape || '',
+              applyFadeIn: intoClip < 0.002,
+              applyFadeOut: (clipEnd - segEnd) < 0.002,
+            });
 
             src.connect(clipGainNode).connect(inputGain);
             src.start(ctxStart, srcOffset, playDur);
@@ -7943,6 +8104,13 @@ async function renderAndExportMixdown({
       : encodeStereoFloat32IeeeWavBytes(left, right, renderRate);
 
     await yieldUiPaint();
+    const vidTrackObj = (effectiveFormat === 'mp4' && resolvedVid?.trackId)
+      ? (currentProject?.tracks || []).find(t => t.id === resolvedVid.trackId)
+      : null;
+    const stitchedVidSegs = (effectiveFormat === 'mp4' && resolvedVid?.isStitchedTrack && vidTrackObj)
+      ? buildClientVideoExportSegments(vidTrackObj, renderStartSec, renderEndSec)
+      : null;
+
     const res = await window.robos.exportMixdown({
       wavBase64: uint8ToBase64(wavBytes),
       format: effectiveFormat,
@@ -7956,6 +8124,7 @@ async function renderAndExportMixdown({
         clipStartSec: resolvedVid.startSec,
         clipOffsetSec: resolvedVid.offsetSec,
         clipDurationSec: resolvedVid.durationSec,
+        segments: stitchedVidSegs,
         renderStartSec,
         renderEndSec,
       } : null,
@@ -8034,16 +8203,13 @@ async function renderFullSessionMixdownWavBase64ForKdenlive({ excludeClick = tru
           const fadeIn = Math.max(0, Number(clip.fadeInSec) || 0);
           const fadeOut = Math.max(0, Number(clip.fadeOutSec) || 0);
 
-          if (fadeIn > 0.002) {
-            clipGainNode.gain.setValueAtTime(0.0001, clipStart);
-            clipGainNode.gain.linearRampToValueAtTime(clipGainLin, clipStart + Math.min(fadeIn, playDur));
-          } else {
-            clipGainNode.gain.setValueAtTime(clipGainLin, clipStart);
-          }
-          if (fadeOut > 0.002 && playDur > fadeOut) {
-            clipGainNode.gain.setValueAtTime(clipGainLin, Math.max(clipStart, clipStart + playDur - fadeOut));
-            clipGainNode.gain.linearRampToValueAtTime(0.0001, clipStart + playDur);
-          }
+          scheduleClipFadeEnvelope(clipGainNode.gain, clipGainLin, clipStart, playDur, {
+            fadeInSec: fadeIn,
+            fadeOutSec: fadeOut,
+            fadeShape: clip.fadeShape || '',
+            applyFadeIn: true,
+            applyFadeOut: true,
+          });
           src.connect(clipGainNode).connect(inputGain);
           src.start(clipStart, clipOff, playDur);
         }
@@ -12093,6 +12259,21 @@ async function init() {
           }
           if (!recState.liveMaxLin || p > recState.liveMaxLin) {
             recState.liveMaxLin = p;
+          }
+          // Pro Tape-Style Auto-Input Switch: once >= 0.24s of pre-roll has played and the musician
+          // strikes their live instrument, smoothly cross-duck old armed-track playback in headphones!
+          if (
+            !liveRecSession.armedCueDucked &&
+            (Number(prog.elapsedSec) || 0) >= 0.24 &&
+            p >= Math.max(0.024, (recState.liveNoiseEst || 0.001) * 5.0)
+          ) {
+            liveRecSession.armedCueDucked = true;
+            const mon = liveRecSession.overdubMonitor;
+            if (mon?.armedPreRollBusGain && mon?.ctx) {
+              try {
+                mon.armedPreRollBusGain.gain.setTargetAtTime(0.0001, mon.ctx.currentTime, 0.06);
+              } catch {}
+            }
           }
           const adaptiveLin = (recState.liveMaxLin >= Math.max(0.0008, (recState.liveNoiseEst || 0.00005) * 6.0) && recState.liveMaxLin < threshLin)
             ? Math.max((recState.liveNoiseEst || 0.00005) * 5.0, recState.liveMaxLin * 0.38)

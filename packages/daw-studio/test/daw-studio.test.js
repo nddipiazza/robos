@@ -2628,4 +2628,319 @@ describe('DAW Editing Engine: Multi-Select, Track/Take Gain, Split/Trim, Copy/Pa
       fs.rmSync(tmpDir, { recursive: true, force: true });
     }
   });
+
+  it('performs pro step / pre-roll punch-in recording: phase-locked pre-roll trim, cymbal ring-out preservation vs equal-power crossfade, and multi-clip stitched MP4 video export', async () => {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'robos-daw-step-rec-'));
+    try {
+      const {
+        buildEqualPowerFadeCurve,
+        detectFirstMusicalEntryInWav,
+        classifyClipTailAsRingOut,
+        reconcileStepRecordingPass,
+        buildTrackVideoExportSegments,
+      } = require('../lib/step-recording');
+      const { transcodeMixdownBuffer } = require('../lib/mixdown-exporter');
+      const { synthesizeTestPatternMp4, probeVideoFileInfo } = require('../lib/video-devices');
+
+      const sr = 48000;
+      function writeMonoFloatWav(filePath, samples) {
+        const dataBytes = samples.length * 2;
+        const hdr = makeWavHeader(dataBytes, sr, 1, 16);
+        const pcm = Buffer.alloc(dataBytes);
+        for (let i = 0; i < samples.length; i++) {
+          const s = Math.max(-1, Math.min(1, samples[i]));
+          pcm.writeInt16LE(Math.round(s * 32767), i * 2);
+        }
+        const full = Buffer.concat([hdr, pcm]);
+        fs.writeFileSync(filePath, full);
+        return full;
+      }
+
+      // Verify equal-power fade curves sum to constant unit power: cos^2 + sin^2 = 1.0
+      const curveIn = buildEqualPowerFadeCurve('in', 1.0, 64);
+      const curveOut = buildEqualPowerFadeCurve('out', 1.0, 64);
+      assert.strictEqual(curveIn.length, 64);
+      const midIdx = 32;
+      const powerSumMid = (curveIn[midIdx] * curveIn[midIdx]) + (curveOut[midIdx] * curveOut[midIdx]);
+      assert.ok(Math.abs(powerSumMid - 1.0) < 0.01, `Expected constant unit power ~1.0 at midpoint, got ${powerSumMid}`);
+
+      // Synthesize Section 1 (0.0s -> 6.5s):
+      //   - Drum hits at 0.5s, 1.5s, 2.5s, 3.5s
+      //   - Final crash cymbal strike at 3.95s decaying smoothly out to 6.5s (ring-out tail!)
+      const sec1Dur = 6.5;
+      const sec1Samples = new Float32Array(Math.floor(sec1Dur * sr));
+      for (const hitSec of [0.5, 1.5, 2.5, 3.5]) {
+        const i0 = Math.floor(hitSec * sr);
+        for (let k = 0; k < Math.floor(0.12 * sr) && i0 + k < sec1Samples.length; k++) {
+          const t = k / sr;
+          sec1Samples[i0 + k] += 0.75 * Math.exp(-t * 32) * Math.sin(2 * Math.PI * 110 * t);
+        }
+      }
+      // Crash cymbal ring-out starting at 3.95s -> smooth exponential shimmer decay for 2.55s
+      const crashStart = Math.floor(3.95 * sr);
+      for (let i = crashStart; i < sec1Samples.length; i++) {
+        const t = (i - crashStart) / sr;
+        const shimmer = (
+          0.42 * Math.sin(2 * Math.PI * 3410 * t) +
+          0.33 * Math.sin(2 * Math.PI * 5173 * t) +
+          0.25 * Math.sin(2 * Math.PI * 7829 * t)
+        );
+        sec1Samples[i] += 0.55 * Math.exp(-t * 1.15) * shimmer;
+      }
+
+      const ohPart1Path = path.join(tmpDir, 'oh-part1.wav');
+      const kickPart1Path = path.join(tmpDir, 'kick-part1.wav');
+      const ohPart1Buf = writeMonoFloatWav(ohPart1Path, sec1Samples);
+      writeMonoFloatWav(kickPart1Path, sec1Samples);
+
+      // Synthesize Section 2 punched in at `punchStartSec = 2.0s` (duration 6.0s => 2.0s -> 8.0s timeline):
+      //   - Quiet room/listening pre-roll for first 2.20s of recording (2.0s -> 4.20s timeline) while listening to Section 1
+      //   - First drum hit enters at 2.20s into recording (`4.20s` timeline), continuing at 5.2s, 6.2s, 7.2s!
+      const sec2Dur = 6.0;
+      const sec2OhSamples = new Float32Array(Math.floor(sec2Dur * sr));
+      const sec2KickSamples = new Float32Array(Math.floor(sec2Dur * sr));
+      for (let i = 0; i < sec2OhSamples.length; i++) {
+        const roomFloor = 0.0005 * Math.sin(2 * Math.PI * 180 * (i / sr));
+        sec2OhSamples[i] = roomFloor;
+        sec2KickSamples[i] = roomFloor;
+      }
+      // Overhead enters at 2.200s offset; Kick enters slightly later at 2.450s offset -> both MUST lock to earliest 2.200s!
+      for (const relHit of [2.20, 3.20, 4.20, 5.20]) {
+        const i0 = Math.floor(relHit * sr);
+        for (let k = 0; k < Math.floor(0.14 * sr) && i0 + k < sec2OhSamples.length; k++) {
+          const t = k / sr;
+          sec2OhSamples[i0 + k] += 0.78 * Math.exp(-t * 28) * Math.sin(2 * Math.PI * 220 * t);
+        }
+      }
+      for (const relHit of [2.45, 3.45, 4.45, 5.45]) {
+        const i0 = Math.floor(relHit * sr);
+        for (let k = 0; k < Math.floor(0.14 * sr) && i0 + k < sec2KickSamples.length; k++) {
+          const t = k / sr;
+          sec2KickSamples[i0 + k] += 0.85 * Math.exp(-t * 30) * Math.sin(2 * Math.PI * 65 * t);
+        }
+      }
+
+      const ohPart2Path = path.join(tmpDir, 'oh-part2.wav');
+      const kickPart2Path = path.join(tmpDir, 'kick-part2.wav');
+      const ohPart2Buf = writeMonoFloatWav(ohPart2Path, sec2OhSamples);
+      const kickPart2Buf = writeMonoFloatWav(kickPart2Path, sec2KickSamples);
+
+      const detOh = detectFirstMusicalEntryInWav(ohPart2Buf);
+      assert.strictEqual(detOh.detectedPreRoll, true);
+      assert.ok(Math.abs(detOh.entryOffsetSec - 2.20) < 0.025, `Expected ~2.20s entry offset, got ${detOh.entryOffsetSec}`);
+
+      // Synthesize 2 camera video takes (`cam-part1.mp4` 6.5s, `cam-part2.mp4` 6.0s)
+      const camPart1Mp4 = path.join(tmpDir, 'cam-part1.mp4');
+      const camPart2Mp4 = path.join(tmpDir, 'cam-part2.mp4');
+      await synthesizeTestPatternMp4(camPart1Mp4, 6.5, false, { width: 640, height: 360 });
+      await synthesizeTestPatternMp4(camPart2Mp4, 6.0, false, { width: 640, height: 360 });
+
+      const proj = createEmptyProject({ name: 'Step Recording Drum + Cam', bpm: 120, sampleRate: sr });
+      const ohTrack = buildTrackFromWizard({ profileId: 'overhead-l', name: 'Overhead L', armed: true });
+      const kickTrack = buildTrackFromWizard({ profileId: 'kick-in', name: 'Kick In', armed: true });
+      const vidTrack = {
+        id: 'trk-cam-main',
+        name: 'Drum Cam',
+        trackKind: 'video',
+        armed: true,
+        muted: false,
+        clips: [],
+      };
+
+      const ohClip1 = {
+        id: 'oh-c1',
+        name: 'OH Part 1',
+        wavFile: ohPart1Path,
+        startSec: 0,
+        offsetSec: 0,
+        durationSec: 6.5,
+        sourceDurationSec: 6.5,
+        peaks: computeWaveformPeaks(ohPart1Buf, 200),
+        transients: [0.5, 1.5, 2.5, 3.5, 3.95].map(t => ({ timeSec: t, peakDb: -3, velocity: 0.85 })),
+      };
+      const kickClip1 = {
+        id: 'kick-c1',
+        name: 'Kick Part 1',
+        wavFile: kickPart1Path,
+        startSec: 0,
+        offsetSec: 0,
+        durationSec: 6.5,
+        sourceDurationSec: 6.5,
+        peaks: computeWaveformPeaks(ohPart1Buf, 200),
+        transients: [0.5, 1.5, 2.5, 3.5].map(t => ({ timeSec: t, peakDb: -3, velocity: 0.85 })),
+      };
+      const vidClip1 = {
+        id: 'vid-c1',
+        name: 'Cam Part 1',
+        mediaKind: 'video',
+        videoFile: camPart1Mp4,
+        startSec: 0,
+        offsetSec: 0,
+        durationSec: 6.5,
+        sourceDurationSec: 6.5,
+      };
+
+      const ohClip2 = {
+        id: 'oh-c2',
+        name: 'OH Part 2',
+        wavFile: ohPart2Path,
+        startSec: 2.0,
+        offsetSec: 0,
+        durationSec: 6.0,
+        sourceDurationSec: 6.0,
+        peaks: computeWaveformPeaks(ohPart2Buf, 200),
+        transients: [2.20, 3.20, 4.20, 5.20].map(t => ({ timeSec: t, peakDb: -2, velocity: 0.9 })),
+      };
+      const kickClip2 = {
+        id: 'kick-c2',
+        name: 'Kick Part 2',
+        wavFile: kickPart2Path,
+        startSec: 2.0,
+        offsetSec: 0,
+        durationSec: 6.0,
+        sourceDurationSec: 6.0,
+        peaks: computeWaveformPeaks(kickPart2Buf, 200),
+        transients: [2.45, 3.45, 4.45, 5.45].map(t => ({ timeSec: t, peakDb: -2, velocity: 0.9 })),
+      };
+      const vidClip2 = {
+        id: 'vid-c2',
+        name: 'Cam Part 2',
+        mediaKind: 'video',
+        videoFile: camPart2Mp4,
+        startSec: 2.0,
+        offsetSec: 0,
+        durationSec: 6.0,
+        sourceDurationSec: 6.0,
+      };
+
+      ohTrack.clips.push(ohClip1, ohClip2);
+      kickTrack.clips.push(kickClip1, kickClip2);
+      vidTrack.clips.push(vidClip1, vidClip2);
+      proj.tracks.push(ohTrack, kickTrack, vidTrack);
+
+      // Verify Section 1 tail after 4.165s is recognized as a decaying Cymbal Ring-Out
+      const ringCheck = classifyClipTailAsRingOut(ohClip1, 4.165);
+      assert.strictEqual(ringCheck.isRingOut, true, 'Decaying crash cymbal shimmer after 3.95s should classify as ring-out');
+
+      // Reconcile the step-recorded punch pass!
+      const blendRes = reconcileStepRecordingPass(proj, {
+        punchStartSec: 2.0,
+        recordedClips: [
+          { trackId: ohTrack.id, clip: ohClip2 },
+          { trackId: kickTrack.id, clip: kickClip2 },
+        ],
+        recordedVideoClips: [
+          { trackId: vidTrack.id, clip: vidClip2 },
+        ],
+      });
+
+      assert.strictEqual(blendRes.blended, true);
+      assert.strictEqual(blendRes.preservedRingOutCount, 2);
+      assert.strictEqual(blendRes.splicedVideoTracks, 1);
+
+      // 1. Multi-mic phase lock: Overhead & Kick MUST receive the exact same `offsetSec` and `startSec`!
+      assert.strictEqual(ohClip2.offsetSec, kickClip2.offsetSec, 'All armed drum mics must share identical sample-locked offsetSec');
+      assert.strictEqual(ohClip2.startSec, kickClip2.startSec, 'All armed drum mics must share identical timeline startSec');
+      assert.ok(Math.abs(ohClip2.startSec - 4.165) < 0.03, `Expected Part 2 audio trimmed to ~4.165s, got ${ohClip2.startSec}`);
+      assert.ok(ohClip2.transients[0].timeSec < 0.08, 'Shifted first transient should sit right near start of trimmed clip');
+
+      // 2. Cymbal ring-out preserved on Part 1 (`durationSec` still extends to 6.5s with smooth equal-power fade-out)
+      assert.strictEqual(ohClip1.stepBlendMode, 'ringout-layer');
+      assert.ok(ohClip1.durationSec >= 6.4, `Expected Part 1 cymbal ring-out tail preserved (~6.5s), got ${ohClip1.durationSec}`);
+      assert.strictEqual(ohClip1.fadeShape, 'equal-power');
+      assert.ok(ohClip1.fadeOutSec > 1.5, `Expected long smooth fade-out over ring-out tail, got ${ohClip1.fadeOutSec}`);
+
+      // 3. Camera video Part 2 idle pre-roll trimmed (`~4.08s`) + Part 1 trimmed with `0.18s` cross-dissolve overlap
+      assert.ok(Math.abs(vidClip2.startSec - 4.08) < 0.04, `Expected Part 2 video trimmed to ~4.08s, got ${vidClip2.startSec}`);
+      assert.strictEqual(vidClip2.videoCrossfadeSec, 0.18);
+      assert.ok(Math.abs((vidClip1.startSec + vidClip1.durationSec) - (vidClip2.startSec + 0.18)) < 0.02);
+
+      // 4. Case B: Active Drum Hits in Tail -> Equal-Power Crossfade (trims old hits so they never double-flam!)
+      const activeClip1 = {
+        id: 'act-c1',
+        name: 'Active Beats Part 1',
+        wavFile: ohPart1Path,
+        startSec: 0,
+        offsetSec: 0,
+        durationSec: 6.5,
+        sourceDurationSec: 6.5,
+        // Simulate active snare/kick hits continuing at 4.8s and 5.5s
+        transients: [0.5, 1.5, 2.5, 3.5, 4.8, 5.5].map(t => ({ timeSec: t, peakDb: -2, velocity: 0.9 })),
+      };
+      const activeClip2 = {
+        id: 'act-c2',
+        name: 'Active Beats Part 2',
+        wavFile: ohPart2Path,
+        startSec: 2.0,
+        offsetSec: 0,
+        durationSec: 6.0,
+        sourceDurationSec: 6.0,
+      };
+      const activeTrack = buildTrackFromWizard({ profileId: 'snare-top', name: 'Snare Active', armed: true });
+      activeTrack.clips.push(activeClip1, activeClip2);
+      const activeProj = createEmptyProject({ name: 'Active Overlap Punch', bpm: 120, sampleRate: sr });
+      activeProj.tracks.push(activeTrack);
+
+      const activeCheck = classifyClipTailAsRingOut(activeClip1, 4.165);
+      assert.strictEqual(activeCheck.isRingOut, false, 'Active hits at 4.8s & 5.5s must NOT classify as ring-out');
+
+      const activeRes = reconcileStepRecordingPass(activeProj, {
+        punchStartSec: 2.0,
+        recordedClips: [{ trackId: activeTrack.id, clip: activeClip2 }],
+      });
+      assert.strictEqual(activeRes.blended, true);
+      assert.strictEqual(activeRes.activeXfadeCount, 1);
+      assert.strictEqual(activeClip1.stepBlendMode, 'equal-power-xfade');
+      assert.strictEqual(activeClip1.fadeOutSec, 0.075);
+      assert.strictEqual(activeClip2.fadeInSec, 0.075);
+      assert.ok(Math.abs((activeClip1.startSec + activeClip1.durationSec) - (activeClip2.startSec + 0.075)) < 0.01);
+
+      // 5. Multi-Segment Stitched MP4 Video + Stereo Audio Export (`segments` FFmpeg cross-dissolve pipeline)
+      const exportSegments = buildTrackVideoExportSegments(vidTrack, {
+        renderStartSec: 0,
+        renderEndSec: 8.0,
+      });
+      assert.strictEqual(exportSegments.length, 2);
+      assert.ok(exportSegments[1].effectiveXfadeSec > 0.05);
+
+      const stereoLeft = new Float32Array(8 * sr);
+      const stereoRight = new Float32Array(8 * sr);
+      for (let i = 0; i < stereoLeft.length; i++) {
+        const v = 0.25 * Math.sin(2 * Math.PI * 220 * (i / sr));
+        stereoLeft[i] = v;
+        stereoRight[i] = v;
+      }
+      const stereoWavBuf = Buffer.from(DE.encodeStereoFloat32ToWavBytes(stereoLeft, stereoRight, sr));
+      const stitchedMp4Out = path.join(tmpDir, 'stitched-step-session.mp4');
+
+      const mp4Res = await transcodeMixdownBuffer(stereoWavBuf, {
+        outPath: stitchedMp4Out,
+        format: 'mp4',
+        quality: 'stream_copy', // multi-segment auto-switches cleanly to frame-accurate H.264 xfade stitch
+        sampleRate: sr,
+        title: 'Step Recording Stitched Drum Video',
+        videoMuxSpec: {
+          segments: exportSegments,
+          renderStartSec: 0,
+          renderEndSec: 8.0,
+        },
+      });
+      assert.strictEqual(mp4Res.ok, true);
+      assert.strictEqual(mp4Res.stitchedSegments, 2);
+      assert.ok(fs.existsSync(stitchedMp4Out));
+      const info = await probeVideoFileInfo(stitchedMp4Out);
+      assert.strictEqual(info.hasVideo, true);
+      assert.strictEqual(info.hasAudio, true);
+      assert.ok(Math.abs(info.durationSec - 8.0) < 0.45, `Expected ~8.0s stitched MP4 duration, got ${info.durationSec}`);
+
+      // 6. Verify renderer pre-roll headphone cueing, auto-input switch, equal-power envelope & stitched MP4 option
+      const appSrc = fs.readFileSync(path.join(__dirname, '..', 'renderer', 'app.js'), 'utf8');
+      assert.ok(appSrc.includes('isArmedCueTrack'), 'Armed tracks should play prior clips in headphones during pre-roll');
+      assert.ok(appSrc.includes('armedPreRollBusGain'), 'Armed pre-roll bus should auto-duck when live playing begins');
+      assert.ok(appSrc.includes('scheduleClipFadeEnvelope'), 'Playback & mixdown should apply equal-power clip fade curves');
+      assert.ok(appSrc.includes('Full Stitched Track'), 'Export MP4 should offer Full Stitched Track across multi-part takes');
+    } finally {
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+    }
+  });
 });
