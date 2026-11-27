@@ -6,8 +6,7 @@ import { useLayoutPref } from './resizable.jsx';
 // speaker while casting) and `onSeek(t)` jumps there. Both switches stick: lyrics
 // on/off, and "Follow" (keep the current line in view). Scrolling the lyrics by
 // hand turns Follow off; the Follow button turns it back on.
-export default function Lyrics({ track, getTime, onSeek }) {
-  const [enabled, setEnabled] = useLayoutPref('lyricsEnabled', true);
+export default function Lyrics({ track, getTime, onSeek, enabled, onEnabledChange }) {
   const [follow, setFollow] = useLayoutPref('lyricsFollow', true);
   const [data, setData] = useState(null); // null = loading
   const [active, setActive] = useState(-1);
@@ -93,7 +92,7 @@ export default function Lyrics({ track, getTime, onSeek }) {
             className={`btn-chip lyrics-btn ${enabled ? 'on' : ''}`}
             aria-pressed={enabled}
             title={enabled ? 'Turn subtitles off' : 'Turn subtitles on'}
-            onClick={() => setEnabled(!enabled)}
+            onClick={() => onEnabledChange(!enabled)}
           >
             {enabled ? 'On' : 'Off'}
           </button>

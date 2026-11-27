@@ -68,6 +68,7 @@ flowchart TD
   - **Picture-in-Picture (`PiP`)**: Float the movie in an always-on-top Picture-in-Picture window while working in other apps.
   - **Frame Snapshot (`Frame`)**: Captures the exact current video frame at native resolution to a PNG in `~/Pictures/RobOS Movie Snapshots/`.
 - **Synchronized Transport Deck**: Uses the `.robos-rhap-theme` transport bar (`react-h5-audio-player`) with 10-second jump steps, shuffle, repeat, and a **Screen Output** selector for one-click switching between local playback and LAN Google Cast TVs.
+- Open **Keyboard shortcuts** on the video toolbar or press **?**. Use **← / →** to seek 10 seconds, **Shift + ← / →** to seek 30 seconds, **Space** to pause or play, **↑ / ↓** for volume, and **F** for fullscreen.
 
 ### 2. Synced Subtitles & Dialogue Panel
 - **Multi-Format Subtitle Parser (`lib/lyrics.js`)**: Automatically discovers sidecar `.srt` (`SubRip`), `.vtt` (`WebVTT`), `.en.srt`, `.en.vtt`, or `.lrc` files beside any video, or extracts embedded subtitle tracks (`0:s:0`) on the fly via `ffmpeg`.

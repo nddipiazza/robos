@@ -19,6 +19,8 @@ import { LibraryContext, ContextMenu, LoveButton, Cover, artUrlFor } from './lib
 import { albumKeyOf, fold, splitGenres, sortTracks, getTrackWatchState } from '../lib/library-index.js';
 import VideoSegmentsPanel, { formatSegmentTime } from './VideoSegments.jsx';
 import TrimVideo from './TrimVideo.jsx';
+import VideoShortcutHelp from './VideoShortcutHelp.jsx';
+import { findVideoShortcut } from '../lib/video-shortcuts.js';
 
 const DEFAULT_QUEUE = [];
 const QUEUE_KEY = 'robos-movie-player.queue.v1';
@@ -86,6 +88,7 @@ export default function App() {
   const [segmentTrack, setSegmentTrack] = useState(null);
   const [segmentDraft, setSegmentDraft] = useState(null);
   const [videoTrim, setVideoTrim] = useState(null);
+  const [showVideoShortcuts, setShowVideoShortcuts] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
   const [isScanningLibrary, setIsScanningLibrary] = useState(false);
   const [libraryScanStatus, setLibraryScanStatus] = useState(null);
@@ -118,6 +121,7 @@ export default function App() {
   const pipSlotRef = useRef(null);
   const [pipRect, setPipRect] = useState(null);
   const [videoFit, setVideoFit] = useState('contain');
+  const [dialogueEnabled, setDialogueEnabled] = useLayoutPref('lyricsEnabled', true);
   const getMediaEl = () => (isVideoTrack(latestRef.current.currentTrack) && videoRef.current) ? videoRef.current : playerRef.current?.audio?.current;
   const audioCtxRef = useRef(null);
   const ambientNodeRef = useRef(null);
@@ -1035,7 +1039,7 @@ export default function App() {
     };
   }, [embeddedPipActive, dockCollapsed, activeTab, currentTrack?.id]);
 
-  const seekVideoTo = useCallback((rawTarget) => {
+  const seekVideoTo = useCallback((rawTarget, { preservePause = false } = {}) => {
     const v = videoRef.current;
     const maxDur = knownVideoDurationSec || (v && isFinite(v.duration) && v.duration > 0 ? v.duration : 0);
     const target = Math.max(0, maxDur > 0 ? Math.min(Number(rawTarget) || 0, Math.max(0, maxDur - 0.5)) : (Number(rawTarget) || 0));
@@ -1058,6 +1062,7 @@ export default function App() {
     }
     const tcBase = (activeProbe?.transcodeUrl || currentTrack?.mediaService?.transcodeUrl || rawResolvedSrc || '').split('?')[0];
     if (tcBase && tcBase.includes('/transcode/')) {
+      const resume = !preservePause || v?.paused === false;
       setPlaybackProbe(prev => ({
         ...(prev && prev.trackId === currentTrack?.id
           ? prev
@@ -1066,8 +1071,8 @@ export default function App() {
         forceTranscode: true,
         offsetSec: Math.floor(target),
       }));
-      setIsPlaying(true);
-      setTimeout(() => { videoRef.current?.play().catch(() => {}); }, 60);
+      setIsPlaying(resume);
+      if (resume) setTimeout(() => { videoRef.current?.play().catch(() => {}); }, 60);
     } else if (v) {
       v.currentTime = target;
     }
@@ -1878,6 +1883,85 @@ export default function App() {
     else playTracks([track], 0, { startAt: position });
   };
 
+  const exitVideoFullscreen = () => {
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+  };
+
+  const toggleVideoFullscreen = () => {
+    if (document.fullscreenElement) exitVideoFullscreen();
+    else videoRef.current?.closest('.cinema-stage-box')?.requestFullscreen?.().catch(() => {});
+  };
+
+  const toggleVideoPip = () => {
+    if (!videoRef.current || !document.pictureInPictureEnabled) return;
+    if (document.pictureInPictureElement) document.exitPictureInPicture().catch(() => {});
+    else videoRef.current.requestPictureInPicture().catch(() => {});
+  };
+
+  const toggleVideoFit = () => setVideoFit(fit => fit === 'contain' ? 'cover' : 'contain');
+
+  const runVideoShortcut = ({ action, amount }) => {
+    const video = videoRef.current;
+    const local = outputTarget === 'local';
+    const position = () => local ? transcodeOffsetSec + (video?.currentTime || 0) : castClock.now();
+    const duration = local ? knownVideoDurationSec || video?.duration : castClock.get().duration || currentTrack.duration;
+    const seek = local ? target => seekVideoTo(target, { preservePause: true }) : handleCastSeek;
+    const actions = {
+      toggle: handleTogglePlayPause,
+      stop: () => {
+        if (local) {
+          video?.pause();
+          seek(0);
+        } else {
+          handleStopCast();
+        }
+      },
+      seekBy: () => seek(Math.min(duration > 0 ? duration : Infinity, position() + amount)),
+      seekFraction: () => {
+        if (amount === 0) seek(0);
+        else if (Number.isFinite(duration) && duration > 0) seek(duration * amount);
+      },
+      prev: handlePlayPrev,
+      next: handlePlayNext,
+      volume: () => {
+        video.volume = Math.min(1, Math.max(0, video.volume + amount));
+        video.muted = false;
+      },
+      mute: () => { video.muted = !video.muted; },
+      fullscreen: toggleVideoFullscreen,
+      exitFullscreen: exitVideoFullscreen,
+      subtitles: () => {
+        const tracks = Array.from(video.textTracks).filter(track => track.kind === 'subtitles' || track.kind === 'captions');
+        const visible = tracks.filter(track => track.mode === 'showing');
+        if (visible.length) visible.forEach(track => { track.mode = 'disabled'; });
+        else if (tracks.length) tracks[0].mode = 'showing';
+        else setDialogueEnabled(!dialogueEnabled);
+      },
+      speed: () => {
+        const nextRate = amount ? Math.min(2, Math.max(0.25, video.playbackRate + amount)) : 1;
+        video.defaultPlaybackRate = nextRate;
+        video.playbackRate = nextRate;
+        showStatus(`Playback speed ${nextRate}×`);
+      },
+      pip: toggleVideoPip,
+      fit: toggleVideoFit,
+      skipSegment: async () => {
+        try {
+          const { segments } = await window.robosAudio.getVideoSegments(currentTrack.id);
+          if (latestRef.current.currentTrack?.id !== currentTrack.id || video !== videoRef.current) return;
+          const at = position();
+          const segment = segments?.find(item => item.status === 'confirmed' && item.start <= at && at < item.end);
+          if (segment) seek(segment.end);
+          else showStatus('No confirmed intro or commercial at this position.');
+        } catch (err) {
+          showStatus(err.message);
+        }
+      },
+      help: () => setShowVideoShortcuts(true),
+    };
+    actions[action]();
+  };
+
 
   const handleAiMetadataApplied = async (res) => {
     if (res && res.library) {
@@ -1972,6 +2056,9 @@ export default function App() {
     prev: handlePlayPrev,
     toggle: () => handleTogglePlayPause(),
     playTracks,
+    videoShortcutsActive: activeTab === 'player' && isVideoTrack(currentTrack),
+    videoIsLocal: outputTarget === 'local',
+    runVideoShortcut,
     removeDeletedVideoFromQueue(ids) {
       const deleted = new Set(ids);
       const indices = [];
@@ -2302,11 +2389,11 @@ export default function App() {
     };
   }, []);
 
-  // Space: play/pause · Ctrl+→ / Ctrl+←: next / previous · Ctrl+F: search the library.
   useEffect(() => {
     const onKey = (e) => {
-      const tag = (e.target.tagName || '').toLowerCase();
-      const typing = tag === 'input' || tag === 'textarea' || tag === 'select' || e.target.isContentEditable;
+      if (e.defaultPrevented || e.isComposing || document.querySelector('dialog[open], .modal-overlay, .context-menu')) return;
+      const target = e.target;
+      const editing = target.isContentEditable || target.closest?.('input, textarea, select, [role="textbox"], [role="slider"]');
       const mod = e.ctrlKey || e.metaKey;
       if (mod && e.key.toLowerCase() === 'f') {
         e.preventDefault();
@@ -2315,8 +2402,19 @@ export default function App() {
         else setTimeout(() => searchInputRef.current?.focus(), 30);
         return;
       }
-      if (typing || (e.target.closest && e.target.closest('.rhap_container'))) return;
-      if (e.code === 'Space' && tag !== 'button') {
+      if (editing || (e.code === 'Space' && target.closest?.('button, a, [role="button"]'))) return;
+      const player = latestRef.current;
+      if (player.videoShortcutsActive) {
+        if (target.closest?.('.lyrics-scroll') && /^(Arrow|Home|End)/.test(e.key)) return;
+        const shortcut = findVideoShortcut(e);
+        if (!shortcut || (shortcut.local && (!player.videoIsLocal || !videoRef.current))) return;
+        if (shortcut.action === 'exitFullscreen' && !document.fullscreenElement) return;
+        e.preventDefault();
+        if (!e.repeat || shortcut.repeat) player.runVideoShortcut(shortcut);
+        return;
+      }
+      if (target.closest?.('.rhap_container')) return;
+      if (e.code === 'Space') {
         e.preventDefault();
         latestRef.current.toggle();
       } else if (mod && e.key === 'ArrowRight') {
@@ -2327,8 +2425,18 @@ export default function App() {
         latestRef.current.prev();
       }
     };
+    // Native video controls handle some keys before they bubble to the window.
+    const onVideoKey = (e) => {
+      if (e.target !== videoRef.current) return;
+      onKey(e);
+      if (e.defaultPrevented) e.stopPropagation();
+    };
+    window.addEventListener('keydown', onVideoKey, true);
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('keydown', onVideoKey, true);
+      window.removeEventListener('keydown', onKey);
+    };
   }, []);
 
   // Persist the queue and player preferences.
@@ -2718,14 +2826,13 @@ export default function App() {
                         if (videoRef.current.paused) { videoRef.current.play().catch(() => {}); setIsPlaying(true); }
                         else { videoRef.current.pause(); setIsPlaying(false); }
                       }}
-                      onDoubleClick={(e) => {
+                      onDoubleClick={() => {
                         if (embeddedPipActive) {
                           setActiveTab('player');
                           return;
                         }
                         if (!isTranscodeActive) return;
-                        if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
-                        else e.currentTarget.parentElement?.requestFullscreen?.().catch(() => {});
+                        toggleVideoFullscreen();
                       }}
                       onLoadedMetadata={(e) => {
                         const d = e.currentTarget?.duration;
@@ -2921,12 +3028,8 @@ export default function App() {
                         <button
                           type="button"
                           className="btn-chip"
-                          onClick={(e) => {
-                            const box = e.currentTarget.closest('.cinema-stage-box');
-                            if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
-                            else box?.requestFullscreen?.().catch(() => {});
-                          }}
-                          title="Toggle Fullscreen"
+                          onClick={toggleVideoFullscreen}
+                          title="Toggle fullscreen (F)"
                         >
                           ⛶
                         </button>
@@ -2978,21 +3081,16 @@ export default function App() {
                       <button
                         type="button"
                         className="btn-chip"
-                        onClick={() => setVideoFit(f => f === 'contain' ? 'cover' : 'contain')}
-                        title="Toggle widescreen aspect fit"
+                        onClick={toggleVideoFit}
+                        title="Toggle widescreen aspect fit (A)"
                       >
                         Fit: {videoFit === 'contain' ? 'Letterbox' : 'Fill'}
                       </button>
                       <button
                         type="button"
                         className="btn-chip"
-                        onClick={() => {
-                          if (videoRef.current && document.pictureInPictureEnabled) {
-                            if (document.pictureInPictureElement) document.exitPictureInPicture().catch(() => {});
-                            else videoRef.current.requestPictureInPicture().catch(() => {});
-                          }
-                        }}
-                        title="Toggle Picture-in-Picture"
+                        onClick={toggleVideoPip}
+                        title="Toggle picture-in-picture (P)"
                       >
                         PiP
                       </button>
@@ -3051,17 +3149,23 @@ export default function App() {
                       <button
                         type="button"
                         className="btn-chip"
-                        onClick={() => {
-                          const v = videoRef.current;
-                          if (v && v.requestFullscreen) v.requestFullscreen().catch(() => {});
-                        }}
-                        title="Fullscreen video"
+                        onClick={toggleVideoFullscreen}
+                        title="Fullscreen video (F)"
                       >
                         Fullscreen
+                      </button>
+                      <button
+                        type="button"
+                        className="btn-chip"
+                        onClick={() => setShowVideoShortcuts(true)}
+                        title="Keyboard shortcuts (?)"
+                      >
+                        Keyboard shortcuts
                       </button>
                     </div>
                   </div>
                   )}
+                  {showVideoShortcuts && <VideoShortcutHelp local={outputTarget === 'local'} onClose={() => setShowVideoShortcuts(false)} />}
                 </div>
               )}
 
@@ -3190,6 +3294,8 @@ export default function App() {
 
               <Lyrics
                 track={currentTrack}
+                enabled={dialogueEnabled}
+                onEnabledChange={setDialogueEnabled}
                 getTime={() => (outputTarget !== 'local'
                   ? castClock.now()
                   : (isTranscodeActive ? transcodeOffsetSec + (getMediaEl()?.currentTime || 0) : (getMediaEl()?.currentTime ?? null)))}

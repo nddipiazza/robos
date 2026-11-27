@@ -2519,6 +2519,18 @@ body.is-resizing, body.is-resizing * { cursor: col-resize !important; user-selec
   margin-bottom: 14px;
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.55);
 }
+.cinema-stage-box:fullscreen {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+}
+.cinema-stage-box:fullscreen > .cinema-video-el {
+  flex: 1;
+  min-height: 0;
+  max-height: none;
+}
 .cinema-video-el {
   display: block;
   width: 100%;
@@ -4453,6 +4465,32 @@ body.is-resizing, body.is-resizing * { cursor: col-resize !important; user-selec
   display: flex;
   justify-content: flex-end;
   margin-top: 12px;
+}
+
+.video-shortcuts-list {
+  margin: 12px 0;
+}
+.video-shortcuts-list > div {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 6px 12px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border-color);
+}
+.video-shortcuts-list dd {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin: 0;
+}
+.video-shortcuts-list kbd {
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 1px 5px;
+  color: var(--text-main);
+  background: var(--bg-tertiary);
 }
 
 .video-trim-range {
