@@ -300,6 +300,19 @@ function registerMediaRecorder({ app, ipcMain, clipboard, shell, desktopCapturer
     if (!sender.isDestroyed()) sender.send('media-record:progress', progress);
   };
   let displayRequest = null;
+  let regionPreview = null;
+
+  async function getScreenSource(window, { preview = false, sourceId } = {}) {
+    const display = screen.getDisplayMatching(window.getBounds());
+    const { width, height } = display.size;
+    const scale = 960 / Math.max(width, height);
+    const thumbnailSize = preview
+      ? { width: Math.max(1, Math.round(width * scale)), height: Math.max(1, Math.round(height * scale)) }
+      : { width: 0, height: 0 };
+    const sources = await desktopCapturer.getSources({ types: ['screen'], thumbnailSize });
+    if (sourceId) return sources.find(source => source.id === sourceId);
+    return sources.find(source => source.display_id === String(display.id)) || sources[0];
+  }
 
   app.whenReady().then(() => {
     session.defaultSession.setDisplayMediaRequestHandler(async (request, respond) => {
@@ -313,9 +326,7 @@ function registerMediaRecorder({ app, ipcMain, clipboard, shell, desktopCapturer
       try {
         const window = getWindow();
         if (!window || window.isDestroyed()) { respond({}); return; }
-        const display = screen.getDisplayMatching(window.getBounds());
-        const sources = await desktopCapturer.getSources({ types: ['screen'], thumbnailSize: { width: 0, height: 0 } });
-        const video = sources.find(source => source.display_id === String(display.id)) || sources[0];
+        const video = await getScreenSource(window, { sourceId: grant.sourceId });
         if (!video || recorder.pending !== grant.pending || getWindow() !== window) { respond({}); return; }
         respond(grant.includeAudio ? { video, audio: 'loopback' } : { video });
       } catch {
@@ -324,22 +335,44 @@ function registerMediaRecorder({ app, ipcMain, clipboard, shell, desktopCapturer
     });
   });
 
+  ipcMain.handle('media-record:capture-preview', async (event) => {
+    if (!fromPlayer(event) || options.kind !== 'video' || recorder.pending) {
+      return { ok: false, error: 'The screen preview is unavailable.' };
+    }
+    const { senderFrame } = event;
+    try {
+      const source = await getScreenSource(getWindow(), { preview: true });
+      if (!source || source.thumbnail.isEmpty()) throw new Error('The display did not return a preview.');
+      regionPreview = { frame: senderFrame, sourceId: source.id };
+      return { ok: true, sourceId: source.id, image: source.thumbnail.toDataURL() };
+    } catch (err) {
+      return { ok: false, error: `Could not preview the display. ${err.message}` };
+    }
+  });
+
   ipcMain.handle('media-record:capture-start', async (event, input) => {
     if (!fromPlayer(event)) return { ok: false, error: 'Open Record to Library in the player window.' };
     if (recorder.pending) return { ok: false, error: 'A recording is already in progress.' };
     const includeAudio = options.kind === 'audio' || input?.includeAudio !== false;
     if (includeAudio && process.platform !== 'win32') return { ok: false, error: 'System audio capture is available on Windows.' };
     const { sender, senderFrame } = event;
+    const sourceId = input?.sourceId;
+    if (sourceId && (options.kind !== 'video' || regionPreview?.frame !== senderFrame || regionPreview.sourceId !== sourceId)) {
+      return { ok: false, error: 'Refresh the screen preview and select the region again.' };
+    }
+    const previousThrottling = sender.backgroundThrottling;
+    if (sourceId) sender.backgroundThrottling = false;
     const cancel = () => recorder.cancel();
     sender.once('destroyed', cancel);
     const start = recorder.startCapture({ includeAudio }, progressFor(sender));
     const pending = recorder.pending;
     pending.then(() => {
       if (displayRequest?.frame === senderFrame) displayRequest = null;
+      if (sourceId && !sender.isDestroyed()) sender.backgroundThrottling = previousThrottling;
       sender.removeListener('destroyed', cancel);
     });
     const result = await start;
-    if (result.ok && !sender.isDestroyed()) displayRequest = { frame: senderFrame, includeAudio, pending };
+    if (result.ok && !sender.isDestroyed()) displayRequest = { frame: senderFrame, includeAudio, pending, sourceId };
     return result;
   });
   ipcMain.handle('media-record:capture-append', (event, chunk) => {

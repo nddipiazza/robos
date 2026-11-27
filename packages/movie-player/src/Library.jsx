@@ -114,7 +114,7 @@ export default function Library({
     return tracks;
   }, [tracks, mode]);
 
-  const scopeFolder = folders.find(f => f.id === prefs.scope) || null;
+  const scopeFolder = nav.recordingId ? null : folders.find(f => f.id === prefs.scope) || null;
   const scopedTracks = useMemo(
     () => (scopeFolder ? modeTracks.filter(t => folderOwnsTrack(scopeFolder, t.filePath)) : modeTracks),
     [modeTracks, scopeFolder]
@@ -338,7 +338,10 @@ export default function Library({
               className="lib-select"
               title="Limit the library to one media folder"
               value={scopeFolder ? scopeFolder.id : ''}
-              onChange={(e) => setPref('scope', e.target.value || null)}
+              onChange={(e) => {
+                setPref('scope', e.target.value || null);
+                if (nav.recordingId) go({ section, detail });
+              }}
             >
               <option value="">All media sources</option>
               {folders.map(f => <option key={f.id} value={f.id}>{f.label}</option>)}

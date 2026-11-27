@@ -79,7 +79,7 @@ flowchart TD
 - **Scene Release Filename Cleaner (`cleanMovieFilename`)**: Automatically strips scene tags (`2160p`, `1080p`, `720p`, `4K`, `UHD`, `HDR10`, `BluRay`, `WEB-DL`, `WEBRip`, `x264`, `x265`, `HEVC`, `AV1`, `AAC`, `DTS`, release groups) while extracting the 4-digit release year, `SxxExx` season/episode numbers, resolution badges (`4K`, `1080p`, `720p`), and video codecs.
 - **Content-Addressed Poster Cache**: Embedded cover art, folder posters (`poster.jpg`, `cover.jpg`, `fanart.jpg`, `folder.jpg`), and extracted video frames are hashed (`sha1`) into `~/.cache/robos/movie-player/art/` so 100,000 movies never hold image buffers in RAM.
 
-Open **Record to Library** and choose **Desktop**. Move the player to the screen you want to capture, then choose **Start recording**. On Windows, **Include system audio** is on by default. Clear it to record a silent video. Choose **Stop & save** to add the MP4 to **Recently Added**. Live capture uses FFmpeg and ffprobe.
+Open **Record to Library** and choose **Desktop**. Move the player to the screen you want to capture. **Capture area** defaults to **Full screen**. To capture part of it, choose **Region**, then drag a rectangle on the screen preview. Choose **Start recording** when you’re ready. On Windows, **Include system audio** is on by default. Clear it to record a silent video. Choose **Stop & save** to add the MP4 to your library and open **Recently Added**. Live capture uses FFmpeg and ffprobe.
 
 To save from a URL, switch to **Media link**, paste the link, and select **Save video**. **Include audio** is on by default. Movie Player looks for matching movie or TV metadata and artwork for linked videos. Files are saved under `~/.config/robos/movie-player/recordings/`.
 

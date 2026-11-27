@@ -2300,7 +2300,9 @@ export default function App() {
                 kind: 'video',
                 player: window.robosAudio,
                 onSaved: (track) => {
-                  setActiveTab('library');
+                  const destination = { section: 'recent', recordingId: track.id };
+                  if (track.mediaType === 'tv') navigateShows(destination);
+                  else navigateLibrary(destination);
                   showStatus(`Saved “${track.title}” to your library.`);
                 },
               });

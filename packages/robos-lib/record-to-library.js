@@ -5,10 +5,174 @@ window.robosRecordToLibrary = (() => {
   const CHUNK_BYTES = 2 * 1024 * 1024;
   const MAX_BUFFERED_BYTES = 32 * 1024 * 1024;
 
+
+  async function cropDisplay(display, region) {
+    const video = document.createElement('video');
+    video.muted = true;
+    video.srcObject = new MediaStream(display.getVideoTracks());
+    let timeout;
+    try {
+      await Promise.race([
+        video.play(),
+        new Promise((_, reject) => {
+          timeout = setTimeout(() => reject(new Error('The selected display did not start sending video.')), 6000);
+        }),
+      ]);
+      const width = Math.max(2, Math.floor(video.videoWidth * region.width / 2) * 2);
+      const height = Math.max(2, Math.floor(video.videoHeight * region.height / 2) * 2);
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const context = canvas.getContext('2d', { alpha: false });
+      if (!context) throw new Error('The selected region could not be recorded.');
+      const [track] = canvas.captureStream(0).getVideoTracks();
+      const draw = () => {
+        const { videoWidth, videoHeight } = video;
+        if (!videoWidth || !videoHeight) return;
+        context.drawImage(video,
+          region.x * videoWidth, region.y * videoHeight, region.width * videoWidth, region.height * videoHeight,
+          0, 0, width, height);
+        track.requestFrame();
+      };
+      const timer = setInterval(draw, 1000 / 30);
+      return {
+        stream: new MediaStream([track, ...display.getAudioTracks()]),
+        stop() {
+          clearInterval(timer);
+          track.stop();
+          video.pause();
+          video.srcObject = null;
+        },
+      };
+    } catch (err) {
+      video.srcObject = null;
+      throw err;
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+
+  function createRegionPicker(form, player, onChange) {
+    const panel = form.querySelector('.record-to-library-region');
+    const preview = panel.querySelector('.record-to-library-preview');
+    const image = preview.querySelector('img');
+    const outline = preview.querySelector('.record-to-library-outline');
+    const caption = panel.querySelector('[role="status"]');
+    const refresh = panel.querySelector('button');
+    let sourceId;
+    let selection;
+    let drag;
+    let loading = false;
+
+    function paint(area) {
+      outline.hidden = !area?.width || !area?.height;
+      if (outline.hidden) return;
+      outline.style.left = `${area.x * 100}%`;
+      outline.style.top = `${area.y * 100}%`;
+      outline.style.width = `${area.width * 100}%`;
+      outline.style.height = `${area.height * 100}%`;
+    }
+
+    function select(area) {
+      selection = area;
+      paint(selection);
+      caption.textContent = selection ? 'Region selected. Drag again to redraw it.' : 'Drag over the preview to select an area.';
+      onChange();
+    }
+
+    async function load() {
+      if (loading) return;
+      loading = true;
+      refresh.disabled = true;
+      preview.hidden = true;
+      sourceId = null;
+      selection = null;
+      drag = null;
+      paint(null);
+      caption.textContent = 'Loading screen preview…';
+      onChange();
+      try {
+        const result = await player.getDesktopRecordingPreview();
+        if (!result.ok) throw new Error(result.error);
+        image.src = result.image;
+        await image.decode();
+        sourceId = result.sourceId;
+        preview.hidden = false;
+        select(null);
+      } catch (err) {
+        caption.textContent = err.message;
+      } finally {
+        loading = false;
+        refresh.disabled = false;
+      }
+    }
+
+    function point(event) {
+      const bounds = preview.getBoundingClientRect();
+      const clamp = value => Math.max(0, Math.min(1, value));
+      return {
+        x: clamp((event.clientX - bounds.left) / bounds.width),
+        y: clamp((event.clientY - bounds.top) / bounds.height),
+      };
+    }
+
+    function selectionAt(event) {
+      const end = point(event);
+      return {
+        x: Math.min(drag.start.x, end.x), y: Math.min(drag.start.y, end.y),
+        width: Math.abs(drag.start.x - end.x), height: Math.abs(drag.start.y - end.y),
+      };
+    }
+
+    preview.addEventListener('pointerdown', (event) => {
+      if (!event.isPrimary || event.button !== 0) return;
+      preview.setPointerCapture(event.pointerId);
+      drag = { id: event.pointerId, start: point(event) };
+      paint(null);
+    });
+    preview.addEventListener('pointermove', (event) => {
+      if (drag?.id === event.pointerId) paint(selectionAt(event));
+    });
+    preview.addEventListener('pointerup', (event) => {
+      if (drag?.id !== event.pointerId) return;
+      const area = selectionAt(event);
+      drag = null;
+      if (area.width * preview.clientWidth >= 6 && area.height * preview.clientHeight >= 6) select(area);
+      else paint(selection);
+    });
+    preview.addEventListener('lostpointercapture', () => {
+      drag = null;
+      paint(selection);
+    });
+    preview.addEventListener('keydown', (event) => {
+      const step = 0.02;
+      const delta = { ArrowLeft: [-step, 0], ArrowRight: [step, 0], ArrowUp: [0, -step], ArrowDown: [0, step] };
+      if (!Object.hasOwn(delta, event.key)) return;
+      event.preventDefault();
+      const [dx, dy] = delta[event.key];
+      const area = selection ? { ...selection } : { x: 0.25, y: 0.25, width: 0.5, height: 0.5 };
+      if (event.shiftKey) {
+        area.width = Math.min(1 - area.x, Math.max(step, area.width + dx));
+        area.height = Math.min(1 - area.y, Math.max(step, area.height + dy));
+      } else {
+        area.x = Math.max(0, Math.min(1 - area.width, area.x + dx));
+        area.y = Math.max(0, Math.min(1 - area.height, area.y + dy));
+      }
+      select(area);
+    });
+    refresh.addEventListener('click', load);
+    return {
+      panel, load,
+      get sourceId() { return sourceId; },
+      get selection() { return selection; },
+    };
+  }
+
   function open({ kind, player, onSaved }) {
     if (activeDialog) return;
     const video = kind === 'video';
     const systemAudio = player.canCaptureSystemAudio;
+    const hasRegionPicker = video && typeof player.getDesktopRecordingPreview === 'function';
     const dialog = document.createElement('dialog');
     dialog.className = 'record-to-library-dialog';
     dialog.setAttribute('aria-labelledby', 'record-to-library-title');
@@ -21,6 +185,24 @@ window.robosRecordToLibrary = (() => {
         </div>
         <div class="record-to-library-source" data-panel="live">
           <p>${video ? 'Records the display this window is on.' : 'Records sound from your current audio output.'}</p>
+          <label class="record-to-library-area" hidden>
+            Capture area
+            <select name="captureArea">
+              <option value="screen" selected>Full screen</option>
+              <option value="region">Region</option>
+            </select>
+          </label>
+          <div class="record-to-library-region" hidden>
+            <div class="record-to-library-region-tools">
+              <p role="status"></p>
+              <button type="button" class="btn-secondary">Refresh preview</button>
+            </div>
+            <div class="record-to-library-preview" tabindex="0" role="group" aria-label="Select a region"
+              aria-description="Drag a rectangle, or use the arrow keys to move it and Shift plus arrow keys to resize it." hidden>
+              <img alt="Screen preview" draggable="false">
+              <span class="record-to-library-outline" aria-hidden="true" hidden></span>
+            </div>
+          </div>
           <label class="record-to-library-audio" ${video && systemAudio ? '' : 'hidden'}>
             <input name="desktopAudio" type="checkbox" checked> Include system audio
           </label>
@@ -49,13 +231,13 @@ window.robosRecordToLibrary = (() => {
         </footer>
       </form>`;
     const form = dialog.querySelector('form');
-    const { url, includeAudio, desktopAudio } = form.elements;
+    const { url, includeAudio, desktopAudio, captureArea } = form.elements;
     const submit = form.querySelector('[type="submit"]');
     const cancel = form.querySelector('.record-to-library-cancel');
     const setup = form.querySelector('.record-to-library-setup');
     const paste = form.querySelector('.record-to-library-paste');
     const progress = form.querySelector('progress');
-    const status = form.querySelector('[role="status"]');
+    const status = form.querySelector('.record-to-library-status');
     const indicator = form.querySelector('.record-to-library-live');
     const elapsed = indicator.querySelector('time');
     const modes = [...form.querySelectorAll('[data-mode]')];
@@ -65,11 +247,19 @@ window.robosRecordToLibrary = (() => {
     let phase = 'idle';
     let missingTool;
     let recording;
+    const regionPicker = hasRegionPicker ? createRegionPicker(form, player, updateControls) : null;
+    captureArea.parentElement.hidden = !regionPicker;
 
     function updateControls() {
       const idle = phase === 'idle';
       const capturing = phase === 'recording';
       const working = phase === 'link' || phase === 'stopping' || phase === 'starting';
+      const selectingRegion = regionPicker && idle && mode === 'live' && captureArea.value === 'region';
+      if (regionPicker) {
+        regionPicker.panel.hidden = !selectingRegion;
+        captureArea.disabled = !idle;
+        dialog.classList.toggle('record-to-library-with-region', selectingRegion);
+      }
       livePanel.hidden = mode !== 'live';
       linkPanel.hidden = mode !== 'link';
       for (const button of modes) {
@@ -79,7 +269,7 @@ window.robosRecordToLibrary = (() => {
       if (!video && !systemAudio) modes[0].title = 'PC audio capture is available on Windows.';
       url.disabled = !idle || mode !== 'link';
       includeAudio.disabled = desktopAudio.disabled = paste.disabled = !idle;
-      submit.disabled = !idle && !capturing;
+      submit.disabled = (!idle && !capturing) || (selectingRegion && !regionPicker.selection);
       submit.textContent = capturing ? 'Stop & save' : (mode === 'live' ? 'Start recording' : `Save ${video ? 'video' : 'audio'}`);
       cancel.disabled = phase === 'starting' || phase === 'stopping';
       cancel.textContent = capturing ? 'Discard' : (phase === 'link' ? 'Cancel recording' : 'Close');
@@ -120,6 +310,7 @@ window.robosRecordToLibrary = (() => {
       const current = recording;
       clearInterval(current.timer);
       if (current.recorder.state !== 'inactive') current.recorder.stop();
+      current.crop?.stop();
       for (const track of current.display.getTracks()) track.stop();
       try {
         await current.stopped;
@@ -140,22 +331,26 @@ window.robosRecordToLibrary = (() => {
 
     async function recordLive() {
       const withAudio = !video || (systemAudio && desktopAudio.checked);
+      const region = captureArea.value === 'region' ? regionPicker.selection : null;
+      const sourceId = region ? regionPicker.sourceId : undefined;
       setPhase('starting');
       status.textContent = 'Starting capture…';
       let display;
+      let crop;
       try {
-        const ready = await player.startDesktopRecording({ includeAudio: withAudio });
+        const ready = await player.startDesktopRecording({ includeAudio: withAudio, sourceId });
         if (!ready.ok) { showResult(ready); return; }
         display = await navigator.mediaDevices.getDisplayMedia({
           video: { displaySurface: 'monitor', frameRate: { ideal: 30, max: 30 } },
           audio: withAudio ? { echoCancellation: false, noiseSuppression: false, autoGainControl: false } : false,
         });
         if (withAudio && !display.getAudioTracks().length) throw new Error('System audio is unavailable. Check your current audio output and try again.');
-        const stream = video ? display : new MediaStream(display.getAudioTracks());
+        if (region) crop = await cropDisplay(display, region);
+        const stream = crop?.stream || (video ? display : new MediaStream(display.getAudioTracks()));
         const mimeType = video ? (withAudio ? 'video/webm;codecs=vp8,opus' : 'video/webm;codecs=vp8') : 'audio/webm;codecs=opus';
         const media = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 5_000_000, audioBitsPerSecond: 160_000 });
         const current = {
-          display, recorder: media, writes: Promise.resolve(), bufferedBytes: 0,
+          display, crop, recorder: media, writes: Promise.resolve(), bufferedBytes: 0,
           stopped: new Promise(resolve => media.addEventListener('stop', resolve, { once: true })),
         };
         media.addEventListener('dataavailable', ({ data }) => {
@@ -193,10 +388,13 @@ window.robosRecordToLibrary = (() => {
         setPhase('recording');
         submit.focus();
       } catch (err) {
+        crop?.stop();
         display?.getTracks().forEach(track => track.stop());
         await player.discardDesktopRecording().catch(() => {});
-        showResult({ error: err.name === 'NotAllowedError'
-          ? 'Screen capture was denied. Check your screen recording permissions and try again.' : err.message });
+        const denied = region
+          ? 'Could not capture the selected display. Refresh the preview and try again.'
+          : 'Screen capture was denied. Check your screen recording permissions and try again.';
+        showResult({ error: err.name === 'NotAllowedError' ? denied : err.message });
       }
     }
 
@@ -231,10 +429,17 @@ window.robosRecordToLibrary = (() => {
       });
     }
 
+    if (regionPicker) {
+      captureArea.addEventListener('change', () => {
+        updateControls();
+        if (captureArea.value === 'region') regionPicker.load();
+      });
+    }
+
     form.addEventListener('submit', (event) => {
       event.preventDefault();
       if (phase === 'recording') { finishLive(true); return; }
-      if (phase !== 'idle') return;
+      if (phase !== 'idle' || submit.disabled) return;
       setup.hidden = true;
       if (mode === 'link') recordLink();
       else recordLive();

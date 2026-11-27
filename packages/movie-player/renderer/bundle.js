@@ -19713,7 +19713,7 @@
       if (mode === "movies") return tracks.filter((t) => t && t.mediaType !== "tv");
       return tracks;
     }, [tracks, mode]);
-    const scopeFolder = folders.find((f) => f.id === prefs.scope) || null;
+    const scopeFolder = nav.recordingId ? null : folders.find((f) => f.id === prefs.scope) || null;
     const scopedTracks = (0, import_react16.useMemo)(
       () => scopeFolder ? modeTracks.filter((t) => folderOwnsTrack(scopeFolder, t.filePath)) : modeTracks,
       [modeTracks, scopeFolder]
@@ -19889,7 +19889,10 @@
         className: "lib-select",
         title: "Limit the library to one media folder",
         value: scopeFolder ? scopeFolder.id : "",
-        onChange: (e) => setPref("scope", e.target.value || null)
+        onChange: (e) => {
+          setPref("scope", e.target.value || null);
+          if (nav.recordingId) go({ section, detail });
+        }
       },
       /* @__PURE__ */ import_react16.default.createElement("option", { value: "" }, "All media sources"),
       folders.map((f) => /* @__PURE__ */ import_react16.default.createElement("option", { key: f.id, value: f.id }, f.label))
@@ -25118,7 +25121,9 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
               kind: "video",
               player: window.robosAudio,
               onSaved: (track) => {
-                setActiveTab("library");
+                const destination = { section: "recent", recordingId: track.id };
+                if (track.mediaType === "tv") navigateShows(destination);
+                else navigateLibrary(destination);
                 showStatus(`Saved \u201C${track.title}\u201D to your library.`);
               }
             });

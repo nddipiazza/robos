@@ -124,6 +124,60 @@
   font-variant-numeric: tabular-nums;
 }
 
+.record-to-library-dialog.record-to-library-with-region {
+  width: min(760px, calc(100vw - 36px));
+}
+
+.record-to-library-area,
+.record-to-library-region-tools {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.record-to-library-area select {
+  padding: 6px 10px;
+  color: var(--text-main);
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font: inherit;
+}
+
+.record-to-library-region-tools {
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.record-to-library-preview {
+  position: relative;
+  width: fit-content;
+  max-width: 100%;
+  margin-inline: auto;
+  overflow: hidden;
+  cursor: crosshair;
+  touch-action: none;
+  user-select: none;
+  border-radius: 6px;
+  background: var(--bg-primary);
+}
+
+.record-to-library-preview img {
+  display: block;
+  max-width: 100%;
+  max-height: min(48vh, 400px);
+  object-fit: contain;
+  pointer-events: none;
+}
+
+.record-to-library-outline {
+  position: absolute;
+  box-sizing: border-box;
+  border: 2px solid var(--accent);
+  box-shadow: 0 0 0 150vmax rgb(0 0 0 / 48%);
+  pointer-events: none;
+}
+
 .record-to-library-dialog [hidden] {
   display: none;
 }
