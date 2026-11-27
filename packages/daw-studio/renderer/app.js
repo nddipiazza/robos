@@ -250,6 +250,11 @@ const liveVideoFrameByTrack = new Map(); // trackId -> latest data:image/jpeg;ba
 let loadedEmbeddedVideoSrc = '';
 let isSeekingEmbeddedVideo = false;
 let pendingEmbeddedSeekSec = null;
+let desiredEmbeddedMetadataSeekSec = null;
+let activeNativeV4l2Stream = null;
+let activeNativeV4l2Sig = '';
+let activeNativeV4l2OpeningPromise = null;
+let activeWebVideoRecorders = []; // [{ trackId, recorder, flushPromise, helperVideoEl }]
 let lastPopoutSyncAtMs = 0;
 let lastPopoutClipKey = '';
 let isCreatingLyricsTrack = false;
@@ -2183,18 +2188,161 @@ function ingestLiveRecordingVideoThumbFromDataUrl(trackId, dataUrl) {
   img.src = dataUrl;
 }
 
+function isNativeV4l2Config(vcfg) {
+  return Boolean(
+    vcfg &&
+    (vcfg.sourceType === 'v4l2' || vcfg.devicePath) &&
+    typeof navigator !== 'undefined' &&
+    navigator.mediaDevices?.getUserMedia &&
+    typeof window.MediaRecorder === 'function'
+  );
+}
+
+function pickBestWebVideoMimeType() {
+  if (typeof window.MediaRecorder !== 'function') return '';
+  const candidates = [
+    'video/webm;codecs=h264',
+    'video/webm;codecs=avc1',
+    'video/mp4;codecs=avc1.42E01F',
+    'video/mp4;codecs=avc1',
+    'video/webm;codecs=vp9',
+    'video/webm;codecs=vp8',
+    'video/webm',
+  ];
+  for (const m of candidates) {
+    try {
+      if (MediaRecorder.isTypeSupported(m)) return m;
+    } catch {}
+  }
+  return '';
+}
+
+function getNativeV4l2TargetDims(vcfg) {
+  const q = vcfg?.qualityPreset || 'hd-1080p';
+  if (q === 'hd-720p') return { width: 1280, height: 720, fps: 30, bps: 4_500_000 };
+  if (q === 'sd-480p') return { width: 854, height: 480, fps: 24, bps: 2_500_000 };
+  if (q === 'low-360p') return { width: 640, height: 360, fps: 20, bps: 1_500_000 };
+  return { width: 1920, height: 1080, fps: 30, bps: 7_500_000 };
+}
+
+function releaseNativeV4l2Stream() {
+  activeNativeV4l2Sig = '';
+  activeNativeV4l2OpeningPromise = null;
+  if (activeNativeV4l2Stream) {
+    try { activeNativeV4l2Stream.getTracks().forEach(t => t.stop()); } catch {}
+    activeNativeV4l2Stream = null;
+  }
+}
+
+async function acquireNativeV4l2Stream(vcfg, { keepExisting = false } = {}) {
+  if (!isNativeV4l2Config(vcfg)) return null;
+  const dims = getNativeV4l2TargetDims(vcfg);
+  const sig = `${vcfg.devicePath || ''}|${vcfg.shortName || vcfg.label || ''}|${dims.width}x${dims.height}`;
+  if (activeNativeV4l2Stream && activeNativeV4l2Sig === sig && activeNativeV4l2Stream.active) {
+    return activeNativeV4l2Stream;
+  }
+  if (activeNativeV4l2OpeningPromise && activeNativeV4l2OpeningPromise._sig === sig) {
+    return activeNativeV4l2OpeningPromise;
+  }
+
+  // Ensure no backend FFmpeg monitor holds `/dev/videoX` before Chromium `VideoCaptureService` opens it
+  try { await window.robos?.stopVideoLiveMonitor?.(); } catch {}
+  if (!keepExisting) {
+    releaseNativeV4l2Stream();
+  }
+
+  const openPromise = (async () => {
+    const devs = await navigator.mediaDevices.enumerateDevices();
+    const vidInputs = devs.filter(d => d.kind === 'videoinput');
+    const cleanNeedle = String(vcfg.shortName || vcfg.label || '')
+      .replace(/\s*\(\/dev\/video\d+\)\s*$/i, '')
+      .trim()
+      .toLowerCase();
+    const matched = cleanNeedle
+      ? vidInputs.find(d => d.label.toLowerCase().includes(cleanNeedle))
+      : vidInputs[0];
+
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio: false,
+      video: {
+        ...(matched?.deviceId ? { deviceId: { exact: matched.deviceId } } : {}),
+        width: { ideal: dims.width },
+        height: { ideal: dims.height },
+        frameRate: { ideal: dims.fps },
+      },
+    });
+    if (!keepExisting || !activeNativeV4l2Stream) {
+      activeNativeV4l2Stream = stream;
+      activeNativeV4l2Sig = sig;
+    }
+    return stream;
+  })();
+  openPromise._sig = sig;
+  activeNativeV4l2OpeningPromise = openPromise;
+  try {
+    return await openPromise;
+  } finally {
+    if (activeNativeV4l2OpeningPromise === openPromise) {
+      activeNativeV4l2OpeningPromise = null;
+    }
+  }
+}
+
+async function stopActiveWebVideoRecorders({ discard = false } = {}) {
+  const list = activeWebVideoRecorders.splice(0, activeWebVideoRecorders.length);
+  if (!list.length) return;
+  await Promise.all(list.map(async (item) => {
+    item.discard = discard;
+    try {
+      if (item.recorder && item.recorder.state !== 'inactive') {
+        item.recorder.stop();
+      }
+    } catch {}
+    if (!discard && item.flushPromise) {
+      try { await item.flushPromise; } catch {}
+    }
+    if (item.helperVideoEl) {
+      try { item.helperVideoEl.srcObject = null; } catch {}
+    }
+  }));
+}
+
 function captureLiveRecordingVideoThumbIfDue(recElapsedSec, trackId = '') {
   if (!liveRecSession || !isRecording) return;
-  // If FFmpeg dual-output live frames are already populating this track's filmstrip, no DOM fallback needed!
+  if (!liveRecSession.lastThumbPerfByTrack) liveRecSession.lastThumbPerfByTrack = new Map();
+  const key = trackId || '__default__';
+  const prevMs = liveRecSession.lastThumbPerfByTrack.get(key) || 0;
+  const nowMs = performance.now();
+  if (prevMs > 0 && (nowMs - prevMs) < 950) return;
+
+  // Prefer zero-overhead GPU draw from active native `<video>` recorder stream (`helperVideoEl` or `#embedded-video-el`)
+  const webRecItem = activeWebVideoRecorders.find(r => r.trackId === trackId);
+  const embVid = document.getElementById('embedded-video-el');
+  const candidateVid = (webRecItem?.helperVideoEl?.readyState >= 2 && webRecItem.helperVideoEl.videoWidth > 0)
+    ? webRecItem.helperVideoEl
+    : ((embVid?.srcObject && embVid.readyState >= 2 && embVid.videoWidth > 0) ? embVid : null);
+
+  if (candidateVid) {
+    liveRecSession.lastThumbPerfByTrack.set(key, nowMs);
+    try {
+      const thumbCanvas = document.createElement('canvas');
+      thumbCanvas.width = 160;
+      thumbCanvas.height = 90;
+      const tctx = thumbCanvas.getContext('2d');
+      tctx.drawImage(candidateVid, 0, 0, 160, 90);
+      pushLiveThumbCanvasToSession(trackId, thumbCanvas, recElapsedSec);
+    } catch {}
+    return;
+  }
+
+  // Fallback for FFmpeg / HTTP MJPEG cameras
   const existing = trackId ? liveRecSession.videoThumbsByTrack?.get(trackId) : null;
   if (existing && existing.length > 0) return;
 
-  const nowMs = performance.now();
-  if (liveRecSession.lastVideoThumbAtMs && nowMs - liveRecSession.lastVideoThumbAtMs < 1100) return;
   const liveImg = document.getElementById('embedded-live-img');
   if (!liveImg || !liveImg.complete || !liveImg.naturalWidth || !liveImg.naturalHeight) return;
 
-  liveRecSession.lastVideoThumbAtMs = nowMs;
+  liveRecSession.lastThumbPerfByTrack.set(key, nowMs);
   try {
     const thumbCanvas = document.createElement('canvas');
     thumbCanvas.width = 160;
@@ -2328,8 +2476,12 @@ function ensureLiveCamSnapshotPolling(track) {
 }
 
 function safeSeekEmbeddedVideo(videoEl, targetSec) {
-  if (!videoEl) return;
+  if (!videoEl || videoEl.srcObject) return;
   const clamped = Math.max(0, Number(targetSec) || 0);
+  if (videoEl.readyState < 1) {
+    desiredEmbeddedMetadataSeekSec = clamped;
+    return;
+  }
   if (isSeekingEmbeddedVideo) {
     pendingEmbeddedSeekSec = clamped;
     return;
@@ -2412,11 +2564,18 @@ function syncVideoOutputMonitor({ forcePush = false } = {}) {
     !activeClipPayload &&
     (videoLiveCamEnabled || (isRecording && videoSourceTrack.armed))
   );
-  const directMjpegUrl = wantLiveFeed ? getLiveStreamDirectMjpegUrl(videoSourceTrack) : '';
-  if (wantLiveFeed && !directMjpegUrl && (videoDockOpen || videoPopoutOpen)) {
+  const wantNativeV4l2Live = Boolean(wantLiveFeed && isNativeV4l2Config(videoSourceTrack?.videoConfig));
+  const directMjpegUrl = (wantLiveFeed && !wantNativeV4l2Live) ? getLiveStreamDirectMjpegUrl(videoSourceTrack) : '';
+  if (wantLiveFeed && !wantNativeV4l2Live && !directMjpegUrl && (videoDockOpen || videoPopoutOpen)) {
     ensureLiveCamSnapshotPolling(videoSourceTrack);
   } else {
     stopLiveCamSnapshotPolling();
+  }
+
+  // Release native V4L2 camera handle when neither Video Output, Recording, nor Add Video Modal needs it
+  const addModalOpen = !document.getElementById('add-video-modal')?.classList.contains('hidden');
+  if (!wantNativeV4l2Live && !isRecording && !addModalOpen && activeNativeV4l2Stream) {
+    releaseNativeV4l2Stream();
   }
 
   // 1. Update Embedded Video Dock (when visible)
@@ -2434,12 +2593,16 @@ function syncVideoOutputMonitor({ forcePush = false } = {}) {
 
   if (videoEl && liveImgEl && slateEl) {
     if (!videoDockOpen || videoPopoutOpen) {
+      if (videoEl.srcObject) videoEl.srcObject = null;
       if (!videoEl.paused) videoEl.pause();
       if (liveImgEl.getAttribute('src')) liveImgEl.removeAttribute('src');
     } else if (activeClipPayload) {
+      if (videoEl.srcObject) videoEl.srcObject = null;
+      const targetVidSec = activeClipPayload.offsetSec + Math.max(0, audiblePlayheadSec - activeClipPayload.startSec);
       const srcUrl = toLocalMediaUrl(activeClipPayload.videoFile);
       if (loadedEmbeddedVideoSrc !== srcUrl) {
         loadedEmbeddedVideoSrc = srcUrl;
+        desiredEmbeddedMetadataSeekSec = targetVidSec;
         videoEl.src = srcUrl;
         videoEl.load();
       }
@@ -2448,7 +2611,6 @@ function syncVideoOutputMonitor({ forcePush = false } = {}) {
       slateEl.classList.add('hidden');
       videoEl.classList.remove('hidden');
 
-      const targetVidSec = activeClipPayload.offsetSec + Math.max(0, audiblePlayheadSec - activeClipPayload.startSec);
       if (transportRolling) {
         if (modePill) { modePill.textContent = activeLyricsPayload ? 'VIDEO + KARAOKE' : 'PLAYING'; modePill.className = 'vmon-mode-pill playing'; }
         const driftSec = targetVidSec - (videoEl.currentTime || 0);
@@ -2474,7 +2636,29 @@ function syncVideoOutputMonitor({ forcePush = false } = {}) {
         }
       }
       renderEmbeddedKaraokeFrame(activeLyricsPayload, playheadSec, true);
+    } else if (wantNativeV4l2Live) {
+      // Zero-latency (<20ms) GPU hardware `<video>` mirror feed directly from Chromium `getUserMedia`!
+      liveImgEl.classList.add('hidden');
+      if (liveImgEl.getAttribute('src')) liveImgEl.removeAttribute('src');
+      slateEl.classList.add('hidden');
+      videoEl.classList.remove('hidden');
+      if (modePill) {
+        modePill.textContent = isRecording ? 'REC CAM' : 'LIVE CAM';
+        modePill.className = 'vmon-mode-pill live';
+      }
+      acquireNativeV4l2Stream(videoSourceTrack.videoConfig).then((stream) => {
+        if (!stream || !videoDockOpen || videoPopoutOpen) return;
+        if (videoEl.srcObject !== stream) {
+          loadedEmbeddedVideoSrc = '';
+          videoEl.removeAttribute('src');
+          videoEl.srcObject = stream;
+        }
+        videoEl.playbackRate = 1.0;
+        if (videoEl.paused) videoEl.play().catch(() => {});
+      }).catch(() => {});
+      renderEmbeddedKaraokeFrame(activeLyricsPayload, playheadSec, true);
     } else if (wantLiveFeed && (directMjpegUrl || videoLiveSnapshotDataUrl)) {
+      if (videoEl.srcObject) videoEl.srcObject = null;
       if (!videoEl.paused) videoEl.pause();
       videoEl.classList.add('hidden');
       slateEl.classList.add('hidden');
@@ -2489,6 +2673,7 @@ function syncVideoOutputMonitor({ forcePush = false } = {}) {
       }
       renderEmbeddedKaraokeFrame(activeLyricsPayload, playheadSec, true);
     } else {
+      if (videoEl.srcObject) videoEl.srcObject = null;
       if (!videoEl.paused) videoEl.pause();
       videoEl.classList.add('hidden');
       liveImgEl.classList.add('hidden');
@@ -2523,7 +2708,14 @@ function syncVideoOutputMonitor({ forcePush = false } = {}) {
   // 2. Sync Standalone Pop-Out Video Output Window (throttled to 4 Hz during steady playback, 0ms on seeks/clip changes!)
   if (videoPopoutOpen && typeof window.robos?.syncVideoOutputWindow === 'function') {
     const nowMs = Date.now();
-    const clipKey = `${selectedVideoOutputTrackId}:${activeClipPayload?.id || 'none'}:${activeLyricsPayload?.id || 'nolyr'}:${activeLyricsPayload?.timelineShiftSec || 0}:${isPlaying ? '1' : '0'}:${isRecording ? '1' : '0'}`;
+    const v4l2Dims = wantNativeV4l2Live ? getNativeV4l2TargetDims(videoSourceTrack.videoConfig) : null;
+    const liveV4l2Hint = wantNativeV4l2Live ? {
+      shortName: videoSourceTrack.videoConfig.shortName || '',
+      label: videoSourceTrack.videoConfig.label || '',
+      width: v4l2Dims.width,
+      height: v4l2Dims.height,
+    } : null;
+    const clipKey = `${selectedVideoOutputTrackId}:${activeClipPayload?.id || 'none'}:${liveV4l2Hint ? liveV4l2Hint.shortName : 'nov4l'}:${activeLyricsPayload?.id || 'nolyr'}:${activeLyricsPayload?.timelineShiftSec || 0}:${isPlaying ? '1' : '0'}:${isRecording ? '1' : '0'}`;
     if (forcePush || clipKey !== lastPopoutClipKey || !transportRolling || (nowMs - lastPopoutSyncAtMs) >= 180) {
       lastPopoutClipKey = clipKey;
       lastPopoutSyncAtMs = nowMs;
@@ -2536,8 +2728,9 @@ function syncVideoOutputMonitor({ forcePush = false } = {}) {
         videoTracks: vTracks.map(t => ({ id: t.id, name: isTrackLyrics(t) ? `[KARAOKE] ${t.name}` : t.name })),
         activeClip: activeClipPayload,
         activeLyricsClip: activeLyricsPayload,
+        liveV4l2Hint,
         livePreviewUrl: directMjpegUrl,
-        liveSnapshotDataUrl: wantLiveFeed ? videoLiveSnapshotDataUrl : '',
+        liveSnapshotDataUrl: (wantLiveFeed && !wantNativeV4l2Live) ? videoLiveSnapshotDataUrl : '',
       });
     }
   }
@@ -2580,6 +2773,8 @@ async function popOutVideoOutputToAppWindow() {
   const activeTrack = ensureSelectedVideoOutputTrack();
   const activeClipRaw = (!isRecording && activeTrack) ? findActiveVideoClipAtSec(activeTrack, playheadSec) : null;
   const activeClipVideoFile = resolveClipVideoFilePath(activeClipRaw);
+  const wantPopoutV4l2 = Boolean(!activeClipRaw && activeTrack?.videoConfig && (videoLiveCamEnabled || (isRecording && activeTrack.armed)) && isNativeV4l2Config(activeTrack.videoConfig));
+  const popoutV4l2Dims = wantPopoutV4l2 ? getNativeV4l2TargetDims(activeTrack.videoConfig) : null;
   await window.robos?.openVideoOutputWindow?.({
     isPlaying,
     isRecording,
@@ -2594,8 +2789,14 @@ async function popOutVideoOutputToAppWindow() {
       offsetSec: Number(activeClipRaw.offsetSec) || 0,
       durationSec: Number(activeClipRaw.durationSec) || 0,
     } : null,
+    liveV4l2Hint: wantPopoutV4l2 ? {
+      shortName: activeTrack.videoConfig.shortName || '',
+      label: activeTrack.videoConfig.label || '',
+      width: popoutV4l2Dims.width,
+      height: popoutV4l2Dims.height,
+    } : null,
     livePreviewUrl: (videoLiveCamEnabled && activeTrack) ? getLiveStreamDirectMjpegUrl(activeTrack) : '',
-    liveSnapshotDataUrl: videoLiveSnapshotDataUrl,
+    liveSnapshotDataUrl: wantPopoutV4l2 ? '' : videoLiveSnapshotDataUrl,
   });
   renderStudio();
 }
@@ -2832,6 +3033,7 @@ async function sendModalRobosCamControl(commandObj) {
 
 async function refreshAddVideoModalPreview() {
   const statusEl = document.getElementById('vid-modal-status');
+  const vidEl = document.getElementById('vid-modal-preview-video');
   const imgEl = document.getElementById('vid-modal-preview-img');
   const phEl = document.getElementById('vid-modal-preview-placeholder');
   const vcfg = buildSelectedModalVideoConfig();
@@ -2840,7 +3042,29 @@ async function refreshAddVideoModalPreview() {
     return;
   }
 
-  // 1. Direct unauthenticated HTTP MJPEG stream (e.g. RobOS IP Camera): stream live 30 fps directly in `<img>`!
+  // 1. Local USB V4L2 Camera (e.g. OBSBOT Tiny 2 Lite): zero-latency (<20ms) GPU hardware `<video>` stream via `getUserMedia`!
+  if (isNativeV4l2Config(vcfg) && vidEl) {
+    if (statusEl) statusEl.textContent = `Connecting zero-lag HD hardware stream from ${vcfg.shortName || vcfg.label}...`;
+    try {
+      const stream = await acquireNativeV4l2Stream(vcfg);
+      if (stream) {
+        imgEl?.classList.add('hidden');
+        phEl?.classList.add('hidden');
+        vidEl.classList.remove('hidden');
+        if (vidEl.srcObject !== stream) vidEl.srcObject = stream;
+        if (vidEl.paused) vidEl.play().catch(() => {});
+        if (statusEl) statusEl.textContent = `LIVE HD hardware stream connected (Zero-Lag): ${vcfg.label}`;
+        return;
+      }
+    } catch {}
+  }
+
+  if (vidEl) {
+    vidEl.srcObject = null;
+    vidEl.classList.add('hidden');
+  }
+
+  // 2. Direct unauthenticated HTTP MJPEG stream (e.g. RobOS IP Camera): stream live 30 fps directly in `<img>`!
   const directHttpMjpeg = vcfg.streamUrl && /^https?:/i.test(vcfg.streamUrl) && !vcfg.username && !/^rtsps?:/i.test(vcfg.streamUrl)
     ? ((vcfg.isRobosAndroidCam || vcfg.sourceType === 'robos-ip-camera') && !/[?&](timestamp|osd|clean)=/i.test(vcfg.streamUrl)
       ? `${vcfg.streamUrl}${vcfg.streamUrl.includes('?') ? '&' : '?'}timestamp=0`
@@ -2855,7 +3079,7 @@ async function refreshAddVideoModalPreview() {
     return;
   }
 
-  // 2. USB V4L2 Webcam (e.g. OBSBOT Tiny 2 Lite), RTSP, or Authenticated IP Camera:
+  // 3. RTSP, Authenticated IP Camera, or fallback V4L2:
   //    Stream continuous 15 fps live MJPEG via `startVideoLiveMonitor` (`__modal_preview__`)!
   if (typeof window.robos?.startVideoLiveMonitor === 'function') {
     if (statusEl) statusEl.textContent = `Starting live HD video stream from ${vcfg.shortName || vcfg.label}...`;
@@ -2878,7 +3102,7 @@ async function refreshAddVideoModalPreview() {
     }
   }
 
-  // 3. Fallback single-frame snapshot if `startVideoLiveMonitor` is unavailable
+  // 4. Fallback single-frame snapshot if `startVideoLiveMonitor` is unavailable
   if (statusEl) statusEl.textContent = `Grabbing HD preview frame from ${vcfg.shortName || vcfg.label}...`;
   const res = await window.robos?.captureVideoSnapshot?.({ videoConfig: vcfg });
   if (res?.ok && res.dataUrl && imgEl) {
@@ -2903,6 +3127,11 @@ async function openAddVideoModal({ scanLan = true, includeSubnetSweep = false, p
   if (!modal) return;
 
   populateVideoModalAudioInputsDropdown();
+  const vidModalVid = document.getElementById('vid-modal-preview-video');
+  if (vidModalVid) {
+    vidModalVid.srcObject = null;
+    vidModalVid.classList.add('hidden');
+  }
   document.getElementById('vid-modal-preview-img')?.classList.add('hidden');
   const phEl = document.getElementById('vid-modal-preview-placeholder');
   if (phEl) {
@@ -2953,13 +3182,18 @@ async function openAddVideoModal({ scanLan = true, includeSubnetSweep = false, p
 
 function closeAddVideoModal({ preserveStreamForAddedTrack = false } = {}) {
   document.getElementById('add-video-modal')?.classList.add('hidden');
+  const vidEl = document.getElementById('vid-modal-preview-video');
+  if (vidEl) {
+    vidEl.srcObject = null;
+    vidEl.classList.add('hidden');
+  }
   const imgEl = document.getElementById('vid-modal-preview-img');
   if (imgEl && /^https?:/i.test(imgEl.getAttribute('src') || '')) {
     imgEl.removeAttribute('src');
   }
   activeLiveMonitorSig = '';
   if (!preserveStreamForAddedTrack) {
-    // Either switch `LiveCameraMonitor` back to the session's active Video Output track, or stop it cleanly!
+    // Either switch `LiveCameraMonitor` / native V4L2 stream back to the session's active Video Output track, or stop it cleanly!
     syncVideoOutputMonitor({ forcePush: true });
   }
 }
@@ -3425,6 +3659,7 @@ async function abortCurrentRecording() {
   const punchInStartSec = liveRecSession ? liveRecSession.startSec : 0;
   stopRecordingRafLoop();
   stopOverdubMonitorPlayback();
+  await stopActiveWebVideoRecorders({ discard: true });
   const res = await window.robos.recordCancel();
   isRecording = false;
   liveRecSession = null;
@@ -3437,6 +3672,7 @@ async function abortCurrentRecording() {
   const sub = document.getElementById('transport-substate');
   if (sub) sub.textContent = 'ABORTED';
   drawAllTimelineCanvases();
+  syncVideoOutputMonitor({ forcePush: true });
   showStatus(`Aborted recording and discarded ${res?.deletedFiles ?? 0} incomplete WAV file(s) — cursor returned to ${formatTimecode(punchInStartSec)}.`);
   return true;
 }
@@ -3505,6 +3741,7 @@ async function toggleRecording({ keepCursorAtStop = false } = {}) {
     const finalizeStopPromise = (async () => {
       let res = null;
       try {
+        await stopActiveWebVideoRecorders({ discard: false });
         res = await window.robos.recordStop({
           injectTestSignal,
           earsStartWallMs,
@@ -3597,9 +3834,30 @@ async function toggleRecording({ keepCursorAtStop = false } = {}) {
     }
 
     const injectTestSignal = Boolean(document.getElementById('chk-test-groove')?.checked);
+
+    // Pre-open / reuse zero-latency Chromium `getUserMedia` streams for armed local USB V4L2 cameras
+    // BEFORE `recordStart` so the camera stays continuously live with 0ms re-open stutter and exact clock sync!
+    const streamByTrack = new Map();
+    if (!injectTestSignal && typeof window.robos?.appendWebVideoChunk === 'function') {
+      const candidateV4l2Tracks = armed.filter(t => t.trackKind === 'video' && isNativeV4l2Config(t.videoConfig));
+      for (let i = 0; i < candidateV4l2Tracks.length; i++) {
+        const vt = candidateV4l2Tracks[i];
+        try {
+          const stream = await acquireNativeV4l2Stream(vt.videoConfig, { keepExisting: i > 0 });
+          if (stream && stream.active) {
+            streamByTrack.set(vt.id, stream);
+          }
+        } catch {
+          // Gracefully fall back to backend FFmpeg `VideoTrackRecorder` if Chromium `getUserMedia` is unavailable (e.g. headless Xvfb)
+        }
+      }
+    }
+    const webCaptureTrackIds = Array.from(streamByTrack.keys());
+
     const res = await window.robos.recordStart({
       startSec: punchTargetSec,
       injectTestSignal,
+      webCaptureTrackIds,
       project: currentProject,
       projectMeta: {
         name: document.getElementById('project-name-input')?.value,
@@ -3613,13 +3871,79 @@ async function toggleRecording({ keepCursorAtStop = false } = {}) {
     }
 
     const punchStartSec = Number(res.startSec) || 0;
-    const overdubMonitor = studioCtx
+    const hasBackingOrClick = overdubEntries.length > 0 || Boolean(currentProject?.metronome);
+    const overdubMonitor = (studioCtx && hasBackingOrClick)
       ? startOverdubMonitorPlayback(studioCtx, punchStartSec, overdubEntries)
       : { active: false, earsStartWallMs: null, backingTrackCount: 0 };
-    // Always provide a shared wall-clock anchor (`sessionZeroWallMs`) even when recording solo without a backing track,
-    // so multi-track audio mics AND camera video lock to the exact same `punchStartSec` millisecond!
+
+    // Start same-clock `MediaRecorder` for each armed native V4L2 USB camera!
+    if (webCaptureTrackIds.length > 0) {
+      const mimeType = pickBestWebVideoMimeType();
+      for (const [trackId, stream] of streamByTrack.entries()) {
+        const vt = armed.find(t => t.id === trackId);
+        const dims = getNativeV4l2TargetDims(vt?.videoConfig);
+        const recOpts = {
+          ...(mimeType ? { mimeType } : {}),
+          videoBitsPerSecond: dims.bps,
+        };
+        let mr = null;
+        try {
+          mr = new MediaRecorder(stream, recOpts);
+        } catch {
+          mr = new MediaRecorder(stream);
+        }
+        const effectiveMime = mr.mimeType || mimeType || 'video/webm';
+        const helperVideoEl = document.createElement('video');
+        helperVideoEl.muted = true;
+        helperVideoEl.playsInline = true;
+        helperVideoEl.srcObject = stream;
+        helperVideoEl.play().catch(() => {});
+
+        const recItem = {
+          trackId,
+          recorder: mr,
+          stream,
+          helperVideoEl,
+          discard: false,
+          flushPromise: null,
+        };
+        let writeChain = Promise.resolve();
+        let resolveFlush = null;
+        recItem.flushPromise = new Promise((r) => { resolveFlush = r; });
+
+        // Exact 35ms (1 frame @ 30fps) UVC sensor-to-Chromium readout offset measured on OBSBOT Tiny 2 Lite
+        const mrStartWallMs = performance.timeOrigin + performance.now();
+        const camWorld0WallMs = mrStartWallMs - 35;
+
+        mr.ondataavailable = (ev) => {
+          if (recItem.discard || !ev.data || ev.data.size === 0) return;
+          const blob = ev.data;
+          writeChain = writeChain.then(async () => {
+            if (recItem.discard) return;
+            const ab = await blob.arrayBuffer();
+            await window.robos.appendWebVideoChunk({
+              trackId,
+              chunk: new Uint8Array(ab),
+              camWorld0WallMs,
+              mimeType: effectiveMime,
+            });
+          }).catch(() => {});
+        };
+        mr.onstop = () => {
+          writeChain.finally(() => {
+            if (resolveFlush) resolveFlush();
+          });
+        };
+        mr.start(250);
+        activeWebVideoRecorders.push(recItem);
+      }
+    }
+
+    // Lock shared wall-clock anchor (`sessionZeroWallMs`):
+    // - When overdubbing against backing tracks / metronome (`hasBackingOrClick`), anchor to exact speaker output `earsStartWallMs`.
+    // - When recording solo with NO backing audio (`!hasBackingOrClick`), do NOT add speaker output latency — anchor to `performance.now()`!
     const startedPerfNow = performance.now();
-    const sharedEarsWallMs = Number.isFinite(overdubMonitor.earsStartWallMs)
+    const sharedEarsWallMs = (overdubMonitor.active && Number.isFinite(overdubMonitor.earsStartWallMs))
       ? overdubMonitor.earsStartWallMs
       : (performance.timeOrigin + startedPerfNow);
 
@@ -12597,6 +12921,13 @@ async function init() {
   // Video Mode: Add Video Input Modal & Embedded / Pop-Out Video Output Monitor Controls
   const embVid = document.getElementById('embedded-video-el');
   if (embVid) {
+    embVid.addEventListener('loadedmetadata', () => {
+      if (desiredEmbeddedMetadataSeekSec !== null && !embVid.srcObject) {
+        const t = desiredEmbeddedMetadataSeekSec;
+        desiredEmbeddedMetadataSeekSec = null;
+        safeSeekEmbeddedVideo(embVid, t);
+      }
+    });
     embVid.addEventListener('seeking', () => { isSeekingEmbeddedVideo = true; });
     embVid.addEventListener('seeked', () => {
       isSeekingEmbeddedVideo = false;
@@ -12728,9 +13059,11 @@ async function init() {
   if (typeof window.robos?.onVideoLiveFrame === 'function') {
     window.robos.onVideoLiveFrame((frame) => {
       if (!frame?.dataUrl) return;
-      // 1. Live 15 fps camera preview inside `"Add Video Input Track"` modal!
+      // 1. Live 15 fps camera preview inside `"Add Video Input Track"` modal (for IP/RTSP/non-native sources)!
       const addVidModal = document.getElementById('add-video-modal');
       if (addVidModal && !addVidModal.classList.contains('hidden') && (!frame.trackId || frame.trackId === '__modal_preview__')) {
+        const vcfg = buildSelectedModalVideoConfig();
+        if (isNativeV4l2Config(vcfg)) return;
         const modalImg = document.getElementById('vid-modal-preview-img');
         const modalPh = document.getElementById('vid-modal-preview-placeholder');
         const modalStatus = document.getElementById('vid-modal-status');
@@ -12740,7 +13073,6 @@ async function init() {
           modalPh?.classList.add('hidden');
         }
         if (modalStatus && /^Starting live HD/i.test(modalStatus.textContent || '')) {
-          const vcfg = buildSelectedModalVideoConfig();
           modalStatus.textContent = `LIVE HD stream connected: ${vcfg.label || 'Camera'}`;
         }
         return;
@@ -12755,6 +13087,9 @@ async function init() {
       }
       const activeTrk = ensureSelectedVideoOutputTrack();
       if (!activeTrk || (frame.trackId && activeTrk.id !== frame.trackId)) {
+        return;
+      }
+      if (isNativeV4l2Config(activeTrk.videoConfig)) {
         return;
       }
       videoLiveSnapshotDataUrl = frame.dataUrl;

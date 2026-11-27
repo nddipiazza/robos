@@ -2700,7 +2700,8 @@ kbd {
   align-items: center;
   justify-content: center;
 }
-#vid-modal-preview-img {
+#vid-modal-preview-img,
+#vid-modal-preview-video {
   width: 100%;
   height: 100%;
   object-fit: contain;

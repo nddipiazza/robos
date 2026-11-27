@@ -39,8 +39,82 @@
   let loadedVideoSrc = '';
   let isSeekingVideo = false;
   let pendingSeekSec = null;
+  let desiredMetadataSeekSec = null;
   let renderedLineSig = '';
+  let popoutLiveStream = null;
+  let popoutLiveSig = '';
+  let popoutLiveOpeningSig = '';
 
+  function stopPopoutLiveStream() {
+    popoutLiveSig = '';
+    popoutLiveOpeningSig = '';
+    if (popoutLiveStream) {
+      try { popoutLiveStream.getTracks().forEach(t => t.stop()); } catch {}
+      popoutLiveStream = null;
+    }
+    if (videoEl.srcObject) {
+      videoEl.srcObject = null;
+    }
+  }
+
+  async function ensurePopoutNativeV4l2Stream(hint) {
+    if (!hint || !navigator.mediaDevices?.getUserMedia) return false;
+    const sig = `${hint.shortName || ''}|${hint.label || ''}|${hint.width || 1920}x${hint.height || 1080}`;
+    if (popoutLiveStream && popoutLiveSig === sig && popoutLiveStream.active) {
+      if (videoEl.srcObject !== popoutLiveStream) {
+        loadedVideoSrc = '';
+        videoEl.removeAttribute('src');
+        videoEl.srcObject = popoutLiveStream;
+      }
+      if (videoEl.paused) videoEl.play().catch(() => {});
+      return true;
+    }
+    if (popoutLiveOpeningSig === sig) return Boolean(popoutLiveStream);
+    popoutLiveOpeningSig = sig;
+    try {
+      const devs = await navigator.mediaDevices.enumerateDevices();
+      const needle = String(hint.shortName || hint.label || '').replace(/\s*\(\/dev\/video\d+\)\s*$/i, '').trim().toLowerCase();
+      const vidInputs = devs.filter(d => d.kind === 'videoinput');
+      const matched = needle
+        ? vidInputs.find(d => d.label.toLowerCase().includes(needle))
+        : vidInputs[0];
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: false,
+        video: {
+          ...(matched?.deviceId ? { deviceId: { exact: matched.deviceId } } : {}),
+          width: { ideal: Number(hint.width) || 1920 },
+          height: { ideal: Number(hint.height) || 1080 },
+          frameRate: { ideal: 30 },
+        },
+      });
+      if (popoutLiveOpeningSig !== sig) {
+        stream.getTracks().forEach(t => t.stop());
+        return false;
+      }
+      if (popoutLiveStream) {
+        try { popoutLiveStream.getTracks().forEach(t => t.stop()); } catch {}
+      }
+      popoutLiveStream = stream;
+      popoutLiveSig = sig;
+      loadedVideoSrc = '';
+      videoEl.removeAttribute('src');
+      videoEl.srcObject = stream;
+      videoEl.playbackRate = 1.0;
+      videoEl.play().catch(() => {});
+      return true;
+    } catch {
+      popoutLiveOpeningSig = '';
+      return false;
+    }
+  }
+
+  videoEl.addEventListener('loadedmetadata', () => {
+    if (desiredMetadataSeekSec !== null && !videoEl.srcObject) {
+      const target = desiredMetadataSeekSec;
+      desiredMetadataSeekSec = null;
+      safeSeekVideo(target);
+    }
+  });
   videoEl.addEventListener('seeking', () => { isSeekingVideo = true; });
   videoEl.addEventListener('seeked', () => {
     isSeekingVideo = false;
@@ -80,6 +154,11 @@
 
   function safeSeekVideo(targetSec) {
     const clamped = Math.max(0, Number(targetSec) || 0);
+    if (videoEl.srcObject) return;
+    if (videoEl.readyState < 1) {
+      desiredMetadataSeekSec = clamped;
+      return;
+    }
     if (isSeekingVideo) {
       pendingSeekSec = clamped;
       return;
@@ -247,9 +326,13 @@
 
     const clip = state.activeClip;
     if (clip && clip.videoFile) {
+      stopPopoutLiveStream();
+      const intoClip = Math.max(0, nowPlayhead - (Number(clip.startSec) || 0));
+      const targetSec = (Number(clip.offsetSec) || 0) + intoClip;
       const srcUrl = toFileUrl(clip.videoFile);
       if (loadedVideoSrc !== srcUrl) {
         loadedVideoSrc = srcUrl;
+        desiredMetadataSeekSec = targetSec;
         videoEl.src = srcUrl;
         videoEl.load();
       }
@@ -257,9 +340,6 @@
       if (liveImgEl.src) liveImgEl.removeAttribute('src');
       slateEl.classList.add('hidden');
       videoEl.classList.remove('hidden');
-
-      const intoClip = Math.max(0, nowPlayhead - (Number(clip.startSec) || 0));
-      const targetSec = (Number(clip.offsetSec) || 0) + intoClip;
 
       if (state.isPlaying) {
         modePillEl.textContent = state.activeLyricsClip ? 'VIDEO + KARAOKE' : 'PLAYING';
@@ -290,6 +370,19 @@
       return;
     }
 
+    if (state.liveV4l2Hint) {
+      liveImgEl.classList.add('hidden');
+      if (liveImgEl.src) liveImgEl.removeAttribute('src');
+      slateEl.classList.add('hidden');
+      videoEl.classList.remove('hidden');
+      ensurePopoutNativeV4l2Stream(state.liveV4l2Hint);
+      modePillEl.textContent = state.isRecording ? 'RECORDING CAM' : 'LIVE CAM';
+      modePillEl.className = 'vw-mode-pill live';
+      renderKaraokeFrame(nowPlayhead, true);
+      return;
+    }
+
+    stopPopoutLiveStream();
     if (!videoEl.paused) videoEl.pause();
     videoEl.classList.add('hidden');
 
@@ -393,6 +486,11 @@
       return;
     }
     state.liveSnapshotDataUrl = frame.dataUrl;
+    if (state.liveV4l2Hint) {
+      return;
+    }
+
+    stopPopoutLiveStream();
     if (!videoEl.paused) videoEl.pause();
     videoEl.classList.add('hidden');
     slateEl.classList.add('hidden');

@@ -101,6 +101,7 @@ contextBridge.exposeInMainWorld('robos', {
   captureVideoSnapshot: (payload) => ipcRenderer.invoke('daw:video-snapshot', payload),
   startVideoLiveMonitor: (payload) => ipcRenderer.invoke('daw:video-live-monitor-start', payload),
   stopVideoLiveMonitor: () => ipcRenderer.invoke('daw:video-live-monitor-stop'),
+  appendWebVideoChunk: (payload) => ipcRenderer.invoke('daw:video-web-chunk', payload),
   onVideoLiveFrame: (cb) => subscribe('daw:video-live-frame', cb),
   getVideoFilmstrip: (payload) => ipcRenderer.invoke('daw:video-filmstrip', payload),
   addVideoTrack: (payload) => ipcRenderer.invoke('daw:add-video-track', payload),

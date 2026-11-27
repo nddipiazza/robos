@@ -99,8 +99,25 @@ for (const extraBin of [
   }
 }
 
+function shouldDisableHardwareGpu() {
+  if (process.env.ROBOS_FORCE_GPU === '1') return false;
+  if (process.env.ROBOS_HEADLESS === '1' || process.env.ROBOS_TEST === '1' || process.env.CI === 'true') return true;
+  if (!process.env.DISPLAY && !process.env.WAYLAND_DISPLAY) return true;
+  if (fs.existsSync('/.dockerenv')) return true;
+  try {
+    const sysVendor = fs.readFileSync('/sys/class/dmi/id/sys_vendor', 'utf8');
+    if (/qemu|bochs|kvm|innotek|virtualbox/i.test(sysVendor)) return true;
+  } catch {}
+  return false;
+}
+
 app.commandLine.appendSwitch('no-sandbox');
-app.commandLine.appendSwitch('disable-gpu');
+if (shouldDisableHardwareGpu()) {
+  app.commandLine.appendSwitch('disable-gpu');
+} else {
+  app.commandLine.appendSwitch('enable-gpu-rasterization');
+  app.commandLine.appendSwitch('ignore-gpu-blocklist');
+}
 app.commandLine.appendSwitch('disable-dev-shm-usage');
 app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
 
@@ -870,9 +887,11 @@ ipcMain.handle('daw:record-start', async (_e, payload) => {
       quantumMs,
       onMeter: (m) => sendToRenderer('daw:record-progress', m),
     });
+    const webCaptureTrackIds = Array.isArray(payload?.webCaptureTrackIds) ? payload.webCaptureTrackIds : [];
     const vidStarted = videoRecorder.start(proj, {
       startSec,
       injectTestSignal,
+      webCaptureTrackIds,
       onLiveFrame: (frame) => broadcastLiveVideoFrame(frame),
     });
     if (!injectTestSignal) {
@@ -1880,6 +1899,19 @@ ipcMain.handle('daw:video-live-monitor-stop', async () => {
   }
 });
 
+ipcMain.handle('daw:video-web-chunk', async (_e, payload) => {
+  try {
+    const raw = payload?.chunk;
+    const buf = raw ? Buffer.from(raw) : Buffer.alloc(0);
+    return videoRecorder.appendWebChunk(String(payload?.trackId || ''), buf, {
+      camWorld0WallMs: payload?.camWorld0WallMs,
+      mimeType: payload?.mimeType || '',
+    });
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
 ipcMain.handle('daw:video-filmstrip', async (_e, payload) => {
   try {
     return await generateVideoFilmstripSprite(payload?.videoFile, payload || {});
@@ -1931,6 +1963,9 @@ function createOrFocusVideoOutputWindow(initialPayload) {
   });
 
   videoOutputWindow.setMenuBarVisibility(false);
+  videoOutputWindow.webContents.session.setPermissionRequestHandler((_wc, permission, callback) => {
+    callback(permission === 'media');
+  });
   videoOutputWindow.loadFile(path.join(__dirname, 'renderer', 'video-window.html'));
 
   videoOutputWindow.webContents.on('did-finish-load', () => {

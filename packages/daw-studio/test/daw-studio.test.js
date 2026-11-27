@@ -3085,16 +3085,91 @@ describe('DAW Editing Engine: Multi-Select, Track/Take Gain, Split/Trim, Copy/Pa
       const mp4Info = await probeVideoFileInfo(vClip.videoFile);
       assert.strictEqual(mp4Info.hasVideo, true);
 
-      // 5. Verify renderer & pop-out window live frame + audible output latency + PLL video sync wiring
+      // 5. Verify native Chromium `webCaptureTrackIds` + `appendWebChunk` + lossless `-c:v copy` MP4 remux & sync lock!
+      const webV4l2Cfg = {
+        id: 'v4l2:/dev/video2',
+        sourceType: 'v4l2',
+        protocol: 'v4l2',
+        devicePath: '/dev/video2',
+        label: 'OBSBOT Tiny 2 Lite (/dev/video2)',
+        shortName: 'OBSBOT Tiny 2 Lite',
+        qualityPreset: 'hd-1080p',
+        fps: 30,
+      };
+      const webVidTrack = buildVideoTrack({ name: 'OBSBOT Tiny 2 Lite', videoConfig: webV4l2Cfg, armed: true });
+      const webProj = { projectDir: tmpDir, sampleRate: 48000, tracks: [webVidTrack] };
+      const webRec = new VideoTrackRecorder();
+      const webStartRes = webRec.start(webProj, {
+        startSec: 8.5,
+        injectTestSignal: false,
+        webCaptureTrackIds: [webVidTrack.id],
+      });
+      assert.strictEqual(webStartRes.ok, true);
+      assert.strictEqual(webStartRes.armedVideoCount, 1);
+
+      // Synthesize a 1.6s H.264-in-Matroska/WebM stream (matches Chromium `MediaRecorder` `video/webm;codecs=h264`)
+      const rawWebmH264 = execFileSync('ffmpeg', [
+        '-hide_banner', '-loglevel', 'error',
+        '-f', 'lavfi', '-i', 'testsrc=size=640x360:rate=30:duration=1.6',
+        '-c:v', 'libx264', '-preset', 'ultrafast', '-pix_fmt', 'yuv420p',
+        '-f', 'matroska', 'pipe:1',
+      ]);
+      const camWorld0WallMs = 1_700_000_000_000;
+      const sessionZeroWallMs = camWorld0WallMs + 120; // Session zero occurs 120ms after camera stream starts -> offsetSec = 0.12s
+      const mid = Math.floor(rawWebmH264.length / 2);
+      assert.strictEqual(
+        webRec.appendWebChunk(webVidTrack.id, rawWebmH264.subarray(0, mid), {
+          camWorld0WallMs,
+          mimeType: 'video/webm;codecs=h264',
+        }).ok,
+        true
+      );
+      assert.strictEqual(
+        webRec.appendWebChunk(webVidTrack.id, rawWebmH264.subarray(mid), {
+          camWorld0WallMs,
+          mimeType: 'video/webm;codecs=h264',
+        }).ok,
+        true
+      );
+
+      const webStopRes = await webRec.stop({
+        injectTestSignal: false,
+        earsStartWallMs: sessionZeroWallMs,
+        stopTimelineSec: 9.7,
+      });
+      assert.strictEqual(webStopRes.ok, true);
+      assert.strictEqual(webStopRes.recordedVideoClips.length, 1);
+      const webClip = webStopRes.recordedVideoClips[0].clip;
+      assert.strictEqual(webClip.startSec, 8.5, 'Web capture clip startSec must lock to punchStartSec (8.5s)');
+      assert.ok(Math.abs(webClip.offsetSec - 0.12) < 0.005, `Expected offsetSec ~0.12s, got ${webClip.offsetSec}`);
+      assert.strictEqual(webClip.durationSec, 1.2, 'Web capture clip durationSec must lock to 9.7 - 8.5 = 1.2s');
+      assert.ok(webClip.videoFile.endsWith('.mp4'), 'Remuxed web capture output must be standard Faststart .mp4');
+      const remuxedInfo = await probeVideoFileInfo(webClip.videoFile);
+      assert.strictEqual(remuxedInfo.hasVideo, true);
+      assert.strictEqual(remuxedInfo.width, 640);
+      assert.strictEqual(remuxedInfo.height, 360);
+
+      // 6. Verify GPU hardware acceleration gate + zero-lag V4L2 `<video>.srcObject` + `loadedmetadata` seek race fix
       const pkgRoot = path.join(__dirname, '..');
+      const mainSrc = fs.readFileSync(path.join(pkgRoot, 'main.js'), 'utf8');
+      const preloadSrc = fs.readFileSync(path.join(pkgRoot, 'preload.js'), 'utf8');
+      const indexHtmlSrc = fs.readFileSync(path.join(pkgRoot, 'renderer', 'index.html'), 'utf8');
       const appSrc = fs.readFileSync(path.join(pkgRoot, 'renderer', 'app.js'), 'utf8');
       const vidWinSrc = fs.readFileSync(path.join(pkgRoot, 'renderer', 'video-window.js'), 'utf8');
+      assert.ok(mainSrc.includes('shouldDisableHardwareGpu'), 'main.js must only disable GPU in headless/VM/test environments');
+      assert.ok(mainSrc.includes('daw:video-web-chunk'));
+      assert.ok(preloadSrc.includes('appendWebVideoChunk'));
+      assert.ok(indexHtmlSrc.includes('vid-modal-preview-video'));
       assert.ok(!appSrc.includes('embedded-video-live-img'), 'Must not reference nonexistent #embedded-video-live-img');
+      assert.ok(appSrc.includes('acquireNativeV4l2Stream'));
+      assert.ok(appSrc.includes('desiredEmbeddedMetadataSeekSec'));
       assert.ok(appSrc.includes('ingestLiveRecordingVideoThumbFromDataUrl'));
       assert.ok(appSrc.includes('getAudibleOutputLatencySec'));
       assert.ok(!/\baudioCtx\b/.test(appSrc), 'Must use studioAudioCtx (never undeclared audioCtx) in renderer/app.js');
       assert.ok(appSrc.includes('videoEl.playbackRate'));
       assert.ok(appSrc.includes('onVideoLiveFrame'));
+      assert.ok(vidWinSrc.includes('ensurePopoutNativeV4l2Stream'));
+      assert.ok(vidWinSrc.includes('desiredMetadataSeekSec'));
       assert.ok(vidWinSrc.includes('onLiveFrame'));
       assert.ok(vidWinSrc.includes('videoEl.playbackRate'));
     } finally {

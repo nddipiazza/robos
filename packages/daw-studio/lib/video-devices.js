@@ -1375,6 +1375,57 @@ function remuxFaststartMp4(rawFile, finalFile) {
   });
 }
 
+function remuxWebCaptureToMp4(rawFile, finalFile, mimeType = '') {
+  return new Promise((resolve) => {
+    const isH264Hint = /h264|avc1|mp4/i.test(String(mimeType || ''));
+    const tryReencodeFallback = () => {
+      execFile('ffmpeg', [
+        '-nostdin', '-y', '-v', 'error',
+        '-i', rawFile,
+        '-c:v', 'libx264',
+        '-preset', 'veryfast',
+        '-crf', '20',
+        '-maxrate', '8M',
+        '-bufsize', '16M',
+        '-pix_fmt', 'yuv420p',
+        '-r', '30',
+        '-an',
+        '-movflags', '+faststart',
+        finalFile,
+      ], { timeout: 45000 }, () => {
+        if (fs.existsSync(finalFile) && fs.statSync(finalFile).size >= 256 && rawFile !== finalFile) {
+          try { fs.unlinkSync(rawFile); } catch {}
+        }
+        resolve(fs.existsSync(finalFile));
+      });
+    };
+
+    if (!isH264Hint) {
+      tryReencodeFallback();
+      return;
+    }
+
+    execFile('ffmpeg', [
+      '-nostdin', '-y', '-v', 'error',
+      '-fflags', '+genpts',
+      '-i', rawFile,
+      '-c:v', 'copy',
+      '-an',
+      '-movflags', '+faststart',
+      finalFile,
+    ], { timeout: 25000 }, (err) => {
+      if (err || !fs.existsSync(finalFile) || fs.statSync(finalFile).size < 256) {
+        tryReencodeFallback();
+        return;
+      }
+      if (rawFile !== finalFile) {
+        try { fs.unlinkSync(rawFile); } catch {}
+      }
+      resolve(true);
+    });
+  });
+}
+
 function synthesizeTestPatternMp4(destMp4, durationSec = 2.5, withAudio = false, { width = 1280, height = 720, crf = 20 } = {}) {
   return new Promise((resolve, reject) => {
     const dur = Math.max(0.5, Math.min(60, Number(durationSec) || 2.5));
@@ -1579,13 +1630,36 @@ class VideoTrackRecorder {
     ]);
   }
 
-  start(project, { startSec = 0, injectTestSignal = false, onLiveFrame = null } = {}) {
+  appendWebChunk(trackId, chunkBuffer, meta = {}) {
+    if (!this.active || !Array.isArray(this.active.entries)) return { ok: false };
+    const entry = this.active.entries.find(e => e.trackId === trackId && e.isWebMediaCapture);
+    if (!entry || entry.webStreamFd === null) return { ok: false };
+    if (Number.isFinite(meta.camWorld0WallMs) && entry.camWorld0WallMs === null) {
+      entry.camWorld0WallMs = Number(meta.camWorld0WallMs);
+      entry.firstPacketWallMs = entry.camWorld0WallMs;
+    }
+    if (meta.mimeType && !entry.webMimeType) {
+      entry.webMimeType = String(meta.mimeType);
+    }
+    if (Buffer.isBuffer(chunkBuffer) && chunkBuffer.length > 0) {
+      try {
+        fs.writeSync(entry.webStreamFd, chunkBuffer, 0, chunkBuffer.length, entry.webBytesWritten);
+        entry.webBytesWritten += chunkBuffer.length;
+      } catch (err) {
+        return { ok: false, error: err.message };
+      }
+    }
+    return { ok: true, bytesWritten: entry.webBytesWritten };
+  }
+
+  start(project, { startSec = 0, injectTestSignal = false, webCaptureTrackIds = [], onLiveFrame = null } = {}) {
     if (this.active) throw new Error('Video recording is already in progress');
     const armedVideoTracks = (project.tracks || []).filter(t => t.armed && t.trackKind === 'video');
     if (!armedVideoTracks.length) {
       return { ok: true, armedVideoCount: 0, entries: [] };
     }
 
+    const webCaptureSet = new Set(Array.isArray(webCaptureTrackIds) ? webCaptureTrackIds : []);
     const projectDir = project.projectDir;
     const takesDir = path.join(projectDir, 'takes');
     fs.mkdirSync(takesDir, { recursive: true });
@@ -1595,7 +1669,8 @@ class VideoTrackRecorder {
       const clipId = makeVideoId('vtake');
       const slug = slugifyVideo(track.shortLabel || track.name);
       const finalFileName = `${slug}-${clipId}.mp4`;
-      const partFileName = `${slug}-${clipId}.part.mp4`;
+      const isWebCap = !injectTestSignal && webCaptureSet.has(track.id);
+      const partFileName = `${slug}-${clipId}.part.${isWebCap ? 'webm' : 'mp4'}`;
       const videoFile = path.join(takesDir, finalFileName);
       const partFile = path.join(takesDir, partFileName);
       const vcfg = track.videoConfig || {};
@@ -1605,11 +1680,7 @@ class VideoTrackRecorder {
 
       let readyResolve = null;
       const readyPromise = new Promise(r => { readyResolve = r; });
-      // Physical camera capture + MJPEG pipe latency between real-world light hitting the CMOS sensor
-      // for MP4 `PTS = 0.000s` and `proc.stdout` emitting decoded/scaled JPEG #1:
-      //   - USB V4L2 UVC (e.g. OBSBOT Tiny 2 Lite): ~56ms CMOS mid-exposure + ISP + USB isoc + ~36ms FFmpeg MJPEG pipe = 92ms
-      //   - Network IP / RTSP camera: ~95ms camera encode + Wi-Fi + ~36ms FFmpeg MJPEG pipe = 131ms
-      const camPipelineLatencyMs = isV4l2 ? 92 : 131;
+      const camPipelineLatencyMs = isV4l2 ? 75 : 131;
 
       const entry = {
         trackId: track.id,
@@ -1622,6 +1693,10 @@ class VideoTrackRecorder {
         audioMode,
         qualitySpec: spec,
         videoConfig: vcfg,
+        isWebMediaCapture: isWebCap,
+        webStreamFd: null,
+        webBytesWritten: 0,
+        webMimeType: '',
         proc: null,
         firstPacketWallMs: null,
         camWorld0WallMs: null,
@@ -1634,6 +1709,20 @@ class VideoTrackRecorder {
         exitPromise: Promise.resolve(),
         stderrTail: '',
       };
+
+      if (isWebCap) {
+        try {
+          entry.webStreamFd = fs.openSync(partFile, 'w');
+        } catch {
+          entry.webStreamFd = null;
+        }
+        if (entry.readyResolve) {
+          const fn = entry.readyResolve;
+          entry.readyResolve = null;
+          fn();
+        }
+        return entry;
+      }
 
       if (!injectTestSignal) {
         // Sync quality & suppress RobOS IP Camera surveillance timestamp watermark during DAW recording
@@ -1683,7 +1772,9 @@ class VideoTrackRecorder {
           '-c:v', 'libx264',
           '-preset', 'ultrafast',
           '-tune', 'zerolatency',
-          '-crf', String(spec.crf),
+          '-crf', String(Math.max(20, Number(spec.crf) || 20)),
+          '-maxrate', spec.width >= 1920 ? '8M' : '5M',
+          '-bufsize', spec.width >= 1920 ? '16M' : '10M',
           '-pix_fmt', 'yuv420p',
           '-g', '30',
           ...(wantStreamAudio ? ['-c:a', 'aac', '-b:a', '160k'] : []),
@@ -1705,11 +1796,11 @@ class VideoTrackRecorder {
           entry.proc = proc;
           extractMjpegFramesFromStream(proc.stdout, (jpg, frameIdx) => {
             const now = Date.now();
+            if (isV4l2 && frameIdx <= 3 && jpg.length < 7500) return;
             if (entry.firstPacketWallMs === null) {
               entry.firstPacketWallMs = now;
               entry.camWorld0WallMs = now - entry.camPipelineLatencyMs;
             }
-            if (isV4l2 && frameIdx <= 3 && jpg.length < 7500) return;
             if (entry.readyResolve) {
               const fn = entry.readyResolve;
               entry.readyResolve = null;
@@ -1781,6 +1872,10 @@ class VideoTrackRecorder {
   }
 
   async _terminateEntryProc(entry) {
+    if (entry.webStreamFd !== null && entry.webStreamFd !== undefined) {
+      try { fs.closeSync(entry.webStreamFd); } catch {}
+      entry.webStreamFd = null;
+    }
     if (entry.proc) {
       const proc = entry.proc;
       entry.proc = null;
@@ -1843,7 +1938,11 @@ class VideoTrackRecorder {
         && fs.statSync(entry.partFile).size > 512;
 
       if (hasRealCapture) {
-        await remuxFaststartMp4(entry.partFile, entry.videoFile);
+        if (entry.isWebMediaCapture) {
+          await remuxWebCaptureToMp4(entry.partFile, entry.videoFile, entry.webMimeType);
+        } else {
+          await remuxFaststartMp4(entry.partFile, entry.videoFile);
+        }
       } else {
         try { if (fs.existsSync(entry.partFile)) fs.unlinkSync(entry.partFile); } catch {}
         const synthW = Math.min(1280, entry.qualitySpec?.width || 1280);
