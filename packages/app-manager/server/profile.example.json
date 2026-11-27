@@ -1,0 +1,11 @@
+{
+  "schema": 1,
+  "name": "Home PC",
+  "revision": 1,
+  "apps": ["audio-player", "robos-preferences"],
+  "settings": {
+    "theme": "dark",
+    "toast_enabled": true,
+    "notification_sound": true
+  }
+}

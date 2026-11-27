@@ -1,10 +1,52 @@
 'use strict';
 const api = window.robosManager, $ = id => document.getElementById(id);
 let state = { installed: {}, busy: false }, selected = new Set(), view = 'all', previewToken = 0;
+let serverProfile = null, firstSetup = false, setupBusy = false;
 const bytes = n => n < 1024 ** 2 ? `${Math.ceil(n / 1024)} KB` : `${(n / 1024 ** 2).toFixed(1)} MB`;
 const notice = message => { $('notice').textContent = message; };
-const attempt = async work => { try { return await work(); } catch (error) { notice(error.message.replace(/^Error invoking remote method '[^']+': Error: /, '')); } };
+const readableError = error => error.message.replace(/^Error invoking remote method '[^']+': Error: /, '');
+const attempt = async work => { try { return await work(); } catch (error) { notice(readableError(error)); } };
 const element = (tag, text, className) => { const el = document.createElement(tag); if (text) el.textContent = text; if (className) el.className = className; return el; };
+const settingLabels = { theme: 'Desktop theme', toast_enabled: 'Toast notifications', notification_sound: 'Notification sounds', dnd_default: 'Start in Do Not Disturb' };
+function renderSetup() {
+  const paired = Boolean(serverProfile);
+  $('first-setup').hidden = !firstSetup;
+  $('use-standalone').disabled = setupBusy || state.busy;
+  $('pair-form').hidden = paired;
+  $('profile-review').hidden = !paired;
+  for (const control of $('pair-form').elements) control.disabled = setupBusy;
+  for (const id of ['profile-refresh', 'profile-disconnect', 'profile-apply']) $(id).disabled = setupBusy || state.busy;
+  if (!paired) return;
+  const { profile, address, fetchedAt } = serverProfile;
+  $('profile-name').textContent = profile.name;
+  $('profile-source').textContent = `${address} · Revision ${profile.revision} · Fetched ${new Date(fetchedAt).toLocaleString()}`;
+  const apps = new Map(scope().map(item => [item.id, item.label]));
+  $('profile-apps').replaceChildren(...(profile.apps.length ? profile.apps : ['None']).map(id => element('li', apps.get(id) || id)));
+  const settings = Object.entries(profile.settings).map(([key, value]) => {
+    const display = typeof value === 'boolean' ? (value ? 'On' : 'Off') : value;
+    return element('li', `${settingLabels[key]} · ${display}`);
+  });
+  $('profile-settings').replaceChildren(...(settings.length ? settings : [element('li', 'None')]));
+}
+async function setupAction(work) {
+  if (setupBusy) return;
+  setupBusy = true;
+  $('setup-status').textContent = '';
+  renderSetup();
+  try { await work(); }
+  catch (error) {
+    if ($('setup-dialog').open) $('setup-status').textContent = readableError(error);
+    else notice(readableError(error));
+  } finally {
+    setupBusy = false;
+    renderSetup();
+  }
+}
+function openSetup() {
+  $('setup-status').textContent = '';
+  renderSetup();
+  $('setup-dialog').showModal();
+}
 function scope() {
   const entries = new Map(Object.values(state.installed).filter(item => item.kind === 'app').map(item => [item.id, item]));
   for (const item of state.catalog?.components || []) if (item.kind === 'app') entries.set(item.id, item);
@@ -25,6 +67,7 @@ function render() {
   $('tree').replaceChildren();
   const order = ['Everyday & business', 'Developer tools', 'AI & agents', 'Games & game tools', 'System & security'];
   const apps = visible(), groups = [...new Set(apps.map(item => item.group))].sort((a, b) => (order.indexOf(a) < 0 ? 99 : order.indexOf(a)) - (order.indexOf(b) < 0 ? 99 : order.indexOf(b)) || a.localeCompare(b));
+  renderSetup();
   for (const group of groups) {
     const items = apps.filter(item => item.group === group), details = element('details'); details.open = open.get(group) ?? true; details.dataset.group = group;
     const summary = element('summary'), label = element('label');
@@ -80,6 +123,41 @@ function render() {
   });
 }
 $('search').oninput = render;
+$('server-setup').onclick = openSetup;
+$('connect-server').onclick = openSetup;
+$('use-standalone').onclick = () => setupAction(async () => {
+  firstSetup = false;
+  renderSetup();
+  await api.setupStandalone();
+});
+$('pair-form').onsubmit = event => {
+  event.preventDefault();
+  const code = $('pairing-code').value;
+  $('pairing-code').value = '';
+  setupAction(async () => {
+    $('setup-status').textContent = 'Connecting to the RobOS server…';
+    serverProfile = await api.setupPair($('server-address').value, code);
+    firstSetup = false;
+    $('setup-status').textContent = 'Paired. Review this profile before applying it.';
+  });
+};
+$('profile-refresh').onclick = () => setupAction(async () => {
+  $('setup-status').textContent = 'Checking for a server profile…';
+  serverProfile = await api.setupRefresh();
+  $('setup-status').textContent = 'Fetched the current profile. Review it before applying.';
+});
+$('profile-disconnect').onclick = () => setupAction(async () => {
+  await api.setupDisconnect();
+  ({ connection: serverProfile, needsSetup: firstSetup } = await api.setupState());
+  $('setup-status').textContent = 'This PC has forgotten the server.';
+});
+$('profile-apply').onclick = () => setupAction(async () => {
+  $('setup-dialog').close();
+  notice('Applying server profile…');
+  state = await api.setupApply(serverProfile.profile.revision, serverProfile.fetchedAt);
+  render();
+  notice(`${serverProfile.profile.name} profile applied.`);
+});
 $('browse').onclick = () => { view = 'all'; render(); };
 $('installed').onclick = () => { view = 'installed'; render(); };
 $('updates').onclick = () => { view = 'updates'; render(); };
@@ -95,4 +173,13 @@ $('remove-all').onclick = () => attempt(() => api.removeAll());
 api.onState(value => { state = value; render(); });
 if (api.onNotice) api.onNotice(message => notice(message));
 api.onProgress(value => { $('progress-label').textContent = `${value.phase}: ${value.label || state.catalog?.components.find(item => item.id === value.id)?.label || value.id}`; if (value.total) $('progress').value = value.received / value.total * 100; else if (value.count) $('progress').value = value.completed / value.count * 100; else $('progress').removeAttribute('value'); });
-attempt(async () => { state = await api.state(); render(); try { state = await api.refresh(); render(); } catch (error) { notice(`${error.message}\n${state.catalog ? 'Showing the saved catalog. Installed apps can still be opened.' : 'Your installed apps remain on this computer.'}`); } });
+attempt(async () => {
+  state = await api.state();
+  try { ({ connection: serverProfile, needsSetup: firstSetup } = await api.setupState()); }
+  catch (error) { notice(readableError(error)); }
+  render();
+  try { state = await api.refresh(); render(); }
+  catch (error) {
+    notice(`${readableError(error)}\n${state.catalog ? 'Showing the saved catalog. Installed apps can still be opened.' : 'Your installed apps remain on this computer.'}`);
+  }
+});

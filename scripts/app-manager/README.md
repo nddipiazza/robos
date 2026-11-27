@@ -2,6 +2,27 @@
 
 Windows NSIS, Ubuntu `.deb`, Linux AppImage and macOS DMG package the same `packages/app-manager` application. The base download contains the manager and one Electron runtime. Apps, their libraries and game assets are separate downloads. The build enforces a 150 MiB base artifact budget.
 
+## Set up a client from a RobOS server
+
+On a Linux RobOS server with Node.js, OpenSSL and user systemd, install the client setup service as the RobOS hosting account.
+
+```sh
+bash packages/app-manager/server/install.sh 192.168.1.25
+```
+
+The service listens on TCP 19406 at the specified LAN address. Edit `~/.config/robos/client-setup/profile.json` to set the profile name, catalog app IDs and shared settings, and increment its revision when it changes. The example profile includes Audio Player and RobOS Preferences. The supported settings are desktop theme, toast notifications, notification sounds and the initial Do Not Disturb preference.
+
+Generate a pairing code on the server and give it to the client operator through a trusted channel. Each code expires in 15 minutes and includes the server certificate fingerprint. Treat the code as a credential.
+
+```sh
+setup="$HOME/.local/share/robos/client-setup"
+"$setup/node" "$setup/server/setup-server.cjs" invite
+```
+
+In App Manager select **Connect to server** or **Server setup**, enter the server's address and the code, then review and apply the profile. App Manager installs the listed apps from its release catalog and merges the supported settings into local RobOS Preferences. **Check for updates** fetches the current profile. A failed refresh leaves the saved profile available for review. App Manager stores the device credential in the system's encrypted storage.
+
+On the server, `"$setup/node" "$setup/server/setup-server.cjs" devices` lists paired devices. Use `revoke DEVICE_ID` with the same command to end a device's access. **Forget server on this PC** clears that PC's saved pairing. Previously applied settings and installed apps remain on the device.
+
 ```sh
 cd packages/app-manager
 npm install

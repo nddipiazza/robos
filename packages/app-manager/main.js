@@ -1,5 +1,5 @@
 'use strict';
-const { app, BrowserWindow, ipcMain, shell, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, shell, dialog, nativeTheme, safeStorage } = require('electron');
 const fs = require('node:fs');
 const path = require('node:path');
 const os = require('node:os');
@@ -8,6 +8,8 @@ const { paths } = require('./lib/paths.cjs');
 const { integration } = require('./lib/integration.cjs');
 const { Manager } = require('./lib/manager.cjs');
 const { activeApps } = require('./lib/leases.cjs');
+const { ServerProfile } = require('./lib/server-profile.cjs');
+const { readJSON, writeJSON } = require('./lib/profile-schema.cjs');
 const locations = paths();
 const id = process.argv.find(arg => arg.startsWith('--app='))?.slice(6);
 if (id) {
@@ -15,7 +17,8 @@ if (id) {
 } else {
   app.setName('robos-app-manager');
   if (process.platform === 'linux') app.setDesktopName('robos-app-manager.desktop');
-  const profile = path.join(os.homedir(), '.config/robos/electron/app-manager');
+  const configDir = path.join(os.homedir(), '.config/robos');
+  const profile = path.join(configDir, 'electron/app-manager');
   fs.mkdirSync(profile, { recursive: true }); app.setPath('userData', profile);
   if (!app.requestSingleInstanceLock()) { app.quit(); } else {
     let window, manager;
@@ -57,6 +60,15 @@ if (id) {
       fs.mkdirSync(path.join(os.homedir(), '.config/robos/logs'), { recursive: true });
       const logger = require('pino')({ name: 'app-manager' }, require('pino').destination(path.join(os.homedir(), '.config/robos/logs/app-manager.ndjson')));
       manager = new Manager({ locations, native, version: require('./package.json').version, logger });
+      const setup = new ServerProfile({ dataDir: locations.data, configDir, storage: safeStorage, deviceName: os.hostname() });
+      const standaloneFile = path.join(locations.root, 'standalone.json');
+      const needsSetup = () => !fs.existsSync(setup.file) && !fs.existsSync(standaloneFile) &&
+        !fs.existsSync(manager.defaultsFile()) && !Object.keys(manager.installed).length;
+      function updateTheme() {
+        const theme = readJSON(setup.settingsFile, {}).theme;
+        if (['dark', 'light'].includes(theme)) nativeTheme.themeSource = theme;
+      }
+      try { updateTheme(); } catch (error) { logger.warn({ err: error }, 'Could not read the RobOS theme'); }
       try { manager.loadCached(); } catch (error) { logger.warn({ err: error }, 'Ignoring invalid cached catalog'); }
       if (image) native.installManager(image);
       if (process.platform === 'linux' && app.isPackaged) {
@@ -72,7 +84,7 @@ if (id) {
       // First launch: install the default apps (RobOS Preferences) and open Preferences on
       // cloud backup, so connecting Google Drive is the first thing offered.
       async function setUpDefaults() {
-        if (activeApps(locations.root).length) return;
+        if (needsSetup() || setup.pending || fs.existsSync(setup.file) || activeApps(locations.root).length) return;
         let ids = [];
         try { ids = await manager.installDefaults(); } catch (error) { logger.warn({ err: error }, 'Could not install default apps'); return; }
         if (!ids.length) return;
@@ -93,11 +105,37 @@ if (id) {
         return state;
       });
       ipcMain.handle('manager:preview', (_event, ids) => manager.preview(ids));
-      ipcMain.handle('manager:install', (_event, ids) => {
+      function installApps(ids) {
         const active = activeApps(locations.root);
         if (active.length && manager.preview(ids).items.length) throw new Error('Close running RobOS apps before installing or updating shared components');
         return manager.install(ids);
+      }
+      ipcMain.handle('manager:install', (_event, ids) => installApps(ids));
+      ipcMain.handle('manager:setup-state', () => ({ connection: setup.state(), needsSetup: needsSetup() }));
+      ipcMain.handle('manager:setup-standalone', async () => {
+        writeJSON(standaloneFile, { selected: true });
+        await setUpDefaults();
       });
+      ipcMain.handle('manager:setup-pair', (_event, address, code) => setup.pair(address, code));
+      ipcMain.handle('manager:setup-refresh', () => setup.refresh());
+      ipcMain.handle('manager:setup-disconnect', () => setup.disconnect());
+      ipcMain.handle('manager:setup-apply', (_event, revision, fetchedAt) => setup.fetchProfile(async () => {
+        const connection = setup.state();
+        if (!connection || connection.profile.revision !== revision || connection.fetchedAt !== fetchedAt) {
+          throw new Error('The setup profile changed. Review it again before applying');
+        }
+        if (manager.busy) throw new Error('Wait for the current operation to finish');
+        if (activeApps(locations.root).includes('robos-preferences')) throw new Error('Close RobOS Preferences before applying server settings');
+        const { profile: desired } = connection;
+        if (desired.apps.length) {
+          if (!manager.catalog) await manager.refresh();
+          await installApps(desired.apps);
+        }
+        if (activeApps(locations.root).includes('robos-preferences')) throw new Error('Close RobOS Preferences before applying server settings');
+        setup.applySettings(desired);
+        updateTheme();
+        return manager.state();
+      }));
       ipcMain.handle('manager:cancel', () => manager.cancel());
       ipcMain.handle('manager:uninstall', (_event, id) => remove(id));
       ipcMain.handle('manager:uninstall-all', () => remove([], true));
