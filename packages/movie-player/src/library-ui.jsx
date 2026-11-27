@@ -80,6 +80,8 @@ export function Collage({ artIds = [], name }) {
 export function ContextMenu({ menu, onClose }) {
   const ref = useRef(null);
   const [pos, setPos] = useState(null);
+  const [submenu, setSubmenu] = useState(null);
+  const current = submenu && submenu.menu === menu ? submenu.item : null;
 
   useLayoutEffect(() => {
     if (!menu || !ref.current) { setPos(null); return; }
@@ -87,7 +89,7 @@ export function ContextMenu({ menu, onClose }) {
     const x = Math.min(menu.x, window.innerWidth - rect.width - 8);
     const y = menu.y + rect.height > window.innerHeight - 8 ? Math.max(8, menu.y - rect.height) : menu.y;
     setPos({ x: Math.max(8, x), y });
-  }, [menu]);
+  }, [menu, current]);
 
   useEffect(() => {
     if (!menu) return undefined;
@@ -108,6 +110,11 @@ export function ContextMenu({ menu, onClose }) {
   }, [menu, onClose]);
 
   if (!menu) return null;
+  const items = current ? [
+    { header: current.label },
+    { label: 'Back', icon: 'back', back: true },
+    ...current.submenu,
+  ] : menu.items;
   return (
     <div
       ref={ref}
@@ -116,7 +123,7 @@ export function ContextMenu({ menu, onClose }) {
       style={{ left: pos ? pos.x : menu.x, top: pos ? pos.y : menu.y, visibility: pos ? 'visible' : 'hidden' }}
       onContextMenu={(e) => e.preventDefault()}
     >
-      {menu.items.filter(Boolean).map((item, i) => {
+      {items.filter(Boolean).map((item, i) => {
         if (item.separator) return <div key={i} className="context-sep" />;
         if (item.header) return <div key={i} className="context-header">{item.header}</div>;
         return (
@@ -125,10 +132,21 @@ export function ContextMenu({ menu, onClose }) {
             role="menuitem"
             className={`context-item ${item.danger ? 'danger' : ''}`}
             disabled={item.disabled}
-            onClick={() => { onClose(); item.onClick && item.onClick(); }}
+            title={item.title}
+            aria-haspopup={item.submenu ? 'menu' : undefined}
+            onClick={() => {
+              if (item.submenu) setSubmenu({ menu, item });
+              else if (item.back) setSubmenu(null);
+              else {
+                setSubmenu(null);
+                onClose();
+                item.onClick?.();
+              }
+            }}
           >
             <span className="context-icon">{item.icon && <Icon name={item.icon} size={14} />}</span>
             <span>{item.label}</span>
+            {item.submenu && <Icon name="chevron" size={14} />}
           </button>
         );
       })}

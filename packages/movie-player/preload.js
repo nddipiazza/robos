@@ -22,6 +22,13 @@ contextBridge.exposeInMainWorld('robosAudio', {
   openFileDialog: () => ipcRenderer.invoke('audio:open-file-dialog'),
   ensureFileAccessible: (filePath) => ipcRenderer.invoke('audio:ensure-file-accessible', filePath),
   getLibrary: () => ipcRenderer.invoke('audio:get-library'),
+  trimVideo: (input) => ipcRenderer.invoke('movie:trim-video', input),
+  cancelVideoTrim: () => ipcRenderer.invoke('movie:trim-cancel'),
+  onVideoTrimProgress: (callback) => {
+    const handler = (_event, progress) => callback(progress);
+    ipcRenderer.on('movie:trim-progress', handler);
+    return () => ipcRenderer.removeListener('movie:trim-progress', handler);
+  },
   getVideoSegments: (trackId) => ipcRenderer.invoke('movie:segments-get', trackId),
   detectVideoSegments: (trackId) => ipcRenderer.invoke('movie:segments-detect', trackId),
   addVideoSegment: (trackId, input) => ipcRenderer.invoke('movie:segments-add', trackId, input),

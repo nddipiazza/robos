@@ -18,6 +18,7 @@ const aiMetadata = require('./lib/ai-metadata');
 const { PublicMetadataService } = require('./lib/public-metadata');
 const { createControlServer } = require('./lib/control-server');
 const { registerVideoSegments } = require('./lib/video-segments');
+const { registerVideoTrim } = require('./lib/video-trim');
 
 // Shared RobOS modules: the repo checkout in development, the installed copy on the VM.
 function requireShared(...relPaths) {
@@ -91,6 +92,21 @@ app.on('second-instance', () => {
 const castService = new CastService();
 const mediaLibrary = new MediaLibrary();
 const videoSegments = registerVideoSegments({ app, ipcMain, getWindow: () => mainWindow, mediaLibrary });
+registerVideoTrim({
+  app, ipcMain, getWindow: () => mainWindow,
+  findTrack: videoSegments.findTrack, isLocalVideo: videoSegments.isLocalVideo,
+  directory: path.join(mediaLibrary.configDir, 'movie-player', 'edits'),
+  async index(file, source, range) {
+    const track = await mediaLibrary.parseTrack(file);
+    for (const key of ['artId', 'overview', 'showOverview', 'rating', 'network', 'cast', 'director', 'airdate', 'imdbId', 'metadataProvider']) {
+      if (source[key] != null && !track[key]) track[key] = source[key];
+    }
+    videoSegments.copyTrimmed(source.id, track.id, range);
+    mediaLibrary.mergeTracks([track]);
+    sendToWindow('audio:library-scan-batch', { library: mediaLibrary.getLibrary() });
+    return track;
+  },
+});
 castService.mediaLibrary = mediaLibrary;
 castService.cloudStorage = cloud;
 const libraryFolders = new LibraryFolders({ mediaLibrary, cloud, castService });

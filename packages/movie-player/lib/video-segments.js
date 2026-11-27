@@ -64,6 +64,16 @@ class VideoSegments {
     return this.save(trackId, { ...entry, segments });
   }
 
+  copyTrimmed(sourceId, trackId, { start, end }) {
+    const source = this.get(sourceId);
+    const segments = source.segments.flatMap(item => {
+      const from = Math.max(item.start, start) - start;
+      const to = Math.min(item.end, end) - start;
+      return validRange(item.type, from, to) ? [{ ...item, id: randomUUID(), start: from, end: to }] : [];
+    });
+    if (segments.length || source.scannedAt) this.save(trackId, { segments, scannedAt: source.scannedAt });
+  }
+
   merge(trackId, suggestions) {
     const segments = [...this.get(trackId).segments];
     for (const item of suggestions) {
@@ -307,6 +317,9 @@ function registerVideoSegments({ app, ipcMain, getWindow, mediaLibrary }) {
 
   return {
     detect,
+    findTrack: find,
+    isLocalVideo: localVideo,
+    copyTrimmed: (sourceId, trackId, range) => store.copyTrimmed(sourceId, trackId, range),
     rememberOpened(tracks) {
       for (const track of tracks) if (localVideo(track)) opened.set(track.id, track);
     },

@@ -18,6 +18,7 @@ import { useSpeakerTakeover } from './useSpeakerTakeover.js';
 import { LibraryContext, ContextMenu, LoveButton, Cover, artUrlFor } from './library-ui.jsx';
 import { albumKeyOf, fold, splitGenres, sortTracks, getTrackWatchState } from '../lib/library-index.js';
 import VideoSegmentsPanel, { formatSegmentTime } from './VideoSegments.jsx';
+import TrimVideo from './TrimVideo.jsx';
 
 const DEFAULT_QUEUE = [];
 const QUEUE_KEY = 'robos-movie-player.queue.v1';
@@ -83,6 +84,7 @@ export default function App() {
   const [infoTrack, setInfoTrack] = useState(null);
   const [segmentTrack, setSegmentTrack] = useState(null);
   const [segmentDraft, setSegmentDraft] = useState(null);
+  const [videoTrim, setVideoTrim] = useState(null);
   const [isScanning, setIsScanning] = useState(false);
   const [isScanningLibrary, setIsScanningLibrary] = useState(false);
   const [libraryScanStatus, setLibraryScanStatus] = useState(null);
@@ -1801,9 +1803,19 @@ export default function App() {
     if (isVideoTrack(track)) setSegmentTrack(track);
   };
 
-  const openVideoSegmentMenu = (event, position = transcodeOffsetSec + (videoRef.current?.currentTime || 0)) => {
+  const showRecentlyAdded = (track) => {
+    const destination = { section: 'recent', recordingId: track.id };
+    if (track.mediaType === 'tv') navigateShows(destination);
+    else navigateLibrary(destination);
+  };
+
+  const openVideoMenu = (event, position = transcodeOffsetSec + (videoRef.current?.currentTime || 0)) => {
     const track = currentTrack;
     if (!isVideoTrack(track)) return;
+    const duration = knownVideoDurationSec || videoRef.current?.duration;
+    const canTrim = !!track.filePath && !track.cloud && !track.mediaService && !track.peerStream && Number.isFinite(duration);
+    const point = Math.max(0, Math.min(duration || 0, position));
+    const trimDisabled = !canTrim || point < 0.25 || duration - point < 0.25;
     const draft = segmentDraft?.trackId === track.id ? segmentDraft : null;
     const marks = ['intro', 'commercial'].map(type => {
       if (draft?.type !== type) {
@@ -1824,7 +1836,13 @@ export default function App() {
       };
     });
     openMenu(event, [
-      { header: `Video segments · ${formatSegmentTime(position)}` },
+      { header: `Video · ${formatSegmentTime(position)}` },
+      { label: 'Edit video', disabled: !canTrim, title: canTrim ? undefined : 'Open a local video to edit it.',
+        submenu: [
+          { label: 'Trim video up to this point', disabled: trimDisabled, onClick: () => setVideoTrim({ track, point, duration, edge: 'start' }) },
+          { label: 'Trim video from this point', disabled: trimDisabled, onClick: () => setVideoTrim({ track, point, duration, edge: 'end' }) },
+        ] },
+      { separator: true },
       ...marks,
       draft ? { label: 'Cancel segment start', onClick: () => setSegmentDraft(null) } : null,
       { separator: true },
@@ -2348,9 +2366,7 @@ export default function App() {
                 kind: 'video',
                 player: window.robosAudio,
                 onSaved: (track) => {
-                  const destination = { section: 'recent', recordingId: track.id };
-                  if (track.mediaType === 'tv') navigateShows(destination);
-                  else navigateLibrary(destination);
+                  showRecentlyAdded(track);
                   showStatus(`Saved “${track.title}” to your library.`);
                 },
               });
@@ -2646,7 +2662,7 @@ export default function App() {
               {isVideoTrack(currentTrack) && (
                 <div
                   className={`cinema-stage-box ${embeddedPipActive ? 'is-embedded-pip' : ''}`}
-                  onContextMenu={outputTarget === 'local' ? openVideoSegmentMenu : undefined}
+                  onContextMenu={outputTarget === 'local' ? openVideoMenu : undefined}
                   style={embeddedPipActive
                     ? (pipRect
                       ? { top: `${pipRect.top}px`, left: `${pipRect.left}px`, width: `${pipRect.width}px`, height: `${pipRect.height}px` }
@@ -2870,7 +2886,7 @@ export default function App() {
                             offsetSec={transcodeOffsetSec}
                             isTranscode={true}
                             onSeekOverride={seekVideoTo}
-                            onSegmentMenu={openVideoSegmentMenu}
+                            onPointMenu={openVideoMenu}
                           />
                         </div>
                         <button
@@ -3083,7 +3099,7 @@ export default function App() {
                           offsetSec={transcodeOffsetSec}
                           isTranscode={isTranscodeActive}
                           onSeekOverride={seekVideoTo}
-                          onSegmentMenu={openVideoSegmentMenu}
+                          onPointMenu={openVideoMenu}
                         />]
                       : undefined}
                   customControlsSection={(outputTarget !== 'local' || isVideoTrack(currentTrack))
@@ -3756,6 +3772,7 @@ export default function App() {
                   offsetSec={transcodeOffsetSec}
                   isTranscode={isTranscodeActive}
                   onSeekOverride={isTranscodeActive ? seekVideoTo : null}
+                  onPointMenu={isVideoTrack(currentTrack) ? openVideoMenu : undefined}
                 />
               )}
           </div>
@@ -3965,6 +3982,12 @@ export default function App() {
         <VideoSegmentsPanel key={segmentTrack.id} track={segmentTrack} onClose={() => setSegmentTrack(null)}
           onJump={(position) => jumpToVideoSegment(segmentTrack, position)} />
       )}
+      {videoTrim && <TrimVideo edit={videoTrim} onClose={() => setVideoTrim(null)}
+        onSaved={(track) => {
+          setVideoTrim(null);
+          showRecentlyAdded(track);
+          showStatus(`Saved “${track.title}” to your library.`);
+        }} />}
       <ContextMenu menu={menu} onClose={closeMenu} />
       {infoTrack && <TrackInfo track={infoTrack} onClose={() => setInfoTrack(null)} />}
 
@@ -3991,7 +4014,7 @@ function CastControls({ onPrev, onToggle, onNext }) {
 
 // Seek bar for the mini player. Subscribes to the audio/video element itself so the
 // rest of the app doesn't re-render on every timeupdate.
-function MiniProgress({ getAudio, trackId, knownDuration = 0, offsetSec = 0, isTranscode = false, onSeekOverride = null, onSegmentMenu }) {
+function MiniProgress({ getAudio, trackId, knownDuration = 0, offsetSec = 0, isTranscode = false, onSeekOverride = null, onPointMenu }) {
   const [time, setTime] = useState({ current: offsetSec || 0, duration: knownDuration || 0 });
   const [dragging, setDragging] = useState(null);
   const dragRef = useRef(null);
@@ -4086,10 +4109,10 @@ function MiniProgress({ getAudio, trackId, knownDuration = 0, offsetSec = 0, isT
         value={Math.min(val, maxVal)}
         style={{ '--pct': `${pct}%` }}
         aria-label="Seek"
-        onContextMenu={onSegmentMenu ? (event) => {
+        onContextMenu={onPointMenu ? (event) => {
           const { left, width } = event.currentTarget.getBoundingClientRect();
           const ratio = Math.max(0, Math.min(1, (event.clientX - left) / width));
-          onSegmentMenu(event, effectiveDuration && event.clientX > 0 ? ratio * effectiveDuration : time.current);
+          onPointMenu(event, effectiveDuration && event.clientX > 0 ? ratio * effectiveDuration : time.current);
         } : undefined}
         onChange={(e) => {
           const next = Number(e.target.value);

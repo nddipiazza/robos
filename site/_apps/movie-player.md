@@ -91,6 +91,8 @@ For media links, install yt-dlp and FFmpeg, including ffprobe, and make the comm
 
 To mark a range manually, right-click the video at the playhead or right-click a position on the seek bar. Choose **Mark intro start here** or **Mark commercial start here**, then mark the matching end. Use **Video segments** to review the saved ranges and jump to either end.
 
+Right-click the video or seek bar and choose **Edit video**. **Trim video up to this point** keeps the rest of the video. **Trim video from this point** keeps the beginning. Review the range, then choose **Save trimmed copy** to see the edited MP4 in **Recently Added**.
+
 ### 4. AI Watchlists & Virtual Cinema Host (Optional AI)
 - **✦ AI Watchlist (`src/AiPlaylist.jsx` / `lib/ai-playlist.js`)**: Describe a movie marathon, director retrospective, era, or mood (e.g., *"4K sci-fi double feature for a rainy night"* or *"short animated films under 20 minutes"*). Your configured RobOS agent picks and orders films from your indexed library, falling back to a deterministic local scorer when offline.
 - **Virtual Cinema Host (`src/useVirtualDj.js`)**: The movie counterpart to the Audio Player's Virtual DJ. When enabled, the agent writes short 1–2 sentence cinema introductions a few movies ahead in the screening queue (in personas like *Classic Theater Host*, *Film Festival Curator*, or *Late-Night Drive-In*), spoken aloud between films with **RobOS Voice** (or cast to your Smart TV).

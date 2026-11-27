@@ -4454,3 +4454,33 @@ body.is-resizing, body.is-resizing * { cursor: col-resize !important; user-selec
   justify-content: flex-end;
   margin-top: 12px;
 }
+
+.video-trim-range {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.video-trim-range div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.video-trim-range dt {
+  color: var(--text-muted);
+}
+
+.video-trim-range dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.video-trim-dialog progress {
+  width: 100%;
+  accent-color: var(--accent);
+}
+
+.video-trim-dialog footer {
+  gap: 8px;
+}
